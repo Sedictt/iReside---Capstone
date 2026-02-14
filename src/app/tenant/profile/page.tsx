@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
     Bell,
@@ -49,6 +50,12 @@ export default function TenantProfilePage() {
                                     {item}
                                 </button>
                             ))}
+                            <Link
+                                href="/tenant/dashboard/ai-concierge"
+                                className="hover:text-white transition-colors relative py-5"
+                            >
+                                Concierge
+                            </Link>
                         </div>
                     </div>
 
