@@ -11,7 +11,13 @@ import {
   Mail,
   CheckCircle2,
   SlidersHorizontal,
-  Home
+  Home,
+  Wallet,
+  Sparkles,
+  BarChart3,
+  Globe,
+  Lock,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,252 +44,183 @@ export default function LandingPage() {
       {/* Hero Section - Split View */}
       <section className="relative h-screen w-full flex flex-col md:flex-row overflow-hidden">
 
-        {/* Seeker Side (Left) */}
-        <div className="group relative flex-1 h-1/2 md:h-full cursor-pointer overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
-          <div className="absolute inset-0 bg-emerald-900/20 group-hover:bg-emerald-900/10 transition-colors duration-500 z-10" />
+        {/* Resident Side (Left) -- Revamped */}
+        <Link href="/search" className="group relative flex-1 h-1/2 md:h-full cursor-pointer overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/60 via-emerald-900/40 to-black/60 group-hover:from-emerald-900/50 group-hover:via-emerald-800/30 transition-all duration-700 z-10" />
           <img
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2670&auto=format&fit=crop"
-            alt="Seeker Building"
-            className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-1000 ease-out"
+            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop"
+            alt="Luxury Home"
+            className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-110 group-hover:opacity-70 transition-all duration-1000 ease-out grayscale group-hover:grayscale-0"
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-8 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-8 text-center transition-transform duration-700 group-hover:scale-105">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mb-4 p-3 rounded-full bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-400"
+              className="mb-6 p-4 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-colors"
             >
-              <MapPin className="h-6 w-6" />
+              <Home className="h-8 w-8" />
             </motion.div>
-            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-2">Seeker</h2>
-            <p className="text-slate-400 text-sm tracking-widest uppercase mb-8">Find beautiful places to call home</p>
-            <Link href="/search">
-              <button className="px-8 py-3 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase hover:bg-white hover:text-black transition-all">
-                Begin Searching
-              </button>
-            </Link>
+            <h2 className="text-5xl md:text-7xl font-light tracking-tighter mb-4 text-white drop-shadow-2xl">Resident</h2>
+            <p className="text-slate-300 text-sm md:text-base tracking-[0.2em] uppercase mb-10 font-medium max-w-xs leading-relaxed group-hover:text-white transition-colors">
+              Find your sanctuary
+            </p>
+            <div className="px-8 py-3 rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-300">
+              Find Your Home
+            </div>
           </div>
-        </div>
+        </Link>
 
-        {/* Steward Side (Right) */}
-        <div className="group relative flex-1 h-1/2 md:h-full cursor-pointer overflow-hidden">
-          <div className="absolute inset-0 bg-indigo-900/20 group-hover:bg-indigo-900/10 transition-colors duration-500 z-10" />
+        {/* Landlord Side (Right) -- Revamped */}
+        <Link href="/login" className="group relative flex-1 h-1/2 md:h-full cursor-pointer overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/60 via-indigo-900/40 to-black/60 group-hover:from-indigo-900/50 group-hover:via-indigo-800/30 transition-all duration-700 z-10" />
           <img
-            src="https://images.unsplash.com/photo-1554469384-e58fac16e23a?q=80&w=2574&auto=format&fit=crop"
-            alt="Steward Building"
-            className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-1000 ease-out"
+            src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2669&auto=format&fit=crop"
+            alt="Modern Office"
+            className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-110 group-hover:opacity-70 transition-all duration-1000 ease-out grayscale group-hover:grayscale-0"
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-8 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 p-8 text-center transition-transform duration-700 group-hover:scale-105">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="mb-4 p-3 rounded-full bg-indigo-500/20 backdrop-blur-md border border-indigo-500/30 text-indigo-400"
+              className="mb-6 p-4 rounded-full bg-indigo-500/10 backdrop-blur-md border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-colors"
             >
-              <Building2 className="h-6 w-6" />
+              <Building2 className="h-8 w-8" />
             </motion.div>
-            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-2">Steward</h2>
-            <p className="text-slate-400 text-sm tracking-widest uppercase mb-8">List & manage seamlessly</p>
+            <h2 className="text-5xl md:text-7xl font-light tracking-tighter mb-4 text-white drop-shadow-2xl">Landlord</h2>
+            <p className="text-slate-300 text-sm md:text-base tracking-[0.2em] uppercase mb-10 font-medium max-w-xs leading-relaxed group-hover:text-white transition-colors">
+              Manage your portfolio
+            </p>
+            <div className="px-8 py-3 rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase group-hover:bg-indigo-500 group-hover:border-indigo-500 group-hover:text-white transition-all duration-300">
+              Manage Properties
+            </div>
+          </div>
+        </Link>
+
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-32 bg-zinc-950 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="mb-20 md:text-center max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-6"
+            >
+              <Zap className="h-3 w-3" /> System Capabilities
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl md:text-6xl font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-slate-500"
+            >
+              Redefining the <br /> standard of living.
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-slate-400 text-lg leading-relaxed"
+            >
+              A unified ecosystem bringing advanced property technology to modern residents and forward-thinking landlords.
+            </motion.p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { title: "AI Concierge", desc: "24/7 intelligent assistance for maintenance requests and localized recommendations.", icon: Sparkles, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+              { title: "Smart Finance", desc: "Automated rent payments, wallet integration, and real-time portfolio tracking.", icon: Wallet, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+              { title: "Global Access", desc: "Manage your properties or pay your rent from anywhere in the world.", icon: Globe, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+              { title: "Verified Identity", desc: "Bank-grade identity verification for secure and trusted interactions.", icon: ShieldCheck, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+              { title: "Market Insights", desc: "Data-driven analytics to maximize yield and optimize occupancy rates.", icon: BarChart3, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
+              { title: "Secure Living", desc: "Digital key access and integrated smart home security features.", icon: Lock, color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-sm"
+              >
+                <div className={`h-12 w-12 rounded-2xl ${feature.bg} ${feature.border} border flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                </div>
+                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats / Trust Section */}
+      <section className="py-24 bg-black border-y border-white/5 relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10 grid md:grid-cols-4 gap-12 text-center">
+          {[
+            { value: "50k+", label: "Active Units" },
+            { value: "$2M+", label: "Rent Processed" },
+            { value: "98%", label: "Satisfaction" },
+            { value: "24/7", label: "Support" },
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="space-y-2"
+            >
+              <div className="text-4xl md:text-5xl font-bold text-white tracking-tighter">{stat.value}</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-500">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Final CTA Footer */}
+      <section className="relative py-32 flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 to-black z-0" />
+
+        <div className="relative z-10 max-w-2xl mx-auto space-y-8">
+          <div className="flex justify-center">
+            <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-4">
+              <div className="h-8 w-8 bg-black rounded-lg" />
+            </div>
+          </div>
+
+          <h2 className="text-5xl md:text-7xl font-bold tracking-tighter text-white">
+            Ready to upgrade?
+          </h2>
+          <p className="text-slate-400 text-lg">
+            Join the network of premium properties and verified residents.
+          </p>
+
+          <div className="flex flex-col md:flex-row gap-4 justify-center pt-8">
+            <Link href="/search">
+              <button className="px-8 py-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold tracking-widest uppercase transition-all hover:scale-105 min-w-[200px]">
+                I'm a Resident
+              </button>
+            </Link>
             <Link href="/login">
-              <button className="px-8 py-3 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase hover:bg-white hover:text-black transition-all">
-                Enter Domain
+              <button className="px-8 py-4 rounded-full border border-white/20 bg-white/5 hover:bg-white hover:text-black text-white font-bold tracking-widest uppercase transition-all hover:scale-105 min-w-[200px]">
+                I'm a Landlord
               </button>
             </Link>
           </div>
+
+          <footer className="pt-24 text-[10px] text-slate-600 tracking-widest uppercase">
+            © 2026 iiReside Inc. • Privacy • Terms • Security
+          </footer>
         </div>
-
-      </section>
-
-      {/* Identity Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden py-24">
-        {/* Background */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2669&auto=format&fit=crop"
-            alt="Office Night"
-            className="absolute inset-0 w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-        </div>
-
-        <div className="container mx-auto px-6 relative z-10 grid md:grid-cols-2 gap-12 items-center">
-          <div className="order-2 md:order-1 space-y-6">
-            <div className="flex items-center gap-3 text-emerald-500">
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold tracking-widest uppercase">Verified Identity</span>
-            </div>
-            <h3 className="text-3xl md:text-5xl font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-500">
-              Your digital reputation <br /> starts here.
-            </h3>
-            <p className="text-slate-400 max-w-md leading-relaxed">
-              Say goodbye to repetitive forms. Create your universal resident profile once, and verify it forever. Secure, portable, and trusted by top landlords.
-            </p>
-          </div>
-
-          {/* Glass Card */}
-          <div className="order-1 md:order-2 flex justify-center md:justify-end">
-            <div className="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded bg-emerald-500/20 text-emerald-400">
-                  <User className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg">Who are you?</h4>
-                  <p className="text-xs text-slate-400">Tell us a bit about yourself.</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="group">
-                  <label className="text-xs text-slate-500 uppercase font-semibold mb-2 block group-focus-within:text-emerald-500 transition-colors">Your Full Name</label>
-                  <div className="relative">
-                    <input type="text" className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-emerald-500/50 transition-colors text-white placeholder-slate-600" placeholder="e.g. Alex Sterling" />
-                    <User className="absolute right-3 top-3 h-4 w-4 text-slate-600" />
-                  </div>
-                </div>
-                <div className="group">
-                  <label className="text-xs text-slate-500 uppercase font-semibold mb-2 block group-focus-within:text-emerald-500 transition-colors">Email Address</label>
-                  <div className="relative">
-                    <input type="email" className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-emerald-500/50 transition-colors text-white placeholder-slate-600" placeholder="name@example.com" />
-                    <Mail className="absolute right-3 top-3 h-4 w-4 text-slate-600" />
-                  </div>
-                </div>
-                <button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                  Next Step <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mt-6 flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-wider">
-                <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Encrypted</span>
-                <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Private</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Preferences Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden py-24 bg-zinc-950">
-        {/* Background */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://images.unsplash.com/photo-1481026469463-66327c86e544?q=80&w=2000&auto=format&fit=crop"
-            alt="Architecture"
-            className="absolute inset-0 w-full h-full object-cover opacity-10"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
-        </div>
-
-        <div className="container mx-auto px-6 relative z-10 grid md:grid-cols-2 gap-12 items-center">
-
-          {/* Glass Card - Left Side */}
-          <div className="flex justify-center md:justify-start">
-            <div className="w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded bg-emerald-500/20 text-emerald-400">
-                  <SlidersHorizontal className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg">The Canvas</h4>
-                  <p className="text-xs text-slate-400">Where are you painting your future?</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="group">
-                  <label className="text-xs text-slate-500 uppercase font-semibold mb-2 block">Preferred City</label>
-                  <select className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-emerald-500/50 transition-colors text-slate-300">
-                    <option>New York, NY</option>
-                    <option>San Francisco, CA</option>
-                    <option>Austin, TX</option>
-                  </select>
-                </div>
-                <div className="group">
-                  <div className="flex justify-between mb-2">
-                    <label className="text-xs text-slate-500 uppercase font-semibold">Price Range</label>
-                    <span className="text-xs text-emerald-400 font-mono">$1.2k - $3.5k</span>
-                  </div>
-                  <div className="h-1 bg-slate-800 rounded-full w-full">
-                    <div className="h-1 bg-emerald-500 w-2/3 rounded-full relative">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 h-3 w-3 bg-white rounded-full shadow-lg" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-2">
-                  <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-white/10 bg-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all text-xs text-slate-300 gap-2">
-                    <Home className="h-4 w-4" />
-                    <span>Studio</span>
-                  </button>
-                  <button className="flex flex-col items-center justify-center p-3 rounded-lg border-2 border-emerald-500/50 bg-emerald-500/20 text-xs text-white gap-2">
-                    <Building2 className="h-4 w-4" />
-                    <span>1 Bed</span>
-                  </button>
-                  <button className="flex flex-col items-center justify-center p-3 rounded-lg border border-white/10 bg-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all text-xs text-slate-300 gap-2">
-                    <Home className="h-4 w-4" />
-                    <span>2+ Bed</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6 md:text-right">
-            <div className="flex md:justify-end items-center gap-3 text-emerald-500">
-              <span className="text-xs font-bold tracking-widest uppercase">Hyper-Personal Match</span>
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            </div>
-            <h3 className="text-3xl md:text-5xl font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-l from-white to-slate-500">
-              Curated homes, <br /> tailored for you.
-            </h3>
-            <p className="text-slate-400 max-w-md ml-auto leading-relaxed">
-              Our AI analyzes thousands of data points to bring you matches that fit not just your budget, but your lifestyle, commute, and aesthetic preferences.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* Footer / Final CTA */}
-      <section className="relative py-32 bg-black flex flex-col items-center justify-center text-center px-6 border-t border-white/10">
-        <div className="mb-8 p-4 rounded-full bg-emerald-900/20 border border-emerald-500/20">
-          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-        </div>
-        <h2 className="text-5xl md:text-7xl font-bold tracking-tighter text-white mb-6">
-          The Vision is Ready.
-        </h2>
-        <p className="text-slate-400 text-lg max-w-xl mb-12">
-          Your journey into the future of living starts now. Join thousands of users who have upgraded their residential experience.
-        </p>
-
-        <Link href="/login">
-          <button className="group relative px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-full text-white font-bold tracking-widest uppercase transition-all hover:scale-105 active:scale-95">
-            Finalize Profile
-            <div className="absolute inset-0 rounded-full ring-4 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all w-full h-full" />
-          </button>
-        </Link>
-
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-24 max-w-4xl w-full border-t border-white/10 pt-12">
-          {[
-            { icon: Search, label: "Search", desc: "Browse curated listings" },
-            { icon: CheckCircle2, label: "Connect", desc: "Verified messaging" },
-            { icon: MapPin, label: "Tour", desc: "Smart scheduling" },
-            { icon: Home, label: "Live", desc: "Digital lease & rent" },
-          ].map((step, i) => (
-            <div key={i} className="flex flex-col items-center gap-3 group">
-              <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover:bg-white/10 group-hover:text-emerald-500 transition-colors">
-                <step.icon className="h-5 w-5" />
-              </div>
-              <span className="text-sm font-bold uppercase tracking-widest text-slate-300">{step.label}</span>
-              <span className="text-[10px] text-slate-500 uppercase">{step.desc}</span>
-            </div>
-          ))}
-        </div>
-
-        <footer className="absolute bottom-6 text-[10px] text-slate-700 tracking-widest uppercase">
-          © 2026 iReside Inc. All Rights Reserved.
-        </footer>
       </section>
 
     </div>
