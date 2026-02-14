@@ -34,9 +34,9 @@ export default function LandingPage() {
           iRESIDE
         </div>
         <div className="hidden md:flex gap-6 text-xs font-medium tracking-widest uppercase opacity-80">
-          <Link href="#" className="hover:opacity-100 transition-opacity">Our Story</Link>
-          <Link href="#" className="hover:opacity-100 transition-opacity"> The Journey</Link>
-          <Link href="/login" className="hover:opacity-100 transition-opacity">Member Login</Link>
+          <Link href="/search" className="hover:opacity-100 transition-opacity">Find Homes</Link>
+          <Link href="/login" className="hover:opacity-100 transition-opacity">For Landlords</Link>
+          <Link href="/login" className="hover:opacity-100 transition-opacity">Log In</Link>
         </div>
       </nav>
 
