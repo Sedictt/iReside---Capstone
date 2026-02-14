@@ -57,7 +57,7 @@ export default function LandingPage() {
             </motion.div>
             <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-2">Seeker</h2>
             <p className="text-slate-400 text-sm tracking-widest uppercase mb-8">Find beautiful places to call home</p>
-            <Link href="/login">
+            <Link href="/search">
               <button className="px-8 py-3 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase hover:bg-white hover:text-black transition-all">
                 Begin Searching
               </button>
