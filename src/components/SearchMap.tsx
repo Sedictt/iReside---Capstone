@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -64,6 +64,10 @@ export default function SearchMap({
     onDetailsClick
 }: SearchMapProps) {
 
+    // Use a stable key to force a fresh map instance on mount/remount
+    // preventing "Map container is being reused" errors in dev/strict mode
+    const [mapKey] = useState(() => `map-${Date.now()}`);
+
     useEffect(() => {
         // @ts-ignore
         delete L.Icon.Default.prototype._getIconUrl;
@@ -77,6 +81,7 @@ export default function SearchMap({
     return (
         <div className="h-full w-full relative">
             <MapContainer
+                key={mapKey}
                 center={[14.6865, 121.0366]}
                 zoom={14}
                 className="h-full w-full z-0"
