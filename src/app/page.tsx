@@ -179,130 +179,180 @@ export default function LandingPage() {
       </section>
 
       {/* Rental Lifecycle */}
-      <section className="relative py-24 border-y border-white/10 overflow-hidden">
+      <section className="relative py-32 border-y border-white/10 overflow-hidden">
+        {/* Background with gradient overlay - slightly darker for better text contrast */}
+        <div className="absolute inset-0 bg-[#0b1630]" />
         <img
           src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2400&auto=format&fit=crop"
-          alt="Modern city skyline"
-          className="absolute inset-0 h-full w-full object-cover"
+          alt="City Night"
+          className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity"
         />
-        <div className="absolute inset-0 bg-[#0b1630]/60" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-[#0b1630]/55 to-black/65" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#000000] via-[#0b1630]/80 to-[#000000]" />
 
         <div className="container mx-auto px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-14"
+            className="text-center max-w-3xl mx-auto mb-20"
           >
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">The Rental Lifecycle</h2>
-            <p className="text-slate-300 text-sm md:text-base">
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-white">The Rental Lifecycle</h2>
+            <p className="text-slate-400 text-lg leading-relaxed">
               A seamless path from searching to living, automated for efficiency and clarity.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-4 mb-12 relative">
-            <div className="hidden md:block absolute top-7 left-0 right-0 h-px bg-blue-400/20" />
+          {/* Timeline Steps - improved visuals */}
+          <div className="relative grid md:grid-cols-4 gap-8 mb-24">
+            {/* Connector Line */}
+            <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0" />
+
             {[
-              { title: "Discovery", icon: Search, text: "Smart listings and AI-driven compatibility scores." },
-              { title: "Leasing", icon: FileText, text: "Digital signatures and secure contracts in minutes." },
-              { title: "Automation", icon: Bot, text: "Collections, notifications, and reconciliation on autopilot." },
-              { title: "Living", icon: House, text: "Community tools and real-time support for residents." },
+              { title: "Discovery", icon: Search, desc: "Smart listings & AI compatibility." },
+              { title: "Leasing", icon: FileText, desc: "Digital contracts in minutes." },
+              { title: "Automation", icon: Bot, desc: "Auto-reconciliation & notifications." },
+              { title: "Living", icon: House, desc: "Community tools & unified support." },
             ].map((item, index) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.06 }}
-                className="relative text-center"
+                transition={{ delay: index * 0.1 }}
+                className="relative flex flex-col items-center text-center group"
               >
-                <div className="mx-auto h-14 w-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-4 backdrop-blur-md shadow-[0_8px_24px_rgba(15,23,42,0.35)]">
-                  <item.icon className="h-5 w-5 text-blue-300" />
+                <div className="relative z-10 h-24 w-24 rounded-3xl bg-[#0f172a] border border-white/10 shadow-2xl shadow-blue-900/10 flex items-center justify-center mb-6 overflow-hidden group-hover:border-blue-500/50 transition-colors duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <item.icon className="h-8 w-8 text-blue-400 group-hover:text-blue-300 transition-colors" />
                 </div>
-                <h3 className="font-semibold mb-2">{item.title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed max-w-[230px] mx-auto">{item.text}</p>
+                <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                <p className="text-sm text-slate-400 max-w-[200px]">{item.desc}</p>
               </motion.div>
             ))}
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
+          {/* Bento Grid Features */}
+          <div className="grid md:grid-cols-3 gap-6 auto-rows-[minmax(250px,auto)]">
+            {/* Card 1: Manual-Free Payments (Large) */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="md:col-span-2 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_12px_36px_rgba(15,23,42,0.35)] p-6 md:p-7"
+              className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all hover:bg-white/[0.05]"
             >
-              <div className="flex items-start justify-between gap-5">
-                <div>
-                  <div className="h-10 w-10 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
-                    <Wallet className="h-5 w-5 text-blue-300" />
+              <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex h-full flex-col justify-between sm:flex-row sm:items-center gap-8">
+                <div className="flex-1 space-y-4">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400 mb-2">
+                    <Wallet className="h-6 w-6" />
                   </div>
-                  <h4 className="text-2xl font-semibold mb-3">Manual-Free Payments</h4>
-                  <p className="text-sm text-slate-300 max-w-xl leading-relaxed">
-                    Connect your property directly to the iGCash ecosystem. Tenants pay in one tap, and your dashboard reconciles every transaction automatically.
+                  <h4 className="text-2xl font-bold text-white">Smart Payment Tracking</h4>
+                  <p className="text-slate-400 leading-relaxed">
+                    Tenants upload payment proofs directly. Our system organizes receipts for easy verification, keeping your ledger accurate without the manual chase.
                   </p>
                 </div>
-                <div className="hidden md:flex h-28 w-28 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm items-center justify-center">
-                  <div className="h-20 w-12 rounded-lg bg-slate-100/90 border border-slate-300/40" />
+                {/* CSS Graphic: Phone Mockup */}
+                <div className="relative h-48 w-28 shrink-0 rotate-[-12deg] transform transition-transform group-hover:rotate-0 duration-500">
+                  <div className="absolute inset-0 rounded-[20px] bg-[#0f172a] border-2 border-white/20 shadow-2xl overflow-hidden p-2">
+                    {/* Screen Content */}
+                    <div className="h-full w-full rounded-[14px] bg-[#1e293b] flex flex-col items-center pt-4 px-2 space-y-2">
+                      <div className="w-8 h-1 rounded-full bg-white/20 mb-2" />
+                      <div className="w-full h-8 rounded bg-blue-500/20 flex items-center justify-center text-[8px] font-bold text-blue-400">RECEIPT SENT</div>
+                      <div className="w-full h-16 rounded bg-white/5 border border-white/5" />
+                      <div className="w-full h-8 rounded bg-emerald-500 flex items-center justify-center font-bold text-white text-[8px]">VERIFIED</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
 
+            {/* Card 2: Community Interaction (Tall/Small) */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.08 }}
-              className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_12px_36px_rgba(15,23,42,0.35)] p-6 md:p-7"
+              transition={{ delay: 0.1 }}
+              className="md:col-span-1 group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all hover:bg-white/[0.05]"
             >
-              <div className="h-10 w-10 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
-                <MessageSquare className="h-5 w-5 text-blue-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 mb-6">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <h4 className="text-xl font-bold text-white mb-3">Community First</h4>
+                <p className="text-sm text-slate-400 leading-relaxed mb-8">
+                  Notices, amenity bookings, and unified messaging in one place.
+                </p>
+                {/* CSS Graphic: Chat Bubbles */}
+                <div className="mt-auto space-y-3">
+                  <div className="w-3/4 p-3 rounded-2xl rounded-tl-none bg-white/10 border border-white/5 text-[10px] text-slate-300">
+                    Gym is open 24/7 now?
+                  </div>
+                  <div className="w-3/4 ml-auto p-3 rounded-2xl rounded-tr-none bg-emerald-500/20 border border-emerald-500/20 text-[10px] text-emerald-300 text-right">
+                    Yes! Access via keycard.
+                  </div>
+                </div>
               </div>
-              <h4 className="text-xl font-semibold mb-3">Community Interaction</h4>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Foster a modern living experience with notices, amenity bookings, and tenant-to-management messaging.
-              </p>
             </motion.div>
 
+            {/* Card 3: Tracking Requests (Small) */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_12px_36px_rgba(15,23,42,0.35)] p-6 md:p-7"
+              transition={{ delay: 0.2 }}
+              className="md:col-span-1 group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all hover:bg-white/[0.05]"
             >
-              <div className="h-10 w-10 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm flex items-center justify-center mb-4">
-                <Wrench className="h-5 w-5 text-blue-300" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 mb-6">
+                <Wrench className="h-6 w-6" />
               </div>
-              <h4 className="text-xl font-semibold mb-3">Tracking Requests</h4>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Log maintenance issues with media, then monitor status and resolution in one unified timeline.
+              <h4 className="text-xl font-bold text-white mb-3">Maintenance</h4>
+              <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                Log issues with photos. Track status from "In Review" to "Resolved".
               </p>
+              {/* CSS Graphic: Progress Bars */}
+              <div className="space-y-2">
+                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full w-3/4 bg-amber-500" />
+                </div>
+                <div className="flex justify-between text-[10px] font-medium text-amber-500 uppercase tracking-wider">
+                  <span>In Progress</span>
+                  <span>75%</span>
+                </div>
+              </div>
             </motion.div>
 
+            {/* Card 4: Data-Driven Insights (Large) */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.08 }}
-              className="md:col-span-2 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md shadow-[0_12px_36px_rgba(15,23,42,0.35)] p-6 md:p-7"
+              transition={{ delay: 0.3 }}
+              className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all hover:bg-white/[0.05]"
             >
-              <div className="flex items-start justify-between gap-5">
-                <div>
-                  <h4 className="text-xl font-semibold mb-3">Data-Driven Insights</h4>
-                  <p className="text-sm text-slate-300 max-w-xl leading-relaxed">
-                    Predict vacancy rates, monitor portfolio ROI, and identify top-performing units with enterprise-grade analytics.
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10 flex flex-col sm:flex-row justify-between gap-8">
+                <div className="max-w-md">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400 mb-6">
+                    <BarChart3 className="h-6 w-6" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-3">Data-Driven Insights</h4>
+                  <p className="text-slate-400 leading-relaxed">
+                    Predict vacancy rates, monitor portfolio ROI, and identify performing units with enterprise analytics.
                   </p>
                 </div>
-                <div className="hidden md:flex items-end gap-2 h-20">
-                  <div className="w-6 h-8 bg-blue-600/30 rounded-sm" />
-                  <div className="w-6 h-12 bg-blue-500/40 rounded-sm" />
-                  <div className="w-6 h-16 bg-blue-400/60 rounded-sm" />
-                  <div className="w-6 h-10 bg-blue-500/35 rounded-sm" />
+                {/* CSS Graphic: Bar Chart */}
+                <div className="flex items-end gap-3 h-32 flex-1 justify-end pb-2">
+                  <div className="w-8 h-12 bg-white/5 rounded-t-sm group-hover:h-16 transition-all duration-700" />
+                  <div className="w-8 h-20 bg-white/10 rounded-t-sm group-hover:h-24 transition-all duration-700 delay-75" />
+                  <div className="w-8 h-16 bg-white/10 rounded-t-sm group-hover:h-20 transition-all duration-700 delay-100" />
+                  <div className="w-8 h-28 bg-indigo-500 rounded-t-sm shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:h-32 transition-all duration-500 delay-150" />
                 </div>
               </div>
             </motion.div>
           </div>
+
         </div>
       </section>
 
