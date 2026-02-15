@@ -17,6 +17,7 @@ interface Unit {
     w: number;
     h: number;
     details?: string;
+    leaseStart?: string;
     leaseEnd?: string;
 }
 
@@ -103,7 +104,9 @@ const INITIAL_UNITS: Unit[] = [
         y: 20,
         w: 200,
         h: 140,
-        details: "1BR Standard"
+        details: "1BR Standard",
+        leaseStart: "2023-01-01",
+        leaseEnd: "2024-01-01"
     },
     {
         id: "102",
@@ -138,6 +141,8 @@ const INITIAL_UNITS: Unit[] = [
         y: 20,
         w: 280,
         h: 140,
+        leaseStart: "2023-05-01",
+        leaseEnd: "2024-05-01",
         details: "Lease ends in 15 days"
     },
 ];
@@ -2480,196 +2485,526 @@ export default function VisualBuilder() {
 
                 {/* Sidebar */}
                 <aside className="w-72 bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col z-10 shadow-2xl">
-                    <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Building Blocks</h2>
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                <span className="material-icons-round text-slate-400 text-lg">search</span>
-                            </span>
-                            <input className="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Search components..." type="text" />
-                        </div>
-                    </div>
-                    <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles.scrollbarHide}`}>
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
-                                <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
-                                Living Units
-                            </h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("studio")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-10 h-8 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 group-hover:bg-primary/10 group-hover:border-primary/50 transition-colors"></div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Studio</p>
-                                        <p className="text-[10px] text-slate-500">400 sqft</p>
-                                    </div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("1br")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 flex"><div className="w-1/2 border-r border-slate-400 dark:border-slate-600"></div></div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">1 BR Std</p>
-                                        <p className="text-[10px] text-slate-500">650 sqft</p>
-                                    </div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("2br")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-12 h-10 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 relative"><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className="border-r border-slate-400 dark:border-slate-600"></div></div></div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">2 BR Corner</p>
-                                        <p className="text-[10px] text-slate-500">950 sqft</p>
-                                    </div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("3br")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-14 h-10 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 relative"><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className="border-r border-slate-400 dark:border-slate-600"></div><div className="border-r border-slate-400 dark:border-slate-600"></div></div></div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">3 BR Suite</p>
-                                        <p className="text-[10px] text-slate-500">1200 sqft</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
-                                <span className="material-icons-round text-primary text-sm">architecture</span>
-                                Structural
-                            </h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("corridor")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-14 h-8 bg-slate-900/80 border-y border-slate-700 rounded-[1px]" />
-                                    <div className="text-center"><p className="text-xs font-medium text-slate-700 dark:text-slate-200">Corridor</p></div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("elevator")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center">
-                                        <span className="material-icons-round text-slate-500 dark:text-slate-400 text-sm">elevator</span>
-                                    </div>
-                                    <div className="text-center"><p className="text-xs font-medium text-slate-700 dark:text-slate-200">Elevator</p></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
-                                <span className="material-icons-round text-primary text-sm">stairs</span>
-                                Stairwells
-                            </h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("stair-straight")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-6 h-10 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 flex flex-col justify-evenly px-0.5">
-                                        {[...Array(6)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Straight</p>
-                                    </div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("stair-l")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 relative">
-                                        <div className="absolute top-0 right-0 w-1/2 h-1/2 border-l border-b border-slate-400 dark:border-slate-400/50"></div>
-                                        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 dark:border-slate-400/50 flex flex-col justify-evenly">
-                                            {[...Array(3)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
-                                        </div>
-                                        <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 dark:border-slate-400/50 flex flex-row justify-evenly">
-                                            {[...Array(3)].map((_, i) => <div key={i} className="h-full w-px bg-slate-400 dark:bg-slate-400/50"></div>)}
-                                        </div>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">L-Shape</p>
-                                    </div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("stair-u")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 relative">
-                                        <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 dark:border-slate-400/50"></div>
-                                        <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-slate-400 dark:bg-slate-400/50"></div>
-                                        <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r border-slate-400 dark:border-slate-400/50">
-                                            {[...Array(4)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
-                                        </div>
-                                        <div className="absolute top-[30%] bottom-0 right-0 left-1/2 flex flex-col justify-evenly border-l border-slate-400 dark:border-slate-400/50">
-                                            {[...Array(4)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
-                                        </div>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">U-Shape</p>
-                                    </div>
-                                </div>
-                                <div
-                                    className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
-                                    draggable="true"
-                                    onDragStart={handleSidebarBlockDragStart("stair-spiral")}
-                                    onDragEnd={handleSidebarBlockDragEnd}
-                                >
-                                    <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded-full border border-slate-400 dark:border-slate-500 relative flex items-center justify-center">
-                                        <div className="w-2 h-2 rounded-full border border-slate-400 dark:border-slate-400/50"></div>
-                                        {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
-                                            <div key={deg} className="absolute inset-0 border-t border-slate-400/50 dark:border-slate-400/30" style={{ transform: `rotate(${deg}deg)` }}></div>
-                                        ))}
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Spiral</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
-                                <span className="material-icons-round text-primary text-sm">pool</span>
-                                Amenities
-                            </h3>
-                            <div className="space-y-2">
-                                <div className="cursor-grab active:cursor-grabbing w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" draggable="true">
-                                    <span className="material-icons-round text-slate-400 text-lg">fitness_center</span>
-                                    <span className="text-xs text-slate-300">Gym / Fitness</span>
-                                </div>
-                                <div className="cursor-grab active:cursor-grabbing w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" draggable="true">
-                                    <span className="material-icons-round text-slate-400 text-lg">local_laundry_service</span>
-                                    <span className="text-xs text-slate-300">Laundry Room</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {selectedItem?.kind === "unit" ? (
+                        <UnitDetailsPanel
+                            unit={units.find(u => u.id === selectedItem.id)!}
+                            onUpdate={(updates) => {
+                                setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, ...updates } : u));
+                            }}
+                            onDelete={() => {
+                                deleteCanvasItem({ kind: "unit", id: selectedItem.id });
+                                setSelectedItem(null);
+                                triggerDeleteToast();
+                            }}
+                            onClose={() => setSelectedItem(null)}
+                        />
+                    ) : (
+                        <SidebarBlockLibrary
+                            onDragStart={handleSidebarBlockDragStart}
+                            styles={styles}
+                        />
+                    )}
                 </aside>
             </div>
         </div>
     );
 }
+
+const UnitDetailsPanel = ({
+    unit,
+    onUpdate,
+    onDelete,
+    onClose
+}: {
+    unit: Unit;
+    onUpdate: (updates: Partial<Unit>) => void;
+    onDelete: () => void;
+    onClose: () => void;
+}) => {
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Status configuration for consistent styling
+    const statusConfig = {
+        occupied: { color: 'text-emerald-400', label: 'Occupied', icon: 'check_circle' },
+        vacant: { color: 'text-blue-400', label: 'Available Now', icon: 'vpn_key' },
+        maintenance: { color: 'text-amber-400', label: 'Maintenance', icon: 'build' },
+        neardue: { color: 'text-rose-400', label: 'Near Due', icon: 'warning' }
+    };
+
+    const currentStatus = statusConfig[unit.status] || statusConfig.vacant;
+
+    // Helper to calculate days remaining
+    const getDaysRemaining = () => {
+        if (!unit.leaseEnd) return null;
+        const end = new Date(unit.leaseEnd).getTime();
+        const now = Date.now();
+        const diff = end - now;
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        return days;
+    };
+
+    const daysRemaining = getDaysRemaining();
+
+    return (
+        <div className="flex flex-col h-full bg-[#1a1c23] border-l border-slate-800 shadow-2xl overflow-hidden relative font-sans">
+
+            {/* Hero Header Section */}
+            <div className="relative h-64 w-full shrink-0 group overflow-hidden">
+                {/* Background Image / Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 mix-blend-overlay opacity-20 z-0"></div>
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-80 z-0 grayscale-[0.2] transition-transform duration-700 group-hover:scale-105"></div>
+
+                {/* Overlay Gradients */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c23] via-transparent to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-black/20 z-10"></div>
+
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-6 right-6 z-20 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white border border-white/10 transition-all"
+                >
+                    <span className="material-icons-round text-lg">close</span>
+                </button>
+
+                {/* Bottom Content */}
+                <div className="absolute bottom-6 left-6 right-6 z-20">
+                    <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg mb-2">{unit.name}</h1>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                            <span className="material-icons-round text-xs text-primary-400">king_bed</span>
+                            <span className="text-xs font-medium text-white/90">
+                                {unit.type === '1BR' ? '1 Bed / 1 Bath' :
+                                    unit.type === '2BR' ? '2 Bed / 2 Bath' :
+                                        unit.type === '3BR' ? '3 Bed / 2.5 Bath' : 'Studio / 1 Bath'}
+                            </span>
+                        </div>
+                        <div className="w-1 h-1 rounded-full bg-white/30"></div>
+                        <div className="flex items-center gap-1.5">
+                            <span className={`material-icons-round text-xs ${currentStatus.color}`}>event_available</span>
+                            <span className="text-xs font-medium text-white/90">{currentStatus.label}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-0 mb-24 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-700/50 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-600/80">
+
+                {!isEditing ? (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+
+
+
+                        {/* Tenant Section */}
+                        <div className="mt-4">
+                            <h3 className="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase mb-4 pl-1">
+                                Current Tenant
+                            </h3>
+                            <div className="flex items-center justify-between group px-1">
+                                <div className="flex items-center gap-4">
+                                    <div className="relative">
+                                        <div className="w-12 h-12 rounded-full p-0.5 border-2 border-sky-500 relative">
+                                            <div className="w-full h-full rounded-full bg-slate-700 overflow-hidden">
+                                                <img
+                                                    src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop"
+                                                    alt="Tenant"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            {/* Status Dot */}
+                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#1a1c23] rounded-full translate-x-1 translate-y-1"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-bold text-white tracking-wide">{unit.tenant || "No Tenant"}</p>
+                                        <p className="text-xs text-slate-500 font-medium italic">"Unit Lease Holder"</p>
+                                    </div>
+                                </div>
+                                <button className="w-10 h-10 rounded-full flex items-center justify-center text-sky-500 hover:bg-sky-500/10 transition-colors">
+                                    <span className="material-icons-round text-2xl">chat_bubble_outline</span>
+                                </button>
+                            </div>
+
+
+                        </div>
+
+                        {/* Lease Status */}
+                        {(unit.status === 'occupied' || unit.status === 'neardue') && (
+                            <div className="bg-[#23242f] border border-white/5 rounded-2xl p-6 relative overflow-hidden flex flex-col items-center">
+                                <h3 className="text-primary-400 text-[10px] font-bold tracking-widest uppercase mb-6 self-start w-full">
+                                    Lease Timeline
+                                </h3>
+
+                                <div className="relative w-56 h-28 mb-2 overflow-hidden">
+                                    {/* Meter Gauge */}
+                                    <svg className="w-full h-full transform rotate-0" viewBox="0 0 200 100">
+                                        {/* Background Arc */}
+                                        <path
+                                            d="M 20 100 A 80 80 0 0 1 180 100"
+                                            fill="none"
+                                            stroke="#334155"
+                                            strokeWidth="12"
+                                            strokeLinecap="round"
+                                            className="opacity-30"
+                                        />
+                                        {/* Progress Arc */}
+                                        <path
+                                            d="M 20 100 A 80 80 0 0 1 180 100"
+                                            fill="none"
+                                            stroke="url(#gradient)"
+                                            strokeWidth="12"
+                                            strokeLinecap="round"
+                                            strokeDasharray="251.2"
+                                            strokeDashoffset={251.2 - ((() => {
+                                                if (!unit.leaseStart || !unit.leaseEnd) return 0;
+                                                const start = new Date(unit.leaseStart).getTime();
+                                                const end = new Date(unit.leaseEnd).getTime();
+                                                const now = Date.now();
+                                                const total = end - start;
+                                                const elapsed = now - start;
+                                                const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+                                                return (percent / 100) * 251.2;
+                                            })())}
+                                            className="transition-all duration-1000 ease-out"
+                                        />
+                                        <defs>
+                                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#d4b996" />
+                                                <stop offset="100%" stopColor="#a89070" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+
+                                    {/* Center Content */}
+                                    <div className="absolute inset-x-0 bottom-0 text-center">
+                                        <span className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4b996] to-white`}>
+                                            {daysRemaining !== null ? (
+                                                daysRemaining < 0 ? 'Overdue' : daysRemaining
+                                            ) : '--'}
+                                        </span>
+                                        <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest -mt-1">
+                                            {daysRemaining !== null && daysRemaining < 0 ? 'Days Past' : 'Days Left'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="w-full flex justify-between text-[10px] uppercase font-bold text-slate-500 tracking-wider px-4 mt-2">
+                                    <span>{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString() : 'Start'}</span>
+                                    <span>{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString() : 'End'}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                        {/* Edit Form */}
+                        <section className="space-y-6">
+                            <div className="space-y-4">
+                                <label className="text-primary-400 text-[10px] font-bold tracking-widest uppercase block mb-4">Edit Details</label>
+
+                                <div className="space-y-4">
+                                    <div className="group relative">
+                                        <input
+                                            type="text"
+                                            value={unit.name}
+                                            onChange={(e) => onUpdate({ name: e.target.value })}
+                                            className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                            placeholder="Unit Name"
+                                            id="unitName"
+                                        />
+                                        <label htmlFor="unitName" className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                            Name
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="group relative">
+                                            <select
+                                                value={unit.type}
+                                                onChange={(e) => onUpdate({ type: e.target.value as Unit["type"] })}
+                                                className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
+                                            >
+                                                <option value="Studio">Studio</option>
+                                                <option value="1BR">1 Bedroom</option>
+                                                <option value="2BR">2 Bedroom</option>
+                                                <option value="3BR">3 Bedroom</option>
+                                            </select>
+                                            <label className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary">
+                                                Type
+                                            </label>
+                                        </div>
+
+                                        <div className="group relative">
+                                            <select
+                                                value={unit.status}
+                                                onChange={(e) => onUpdate({ status: e.target.value as Unit["status"] })}
+                                                className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
+                                            >
+                                                <option value="occupied">Occupied</option>
+                                                <option value="vacant">Vacant</option>
+                                                <option value="maintenance">Maint.</option>
+                                                <option value="neardue">Near Due</option>
+                                            </select>
+                                            <label className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary">
+                                                Status
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="group relative mt-6">
+                                        <input
+                                            type="text"
+                                            value={unit.tenant || ''}
+                                            onChange={(e) => onUpdate({ tenant: e.target.value })}
+                                            className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                            placeholder="Tenant Name"
+                                            id="tenantName"
+                                        />
+                                        <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                            Tenant Name
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            {isEditing ? (
+                <div className="p-6 border-t border-slate-800 bg-[#1a1c23]/90 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
+                    <button
+                        onClick={onDelete}
+                        className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all"
+                    >
+                        <span className="material-icons-round">delete</span>
+                    </button>
+                    <button
+                        onClick={() => setIsEditing(false)}
+                        className="flex-1 py-3 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-primary/20"
+                    >
+                        Save Changes
+                    </button>
+                </div>
+            ) : (
+                <div className="p-6 border-t border-slate-800 bg-[#1a1c23]/90 backdrop-blur-xl absolute bottom-0 w-full z-20">
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-primary/20"
+                    >
+                        Edit Residence
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* End of Details Panel */
+
+/* Extracted Sidebar Library Component for cleaner main render */
+const SidebarBlockLibrary = ({
+    onDragStart,
+    styles
+}: {
+    onDragStart: (type: SidebarBlockType) => (e: React.DragEvent<HTMLDivElement>) => void;
+    styles: { readonly [key: string]: string; }
+}) => {
+    const handleSidebarBlockDragEnd = () => {
+        // Optional cleanup if needed inside component, but parent tracks ghost
+    };
+
+    return (
+        <div className="flex flex-col h-full">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Building Blocks</h2>
+                <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span className="material-icons-round text-slate-400 text-lg">search</span>
+                    </span>
+                    <input className="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Search components..." type="text" />
+                </div>
+            </div>
+            <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
+                <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                        <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
+                        Living Units
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("studio")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-10 h-8 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 group-hover:bg-primary/10 group-hover:border-primary/50 transition-colors"></div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Studio</p>
+                                <p className="text-[10px] text-slate-500">400 sqft</p>
+                            </div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("1br")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 flex"><div className="w-1/2 border-r border-slate-400 dark:border-slate-600"></div></div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">1 BR Std</p>
+                                <p className="text-[10px] text-slate-500">650 sqft</p>
+                            </div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("2br")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-12 h-10 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 relative"><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className="border-r border-slate-400 dark:border-slate-600"></div></div></div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">2 BR Corner</p>
+                                <p className="text-[10px] text-slate-500">950 sqft</p>
+                            </div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("3br")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-14 h-10 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 relative"><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className="border-r border-slate-400 dark:border-slate-600"></div><div className="border-r border-slate-400 dark:border-slate-600"></div></div></div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">3 BR Suite</p>
+                                <p className="text-[10px] text-slate-500">1200 sqft</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                        <span className="material-icons-round text-primary text-sm">architecture</span>
+                        Structural
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("corridor")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-14 h-8 bg-slate-900/80 border-y border-slate-700 rounded-[1px]" />
+                            <div className="text-center"><p className="text-xs font-medium text-slate-700 dark:text-slate-200">Corridor</p></div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("elevator")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center">
+                                <span className="material-icons-round text-slate-500 dark:text-slate-400 text-sm">elevator</span>
+                            </div>
+                            <div className="text-center"><p className="text-xs font-medium text-slate-700 dark:text-slate-200">Elevator</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                        <span className="material-icons-round text-primary text-sm">stairs</span>
+                        Stairwells
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("stair-straight")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-6 h-10 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 flex flex-col justify-evenly px-0.5">
+                                {[...Array(6)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Straight</p>
+                            </div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("stair-l")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 relative">
+                                <div className="absolute top-0 right-0 w-1/2 h-1/2 border-l border-b border-slate-400 dark:border-slate-400/50"></div>
+                                <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 dark:border-slate-400/50 flex flex-col justify-evenly">
+                                    {[...Array(3)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                                </div>
+                                <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 dark:border-slate-400/50 flex flex-row justify-evenly">
+                                    {[...Array(3)].map((_, i) => <div key={i} className="h-full w-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">L-Shape</p>
+                            </div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("stair-u")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 relative">
+                                <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 dark:border-slate-400/50"></div>
+                                <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-slate-400 dark:bg-slate-400/50"></div>
+                                <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r border-slate-400 dark:border-slate-400/50">
+                                    {[...Array(4)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                                </div>
+                                <div className="absolute top-[30%] bottom-0 right-0 left-1/2 flex flex-col justify-evenly border-l border-slate-400 dark:border-slate-400/50">
+                                    {[...Array(4)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">U-Shape</p>
+                            </div>
+                        </div>
+                        <div
+                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            draggable="true"
+                            onDragStart={onDragStart("stair-spiral")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded-full border border-slate-400 dark:border-slate-500 relative flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full border border-slate-400 dark:border-slate-400/50"></div>
+                                {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
+                                    <div key={deg} className="absolute inset-0 border-t border-slate-400/50 dark:border-slate-400/30" style={{ transform: `rotate(${deg}deg)` }}></div>
+                                ))}
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Spiral</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                        <span className="material-icons-round text-primary text-sm">pool</span>
+                        Amenities
+                    </h3>
+                    <div className="space-y-2">
+                        <div className="cursor-grab active:cursor-grabbing w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" draggable="true">
+                            <span className="material-icons-round text-slate-400 text-lg">fitness_center</span>
+                            <span className="text-xs text-slate-300">Gym / Fitness</span>
+                        </div>
+                        <div className="cursor-grab active:cursor-grabbing w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" draggable="true">
+                            <span className="material-icons-round text-slate-400 text-lg">local_laundry_service</span>
+                            <span className="text-xs text-slate-300">Laundry Room</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
