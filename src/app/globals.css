@@ -10,14 +10,32 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-primary: #1973f0;
+  --color-primary-dark: #1565c0;
+  --color-primary-200: #bfdbfe;
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #101822;
+  --color-surface-dark: #1b2633;
+  --color-status-vacant: #10B981;
+  --color-status-occupied: #1973f0;
+  --color-status-due: #F59E0B;
+  --color-status-maintenance: #EF4444;
+
+  --font-display: "Manrope", sans-serif;
 }
 
 :root {
-  --background: #0f172a; /* Slate 900 */
-  --foreground: #f8fafc; /* Slate 50 */
-  --primary: #3b82f6; /* Blue 500 */
-  --card: #1e293b; /* Slate 800 */
-  --input: #334155; /* Slate 700 */
+  --background: #0f172a;
+  /* Slate 900 */
+  --foreground: #f8fafc;
+  /* Slate 50 */
+  --primary: #3b82f6;
+  /* Blue 500 */
+  --card: #1e293b;
+  /* Slate 800 */
+  --input: #334155;
+  /* Slate 700 */
 }
 
 body {
