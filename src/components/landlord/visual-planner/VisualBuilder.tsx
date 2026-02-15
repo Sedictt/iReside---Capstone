@@ -213,6 +213,59 @@ export default function VisualBuilder() {
     const scaleRef = useRef(scale);
     const trashRef = useRef<HTMLDivElement>(null);
     const floorTabsScrollRef = useRef<HTMLDivElement>(null);
+    const historyRef = useRef<FloorLayout[]>([DEFAULT_FLOOR_LAYOUTS[DEFAULT_ACTIVE_FLOOR]]);
+    const historyIndexRef = useRef(0);
+    const isUndoingRef = useRef(false);
+
+    // Helper to update undo availability state
+    const [undoAvailable, setUndoAvailable] = useState(false);
+
+    // Auto-record history on changes
+    useEffect(() => {
+        if (isUndoingRef.current) {
+            isUndoingRef.current = false;
+            return;
+        }
+
+        const currentLayout: FloorLayout = {
+            units,
+            corridors,
+            structures,
+        };
+
+        const lastLayout = historyRef.current[historyIndexRef.current];
+
+        // Deep compare to avoid duplicates
+        if (JSON.stringify(currentLayout) === JSON.stringify(lastLayout)) return;
+
+        // If we are not at the end of history, truncate the future
+        const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+        newHistory.push(currentLayout);
+
+        // Limit history size
+        if (newHistory.length > 50) {
+            newHistory.shift();
+        }
+
+        historyRef.current = newHistory;
+        historyIndexRef.current = newHistory.length - 1;
+        setUndoAvailable(historyIndexRef.current > 0);
+    }, [units, corridors, structures]);
+
+    const performUndo = useCallback(() => {
+        if (historyIndexRef.current <= 0) return;
+
+        // Mark as undoing so the effect doesn't record this state change as a new action
+        isUndoingRef.current = true;
+
+        historyIndexRef.current -= 1;
+        const previousLayout = historyRef.current[historyIndexRef.current];
+
+        setUnits(previousLayout.units);
+        setCorridors(previousLayout.corridors);
+        setStructures(previousLayout.structures);
+        setUndoAvailable(historyIndexRef.current > 0);
+    }, []);
 
     const [extraDimensions, setExtraDimensions] = useState({ width: 0, height: 0 });
 
@@ -503,6 +556,11 @@ export default function VisualBuilder() {
         setPosition(clampPosition(0, 0, 1));
         setExtraDimensions({ width: 0, height: 0 });
     };
+
+    const handleUndo = () => {
+        performUndo();
+    };
+
     const totalArea = 42500;
 
     const switchFloor = (nextFloor: FloorId) => {
@@ -514,17 +572,16 @@ export default function VisualBuilder() {
             structures,
         };
 
-        setFloorLayouts((prev) => {
-            const updated: Record<FloorId, FloorLayout> = {
-                ...prev,
-                [activeFloor]: snapshot,
-            };
-            const nextLayout = updated[nextFloor] ?? EMPTY_FLOOR_LAYOUT;
-            setUnits(nextLayout.units);
-            setCorridors(nextLayout.corridors);
-            setStructures(nextLayout.structures);
-            return updated;
-        });
+        const nextLayout = floorLayouts[nextFloor] ?? EMPTY_FLOOR_LAYOUT;
+
+        setFloorLayouts((prev) => ({
+            ...prev,
+            [activeFloor]: snapshot,
+        }));
+
+        setUnits(nextLayout.units);
+        setCorridors(nextLayout.corridors);
+        setStructures(nextLayout.structures);
 
         setActiveFloor(nextFloor);
         setSelectedItem(null);
@@ -536,6 +593,17 @@ export default function VisualBuilder() {
         setDraggingStructureId(null);
         setIsTrashHot(false);
         setResizingCorridorId(null);
+
+        // Reset History on floor switch for the NEW floor's initial state
+        isUndoingRef.current = true; // Prevent effect from double recording
+        historyRef.current = [{
+            units: nextLayout.units,
+            corridors: nextLayout.corridors,
+            structures: nextLayout.structures
+        }];
+        historyIndexRef.current = 0;
+        setUndoAvailable(false);
+
         setExtraDimensions({ width: 0, height: 0 });
     };
 
@@ -574,6 +642,12 @@ export default function VisualBuilder() {
         setDraggingStructureId(null);
         setIsTrashHot(false);
         setResizingCorridorId(null);
+        // Reset History for new floor
+        isUndoingRef.current = true; // Prevent effect from double recording
+        historyRef.current = [EMPTY_FLOOR_LAYOUT];
+        historyIndexRef.current = 0;
+        setUndoAvailable(false);
+
         setExtraDimensions({ width: 0, height: 0 });
     };
 
@@ -721,13 +795,11 @@ export default function VisualBuilder() {
     const deleteCanvasItem = (item: SelectedCanvasItem) => {
         if (item.kind === "unit") {
             setUnits(prev => prev.filter(unit => unit.id !== item.id));
-            return;
-        }
-        if (item.kind === "corridor") {
+        } else if (item.kind === "corridor") {
             setCorridors(prev => prev.filter(corridor => corridor.id !== item.id));
-            return;
+        } else {
+            setStructures(prev => prev.filter(structure => structure.id !== item.id));
         }
-        setStructures(prev => prev.filter(structure => structure.id !== item.id));
     };
 
     const getCanvasItemLabel = (item: SelectedCanvasItem) => {
@@ -795,54 +867,46 @@ export default function VisualBuilder() {
             const centerY = rect.y + rect.h / 2;
 
             return {
-                x: clampUnitAxis(snapToGrid(centerX - nextWidth / 2), nextWidth, BLUEPRINT_WIDTH),
-                y: clampUnitAxis(snapToGrid(centerY - nextHeight / 2), nextHeight, BLUEPRINT_HEIGHT),
+                x: snapToGrid(centerX - nextWidth / 2),
+                y: snapToGrid(centerY - nextHeight / 2),
                 w: nextWidth,
                 h: nextHeight,
             };
         };
 
         if (item.kind === "unit") {
-            const unit = units.find(existingUnit => existingUnit.id === item.id);
-            if (!unit) return;
-
-            const rotatedRect = rotateRect(unit);
-            if (hasCollisionWithPlacedItems(rotatedRect, { kind: "unit", id: unit.id })) {
-                triggerOverlapToast();
-                return;
-            }
-
-            setUnits(prevUnits => prevUnits.map(existingUnit => (
-                existingUnit.id === item.id
-                    ? {
-                        ...existingUnit,
-                        ...rotatedRect,
-                    }
-                    : existingUnit
-            )));
-            setSelectedItem({ kind: "unit", id: item.id });
+            // Units don't rotate yet
             return;
         }
 
         if (item.kind === "corridor") {
-            const corridor = corridors.find(existingCorridor => existingCorridor.id === item.id);
+            const corridor = corridors.find(c => c.id === item.id);
             if (!corridor) return;
 
-            const rotatedRect = rotateRect(corridor);
-            if (hasCollisionWithPlacedItems(rotatedRect, { kind: "corridor", id: corridor.id })) {
+            // Swap w/h for simple rotation
+            const newW = corridor.h;
+            const newH = corridor.w;
+
+            // Calculate new position to keep it centered as much as possible
+            const centerX = corridor.x + corridor.w / 2;
+            const centerY = corridor.y + corridor.h / 2;
+            const newX = snapToGrid(centerX - newW / 2);
+            const newY = snapToGrid(centerY - newH / 2);
+
+            const nextX = clampUnitAxis(newX, newW, BLUEPRINT_WIDTH);
+            const nextY = clampUnitAxis(newY, newH, BLUEPRINT_HEIGHT);
+
+            const newRect = { x: nextX, y: nextY, w: newW, h: newH };
+
+            if (hasCollisionWithPlacedItems(newRect, item)) {
                 triggerOverlapToast();
                 return;
             }
 
-            setCorridors(prevCorridors => prevCorridors.map(existingCorridor => (
-                existingCorridor.id === item.id
-                    ? {
-                        ...existingCorridor,
-                        ...rotatedRect,
-                    }
-                    : existingCorridor
-            )));
-            setSelectedItem({ kind: "corridor", id: item.id });
+            setCorridors(prev => prev.map(c =>
+                c.id === corridor.id ? { ...c, ...newRect } : c
+            ));
+
             return;
         }
 
@@ -851,23 +915,32 @@ export default function VisualBuilder() {
 
         const rotatedRect = rotateRect(structure);
         const nextRotation = ((structure.rotation ?? 0) + 90) % 360;
-        if (hasCollisionWithPlacedItems(rotatedRect, { kind: "structure", id: structure.id })) {
+
+        // Reposition if out of bounds after rotation
+        const nextX = clampUnitAxis(rotatedRect.x, rotatedRect.w, BLUEPRINT_WIDTH);
+        const nextY = clampUnitAxis(rotatedRect.y, rotatedRect.h, BLUEPRINT_HEIGHT);
+
+        const finalRect = { ...rotatedRect, x: nextX, y: nextY };
+
+        if (hasCollisionWithPlacedItems(finalRect, item)) {
             triggerOverlapToast();
             return;
         }
 
-        setStructures(prevStructures => prevStructures.map(existingStructure => (
-            existingStructure.id === item.id
+        setStructures(prev => prev.map((existingStructure) => (
+            existingStructure.id === structure.id
                 ? {
                     ...existingStructure,
-                    ...rotatedRect,
                     rotation: nextRotation,
+                    w: rotatedRect.w,
+                    h: rotatedRect.h,
+                    x: nextX,
+                    y: nextY,
                 }
                 : existingStructure
         )));
         setSelectedItem({ kind: "structure", id: item.id });
     };
-
     useEffect(() => {
         const storedVisibility = window.localStorage.getItem(LEGEND_VISIBILITY_STORAGE_KEY);
         if (storedVisibility === "hidden") {
@@ -968,6 +1041,12 @@ export default function VisualBuilder() {
                 return;
             }
 
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+                event.preventDefault();
+                performUndo();
+                return;
+            }
+
             if (event.key !== "Delete" && event.key !== "Backspace") return;
 
             event.preventDefault();
@@ -976,7 +1055,7 @@ export default function VisualBuilder() {
 
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [selectedItem, units, corridors, structures]);
+    }, [selectedItem, units, corridors, structures, performUndo, rotateSelectedItem]);
 
     const handleSidebarBlockDragStart = (blockType: SidebarBlockType) => (e: React.DragEvent<HTMLDivElement>) => {
         const payload = blockType === "studio"
@@ -2312,7 +2391,15 @@ export default function VisualBuilder() {
                             <div className="flex flex-col bg-surface-dark border border-slate-700 rounded-lg shadow-xl overflow-hidden">
                                 <button onClick={handleZoomIn} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors border-b border-slate-700"><span className="material-icons-round text-lg">add</span></button>
                                 <button onClick={handleZoomOut} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors border-b border-slate-700"><span className="material-icons-round text-lg">remove</span></button>
-                                <button onClick={handleFit} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                                <button onClick={handleFit} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors border-b border-slate-700"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                                <button
+                                    onClick={handleUndo}
+                                    disabled={!undoAvailable}
+                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-slate-700 text-slate-300' : 'text-slate-600 cursor-not-allowed'}`}
+                                    title="Undo (Ctrl+Z)"
+                                >
+                                    <span className="material-icons-round text-lg">undo</span>
+                                </button>
                             </div>
                         </div>
                     </div>
