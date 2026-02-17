@@ -8,7 +8,8 @@ import {
     Search, ShieldCheck, Map as MapIcon, RotateCw, Plus, Minus, Navigation,
     List, X, Share, Heart, Bed, Bath, LayoutTemplate, Wifi, Dumbbell,
     WashingMachine, Lock, MessageSquare, Send, CheckCircle2, Ban,
-    ListFilter, Sparkles, Star
+    ListFilter, Sparkles, Star, Locate, Car, PawPrint, Droplets,
+    Shield, Flame, Snowflake, Tv, UtensilsCrossed
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import "leaflet/dist/leaflet.css";
@@ -19,8 +20,8 @@ const SearchMap = dynamic(
     () => import("@/components/SearchMap"),
     {
         ssr: false,
-        loading: () => <div className="h-full w-full bg-[#1b1e2e] animate-pulse relative">
-            <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">Loading Map...</div>
+        loading: () => <div className="h-full w-full bg-background animate-pulse relative">
+            <div className="absolute inset-0 flex items-center justify-center text-neutral-500 text-sm">Loading Map...</div>
         </div>
     }
 );
@@ -115,7 +116,7 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
-                <Dialog.Content className="fixed left-[50%] top-[50%] max-h-[90vh] w-[95vw] max-w-[1100px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-[#0f1218] shadow-2xl focus:outline-none z-[70] overflow-hidden flex border border-slate-800/50">
+                <Dialog.Content className="fixed left-[50%] top-[50%] max-h-[90vh] w-[95vw] max-w-[1100px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-background shadow-2xl focus:outline-none z-[70] overflow-hidden flex border border-neutral-800/50">
 
                     {/* Left: Image Gallery */}
                     <div className="hidden md:flex flex-col w-[60%] bg-black relative">
@@ -140,7 +141,7 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
                                 Virtual Tour Available
                             </div>
                         </div>
-                        <div className="h-[35%] w-full grid grid-cols-3 gap-1 p-1 bg-[#0f1218]">
+                        <div className="h-[35%] w-full grid grid-cols-3 gap-1 p-1 bg-background">
                             {property.images.slice(1, 4).map((img, i) => (
                                 <div key={i} className="relative h-full w-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
                                     <Image src={img} alt={`Gallery ${i}`} fill className="object-cover" />
@@ -150,53 +151,53 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
                     </div>
 
                     {/* Right: Details */}
-                    <div className="flex-1 flex flex-col h-full bg-[#13161c] text-slate-200 overflow-y-auto custom-scrollbar">
+                    <div className="flex-1 flex flex-col h-full bg-card text-neutral-200 overflow-y-auto custom-scrollbar">
 
                         {/* Header */}
                         <div className="p-6 md:p-8 space-y-6">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <Dialog.Title className="text-2xl font-bold text-white mb-1">{property.name} Unit 402</Dialog.Title>
-                                    <div className="flex items-center text-slate-400 text-xs">
+                                    <div className="flex items-center text-neutral-400 text-xs">
                                         <Navigation className="h-3 w-3 mr-1" />
                                         {property.address}
                                     </div>
                                 </div>
-                                <Dialog.Close className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                                <Dialog.Close className="h-8 w-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
                                     <X className="h-4 w-4" />
                                 </Dialog.Close>
                             </div>
 
                             <div className="flex items-end gap-3">
-                                <span className="text-3xl font-bold text-blue-500">₱{property.numericPrice.toLocaleString()}<span className="text-sm font-normal text-slate-400">/mo</span></span>
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase rounded border border-emerald-500/20 mb-1 flex items-center gap-1">
+                                <span className="text-3xl font-bold text-primary">₱{property.numericPrice.toLocaleString()}<span className="text-sm font-normal text-neutral-400">/mo</span></span>
+                                <span className="px-2 py-1 bg-status-occupied/10 text-status-occupied text-[10px] font-bold uppercase rounded border border-status-occupied/20 mb-1 flex items-center gap-1">
                                     <RotateCw className="h-3 w-3" /> 5% Below Market
                                 </span>
                             </div>
 
-                            <div className="flex gap-6 py-4 border-y border-slate-800">
+                            <div className="flex gap-6 py-4 border-y border-neutral-800">
                                 <div className="flex items-center gap-2">
-                                    <Bed className="h-5 w-5 text-slate-400" />
+                                    <Bed className="h-5 w-5 text-neutral-400" />
                                     <span className="text-sm font-medium">{property.beds} Beds</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Bath className="h-5 w-5 text-slate-400" />
+                                    <Bath className="h-5 w-5 text-neutral-400" />
                                     <span className="text-sm font-medium">{property.baths} Baths</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <LayoutTemplate className="h-5 w-5 text-slate-400" />
+                                    <LayoutTemplate className="h-5 w-5 text-neutral-400" />
                                     <span className="text-sm font-medium">{property.sqft.toLocaleString()} sqft</span>
                                 </div>
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex p-1 bg-slate-900/50 rounded-lg">
-                                <button className="flex-1 py-2 rounded-md bg-blue-600 text-white text-sm font-bold shadow-sm">Details</button>
-                                <button className="flex-1 py-2 rounded-md text-slate-400 text-sm font-medium hover:text-white transition-colors">Blueprint</button>
+                            <div className="flex p-1 bg-neutral-900/50 rounded-lg">
+                                <button className="flex-1 py-2 rounded-md bg-primary text-white text-sm font-bold shadow-sm">Details</button>
+                                <button className="flex-1 py-2 rounded-md text-neutral-400 text-sm font-medium hover:text-white transition-colors">Blueprint</button>
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm text-slate-400 leading-relaxed">
+                            <p className="text-sm text-neutral-400 leading-relaxed">
                                 {property.description}
                             </p>
 
@@ -205,15 +206,15 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
                                 <h3 className="text-sm font-bold text-white mb-3">Amenities</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     {property.amenities.map((amenity, i) => (
-                                        <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-slate-900 border border-slate-800">
-                                            <div className="p-1.5 rounded bg-blue-500/10 text-blue-500">
+                                        <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-neutral-900 border border-neutral-800">
+                                            <div className="p-1.5 rounded bg-primary/10 text-primary">
                                                 {amenity.includes("Wifi") && <Wifi className="h-4 w-4" />}
                                                 {amenity.includes("Gym") && <Dumbbell className="h-4 w-4" />}
                                                 {amenity.includes("Washer") && <WashingMachine className="h-4 w-4" />}
                                                 {amenity.includes("Smart") && <Lock className="h-4 w-4" />}
                                                 {(!amenity.includes("Wifi") && !amenity.includes("Gym") && !amenity.includes("Washer") && !amenity.includes("Smart")) && <CheckCircle2 className="h-4 w-4" />}
                                             </div>
-                                            <span className="text-xs font-medium text-slate-300">{amenity}</span>
+                                            <span className="text-xs font-medium text-neutral-300">{amenity}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -227,8 +228,8 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
                                         <span key={i} className={cn(
                                             "px-3 py-1.5 rounded-full text-xs font-medium border flex items-center gap-1.5",
                                             rule.includes("No")
-                                                ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                                : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                ? "bg-status-maintenance/10 text-status-maintenance border-status-maintenance/20"
+                                                : "bg-status-occupied/10 text-status-occupied border-status-occupied/20"
                                         )}>
                                             {rule.includes("No") ? <Ban className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
                                             {rule}
@@ -239,17 +240,17 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="mt-auto p-6 md:p-8 border-t border-slate-800 bg-[#13161c] bg-opacity-95 backdrop-blur-sm sticky bottom-0">
+                        <div className="mt-auto p-6 md:p-8 border-t border-neutral-800 bg-card bg-opacity-95 backdrop-blur-sm sticky bottom-0">
                             <div className="flex gap-3">
-                                <button className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20">
+                                <button className="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
                                     <Send className="h-4 w-4" />
                                     Request Tour
                                 </button>
-                                <button className="h-12 w-12 rounded-xl border border-slate-700 bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
+                                <button className="h-12 w-12 rounded-xl border border-neutral-700 bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors">
                                     <MessageSquare className="h-5 w-5" />
                                 </button>
                             </div>
-                            <p className="text-center text-[10px] text-slate-500 mt-3">Usually responds within 2 hours</p>
+                            <p className="text-center text-[10px] text-neutral-500 mt-3">Usually responds within 2 hours</p>
                         </div>
 
                     </div>
@@ -260,15 +261,162 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
     );
 }
 
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
+}
+
+function deg2rad(deg: number) {
+    return deg * (Math.PI / 180);
+}
 
 export default function SearchPage() {
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [radius, setRadius] = useState([5]);
     const [showFilters, setShowFilters] = useState(false);
+    const [searchCenter, setSearchCenter] = useState<[number, number]>([14.6865, 121.0366]);
+    const [viewCenter, setViewCenter] = useState<[number, number]>([14.6865, 121.0366]);
+    const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [priceRange, setPriceRange] = useState([3000, 25000]);
+    const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+    const amenitiesList = [
+        { name: "WiFi", icon: Wifi },
+        { name: "Air Con", icon: Snowflake },
+        { name: "Parking", icon: Car },
+        { name: "Pet Friendly", icon: PawPrint },
+        { name: "Laundry", icon: WashingMachine },
+        { name: "Gym", icon: Dumbbell },
+        { name: "Security", icon: Shield },
+        { name: "Kitchen", icon: UtensilsCrossed },
+        { name: "Water", icon: Droplets },
+        { name: "Cable TV", icon: Tv },
+    ];
+
+    const toggleAmenity = (name: string) => {
+        setSelectedAmenities((prev) =>
+            prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name]
+        );
+    };
+
+    // Debounce search suggestions
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (searchQuery.length < 3) {
+                setSuggestions([]);
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&addressdetails=1&limit=5`);
+                const data = await response.json();
+                setSuggestions(data);
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+            }
+        };
+
+        const timeoutId = setTimeout(() => {
+            if (showSuggestions) {
+                fetchSuggestions();
+            }
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery, showSuggestions]);
+
+    const handleSuggestionClick = (suggestion: any) => {
+        setSearchQuery(suggestion.display_name);
+        const lat = parseFloat(suggestion.lat);
+        const lon = parseFloat(suggestion.lon);
+        setSearchCenter([lat, lon]);
+        setViewCenter([lat, lon]);
+        setRadius([5]);
+        setShowSuggestions(false);
+        setSuggestions([]);
+    };
+
+    // Filter properties based on price range
+    const filteredProperties = properties.filter(
+        (p) => p.numericPrice >= priceRange[0] && p.numericPrice <= priceRange[1]
+    );
+
+    const handleCurrentLocation = () => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    // Only update user location and view center, do not change search context
+                    setUserLocation([latitude, longitude]);
+                    setViewCenter([latitude, longitude]);
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                    alert("Could not access your location. Please check your browser settings.");
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
+
+    const handleSearch = async () => {
+        if (!searchQuery) return;
+
+        try {
+            // Priority 1: Search for a place using Geocoding (OpenStreetMap)
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+            const data = await response.json();
+
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                setSearchCenter([lat, lon]);
+                setViewCenter([lat, lon]);
+                setRadius([5]); // Default view radius for a place
+            } else {
+                // Fallback: Search in ALL properties for a name match
+                const match = properties.find(p =>
+                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.address.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+
+                if (match) {
+                    setSearchCenter([match.lat, match.lng]);
+                    setViewCenter([match.lat, match.lng]);
+                    setRadius([2]);
+                }
+            }
+        } catch (error) {
+            console.error("Geocoding failed:", error);
+            // Fallback on error
+            const match = properties.find(p =>
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.address.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            if (match) {
+                setSearchCenter([match.lat, match.lng]);
+                setViewCenter([match.lat, match.lng]);
+                setRadius([2]);
+            }
+        }
+    };
 
     const handleMarkerClick = (property: Property) => {
         setSelectedProperty(property);
+        setViewCenter([property.lat, property.lng]);
     };
 
     const handleOpenDetails = (property: Property) => {
@@ -277,19 +425,19 @@ export default function SearchPage() {
     };
 
     return (
-        <div className="flex h-screen w-full bg-[#1b1e2e] overflow-hidden font-sans text-slate-200">
+        <div className="flex h-screen w-full bg-background overflow-hidden font-sans text-neutral-200">
 
             {/* Sidebar */}
-            <aside className="w-[380px] flex-shrink-0 flex flex-col bg-[#13161c] border-r border-slate-800 z-20 shadow-2xl overflow-hidden">
+            <aside className="w-[380px] flex-shrink-0 flex flex-col bg-card border-r border-neutral-800 z-20 shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="p-6 pb-2 flex items-center justify-between border-b border-slate-800/50">
+                <div className="p-6 pb-2 flex items-center justify-between border-b border-neutral-800/50">
                     <div>
                         <h2 className="text-xl font-bold text-white tracking-tight">{showFilters ? "Filters" : "Available Rentals"}</h2>
-                        <p className="text-xs text-slate-400 mt-1">{properties.length} properties found in Valenzuela</p>
+                        <p className="text-xs text-neutral-400 mt-1">{filteredProperties.length} properties found</p>
                     </div>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2 rounded-lg border transition-all ${showFilters ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'}`}
+                        className={`p-2 rounded-lg border transition-all ${showFilters ? 'bg-primary border-primary text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white'}`}
                     >
                         <ListFilter className="h-5 w-5" />
                     </button>
@@ -302,7 +450,7 @@ export default function SearchPage() {
                         <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-300">
                             {/* Header */}
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                                     <MapIcon className="h-5 w-5 text-white" />
                                 </div>
                                 <h1 className="font-bold text-xl text-white tracking-tight">iReside</h1>
@@ -311,33 +459,24 @@ export default function SearchPage() {
                             {/* Title & Stats */}
                             <div className="flex justify-between items-end">
                                 <h2 className="text-2xl font-bold text-white">Find your home</h2>
-                                <span className="text-xs text-blue-500 font-medium bg-blue-500/10 px-2 py-1 rounded">24 Results</span>
+                                <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-1 rounded">{filteredProperties.length} Results</span>
                             </div>
 
-                            {/* Search Input */}
-                            <div className="relative group">
-                                <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
-                                <input
-                                    type="text"
-                                    placeholder="Valenzuela City"
-                                    className="w-full bg-[#0f1218] border border-slate-800 rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all text-white placeholder-slate-600"
-                                />
-                                <Navigation className="absolute right-4 top-3.5 h-4 w-4 text-slate-500 cursor-pointer hover:text-white" />
-                            </div>
+
 
                             {/* Search Radius Slider */}
                             <div className="space-y-4">
-                                <div className="flex justify-between text-xs font-semibold uppercase text-slate-500 tracking-wider">
+                                <div className="flex justify-between text-xs font-semibold uppercase text-neutral-500 tracking-wider">
                                     <span>Search Radius</span>
-                                    <span className="text-blue-400">{radius} km</span>
+                                    <span className="text-primary">{radius} km</span>
                                 </div>
                                 <Slider.Root className="relative flex items-center select-none touch-none w-full h-5" defaultValue={[5]} max={10} step={1} onValueChange={setRadius}>
-                                    <Slider.Track className="bg-slate-800 relative grow rounded-full h-[4px]">
-                                        <Slider.Range className="absolute bg-blue-500 rounded-full h-full" />
+                                    <Slider.Track className="bg-neutral-800 relative grow rounded-full h-[4px]">
+                                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
                                     </Slider.Track>
-                                    <Slider.Thumb className="block w-5 h-5 bg-white border-2 border-blue-500 shadow-md rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-transform hover:scale-110" aria-label="Volume" />
+                                    <Slider.Thumb className="block w-5 h-5 bg-white border-2 border-primary shadow-md rounded-full hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-transform hover:scale-110" aria-label="Volume" />
                                 </Slider.Root>
-                                <div className="flex justify-between text-[10px] text-slate-600 font-mono">
+                                <div className="flex justify-between text-[10px] text-neutral-600 font-mono">
                                     <span>1km</span>
                                     <span>10km</span>
                                 </div>
@@ -345,53 +484,91 @@ export default function SearchPage() {
 
                             {/* Price Range */}
                             <div className="space-y-4">
-                                <label className="text-xs font-semibold uppercase text-slate-500 tracking-wider">Price Range (Monthly)</label>
+                                <div className="flex justify-between text-xs font-semibold uppercase text-neutral-500 tracking-wider">
+                                    <span>Price Range</span>
+                                    <span className="text-primary">₱{priceRange[0].toLocaleString()} – ₱{priceRange[1].toLocaleString()}</span>
+                                </div>
+                                <Slider.Root
+                                    className="relative flex items-center select-none touch-none w-full h-5"
+                                    value={priceRange}
+                                    min={1000}
+                                    max={50000}
+                                    step={500}
+                                    onValueChange={setPriceRange}
+                                >
+                                    <Slider.Track className="bg-neutral-800 relative grow rounded-full h-[4px]">
+                                        <Slider.Range className="absolute bg-primary rounded-full h-full" />
+                                    </Slider.Track>
+                                    <Slider.Thumb className="block w-5 h-5 bg-white border-2 border-primary shadow-md rounded-full hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-transform hover:scale-110" aria-label="Minimum price" />
+                                    <Slider.Thumb className="block w-5 h-5 bg-white border-2 border-primary shadow-md rounded-full hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-transform hover:scale-110" aria-label="Maximum price" />
+                                </Slider.Root>
                                 <div className="flex items-center gap-3">
-                                    <div className="flex-1 bg-[#0f1218] border border-slate-800 rounded-lg py-2.5 px-3 flex items-center gap-2">
-                                        <span className="text-slate-500 text-xs">₱</span>
-                                        <input type="number" className="bg-transparent w-full text-sm text-white focus:outline-none" placeholder="5000" />
+                                    <div className="flex-1 bg-background border border-neutral-800 rounded-lg py-2.5 px-3 flex items-center gap-2">
+                                        <span className="text-neutral-500 text-xs">₱</span>
+                                        <input
+                                            type="number"
+                                            className="bg-transparent w-full text-sm text-white focus:outline-none"
+                                            placeholder="Min. Amount"
+                                            value={priceRange[0]}
+                                            onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                                        />
                                     </div>
-                                    <div className="text-slate-600">-</div>
-                                    <div className="flex-1 bg-[#0f1218] border border-slate-800 rounded-lg py-2.5 px-3 flex items-center gap-2">
-                                        <span className="text-slate-500 text-xs">₱</span>
-                                        <input type="number" className="bg-transparent w-full text-sm text-white focus:outline-none" placeholder="25000" />
+                                    <div className="text-neutral-600">–</div>
+                                    <div className="flex-1 bg-background border border-neutral-800 rounded-lg py-2.5 px-3 flex items-center gap-2">
+                                        <span className="text-neutral-500 text-xs">₱</span>
+                                        <input
+                                            type="number"
+                                            className="bg-transparent w-full text-sm text-white focus:outline-none"
+                                            placeholder="Max. Amount"
+                                            value={priceRange[1]}
+                                            onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 0])}
+                                        />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Amenities */}
                             <div className="space-y-4">
-                                <label className="text-xs font-semibold uppercase text-slate-500 tracking-wider">Amenities</label>
+                                <label className="text-xs font-semibold uppercase text-neutral-500 tracking-wider">Amenities</label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {["WiFi Included", "Air Con", "Parking", "Pet Friendly"].map((item, i) => (
-                                        <div key={i} className={cn(
-                                            "flex items-center gap-2 p-3 rounded-lg border text-xs font-medium cursor-pointer transition-all",
-                                            item === "Air Con"
-                                                ? "bg-blue-600/10 border-blue-600/50 text-blue-400"
-                                                : "bg-[#0f1218] border-slate-800 text-slate-400 hover:border-slate-700"
-                                        )}>
-                                            <div className={cn(
-                                                "h-4 w-4 rounded border flex items-center justify-center",
-                                                item === "Air Con" ? "bg-blue-600 border-blue-600" : "border-slate-600"
-                                            )}>
-                                                {item === "Air Con" && <span className="text-white text-[8px]">✓</span>}
+                                    {amenitiesList.map((item) => {
+                                        const isActive = selectedAmenities.includes(item.name);
+                                        const Icon = item.icon;
+                                        return (
+                                            <div
+                                                key={item.name}
+                                                onClick={() => toggleAmenity(item.name)}
+                                                className={cn(
+                                                    "flex items-center gap-2.5 p-3 rounded-lg border text-xs font-medium cursor-pointer transition-all",
+                                                    isActive
+                                                        ? "bg-primary/10 border-primary/50 text-primary"
+                                                        : "bg-background border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "h-4 w-4 rounded border flex items-center justify-center flex-shrink-0",
+                                                    isActive ? "bg-primary border-primary" : "border-neutral-600"
+                                                )}>
+                                                    {isActive && <span className="text-white text-[8px]">✓</span>}
+                                                </div>
+                                                <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                                                {item.name}
                                             </div>
-                                            {item}
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
                             {/* Property Type */}
                             <div className="space-y-4">
-                                <label className="text-xs font-semibold uppercase text-slate-500 tracking-wider">Property Type</label>
+                                <label className="text-xs font-semibold uppercase text-neutral-500 tracking-wider">Property Type</label>
                                 <div className="flex flex-wrap gap-2">
-                                    {["Apartment", "House", "Condo", "Room"].map((type, i) => (
+                                    {["Apartment", "Boarding House", "Dorms"].map((type, i) => (
                                         <button key={i} className={cn(
                                             "px-4 py-1.5 rounded-full text-xs font-medium border transition-colors",
                                             type === "Apartment"
-                                                ? "bg-blue-600 text-white border-blue-600"
-                                                : "bg-transparent text-slate-400 border-slate-700 hover:border-slate-600 hover:text-slate-300"
+                                                ? "bg-primary text-white border-primary"
+                                                : "bg-transparent text-neutral-400 border-neutral-700 hover:border-neutral-600 hover:text-neutral-300"
                                         )}>
                                             {type}
                                         </button>
@@ -399,7 +576,9 @@ export default function SearchPage() {
                                 </div>
                             </div>
 
-                            <button className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-sm transition-colors shadow-lg shadow-blue-600/20 active:scale-[0.98]">
+                            <button
+                                onClick={handleSearch}
+                                className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl text-sm transition-colors shadow-lg shadow-primary/20 active:scale-[0.98]">
                                 Update Results
                             </button>
                         </div>
@@ -407,14 +586,14 @@ export default function SearchPage() {
                         /* Results View */
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                             {/* AI Recommendation Card */}
-                            <div className="relative p-5 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-xl">
+                            <div className="relative p-5 rounded-2xl bg-card border border-neutral-800 shadow-xl">
                                 <div className="flex gap-4">
-                                    <div className="h-10 w-10 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-600/20">
+                                    <div className="h-10 w-10 rounded-lg bg-primary text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
                                         <Sparkles className="h-5 w-5" />
                                     </div>
                                     <div className="space-y-1">
                                         <h3 className="text-sm font-bold text-white">AI Recommendation</h3>
-                                        <p className="text-xs text-slate-400 leading-relaxed">
+                                        <p className="text-xs text-neutral-400 leading-relaxed">
                                             Properties in <span className="text-white font-medium">Maysan</span> are seeing 15% lower rates than the city average this month.
                                         </p>
                                     </div>
@@ -423,7 +602,11 @@ export default function SearchPage() {
 
                             {/* Property List */}
                             <div className="space-y-4">
-                                {properties.map((p) => (
+                                {filteredProperties.length === 0 ? (
+                                    <div className="text-center py-10 text-neutral-500">
+                                        <p>No properties found matching your search.</p>
+                                    </div>
+                                ) : filteredProperties.map((p) => (
                                     <div
                                         key={p.id}
                                         onClick={() => {
@@ -431,12 +614,12 @@ export default function SearchPage() {
                                             // Optional: Open details immediately? Image shows "View Details" button.
                                         }}
                                         className={cn(
-                                            "group relative bg-[#0f1218] rounded-2xl p-3 flex gap-3 cursor-pointer transition-all hover:bg-[#13161c]",
-                                            p.featured ? "border-2 border-blue-600 shadow-lg shadow-blue-900/10" : "border border-slate-800"
+                                            "group relative bg-background rounded-2xl p-3 flex gap-3 cursor-pointer transition-all hover:bg-card",
+                                            p.featured ? "border-2 border-primary shadow-lg shadow-primary/10" : "border border-neutral-800"
                                         )}
                                     >
                                         {/* Image */}
-                                        <div className="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-slate-900">
+                                        <div className="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900">
                                             <Image
                                                 src={p.images[0]}
                                                 alt={p.name}
@@ -444,7 +627,7 @@ export default function SearchPage() {
                                                 className="object-cover transition-transform duration-500 group-hover:scale-110"
                                             />
                                             {p.featured && (
-                                                <div className="absolute top-2 left-2 bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-sm">
+                                                <div className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-sm">
                                                     FEATURED
                                                 </div>
                                             )}
@@ -455,25 +638,25 @@ export default function SearchPage() {
                                             <div>
                                                 <div className="flex justify-between items-start mb-1">
                                                     <h3 className="font-bold text-sm text-white leading-tight">{p.name}</h3>
-                                                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                                                        <Star className="h-3 w-3 fill-blue-500 text-blue-500" /> 4.8
+                                                    <div className="flex items-center gap-1 text-[10px] font-bold text-neutral-500">
+                                                        <Star className="h-3 w-3 fill-primary text-primary" /> 4.8
                                                     </div>
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 flex items-center gap-1 mb-2">
+                                                <p className="text-[10px] text-neutral-500 flex items-center gap-1 mb-2">
                                                     <Navigation className="h-3 w-3" /> {p.address}
                                                 </p>
 
                                                 {/* Tags (only for featured primarily, or small tags) */}
                                                 {p.featured && (
                                                     <div className="flex gap-1.5 mb-2">
-                                                        <span className="text-[9px] border border-slate-700 text-slate-400 px-1.5 py-0.5 rounded uppercase">WiFi</span>
-                                                        <span className="text-[9px] border border-slate-700 text-slate-400 px-1.5 py-0.5 rounded uppercase">AC</span>
+                                                        <span className="text-[9px] border border-neutral-700 text-neutral-400 px-1.5 py-0.5 rounded uppercase">WiFi</span>
+                                                        <span className="text-[9px] border border-neutral-700 text-neutral-400 px-1.5 py-0.5 rounded uppercase">AC</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div className="flex justify-between items-end">
-                                                <span className="font-bold text-lg text-white">{p.price}<span className="text-[10px] font-normal text-slate-500">/mo</span></span>
+                                                <span className="font-bold text-lg text-white">{p.price}<span className="text-[10px] font-normal text-neutral-500">/mo</span></span>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -481,7 +664,7 @@ export default function SearchPage() {
                                                     }}
                                                     className={cn(
                                                         "text-xs font-bold transition-colors",
-                                                        p.featured ? "text-blue-500 hover:text-blue-400" : "text-slate-500 hover:text-white"
+                                                        p.featured ? "text-primary hover:text-primary-200" : "text-neutral-500 hover:text-white"
                                                     )}
                                                 >
                                                     {p.featured ? "View Details" : "Details"}
@@ -498,40 +681,89 @@ export default function SearchPage() {
             </aside>
 
             {/* Map Area */}
-            <main className="flex-1 relative bg-[#1b1e2e]">
+            <main className="flex-1 relative bg-background">
+                {/* Search Bar - Top Center */}
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[50] w-[600px] max-w-[90%]">
+                    <div className="relative group shadow-xl shadow-black/10 rounded-xl">
+                        <Search className="absolute left-4 top-3.5 h-4 w-4 text-neutral-500 group-focus-within:text-primary transition-colors z-10" />
+                        <input
+                            type="text"
+                            placeholder="Search by city, neighborhood, or address..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setShowSuggestions(true);
+                            }}
+                            onFocus={() => setShowSuggestions(true)}
+                            // Delay blur to allow clicking on suggestions
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            className="w-full bg-white/95 backdrop-blur-md border border-neutral-200 rounded-xl py-3 pl-11 pr-12 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all text-neutral-900 placeholder-neutral-500 font-medium"
+                        />
+                        <Navigation
+                            onClick={handleSearch}
+                            className="absolute right-4 top-3.5 h-4 w-4 text-neutral-500 cursor-pointer hover:text-primary hover:scale-110 transition-all z-10"
+                        />
+
+                        {/* Search Suggestions Dropdown */}
+                        {showSuggestions && suggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                                {suggestions.map((item, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleSuggestionClick(item)}
+                                        className="w-full text-left px-4 py-3 text-xs text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors border-b border-neutral-100 last:border-0 flex items-center gap-2"
+                                    >
+                                        <MapIcon className="h-3 w-3 flex-shrink-0 text-primary" />
+                                        <span className="truncate">{item.display_name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Top Floating Controls */}
                 <div className="absolute top-6 right-6 z-[40] flex items-center gap-3">
-                    <div className="bg-[#13161c] border border-slate-800 rounded-lg p-1 flex">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-md shadow-sm">
+                    <div className="bg-card border border-neutral-800 rounded-lg p-1 flex">
+                        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-md shadow-sm">
                             <MapIcon className="h-3 w-3" /> Map
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-white text-xs font-bold rounded-md transition-colors">
+                        <button className="flex items-center gap-2 px-4 py-2 text-neutral-400 hover:text-white text-xs font-bold rounded-md transition-colors">
                             <List className="h-3 w-3" /> List
                         </button>
                     </div>
-                    <div className="h-10 w-10 rounded-full bg-[#13161c] border border-slate-800 flex items-center justify-center overflow-hidden">
+                    <div className="h-10 w-10 rounded-full bg-card border border-neutral-800 flex items-center justify-center overflow-hidden">
                         <Image src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=100&auto=format&fit=crop" alt="User" width={40} height={40} />
                     </div>
                 </div>
 
                 {/* Bottom Floating Controls */}
                 <div className="absolute bottom-6 right-6 z-[40] flex flex-col gap-2">
-                    <button className="h-10 w-10 rounded-lg bg-[#13161c] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-600 flex items-center justify-center transition-colors shadow-xl">
+                    <button className="h-10 w-10 rounded-lg bg-card border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-600 flex items-center justify-center transition-colors shadow-xl">
                         <Plus className="h-5 w-5" />
                     </button>
-                    <button className="h-10 w-10 rounded-lg bg-[#13161c] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-600 flex items-center justify-center transition-colors shadow-xl">
+                    <button className="h-10 w-10 rounded-lg bg-card border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-600 flex items-center justify-center transition-colors shadow-xl">
                         <Minus className="h-5 w-5" />
                     </button>
-                    <button className="mt-2 h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-colors">
-                        <Navigation className="h-4 w-4" />
+                    <button
+                        onClick={handleCurrentLocation}
+                        className="mt-2 h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary-dark transition-colors"
+                        title="My Location"
+                    >
+                        <Locate className="h-4 w-4" />
                     </button>
                 </div>
 
                 <SearchMap
-                    properties={properties}
+                    properties={filteredProperties}
                     selectedProperty={selectedProperty}
                     onMarkerClick={handleMarkerClick}
                     onDetailsClick={handleOpenDetails}
+                    radius={radius[0]}
+                    center={searchCenter}
+                    viewCenter={viewCenter}
+                    location={userLocation}
                 />
 
                 {/* Modal */}
@@ -549,10 +781,10 @@ export default function SearchPage() {
           width: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #0f1218; 
+          background: #0a0a0a; 
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #334155; 
+          background: #404040; 
           border-radius: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {

@@ -10,9 +10,9 @@ export default function LandlordLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    const isDashboard = pathname === "/landlord/dashboard";
+    const showSidebar = pathname === "/landlord/dashboard" || pathname === "/landlord/applications";
 
-    if (isDashboard) {
+    if (showSidebar) {
         return (
             <div className="flex h-screen overflow-hidden bg-[#0f172a] text-white">
                 <Sidebar />

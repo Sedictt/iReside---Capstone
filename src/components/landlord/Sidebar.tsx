@@ -14,7 +14,8 @@ import {
     Settings,
     Bell,
     LogOut,
-    ChevronDown
+    ChevronDown,
+    ClipboardList
 } from "lucide-react";
 
 
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
         items: [
             { label: "Properties", href: "/landlord/properties", icon: Building2 },
             { label: "Listings", href: "/landlord/listings", icon: FileText },
+            { label: "Applications", href: "/landlord/applications", icon: ClipboardList, badge: 2 },
             { label: "Tenants", href: "/landlord/tenants", icon: Users },
         ]
     },
