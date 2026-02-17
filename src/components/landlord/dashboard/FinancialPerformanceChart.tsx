@@ -23,17 +23,17 @@ ChartJS.register(
 );
 
 export function FinancialPerformanceChart() {
-    const [activeTab, setActiveTab] = useState<"earnings" | "revenue" | "starts">("earnings");
+    const [activeTab, setActiveTab] = useState<"earnings" | "expenses" | "netIncome">("earnings");
 
     // Mock data to match the curve shape in the requested design
     const earningsData = [130, 165, 225, 180, 235, 175];
-    const revenueData = [200, 210, 205, 240, 230, 250];
-    const startsData = [50, 80, 60, 90, 85, 100];
+    const expensesData = [80, 95, 110, 100, 120, 105]; // Lower relative to earnings
+    const netIncomeData = [50, 70, 115, 80, 115, 70]; // Difference roughly
 
     const getCurrentData = () => {
         switch (activeTab) {
-            case "revenue": return revenueData;
-            case "starts": return startsData;
+            case "expenses": return expensesData;
+            case "netIncome": return netIncomeData;
             case "earnings":
             default: return earningsData;
         }
@@ -48,6 +48,9 @@ export function FinancialPerformanceChart() {
                 borderColor: (context: ScriptableContext<"line">) => {
                     const ctx = context.chart.ctx;
                     const gradient = ctx.createLinearGradient(0, 0, context.chart.width, 0);
+                    // Dynamically change color based on tab for better visual distinction? 
+                    // Keeping orange theme for now as per original design, or subtle shift?
+                    // Let's keep the warm orange as it fits the dark theme well.
                     gradient.addColorStop(0, '#fdba74'); // Orange-300
                     gradient.addColorStop(0.5, '#f97316'); // Orange-500
                     gradient.addColorStop(1, '#c2410c'); // Orange-700
@@ -111,7 +114,7 @@ export function FinancialPerformanceChart() {
                     padding: 10,
                     font: { size: 12 }
                 },
-                min: 100,
+                min: 0, // Adjusted min to 0 to accommodate lower values
                 suggestedMax: 300
             }
         },
@@ -135,25 +138,31 @@ export function FinancialPerformanceChart() {
                     {activeTab === "earnings" && (
                         <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,1)]"></span>
                     )}
-                    Estimated Earnings
+                    Total Earnings
                 </button>
                 <button
-                    onClick={() => setActiveTab("revenue")}
+                    onClick={() => setActiveTab("expenses")}
                     className={cn(
-                        "text-sm font-medium transition-all pb-2 hover:text-slate-300",
-                        activeTab === "revenue" ? "text-white" : "text-slate-500"
+                        "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
+                        activeTab === "expenses" ? "text-white" : "text-slate-500 hover:text-slate-300"
                     )}
                 >
-                    Revenue Per Panelist
+                    {activeTab === "expenses" && (
+                        <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]"></span>
+                    )}
+                    Expenses
                 </button>
                 <button
-                    onClick={() => setActiveTab("starts")}
+                    onClick={() => setActiveTab("netIncome")}
                     className={cn(
-                        "text-sm font-medium transition-all pb-2 hover:text-slate-300",
-                        activeTab === "starts" ? "text-white" : "text-slate-500"
+                        "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
+                        activeTab === "netIncome" ? "text-white" : "text-slate-500 hover:text-slate-300"
                     )}
                 >
-                    Survey Starts
+                    {activeTab === "netIncome" && (
+                        <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)]"></span>
+                    )}
+                    Net Income
                 </button>
             </div>
 
