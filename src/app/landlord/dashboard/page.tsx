@@ -10,6 +10,7 @@ import { QuickActions } from "@/components/landlord/dashboard/QuickActions";
 
 import { FeaturedPropertyCard } from "@/components/landlord/dashboard/FeaturedPropertyCard";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
+import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
 
 export default function LandlordDashboard() {
     const [mounted, setMounted] = useState(false);
@@ -157,93 +158,9 @@ export default function LandlordDashboard() {
                 </div>
             </div>
 
-            {/* Recent Inquiries List */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-3 rounded-xl border border-white/5 bg-[#171717]/30 overflow-hidden backdrop-blur-sm">
-                    <div className="border-b border-white/5 px-6 py-4 flex items-center justify-between">
-                        <h3 className="text-base font-bold text-white">Recent Inquiries</h3>
-                        <button className="text-xs font-medium text-primary hover:text-primary-200 hover:underline">View All</button>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-neutral-400">
-                            <thead className="bg-neutral-800/50 text-xs uppercase text-neutral-500">
-                                <tr>
-                                    <th className="px-6 py-3 font-semibold tracking-wider">Lead Name</th>
-                                    <th className="px-6 py-3 font-semibold tracking-wider">Property Interest</th>
-                                    <th className="px-6 py-3 font-semibold tracking-wider">Date</th>
-                                    <th className="px-6 py-3 font-semibold tracking-wider">Status</th>
-                                    <th className="px-6 py-3 font-semibold tracking-wider text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                <tr className="hover:bg-neutral-800/30 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-orange-500/20 text-orange-500 flex items-center justify-center font-bold text-xs border border-orange-500/20">
-                                                MS
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-white">Maria Santos</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-neutral-300">Makati Skyline, Unit 402</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-neutral-300">Oct 24, 2023</span>
-                                            <span className="text-xs text-neutral-500">10:30 AM</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-1 text-xs font-medium text-blue-400 border border-blue-500/20">
-                                            New Lead
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="rounded-lg p-1 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors">
-                                            <ArrowUpRight className="h-4 w-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                                {/* Additional mock row */}
-                                <tr className="hover:bg-neutral-800/30 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold text-xs border border-emerald-500/20">
-                                                JD
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-white">John Doe</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-neutral-300">Azure Urban Resort, Unit 1215</p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-neutral-300">Oct 23, 2023</span>
-                                            <span className="text-xs text-neutral-500">2:45 PM</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-400 border border-amber-500/20">
-                                            Follow Up
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="rounded-lg p-1 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors">
-                                            <ArrowUpRight className="h-4 w-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
+            {/* Recent Inquiries */}
+            <div className="w-full">
+                <RecentInquiries />
             </div>
 
             <QuickActions />
