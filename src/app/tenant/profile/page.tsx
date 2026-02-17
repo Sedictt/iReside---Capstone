@@ -120,7 +120,7 @@ export default function TenantProfilePage() {
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1">Investment</p>
-                                <p className="text-white font-medium">$2,450.00 <span className="text-slate-500 text-sm font-normal">/ mo</span></p>
+                                <p className="text-white font-medium">₱2,450.00 <span className="text-slate-500 text-sm font-normal">/ mo</span></p>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1">Days Remaining</p>
@@ -198,7 +198,7 @@ export default function TenantProfilePage() {
                                     <p className={cn("text-slate-500 italic text-sm mb-12", playfair.className)}>Los Angeles, CA</p>
 
                                     <div className="flex justify-between items-end border-t border-white/5 pt-4">
-                                        <span className="text-lg font-medium text-white">$2,100 <span className="text-sm text-slate-500 font-normal">/ mo</span></span>
+                                        <span className="text-lg font-medium text-white">₱2,100 <span className="text-sm text-slate-500 font-normal">/ mo</span></span>
                                         <button className="text-slate-500 hover:text-white transition-colors">
                                             <Download className="h-5 w-5" />
                                         </button>
@@ -215,7 +215,7 @@ export default function TenantProfilePage() {
                                     <p className={cn("text-slate-500 italic text-sm mb-12", playfair.className)}>Santa Monica, CA</p>
 
                                     <div className="flex justify-between items-end border-t border-white/5 pt-4">
-                                        <span className="text-lg font-medium text-white">$1,850 <span className="text-sm text-slate-500 font-normal">/ mo</span></span>
+                                        <span className="text-lg font-medium text-white">₱1,850 <span className="text-sm text-slate-500 font-normal">/ mo</span></span>
                                         <button className="text-slate-500 hover:text-white transition-colors">
                                             <Download className="h-5 w-5" />
                                         </button>

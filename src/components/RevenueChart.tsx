@@ -58,7 +58,7 @@ const options = {
             },
             ticks: {
                 color: "#94a3b8",
-                callback: (value: any) => `$${value}`,
+                callback: (value: any) => `₱${value}`,
             },
         },
     },

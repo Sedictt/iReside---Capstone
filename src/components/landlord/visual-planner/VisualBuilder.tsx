@@ -880,7 +880,33 @@ export default function VisualBuilder() {
         };
 
         if (item.kind === "unit") {
-            // Units don't rotate yet
+            const unit = units.find(u => u.id === item.id);
+            if (!unit) return;
+
+            // Swap w/h for simple rotation
+            const newW = unit.h;
+            const newH = unit.w;
+
+            // Calculate new position to keep it centered as much as possible
+            const centerX = unit.x + unit.w / 2;
+            const centerY = unit.y + unit.h / 2;
+            const newX = snapToGrid(centerX - newW / 2);
+            const newY = snapToGrid(centerY - newH / 2);
+
+            const nextX = clampUnitAxis(newX, newW, BLUEPRINT_WIDTH);
+            const nextY = clampUnitAxis(newY, newH, BLUEPRINT_HEIGHT);
+
+            const newRect = { x: nextX, y: nextY, w: newW, h: newH };
+
+            if (hasCollisionWithPlacedItems(newRect, item)) {
+                triggerOverlapToast();
+                return;
+            }
+
+            setUnits(prev => prev.map(u =>
+                u.id === unit.id ? { ...u, ...newRect } : u
+            ));
+
             return;
         }
 
@@ -2201,34 +2227,34 @@ export default function VisualBuilder() {
                                         }}
                                     >
                                         {/* Blueprint Architectural Rendering - Dark Mode */}
-                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
+                                        <div className="w-full h-full bg-neutral-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
                                             {/* Outer Walls - Lighter for dark mode */}
-                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                            <div className="absolute inset-[4px] border border-slate-600"></div>
+                                            <div className="absolute inset-0 border-[2px] border-neutral-500"></div>
+                                            <div className="absolute inset-[4px] border border-neutral-600"></div>
 
                                             {/* Door - Bottom Center */}
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-800 z-10 border-x-2 border-slate-500"></div>
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-neutral-800 z-10 border-x-2 border-neutral-500"></div>
 
                                             {/* Windows - Top Center */}
-                                            <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-800 z-10 flex items-center justify-center border-x border-slate-500">
-                                                <div className="w-full h-px bg-slate-600"></div>
+                                            <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-neutral-800 z-10 flex items-center justify-center border-x border-neutral-500">
+                                                <div className="w-full h-px bg-neutral-600"></div>
                                             </div>
 
                                             {/* Windows - Sides */}
-                                            <div className="absolute top-1/4 bottom-1/4 left-0 w-[6px] bg-slate-800 z-10 flex flex-col justify-center border-y border-slate-500">
-                                                <div className="h-full w-px bg-slate-500 mx-auto"></div>
+                                            <div className="absolute top-1/4 bottom-1/4 left-0 w-[6px] bg-neutral-800 z-10 flex flex-col justify-center border-y border-neutral-500">
+                                                <div className="h-full w-px bg-neutral-500 mx-auto"></div>
                                             </div>
-                                            <div className="absolute top-1/4 bottom-1/4 right-0 w-[6px] bg-slate-800 z-10 flex flex-col justify-center border-y border-slate-500">
-                                                <div className="h-full w-px bg-slate-500 mx-auto"></div>
+                                            <div className="absolute top-1/4 bottom-1/4 right-0 w-[6px] bg-neutral-800 z-10 flex flex-col justify-center border-y border-neutral-500">
+                                                <div className="h-full w-px bg-neutral-500 mx-auto"></div>
                                             </div>
 
                                             {/* Interior Elements (Columns/Corners) */}
-                                            <div className="absolute top-[8px] right-[8px] w-5 h-5 border border-slate-600"></div>
-                                            <div className="absolute bottom-[8px] left-[8px] w-4 h-4 border border-slate-600 flex flex-col gap-0.5 p-0.5">
-                                                <div className="w-full h-full border border-slate-700"></div>
+                                            <div className="absolute top-[8px] right-[8px] w-5 h-5 border border-neutral-600"></div>
+                                            <div className="absolute bottom-[8px] left-[8px] w-4 h-4 border border-neutral-600 flex flex-col gap-0.5 p-0.5">
+                                                <div className="w-full h-full border border-neutral-700"></div>
                                             </div>
-                                            <div className="absolute bottom-[8px] right-[8px] w-4 h-4 border border-slate-600 flex flex-col gap-0.5 p-0.5">
-                                                <div className="w-full h-full border border-slate-700"></div>
+                                            <div className="absolute bottom-[8px] right-[8px] w-4 h-4 border border-neutral-600 flex flex-col gap-0.5 p-0.5">
+                                                <div className="w-full h-full border border-neutral-700"></div>
                                             </div>
 
                                             {/* Grid floor pattern inside unit */}
@@ -2237,26 +2263,26 @@ export default function VisualBuilder() {
                                             ></div>
 
                                             {/* Status Highlight Overlay - Always visible */}
-                                            <div className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity ${unit.status === 'occupied' ? 'bg-blue-500' :
-                                                unit.status === 'vacant' ? 'bg-emerald-500' :
-                                                    unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
+                                            <div className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity ${unit.status === 'occupied' ? 'bg-status-occupied' :
+                                                unit.status === 'vacant' ? 'bg-status-vacant' :
+                                                    unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
                                                 }`}></div>
 
                                             {/* Info Content Overlay */}
                                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
                                                 {/* Mini Status Indicator */}
-                                                <div className={`w-2 h-2 rounded-full mb-2 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${unit.status === 'occupied' ? 'bg-blue-500' :
-                                                    unit.status === 'vacant' ? 'bg-emerald-500' :
-                                                        unit.status === 'maintenance' ? 'bg-red-500' : 'bg-amber-500'
+                                                <div className={`w-2 h-2 rounded-full mb-2 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${unit.status === 'occupied' ? 'bg-status-occupied' :
+                                                    unit.status === 'vacant' ? 'bg-status-vacant' :
+                                                        unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
                                                     }`}></div>
 
-                                                <h4 className="font-bold text-xs text-slate-200 drop-shadow-md">{unit.name}</h4>
+                                                <h4 className="font-bold text-xs text-neutral-200 drop-shadow-md">{unit.name}</h4>
 
                                                 {unit.status !== 'vacant' && unit.tenant && (
-                                                    <p className="text-[10px] text-slate-400 font-mono mt-1">{unit.tenant}</p>
+                                                    <p className="text-[10px] text-neutral-400 font-mono mt-1">{unit.tenant}</p>
                                                 )}
                                                 {unit.status === 'vacant' && (
-                                                    <span className="text-[9px] text-emerald-400 font-bold uppercase mt-1 tracking-wider border border-emerald-500/30 px-1 rounded bg-emerald-500/10">Vacant</span>
+                                                    <span className="text-[9px] text-blue-400 font-bold uppercase mt-1 tracking-wider border border-blue-500/30 px-1 rounded bg-blue-500/10">Vacant</span>
                                                 )}
                                                 {unit.status === 'maintenance' && (
                                                     <span className="text-[9px] text-red-400 font-bold uppercase mt-1 tracking-wider border border-red-500/30 px-1 rounded bg-red-500/10">Maint</span>
@@ -2264,7 +2290,7 @@ export default function VisualBuilder() {
                                             </div>
 
                                             {/* Resize Handle */}
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize border-b-2 border-r-2 border-slate-500 rounded-br-sm opacity-0 group-hover:opacity-100"></div>
+                                            <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize border-b-2 border-r-2 border-neutral-500 rounded-br-sm opacity-0 group-hover:opacity-100"></div>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -2277,13 +2303,13 @@ export default function VisualBuilder() {
                     {/* Legend */}
                     <div className="absolute bottom-6 right-6 flex flex-col gap-4 z-20 pointer-events-none">
                         {showLegend ? (
-                            <div className="bg-surface-dark border border-slate-700 p-3 rounded-lg shadow-xl backdrop-blur-sm bg-opacity-90 pointer-events-auto">
+                            <div className="bg-surface-dark border border-neutral-700 p-3 rounded-lg shadow-xl backdrop-blur-sm bg-opacity-90 pointer-events-auto">
                                 <div className="flex items-center justify-between mb-2 gap-2">
-                                    <h4 className="text-[10px] uppercase font-bold text-slate-400">Legend</h4>
+                                    <h4 className="text-[10px] uppercase font-bold text-neutral-400">Legend</h4>
                                     <button
                                         type="button"
                                         onClick={() => setShowLegend(false)}
-                                        className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200 border border-slate-600 hover:border-slate-500 rounded px-1.5 py-0.5 transition-colors"
+                                        className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400 hover:text-neutral-200 border border-neutral-600 hover:border-neutral-500 rounded px-1.5 py-0.5 transition-colors"
                                     >
                                         Hide
                                     </button>
@@ -2291,19 +2317,19 @@ export default function VisualBuilder() {
                                 <div className="space-y-1.5">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-vacant"></div>
-                                        <span className="text-xs text-slate-300">Vacant</span>
+                                        <span className="text-xs text-neutral-300">Vacant</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-occupied"></div>
-                                        <span className="text-xs text-slate-300">Occupied</span>
+                                        <span className="text-xs text-neutral-300">Occupied</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-due"></div>
-                                        <span className="text-xs text-slate-300">Near-due</span>
+                                        <span className="text-xs text-neutral-300">Near-due</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-maintenance"></div>
-                                        <span className="text-xs text-slate-300">Maintenance</span>
+                                        <span className="text-xs text-neutral-300">Maintenance</span>
                                     </div>
                                 </div>
                             </div>
@@ -2311,7 +2337,7 @@ export default function VisualBuilder() {
                             <button
                                 type="button"
                                 onClick={() => setShowLegend(true)}
-                                className="self-end bg-surface-dark border border-slate-700 px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-sm bg-opacity-90 pointer-events-auto text-[10px] font-semibold uppercase tracking-wide text-slate-300 hover:text-slate-100 hover:border-slate-500 transition-colors"
+                                className="self-end bg-surface-dark border border-neutral-700 px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-sm bg-opacity-90 pointer-events-auto text-[10px] font-semibold uppercase tracking-wide text-neutral-300 hover:text-neutral-100 hover:border-neutral-500 transition-colors"
                             >
                                 Show Legend
                             </button>
@@ -2320,15 +2346,15 @@ export default function VisualBuilder() {
                         {/* Controls */}
                         <div className="flex gap-4 items-end pointer-events-auto">
                             {/* Minimap */}
-                            <div className="w-48 h-32 bg-surface-dark border border-slate-700 rounded-lg shadow-xl overflow-hidden relative group hidden md:block">
+                            <div className="w-48 h-32 bg-surface-dark border border-neutral-700 rounded-lg shadow-xl overflow-hidden relative group hidden md:block">
                                 <div className="absolute inset-0 p-2">
                                     <div
                                         ref={minimapRef}
                                         onPointerDown={handleMinimapPointerDown}
-                                        className="w-full h-full bg-slate-800 rounded opacity-50 relative overflow-hidden cursor-pointer"
+                                        className="w-full h-full bg-neutral-800 rounded opacity-50 relative overflow-hidden cursor-pointer"
                                     >
                                         <div
-                                            className="absolute border border-slate-600/60"
+                                            className="absolute border border-neutral-600/60"
                                             style={{
                                                 top: `${(BLUEPRINT_MARGIN / WORLD_HEIGHT) * 100}%`,
                                                 left: `${(BLUEPRINT_MARGIN / WORLD_WIDTH) * 100}%`,
@@ -2356,7 +2382,7 @@ export default function VisualBuilder() {
                                         {corridors.map((corridor) => (
                                             <div
                                                 key={`minimap-corridor-${corridor.id}`}
-                                                className="absolute bg-slate-500/70 rounded-[1px]"
+                                                className="absolute bg-neutral-500/70 rounded-[1px]"
                                                 style={{
                                                     left: `${((BLUEPRINT_MARGIN + corridor.x) / WORLD_WIDTH) * 100}%`,
                                                     top: `${((BLUEPRINT_MARGIN + corridor.y) / WORLD_HEIGHT) * 100}%`,
@@ -2369,7 +2395,7 @@ export default function VisualBuilder() {
                                         {structures.map((structure) => (
                                             <div
                                                 key={`minimap-structure-${structure.id}`}
-                                                className="absolute bg-slate-300/70 rounded-[1px]"
+                                                className="absolute bg-neutral-300/70 rounded-[1px]"
                                                 style={{
                                                     left: `${((BLUEPRINT_MARGIN + structure.x) / WORLD_WIDTH) * 100}%`,
                                                     top: `${((BLUEPRINT_MARGIN + structure.y) / WORLD_HEIGHT) * 100}%`,
@@ -2393,14 +2419,14 @@ export default function VisualBuilder() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col bg-surface-dark border border-slate-700 rounded-lg shadow-xl overflow-hidden">
-                                <button onClick={handleZoomIn} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors border-b border-slate-700"><span className="material-icons-round text-lg">add</span></button>
-                                <button onClick={handleZoomOut} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors border-b border-slate-700"><span className="material-icons-round text-lg">remove</span></button>
-                                <button onClick={handleFit} className="p-2 hover:bg-slate-700 text-slate-300 transition-colors border-b border-slate-700"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                            <div className="flex flex-col bg-surface-dark border border-neutral-700 rounded-lg shadow-xl overflow-hidden">
+                                <button onClick={handleZoomIn} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">add</span></button>
+                                <button onClick={handleZoomOut} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">remove</span></button>
+                                <button onClick={handleFit} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">aspect_ratio</span></button>
                                 <button
                                     onClick={handleUndo}
                                     disabled={!undoAvailable}
-                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-slate-700 text-slate-300' : 'text-slate-600 cursor-not-allowed'}`}
+                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-neutral-700 text-neutral-300' : 'text-neutral-600 cursor-not-allowed'}`}
                                     title="Undo (Ctrl+Z)"
                                 >
                                     <span className="material-icons-round text-lg">undo</span>
@@ -2410,20 +2436,20 @@ export default function VisualBuilder() {
                     </div>
 
                     {/* Status Bar */}
-                    <div className="absolute bottom-6 left-6 bg-surface-dark/90 backdrop-blur border border-slate-700 py-2 px-4 rounded-lg shadow-lg z-20 pointer-events-auto">
+                    <div className="absolute bottom-6 left-6 bg-surface-dark/90 backdrop-blur border border-neutral-700 py-2 px-4 rounded-lg shadow-lg z-20 pointer-events-auto">
                         <div className="flex items-center gap-4 text-xs">
                             <div className="flex flex-col">
-                                <span className="text-slate-400">Total Units</span>
+                                <span className="text-neutral-400">Total Units</span>
                                 <span className="font-mono text-white">{units.length}</span>
                             </div>
-                            <div className="h-6 w-px bg-slate-700"></div>
+                            <div className="h-6 w-px bg-neutral-700"></div>
                             <div className="flex flex-col">
-                                <span className="text-slate-400">Total Area</span>
+                                <span className="text-neutral-400">Total Area</span>
                                 <span className="font-mono text-white">{totalArea.toLocaleString()} sqft</span>
                             </div>
-                            <div className="h-6 w-px bg-slate-700"></div>
+                            <div className="h-6 w-px bg-neutral-700"></div>
                             <div className="flex flex-col">
-                                <span className="text-slate-400">Cursor</span>
+                                <span className="text-neutral-400">Cursor</span>
                                 <span className="font-mono text-primary">X: {Math.round(position.x)} Y: {Math.round(position.y)}</span>
                             </div>
                         </div>
@@ -2445,29 +2471,29 @@ export default function VisualBuilder() {
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
                             <div
                                 ref={trashRef}
-                                className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-xl transition-all ${isTrashHot ? 'border-red-400 bg-red-500/25 scale-110' : 'border-slate-500 bg-slate-800/80'}`}
+                                className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-xl transition-all ${isTrashHot ? 'border-red-400 bg-red-500/25 scale-110' : 'border-neutral-500 bg-neutral-800/80'}`}
                             >
-                                <span className={`material-icons-round text-2xl ${isTrashHot ? 'text-red-300' : 'text-slate-300'}`}>delete</span>
+                                <span className={`material-icons-round text-2xl ${isTrashHot ? 'text-red-300' : 'text-neutral-300'}`}>delete</span>
                             </div>
                         </div>
                     )}
 
                     {pendingDelete && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4">
-                            <div className="w-full max-w-sm rounded-xl border border-slate-700 bg-surface-dark shadow-2xl">
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/55 p-4">
+                            <div className="w-full max-w-sm rounded-xl border border-neutral-700 bg-surface-dark shadow-2xl">
                                 <div className="p-5">
                                     <h3 className="text-sm font-semibold text-white">Confirm deletion</h3>
-                                    <p className="mt-2 text-xs text-slate-300">
+                                    <p className="mt-2 text-xs text-neutral-300">
                                         Delete {getCanvasItemLabel(pendingDelete.item)}?
                                     </p>
-                                    <p className="mt-1 text-[11px] text-slate-400">
+                                    <p className="mt-1 text-[11px] text-neutral-400">
                                         {pendingDelete.source === "trash" ? "You dropped this item near the trash." : "You used keyboard delete."}
                                     </p>
                                 </div>
-                                <div className="flex items-center justify-end gap-2 border-t border-slate-700 p-3">
+                                <div className="flex items-center justify-end gap-2 border-t border-neutral-700 p-3">
                                     <button
                                         onClick={cancelDeleteItem}
-                                        className="rounded-md border border-slate-600 bg-slate-700/50 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                                        className="rounded-md border border-neutral-600 bg-neutral-700/50 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-700"
                                     >
                                         Cancel
                                     </button>

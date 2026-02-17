@@ -114,7 +114,7 @@ export function LeaseDocument({
                     <p className="mb-4 leading-relaxed text-slate-600">
                         Tenant agrees to pay Landlord as rent for the Premises the sum of{" "}
                         <span className="font-bold text-slate-900 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">
-                            ${rent.monthly.toLocaleString()}.00
+                            ₱{rent.monthly.toLocaleString()}.00
                         </span>{" "}
                         per month, payable in advance on the {rent.due} day of each month.
                     </p>
@@ -132,7 +132,7 @@ export function LeaseDocument({
                     <p className="leading-relaxed text-slate-600">
                         Upon execution of this Agreement, Tenant shall deposit with Landlord the sum of{" "}
                         <span className="font-bold text-slate-900">
-                            ${deposit.toLocaleString()}.00
+                            ₱{deposit.toLocaleString()}.00
                         </span>{" "}
                         as security for any damage caused to the Premises during the term hereof.
                     </p>

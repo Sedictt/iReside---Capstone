@@ -51,7 +51,7 @@ const properties: Property[] = [
         id: "1",
         name: "Skyline Lofts",
         address: "Maysan, Valenzuela",
-        price: "P15,000",
+        price: "₱15,000",
         numericPrice: 15000,
         beds: 2,
         baths: 2,
@@ -75,7 +75,7 @@ const properties: Property[] = [
         id: "2",
         name: "The Garden Residences",
         address: "Paso de Blas, Valenzuela",
-        price: "P12,500",
+        price: "₱12,500",
         numericPrice: 12500,
         beds: 3,
         baths: 2,
@@ -92,7 +92,7 @@ const properties: Property[] = [
         id: "3",
         name: "Metro Studio B",
         address: "Marulas, Valenzuela",
-        price: "P8,500",
+        price: "₱8,500",
         numericPrice: 8500,
         beds: 1,
         baths: 1,
@@ -168,7 +168,7 @@ function PropertyDetailModal({ property, open, onOpenChange }: { property: Prope
                             </div>
 
                             <div className="flex items-end gap-3">
-                                <span className="text-3xl font-bold text-blue-500">${property.numericPrice.toLocaleString()}<span className="text-sm font-normal text-slate-400">/mo</span></span>
+                                <span className="text-3xl font-bold text-blue-500">₱{property.numericPrice.toLocaleString()}<span className="text-sm font-normal text-slate-400">/mo</span></span>
                                 <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase rounded border border-emerald-500/20 mb-1 flex items-center gap-1">
                                     <RotateCw className="h-3 w-3" /> 5% Below Market
                                 </span>
@@ -348,12 +348,12 @@ export default function SearchPage() {
                                 <label className="text-xs font-semibold uppercase text-slate-500 tracking-wider">Price Range (Monthly)</label>
                                 <div className="flex items-center gap-3">
                                     <div className="flex-1 bg-[#0f1218] border border-slate-800 rounded-lg py-2.5 px-3 flex items-center gap-2">
-                                        <span className="text-slate-500 text-xs">P</span>
+                                        <span className="text-slate-500 text-xs">₱</span>
                                         <input type="number" className="bg-transparent w-full text-sm text-white focus:outline-none" placeholder="5000" />
                                     </div>
                                     <div className="text-slate-600">-</div>
                                     <div className="flex-1 bg-[#0f1218] border border-slate-800 rounded-lg py-2.5 px-3 flex items-center gap-2">
-                                        <span className="text-slate-500 text-xs">P</span>
+                                        <span className="text-slate-500 text-xs">₱</span>
                                         <input type="number" className="bg-transparent w-full text-sm text-white focus:outline-none" placeholder="25000" />
                                     </div>
                                 </div>

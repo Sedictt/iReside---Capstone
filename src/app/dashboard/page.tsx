@@ -1,4 +1,4 @@
-import { ArrowUpRight, DollarSign, Users, Home as HomeIcon } from "lucide-react";
+import { ArrowUpRight, PhilippinePeso, Users, Home as HomeIcon } from "lucide-react";
 import RevenueChart from "@/components/RevenueChart";
 
 export default function DashboardPage() {
@@ -17,10 +17,10 @@ export default function DashboardPage() {
                 <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6 backdrop-blur-xl">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium text-slate-400">Total Revenue</h3>
-                        <DollarSign className="h-4 w-4 text-slate-400" />
+                        <PhilippinePeso className="h-4 w-4 text-slate-400" />
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-white">$45,231.89</span>
+                        <span className="text-2xl font-bold text-white">₱45,231.89</span>
                         <span className="flex items-center text-xs font-medium text-emerald-500">
                             +20.1%
                             <ArrowUpRight className="h-3 w-3" />
@@ -75,7 +75,7 @@ export default function DashboardPage() {
                                     <p className="text-sm font-medium text-white">New lease signed</p>
                                     <p className="text-xs text-slate-400">2 hours ago</p>
                                 </div>
-                                <div className="text-sm font-medium text-white">$1,200.00</div>
+                                <div className="text-sm font-medium text-white">₱1,200.00</div>
                             </div>
                         ))}
                     </div>

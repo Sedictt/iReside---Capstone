@@ -23,7 +23,7 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30">
 
       {/* Navigation Layer */}
       <nav className="fixed top-0 z-50 w-full px-6 py-4 flex justify-between items-center mix-blend-difference text-white">
@@ -45,7 +45,7 @@ export default function LandingPage() {
 
         {/* Resident Side (Left) -- Revamped */}
         <Link href="/search" className="group relative flex-1 h-1/2 md:h-full cursor-pointer overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/60 via-emerald-900/40 to-black/60 group-hover:from-emerald-900/50 group-hover:via-emerald-800/30 transition-all duration-700 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/60 via-blue-900/40 to-black/60 group-hover:from-blue-900/50 group-hover:via-blue-800/30 transition-all duration-700 z-10" />
           <img
             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop"
             alt="Luxury Home"
@@ -56,7 +56,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="mb-6 p-4 rounded-full bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition-colors"
+              className="mb-6 p-4 rounded-full bg-blue-500/10 backdrop-blur-md border border-blue-500/20 text-blue-400 group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-colors"
             >
               <Home className="h-8 w-8" />
             </motion.div>
@@ -64,7 +64,7 @@ export default function LandingPage() {
             <p className="text-slate-300 text-sm md:text-base tracking-[0.2em] uppercase mb-10 font-medium max-w-xs leading-relaxed group-hover:text-white transition-colors">
               Find your sanctuary
             </p>
-            <div className="px-8 py-3 rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-300">
+            <div className="px-8 py-3 rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase group-hover:bg-blue-500 group-hover:border-blue-500 group-hover:text-white transition-all duration-300">
               Find Your Home
             </div>
           </div>
@@ -72,7 +72,7 @@ export default function LandingPage() {
 
         {/* Landlord Side (Right) -- Revamped */}
         <Link href="/login" className="group relative flex-1 h-1/2 md:h-full cursor-pointer overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/60 via-indigo-900/40 to-black/60 group-hover:from-indigo-900/50 group-hover:via-indigo-800/30 transition-all duration-700 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary-dark/60 via-primary/40 to-black/60 group-hover:from-primary-dark/50 group-hover:via-primary/30 transition-all duration-700 z-10" />
           <img
             src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2669&auto=format&fit=crop"
             alt="Modern Office"
@@ -83,7 +83,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="mb-6 p-4 rounded-full bg-indigo-500/10 backdrop-blur-md border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-colors"
+              className="mb-6 p-4 rounded-full bg-primary/10 backdrop-blur-md border border-primary/20 text-primary group-hover:bg-primary/20 group-hover:border-primary/40 transition-colors"
             >
               <Building2 className="h-8 w-8" />
             </motion.div>
@@ -91,7 +91,7 @@ export default function LandingPage() {
             <p className="text-slate-300 text-sm md:text-base tracking-[0.2em] uppercase mb-10 font-medium max-w-xs leading-relaxed group-hover:text-white transition-colors">
               Manage your portfolio
             </p>
-            <div className="px-8 py-3 rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase group-hover:bg-indigo-500 group-hover:border-indigo-500 group-hover:text-white transition-all duration-300">
+            <div className="px-8 py-3 rounded-full border border-white/30 bg-white/5 backdrop-blur-sm text-xs font-bold tracking-widest uppercase group-hover:bg-primary group-hover:border-primary group-hover:text-white transition-all duration-300">
               Manage Properties
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase mb-5"
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-widest uppercase mb-5"
             >
               <Zap className="h-3 w-3" /> Why iReside
             </motion.div>
@@ -156,7 +156,7 @@ export default function LandingPage() {
                 title: "Portfolio Insights",
                 description: "Track occupancy, payment health, and operational performance in real time.",
                 icon: BarChart3,
-                iconStyle: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+                iconStyle: "text-primary bg-primary/10 border-primary/20",
               },
             ].map((item, index) => (
               <motion.div
@@ -205,7 +205,7 @@ export default function LandingPage() {
           {/* Timeline Steps - improved visuals */}
           <div className="relative grid md:grid-cols-4 gap-8 mb-24">
             {/* Connector Line */}
-            <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0" />
+            <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-[2px] bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0" />
 
             {[
               { title: "Discovery", icon: Search, desc: "Smart listings & AI compatibility." },
@@ -221,9 +221,9 @@ export default function LandingPage() {
                 transition={{ delay: index * 0.1 }}
                 className="relative flex flex-col items-center text-center group"
               >
-                <div className="relative z-10 h-24 w-24 rounded-3xl bg-[#0f172a] border border-white/10 shadow-2xl shadow-blue-900/10 flex items-center justify-center mb-6 overflow-hidden group-hover:border-blue-500/50 transition-colors duration-500">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <item.icon className="h-8 w-8 text-blue-400 group-hover:text-blue-300 transition-colors" />
+                <div className="relative z-10 h-24 w-24 rounded-3xl bg-[#0f172a] border border-white/10 shadow-2xl shadow-primary/10 flex items-center justify-center mb-6 overflow-hidden group-hover:border-primary/50 transition-colors duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <item.icon className="h-8 w-8 text-primary/80 group-hover:text-primary transition-colors" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
                 <p className="text-sm text-slate-400 max-w-[200px]">{item.desc}</p>
@@ -274,9 +274,9 @@ export default function LandingPage() {
               transition={{ delay: 0.1 }}
               className="md:col-span-1 group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all hover:bg-white/[0.05]"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex flex-col h-full">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 mb-6">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary mb-6">
                   <MessageSquare className="h-6 w-6" />
                 </div>
                 <h4 className="text-xl font-bold text-white mb-3">Community First</h4>
@@ -288,7 +288,7 @@ export default function LandingPage() {
                   <div className="w-3/4 p-3 rounded-2xl rounded-tl-none bg-white/10 border border-white/5 text-[10px] text-slate-300">
                     Gym is open 24/7 now?
                   </div>
-                  <div className="w-3/4 ml-auto p-3 rounded-2xl rounded-tr-none bg-emerald-500/20 border border-emerald-500/20 text-[10px] text-emerald-300 text-right">
+                  <div className="w-3/4 ml-auto p-3 rounded-2xl rounded-tr-none bg-primary/20 border border-primary/20 text-[10px] text-primary text-right">
                     Yes! Access via keycard.
                   </div>
                 </div>
@@ -331,10 +331,10 @@ export default function LandingPage() {
               transition={{ delay: 0.3 }}
               className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all hover:bg-white/[0.05]"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10 flex flex-col sm:flex-row justify-between gap-8">
                 <div className="max-w-md">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400 mb-6">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary mb-6">
                     <BarChart3 className="h-6 w-6" />
                   </div>
                   <h4 className="text-2xl font-bold text-white mb-3">Data-Driven Insights</h4>
@@ -347,7 +347,7 @@ export default function LandingPage() {
                   <div className="w-8 h-12 bg-white/5 rounded-t-sm group-hover:h-16 transition-all duration-700" />
                   <div className="w-8 h-20 bg-white/10 rounded-t-sm group-hover:h-24 transition-all duration-700 delay-75" />
                   <div className="w-8 h-16 bg-white/10 rounded-t-sm group-hover:h-20 transition-all duration-700 delay-100" />
-                  <div className="w-8 h-28 bg-indigo-500 rounded-t-sm shadow-[0_0_15px_rgba(99,102,241,0.5)] group-hover:h-32 transition-all duration-500 delay-150" />
+                  <div className="w-8 h-28 bg-primary rounded-t-sm shadow-[0_0_15px_rgba(62,123,57,0.5)] group-hover:h-32 transition-all duration-500 delay-150" />
                 </div>
               </div>
             </motion.div>
@@ -379,7 +379,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/search"
-              className="px-8 py-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold tracking-widest uppercase transition-colors"
+              className="px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold tracking-widest uppercase transition-colors"
             >
               I&apos;m a Resident
             </Link>
