@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Search, Bell } from "lucide-react";
+import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 
 interface DashboardBannerProps {
     title?: string;
@@ -30,11 +31,11 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "relative w-full h-48 md:h-64 min-h-[192px] md:min-h-[256px] shrink-0 rounded-3xl overflow-hidden shadow-2xl group bg-neutral-800 border border-white/10",
+                "relative w-full h-48 md:h-64 min-h-[192px] md:min-h-[256px] shrink-0 rounded-3xl overflow-visible shadow-2xl group bg-neutral-800 border border-white/10",
                 className
             )}>
             {/* Background Image */}
-            <div className="absolute inset-0">
+            <div className="absolute inset-0 overflow-hidden rounded-3xl">
                 <img
                     src={image}
                     alt="Dashboard Banner"
@@ -46,16 +47,21 @@ export function DashboardBanner({
             </div>
 
             {/* Top Right Header Actions */}
-            <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
+            <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+                {/* Search Bar */}
                 <div className="relative group hidden sm:block">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300 z-10 group-focus-within:text-white transition-colors" />
                     <input
                         type="text"
                         placeholder="Search..."
-                        className="pl-10 pr-4 py-2 w-full md:w-56 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-white/40 hover:bg-black/60"
+                        className="pl-10 pr-4 py-2 w-full md:w-56 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder:text-white/40 hover:bg-black/60 shadow-lg shadow-emerald-900/10"
                     />
                 </div>
 
+                {/* Profile Widget */}
+                <ProfileWidget />
+
+                {/* Notifications */}
                 <button className="relative p-2 rounded-full hover:bg-black/40 transition-colors group backdrop-blur-md border border-white/5 bg-black/20">
                     <Bell className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
                     <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#0a0a0a]"></span>
@@ -75,7 +81,7 @@ export function DashboardBanner({
 
                     {/* Date Badge */}
                     <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 w-fit">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        <span className="w-2 h-2 rounded-full bg-gradient-to-r from-lime-500 to-emerald-600 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                         <span className="text-xs font-medium text-white tracking-wide">
                             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </span>

@@ -93,24 +93,6 @@ export function Sidebar() {
                     </div>
                 ))}
             </nav>
-
-            {/* User Profile */}
-            <div className="border-t border-white/5 p-4">
-                <div className="flex items-center gap-3 rounded-xl bg-slate-800/30 p-2 hover:bg-slate-800/50 transition-colors cursor-pointer group">
-                    <div className="h-10 w-10 overflow-hidden rounded-full bg-primary/20 ring-2 ring-white/10 flex items-center justify-center relative">
-                        {/* Placeholder */}
-                        <span className="font-bold text-primary relative z-10">RC</span>
-                        <div className="absolute right-0 bottom-0 w-3 h-3 bg-primary border-2 border-[#0a0a0a] rounded-full z-20"></div>
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                        <p className="truncate text-sm font-semibold text-white group-hover:text-primary transition-colors">
-                            Robert Chen
-                        </p>
-                        <p className="truncate text-xs text-neutral-400">Portfolio Manager</p>
-                    </div>
-                    <Settings className="h-4 w-4 text-neutral-500 group-hover:text-white transition-colors" />
-                </div>
-            </div>
         </aside>
     );
 }

@@ -57,10 +57,10 @@ export function QuickActions() {
                                     {action.label}
                                 </span>
                                 <div className={cn(
-                                    "flex h-12 w-12 items-center justify-center rounded-full shadow-lg border border-white/10 transition-transform active:scale-95 hover:brightness-110",
-                                    "bg-neutral-800 backdrop-blur-md"
+                                    "flex h-12 w-12 items-center justify-center rounded-full shadow-lg border border-white/10 transition-transform active:scale-95 hover:scale-105",
+                                    "bg-gradient-to-br from-lime-600 to-emerald-800"
                                 )}>
-                                    <action.icon className={cn("h-5 w-5", action.color)} />
+                                    <action.icon className="h-5 w-5 text-white" />
                                 </div>
                             </motion.button>
                         ))}
@@ -71,9 +71,12 @@ export function QuickActions() {
             <motion.button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex h-14 w-14 items-center justify-center rounded-full shadow-xl shadow-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0a]",
-                    isOpen ? "bg-neutral-700 hover:bg-neutral-600 text-white" : "bg-primary hover:bg-primary-dark text-white"
+                    "flex h-14 w-14 items-center justify-center rounded-full shadow-xl shadow-lime-900/20 transition-all focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0a]",
+                    isOpen
+                        ? "bg-neutral-800 hover:bg-neutral-700 text-neutral-400 rotate-45"
+                        : "bg-gradient-to-br from-lime-600 to-emerald-800 hover:from-lime-700 hover:to-emerald-900 text-white"
                 )}
+                whileTap={{ scale: 0.95 }}
                 animate={{ rotate: isOpen ? 135 : 0 }}
                 transition={{ duration: 0.3, ease: "anticipate" }}
             >
