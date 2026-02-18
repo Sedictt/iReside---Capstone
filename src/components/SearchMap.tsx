@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,7 +6,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from "react-le
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import Image from "next/image";
-import { Star } from "lucide-react";
+import { Star, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Helper to center markers
 function MapUpdater({ center }: { center: [number, number] }) {
@@ -97,10 +99,11 @@ interface SearchMapProps {
     onMarkerClick: (property: Property) => void;
     onDetailsClick: (property: Property) => void;
     radius?: number; // Radius in km
-
     center?: [number, number];
     viewCenter?: [number, number];
     location?: [number, number];
+    likedProperties: Set<string>;
+    onLike: (id: string) => void;
 }
 
 export default function SearchMap({
@@ -111,10 +114,10 @@ export default function SearchMap({
     radius = 5,
     center = [14.6865, 121.0366],
     viewCenter,
-    location
+    location,
+    likedProperties,
+    onLike
 }: SearchMapProps) {
-
-
 
     useEffect(() => {
         // @ts-ignore
@@ -125,6 +128,8 @@ export default function SearchMap({
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         });
     }, []);
+
+    const isLiked = selectedProperty ? likedProperties.has(selectedProperty.id) : false;
 
     return (
         <div className="h-full w-full relative">
@@ -150,8 +155,7 @@ export default function SearchMap({
                 <MapBoundsEnforcer />
                 <MapUpdater center={viewCenter || center} />
 
-                {/* Search Result Marker - ONLY if no user location or if center != location (i.e. user searched elsewhere) */}
-                {/* Actually user request implies they want to see their location marker separate from search result */}
+                {/* Search Result Marker */}
                 <Marker position={center} icon={createSearchIcon()} />
 
                 {/* User Current Location Marker */}
@@ -204,6 +208,23 @@ export default function SearchMap({
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+
+                                {/* Favorite Button */}
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onLike(selectedProperty.id);
+                                    }}
+                                    className={cn(
+                                        "absolute top-3 left-3 h-8 w-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-all z-20",
+                                        isLiked
+                                            ? "bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30"
+                                            : "bg-black/30 border-white/20 text-white hover:bg-black/50"
+                                    )}
+                                >
+                                    <Heart className={cn("h-4 w-4 transition-colors", isLiked ? "fill-current" : "group-hover:scale-110")} />
+                                </button>
 
                                 {selectedProperty.isNew && (
                                     <span className="absolute top-3 right-3 bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-lg">
