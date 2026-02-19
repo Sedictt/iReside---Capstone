@@ -13,7 +13,7 @@ import {
     RotateCw,
     Check
 } from 'lucide-react';
-import { TenantNavbar } from '@/components/tenant/TenantNavbar';
+
 
 export default function TenantProfilePage() {
     const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop");
@@ -129,24 +129,9 @@ export default function TenantProfilePage() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 relative">
-
-            {/* Ambient Background */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <Image
-                    src="https://images.unsplash.com/photo-1481277542470-605612bd2d61?q=80&w=2600&auto=format&fit=crop"
-                    alt="Background"
-                    fill
-                    className="object-cover opacity-[0.10]"
-                    priority
-                />
-            </div>
-
+        <div className="space-y-12 relative">
             <div className="relative z-10">
-
-                <TenantNavbar />
-
-                <main className="max-w-7xl mx-auto p-6 md:p-8 space-y-12">
+                <div className="space-y-12">
 
                     {/* Hero Section with User Profile */}
                     <section className="relative w-full min-h-[500px] rounded-3xl overflow-hidden border border-border/50 shadow-2xl group">
@@ -388,7 +373,7 @@ export default function TenantProfilePage() {
 
                     </div>
 
-                </main>
+                </div>
 
                 <style jsx global>{`
         ::-webkit-scrollbar {

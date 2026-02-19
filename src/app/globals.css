@@ -99,3 +99,19 @@ input[type="number"] {
 .animate-view-map {
   animation: viewFadeScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}

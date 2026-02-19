@@ -23,7 +23,7 @@ export default function LandlordDashboard() {
     if (!mounted) return null;
 
     return (
-        <div className="flex flex-col min-h-screen w-full bg-[#0a0a0a] text-white overflow-y-auto p-6 md:p-8 space-y-6">
+        <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-6">
 
             {/* Main Dashboard Banner */}
             <DashboardBanner />

@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowRight, CircleHelp, X } from "lucide-react";
 import { Line } from "react-chartjs-2";
 import { cn } from "@/lib/utils";
@@ -7,6 +9,7 @@ import {
     LinearScale,
     PointElement,
     LineElement,
+    LineController,
     Title,
     Tooltip,
     Filler,
@@ -14,7 +17,7 @@ import {
     ChartData,
     ChartOptions
 } from "chart.js";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // Register ChartJS components
@@ -23,6 +26,7 @@ ChartJS.register(
     LinearScale,
     PointElement,
     LineElement,
+    LineController,
     Title,
     Tooltip,
     Filler
@@ -51,18 +55,26 @@ export function KpiCard({
     iconColor = "bg-blue-500",
     className
 }: KpiCardProps) {
-    const chartRef = useRef<any>(null);
-    const [gradient, setGradient] = useState<CanvasGradient | null>(null);
     const [showAiTooltip, setShowAiTooltip] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
 
     // Prepare chart data locally to handle gradients and simplified props
-    const chartData: ChartData<"line"> = {
+    const chartData = useMemo<ChartData<"line">>(() => ({
         labels: data.map((_, i) => i.toString()), // Dummy labels
         datasets: [
             {
                 data: data,
-                borderColor: gradient || trendlineProperties.colors[0], // Fallback color
+                borderColor: (context: ScriptableContext<"line">) => {
+                    const ctx = context.chart.ctx;
+                    const chartArea = context.chart.chartArea;
+                    if (!chartArea) {
+                        return trendlineProperties.colors[0];
+                    }
+                    const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    gradient.addColorStop(0, trendlineProperties.colors[0]);
+                    gradient.addColorStop(1, trendlineProperties.colors[1]);
+                    return gradient;
+                },
                 borderWidth: 3,
                 tension: 0.4,
                 pointRadius: 0,
@@ -70,7 +82,7 @@ export function KpiCard({
                 fill: false,
             }
         ]
-    };
+    }), [data, trendlineProperties]);
 
     const options: ChartOptions<"line"> = {
         responsive: true,
@@ -100,23 +112,6 @@ export function KpiCard({
             duration: 1000,
         }
     };
-
-    useEffect(() => {
-        const chart = chartRef.current;
-        if (!chart) return;
-
-        const ctx = chart.ctx;
-        if (ctx) {
-            const chartArea = chart.chartArea;
-            // Create gradient from left to right
-            // Use a fallback width if chartArea is not yet available (initial render)
-            const width = chartArea ? chartArea.right - chartArea.left : 300;
-            const newGradient = ctx.createLinearGradient(0, 0, width, 0);
-            newGradient.addColorStop(0, trendlineProperties.colors[0]);
-            newGradient.addColorStop(1, trendlineProperties.colors[1]);
-            setGradient(newGradient);
-        }
-    }, [trendlineProperties, data]); // Re-create if colors change
 
     return (
         <div className={cn("relative flex flex-col justify-between overflow-visible rounded-3xl bg-gradient-to-br from-[#171717] to-[#0a0a0a] shadow-xl border border-white/5", className)}>
@@ -246,7 +241,6 @@ export function KpiCard({
             {/* Chart Section - Bottom Section */}
             <div className="relative h-24 w-full mt-2">
                 <Line
-                    ref={chartRef}
                     data={chartData}
                     options={options}
                 />

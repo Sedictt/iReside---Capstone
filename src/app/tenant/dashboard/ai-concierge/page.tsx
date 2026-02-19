@@ -23,49 +23,9 @@ const body = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700", 
 
 export default function AIConciergePage() {
    return (
-      <div className={`min-h-screen bg-[#0d1117] text-white ${body.className}`}>
+      <div className={`text-white ${body.className}`}>
 
-         {/* Navbar */}
-         <nav className="border-b border-white/5 bg-[#0d1117] sticky top-0 z-50">
-            <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
-               <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                     <Home className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="font-bold text-lg tracking-tight">iReside</span>
-               </div>
 
-               {/* Center Nav - Matching previous tenant nav style */}
-               <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-                  <Link href="/tenant/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-                  <Link href="/tenant/leases" className="hover:text-white transition-colors">Leases</Link>
-                  <Link href="/tenant/payments" className="hover:text-white transition-colors">Payments</Link>
-                  <Link href="/tenant/profile" className="hover:text-white transition-colors">Profile</Link>
-                  <Link href="/tenant/dashboard/ai-concierge" className="text-white font-semibold">Concierge</Link>
-               </div>
-
-               <div className="flex items-center gap-4">
-                  <button className="text-slate-400 hover:text-white transition-colors">
-                     <Bell className="h-5 w-5" />
-                  </button>
-                  <div className="flex items-center gap-3 pl-4 border-l border-white/10">
-                     <div className="text-right hidden md:block">
-                        <p className="text-sm font-bold leading-none">Sarah Chen</p>
-                        <p className="text-xs text-slate-500 mt-1">Tenant</p>
-                     </div>
-                     <div className="h-9 w-9 rounded-full bg-slate-700 overflow-hidden border border-white/10">
-                        <Image
-                           src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&auto=format&fit=crop"
-                           alt="Sarah"
-                           width={36}
-                           height={36}
-                           className="object-cover h-full w-full"
-                        />
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </nav>
 
          <div className="max-w-[1600px] mx-auto p-6 md:p-8">
 
