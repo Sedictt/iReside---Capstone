@@ -54,7 +54,7 @@ export function TenantNavbar() {
                                 pathname?.includes('ai-concierge') && "text-foreground after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
                             )}
                         >
-                            Concierge
+                            Ask iRis
                         </Link>
                     </div>
                 </div>

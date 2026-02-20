@@ -132,7 +132,7 @@ export default function TenantDashboard() {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
                                     { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
-                                    { icon: Mail, label: "Contact Landlord", href: "#", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                                    { icon: Mail, label: "Contact Landlord", href: "/tenant/dashboard/ai-concierge", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
                                     { icon: MoreHorizontal, label: "More", href: "#", color: "text-blue-500", bg: "bg-blue-500/10" },
                                 ].map((action, i) => (
@@ -212,16 +212,16 @@ export default function TenantDashboard() {
                                 <div>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Sparkles className="w-4 h-4 text-primary" />
-                                        <span className="text-xs font-semibold text-primary uppercase tracking-wide">AI Concierge</span>
+                                        <span className="text-xs font-semibold text-primary uppercase tracking-wide">iRis Assistant</span>
                                     </div>
                                     <h3 className="text-xl font-bold mb-1">Need help with something?</h3>
-                                    <p className="text-muted-foreground text-sm max-w-md">Ask our AI assistant about building rules, amenities, or local recommendations.</p>
+                                    <p className="text-muted-foreground text-sm max-w-md">Ask iRis about building rules, amenities, or local recommendations.</p>
                                 </div>
                                 <Link
                                     href="/tenant/dashboard/ai-concierge"
                                     className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/20 whitespace-nowrap"
                                 >
-                                    Ask Concierge
+                                    Chat with iRis
                                 </Link>
                             </div>
                         </div>

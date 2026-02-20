@@ -141,7 +141,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-5">
             {[
               {
-                title: "AI Concierge",
+                title: "AI Assistant",
                 description: "Get instant help for property questions, maintenance, and daily tasks.",
                 icon: Sparkles,
                 iconStyle: "text-amber-400 bg-amber-500/10 border-amber-500/20",
