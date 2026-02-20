@@ -24,9 +24,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import LeaseModal from "@/components/tenant/LeaseModal";
 
 export default function TenantDashboard() {
     const [showBanner, setShowBanner] = useState(true);
+    const [isLeaseModalOpen, setIsLeaseModalOpen] = useState(false);
 
     return (
         <div className="relative">
@@ -135,18 +137,39 @@ export default function TenantDashboard() {
                                     { icon: Mail, label: "Contact Landlord", href: "/tenant/dashboard/ai-concierge", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
                                     { icon: MoreHorizontal, label: "More", href: "#", color: "text-blue-500", bg: "bg-blue-500/10" },
-                                ].map((action, i) => (
-                                    <Link
-                                        key={i}
-                                        href={action.href}
-                                        className="bg-card border border-border hover:border-primary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 group"
-                                    >
-                                        <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", action.bg, action.color)}>
-                                            <action.icon className="w-6 h-6" />
-                                        </div>
-                                        <span className="text-sm font-medium text-center group-hover:text-primary transition-colors">{action.label}</span>
-                                    </Link>
-                                ))}
+                                ].map((action, i) => {
+                                    const isLease = action.label === "Your Lease";
+                                    const content = (
+                                        <>
+                                            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", action.bg, action.color)}>
+                                                <action.icon className="w-6 h-6" />
+                                            </div>
+                                            <span className="text-sm font-medium text-center group-hover:text-primary transition-colors">{action.label}</span>
+                                        </>
+                                    );
+
+                                    if (isLease) {
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => setIsLeaseModalOpen(true)}
+                                                className="bg-card border border-border hover:border-primary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 group text-left"
+                                            >
+                                                {content}
+                                            </button>
+                                        );
+                                    }
+
+                                    return (
+                                        <Link
+                                            key={i}
+                                            href={action.href}
+                                            className="bg-card border border-border hover:border-primary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 group"
+                                        >
+                                            {content}
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -282,7 +305,15 @@ export default function TenantDashboard() {
                                         isNew: false
                                     }
                                 ].map((item, i) => (
-                                    <div key={i} className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all cursor-pointer">
+                                    <div
+                                        key={i}
+                                        onClick={() => {
+                                            if (item.type === "lease") {
+                                                setIsLeaseModalOpen(true);
+                                            }
+                                        }}
+                                        className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all cursor-pointer"
+                                    >
                                         <div className={cn(
                                             "h-10 w-10 rounded-full flex items-center justify-center border border-white/5 shadow-sm transition-transform group-hover:scale-105",
                                             item.bg, item.color
@@ -306,6 +337,11 @@ export default function TenantDashboard() {
                     </div>
                 </div>
             </div>
+
+            <LeaseModal
+                open={isLeaseModalOpen}
+                onOpenChange={setIsLeaseModalOpen}
+            />
         </div>
     );
 }
