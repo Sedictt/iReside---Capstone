@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from 'next/link';
 import {
@@ -31,6 +32,12 @@ import {
 import { motion } from "framer-motion";
 
 export default function AIConciergePage() {
+   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+   useEffect(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+   }, []);
+
    return (
       <div className="bg-[#f3f4f6] dark:bg-[#111827] text-gray-900 dark:text-gray-100 flex-1 w-full flex h-screen max-h-screen overflow-hidden transition-colors duration-300">
 
@@ -346,6 +353,7 @@ export default function AIConciergePage() {
                   </div>
                </motion.div>
 
+               <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
