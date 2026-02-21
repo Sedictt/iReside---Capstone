@@ -317,14 +317,28 @@ export default function SearchPage() {
                             <p className="text-xs text-neutral-400 mt-1">{filteredProperties.length} properties found</p>
                         </div>
                         <div className="flex gap-2">
-                            <Link href="/saved">
-                                <button className="p-2 rounded-lg border bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-600 relative group transition-colors">
-                                    <Heart className="h-5 w-5 group-hover:text-red-500 transition-colors" />
-                                    {likedProperties.size > 0 && (
-                                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border border-neutral-900" />
-                                    )}
-                                </button>
-                            </Link>
+                            <button
+                                onClick={() => {
+                                    if (listSortFilter === "saved") {
+                                        setListSortFilter("all");
+                                    } else {
+                                        setListSortFilter("saved");
+                                    }
+                                }}
+                                className={cn(
+                                    "p-2 rounded-lg border relative group transition-colors",
+                                    listSortFilter === "saved"
+                                        ? "bg-red-500/10 border-red-500 text-red-500"
+                                        : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-600"
+                                )}>
+                                <Heart className={cn(
+                                    "h-5 w-5 transition-colors",
+                                    listSortFilter === "saved" ? "fill-red-500 text-red-500" : "group-hover:text-red-500"
+                                )} />
+                                {likedProperties.size > 0 && listSortFilter !== "saved" && (
+                                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border border-neutral-900" />
+                                )}
+                            </button>
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={`p-2 rounded-lg border transition-all ${showFilters ? 'bg-primary border-primary text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white'}`}
@@ -489,11 +503,18 @@ export default function SearchPage() {
 
                                 {/* Property List */}
                                 <div className="space-y-4">
-                                    {filteredProperties.length === 0 ? (
+                                    {/* Handle saved sorting filter here */}
+                                    {(listSortFilter === "saved"
+                                        ? filteredProperties.filter(p => likedProperties.has(p.id))
+                                        : filteredProperties
+                                    ).length === 0 ? (
                                         <div className="text-center py-10 text-neutral-500">
-                                            <p>No properties found matching your search.</p>
+                                            <p>{listSortFilter === "saved" ? "No saved properties found in this area." : "No properties found matching your search."}</p>
                                         </div>
-                                    ) : filteredProperties.map((p) => (
+                                    ) : (listSortFilter === "saved"
+                                        ? filteredProperties.filter(p => likedProperties.has(p.id))
+                                        : filteredProperties
+                                    ).map((p) => (
                                         <div
                                             key={p.id}
                                             onClick={() => {
@@ -1038,17 +1059,32 @@ export default function SearchPage() {
                                     );
                                 })}
 
-                                <Link href="/saved">
-                                    <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold transition-all border bg-card text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white group">
-                                        <Heart className="h-3.5 w-3.5 group-hover:text-red-500 transition-colors" />
-                                        Saved
-                                        {likedProperties.size > 0 && (
-                                            <span className="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                                                {likedProperties.size}
-                                            </span>
-                                        )}
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={() => {
+                                        if (listSortFilter === "saved") {
+                                            setListSortFilter("all");
+                                        } else {
+                                            setListSortFilter("saved");
+                                        }
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold transition-all border group",
+                                        listSortFilter === "saved"
+                                            ? "bg-red-500/10 border-red-500 text-red-500 shadow-md shadow-red-500/20"
+                                            : "bg-card text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
+                                    )}
+                                >
+                                    <Heart className={cn(
+                                        "h-3.5 w-3.5 transition-colors",
+                                        listSortFilter === "saved" ? "fill-red-500 text-red-500" : "group-hover:text-red-500"
+                                    )} />
+                                    Saved
+                                    {likedProperties.size > 0 && listSortFilter !== "saved" && (
+                                        <span className="ml-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                                            {likedProperties.size}
+                                        </span>
+                                    )}
+                                </button>
                             </div>
 
 
@@ -1097,7 +1133,9 @@ export default function SearchPage() {
                                                 ? recentlyViewed
                                                     .map(id => properties.find(p => p.id === id))
                                                     .filter((p): p is Property => p !== undefined)
-                                                : filteredProperties
+                                                : listSortFilter === "saved"
+                                                    ? [...filteredProperties].filter(p => likedProperties.has(p.id))
+                                                    : filteredProperties
                                     ).map((p) => (
                                         <PropertyCard
                                             key={p.id}

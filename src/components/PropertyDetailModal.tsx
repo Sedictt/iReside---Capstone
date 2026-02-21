@@ -24,6 +24,10 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
     const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
 
     const [rulesOpen, setRulesOpen] = useState(false);
+    const [messageOpen, setMessageOpen] = useState(false);
+    const [messageSent, setMessageSent] = useState(false);
+    const [messageText, setMessageText] = useState("");
+
 
     if (!property) return null;
 
@@ -271,7 +275,13 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                         <Ban className="h-4 w-4" />
                                         Apt Rules
                                     </button>
-                                    <button className="h-12 w-12 rounded-xl border border-neutral-700 bg-neutral-800 flex items-center justify-center flex-shrink-0 text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors">
+                                    <button
+                                        onClick={() => {
+                                            setMessageSent(false);
+                                            setMessageText("");
+                                            setMessageOpen(true);
+                                        }}
+                                        className="h-12 w-12 rounded-xl border border-neutral-700 bg-neutral-800 flex items-center justify-center flex-shrink-0 text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors">
                                         <MessageSquare className="h-5 w-5" />
                                     </button>
                                 </div>
@@ -329,12 +339,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                     }
                 }
 
-                .modal-overlay {
-                    will-change: opacity;
-                }
-                .modal-content {
-                    will-change: transform, opacity;
-                }
+
 
                 [data-state="open"].modal-overlay {
                     animation: overlayFadeIn 0.2s ease-out forwards;
@@ -489,6 +494,89 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                             </Dialog.Close>
                         </div>
 
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog.Root>
+            {/* Message Modal */}
+            <Dialog.Root open={messageOpen} onOpenChange={setMessageOpen}>
+                <Dialog.Portal>
+                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[80] backdrop-blur-sm" />
+                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] w-[90vw] max-w-[500px] rounded-2xl bg-neutral-900 shadow-2xl focus:outline-none z-[90] flex flex-col border border-neutral-800 overflow-hidden">
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-neutral-800 bg-neutral-900 w-full z-10 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-neutral-800 rounded-lg">
+                                    <MessageSquare className="h-5 w-5 text-neutral-400" />
+                                </div>
+                                <Dialog.Title className="text-xl font-bold text-white">Message Manager</Dialog.Title>
+                            </div>
+                            <Dialog.Close className="h-8 w-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
+                                <X className="h-4 w-4" />
+                            </Dialog.Close>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6">
+                            {messageSent ? (
+                                <div className="py-12 flex flex-col items-center text-center fade-slide-up">
+                                    <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center mb-6 border border-primary/30">
+                                        <CheckCircle2 className="h-8 w-8 text-primary" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">Message Sent!</h3>
+                                    <p className="text-sm text-neutral-400 max-w-[280px]">
+                                        The property manager typically responds within 2 hours. Keep an eye on your inbox.
+                                    </p>
+                                    <button
+                                        onClick={() => setMessageOpen(false)}
+                                        className="mt-8 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 px-8 rounded-xl text-sm transition-all border border-neutral-700">
+                                        Done
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="fade-slide-up">
+                                    <div className="flex items-center gap-4 p-4 rounded-xl bg-neutral-800/50 border border-neutral-800/80 mb-6">
+                                        <div className="h-10 w-10 rounded-full overflow-hidden relative border border-neutral-700">
+                                            <Image src={property.images[0]} alt="Property" fill className="object-cover" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">{property.name}</p>
+                                            <p className="text-xs text-neutral-400">{property.address}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Your Message</label>
+                                            <textarea
+                                                value={messageText}
+                                                onChange={(e) => setMessageText(e.target.value)}
+                                                placeholder="Hi, I'm interested in this property and would like to know more..."
+                                                className="w-full h-32 bg-neutral-950 border border-neutral-800 rounded-xl p-4 text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 resize-none transition-all custom-scrollbar"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-3 pt-4">
+                                            <Dialog.Close asChild>
+                                                <button className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3.5 rounded-xl text-sm transition-all border border-neutral-700">
+                                                    Cancel
+                                                </button>
+                                            </Dialog.Close>
+                                            <button
+                                                onClick={() => {
+                                                    if (messageText.trim()) {
+                                                        setMessageSent(true);
+                                                    }
+                                                }}
+                                                disabled={!messageText.trim()}
+                                                className="flex-1 bg-primary hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
+                                                <Send className="h-4 w-4" />
+                                                Send Message
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </Dialog.Content>
                 </Dialog.Portal>
             </Dialog.Root>
