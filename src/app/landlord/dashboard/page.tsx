@@ -15,6 +15,7 @@ import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries
 export default function LandlordDashboard() {
     const [mounted, setMounted] = useState(false);
     const [showMoreKpis, setShowMoreKpis] = useState(false);
+    const [simplifiedMode, setSimplifiedMode] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -26,18 +27,44 @@ export default function LandlordDashboard() {
         <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-6">
 
             {/* Main Dashboard Banner */}
-            <DashboardBanner />
+            <DashboardBanner simplifiedMode={simplifiedMode} />
 
             {/* Performance Overview Header */}
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white tracking-tight">Performance Overview</h2>
-                <button
-                    onClick={() => setShowMoreKpis(!showMoreKpis)}
-                    className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5"
-                >
-                    {showMoreKpis ? "Show Less" : "See More"}
-                    <ChevronDown className={cn("h-4 w-4 transition-transform duration-300", showMoreKpis && "rotate-180")} />
-                </button>
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-lg font-bold text-white tracking-tight">
+                        {simplifiedMode ? "How You're Doing" : "Performance Overview"}
+                    </h2>
+                    {simplifiedMode && (
+                        <p className="text-xs text-neutral-400 font-medium">Simplified for easy reading</p>
+                    )}
+                </div>
+                <div className="flex items-center gap-4">
+                    {/* Simplified Mode Toggle */}
+                    <button
+                        onClick={() => setSimplifiedMode(!simplifiedMode)}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border",
+                            simplifiedMode
+                                ? "bg-gradient-to-r from-lime-500 to-emerald-600 text-white border-lime-400/20 shadow-[0_0_15px_rgba(132,204,22,0.3)]"
+                                : "bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10"
+                        )}
+                    >
+                        <div className={cn(
+                            "w-2 h-2 rounded-full animate-pulse",
+                            simplifiedMode ? "bg-white" : "bg-neutral-600"
+                        )} />
+                        {simplifiedMode ? "SIMPLIFIED ON" : "SIMPLIFY VIEW"}
+                    </button>
+
+                    <button
+                        onClick={() => setShowMoreKpis(!showMoreKpis)}
+                        className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5"
+                    >
+                        {showMoreKpis ? "Show Less" : "See More"}
+                        <ChevronDown className={cn("h-4 w-4 transition-transform duration-300", showMoreKpis && "rotate-180")} />
+                    </button>
+                </div>
             </div>
 
             {/* Stats Grid */}
@@ -45,42 +72,53 @@ export default function LandlordDashboard() {
 
                 <KpiCard
                     title="Estimated Earnings"
+                    simplifiedTitle="Money Earned"
                     value="₱1,345.78"
                     change="+672.89 (+100.00%)"
+                    simplifiedChange="+₱672 since last month"
                     changeType="positive"
                     iconColor="bg-blue-500"
                     trendlineProperties={{ colors: ["#22d3ee", "#3b82f6"] }} // Cyan to Blue
                     data={[800, 950, 1100, 1050, 1250, 1150, 1345]}
+                    simplifiedMode={simplifiedMode}
                 />
 
                 <KpiCard
                     title="Active Tenants"
+                    simplifiedTitle="People Staying"
                     value="142"
                     change="+4 New this month"
                     changeType="positive"
                     iconColor="bg-purple-500"
                     trendlineProperties={{ colors: ["#fb923c", "#ef4444"] }} // Orange to Red
                     data={[130, 132, 135, 138, 140, 141, 142]}
+                    simplifiedMode={simplifiedMode}
                 />
 
                 <KpiCard
                     title="Occupancy Rate"
+                    simplifiedTitle="Rented Houses"
                     value="92%"
                     change="-3% from last month"
+                    simplifiedChange="3% fewer than last month"
                     changeType="negative"
                     iconColor="bg-emerald-500"
                     trendlineProperties={{ colors: ["#a855f7", "#ec4899"] }} // Purple to Pink
                     data={[95, 95, 94, 94, 93, 92, 92]}
+                    simplifiedMode={simplifiedMode}
                 />
 
                 <KpiCard
                     title="Pending Issues"
+                    simplifiedTitle="Things to Fix"
                     value="3"
                     change="+1 Critical Priority"
+                    simplifiedChange="1 new thing needs fixing"
                     changeType="negative"
                     iconColor="bg-red-500"
                     trendlineProperties={{ colors: ["#ef4444", "#ec4899"] }} // Red to Pink
                     data={[1, 1, 2, 2, 3, 3, 3]}
+                    simplifiedMode={simplifiedMode}
                 />
 
             </div>
@@ -100,39 +138,51 @@ export default function LandlordDashboard() {
                     )}>
                         <KpiCard
                             title="Maintenance Cost"
+                            simplifiedTitle="Repair Costs"
                             value="₱12,450"
                             change="-15% vs last month"
+                            simplifiedChange="₱1,800 less than last month"
                             changeType="positive"
                             iconColor="bg-orange-500"
                             trendlineProperties={{ colors: ["#f97316", "#ea580c"] }}
                             data={[15000, 14200, 13800, 12450, 12450, 12000, 12450]}
+                            simplifiedMode={simplifiedMode}
                         />
                         <KpiCard
                             title="Lease Renewals"
+                            simplifiedTitle="Ending Contracts"
                             value="8"
                             change="Due in next 30 days"
+                            simplifiedChange="8 contracts ending soon"
                             changeType="neutral"
                             iconColor="bg-indigo-500"
                             trendlineProperties={{ colors: ["#818cf8", "#6366f1"] }}
                             data={[2, 3, 5, 8, 8, 9, 8]}
+                            simplifiedMode={simplifiedMode}
                         />
                         <KpiCard
                             title="Avg. Tenant Duration"
+                            simplifiedTitle="Average Stay"
                             value="1.8 Years"
                             change="+0.2 Years YTD"
+                            simplifiedChange="People staying longer"
                             changeType="positive"
                             iconColor="bg-teal-500"
                             trendlineProperties={{ colors: ["#2dd4bf", "#14b8a6"] }}
                             data={[1.5, 1.5, 1.6, 1.6, 1.7, 1.8, 1.8]}
+                            simplifiedMode={simplifiedMode}
                         />
                         <KpiCard
                             title="Portfolio Value"
+                            simplifiedTitle="Total Property Value"
                             value="₱45.2M"
                             change="+5.4% Appreciation"
+                            simplifiedChange="Your houses are worth more"
                             changeType="positive"
                             iconColor="bg-yellow-500"
                             trendlineProperties={{ colors: ["#facc15", "#eab308"] }}
                             data={[42, 42.5, 43, 44, 44.5, 45, 45.2]}
+                            simplifiedMode={simplifiedMode}
                         />
                     </div>
                 </div>
@@ -144,7 +194,7 @@ export default function LandlordDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-8">
                 {/* Chart Section */}
                 <div className="lg:col-span-2 h-[400px]">
-                    <FinancialPerformanceChart />
+                    <FinancialPerformanceChart simplifiedMode={simplifiedMode} />
                 </div>
 
                 {/* Featured Property Card */}
@@ -154,16 +204,17 @@ export default function LandlordDashboard() {
                         totalSales={243}
                         totalViews="20K+"
                         className="h-full shadow-2xl"
+                        simplifiedMode={simplifiedMode}
                     />
                 </div>
             </div>
 
             {/* Recent Inquiries */}
             <div className="w-full">
-                <RecentInquiries />
+                <RecentInquiries simplifiedMode={simplifiedMode} />
             </div>
 
-            <QuickActions />
+            <QuickActions simplifiedMode={simplifiedMode} />
         </div >
     );
 }

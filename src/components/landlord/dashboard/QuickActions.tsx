@@ -36,15 +36,25 @@ const actions = [
     }
 ];
 
-export function QuickActions() {
+export function QuickActions({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
+
+    const displayActions = actions.map(action => ({
+        ...action,
+        label: simplifiedMode ? (
+            action.label === "Add Property" ? "List a House" :
+                action.label === "Create Invoice" ? "Send a Bill" :
+                    action.label === "New Lease" ? "Sign New Tenant" :
+                        action.label === "Announce" ? "Tell Everyone" : action.label
+        ) : action.label
+    }));
 
     return (
         <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
             <AnimatePresence>
                 {isOpen && (
                     <div className="flex flex-col items-end gap-3 mb-2">
-                        {actions.map((action) => (
+                        {displayActions.map((action) => (
                             <motion.button
                                 key={action.label}
                                 initial={{ opacity: 0, y: 20, scale: 0.8 }}

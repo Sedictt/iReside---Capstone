@@ -34,8 +34,10 @@ ChartJS.register(
 
 interface KpiCardProps {
     title: string;
+    simplifiedTitle?: string;
     value: string;
     change: string;
+    simplifiedChange?: string;
     changeType: "positive" | "negative" | "neutral";
     data: number[];
     trendlineProperties?: {
@@ -43,20 +45,27 @@ interface KpiCardProps {
     };
     iconColor?: string;
     className?: string;
+    simplifiedMode?: boolean;
 }
 
 export function KpiCard({
     title,
+    simplifiedTitle,
     value,
     change,
+    simplifiedChange,
     changeType,
     data,
     trendlineProperties = { colors: ["#3b82f6", "#06b6d4"] }, // Default Blue to Cyan
     iconColor = "bg-blue-500",
-    className
+    className,
+    simplifiedMode = false
 }: KpiCardProps) {
     const [showAiTooltip, setShowAiTooltip] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
+
+    const displayTitle = simplifiedMode && simplifiedTitle ? simplifiedTitle : title;
+    const displayChange = simplifiedMode && simplifiedChange ? simplifiedChange : change;
 
     // Prepare chart data locally to handle gradients and simplified props
     const chartData = useMemo<ChartData<"line">>(() => ({
@@ -117,48 +126,50 @@ export function KpiCard({
         <div className={cn("relative flex flex-col justify-between overflow-visible rounded-3xl bg-gradient-to-br from-[#171717] to-[#0a0a0a] shadow-xl border border-white/5", className)}>
 
             {/* AI Helper Widget */}
-            <div className="absolute top-4 right-4 z-30">
-                <button
-                    onMouseEnter={() => setShowAiTooltip(true)}
-                    onMouseLeave={() => setShowAiTooltip(false)}
-                    onClick={() => setShowAiModal(true)}
-                    className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 hover:scale-110 transition-all border border-primary/20 group cursor-pointer shadow-lg shadow-primary/10"
-                >
-                    <CircleHelp className="h-3.5 w-3.5" />
-                </button>
+            {!simplifiedMode && (
+                <div className="absolute top-4 right-4 z-30">
+                    <button
+                        onMouseEnter={() => setShowAiTooltip(true)}
+                        onMouseLeave={() => setShowAiTooltip(false)}
+                        onClick={() => setShowAiModal(true)}
+                        className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 hover:scale-110 transition-all border border-primary/20 group cursor-pointer shadow-lg shadow-primary/10"
+                    >
+                        <CircleHelp className="h-3.5 w-3.5" />
+                    </button>
 
-                <AnimatePresence>
-                    {showAiTooltip && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                            className="absolute right-0 top-10 w-64 p-4 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 pointer-events-none"
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <CircleHelp className="h-4 w-4 text-primary" />
-                                <span className="text-sm font-bold text-primary">i.R.i.s. Insight</span>
-                            </div>
-                            <p className="text-sm text-neutral-300 leading-relaxed font-medium">
-                                Your <strong className="text-white">{title}</strong> is currently <span className="text-white">{value}</span>.
-                                This represents a <span className={cn(changeType === "positive" ? "text-emerald-400" : changeType === "negative" ? "text-red-400" : "text-neutral-400")}>{change}</span> shift,
-                                suggesting {changeType === 'positive' ? 'strong growth' : changeType === 'negative' ? 'a decline to monitor' : 'stability'} in your portfolio.
-                            </p>
-                            <div className="mt-3 pt-2 border-t border-white/10 flex items-center gap-1.5 bg-primary/5 rounded-lg px-2 py-1.5">
-                                <svg
-                                    className="h-3.5 w-3.5 text-primary animate-pulse"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                                </svg>
-                                <span className="text-xs font-bold text-primary">Click icon for detailed analysis</span>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                    <AnimatePresence>
+                        {showAiTooltip && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                className="absolute right-0 top-10 w-64 p-4 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 pointer-events-none"
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <CircleHelp className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-bold text-primary">i.R.i.s. Insight</span>
+                                </div>
+                                <p className="text-sm text-neutral-300 leading-relaxed font-medium">
+                                    Your <strong className="text-white">{title}</strong> is currently <span className="text-white">{value}</span>.
+                                    This represents a <span className={cn(changeType === "positive" ? "text-emerald-400" : changeType === "negative" ? "text-red-400" : "text-neutral-400")}>{change}</span> shift,
+                                    suggesting {changeType === 'positive' ? 'strong growth' : changeType === 'negative' ? 'a decline to monitor' : 'stability'} in your portfolio.
+                                </p>
+                                <div className="mt-3 pt-2 border-t border-white/10 flex items-center gap-1.5 bg-primary/5 rounded-lg px-2 py-1.5">
+                                    <svg
+                                        className="h-3.5 w-3.5 text-primary animate-pulse"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                    </svg>
+                                    <span className="text-xs font-bold text-primary">Click icon for detailed analysis</span>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
 
             {/* AI Details Modal */}
             <AnimatePresence>
@@ -224,7 +235,7 @@ export function KpiCard({
             <div className="p-6 pb-2 z-10 w-full">
                 <div className="flex items-center gap-2 mb-3">
                     <span className={cn("h-2 w-2 rounded-full", iconColor)}></span>
-                    <span className="text-sm font-medium text-neutral-300 tracking-wide">{title}</span>
+                    <span className="text-sm font-medium text-neutral-300 tracking-wide">{displayTitle}</span>
                 </div>
 
                 <h3 className="text-3xl font-bold text-white mb-2 tracking-tight">{value}</h3>
@@ -234,22 +245,25 @@ export function KpiCard({
                     changeType === "positive" ? "text-emerald-400" :
                         changeType === "negative" ? "text-red-400" : "text-neutral-400"
                 )}>
-                    {change}
+                    {displayChange}
                 </p>
             </div>
 
             {/* Chart Section - Bottom Section */}
-            <div className="relative h-24 w-full mt-2">
-                <Line
-                    data={chartData}
-                    options={options}
-                />
+            {!simplifiedMode && (
+                <div className="relative h-24 w-full mt-2">
+                    <Line
+                        data={chartData}
+                        options={options}
+                    />
 
-                {/* Overlay Arrow Button */}
-                <button className="absolute bottom-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800/80 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white backdrop-blur-md border border-white/5">
-                    <ArrowRight className="h-4 w-4" />
-                </button>
-            </div>
+                    {/* Overlay Arrow Button */}
+                    <button className="absolute bottom-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800/80 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white backdrop-blur-md border border-white/5">
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
+            {simplifiedMode && <div className="h-6" />}
         </div>
     );
 }

@@ -56,7 +56,7 @@ const MOCK_INQUIRIES: Inquiry[] = [
     }
 ];
 
-export function RecentInquiries() {
+export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
     console.log('RecentInquiries component rendering');
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -104,15 +104,19 @@ export function RecentInquiries() {
                                 <MessageSquare className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">Recent Inquiries</h2>
-                                <p className="text-sm text-neutral-400">Respond quickly to convert more prospects</p>
+                                <h2 className="text-xl font-bold text-white">
+                                    {simplifiedMode ? "Messages from People" : "Recent Inquiries"}
+                                </h2>
+                                <p className="text-sm text-neutral-400">
+                                    {simplifiedMode ? "Talk to people interested in your house" : "Respond quickly to convert more prospects"}
+                                </p>
                             </div>
                         </div>
                         <a
                             href="/landlord/messages"
                             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium text-neutral-300 hover:text-white transition-all group"
                         >
-                            <span>View All</span>
+                            <span>{simplifiedMode ? "See All Messages" : "View All"}</span>
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </a>
                     </div>
@@ -213,7 +217,7 @@ export function RecentInquiries() {
 
                                     {/* Action Button */}
                                     <button className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-sm font-bold transition-all shadow-lg hover:shadow-xl">
-                                        Reply now
+                                        {simplifiedMode ? "Answer Now" : "Reply now"}
                                     </button>
                                 </div>
                             </motion.div>
@@ -255,7 +259,7 @@ export function RecentInquiries() {
                         >
                             <CheckCircle className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
                             <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
-                                {MOCK_INQUIRIES.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread'}
+                                {simplifiedMode ? "Got it" : (MOCK_INQUIRIES.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
                             </span>
                         </button>
 
@@ -268,7 +272,7 @@ export function RecentInquiries() {
                         >
                             <Eye className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
                             <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
-                                View Property
+                                {simplifiedMode ? "See House" : "View Property"}
                             </span>
                         </button>
 
@@ -281,7 +285,7 @@ export function RecentInquiries() {
                         >
                             <Archive className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
                             <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
-                                Archive
+                                {simplifiedMode ? "Save" : "Archive"}
                             </span>
                         </button>
 
@@ -295,7 +299,7 @@ export function RecentInquiries() {
                         >
                             <Trash2 className="h-4 w-4 text-red-400 group-hover/item:text-red-300 transition-colors" />
                             <span className="text-sm text-red-400 group-hover/item:text-red-300 transition-colors">
-                                Delete
+                                {simplifiedMode ? "Remove" : "Delete"}
                             </span>
                         </button>
                     </div>

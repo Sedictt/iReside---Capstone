@@ -565,7 +565,7 @@ function UnitSelector({ label, value, onChange, options, onSeeMore, propertyId }
                                 : "bg-primary text-black shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
                         )}
                     >
-                        <span className="relative z-10">{isSelected ? "Change Detail" : "Assign Unit"}</span>
+                        <span className="relative z-10">{isSelected ? "Change Unit" : "Select Unit"}</span>
                         {!isSelected && <ArrowRight className="h-4 w-4 relative z-10 animate-bounce-x" />}
                     </button>
                 </div>

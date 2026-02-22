@@ -22,8 +22,15 @@ ChartJS.register(
     Tooltip
 );
 
-export function FinancialPerformanceChart() {
+export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
     const [activeTab, setActiveTab] = useState<"earnings" | "expenses" | "netIncome">("earnings");
+
+    // labels mapping
+    const labels = {
+        earnings: simplifiedMode ? "Money In" : "Total Earnings",
+        expenses: simplifiedMode ? "Money Out" : "Expenses",
+        netIncome: simplifiedMode ? "Money Left" : "Net Income"
+    };
 
     // Mock data to match the curve shape in the requested design
     const earningsData = [130, 165, 225, 180, 235, 175];
@@ -138,7 +145,7 @@ export function FinancialPerformanceChart() {
                     {activeTab === "earnings" && (
                         <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,1)]"></span>
                     )}
-                    Total Earnings
+                    {labels.earnings}
                 </button>
                 <button
                     onClick={() => setActiveTab("expenses")}
@@ -150,7 +157,7 @@ export function FinancialPerformanceChart() {
                     {activeTab === "expenses" && (
                         <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]"></span>
                     )}
-                    Expenses
+                    {labels.expenses}
                 </button>
                 <button
                     onClick={() => setActiveTab("netIncome")}
@@ -162,7 +169,7 @@ export function FinancialPerformanceChart() {
                     {activeTab === "netIncome" && (
                         <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)]"></span>
                     )}
-                    Net Income
+                    {labels.netIncome}
                 </button>
             </div>
 

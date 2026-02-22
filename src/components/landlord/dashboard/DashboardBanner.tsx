@@ -10,15 +10,19 @@ interface DashboardBannerProps {
     subtitle?: string;
     image?: string;
     className?: string;
+    simplifiedMode?: boolean;
 }
 
 export function DashboardBanner({
     title = "Welcome back, Landlord",
     subtitle = "Here's what's happening with your properties today.",
     image = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop", // City Night Architecture
-    className
+    className,
+    simplifiedMode = false
 }: DashboardBannerProps) {
     const [time, setTime] = useState<Date | null>(null);
+
+    const displaySubtitle = simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle;
 
     useEffect(() => {
         setTime(new Date());
@@ -76,7 +80,7 @@ export function DashboardBanner({
                         {title}
                     </h1>
                     <p className="text-neutral-300 text-sm md:text-lg max-w-xl font-medium drop-shadow-md">
-                        {subtitle}
+                        {displaySubtitle}
                     </p>
 
                     {/* Date Badge */}
