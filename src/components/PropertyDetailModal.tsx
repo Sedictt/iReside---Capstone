@@ -63,10 +63,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                         <Share className="h-4 w-4" />
                                     </button>
                                 </div>
-                                {/* Virtual Tour Badge */}
-                                <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold tracking-wider uppercase text-white border border-white/10">
-                                    Virtual Tour Available
-                                </div>
+
                             </div>
                             <div className="h-[35%] w-full grid grid-cols-3 gap-1 p-1 bg-background">
                                 {property.images.slice(1, 4).map((img, i) => (

@@ -111,7 +111,7 @@ export default function SearchPage() {
     };
 
     // Available Property Types
-    const propertyTypes = ["Apartment", "Condo", "House", "Townhouse", "Studio"];
+    const propertyTypes = ["Dormitories", "Boarding Houses", "Apartments"];
 
     const handleTypeToggle = (type: string) => {
         setSelectedTypes(prev =>
@@ -478,10 +478,10 @@ export default function SearchPage() {
                                 <div className="space-y-4">
                                     <label className="text-xs font-semibold uppercase text-neutral-500 tracking-wider">Property Type</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {["Apartment", "Boarding House", "Dorms"].map((type, i) => (
-                                            <button key={i} className={cn(
+                                        {propertyTypes.map((type, i) => (
+                                            <button key={i} onClick={() => handleTypeToggle(type)} className={cn(
                                                 "px-4 py-1.5 rounded-full text-xs font-medium border transition-colors",
-                                                type === "Apartment"
+                                                selectedTypes.includes(type)
                                                     ? "bg-primary text-white border-primary"
                                                     : "bg-transparent text-neutral-400 border-neutral-700 hover:border-neutral-600 hover:text-neutral-300"
                                             )}>
@@ -491,11 +491,7 @@ export default function SearchPage() {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={handleSearch}
-                                    className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl text-sm transition-colors shadow-lg shadow-primary/20 active:scale-[0.98]">
-                                    Update Results
-                                </button>
+
                             </div>
                         ) : (
                             /* Results View */
