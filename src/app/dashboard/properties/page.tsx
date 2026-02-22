@@ -6,7 +6,7 @@ import { Building2, Plus, Map as MapIcon, Grid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
-import "leaflet-defaulticon-compatibility";
+
 
 // Dynamically import map components to avoid SSR issues
 const Map = dynamic(
@@ -72,6 +72,8 @@ export default function PropertiesPage() {
 
     useEffect(() => {
         setIsClient(true);
+        // @ts-ignore - Load leaflet compatibility only on client
+        import("leaflet-defaulticon-compatibility");
     }, []);
 
     return (

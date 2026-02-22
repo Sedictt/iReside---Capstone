@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Property } from "@/lib/data";
-
+import Link from "next/link";
 interface PropertyDetailModalProps {
     property: Property | null;
     isLiked: boolean;
@@ -66,7 +66,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
 
                             </div>
                             <div className="h-[35%] w-full grid grid-cols-3 gap-1 p-1 bg-background">
-                                {property.images.slice(1, 4).map((img, i) => (
+                                {property.images.slice(1, 4).map((img: string, i: number) => (
                                     <div key={i} className="relative h-full w-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
                                         <Image src={img} alt={`Gallery ${i}`} fill className="object-cover" />
                                     </div>
@@ -153,7 +153,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                             <div>
                                                 <h3 className="text-sm font-bold text-white mb-3">Amenities</h3>
                                                 <div className="grid grid-cols-2 gap-3">
-                                                    {property.amenities.map((amenity, i) => (
+                                                    {property.amenities.map((amenity: string, i: number) => (
                                                         <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-neutral-900 border border-neutral-800">
                                                             <div className="p-1.5 rounded bg-primary/10 text-primary">
                                                                 {(() => {
@@ -185,7 +185,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                             <div>
                                                 <h3 className="text-sm font-bold text-white mb-3">House Rules</h3>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {property.houseRules.map((rule, i) => (
+                                                    {property.houseRules.map((rule: string, i: number) => (
                                                         <span key={i} className={cn(
                                                             "px-3 py-1.5 rounded-full text-xs font-medium border flex items-center gap-1.5",
                                                             rule.includes("No")
@@ -262,10 +262,14 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                             {/* Footer Actions */}
                             <div className="p-6 md:p-8 border-t border-neutral-800 bg-card z-10">
                                 <div className="flex gap-3">
-                                    <button className="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
-                                        <Send className="h-4 w-4" />
-                                        Rent Now
-                                    </button>
+                                    <Link
+                                        href={`/tenant/applications/${property.id}/apply`}
+                                        className="group relative flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-2xl text-sm flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 overflow-hidden active:scale-[0.98]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                                        <Send className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                        <span className="relative z-10">Rent Now</span>
+                                    </Link>
                                     <button
                                         onClick={() => setRulesOpen(true)}
                                         className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all border border-neutral-700">
@@ -447,7 +451,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                             <div>
                                 <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider text-neutral-400">General Rules</h3>
                                 <div className="space-y-3">
-                                    {property.houseRules.map((rule, i) => (
+                                    {property.houseRules.map((rule: string, i: number) => (
                                         <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-neutral-800/50 border border-neutral-800/80">
                                             <div className={cn(
                                                 "mt-0.5 flex-shrink-0 p-1.5 rounded-full flex items-center justify-center",

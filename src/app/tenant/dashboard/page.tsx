@@ -131,12 +131,13 @@ export default function TenantDashboard() {
 
                         <div>
                             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 {[
                                     { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
                                     { icon: Mail, label: "Contact Landlord", href: "/tenant/dashboard/ai-concierge", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
-                                    { icon: MoreHorizontal, label: "More", href: "#", color: "text-blue-500", bg: "bg-blue-500/10" },
+                                    { icon: FileText, label: "Applications", href: "/tenant/applications", color: "text-blue-500", bg: "bg-blue-500/10" },
+                                    { icon: MoreHorizontal, label: "More", href: "#", color: "text-neutral-500", bg: "bg-neutral-500/10" },
                                 ].map((action, i) => {
                                     const isLease = action.label === "Your Lease";
                                     const content = (
