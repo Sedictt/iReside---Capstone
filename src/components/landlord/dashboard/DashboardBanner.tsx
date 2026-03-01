@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Home, Users, Wrench, ClipboardList } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
+import Link from "next/link";
 
 interface DashboardBannerProps {
     title?: string;
@@ -66,9 +67,9 @@ export function DashboardBanner({
                 <ProfileWidget />
 
                 {/* Notifications */}
-                <button className="relative p-2 rounded-full hover:bg-black/40 transition-colors group backdrop-blur-md border border-white/5 bg-black/20">
+                <button className="relative p-2.5 rounded-full hover:bg-black/40 transition-colors group backdrop-blur-md border border-white/5 bg-black/20">
                     <Bell className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
-                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#0a0a0a]"></span>
+                    <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 ring-2 ring-[#0a0a0a]"></span>
                 </button>
             </div>
 
@@ -84,11 +85,31 @@ export function DashboardBanner({
                     </p>
 
                     {/* Date Badge */}
-                    <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 w-fit">
+                    <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 w-fit mb-4">
                         <span className="w-2 h-2 rounded-full bg-gradient-to-r from-lime-500 to-emerald-600 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                         <span className="text-xs font-medium text-white tracking-wide">
                             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                         </span>
+                    </div>
+
+                    {/* Quick Access Links */}
+                    <div className="flex flex-wrap items-center gap-3 mt-2">
+                        <Link href="/landlord/properties" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
+                            <Home className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-white">Properties</span>
+                        </Link>
+                        <Link href="/landlord/tenants" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
+                            <Users className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-white">Tenants</span>
+                        </Link>
+                        <Link href="/landlord/maintenance" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
+                            <Wrench className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-white">Maintenance</span>
+                        </Link>
+                        <Link href="/landlord/applications" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
+                            <ClipboardList className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-white">Applications</span>
+                        </Link>
                     </div>
                 </div>
 

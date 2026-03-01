@@ -15,21 +15,37 @@ import {
     Bell,
     LogOut,
     ChevronDown,
-    ClipboardList
+    ClipboardList,
+    Map,
+    ArrowUpRight
 } from "lucide-react";
 
 
-const NAV_ITEMS = [
+interface NavItem {
+    label: string;
+    href: string;
+    icon: any;
+    badge?: number;
+}
+
+interface NavSection {
+    category: string;
+    items: NavItem[];
+}
+
+const NAV_ITEMS: NavSection[] = [
     {
         category: "Main",
         items: [
             { label: "Dashboard", href: "/landlord/dashboard", icon: LayoutDashboard },
+            { label: "Statistics", href: "/landlord/statistics", icon: ArrowUpRight },
         ]
     },
     {
         category: "Management",
         items: [
             { label: "Properties", href: "/landlord/properties", icon: Building2 },
+            { label: "Unit Map", href: "/landlord/unit-map", icon: Map },
             { label: "Listings", href: "/landlord/listings", icon: FileText },
             { label: "Applications", href: "/landlord/applications", icon: ClipboardList, badge: 2 },
             { label: "Tenants", href: "/landlord/tenants", icon: Users },
@@ -44,6 +60,7 @@ const NAV_ITEMS = [
         ]
     },
 ];
+
 
 export function Sidebar() {
     const pathname = usePathname();

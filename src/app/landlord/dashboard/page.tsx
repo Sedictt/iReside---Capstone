@@ -1,21 +1,20 @@
 "use client";
 
-import { Search, ArrowUpRight, Bell, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
-import { FinancialPerformanceChart } from "@/components/landlord/dashboard/FinancialPerformanceChart";
-import { QuickActions } from "@/components/landlord/dashboard/QuickActions";
-
-
-import { FeaturedPropertyCard } from "@/components/landlord/dashboard/FeaturedPropertyCard";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
-import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
+import { QuickActions } from "@/components/landlord/dashboard/QuickActions";
+import {
+    Building2,
+    CreditCard
+} from "lucide-react";
+import Link from "next/link";
+import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
+import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
 
 export default function LandlordDashboard() {
     const [mounted, setMounted] = useState(false);
-    const [showMoreKpis, setShowMoreKpis] = useState(false);
-    const [simplifiedMode, setSimplifiedMode] = useState(false);
+    const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -24,197 +23,145 @@ export default function LandlordDashboard() {
     if (!mounted) return null;
 
     return (
-        <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-6">
+        <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 md:pr-24 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
+            <DashboardBanner />
 
-            {/* Main Dashboard Banner */}
-            <DashboardBanner simplifiedMode={simplifiedMode} />
-
-            {/* Performance Overview Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-lg font-bold text-white tracking-tight">
-                        {simplifiedMode ? "How You're Doing" : "Performance Overview"}
-                    </h2>
-                    {simplifiedMode && (
-                        <p className="text-xs text-neutral-400 font-medium">Simplified for easy reading</p>
-                    )}
+            {/* Payment Overview */}
+            <div className="p-6 rounded-3xl bg-neutral-900 border border-white/5 space-y-4 pt-6">
+                <div className="flex items-center justify-between pointer-events-none">
+                    <div className="flex items-center gap-3">
+                        <CreditCard className="h-5 w-5 text-primary" />
+                        <h2 className="text-lg font-bold text-white">Payment Overview</h2>
+                    </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    {/* Simplified Mode Toggle */}
-                    <button
-                        onClick={() => setSimplifiedMode(!simplifiedMode)}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border",
-                            simplifiedMode
-                                ? "bg-gradient-to-r from-lime-500 to-emerald-600 text-white border-lime-400/20 shadow-[0_0_15px_rgba(132,204,22,0.3)]"
-                                : "bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10"
-                        )}
-                    >
-                        <div className={cn(
-                            "w-2 h-2 rounded-full animate-pulse",
-                            simplifiedMode ? "bg-white" : "bg-neutral-600"
-                        )} />
-                        {simplifiedMode ? "SIMPLIFIED ON" : "SIMPLIFY VIEW"}
-                    </button>
 
-                    <button
-                        onClick={() => setShowMoreKpis(!showMoreKpis)}
-                        className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/5"
-                    >
-                        {showMoreKpis ? "Show Less" : "See More"}
-                        <ChevronDown className={cn("h-4 w-4 transition-transform duration-300", showMoreKpis && "rotate-180")} />
-                    </button>
-                </div>
-            </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2">
+                    {/* Overdue */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between mb-2 px-1">
+                            <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">Overdue</h3>
+                            </div>
+                            <button onClick={() => setOpenPaymentModal("Overdue")} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <PaymentCard
+                                tenant="Marcus Johnson"
+                                unit="Unit 102"
+                                amount={13000}
+                                status="Overdue"
+                                date="Feb 20, 2026"
+                                avatar="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80"
+                            />
+                        </div>
+                    </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Near Due */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between mb-2 px-1">
+                            <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">Near Due</h3>
+                            </div>
+                            <button onClick={() => setOpenPaymentModal("Near Due")} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <PaymentCard
+                                tenant="Alex Reyes"
+                                unit="Unit 201"
+                                amount={15000}
+                                status="Near Due"
+                                date="Mar 5, 2026"
+                                avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+                            />
+                        </div>
+                    </div>
 
-                <KpiCard
-                    title="Estimated Earnings"
-                    simplifiedTitle="Money Earned"
-                    value="₱1,345.78"
-                    change="+672.89 (+100.00%)"
-                    simplifiedChange="+₱672 since last month"
-                    changeType="positive"
-                    iconColor="bg-blue-500"
-                    trendlineProperties={{ colors: ["#22d3ee", "#3b82f6"] }} // Cyan to Blue
-                    data={[800, 950, 1100, 1050, 1250, 1150, 1345]}
-                    simplifiedMode={simplifiedMode}
-                />
-
-                <KpiCard
-                    title="Active Tenants"
-                    simplifiedTitle="People Staying"
-                    value="142"
-                    change="+4 New this month"
-                    changeType="positive"
-                    iconColor="bg-purple-500"
-                    trendlineProperties={{ colors: ["#fb923c", "#ef4444"] }} // Orange to Red
-                    data={[130, 132, 135, 138, 140, 141, 142]}
-                    simplifiedMode={simplifiedMode}
-                />
-
-                <KpiCard
-                    title="Occupancy Rate"
-                    simplifiedTitle="Rented Houses"
-                    value="92%"
-                    change="-3% from last month"
-                    simplifiedChange="3% fewer than last month"
-                    changeType="negative"
-                    iconColor="bg-emerald-500"
-                    trendlineProperties={{ colors: ["#a855f7", "#ec4899"] }} // Purple to Pink
-                    data={[95, 95, 94, 94, 93, 92, 92]}
-                    simplifiedMode={simplifiedMode}
-                />
-
-                <KpiCard
-                    title="Pending Issues"
-                    simplifiedTitle="Things to Fix"
-                    value="3"
-                    change="+1 Critical Priority"
-                    simplifiedChange="1 new thing needs fixing"
-                    changeType="negative"
-                    iconColor="bg-red-500"
-                    trendlineProperties={{ colors: ["#ef4444", "#ec4899"] }} // Red to Pink
-                    data={[1, 1, 2, 2, 3, 3, 3]}
-                    simplifiedMode={simplifiedMode}
-                />
-
-            </div>
-
-            {/* Expandable Stats Grid */}
-            {/* Expandable Stats Grid - CSS Transition */}
-            <div
-                className={cn(
-                    "grid transition-all duration-500 ease-in-out",
-                    showMoreKpis ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0 mt-0"
-                )}
-            >
-                <div className="overflow-hidden min-h-0">
-                    <div className={cn(
-                        "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-transform duration-500",
-                        showMoreKpis ? "translate-y-0" : "-translate-y-4"
-                    )}>
-                        <KpiCard
-                            title="Maintenance Cost"
-                            simplifiedTitle="Repair Costs"
-                            value="₱12,450"
-                            change="-15% vs last month"
-                            simplifiedChange="₱1,800 less than last month"
-                            changeType="positive"
-                            iconColor="bg-orange-500"
-                            trendlineProperties={{ colors: ["#f97316", "#ea580c"] }}
-                            data={[15000, 14200, 13800, 12450, 12450, 12000, 12450]}
-                            simplifiedMode={simplifiedMode}
-                        />
-                        <KpiCard
-                            title="Lease Renewals"
-                            simplifiedTitle="Ending Contracts"
-                            value="8"
-                            change="Due in next 30 days"
-                            simplifiedChange="8 contracts ending soon"
-                            changeType="neutral"
-                            iconColor="bg-indigo-500"
-                            trendlineProperties={{ colors: ["#818cf8", "#6366f1"] }}
-                            data={[2, 3, 5, 8, 8, 9, 8]}
-                            simplifiedMode={simplifiedMode}
-                        />
-                        <KpiCard
-                            title="Avg. Tenant Duration"
-                            simplifiedTitle="Average Stay"
-                            value="1.8 Years"
-                            change="+0.2 Years YTD"
-                            simplifiedChange="People staying longer"
-                            changeType="positive"
-                            iconColor="bg-teal-500"
-                            trendlineProperties={{ colors: ["#2dd4bf", "#14b8a6"] }}
-                            data={[1.5, 1.5, 1.6, 1.6, 1.7, 1.8, 1.8]}
-                            simplifiedMode={simplifiedMode}
-                        />
-                        <KpiCard
-                            title="Portfolio Value"
-                            simplifiedTitle="Total Property Value"
-                            value="₱45.2M"
-                            change="+5.4% Appreciation"
-                            simplifiedChange="Your houses are worth more"
-                            changeType="positive"
-                            iconColor="bg-yellow-500"
-                            trendlineProperties={{ colors: ["#facc15", "#eab308"] }}
-                            data={[42, 42.5, 43, 44, 44.5, 45, 45.2]}
-                            simplifiedMode={simplifiedMode}
-                        />
+                    {/* Paid */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between mb-2 px-1">
+                            <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">Paid</h3>
+                            </div>
+                            <button onClick={() => setOpenPaymentModal("Paid")} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <PaymentCard
+                                tenant="Sarah Wilson"
+                                unit="Studio A"
+                                amount={12500}
+                                status="Paid"
+                                date="Feb 28, 2026"
+                                avatar="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
-
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-8">
-                {/* Chart Section */}
-                <div className="lg:col-span-2 h-[400px]">
-                    <FinancialPerformanceChart simplifiedMode={simplifiedMode} />
+            {/* Announcement Card */}
+            <div className="p-6 rounded-3xl bg-neutral-800/50 border border-white/5 relative overflow-hidden group flex flex-col justify-between">
+                <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3">
+                        <Building2 className="h-5 w-5 text-amber-500" />
+                        <h3 className="font-bold text-white text-lg">System Advisory</h3>
+                    </div>
+                    <p className="text-sm text-neutral-300 leading-relaxed font-medium">Maintenance scheduled for March 15th at 2:00 AM. Expect brief downtime.</p>
+                    <button className="px-4 py-2 mt-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors border border-white/10">Read Details</button>
                 </div>
-
-                {/* Featured Property Card */}
-                <div className="lg:col-span-1 h-[400px]">
-                    <FeaturedPropertyCard
-                        propertyName="Sunset Valley Apartments"
-                        totalSales={243}
-                        totalViews="20K+"
-                        className="h-full shadow-2xl"
-                        simplifiedMode={simplifiedMode}
-                    />
+                <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 group-hover:opacity-10 transition-all duration-500">
+                    <Building2 className="h-32 w-32" />
                 </div>
             </div>
 
-            {/* Recent Inquiries */}
-            <div className="w-full">
-                <RecentInquiries simplifiedMode={simplifiedMode} />
-            </div>
+            <PaymentModal
+                isOpen={openPaymentModal !== null}
+                onClose={() => setOpenPaymentModal(null)}
+                category={openPaymentModal}
+            />
+            <ContactsSidebar />
+            <QuickActions />
+        </div>
+    );
+}
 
-            <QuickActions simplifiedMode={simplifiedMode} />
-        </div >
+
+
+function PaymentCard({ tenant, unit, amount, status, date, avatar }: any) {
+    const isPaid = status === 'Paid';
+    const isNearDue = status === 'Near Due';
+
+    return (
+        <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 hover:bg-white/[0.04] transition-all cursor-pointer group">
+            <div className="flex items-center gap-4">
+                <div className="relative">
+                    <img src={avatar} alt={tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
+                    <div className={cn(
+                        "absolute -bottom-0 -right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a]",
+                        isPaid ? "bg-emerald-500" : isNearDue ? "bg-amber-500" : "bg-red-500"
+                    )} />
+                </div>
+                <div>
+                    <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{tenant}</h4>
+                    <p className="text-xs text-neutral-400 font-medium">{unit}</p>
+                </div>
+            </div>
+            <div className="text-right">
+                <h4 className="text-sm font-bold text-white mb-0.5">₱{amount.toLocaleString()}</h4>
+                <div className="flex items-center justify-end gap-1.5 mt-1">
+                    <span className={cn(
+                        "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border",
+                        isPaid ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
+                            isNearDue ? "text-amber-400 bg-amber-500/10 border-amber-500/20" :
+                                "text-red-400 bg-red-500/10 border-red-500/20"
+                    )}>
+                        {status}
+                    </span>
+                    <span className="text-[10px] text-neutral-500 font-medium">{date}</span>
+                </div>
+            </div>
+        </div>
     );
 }

@@ -61,19 +61,19 @@ export default function AIConciergePage() {
                   <div className="grid grid-cols-2 gap-2">
                      <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#6d9838] hover:bg-[#6d9838]/5 dark:hover:bg-[#6d9838]/10 transition group">
                         <Wrench className="text-gray-400 group-hover:text-[#6d9838] mb-2 w-5 h-5" />
-                        <span className="text-xs font-medium text-center">Maintenance</span>
+                        <span className="text-xs font-medium text-center">Report Damage</span>
                      </button>
                      <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#6d9838] hover:bg-[#6d9838]/5 dark:hover:bg-[#6d9838]/10 transition group">
                         <Package className="text-gray-400 group-hover:text-[#6d9838] mb-2 w-5 h-5" />
-                        <span className="text-xs font-medium text-center">Packages</span>
+                        <span className="text-xs font-medium text-center">Check Packages</span>
                      </button>
                      <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#6d9838] hover:bg-[#6d9838]/5 dark:hover:bg-[#6d9838]/10 transition group">
                         <Calendar className="text-gray-400 group-hover:text-[#6d9838] mb-2 w-5 h-5" />
-                        <span className="text-xs font-medium text-center">Amenities</span>
+                        <span className="text-xs font-medium text-center">Book Amenity</span>
                      </button>
                      <button className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[#6d9838] hover:bg-[#6d9838]/5 dark:hover:bg-[#6d9838]/10 transition group">
                         <CreditCard className="text-gray-400 group-hover:text-[#6d9838] mb-2 w-5 h-5" />
-                        <span className="text-xs font-medium text-center">Rent</span>
+                        <span className="text-xs font-medium text-center">Pay Rent</span>
                      </button>
                   </div>
                </div>
