@@ -10,15 +10,15 @@ export function MessageFab() {
     const pathname = usePathname();
     const [isChatOpen, setIsChatOpen] = useState(false);
 
-    // Don't show on the concierge page itself to avoid redundancy
-    if (pathname === "/tenant/dashboard/ai-concierge") return null;
+    // Don't show on the concierge page itself or the messages page to avoid redundancy
+    if (pathname === "/tenant/messages") return null;
 
     return (
         <>
             <button
                 onClick={() => setIsChatOpen(!isChatOpen)}
                 className={cn(
-                    "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-full shadow-[0_8px_30px_rgb(109,152,56,0.3)] hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group border border-white/20",
+                    "fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-full shadow-[0_8px_30px_rgb(109,152,56,0.3)] hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 group border border-white/20",
                     "animate-in slide-in-from-bottom-4 fade-in duration-700",
                     isChatOpen && "scale-90 opacity-0 pointer-events-none"
                 )}

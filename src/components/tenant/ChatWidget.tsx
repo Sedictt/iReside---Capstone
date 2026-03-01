@@ -85,7 +85,7 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     initial={{ opacity: 0, scale: 0.9, y: 40, filter: "blur(10px)" }}
                     animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
                     exit={{ opacity: 0, scale: 0.9, y: 40, filter: "blur(10px)" }}
-                    className="fixed bottom-6 right-6 z-[60] w-[400px] h-[600px] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 dark:border-white/5 flex flex-col overflow-hidden"
+                    className="w-[380px] h-[580px] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-t-2xl shadow-2xl border border-white/20 dark:border-white/5 flex flex-col pointer-events-auto overflow-hidden"
                 >
                     {/* Header */}
                     <header className="bg-primary/95 dark:bg-primary/90 p-5 text-white flex items-center justify-between backdrop-blur-md">
@@ -114,7 +114,7 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         </div>
                         <div className="flex items-center gap-1">
                             <Link
-                                href="/tenant/dashboard/ai-concierge"
+                                href="/tenant/messages"
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
                                 title="Open full chat"
                             >

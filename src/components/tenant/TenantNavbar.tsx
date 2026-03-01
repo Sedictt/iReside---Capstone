@@ -15,7 +15,7 @@ export function TenantNavbar() {
         { label: 'Dashboard', href: '/tenant/dashboard' },
         { label: 'Applications', href: '/tenant/applications' },
         { label: 'Leases', href: '/tenant/lease' },
-        { label: 'Payments', href: '/tenant/payments' },
+        { label: 'Payments', href: '/tenant/payments' }
     ];
 
     return (
@@ -47,13 +47,13 @@ export function TenantNavbar() {
                             );
                         })}
                         <Link
-                            href="/tenant/dashboard/ai-concierge"
+                            href="/tenant/messages"
                             className={cn(
                                 "hover:text-foreground transition-colors relative py-5",
-                                pathname?.includes('ai-concierge') && "text-foreground after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
+                                pathname?.includes('messages') && "text-foreground after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary"
                             )}
                         >
-                            Ask iRis
+                            Messages
                         </Link>
                     </div>
                 </div>

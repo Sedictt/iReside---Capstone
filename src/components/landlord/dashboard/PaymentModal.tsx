@@ -1,4 +1,5 @@
-import { X, CreditCard, Search } from "lucide-react";
+import { X, CreditCard, Search, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -29,6 +30,12 @@ export function PaymentModal({ isOpen, onClose, category }: PaymentModalProps) {
     if (!category) return null;
 
     const payments = mockPayments[category] || [];
+    const [confirmedPayments, setConfirmedPayments] = useState<string[]>([]);
+
+    const handleConfirm = (e: React.MouseEvent, tenant: string) => {
+        e.stopPropagation();
+        setConfirmedPayments(prev => [...prev, tenant]);
+    };
 
     const getStatusStyles = () => {
         switch (category) {
@@ -105,7 +112,7 @@ export function PaymentModal({ isOpen, onClose, category }: PaymentModalProps) {
                                             <img src={payment.avatar} alt={payment.tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
                                             <div className={cn(
                                                 "absolute -bottom-0 -right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a]",
-                                                getDotColor()
+                                                confirmedPayments.includes(payment.tenant) || category === "Paid" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : getDotColor()
                                             )} />
                                         </div>
                                         <div>
@@ -113,17 +120,42 @@ export function PaymentModal({ isOpen, onClose, category }: PaymentModalProps) {
                                             <p className="text-xs text-neutral-400 font-medium">{payment.unit}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <h4 className="text-sm font-bold text-white mb-0.5">₱{payment.amount.toLocaleString()}</h4>
-                                        <div className="flex items-center justify-end gap-1.5 mt-1">
+                                    <div className="text-right flex flex-col items-end relative overflow-hidden min-w-[120px]">
+                                        <h4 className={cn(
+                                            "text-sm font-bold text-white mb-0.5 transition-all",
+                                            !confirmedPayments.includes(payment.tenant) && category !== "Paid" && "group-hover:opacity-0"
+                                        )}>₱{payment.amount.toLocaleString()}</h4>
+                                        <div className={cn(
+                                            "flex items-center justify-end gap-1.5 mt-1 transition-all",
+                                            !confirmedPayments.includes(payment.tenant) && category !== "Paid" && "group-hover:opacity-0"
+                                        )}>
                                             <span className={cn(
                                                 "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border",
-                                                getStatusStyles()
+                                                confirmedPayments.includes(payment.tenant) || category === "Paid" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : getStatusStyles()
                                             )}>
-                                                {category}
+                                                {confirmedPayments.includes(payment.tenant) ? "Paid" : category}
                                             </span>
                                             <span className="text-[10px] text-neutral-500 font-medium">{payment.date}</span>
                                         </div>
+
+                                        {/* Hover Confirm Button */}
+                                        {category !== "Paid" && !confirmedPayments.includes(payment.tenant) && (
+                                            <button
+                                                onClick={(e) => handleConfirm(e, payment.tenant)}
+                                                className="absolute inset-y-0 right-0 opacity-0 group-hover:opacity-100 flex items-center gap-2 bg-primary text-black px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all translate-x-4 group-hover:translate-x-0 active:scale-95 whitespace-nowrap"
+                                            >
+                                                <CreditCard className="w-3.5 h-3.5" />
+                                                Confirm Payment
+                                            </button>
+                                        )}
+
+                                        {/* Success State */}
+                                        {confirmedPayments.includes(payment.tenant) && (
+                                            <div className="absolute inset-y-0 right-0 flex items-center text-emerald-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-right-2 duration-300">
+                                                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                                                Invoice Sent
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

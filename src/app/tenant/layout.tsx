@@ -12,7 +12,7 @@ export default function TenantLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    const isChatPage = pathname === "/tenant/dashboard/ai-concierge";
+    const isChatPage = pathname === "/tenant/messages";
 
     return (
         <div className={cn(
@@ -43,7 +43,6 @@ export default function TenantLayout({
                     </motion.div>
                 </AnimatePresence>
             </main>
-            <MessageFab />
         </div>
     );
 }

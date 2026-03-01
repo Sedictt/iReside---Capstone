@@ -57,6 +57,38 @@ export default function MessagesPage() {
     const [messageInput, setMessageInput] = useState("");
     const [showInfoSidebar, setShowInfoSidebar] = useState(false);
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownloadImage = async (elementId: string, filename: string) => {
+        try {
+            setIsDownloading(true);
+            const domtoimage = (await import('dom-to-image')).default;
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            // Adding a small delay helps ensure all internal fonts/rendering is complete
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const dataUrl = await domtoimage.toPng(element, {
+                bgcolor: '#0a0a0a',
+                height: element.offsetHeight,
+                width: element.offsetWidth,
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
+            });
+
+            const link = document.createElement('a');
+            link.download = `${filename}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error("Failed to generate image", error);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     const handleSendMessage = () => {
         if (!messageInput.trim()) return;
@@ -91,13 +123,40 @@ export default function MessagesPage() {
     };
 
     const handleConfirmPayment = (id: string, amount?: string) => {
-        setMessagesState(prev => prev.map(m =>
-            m.id === id ? {
-                ...m,
-                systemType: "payment",
-                content: `Marcus Johnson successfully paid ₱${amount || "13,000"} for Rent (February). Receipt ID: #PAY-${Math.floor(Math.random() * 10000)}.`
-            } : m
-        ));
+        const timestamp = new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        setMessagesState(prev => {
+            const updated = prev.map(m =>
+                m.id === id ? {
+                    ...m,
+                    systemType: "payment",
+                    content: `${activeContact.name} successfully paid ₱${amount || "13,000"} for Rent (February). Receipt ID: #PAY-${Math.floor(Math.random() * 10000)}.`
+                } : m
+            );
+
+            const invoiceId = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+            const invoiceMessage = {
+                id: `inv_${Date.now()}`,
+                type: "system",
+                systemType: "invoice",
+                invoiceId: invoiceId,
+                tenantName: activeContact.name,
+                unit: activeContact.unit,
+                amount: amount || "13,000",
+                date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                description: "Monthly Rent - February 2026",
+                content: "Official Electronic Invoice Generated",
+                timestamp: timestamp
+            };
+
+            return [...updated, invoiceMessage];
+        });
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -111,6 +170,7 @@ export default function MessagesPage() {
         switch (type) {
             case 'payment_submitted': return <FileText className="h-4 w-4 text-primary" />;
             case 'payment': return <CheckCircle2 className="h-4 w-4 text-primary" />;
+            case 'invoice': return <Receipt className="h-4 w-4 text-emerald-500" />;
             case 'maintenance': return <Wrench className="h-4 w-4 text-amber-500" />;
             case 'maintenance_resolved': return <CheckCircle2 className="h-4 w-4 text-blue-500" />;
             case 'lease': return <FileText className="h-4 w-4 text-purple-500" />;
@@ -279,6 +339,83 @@ export default function MessagesPage() {
                                                     >
                                                         Verify  & Confirm Payment
                                                     </button>
+                                                </div>
+                                            </div>
+                                        ) : msg.systemType === "invoice" ? (
+                                            <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-neutral-900 border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+                                                {/* Invoice Watermark Header */}
+                                                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-6 border-b border-white/5 relative overflow-hidden">
+                                                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                                                        <Receipt size={120} className="-rotate-12" />
+                                                    </div>
+                                                    <div className="relative z-10 flex justify-between items-start">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
+                                                                    <div className="w-3 h-3 bg-black rounded-sm rotate-45" />
+                                                                </div>
+                                                                <h2 className="text-primary font-black tracking-tighter text-lg italic">iReside</h2>
+                                                            </div>
+                                                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Digital Payment Invoice</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
+                                                                Status: Paid
+                                                            </span>
+                                                            <p className="text-[10px] text-neutral-400 mt-2 font-medium">{msg.invoiceId}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Invoice Content */}
+                                                <div className="p-6 space-y-6">
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <p className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">Billed To</p>
+                                                            <p className="text-sm font-bold text-white leading-tight">{msg.tenantName}</p>
+                                                            <p className="text-[11px] text-neutral-400 mt-0.5">{msg.unit}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">Date Issued</p>
+                                                            <p className="text-sm font-bold text-white leading-tight">{msg.date}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
+                                                        <div className="p-3 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider px-1">Description</span>
+                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider px-1">Amount</span>
+                                                        </div>
+                                                        <div className="p-4 flex items-center justify-between">
+                                                            <p className="text-xs text-neutral-300 font-medium">{msg.description}</p>
+                                                            <p className="text-sm font-black text-white">₱{msg.amount}</p>
+                                                        </div>
+                                                        <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-white/5">
+                                                            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Total Paid</span>
+                                                            <span className="text-lg font-black text-primary">₱{msg.amount}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            disabled={isDownloading}
+                                                            onClick={() => handleDownloadImage(`invoice-${msg.id}`, `Invoice-${msg.invoiceId}`)}
+                                                            className={cn(
+                                                                "flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-2xl text-[11px] font-bold transition-all border border-white/5 flex items-center justify-center gap-2 group",
+                                                                isDownloading && "opacity-50 cursor-not-allowed"
+                                                            )}
+                                                        >
+                                                            <Download className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-colors" />
+                                                            {isDownloading ? "Generating..." : "Download Image"}
+                                                        </button>
+                                                        <button className="w-12 h-12 bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center rounded-2xl transition-all border border-white/5">
+                                                            <ShieldCheck className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="px-6 py-3 bg-neutral-900 border-t border-white/5 text-center">
+                                                    <p className="text-[9px] text-neutral-600 font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
                                                 </div>
                                             </div>
                                         ) : (
@@ -582,7 +719,7 @@ export default function MessagesPage() {
             {/* Payment History Full Modal Overlay */}
             {showPaymentHistoryModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+                    <div id="payment-statement" className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
                         {/* Modal Header */}
                         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-neutral-900/50">
                             <div className="flex items-center gap-4">
@@ -650,8 +787,15 @@ export default function MessagesPage() {
                                 <span className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-0.5">Total Paid (Lifetime)</span>
                                 <span className="text-lg font-black text-white">₱91,000</span>
                             </div>
-                            <button className="bg-primary text-black font-bold px-6 py-2.5 rounded-xl text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
-                                Download Statement (PDF)
+                            <button
+                                disabled={isDownloading}
+                                onClick={() => handleDownloadImage('payment-statement', 'Payment-Statement')}
+                                className={cn(
+                                    "bg-primary text-black font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-primary/20",
+                                    isDownloading ? "opacity-50 cursor-not-allowed" : "hover:scale-105 active:scale-95"
+                                )}
+                            >
+                                {isDownloading ? "Generating..." : "Download Statement (Image)"}
                             </button>
                         </div>
                     </div>

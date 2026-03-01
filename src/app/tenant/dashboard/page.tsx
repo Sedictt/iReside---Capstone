@@ -25,13 +25,14 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import LeaseModal from "@/components/tenant/LeaseModal";
+import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar";
 
 export default function TenantDashboard() {
     const [showBanner, setShowBanner] = useState(true);
     const [isLeaseModalOpen, setIsLeaseModalOpen] = useState(false);
 
     return (
-        <div className="relative">
+        <div className="relative md:pr-[88px]">
             {/* Ambient Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <Image
@@ -134,7 +135,7 @@ export default function TenantDashboard() {
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 {[
                                     { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
-                                    { icon: Mail, label: "Contact Landlord", href: "/tenant/dashboard/ai-concierge", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                                    { icon: MessageSquare, label: "Messages", href: "/tenant/messages", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
                                     { icon: FileText, label: "Applications", href: "/tenant/applications", color: "text-blue-500", bg: "bg-blue-500/10" },
                                     { icon: MoreHorizontal, label: "More", href: "#", color: "text-neutral-500", bg: "bg-neutral-500/10" },
@@ -242,7 +243,7 @@ export default function TenantDashboard() {
                                     <p className="text-muted-foreground text-sm max-w-md">Ask iRis about building rules, amenities, or local recommendations.</p>
                                 </div>
                                 <Link
-                                    href="/tenant/dashboard/ai-concierge"
+                                    href="/tenant/messages"
                                     className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/20 whitespace-nowrap"
                                 >
                                     Chat with iRis
@@ -343,6 +344,7 @@ export default function TenantDashboard() {
                 open={isLeaseModalOpen}
                 onOpenChange={setIsLeaseModalOpen}
             />
+            <TenantContactsSidebar />
         </div>
     );
 }
