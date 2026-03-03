@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
     Search,
     Plus,
@@ -113,7 +114,7 @@ export function PropertiesDashboard() {
                             <span>Portfolio Management</span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-2">
-                            Property <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Portfolio</span>
+                            Property Portfolio
                         </h1>
                         <p className="text-neutral-400 text-lg max-w-xl">
                             Real-time performance metrics and operational health for your entire real estate portfolio.
@@ -125,10 +126,10 @@ export function PropertiesDashboard() {
                             <Filter className="h-4 w-4" />
                             Analytics
                         </button>
-                        <button className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+                        <Link href="/landlord/properties/new" className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-black font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                             <Plus className="h-5 w-5" />
                             New Asset
-                        </button>
+                        </Link>
                     </div>
                 </div>
 

@@ -46,7 +46,6 @@ const NAV_ITEMS: NavSection[] = [
         items: [
             { label: "Properties", href: "/landlord/properties", icon: Building2 },
             { label: "Unit Map", href: "/landlord/unit-map", icon: Map },
-            { label: "Listings", href: "/landlord/listings", icon: FileText },
             { label: "Applications", href: "/landlord/applications", icon: ClipboardList, badge: 2 },
             { label: "Tenants", href: "/landlord/tenants", icon: Users },
         ]

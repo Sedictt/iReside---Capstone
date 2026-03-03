@@ -1,6 +1,7 @@
 "use client";
 
 import { Sidebar } from "@/components/landlord/Sidebar";
+import { InPersonPaymentModal } from "@/components/landlord/InPersonPaymentModal";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export default function LandlordLayout({
             <main className={cn("flex-1 overflow-y-auto", !isMessages ? "ml-64" : "")}>
                 {children}
             </main>
+            <InPersonPaymentModal />
         </div>
     );
 }

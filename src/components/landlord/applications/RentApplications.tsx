@@ -21,6 +21,7 @@ import {
     Briefcase,
     Star,
     ArrowUpRight,
+    ArrowRight,
     X,
     Shield,
     AlertCircle,
@@ -271,416 +272,421 @@ export function RentApplications() {
     ];
 
     return (
-        <>
-            <div className="flex flex-col min-h-screen w-full bg-[#0a0a0a] text-white overflow-y-auto p-6 md:p-8 space-y-6">
+        <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar relative">
 
-                {/* Page Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-                >
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-lime-600/20 to-emerald-700/20 border border-lime-500/10">
-                            <FileText className="h-7 w-7 text-lime-400" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-                                Rent Applications
-                            </h1>
-                            <p className="text-sm text-neutral-400 mt-0.5">
-                                Review and manage incoming tenant applications
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
+            {/* Header Section */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-black tracking-tight text-white mb-2 flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-primary/80" />
+                        Application Control
+                    </h1>
+                    <p className="text-neutral-400 font-medium tracking-wide text-sm">
+                        Review, process, and securely manage incoming residency applications.
+                    </p>
+                </div>
+                <button className="flex items-center gap-2 bg-gradient-to-r from-primary to-emerald-400 text-black px-6 py-3 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 border border-primary/20">
+                    <CheckCircle2 className="h-5 w-5" />
+                    Auto-Screening
+                </button>
+            </div>
 
-                {/* Stat Cards */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-                >
-                    {[
-                        { label: "Pending Review", value: stats.pending, icon: Clock, gradient: "from-amber-600/20 to-orange-700/20", iconColor: "text-amber-400", borderColor: "border-amber-500/10" },
-                        { label: "Under Review", value: stats.reviewing, icon: Eye, gradient: "from-blue-600/20 to-indigo-700/20", iconColor: "text-blue-400", borderColor: "border-blue-500/10" },
-                        { label: "Approved", value: stats.approved, icon: CheckCircle2, gradient: "from-emerald-600/20 to-green-700/20", iconColor: "text-emerald-400", borderColor: "border-emerald-500/10" },
-                        { label: "Rejected", value: stats.rejected, icon: XCircle, gradient: "from-red-600/20 to-rose-700/20", iconColor: "text-red-400", borderColor: "border-red-500/10" },
-                    ].map((stat, i) => (
-                        <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.15 + i * 0.05 }}
-                            className={cn(
-                                "relative overflow-hidden rounded-2xl border bg-gradient-to-br p-5",
-                                stat.gradient,
-                                stat.borderColor,
-                            )}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider">{stat.label}</p>
-                                    <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
-                                </div>
-                                <div className={cn("p-2.5 rounded-xl bg-white/5", stat.borderColor)}>
-                                    <stat.icon className={cn("h-5 w-5", stat.iconColor)} />
+            {/* Glowing KPI Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                    { label: "Action Required", subtitle: "Pending forms", value: stats.pending, icon: Clock, glow: "rgba(245,158,11,0.15)", border: "border-amber-500/20", color: "text-amber-500" },
+                    { label: "Under Review", subtitle: "Background checks", value: stats.reviewing, icon: Eye, glow: "rgba(59,130,246,0.15)", border: "border-blue-500/20", color: "text-blue-500" },
+                    { label: "Approved", subtitle: "Awaiting contracts", value: stats.approved, icon: CheckCircle2, glow: "rgba(16,185,129,0.15)", border: "border-emerald-500/20", color: "text-emerald-500" },
+                    { label: "Rejected", subtitle: "Denied profiles", value: stats.rejected, icon: XCircle, glow: "rgba(239,68,68,0.15)", border: "border-red-500/20", color: "text-red-500" },
+                ].map((stat) => (
+                    <div
+                        key={stat.label}
+                        className={cn(
+                            "relative overflow-hidden p-6 rounded-3xl bg-neutral-900 border transition-all duration-300 group hover:-translate-y-1",
+                            stat.border
+                        )}
+                    >
+                        <div
+                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                            style={{ background: `radial-gradient(circle at center, ${stat.glow} 0%, transparent 70%)` }}
+                        />
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">{stat.label}</h3>
+                                <div className="p-2 rounded-xl bg-neutral-800 border border-white/5">
+                                    <stat.icon className={cn("h-5 w-5", stat.color)} />
                                 </div>
                             </div>
-                        </motion.div>
-                    ))}
-                </motion.div>
-
-                {/* Search and Filter Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                    className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-                >
-                    {/* Search */}
-                    <div className="relative w-full sm:w-80">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
-                        <input
-                            type="text"
-                            placeholder="Search by name, property, or ID..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-xl bg-white/5 border border-white/10 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-lime-500/30 focus:border-lime-500/30 transition-all"
-                        />
+                            <div className="flex flex-col gap-1">
+                                <span className="text-4xl font-black text-white tracking-tighter">{stat.value}</span>
+                                <span className="text-sm font-medium text-neutral-500">{stat.subtitle}</span>
+                            </div>
+                        </div>
                     </div>
+                ))}
+            </div>
 
-                    {/* Filter Tabs */}
-                    <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/5">
+            {/* Main Application Container */}
+            <div className="rounded-3xl bg-neutral-900 border border-white/5 flex flex-col pt-2 shadow-2xl">
+
+                {/* Advanced Command Toolbar */}
+                <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-neutral-900/50 backdrop-blur-xl sticky top-0 z-10 rounded-t-3xl">
+                    <div className="flex bg-neutral-950 p-1.5 rounded-xl border border-white/5 overflow-x-auto w-full sm:w-auto no-scrollbar">
                         {filterTabs.map((tab) => (
                             <button
                                 key={tab.value}
                                 onClick={() => setActiveFilter(tab.value)}
                                 className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                                    "px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2",
                                     activeFilter === tab.value
-                                        ? "bg-lime-600 text-white shadow-lg shadow-lime-900/30"
-                                        : "text-neutral-400 hover:text-white hover:bg-white/5"
+                                        ? "bg-neutral-800 text-white shadow-lg border border-white/5"
+                                        : "text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.02]"
                                 )}
                             >
                                 {tab.label}
                                 <span className={cn(
-                                    "ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full",
-                                    activeFilter === tab.value ? "bg-white/20" : "bg-white/5"
+                                    "px-1.5 py-0.5 rounded text-[10px] font-black leading-none",
+                                    activeFilter === tab.value ? "bg-primary/20 text-primary" : "bg-white/5 text-neutral-400"
                                 )}>
                                     {tab.count}
                                 </span>
                             </button>
                         ))}
                     </div>
-                </motion.div>
 
-                {/* Applications List */}
-                <div className="space-y-3">
-                    <AnimatePresence mode="popLayout">
-                        {filteredApplications.map((app, index) => {
-                            const statusConfig = STATUS_CONFIG[app.status];
-                            const StatusIcon = statusConfig.icon;
-                            return (
-                                <motion.div
-                                    key={app.id}
-                                    layout
-                                    initial={{ opacity: 0, y: 15 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    transition={{ delay: index * 0.05, duration: 0.3 }}
-                                    onClick={() => setSelectedApp(app)}
-                                    className="group relative rounded-2xl bg-gradient-to-r from-[#171717] to-[#131313] border border-white/5 hover:border-white/15 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-lime-900/10 overflow-hidden"
-                                >
-                                    {/* Status Accent Bar */}
-                                    <div className={cn(
-                                        "absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl",
-                                        app.status === "pending" && "bg-amber-500",
-                                        app.status === "reviewing" && "bg-blue-500",
-                                        app.status === "approved" && "bg-emerald-500",
-                                        app.status === "rejected" && "bg-red-500",
-                                    )} />
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="relative group flex-1 sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-white transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search applicant, property..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-neutral-950 border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                            />
+                        </div>
+                        <button className="p-2.5 rounded-xl bg-neutral-950 border border-white/5 text-neutral-400 hover:text-white hover:bg-white/5 transition-all">
+                            <Filter className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
 
-                                    <div className="flex flex-col lg:flex-row lg:items-center gap-4 p-5 pl-6">
-                                        {/* Left: Property Image + Applicant Info */}
-                                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                                            {/* Property Image */}
-                                            <div className="relative h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-white/10">
-                                                <img
-                                                    src={app.propertyImage}
-                                                    alt={app.propertyName}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                                            </div>
+                {/* Grid Format Interface */}
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <AnimatePresence mode="popLayout">
+                            {filteredApplications.map((app, index) => {
+                                const statusConfig = STATUS_CONFIG[app.status];
+                                const StatusIcon = statusConfig.icon;
+                                const isPending = app.status === "pending";
 
-                                            {/* Applicant Info */}
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="text-base font-bold text-white truncate">
-                                                        {app.applicant.name}
-                                                    </h3>
-                                                    <span className="text-xs text-neutral-500 font-mono">
-                                                        {app.id}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-3 text-xs text-neutral-400">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <Home className="h-3.5 w-3.5" />
-                                                        {app.propertyName} — {app.unitNumber}
-                                                    </span>
-                                                    <span className="hidden sm:flex items-center gap-1.5">
-                                                        <Briefcase className="h-3.5 w-3.5" />
-                                                        {app.applicant.occupation}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                return (
+                                    <motion.div
+                                        key={app.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 15 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ delay: index * 0.05, duration: 0.3 }}
+                                        onClick={() => setSelectedApp(app)}
+                                        className="group relative flex flex-col bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl"
+                                    >
+                                        {/* Status Glow Bar */}
+                                        {isPending && (
+                                            <div className="absolute top-0 inset-x-0 h-1 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-10 animate-pulse" />
+                                        )}
 
-                                        {/* Center: Key Metrics */}
-                                        <div className="flex items-center gap-6 flex-shrink-0">
-                                            <div className="hidden md:block text-center">
-                                                <p className="text-xs text-neutral-500 mb-0.5">Rent</p>
-                                                <p className="text-sm font-bold text-white">₱{app.monthlyRent.toLocaleString()}</p>
-                                            </div>
-                                            <div className="hidden md:block text-center">
-                                                <p className="text-xs text-neutral-500 mb-0.5">Move-in</p>
-                                                <p className="text-sm font-semibold text-neutral-300">{app.requestedMoveIn}</p>
-                                            </div>
-                                            <div className="hidden lg:block text-center">
-                                                <p className="text-xs text-neutral-500 mb-0.5">Credit</p>
-                                                <p className={cn("text-sm font-bold", getCreditScoreColor(app.applicant.creditScore))}>
-                                                    {app.applicant.creditScore}
-                                                </p>
-                                            </div>
-                                        </div>
+                                        {/* Top Card Section: Property Image bg */}
+                                        <div className="relative h-28 w-full bg-neutral-900 overflow-hidden shrink-0">
+                                            <img
+                                                src={app.propertyImage}
+                                                alt={app.propertyName}
+                                                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay transition-transform duration-700 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-neutral-950/20" />
 
-                                        {/* Right: Status + Arrow */}
-                                        <div className="flex items-center gap-3 flex-shrink-0">
-                                            <div className={cn(
-                                                "flex items-center gap-2 px-3 py-1.5 rounded-lg border",
-                                                statusConfig.bgColor,
-                                                statusConfig.borderColor
-                                            )}>
-                                                <StatusIcon className={cn("h-4 w-4", statusConfig.color)} />
-                                                <span className={cn("text-xs font-semibold", statusConfig.color)}>
+                                            {/* Top Status */}
+                                            <div className="absolute top-3 left-3 z-10">
+                                                <span className={cn(
+                                                    "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-lg",
+                                                    statusConfig.bgColor,
+                                                    statusConfig.borderColor,
+                                                    statusConfig.color,
+                                                    app.status === "pending" ? "bg-amber-500 text-black border-amber-400" :
+                                                        app.status === "approved" ? "bg-emerald-500/90 text-black border-emerald-400/50" : ""
+                                                )}>
+                                                    <StatusIcon className="w-3 h-3" />
                                                     {statusConfig.label}
                                                 </span>
                                             </div>
-                                            <ChevronRight className="h-5 w-5 text-neutral-600 group-hover:text-neutral-300 group-hover:translate-x-0.5 transition-all" />
+
+                                            {/* Score Metric Top Right */}
+                                            <div className="absolute top-3 right-3 z-10 flex flex-col items-end">
+                                                <span className="text-[9px] uppercase tracking-widest font-bold text-neutral-400">Credit</span>
+                                                <span className={cn("text-lg font-black leading-none drop-shadow-md", getCreditScoreColor(app.applicant.creditScore))}>
+                                                    {app.applicant.creditScore}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {/* Submitted Date */}
-                                    <div className="px-6 pb-3 flex items-center gap-1.5 text-[11px] text-neutral-500">
-                                        <Calendar className="h-3 w-3" />
-                                        Submitted {app.submittedDate}
-                                        <span className="mx-1">·</span>
-                                        {app.documents.length} document{app.documents.length !== 1 ? "s" : ""} attached
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
+                                        {/* Main Content Body */}
+                                        <div className="p-5 flex flex-col flex-1 bg-gradient-to-b from-neutral-950 to-neutral-900 border-t border-white/5 relative">
 
-                    {/* Empty State */}
+                                            {/* Floating Avatar */}
+                                            <div className="absolute -top-10 left-4 h-14 w-14 rounded-full bg-neutral-900 border-4 border-neutral-950 ring-1 ring-white/10 flex items-center justify-center overflow-hidden shadow-2xl z-20 group-hover:ring-primary/50 transition-colors">
+                                                <span className="text-lg font-black text-primary">
+                                                    {app.applicant.name.split(" ").map((n) => n[0]).join("")}
+                                                </span>
+                                            </div>
+
+                                            {/* Applicant Core Details */}
+                                            <div className="mt-4 mb-4">
+                                                <h3 className="text-base font-bold text-white mb-0.5 group-hover:text-primary transition-colors">{app.applicant.name}</h3>
+                                                <p className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium">
+                                                    <Briefcase className="w-3 h-3" />
+                                                    {app.applicant.occupation}
+                                                </p>
+                                            </div>
+
+                                            {/* Critical Property Info */}
+                                            <div className="grid grid-cols-2 gap-3 mb-4 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                                                <div>
+                                                    <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Property</span>
+                                                    <span className="text-xs font-bold text-white truncate block">{app.propertyName}</span>
+                                                    <span className="text-[10px] font-bold text-primary mt-0.5 block">{app.unitNumber}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Rental Rate</span>
+                                                    <span className="text-xs font-bold text-white block">₱{app.monthlyRent.toLocaleString()}</span>
+                                                    <span className="text-[10px] font-bold text-neutral-400 flex items-center gap-1 mt-0.5">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {app.requestedMoveIn}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-1 min-h-[8px]" />
+
+                                            {/* Footer Actions */}
+                                            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                                                <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 font-mono tracking-wider">
+                                                    {app.id}
+                                                </div>
+
+                                                <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-white/10 hover:text-primary border border-white/10 px-3 py-1.5 rounded-lg transition-all shadow-sm">
+                                                    Review
+                                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
+
                     {filteredApplications.length === 0 && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex flex-col items-center justify-center py-20 text-center"
-                        >
-                            <div className="p-4 rounded-2xl bg-neutral-800/50 mb-4">
-                                <FileText className="h-10 w-10 text-neutral-600" />
+                        <div className="py-24 flex flex-col items-center justify-center text-center">
+                            <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mb-5 ring-1 ring-white/10 shadow-xl">
+                                <Users className="w-8 h-8 text-neutral-600" />
                             </div>
-                            <h3 className="text-lg font-semibold text-white mb-1">No Applications Found</h3>
-                            <p className="text-sm text-neutral-500 max-w-sm">
-                                {searchQuery
-                                    ? "Try adjusting your search or filter criteria."
-                                    : "When potential tenants submit applications, they'll appear here."}
+                            <h3 className="text-xl font-black text-white mb-2">No Active Applications</h3>
+                            <p className="text-neutral-400 text-sm max-w-sm font-medium">
+                                Everything is quiet. When prospective tenants apply for residency, their profiles will appear here for review.
                             </p>
-                        </motion.div>
+                        </div>
                     )}
                 </div>
             </div>
 
-            {/* ── Detail Slide-Out Panel ───────────────────────────────────── */}
+            {/* Premium Slide-Out Panel */}
             <AnimatePresence>
                 {selectedApp && (
                     <>
-                        {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedApp(null)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 transition-opacity"
                         />
 
-                        {/* Panel */}
                         <motion.div
-                            initial={{ x: "100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-[#0f0f0f] border-l border-white/5 z-50 overflow-y-auto shadow-2xl"
+                            initial={{ x: "100%", opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: "100%", opacity: 0 }}
+                            transition={{ type: "spring", damping: 30, stiffness: 350 }}
+                            className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-neutral-950 border-l border-white/10 z-50 overflow-y-auto custom-scrollbar shadow-2xl flex flex-col"
                         >
                             {/* Panel Header */}
-                            <div className="sticky top-0 z-10 bg-[#0f0f0f]/90 backdrop-blur-xl border-b border-white/5">
-                                <div className="flex items-center justify-between p-6">
-                                    <div>
-                                        <p className="text-xs text-neutral-500 font-mono">{selectedApp.id}</p>
-                                        <h2 className="text-xl font-bold text-white mt-0.5">Application Details</h2>
-                                    </div>
-                                    <button
-                                        onClick={() => setSelectedApp(null)}
-                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
-                                    >
-                                        <X className="h-5 w-5 text-neutral-400" />
-                                    </button>
+                            <div className="sticky top-0 z-20 bg-neutral-950/80 backdrop-blur-3xl border-b border-white/5 px-6 py-4 flex items-center justify-between shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <span className="font-mono text-xs font-bold text-neutral-500 bg-white/5 px-2 py-1 rounded-md border border-white/5">{selectedApp.id}</span>
+                                    <h2 className="text-lg font-black text-white tracking-tight">Application Dossier</h2>
                                 </div>
+                                <button
+                                    onClick={() => setSelectedApp(null)}
+                                    className="p-2 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 transition-colors"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
                             </div>
 
-                            <div className="p-6 space-y-6">
-                                {/* Property Card */}
-                                <div className="relative h-40 rounded-2xl overflow-hidden">
-                                    <img
-                                        src={selectedApp.propertyImage}
-                                        alt={selectedApp.propertyName}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                                    <div className="absolute bottom-4 left-4">
-                                        <h3 className="text-lg font-bold text-white">{selectedApp.propertyName}</h3>
-                                        <p className="text-sm text-neutral-300">{selectedApp.unitNumber}</p>
-                                    </div>
-                                    <div className="absolute top-4 right-4">
-                                        {(() => {
-                                            const sc = STATUS_CONFIG[selectedApp.status];
-                                            const Icon = sc.icon;
-                                            return (
-                                                <div className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-full border backdrop-blur-sm", sc.bgColor, sc.borderColor)}>
-                                                    <Icon className={cn("h-3.5 w-3.5", sc.color)} />
-                                                    <span className={cn("text-xs font-bold", sc.color)}>{sc.label}</span>
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
+                            {/* Dossier Body */}
+                            <div className="p-6 md:p-8 space-y-8 flex-1">
 
-                                {/* Applicant Profile */}
-                                <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-4">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-lime-600/30 to-emerald-700/30 flex items-center justify-center ring-2 ring-white/10">
-                                            <span className="text-base font-bold text-lime-300">
-                                                {selectedApp.applicant.name.split(" ").map((n) => n[0]).join("")}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-white">{selectedApp.applicant.name}</h3>
-                                            <p className="text-sm text-neutral-400">{selectedApp.applicant.occupation}</p>
-                                        </div>
+                                {/* Hero Target Block */}
+                                <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl group">
+                                    <div className="h-48 w-full bg-neutral-900 border-b border-white/5">
+                                        <img
+                                            src={selectedApp.propertyImage}
+                                            alt={selectedApp.propertyName}
+                                            className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-700"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/50 to-transparent" />
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-3">
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <Mail className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                                            <span className="text-neutral-300">{selectedApp.applicant.email}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <Phone className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                                            <span className="text-neutral-300">{selectedApp.applicant.phone}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Financial Details */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-4 text-center">
-                                        <Banknote className="h-5 w-5 text-emerald-400 mx-auto mb-2" />
-                                        <p className="text-xs text-neutral-500">Monthly Income</p>
-                                        <p className="text-lg font-bold text-white">₱{selectedApp.applicant.monthlyIncome.toLocaleString()}</p>
-                                    </div>
-                                    <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-4 text-center">
-                                        <Shield className="h-5 w-5 text-blue-400 mx-auto mb-2" />
-                                        <p className="text-xs text-neutral-500">Credit Score</p>
-                                        <p className={cn("text-lg font-bold", getCreditScoreColor(selectedApp.applicant.creditScore))}>
-                                            {selectedApp.applicant.creditScore}
-                                        </p>
-                                        <p className={cn("text-xs font-medium mt-0.5", getCreditScoreColor(selectedApp.applicant.creditScore))}>
-                                            {getCreditScoreLabel(selectedApp.applicant.creditScore)}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Lease Details */}
-                                <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-3">
-                                    <h4 className="text-sm font-bold text-white uppercase tracking-wider">Lease Details</h4>
-                                    <div className="space-y-2.5">
-                                        {[
-                                            { label: "Monthly Rent", value: `₱${selectedApp.monthlyRent.toLocaleString()}`, icon: Banknote },
-                                            { label: "Lease Term", value: selectedApp.leaseTerm, icon: Calendar },
-                                            { label: "Requested Move-in", value: selectedApp.requestedMoveIn, icon: Calendar },
-                                            { label: "Income-to-Rent Ratio", value: `${(selectedApp.applicant.monthlyIncome / selectedApp.monthlyRent).toFixed(1)}x`, icon: TrendingUp },
-                                        ].map((detail) => (
-                                            <div key={detail.label} className="flex items-center justify-between text-sm">
-                                                <span className="flex items-center gap-2 text-neutral-400">
-                                                    <detail.icon className="h-4 w-4" />
-                                                    {detail.label}
+                                    <div className="absolute bottom-6 left-6 right-6">
+                                        <div className="flex items-end justify-between">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-white leading-none mb-2">{selectedApp.propertyName}</h3>
+                                                <span className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-lg text-sm font-bold shadow-sm backdrop-blur-md">
+                                                    {selectedApp.unitNumber}
                                                 </span>
-                                                <span className="font-semibold text-white">{detail.value}</span>
                                             </div>
-                                        ))}
+                                            <div className="text-right">
+                                                <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 block mb-1">Monthly Rent</span>
+                                                <span className="text-2xl font-black text-white">₱{selectedApp.monthlyRent.toLocaleString()}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Documents */}
-                                <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-3">
-                                    <h4 className="text-sm font-bold text-white uppercase tracking-wider">Submitted Documents</h4>
-                                    <div className="space-y-2">
+                                {/* Deep Intelligence Profiling */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-500 pl-2">Applicant Profile</h4>
+                                    <div className="rounded-3xl bg-neutral-900 border border-white/5 p-6 flex flex-col gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-16 w-16 rounded-full bg-neutral-950 border border-white/10 ring-2 ring-primary/20 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                                                <span className="text-2xl font-black text-primary">
+                                                    {selectedApp.applicant.name.split(" ").map((n) => n[0]).join("")}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-white">{selectedApp.applicant.name}</h3>
+                                                <p className="text-sm text-neutral-400 font-medium">{selectedApp.applicant.occupation}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="h-px w-full bg-white/5" />
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                                    <Mail className="h-4 w-4 text-neutral-400" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] uppercase font-bold text-neutral-500 block">Email</span>
+                                                    <span className="text-sm font-bold text-neutral-300">{selectedApp.applicant.email}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                                    <Phone className="h-4 w-4 text-neutral-400" />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] uppercase font-bold text-neutral-500 block">Phone</span>
+                                                    <span className="text-sm font-bold text-neutral-300">{selectedApp.applicant.phone}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Financial Underwriting Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="rounded-3xl bg-neutral-900 border border-white/5 p-5 relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
+                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                        <Banknote className="h-6 w-6 text-emerald-400 mb-4" />
+                                        <span className="text-[10px] uppercase font-black tracking-widest text-neutral-500 block mb-1">Monthly Income</span>
+                                        <span className="text-2xl font-black text-white">₱{selectedApp.applicant.monthlyIncome.toLocaleString()}</span>
+                                        <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded bg-black/40 border border-white/5 text-[10px] font-bold text-neutral-400">
+                                            <TrendingUp className="w-3 h-3 text-emerald-500" />
+                                            Ratio: {(selectedApp.applicant.monthlyIncome / selectedApp.monthlyRent).toFixed(1)}x
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-3xl bg-neutral-900 border border-white/5 p-5 relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                        <Shield className="h-6 w-6 text-blue-400 mb-4" />
+                                        <span className="text-[10px] uppercase font-black tracking-widest text-neutral-500 block mb-1">Credit Score</span>
+                                        <span className={cn("text-2xl font-black", getCreditScoreColor(selectedApp.applicant.creditScore))}>
+                                            {selectedApp.applicant.creditScore}
+                                        </span>
+                                        <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded bg-black/40 border border-white/5 text-[10px] font-bold">
+                                            <span className={cn("w-2 h-2 rounded-full", getCreditScoreColor(selectedApp.applicant.creditScore).replace('text-', 'bg-'))} />
+                                            {getCreditScoreLabel(selectedApp.applicant.creditScore)} Rating
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Extractive Document View */}
+                                <div className="space-y-4">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-500 pl-2 flex items-center justify-between">
+                                        Supporting Documents
+                                        <span className="bg-white/10 text-white px-2 py-0.5 rounded-full">{selectedApp.documents.length} Files</span>
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {selectedApp.documents.map((doc) => (
                                             <div
                                                 key={doc}
-                                                className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                                                className="flex items-center justify-between p-3 rounded-2xl bg-neutral-900 border border-white/5 hover:border-primary/50 hover:bg-white/[0.02] transition-all cursor-pointer group shadow-sm"
                                             >
-                                                <span className="flex items-center gap-3 text-sm text-neutral-300">
-                                                    <FileText className="h-4 w-4 text-neutral-500" />
-                                                    {doc}
-                                                </span>
-                                                <ArrowUpRight className="h-4 w-4 text-neutral-600 group-hover:text-lime-400 transition-colors" />
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    <div className="p-2 bg-neutral-950 rounded-xl border border-white/5 group-hover:border-primary/30 transition-colors shrink-0">
+                                                        <FileText className="h-4 w-4 text-neutral-500 group-hover:text-primary transition-colors" />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-neutral-300 truncate group-hover:text-white transition-colors">{doc}</span>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Notes */}
-                                {selectedApp.notes && (
-                                    <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-5 space-y-2">
-                                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">Notes</h4>
-                                        <p className="text-sm text-neutral-400 leading-relaxed">{selectedApp.notes}</p>
+                            </div>
+
+                            {/* Docked Action Footer */}
+                            <div className="p-6 md:p-8 bg-neutral-950 border-t border-white/5 mt-auto">
+                                {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
+                                    <div className="flex items-center gap-4">
+                                        <button className="flex-1 flex justify-center items-center gap-2 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 font-black hover:bg-red-500 hover:text-white transition-all focus:ring-4 focus:ring-red-500/20 active:scale-95">
+                                            <XCircle className="h-5 w-5" />
+                                            Decline Profile
+                                        </button>
+                                        <button className="flex-1 flex justify-center items-center gap-2 py-4 rounded-2xl bg-primary text-black font-black hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] focus:ring-4 focus:ring-primary/40 active:scale-95">
+                                            <CheckCircle2 className="h-5 w-5" />
+                                            Approve & Proceed
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="w-full flex items-center justify-center p-4 rounded-2xl border border-white/5 bg-white/[0.02]">
+                                        <span className={cn(
+                                            "text-sm font-black flex items-center gap-2",
+                                            selectedApp.status === "approved" ? "text-emerald-500" : "text-red-500"
+                                        )}>
+                                            {selectedApp.status === "approved" ? (
+                                                <><CheckCircle2 className="w-5 h-5" /> Application Finalized: Approved</>
+                                            ) : (
+                                                <><XCircle className="w-5 h-5" /> Application Finalized: Rejected</>
+                                            )}
+                                        </span>
                                     </div>
                                 )}
-
-                                {/* Action Buttons */}
-                                {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
-                                    <div className="grid grid-cols-2 gap-3 pt-2">
-                                        <button className="flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/20 transition-all">
-                                            <XCircle className="h-4 w-4" />
-                                            Reject
-                                        </button>
-                                        <button className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-lime-600 to-emerald-700 text-white text-sm font-bold hover:from-lime-700 hover:to-emerald-800 transition-all shadow-lg shadow-lime-900/20">
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            Approve
-                                        </button>
-                                    </div>
-                                ) : null}
                             </div>
                         </motion.div>
                     </>
                 )}
             </AnimatePresence>
-        </>
+        </div>
     );
 }
