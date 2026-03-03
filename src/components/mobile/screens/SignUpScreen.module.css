@@ -1,0 +1,380 @@
+/* ═══════════════════════════════════════════════════════════
+   Sign Up Screen
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+    padding: 0 28px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.container::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    flex-shrink: 0;
+}
+
+.backButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
+}
+
+.backButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 0 24px;
+}
+
+.headerTitle {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.headerSub {
+    font-size: 13px;
+    color: #737373;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* ─── Form ─────────────────────────────────────────────── */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+/* Input Group */
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inputLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: #a3a3a3;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.inputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #141414;
+    border: 1.5px solid #262626;
+    border-radius: 14px;
+    padding: 0 16px;
+    height: 52px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+    border-color: #6d9838;
+    box-shadow: 0 0 0 3px rgba(109, 152, 56, 0.1);
+}
+
+.inputIcon {
+    width: 18px;
+    height: 18px;
+    color: #525252;
+    flex-shrink: 0;
+}
+
+.inputWrapper:focus-within .inputIcon {
+    color: #6d9838;
+}
+
+.input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fafafa;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.input::placeholder {
+    color: #525252;
+    font-weight: 400;
+}
+
+.passwordToggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #525252;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.passwordToggle svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Role Selection ───────────────────────────────────── */
+.roleSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.roleSectionLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: #a3a3a3;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.roleCards {
+    display: flex;
+    gap: 10px;
+}
+
+.roleCard {
+    flex: 1;
+    padding: 16px 12px;
+    border-radius: 14px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.25s ease;
+    text-align: center;
+}
+
+.roleCard:active {
+    transform: scale(0.97);
+}
+
+.roleCardActive {
+    border-color: #6d9838;
+    background: rgba(109, 152, 56, 0.06);
+    box-shadow: 0 0 0 3px rgba(109, 152, 56, 0.1);
+}
+
+.roleIconBox {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+}
+
+.roleIconDefault {
+    background: #1a1a1a;
+    color: #525252;
+}
+
+.roleIconActive {
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    box-shadow: 0 4px 16px rgba(109, 152, 56, 0.3);
+}
+
+.roleIconBox svg {
+    width: 22px;
+    height: 22px;
+}
+
+.roleTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fafafa;
+    line-height: 1.3;
+}
+
+.roleSub {
+    font-size: 11px;
+    color: #525252;
+    line-height: 1.4;
+}
+
+.roleCardActive .roleSub {
+    color: #737373;
+}
+
+.roleHint {
+    font-size: 11px;
+    color: #525252;
+    text-align: center;
+    margin-top: 2px;
+    font-style: italic;
+}
+
+.roleHint span {
+    color: #6d9838;
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* ─── Terms ────────────────────────────────────────────── */
+.termsRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 1.5px solid #333333;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    margin-top: 1px;
+}
+
+.checkboxChecked {
+    background: #6d9838;
+    border-color: #6d9838;
+}
+
+.checkboxChecked svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+}
+
+.termsText {
+    font-size: 12px;
+    color: #737373;
+    line-height: 1.6;
+}
+
+.termsLink {
+    color: #6d9838;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ─── Submit Button ────────────────────────────────────── */
+.submitButton {
+    width: 100%;
+    height: 54px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.2px;
+    box-shadow:
+        0 4px 20px rgba(109, 152, 56, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.submitButton:active {
+    transform: scale(0.97);
+    background: linear-gradient(145deg, #5a7e2f, #4a6926);
+}
+
+.submitButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.submitButton:disabled:active {
+    transform: none;
+}
+
+.submitButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Footer ───────────────────────────────────────────── */
+.footer {
+    padding: 20px 0 20px;
+    text-align: center;
+    margin-top: auto;
+}
+
+.footerText {
+    font-size: 13px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.footerLink {
+    color: #6d9838;
+    font-weight: 700;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.footerLink:active {
+    color: #89b84f;
+}

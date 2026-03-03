@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════════
+   Welcome / Onboarding Carousel
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ─── Skip Button ──────────────────────────────────────── */
+.skipButton {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    z-index: 20;
+    background: none;
+    border: none;
+    color: #737373;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 99px;
+    transition: color 0.2s ease, background 0.2s ease;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+}
+
+.skipButton:active {
+    color: #a3a3a3;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Slides Area ──────────────────────────────────────── */
+.slidesArea {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+.slidesTrack {
+    display: flex;
+    height: 100%;
+    transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+.slidesTrack.dragging {
+    transition: none;
+}
+
+.slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    gap: 28px;
+}
+
+/* ─── Slide Illustration ───────────────────────────────── */
+.illustrationArea {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.illustrationBg {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+.illustrationBg.green {
+    background: radial-gradient(circle, rgba(109, 152, 56, 0.15) 0%, transparent 70%);
+}
+
+.illustrationBg.blue {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+}
+
+.illustrationBg.amber {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
+}
+
+.illustrationRing {
+    position: absolute;
+    inset: 15px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(255, 255, 255, 0.06);
+    animation: ringRotate 30s linear infinite;
+}
+
+@keyframes ringRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.illustrationIcon {
+    position: relative;
+    z-index: 2;
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.illustrationIcon.green {
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+}
+
+.illustrationIcon.blue {
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+}
+
+.illustrationIcon.amber {
+    background: linear-gradient(145deg, #f59e0b, #d97706);
+}
+
+.illustrationIcon svg {
+    width: 40px;
+    height: 40px;
+    color: white;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Small floating accent dots around the illustration */
+.floatingDot {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.dot1 {
+    width: 8px;
+    height: 8px;
+    top: 20px;
+    right: 25px;
+    animation: dotFloat 4s ease-in-out infinite alternate;
+}
+
+.dot1.green {
+    background: #6d9838;
+}
+
+.dot1.blue {
+    background: #3b82f6;
+}
+
+.dot1.amber {
+    background: #f59e0b;
+}
+
+.dot2 {
+    width: 6px;
+    height: 6px;
+    bottom: 30px;
+    left: 20px;
+    opacity: 0.5;
+    animation: dotFloat 5s ease-in-out 1s infinite alternate;
+}
+
+.dot2.green {
+    background: #89b84f;
+}
+
+.dot2.blue {
+    background: #60a5fa;
+}
+
+.dot2.amber {
+    background: #fbbf24;
+}
+
+.dot3 {
+    width: 5px;
+    height: 5px;
+    top: 45px;
+    left: 30px;
+    opacity: 0.3;
+    animation: dotFloat 3.5s ease-in-out 0.5s infinite alternate;
+}
+
+.dot3.green {
+    background: #6d9838;
+}
+
+.dot3.blue {
+    background: #3b82f6;
+}
+
+.dot3.amber {
+    background: #f59e0b;
+}
+
+@keyframes dotFloat {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-8px);
+    }
+}
+
+/* ─── Slide Text ───────────────────────────────────────── */
+.slideTextArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    max-width: 300px;
+}
+
+.slideTitle {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.slideDescription {
+    font-size: 14px;
+    font-weight: 400;
+    color: #737373;
+    line-height: 1.6;
+}
+
+/* ─── Bottom Area (dots + button) ──────────────────────── */
+.bottomArea {
+    padding: 0 32px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    z-index: 10;
+}
+
+/* Dot Indicators */
+.dotsRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.12);
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.dotActive {
+    width: 28px;
+    background: #6d9838;
+    box-shadow: 0 0 12px rgba(109, 152, 56, 0.4);
+}
+
+/* CTA Button */
+.ctaButton {
+    width: 100%;
+    height: 54px;
+    border-radius: 16px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    letter-spacing: -0.2px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ctaButton:active {
+    transform: scale(0.97);
+}
+
+.ctaPrimary {
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    box-shadow:
+        0 4px 20px rgba(109, 152, 56, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.ctaPrimary:active {
+    background: linear-gradient(145deg, #5a7e2f, #4a6926);
+}
+
+.ctaButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Login Link ───────────────────────────────────────── */
+.loginLink {
+    font-size: 13px;
+    color: #525252;
+    font-weight: 500;
+    font-family: inherit;
+}
+
+.loginLink span {
+    color: #6d9838;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.loginLink span:active {
+    color: #89b84f;
+}

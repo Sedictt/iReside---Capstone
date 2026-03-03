@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════════════════
+   Email Verification Screen
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    background: #0a0a0a;
+    padding: 0 28px;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.backButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
+}
+
+.backButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ─── Icon Area ────────────────────────────────────────── */
+.iconArea {
+    margin-top: 40px;
+    margin-bottom: 28px;
+    position: relative;
+    width: 88px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconCircle {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: rgba(109, 152, 56, 0.1);
+    border: 1.5px solid rgba(109, 152, 56, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(109, 152, 56, 0.15);
+    }
+
+    50% {
+        box-shadow: 0 0 0 16px rgba(109, 152, 56, 0);
+    }
+}
+
+.iconCircle svg {
+    width: 36px;
+    height: 36px;
+    color: #6d9838;
+}
+
+/* Floating sparkle dots */
+.sparkle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6d9838;
+}
+
+.sparkle1 {
+    top: 6px;
+    right: 4px;
+    opacity: 0.7;
+    animation: sparkleFloat 3s ease-in-out infinite;
+}
+
+.sparkle2 {
+    bottom: 10px;
+    left: 2px;
+    opacity: 0.4;
+    width: 5px;
+    height: 5px;
+    animation: sparkleFloat 4s ease-in-out 1s infinite;
+}
+
+.sparkle3 {
+    top: 20px;
+    left: 6px;
+    opacity: 0.3;
+    width: 4px;
+    height: 4px;
+    animation: sparkleFloat 3.5s ease-in-out 0.5s infinite;
+}
+
+@keyframes sparkleFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translateY(-6px);
+        opacity: 0.8;
+    }
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.headerTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+}
+
+.headerSub {
+    font-size: 13px;
+    color: #737373;
+    line-height: 1.6;
+}
+
+.headerEmail {
+    color: #fafafa;
+    font-weight: 700;
+}
+
+/* ─── OTP Input ────────────────────────────────────────── */
+.otpRow {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.otpInput {
+    width: 48px;
+    height: 56px;
+    border-radius: 14px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    color: #fafafa;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    font-family: inherit;
+    outline: none;
+    caret-color: #6d9838;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.otpInput:focus {
+    border-color: #6d9838;
+    box-shadow: 0 0 0 3px rgba(109, 152, 56, 0.1);
+    background: #1a1a1a;
+}
+
+.otpInput::placeholder {
+    color: #333333;
+    font-weight: 400;
+}
+
+/* Filled state */
+.otpFilled {
+    border-color: #6d9838;
+    background: rgba(109, 152, 56, 0.05);
+}
+
+/* ─── Verify Button ────────────────────────────────────── */
+.verifyButton {
+    width: 100%;
+    height: 54px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.2px;
+    box-shadow:
+        0 4px 20px rgba(109, 152, 56, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.verifyButton:active {
+    transform: scale(0.97);
+}
+
+.verifyButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.verifyButton:disabled:active {
+    transform: none;
+}
+
+.verifyButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Resend Area ──────────────────────────────────────── */
+.resendArea {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.resendText {
+    font-size: 13px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.resendTimer {
+    color: #737373;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.resendButton {
+    font-size: 13px;
+    color: #6d9838;
+    font-weight: 700;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.resendButton:active {
+    color: #89b84f;
+}
+
+.changeEmail {
+    font-size: 12px;
+    color: #525252;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 0;
+    -webkit-tap-highlight-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.changeEmail:active {
+    color: #737373;
+}

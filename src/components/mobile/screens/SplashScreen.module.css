@@ -1,0 +1,253 @@
+/* ═══════════════════════════════════════════════════════════
+   Splash Screen — First impression when the app opens
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: #0a0a0a;
+}
+
+/* ─── Ambient Background Glows ─────────────────────────── */
+.ambientGlow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+.glowPrimary {
+    width: 280px;
+    height: 280px;
+    background: rgba(109, 152, 56, 0.12);
+    top: 15%;
+    left: -10%;
+    animation: glowFloat1 6s ease-in-out infinite alternate;
+}
+
+.glowBlue {
+    width: 220px;
+    height: 220px;
+    background: rgba(59, 130, 246, 0.08);
+    bottom: 10%;
+    right: -10%;
+    animation: glowFloat2 7s ease-in-out infinite alternate;
+}
+
+.glowAccent {
+    width: 160px;
+    height: 160px;
+    background: rgba(109, 152, 56, 0.06);
+    top: 50%;
+    right: 20%;
+    animation: glowFloat3 5s ease-in-out infinite alternate;
+}
+
+@keyframes glowFloat1 {
+    from {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.6;
+    }
+
+    to {
+        transform: translate(30px, -20px) scale(1.15);
+        opacity: 1;
+    }
+}
+
+@keyframes glowFloat2 {
+    from {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.5;
+    }
+
+    to {
+        transform: translate(-20px, 15px) scale(1.1);
+        opacity: 0.9;
+    }
+}
+
+@keyframes glowFloat3 {
+    from {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.4;
+    }
+
+    to {
+        transform: translate(15px, -25px) scale(1.2);
+        opacity: 0.7;
+    }
+}
+
+/* ─── Logo Container ───────────────────────────────────── */
+.logoArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    z-index: 10;
+    animation: logoReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+}
+
+@keyframes logoReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ─── Brand Mark (Icon) ────────────────────────────────── */
+.brandMark {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 40px rgba(109, 152, 56, 0.3),
+        0 8px 32px rgba(0, 0, 0, 0.4);
+    position: relative;
+    animation: markPulse 2.5s ease-in-out infinite;
+}
+
+.brandMark::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(109, 152, 56, 0.4), transparent);
+    z-index: -1;
+    opacity: 0.5;
+}
+
+@keyframes markPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 40px rgba(109, 152, 56, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 60px rgba(109, 152, 56, 0.5), 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.brandIcon {
+    color: white;
+    width: 36px;
+    height: 36px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* ─── Brand Text ───────────────────────────────────────── */
+.brandText {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.brandName {
+    font-size: 32px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -1px;
+    line-height: 1;
+    animation: textFadeIn 0.8s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+.brandTagline {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6d9838;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: textFadeIn 0.8s ease-out 0.6s forwards;
+    opacity: 0;
+}
+
+@keyframes textFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── Loading Bar ──────────────────────────────────────── */
+.loadingArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    margin-bottom: 60px;
+    animation: textFadeIn 0.8s ease-out 0.9s forwards;
+    opacity: 0;
+}
+
+.loadingBar {
+    width: 120px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.loadingFill {
+    height: 100%;
+    background: linear-gradient(90deg, #6d9838, #89b84f);
+    border-radius: 99px;
+    animation: loadProgress 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    box-shadow: 0 0 12px rgba(109, 152, 56, 0.5);
+}
+
+@keyframes loadProgress {
+    0% {
+        width: 0%;
+    }
+
+    20% {
+        width: 25%;
+    }
+
+    50% {
+        width: 55%;
+    }
+
+    80% {
+        width: 85%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+.loadingText {
+    font-size: 10px;
+    font-weight: 600;
+    color: #525252;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}

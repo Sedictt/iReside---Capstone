@@ -1,0 +1,312 @@
+/* ═══════════════════════════════════════════════════════════
+   iReside Mobile — App Shell Styles
+   Design tokens + viewport + tab bar + screen transitions
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Viewport Container + Design Tokens ───────────────── */
+/* 
+   During development: renders a phone-sized container centered on screen
+   In production/Capacitor: this becomes full viewport 
+*/
+.viewport {
+    /* Colors — matching the website's dark theme */
+    --m-bg: #0a0a0a;
+    --m-bg-card: #141414;
+    --m-bg-elevated: #1a1a1a;
+    --m-bg-input: #1e1e1e;
+    --m-border: #262626;
+    --m-border-light: #333333;
+
+    --m-primary: #6d9838;
+    --m-primary-dark: #5a7e2f;
+    --m-primary-light: #89b84f;
+    --m-primary-glow: rgba(109, 152, 56, 0.15);
+    --m-primary-muted: rgba(109, 152, 56, 0.08);
+
+    --m-text: #fafafa;
+    --m-text-secondary: #a3a3a3;
+    --m-text-muted: #737373;
+    --m-text-dim: #525252;
+
+    --m-accent-blue: #3b82f6;
+    --m-accent-red: #ef4444;
+    --m-accent-amber: #f59e0b;
+    --m-accent-emerald: #10b981;
+
+    /* Typography */
+    --m-font: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --m-font-size-xxl: 28px;
+    --m-font-size-xl: 22px;
+    --m-font-size-lg: 18px;
+    --m-font-size-md: 15px;
+    --m-font-size-sm: 13px;
+    --m-font-size-xs: 11px;
+    --m-font-size-xxs: 9px;
+
+    /* Spacing */
+    --m-space-xs: 4px;
+    --m-space-sm: 8px;
+    --m-space-md: 12px;
+    --m-space-lg: 16px;
+    --m-space-xl: 20px;
+    --m-space-xxl: 24px;
+    --m-space-xxxl: 32px;
+
+    /* Radius */
+    --m-radius-sm: 8px;
+    --m-radius-md: 12px;
+    --m-radius-lg: 16px;
+    --m-radius-xl: 20px;
+    --m-radius-xxl: 24px;
+    --m-radius-full: 9999px;
+
+    /* Touch */
+    --m-touch-min: 44px;
+
+    /* Layout */
+    --m-status-bar-height: 44px;
+    --m-tab-bar-height: 64px;
+    --m-safe-bottom: 20px;
+
+    /* Viewport sizing */
+    position: relative;
+    width: 393px;
+    height: 852px;
+    max-height: 100dvh;
+    background: #0a0a0a;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #fafafa;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Development frame */
+    border-radius: 40px;
+    border: 3px solid #555555;
+    box-shadow:
+        0 0 0 1px #444444,
+        0 0 50px rgba(109, 152, 56, 0.15),
+        0 25px 80px rgba(0, 0, 0, 0.6),
+        0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Center the phone on the page during dev */
+.devWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #111111;
+    background-image:
+        radial-gradient(ellipse at 30% 40%, rgba(109, 152, 56, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 60%, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
+    padding: 20px;
+}
+
+/* ─── Status Bar ───────────────────────────────────────── */
+.statusBar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    z-index: 100;
+    position: relative;
+}
+
+.statusTime {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fafafa;
+    letter-spacing: 0.2px;
+}
+
+.statusIcons {
+    display: flex;
+    align-items: center;
+    gap: var(--m-space-sm);
+}
+
+.statusIcon {
+    display: flex;
+    align-items: center;
+    color: #fafafa;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* ─── Screen Area ──────────────────────────────────────── */
+.screenArea {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.screenContent {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth scrollbar */
+.screenContent::-webkit-scrollbar {
+    width: 0;
+    display: none;
+}
+
+/* Screen transition: slide in from right */
+.screenSlideIn {
+    animation: slideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Screen transition: fade in */
+.screenFadeIn {
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ─── Bottom Tab Bar ───────────────────────────────────── */
+.tabBar {
+    height: var(--m-tab-bar-height);
+    padding-bottom: var(--m-safe-bottom);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    background: var(--m-bg-card);
+    border-top: 1px solid var(--m-border);
+    flex-shrink: 0;
+    z-index: 100;
+    padding-top: var(--m-space-sm);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.tabItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: var(--m-touch-min);
+    min-height: var(--m-touch-min);
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease;
+}
+
+.tabItem:active {
+    transform: scale(0.9);
+}
+
+.tabIcon {
+    width: 22px;
+    height: 22px;
+    color: var(--m-text-dim);
+    transition: color 0.2s ease;
+}
+
+.tabLabel {
+    font-size: var(--m-font-size-xxs);
+    font-weight: 600;
+    color: var(--m-text-dim);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+}
+
+.tabItemActive .tabIcon {
+    color: var(--m-primary);
+}
+
+.tabItemActive .tabLabel {
+    color: var(--m-primary);
+}
+
+/* Active tab dot indicator */
+.tabItemActive .tabIcon {
+    filter: drop-shadow(0 0 6px rgba(109, 152, 56, 0.4));
+}
+
+/* ─── Home Indicator (bottom bar) ──────────────────────── */
+.homeIndicator {
+    width: 134px;
+    height: 5px;
+    background: var(--m-text-dim);
+    border-radius: var(--m-radius-full);
+    margin: 0 auto;
+    opacity: 0.25;
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* ─── Placeholder Screen ───────────────────────────────── */
+.placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 16px;
+    padding: 24px;
+    text-align: center;
+    background: #0a0a0a;
+}
+
+.placeholderIcon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(109, 152, 56, 0.15);
+    border: 1px solid rgba(109, 152, 56, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6d9838;
+}
+
+.placeholderTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+}
+
+.placeholderSub {
+    font-size: 13px;
+    color: #737373;
+    line-height: 1.5;
+    max-width: 260px;
+}

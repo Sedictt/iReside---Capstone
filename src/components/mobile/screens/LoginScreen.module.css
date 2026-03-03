@@ -1,0 +1,328 @@
+/* ═══════════════════════════════════════════════════════════
+   Login Screen
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+    padding: 0 28px;
+    overflow-y: auto;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-top: 32px;
+    padding-bottom: 28px;
+}
+
+.brandMark {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(109, 152, 56, 0.25);
+    margin-bottom: 4px;
+}
+
+.brandMark svg {
+    width: 26px;
+    height: 26px;
+    color: white;
+}
+
+.headerTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.headerSub {
+    font-size: 13px;
+    color: #737373;
+    font-weight: 400;
+}
+
+/* ─── Form ─────────────────────────────────────────────── */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+/* Input Group */
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inputLabel {
+    font-size: 12px;
+    font-weight: 700;
+    color: #a3a3a3;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.inputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #141414;
+    border: 1.5px solid #262626;
+    border-radius: 14px;
+    padding: 0 16px;
+    height: 52px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+    border-color: #6d9838;
+    box-shadow: 0 0 0 3px rgba(109, 152, 56, 0.1);
+}
+
+.inputIcon {
+    width: 18px;
+    height: 18px;
+    color: #525252;
+    flex-shrink: 0;
+}
+
+.inputWrapper:focus-within .inputIcon {
+    color: #6d9838;
+}
+
+.input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fafafa;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.input::placeholder {
+    color: #525252;
+    font-weight: 400;
+}
+
+.passwordToggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #525252;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s ease;
+}
+
+.passwordToggle:active {
+    color: #a3a3a3;
+}
+
+.passwordToggle svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Options Row ──────────────────────────────────────── */
+.optionsRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2px;
+}
+
+.rememberMe {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.5px solid #333333;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.checkboxChecked {
+    background: #6d9838;
+    border-color: #6d9838;
+}
+
+.checkboxChecked svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+}
+
+.rememberLabel {
+    font-size: 13px;
+    color: #a3a3a3;
+    font-weight: 500;
+}
+
+.forgotPassword {
+    font-size: 13px;
+    color: #6d9838;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.forgotPassword:active {
+    color: #89b84f;
+}
+
+/* ─── Login Button ─────────────────────────────────────── */
+.loginButton {
+    width: 100%;
+    height: 54px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.2px;
+    box-shadow:
+        0 4px 20px rgba(109, 152, 56, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    margin-top: 8px;
+}
+
+.loginButton:active {
+    transform: scale(0.97);
+    background: linear-gradient(145deg, #5a7e2f, #4a6926);
+}
+
+/* ─── Divider ──────────────────────────────────────────── */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background: #262626;
+}
+
+.dividerText {
+    font-size: 11px;
+    color: #525252;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+/* ─── Social Buttons ───────────────────────────────────── */
+.socialRow {
+    display: flex;
+    gap: 12px;
+}
+
+.socialButton {
+    flex: 1;
+    height: 50px;
+    border-radius: 14px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #a3a3a3;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.socialButton:active {
+    background: #1a1a1a;
+    border-color: #333333;
+    transform: scale(0.97);
+}
+
+.socialIcon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Google colors */
+.googleIcon {
+    color: #fafafa;
+}
+
+/* Facebook colors */
+.facebookIcon {
+    color: #1877F2;
+}
+
+/* ─── Footer ───────────────────────────────────────────── */
+.footer {
+    margin-top: auto;
+    padding: 24px 0 20px;
+    text-align: center;
+}
+
+.footerText {
+    font-size: 13px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.footerLink {
+    color: #6d9838;
+    font-weight: 700;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.footerLink:active {
+    color: #89b84f;
+}
