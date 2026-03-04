@@ -1,0 +1,416 @@
+/* ═══════════════════════════════════════════════════════════
+   Property Detail Screen
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Image Carousel ───────────────────────────────────── */
+.imageArea {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+    background: #141414;
+}
+
+.imageTrack {
+    display: flex;
+    height: 100%;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+.imageTrack.dragging {
+    transition: none;
+}
+
+.imageSlide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+}
+
+.imageSlide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Overlay gradient at top for nav buttons */
+.imageOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+    z-index: 5;
+}
+
+/* Nav buttons over image */
+.imageNav {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.navButton {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: none;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.navButton:active {
+    transform: scale(0.9);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.navButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.navRight {
+    display: flex;
+    gap: 8px;
+}
+
+.liked {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Image dots */
+.imageDots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.imageDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    transition: all 0.3s ease;
+}
+
+.imageDotActive {
+    width: 20px;
+    border-radius: 99px;
+    background: white;
+}
+
+/* Image counter */
+.imageCounter {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 4px 10px;
+    border-radius: 99px;
+    z-index: 10;
+}
+
+/* ─── Body Content ─────────────────────────────────────── */
+.body {
+    padding: 20px 20px 100px;
+}
+
+/* ─── Price & Title ────────────────────────────────────── */
+.priceRow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.price {
+    font-size: 28px;
+    font-weight: 900;
+    color: #6d9838;
+    letter-spacing: -1px;
+}
+
+.priceMonth {
+    font-size: 14px;
+    font-weight: 500;
+    color: #525252;
+}
+
+.matchBadge {
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    background: #6d9838;
+    padding: 4px 10px;
+    border-radius: 99px;
+}
+
+.propertyName {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+}
+
+.address {
+    font-size: 13px;
+    color: #525252;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 18px;
+}
+
+.address svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ─── Stats Row ────────────────────────────────────────── */
+.statsRow {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.statCard {
+    flex: 1;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+}
+
+.statValue {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.statLabel {
+    font-size: 10px;
+    font-weight: 600;
+    color: #525252;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.typeBadge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-bottom: 24px;
+}
+
+/* ─── Section ──────────────────────────────────────────── */
+.section {
+    margin-bottom: 24px;
+}
+
+.sectionTitle {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.2px;
+    margin-bottom: 10px;
+}
+
+/* ─── Description ──────────────────────────────────────── */
+.description {
+    font-size: 13px;
+    color: #737373;
+    line-height: 1.7;
+    font-weight: 400;
+}
+
+.descriptionClamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.readMore {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6d9838;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 0;
+    margin-top: 4px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Amenities Grid ───────────────────────────────────── */
+.amenitiesGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.amenityItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 12px;
+}
+
+.amenityIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(109, 152, 56, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.amenityIcon svg {
+    width: 16px;
+    height: 16px;
+    color: #6d9838;
+}
+
+.amenityName {
+    font-size: 12px;
+    font-weight: 600;
+    color: #a3a3a3;
+}
+
+/* ─── House Rules ──────────────────────────────────────── */
+.rulesList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ruleItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #a3a3a3;
+    font-weight: 500;
+}
+
+.ruleIcon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ruleIcon svg {
+    width: 14px;
+    height: 14px;
+    color: #f59e0b;
+}
+
+/* ─── Sticky Apply Button ──────────────────────────────── */
+.stickyFooter {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 20px 20px;
+    background: linear-gradient(0deg, #0a0a0a 70%, transparent 100%);
+    z-index: 20;
+}
+
+.applyButton {
+    width: 100%;
+    height: 54px;
+    border-radius: 16px;
+    border: none;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.2px;
+    box-shadow:
+        0 4px 20px rgba(109, 152, 56, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.applyButton:active {
+    transform: scale(0.97);
+}
+
+.applyButton svg {
+    width: 18px;
+    height: 18px;
+}

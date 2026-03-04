@@ -8,6 +8,7 @@ import SignUpScreen from "./screens/SignUpScreen";
 import EmailVerificationScreen from "./screens/EmailVerificationScreen";
 import TenantHomeScreen from "./screens/TenantHomeScreen";
 import PropertySearchScreen from "./screens/PropertySearchScreen";
+import PropertyDetailScreen from "./screens/PropertyDetailScreen";
 import {
     Home,
     Search,
@@ -157,6 +158,7 @@ function ScreenRouter() {
         emailVerification: EmailVerificationScreen,
         tenantHome: TenantHomeScreen,
         propertySearch: PropertySearchScreen,
+        propertyDetail: PropertyDetailScreen,
         // Screens will be registered here as they're built
     };
 
