@@ -170,9 +170,6 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 0 20px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
 }
 
 .listView::-webkit-scrollbar {
@@ -188,8 +185,11 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+.propertyCard:last-child {
+    margin-bottom: 0;
 }
 
 .propertyCard:active {
