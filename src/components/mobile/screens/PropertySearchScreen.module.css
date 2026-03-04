@@ -188,6 +188,8 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .propertyCard:active {
@@ -199,14 +201,18 @@
     position: relative;
     width: 100%;
     height: 160px;
+    min-height: 160px;
+    max-height: 160px;
     overflow: hidden;
     background: #1a1a1a;
+    flex-shrink: 0;
 }
 
 .cardImage {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .cardBadges {
