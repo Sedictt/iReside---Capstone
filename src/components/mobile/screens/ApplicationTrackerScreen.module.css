@@ -1,0 +1,308 @@
+/* ═══════════════════════════════════════════════════════════
+   Application Tracker Screen
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    padding: 12px 20px 0;
+    flex-shrink: 0;
+}
+
+.headerTitle {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 2px;
+}
+
+.headerSub {
+    font-size: 12px;
+    color: #525252;
+    font-weight: 500;
+    margin-bottom: 14px;
+}
+
+.headerSub span {
+    color: #6d9838;
+    font-weight: 700;
+}
+
+/* ─── Filter Tabs ──────────────────────────────────────── */
+.filterRow {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 14px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.filterRow::-webkit-scrollbar {
+    display: none;
+}
+
+.filterChip {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 99px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    color: #737373;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.filterChip:active {
+    transform: scale(0.95);
+}
+
+.filterChipActive {
+    background: rgba(109, 152, 56, 0.12);
+    border-color: rgba(109, 152, 56, 0.3);
+    color: #6d9838;
+}
+
+.chipCount {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #262626;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filterChipActive .chipCount {
+    background: rgba(109, 152, 56, 0.2);
+    color: #6d9838;
+}
+
+/* ─── Application List ─────────────────────────────────── */
+.applicationList {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.applicationList::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Application Card ─────────────────────────────────── */
+.applicationCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.applicationCard:last-child {
+    margin-bottom: 0;
+}
+
+.applicationCard:active {
+    transform: scale(0.98);
+    background: #1a1a1a;
+}
+
+.cardTop {
+    display: flex;
+    gap: 12px;
+    padding: 14px 14px 0;
+}
+
+.cardImage {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #1a1a1a;
+}
+
+.cardInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.cardPropertyName {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardAddress {
+    font-size: 11px;
+    color: #525252;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardPrice {
+    font-size: 13px;
+    font-weight: 800;
+    color: #6d9838;
+    margin-top: 2px;
+}
+
+/* ─── Card Bottom ──────────────────────────────────────── */
+.cardBottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px 12px;
+}
+
+.cardMeta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cardDate {
+    font-size: 11px;
+    color: #525252;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cardDate svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* ─── Status Badges ────────────────────────────────────── */
+.statusBadge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.statusPending {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.statusReviewing {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.statusApproved {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+}
+
+.statusRejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+/* ─── Card Progress Bar ────────────────────────────────── */
+.cardProgress {
+    height: 3px;
+    background: #1e1e1e;
+}
+
+.cardProgressFill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.3s ease;
+}
+
+.progressPending {
+    width: 25%;
+    background: #f59e0b;
+}
+
+.progressReviewing {
+    width: 50%;
+    background: #3b82f6;
+}
+
+.progressApproved {
+    width: 100%;
+    background: #22c55e;
+}
+
+.progressRejected {
+    width: 100%;
+    background: #ef4444;
+}
+
+/* ─── Empty State ──────────────────────────────────────── */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.emptyIcon svg {
+    width: 28px;
+    height: 28px;
+    color: #333333;
+}
+
+.emptyTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.emptySub {
+    font-size: 13px;
+    color: #525252;
+    line-height: 1.5;
+}
