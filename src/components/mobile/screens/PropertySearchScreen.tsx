@@ -13,7 +13,8 @@ import {
     Maximize2,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
-import { properties } from "@/lib/data";
+import { properties, Property } from "@/lib/data";
+import SearchFilters, { FilterState } from "./SearchFilters";
 import styles from "./PropertySearchScreen.module.css";
 
 type ViewMode = "list" | "map";
@@ -23,18 +24,68 @@ export default function PropertySearchScreen() {
     const [viewMode, setViewMode] = useState<ViewMode>("list");
     const [searchQuery, setSearchQuery] = useState("");
     const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState<FilterState>({
+        priceMin: "",
+        priceMax: "",
+        propertyTypes: [],
+        bedrooms: "Any",
+        amenities: [],
+    });
 
-    // Filter properties based on search query
+    // Count active filters
+    const activeFilterCount =
+        (filters.priceMin ? 1 : 0) +
+        (filters.priceMax ? 1 : 0) +
+        filters.propertyTypes.length +
+        (filters.bedrooms !== "Any" ? 1 : 0) +
+        filters.amenities.length;
+
+    // Filter properties based on search query and filters
     const filteredProperties = useMemo(() => {
-        if (!searchQuery.trim()) return properties;
-        const q = searchQuery.toLowerCase();
-        return properties.filter(
-            (p) =>
-                p.name.toLowerCase().includes(q) ||
-                p.address.toLowerCase().includes(q) ||
-                p.type?.toLowerCase().includes(q)
-        );
-    }, [searchQuery]);
+        let result: Property[] = properties;
+
+        // Text search
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(
+                (p) =>
+                    p.name.toLowerCase().includes(q) ||
+                    p.address.toLowerCase().includes(q) ||
+                    p.type?.toLowerCase().includes(q)
+            );
+        }
+
+        // Price range
+        if (filters.priceMin) {
+            result = result.filter((p) => p.numericPrice >= Number(filters.priceMin));
+        }
+        if (filters.priceMax) {
+            result = result.filter((p) => p.numericPrice <= Number(filters.priceMax));
+        }
+
+        // Property type
+        if (filters.propertyTypes.length > 0) {
+            result = result.filter((p) => p.type && filters.propertyTypes.includes(p.type));
+        }
+
+        // Bedrooms
+        if (filters.bedrooms !== "Any") {
+            const beds = filters.bedrooms === "4+" ? 4 : Number(filters.bedrooms);
+            result = result.filter((p) =>
+                filters.bedrooms === "4+" ? p.beds >= beds : p.beds === beds
+            );
+        }
+
+        // Amenities
+        if (filters.amenities.length > 0) {
+            result = result.filter((p) =>
+                filters.amenities.every((a) => p.amenities.includes(a))
+            );
+        }
+
+        return result;
+    }, [searchQuery, filters]);
 
     const toggleLike = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -65,8 +116,14 @@ export default function PropertySearchScreen() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <button className={styles.filterButton}>
+                    <button
+                        className={styles.filterButton}
+                        onClick={() => setShowFilters(true)}
+                    >
                         <SlidersHorizontal />
+                        {activeFilterCount > 0 && (
+                            <div className={styles.filterBadge} />
+                        )}
                     </button>
                 </div>
             </div>
@@ -190,6 +247,15 @@ export default function PropertySearchScreen() {
                     </div>
                 )}
             </div>
+
+            {/* Filters Bottom Sheet */}
+            {showFilters && (
+                <SearchFilters
+                    onClose={() => setShowFilters(false)}
+                    onApply={setFilters}
+                    initialFilters={filters}
+                />
+            )}
         </div>
     );
 }
