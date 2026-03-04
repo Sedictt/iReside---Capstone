@@ -118,6 +118,12 @@ export default function PropertySearchScreen() {
                     </div>
                     <button
                         className={styles.filterButton}
+                        onClick={() => navigate("savedProperties")}
+                    >
+                        <Heart />
+                    </button>
+                    <button
+                        className={styles.filterButton}
                         onClick={() => setShowFilters(true)}
                     >
                         <SlidersHorizontal />

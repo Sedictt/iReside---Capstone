@@ -6,6 +6,7 @@ import {
     FileText,
     Wrench,
     MessageSquare,
+    Heart,
     ArrowRight,
     CheckCircle2,
     Clock,
@@ -32,10 +33,10 @@ const LEASE_DATA = {
 };
 
 const QUICK_ACTIONS = [
-    { id: "pay", label: "Pay Rent", icon: CreditCard, color: "Green" },
-    { id: "lease", label: "View Lease", icon: FileText, color: "Blue" },
-    { id: "maintenance", label: "Request Fix", icon: Wrench, color: "Amber" },
-    { id: "message", label: "Message", icon: MessageSquare, color: "Purple" },
+    { id: "pay", label: "Pay Rent", icon: CreditCard, color: "Green", screen: "payments" as const },
+    { id: "lease", label: "View Lease", icon: FileText, color: "Blue", screen: "leaseList" as const },
+    { id: "saved", label: "Saved", icon: Heart, color: "Amber", screen: "savedProperties" as const },
+    { id: "maintenance", label: "Request Fix", icon: Wrench, color: "Purple", screen: "notifications" as const },
 ];
 
 const NOTIFICATIONS = [
@@ -188,7 +189,11 @@ export default function TenantHomeScreen() {
                     const colorClass =
                         styles[`action${action.color}` as keyof typeof styles];
                     return (
-                        <div key={action.id} className={styles.actionCard}>
+                        <div
+                            key={action.id}
+                            className={styles.actionCard}
+                            onClick={() => navigate(action.screen)}
+                        >
                             <div className={`${styles.actionIcon} ${colorClass}`}>
                                 <Icon />
                             </div>
