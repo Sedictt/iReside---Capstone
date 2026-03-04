@@ -59,6 +59,8 @@ export default function TenantMessagesPage() {
     const [messagesState, setMessagesState] = useState<any[]>(MESSAGES);
     const [messageInput, setMessageInput] = useState("");
     const [showInfoSidebar, setShowInfoSidebar] = useState(false);
+    const [showFilesSidebar, setShowFilesSidebar] = useState(false);
+    const [fileFilter, setFileFilter] = useState("all");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
 
@@ -237,7 +239,23 @@ export default function TenantMessagesPage() {
                                     <Search className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => setShowInfoSidebar(!showInfoSidebar)}
+                                    onClick={() => {
+                                        setShowFilesSidebar(!showFilesSidebar);
+                                        setShowInfoSidebar(false);
+                                    }}
+                                    className={cn(
+                                        "p-2 hover:text-white rounded-lg transition-colors",
+                                        showFilesSidebar ? "bg-white/10 text-white" : "text-neutral-400 hover:bg-white/5"
+                                    )}
+                                    title="Shared Files"
+                                >
+                                    <Folder className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowInfoSidebar(!showInfoSidebar);
+                                        setShowFilesSidebar(false);
+                                    }}
                                     className={cn(
                                         "p-2 hover:text-white rounded-lg transition-colors",
                                         showInfoSidebar ? "bg-white/10 text-white" : "text-neutral-400 hover:bg-white/5"
@@ -578,52 +596,7 @@ export default function TenantMessagesPage() {
                                     </div>
                                 </div>
 
-                                {/* Images Section */}
-                                <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
-                                            <ImageIcon className="w-4 h-4 text-primary" /> Shared Images
-                                        </h4>
-                                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full text-neutral-400">4</span>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <img src="https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=150&q=80" alt="Receipt" className="w-full h-16 object-cover rounded-lg border border-white/10 cursor-pointer hover:opacity-80 transition-opacity" />
-                                        <img src="https://images.unsplash.com/photo-1588600878108-578307a3cc9d?auto=format&fit=crop&w=150&q=80" alt="Sink" className="w-full h-16 object-cover rounded-lg border border-white/10 cursor-pointer hover:opacity-80 transition-opacity" />
-                                        <div className="w-full h-16 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center text-neutral-500 cursor-pointer hover:border-white/40 hover:text-neutral-300 transition-all bg-white/5">
-                                            <span className="text-xl">+2</span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Documents Section */}
-                                <div>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
-                                            <Folder className="w-4 h-4 text-primary" /> Documents
-                                        </h4>
-                                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full text-neutral-400">2</span>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/5 cursor-pointer transition-colors group">
-                                            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                                                <File className="w-4 h-4 text-primary" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-[11px] text-neutral-200 font-medium truncate group-hover:text-primary transition-colors">Lease_Agreement_SIGNED.pdf</p>
-                                                <p className="text-[10px] text-neutral-500 mt-0.5">2.4 MB • Feb 1</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-white/5 cursor-pointer transition-colors group">
-                                            <div className="p-2 bg-blue-500/10 rounded-lg shrink-0">
-                                                <File className="w-4 h-4 text-blue-500" />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-[11px] text-neutral-200 font-medium truncate group-hover:text-blue-400 transition-colors">Move_In_Checklist.pdf</p>
-                                                <p className="text-[10px] text-neutral-500 mt-0.5">840 KB • Feb 1</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
                                 {/* Payment History Section */}
                                 <div className="pb-4">
@@ -680,6 +653,121 @@ export default function TenantMessagesPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Shared Files Sidebar (Slide out panel) */}
+                    {showFilesSidebar && (
+                        <div className="w-80 shrink-0 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col h-full overflow-hidden shadow-2xl animate-in slide-in-from-right-8 duration-300">
+                            {/* Header */}
+                            <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/40 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                    <Folder size={80} className="-rotate-12" />
+                                </div>
+                                <div className="flex items-center gap-3 relative z-10">
+                                    <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+                                        <Folder className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white text-base">Shared Files</h3>
+                                        <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">12 Items • 34 MB</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowFilesSidebar(false)}
+                                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors relative z-10"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Filter Tabs */}
+                            <div className="px-6 py-4 border-b border-white/5 shrink-0">
+                                <div className="flex p-1 bg-black/40 rounded-xl border border-white/5">
+                                    {['all', 'media', 'docs'].map((filter) => (
+                                        <button
+                                            key={filter}
+                                            onClick={() => setFileFilter(filter)}
+                                            className={cn(
+                                                "flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all",
+                                                fileFilter === filter
+                                                    ? "bg-white/10 text-white shadow-sm"
+                                                    : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                                            )}
+                                        >
+                                            {filter}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                                {/* Media Section */}
+                                {(fileFilter === 'all' || fileFilter === 'media') && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                                <ImageIcon className="w-4 h-4 text-blue-400" /> Recent Media
+                                            </h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {[
+                                                { src: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=150&q=80", type: "img" },
+                                                { src: "https://images.unsplash.com/photo-1588600878108-578307a3cc9d?auto=format&fit=crop&w=150&q=80", type: "img" },
+                                                { src: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80", type: "img" },
+                                                { src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=150&q=80", type: "img" },
+                                            ].map((img, idx) => (
+                                                <div key={idx} className="group relative rounded-2xl overflow-hidden border border-white/10 aspect-square cursor-pointer bg-neutral-800">
+                                                    <img src={img.src} alt={`Media ${idx}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                                        <div className="w-full flex justify-end">
+                                                            <div className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-colors">
+                                                                <Download className="w-4 h-4 text-white" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Documents Section */}
+                                {(fileFilter === 'all' || fileFilter === 'docs') && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                                <FileText className="w-4 h-4 text-primary" /> Shared Documents
+                                            </h4>
+                                        </div>
+                                        <div className="flex flex-col gap-3">
+                                            {[
+                                                { name: "Lease_Agreement_SIGNED.pdf", icon: <FileText className="w-4 h-4 text-primary" />, color: "primary", size: "2.4 MB", date: "Feb 1" },
+                                                { name: "Move_In_Checklist.pdf", icon: <File className="w-4 h-4 text-blue-500" />, color: "blue-500", size: "840 KB", date: "Feb 1" },
+                                                { name: "Unit102_Inventory.xlsx", icon: <File className="w-4 h-4 text-emerald-500" />, color: "emerald-500", size: "1.2 MB", date: "Jan 15" },
+                                                { name: "Building_Rules_2026.pdf", icon: <FileText className="w-4 h-4 text-neutral-300" />, color: "neutral-500", size: "3.5 MB", date: "Jan 10" },
+                                            ].map((doc, idx) => (
+                                                <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-black/20 hover:bg-white/[0.05] hover:border-white/10 cursor-pointer transition-all group">
+                                                    <div className={`p-2.5 bg-${doc.color.split('-')[0]}/10 rounded-xl shrink-0 border border-${doc.color.split('-')[0]}/20 group-hover:scale-105 transition-transform`}>
+                                                        {doc.icon}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs text-neutral-200 font-bold truncate group-hover:text-white transition-colors">{doc.name}</p>
+                                                        <div className="flex items-center gap-2 mt-1 blur-0">
+                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{doc.size}</span>
+                                                            <span className="w-1 h-1 rounded-full bg-white/10"></span>
+                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{doc.date}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-2 text-neutral-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                                        <Download className="w-4 h-4" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

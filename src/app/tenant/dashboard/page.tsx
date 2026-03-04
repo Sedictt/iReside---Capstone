@@ -18,7 +18,9 @@ import {
     Home,
     Zap,
     Droplets,
-    Sparkles
+    Sparkles,
+    AlertCircle,
+    ArrowRight
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar";
+import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 
 export default function TenantDashboard() {
     const [showBanner, setShowBanner] = useState(true);
@@ -138,7 +141,6 @@ export default function TenantDashboard() {
                                     { icon: MessageSquare, label: "Messages", href: "/tenant/messages", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
                                     { icon: FileText, label: "Applications", href: "/tenant/applications", color: "text-blue-500", bg: "bg-blue-500/10" },
-                                    { icon: MoreHorizontal, label: "More", href: "#", color: "text-neutral-500", bg: "bg-neutral-500/10" },
                                 ].map((action, i) => {
                                     const isLease = action.label === "Your Lease";
                                     const content = (
@@ -172,6 +174,66 @@ export default function TenantDashboard() {
                                         </Link>
                                     );
                                 })}
+                                <MoveOutRequest variant="quickAction" />
+                            </div>
+                        </div>
+
+                        {/* Pending Bills Section */}
+                        <div className="bg-card border border-red-500/20 rounded-2xl p-0 overflow-hidden shadow-lg shadow-red-500/5 hover:border-red-500/40 transition-colors">
+                            <div className="p-6 border-b border-border/50 bg-red-500/5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+                                        <AlertCircle className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-foreground">Action Required: Unpaid Bills</h3>
+                                        <p className="text-xs text-muted-foreground mt-0.5">Please settle your balances to maintain your Trust Score.</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Total Due</p>
+                                    <p className="text-xl font-bold text-red-500">₱2,950.00</p>
+                                </div>
+                            </div>
+
+                            <div className="divide-y divide-border/50">
+                                {/* Bill Item 1 */}
+                                <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-500 flex items-center justify-center shrink-0 mt-1">
+                                            <Zap className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-foreground text-sm">Electricity Bill (Aug)</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Invoice <span className="font-mono text-muted-foreground/80">#INV-2849</span> • <span className="text-red-400 font-medium">Due 3 days ago</span></p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
+                                        <span className="font-bold text-foreground">₱2,450.00</span>
+                                        <Link href="/tenant/payments/checkout" className="px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5">
+                                            Pay <span className="hidden sm:inline">Now</span> <ArrowRight className="w-3.5 h-3.5" />
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {/* Bill Item 2 */}
+                                <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center shrink-0 mt-1">
+                                            <AlertCircle className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-foreground text-sm">Late Fee Penalty</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Invoice <span className="font-mono text-muted-foreground/80">#INV-2850</span> • <span className="text-red-400 font-medium">Applied yesterday</span></p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
+                                        <span className="font-bold text-foreground">₱500.00</span>
+                                        <Link href="/tenant/payments/checkout" className="px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5">
+                                            Pay <span className="hidden sm:inline">Now</span> <ArrowRight className="w-3.5 h-3.5" />
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

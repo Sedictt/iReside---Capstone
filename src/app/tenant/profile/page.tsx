@@ -11,7 +11,8 @@ import {
     X,
     ZoomIn,
     RotateCw,
-    Check
+    Check,
+    ArrowUpRight
 } from 'lucide-react';
 
 
@@ -241,6 +242,83 @@ export default function TenantProfilePage() {
                         </div>
                     </section>
 
+
+                    {/* Trust Score Section */}
+                    <section className="relative w-full rounded-3xl overflow-hidden border border-border/50 bg-card shadow-xl p-8 md:p-12 group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-primary/5 opacity-50" />
+
+                        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12">
+                            {/* Score Display */}
+                            <div className="relative flex-shrink-0 flex items-center justify-center">
+                                {/* Glowing backdrop */}
+                                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-3xl animate-pulse-slow" />
+
+                                {/* Circular progress (SVG) */}
+                                <div className="relative w-48 h-48 md:w-56 md:h-56 flex items-center justify-center">
+                                    <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                                        <circle
+                                            className="text-muted/20 stroke-current"
+                                            strokeWidth="4"
+                                            cx="50" cy="50" r="46" fill="transparent"
+                                        />
+                                        <circle
+                                            className="text-emerald-400 stroke-current drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+                                            strokeWidth="4"
+                                            strokeLinecap="round"
+                                            cx="50" cy="50" r="46" fill="transparent"
+                                            strokeDasharray="289.026"
+                                            strokeDashoffset="28.902"
+                                        /* Roughly 90% of circumference */
+                                        />
+                                    </svg>
+
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                        <span className="text-5xl md:text-6xl font-display text-foreground font-bold tabular-nums drop-shadow-md">
+                                            842
+                                        </span>
+                                        <span className="text-emerald-400 font-bold tracking-widest text-[10px] uppercase mt-1">
+                                            Excellent
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Score Details */}
+                            <div className="flex-1 space-y-6">
+                                <div>
+                                    <h3 className="text-3xl md:text-4xl font-display text-foreground flex items-center gap-3">
+                                        iReside Trust Score
+                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                                            <Check className="w-3.5 h-3.5" />
+                                        </span>
+                                    </h3>
+                                    <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
+                                        Your platform reputation. Maintaining a high Trust Score unlocks priority applications, lower security deposit requirements, and premium perks across all iReside properties.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/50">
+                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50 text-center">
+                                        <span className="block text-xl font-bold text-foreground mb-1">100%</span>
+                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">On-Time Pay</span>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50 text-center">
+                                        <span className="block text-xl font-bold text-foreground mb-1">0</span>
+                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Violations</span>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50 text-center">
+                                        <span className="block text-xl font-bold text-foreground mb-1">5</span>
+                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Residencies</span>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center relative overflow-hidden group/perk cursor-pointer hover:bg-emerald-500/20 transition-colors">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/perk:translate-x-[100%] transition-transform duration-1000" />
+                                        <span className="block text-xl font-bold text-emerald-400 mb-1 flex justify-center"><ArrowUpRight className="w-6 h-6" /></span>
+                                        <span className="text-[10px] font-bold tracking-widest text-emerald-400/80 uppercase">View Perks</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
                     {/* Journey History & Other Content */}
                     <div className="space-y-16">
