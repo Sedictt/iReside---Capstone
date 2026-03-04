@@ -1,0 +1,282 @@
+/* ═══════════════════════════════════════════════════════════
+   Chat Conversation Screen
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #1a1a1a;
+    flex-shrink: 0;
+}
+
+.backButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.contactInfo {
+    flex: 1;
+}
+
+.contactName {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.2px;
+}
+
+.contactStatus {
+    font-size: 11px;
+    color: #22c55e;
+    font-weight: 500;
+}
+
+.contactOffline {
+    color: #525252;
+}
+
+.moreButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.moreButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Messages Area ────────────────────────────────────── */
+.messagesArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.messagesArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* Date divider */
+.dateDivider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+}
+
+.dateDividerText {
+    font-size: 10px;
+    font-weight: 600;
+    color: #525252;
+    background: #141414;
+    padding: 4px 12px;
+    border-radius: 99px;
+    letter-spacing: 0.3px;
+}
+
+/* Message bubble */
+.messageRow {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+}
+
+.messageReceived {
+    align-self: flex-start;
+}
+
+.messageSent {
+    align-self: flex-end;
+}
+
+.bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 400;
+    word-wrap: break-word;
+}
+
+.bubbleReceived {
+    background: #1a1a1a;
+    color: #e5e5e5;
+    border-bottom-left-radius: 6px;
+}
+
+.bubbleSent {
+    background: #6d9838;
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.messageTime {
+    font-size: 10px;
+    color: #525252;
+    margin-top: 3px;
+    padding: 0 4px;
+}
+
+.messageSent .messageTime {
+    text-align: right;
+}
+
+/* System message */
+.systemMessage {
+    align-self: center;
+    max-width: 85%;
+}
+
+.systemBubble {
+    background: rgba(59, 130, 246, 0.08);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #737373;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ─── Input Area ───────────────────────────────────────── */
+.inputArea {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 16px 16px;
+    border-top: 1px solid #1a1a1a;
+    flex-shrink: 0;
+}
+
+.inputWrapper {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: #141414;
+    border: 1.5px solid #262626;
+    border-radius: 22px;
+    padding: 6px 8px 6px 16px;
+    min-height: 44px;
+    transition: border-color 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+    border-color: #6d9838;
+}
+
+.textInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fafafa;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 400;
+    resize: none;
+    min-height: 20px;
+    max-height: 80px;
+    line-height: 1.4;
+    padding: 4px 0;
+}
+
+.textInput::placeholder {
+    color: #525252;
+}
+
+.attachButton {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #525252;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+}
+
+.attachButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+.sendButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #6d9838;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(109, 152, 56, 0.3);
+}
+
+.sendButton:active {
+    transform: scale(0.9);
+}
+
+.sendButton:disabled {
+    background: #262626;
+    color: #525252;
+    box-shadow: none;
+    cursor: default;
+}
+
+.sendButton svg {
+    width: 18px;
+    height: 18px;
+}

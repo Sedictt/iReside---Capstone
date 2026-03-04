@@ -10,6 +10,8 @@ import TenantHomeScreen from "./screens/TenantHomeScreen";
 import PropertySearchScreen from "./screens/PropertySearchScreen";
 import PropertyDetailScreen from "./screens/PropertyDetailScreen";
 import SavedPropertiesScreen from "./screens/SavedPropertiesScreen";
+import TenantChatScreen from "./screens/TenantChatScreen";
+import ChatConversationScreen from "./screens/ChatConversationScreen";
 import {
     Home,
     Search,
@@ -161,6 +163,8 @@ function ScreenRouter() {
         propertySearch: PropertySearchScreen,
         propertyDetail: PropertyDetailScreen,
         savedProperties: SavedPropertiesScreen,
+        tenantChat: TenantChatScreen,
+        chatConversation: ChatConversationScreen,
         // Screens will be registered here as they're built
     };
 

@@ -1,0 +1,301 @@
+/* ═══════════════════════════════════════════════════════════
+   Tenant Chat — Conversations List
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px 12px;
+    flex-shrink: 0;
+}
+
+.headerTitle {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.headerActions {
+    display: flex;
+    gap: 8px;
+}
+
+.headerButton {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.headerButton:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
+}
+
+.headerButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── iRis AI Banner ───────────────────────────────────── */
+.irisBanner {
+    margin: 0 20px 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(109, 152, 56, 0.12), rgba(59, 130, 246, 0.08));
+    border: 1px solid rgba(109, 152, 56, 0.15);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.irisBanner:active {
+    transform: scale(0.98);
+}
+
+.irisAvatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #6d9838, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.irisAvatar svg {
+    width: 22px;
+    height: 22px;
+    color: white;
+}
+
+.irisText {
+    flex: 1;
+}
+
+.irisName {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 1px;
+}
+
+.irisSub {
+    font-size: 11px;
+    color: #6d9838;
+    font-weight: 500;
+}
+
+.irisArrow {
+    color: #525252;
+}
+
+.irisArrow svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ─── Search ───────────────────────────────────────────── */
+.searchBar {
+    margin: 0 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #141414;
+    border: 1.5px solid #1e1e1e;
+    border-radius: 12px;
+    padding: 0 14px;
+    height: 42px;
+}
+
+.searchBar svg {
+    width: 16px;
+    height: 16px;
+    color: #525252;
+    flex-shrink: 0;
+}
+
+.searchInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fafafa;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.searchInput::placeholder {
+    color: #333333;
+}
+
+/* ─── Conversation List ────────────────────────────────── */
+.conversationList {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px;
+}
+
+.conversationList::-webkit-scrollbar {
+    display: none;
+}
+
+.conversationItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #1a1a1a;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease;
+}
+
+.conversationItem:last-child {
+    border-bottom: none;
+}
+
+.conversationItem:active {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Avatar */
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+    font-weight: 800;
+    position: relative;
+}
+
+.avatarLandlord {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+.avatarMaintenance {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.avatarSystem {
+    background: rgba(168, 85, 247, 0.12);
+    color: #a855f7;
+}
+
+.avatar svg {
+    width: 22px;
+    height: 22px;
+}
+
+.onlineDot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid #0a0a0a;
+}
+
+/* Content */
+.convContent {
+    flex: 1;
+    min-width: 0;
+}
+
+.convTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 3px;
+}
+
+.convName {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fafafa;
+}
+
+.convTime {
+    font-size: 11px;
+    color: #525252;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.convBottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.convMessage {
+    font-size: 12px;
+    color: #525252;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.convUnread .convName {
+    color: #fafafa;
+}
+
+.convUnread .convMessage {
+    color: #a3a3a3;
+    font-weight: 600;
+}
+
+.convUnread .convTime {
+    color: #6d9838;
+    font-weight: 700;
+}
+
+.unreadBadge {
+    min-width: 18px;
+    height: 18px;
+    border-radius: 99px;
+    background: #6d9838;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    flex-shrink: 0;
+}
