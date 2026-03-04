@@ -1,0 +1,450 @@
+/* ═══════════════════════════════════════════════════════════
+   Application Form Screen — Multi-Step
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px 8px;
+    flex-shrink: 0;
+}
+
+.backButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.topBarTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+}
+
+.stepIndicator {
+    font-size: 12px;
+    font-weight: 600;
+    color: #525252;
+}
+
+.stepIndicator span {
+    color: #6d9838;
+}
+
+/* ─── Progress Bar ─────────────────────────────────────── */
+.progressBar {
+    display: flex;
+    gap: 6px;
+    padding: 0 20px 16px;
+    flex-shrink: 0;
+}
+
+.progressSegment {
+    flex: 1;
+    height: 3px;
+    border-radius: 99px;
+    background: #1e1e1e;
+    transition: background 0.4s ease;
+}
+
+.progressDone {
+    background: #6d9838;
+}
+
+.progressActive {
+    background: linear-gradient(90deg, #6d9838, #4a6923);
+}
+
+/* ─── Form Body ────────────────────────────────────────── */
+.formBody {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.formBody::-webkit-scrollbar {
+    display: none;
+}
+
+.stepTitle {
+    font-size: 18px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+}
+
+.stepSub {
+    font-size: 12px;
+    color: #525252;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+/* ─── Form Fields ──────────────────────────────────────── */
+.fieldGroup {
+    margin-bottom: 16px;
+}
+
+.fieldLabel {
+    font-size: 11px;
+    font-weight: 700;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.fieldInput {
+    width: 100%;
+    height: 46px;
+    border-radius: 12px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    color: #fafafa;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    padding: 0 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.fieldInput:focus {
+    border-color: #6d9838;
+}
+
+.fieldInput::placeholder {
+    color: #333333;
+}
+
+.fieldTextarea {
+    width: 100%;
+    min-height: 80px;
+    border-radius: 12px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    color: #fafafa;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    padding: 12px 14px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.fieldTextarea:focus {
+    border-color: #6d9838;
+}
+
+.fieldTextarea::placeholder {
+    color: #333333;
+}
+
+.fieldRow {
+    display: flex;
+    gap: 10px;
+}
+
+.fieldRow .fieldGroup {
+    flex: 1;
+}
+
+/* ─── Select Dropdown ──────────────────────────────────── */
+.fieldSelect {
+    width: 100%;
+    height: 46px;
+    border-radius: 12px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    color: #fafafa;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    padding: 0 14px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.fieldSelect:focus {
+    border-color: #6d9838;
+}
+
+/* ─── Review Step ──────────────────────────────────────── */
+.reviewSection {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.reviewSectionTitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6d9838;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.reviewSectionTitle svg {
+    width: 14px;
+    height: 14px;
+}
+
+.reviewRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.reviewLabel {
+    font-size: 12px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.reviewValue {
+    font-size: 13px;
+    color: #e5e5e5;
+    font-weight: 600;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+.reviewDivider {
+    height: 1px;
+    background: #1e1e1e;
+    margin: 4px 0;
+}
+
+/* Terms Checkbox */
+.termsRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 0;
+}
+
+.checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid #333333;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.checkboxChecked {
+    background: #6d9838;
+    border-color: #6d9838;
+}
+
+.checkboxChecked svg {
+    width: 12px;
+    height: 12px;
+    color: white;
+}
+
+.termsText {
+    font-size: 12px;
+    color: #737373;
+    line-height: 1.5;
+}
+
+.termsText span {
+    color: #6d9838;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ─── Footer ───────────────────────────────────────────── */
+.footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px 20px 20px;
+    flex-shrink: 0;
+    border-top: 1px solid #1a1a1a;
+}
+
+.prevButton {
+    flex: 1;
+    height: 48px;
+    border-radius: 14px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    color: #a3a3a3;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.prevButton:active {
+    background: #1a1a1a;
+    transform: scale(0.98);
+}
+
+.prevButton svg {
+    width: 16px;
+    height: 16px;
+}
+
+.nextButton {
+    flex: 2;
+    height: 48px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(109, 152, 56, 0.25);
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.nextButton:active {
+    transform: scale(0.98);
+}
+
+.nextButton svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ─── Success State ────────────────────────────────────── */
+.successState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    gap: 14px;
+}
+
+.successIcon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(109, 152, 56, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.successIcon svg {
+    width: 32px;
+    height: 32px;
+    color: #6d9838;
+}
+
+.successTitle {
+    font-size: 20px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+}
+
+.successSub {
+    font-size: 13px;
+    color: #525252;
+    line-height: 1.5;
+    max-width: 280px;
+}
+
+.successButton {
+    margin-top: 12px;
+    height: 48px;
+    padding: 0 32px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(145deg, #6d9838, #5a7e2f);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 14px rgba(109, 152, 56, 0.25);
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.successButton:active {
+    transform: scale(0.98);
+}
+
+.successButton svg {
+    width: 16px;
+    height: 16px;
+}
