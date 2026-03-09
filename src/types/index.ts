@@ -1,19 +1,37 @@
-export type UserRole = 'tenant' | 'landlord';
-
-export interface User {
-    id: string;
-    email: string;
-    fullName: string;
-    role: UserRole;
-    avatar_url?: string;
-    createdAt: string;
-}
-
-export interface Unit {
-    id: string;
-    propertyId: string;
-    name: string;
-    floor: number;
-    status: 'occupied' | 'vacant' | 'maintenance';
-    rentAmount: number;
-}
+// Re-export all database types for convenience
+export type {
+    Database,
+    Json,
+    UserRole,
+    PropertyType,
+    UnitStatus,
+    LeaseStatus,
+    PaymentStatus,
+    PaymentMethod,
+    ApplicationStatus,
+    MaintenanceStatus,
+    MaintenancePriority,
+    MoveOutStatus,
+    MessageType,
+    NotificationType,
+    Profile,
+    Property,
+    Unit,
+    Lease,
+    Payment,
+    PaymentItem,
+    Application,
+    MaintenanceRequest,
+    MoveOutRequest,
+    Conversation,
+    ConversationParticipant,
+    Message,
+    Notification,
+    SavedProperty,
+    UnitWithProperty,
+    LeaseWithDetails,
+    PaymentWithDetails,
+    ApplicationWithDetails,
+    MaintenanceRequestWithDetails,
+    ConversationWithParticipants,
+} from './database'

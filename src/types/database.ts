@@ -1,0 +1,576 @@
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[]
+
+export type UserRole = 'tenant' | 'landlord'
+export type PropertyType = 'apartment' | 'condo' | 'house' | 'townhouse' | 'studio'
+export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
+export type LeaseStatus = 'draft' | 'pending_signature' | 'active' | 'expired' | 'terminated'
+export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
+export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
+export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'withdrawn'
+export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
+export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
+export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
+export type MessageType = 'text' | 'system' | 'image' | 'file'
+export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application'
+
+export interface Database {
+    public: {
+        Tables: {
+            profiles: {
+                Row: {
+                    id: string
+                    email: string
+                    full_name: string
+                    role: UserRole
+                    avatar_url: string | null
+                    phone: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id: string
+                    email: string
+                    full_name: string
+                    role: UserRole
+                    avatar_url?: string | null
+                    phone?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    email?: string
+                    full_name?: string
+                    role?: UserRole
+                    avatar_url?: string | null
+                    phone?: string | null
+                    updated_at?: string
+                }
+            }
+            properties: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    name: string
+                    address: string
+                    city: string
+                    description: string | null
+                    type: PropertyType
+                    lat: number | null
+                    lng: number | null
+                    amenities: string[]
+                    house_rules: string[]
+                    images: string[]
+                    is_featured: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    name: string
+                    address: string
+                    city?: string
+                    description?: string | null
+                    type?: PropertyType
+                    lat?: number | null
+                    lng?: number | null
+                    amenities?: string[]
+                    house_rules?: string[]
+                    images?: string[]
+                    is_featured?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    name?: string
+                    address?: string
+                    city?: string
+                    description?: string | null
+                    type?: PropertyType
+                    lat?: number | null
+                    lng?: number | null
+                    amenities?: string[]
+                    house_rules?: string[]
+                    images?: string[]
+                    is_featured?: boolean
+                    updated_at?: string
+                }
+            }
+            units: {
+                Row: {
+                    id: string
+                    property_id: string
+                    name: string
+                    floor: number
+                    status: UnitStatus
+                    rent_amount: number
+                    sqft: number | null
+                    beds: number
+                    baths: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    property_id: string
+                    name: string
+                    floor?: number
+                    status?: UnitStatus
+                    rent_amount: number
+                    sqft?: number | null
+                    beds?: number
+                    baths?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    property_id?: string
+                    name?: string
+                    floor?: number
+                    status?: UnitStatus
+                    rent_amount?: number
+                    sqft?: number | null
+                    beds?: number
+                    baths?: number
+                    updated_at?: string
+                }
+            }
+            leases: {
+                Row: {
+                    id: string
+                    unit_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    status: LeaseStatus
+                    start_date: string
+                    end_date: string
+                    monthly_rent: number
+                    security_deposit: number
+                    terms: Json | null
+                    tenant_signature: string | null
+                    landlord_signature: string | null
+                    signed_at: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    unit_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    status?: LeaseStatus
+                    start_date: string
+                    end_date: string
+                    monthly_rent: number
+                    security_deposit?: number
+                    terms?: Json | null
+                    tenant_signature?: string | null
+                    landlord_signature?: string | null
+                    signed_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    unit_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    status?: LeaseStatus
+                    start_date?: string
+                    end_date?: string
+                    monthly_rent?: number
+                    security_deposit?: number
+                    terms?: Json | null
+                    tenant_signature?: string | null
+                    landlord_signature?: string | null
+                    signed_at?: string | null
+                    updated_at?: string
+                }
+            }
+            payments: {
+                Row: {
+                    id: string
+                    lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    amount: number
+                    status: PaymentStatus
+                    method: PaymentMethod | null
+                    description: string | null
+                    due_date: string
+                    paid_at: string | null
+                    reference_number: string | null
+                    landlord_confirmed: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    amount: number
+                    status?: PaymentStatus
+                    method?: PaymentMethod | null
+                    description?: string | null
+                    due_date: string
+                    paid_at?: string | null
+                    reference_number?: string | null
+                    landlord_confirmed?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    lease_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    amount?: number
+                    status?: PaymentStatus
+                    method?: PaymentMethod | null
+                    description?: string | null
+                    due_date?: string
+                    paid_at?: string | null
+                    reference_number?: string | null
+                    landlord_confirmed?: boolean
+                    updated_at?: string
+                }
+            }
+            payment_items: {
+                Row: {
+                    id: string
+                    payment_id: string
+                    label: string
+                    amount: number
+                    category: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    payment_id: string
+                    label: string
+                    amount: number
+                    category?: string
+                    created_at?: string
+                }
+                Update: {
+                    payment_id?: string
+                    label?: string
+                    amount?: number
+                    category?: string
+                }
+            }
+            applications: {
+                Row: {
+                    id: string
+                    unit_id: string
+                    applicant_id: string
+                    landlord_id: string
+                    status: ApplicationStatus
+                    message: string | null
+                    monthly_income: number | null
+                    employment_status: string | null
+                    move_in_date: string | null
+                    documents: string[]
+                    reviewed_at: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    unit_id: string
+                    applicant_id: string
+                    landlord_id: string
+                    status?: ApplicationStatus
+                    message?: string | null
+                    monthly_income?: number | null
+                    employment_status?: string | null
+                    move_in_date?: string | null
+                    documents?: string[]
+                    reviewed_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    unit_id?: string
+                    applicant_id?: string
+                    landlord_id?: string
+                    status?: ApplicationStatus
+                    message?: string | null
+                    monthly_income?: number | null
+                    employment_status?: string | null
+                    move_in_date?: string | null
+                    documents?: string[]
+                    reviewed_at?: string | null
+                    updated_at?: string
+                }
+            }
+            maintenance_requests: {
+                Row: {
+                    id: string
+                    unit_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    title: string
+                    description: string
+                    status: MaintenanceStatus
+                    priority: MaintenancePriority
+                    category: string | null
+                    images: string[]
+                    resolved_at: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    unit_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    title: string
+                    description: string
+                    status?: MaintenanceStatus
+                    priority?: MaintenancePriority
+                    category?: string | null
+                    images?: string[]
+                    resolved_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    unit_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    title?: string
+                    description?: string
+                    status?: MaintenanceStatus
+                    priority?: MaintenancePriority
+                    category?: string | null
+                    images?: string[]
+                    resolved_at?: string | null
+                    updated_at?: string
+                }
+            }
+            move_out_requests: {
+                Row: {
+                    id: string
+                    lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    reason: string | null
+                    requested_date: string
+                    status: MoveOutStatus
+                    notes: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    reason?: string | null
+                    requested_date: string
+                    status?: MoveOutStatus
+                    notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    lease_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    reason?: string | null
+                    requested_date?: string
+                    status?: MoveOutStatus
+                    notes?: string | null
+                    updated_at?: string
+                }
+            }
+            conversations: {
+                Row: {
+                    id: string
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    updated_at?: string
+                }
+            }
+            conversation_participants: {
+                Row: {
+                    id: string
+                    conversation_id: string
+                    user_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    conversation_id: string
+                    user_id: string
+                    created_at?: string
+                }
+                Update: {
+                    conversation_id?: string
+                    user_id?: string
+                }
+            }
+            messages: {
+                Row: {
+                    id: string
+                    conversation_id: string
+                    sender_id: string
+                    type: MessageType
+                    content: string
+                    metadata: Json | null
+                    read_at: string | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    conversation_id: string
+                    sender_id: string
+                    type?: MessageType
+                    content: string
+                    metadata?: Json | null
+                    read_at?: string | null
+                    created_at?: string
+                }
+                Update: {
+                    conversation_id?: string
+                    sender_id?: string
+                    type?: MessageType
+                    content?: string
+                    metadata?: Json | null
+                    read_at?: string | null
+                }
+            }
+            notifications: {
+                Row: {
+                    id: string
+                    user_id: string
+                    type: NotificationType
+                    title: string
+                    message: string
+                    data: Json | null
+                    read: boolean
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    type: NotificationType
+                    title: string
+                    message: string
+                    data?: Json | null
+                    read?: boolean
+                    created_at?: string
+                }
+                Update: {
+                    user_id?: string
+                    type?: NotificationType
+                    title?: string
+                    message?: string
+                    data?: Json | null
+                    read?: boolean
+                }
+            }
+            saved_properties: {
+                Row: {
+                    id: string
+                    user_id: string
+                    property_id: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    property_id: string
+                    created_at?: string
+                }
+                Update: {
+                    user_id?: string
+                    property_id?: string
+                }
+            }
+        }
+        Views: {
+            [_ in never]: never
+        }
+        Functions: {
+            [_ in never]: never
+        }
+        Enums: {
+            user_role: UserRole
+            property_type: PropertyType
+            unit_status: UnitStatus
+            lease_status: LeaseStatus
+            payment_status: PaymentStatus
+            payment_method: PaymentMethod
+            application_status: ApplicationStatus
+            maintenance_status: MaintenanceStatus
+            maintenance_priority: MaintenancePriority
+            move_out_status: MoveOutStatus
+            message_type: MessageType
+            notification_type: NotificationType
+        }
+    }
+}
+
+// ---------- Convenience row types ----------
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type Property = Database['public']['Tables']['properties']['Row']
+export type Unit = Database['public']['Tables']['units']['Row']
+export type Lease = Database['public']['Tables']['leases']['Row']
+export type Payment = Database['public']['Tables']['payments']['Row']
+export type PaymentItem = Database['public']['Tables']['payment_items']['Row']
+export type Application = Database['public']['Tables']['applications']['Row']
+export type MaintenanceRequest = Database['public']['Tables']['maintenance_requests']['Row']
+export type MoveOutRequest = Database['public']['Tables']['move_out_requests']['Row']
+export type Conversation = Database['public']['Tables']['conversations']['Row']
+export type ConversationParticipant = Database['public']['Tables']['conversation_participants']['Row']
+export type Message = Database['public']['Tables']['messages']['Row']
+export type Notification = Database['public']['Tables']['notifications']['Row']
+export type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
+
+// ---------- Joined / view types for common queries ----------
+export type UnitWithProperty = Unit & {
+    property: Property
+}
+
+export type LeaseWithDetails = Lease & {
+    unit: UnitWithProperty
+    tenant: Profile
+    landlord: Profile
+}
+
+export type PaymentWithDetails = Payment & {
+    lease: Lease
+    tenant: Profile
+    items: PaymentItem[]
+}
+
+export type ApplicationWithDetails = Application & {
+    unit: UnitWithProperty
+    applicant: Profile
+}
+
+export type MaintenanceRequestWithDetails = MaintenanceRequest & {
+    unit: UnitWithProperty
+    tenant: Profile
+}
+
+export type ConversationWithParticipants = Conversation & {
+    participants: (ConversationParticipant & { profile: Profile })[]
+    last_message?: Message
+}
