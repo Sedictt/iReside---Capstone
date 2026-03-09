@@ -1,0 +1,224 @@
+/* ═══════════════════════════════════════════════════════════
+   Tenant Settings Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    flex-shrink: 0;
+}
+
+.backButton,
+.actionButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active,
+.actionButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg,
+.actionButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.topBarTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    text-align: center;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Generic Section ──────────────────────────────────── */
+.section {
+    margin-bottom: 24px;
+}
+
+.section:first-child {
+    margin-top: 16px;
+}
+
+.sectionTitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6d9838;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-left: 4px;
+}
+
+/* ─── Form Elements ────────────────────────────────────── */
+.formGroup {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.inputRow {
+    padding: 12px 16px;
+    border-bottom: 1px solid #1e1e1e;
+}
+
+.inputRow:last-child {
+    border-bottom: none;
+}
+
+.label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #fafafa;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    outline: none;
+}
+
+.input::placeholder {
+    color: #525252;
+}
+
+/* ─── Toggles & Lists ──────────────────────────────────── */
+.listGroup {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.listItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid #1e1e1e;
+    cursor: pointer;
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    width: 100%;
+    text-align: left;
+}
+
+.listItem:last-child {
+    border-bottom: none;
+}
+
+.itemLabel {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e5e5e5;
+}
+
+.itemDesc {
+    font-size: 13px;
+    color: #737373;
+    margin-top: 4px;
+}
+
+/* ─── Custom Toggle Switch ─────────────────────────────── */
+.toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: #262626;
+    border-radius: 99px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.toggleActive {
+    background: #6d9838;
+}
+
+.toggleCircle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toggleActive .toggleCircle {
+    transform: translateX(20px);
+}
+
+/* ─── Save Button ──────────────────────────────────────── */
+.saveContainer {
+    padding: 16px 20px;
+    background: #0a0a0a;
+    border-top: 1px solid #1e1e1e;
+    flex-shrink: 0;
+}
+
+.saveButton {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    background: #fafafa;
+    color: #000;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.saveButton:active {
+    transform: scale(0.98);
+}
