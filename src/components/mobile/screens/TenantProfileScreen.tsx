@@ -17,7 +17,7 @@ import { useNavigation } from "../navigation";
 import styles from "./TenantProfileScreen.module.css";
 
 export default function TenantProfileScreen() {
-    const { navigate } = useNavigation();
+    const { navigate, setRole } = useNavigation();
 
     return (
         <div className={styles.container}>
@@ -39,7 +39,7 @@ export default function TenantProfileScreen() {
                 {/* Role Switcher */}
                 <div
                     className={styles.roleSwitcherCard}
-                    onClick={() => alert("Switching to Landlord View...")}
+                    onClick={() => setRole("landlord")}
                 >
                     <div className={styles.roleLeft}>
                         <div className={styles.roleIcon}>
