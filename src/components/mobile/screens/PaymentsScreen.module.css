@@ -1,0 +1,527 @@
+/* ═══════════════════════════════════════════════════════════
+   Payments Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    flex-shrink: 0;
+}
+
+.backButton,
+.actionButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active,
+.actionButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg,
+.actionButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.topBarTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    text-align: center;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Balance Card ─────────────────────────────────────── */
+.balanceCard {
+    background: linear-gradient(135deg, #1f2910 0%, #141414 100%);
+    border: 1px solid #262626;
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 24px;
+    margin-top: 12px;
+}
+
+.balanceLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a3a3a3;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.balanceAmount {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+}
+
+.balanceDue {
+    font-size: 13px;
+    color: #ef4444;
+    font-weight: 600;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 4px 12px;
+    border-radius: 99px;
+}
+
+/* ─── Pay Button ───────────────────────────────────────── */
+.payButton {
+    width: 100%;
+    height: 48px;
+    border-radius: 14px;
+    background: #6d9838;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.payButton:active {
+    transform: scale(0.98);
+    background: #5c842b;
+}
+
+.payButton svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Section ──────────────────────────────────────────── */
+.section {
+    margin-bottom: 24px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.sectionLink {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6d9838;
+    cursor: pointer;
+}
+
+/* ─── Payment Filter Tabs ──────────────────────────────── */
+.filterTabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.filterTab {
+    flex: 1;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background: #141414;
+    color: #737373;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filterTabActive {
+    background: #262626;
+    color: #fafafa;
+    border-color: #333333;
+}
+
+/* ─── Invoice List ─────────────────────────────────────── */
+.invoiceList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.invoiceItem {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.invoiceIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.invoiceIcon svg {
+    width: 20px;
+    height: 20px;
+    color: #737373;
+}
+
+.invoiceIconPending {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.invoiceIconPending svg {
+    color: #f59e0b;
+}
+
+.invoiceIconCompleted {
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.invoiceIconCompleted svg {
+    color: #22c55e;
+}
+
+.invoiceDetails {
+    flex: 1;
+    min-width: 0;
+}
+
+.invoiceTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.invoiceDate {
+    font-size: 12px;
+    color: #737373;
+}
+
+.invoiceRight {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.invoiceAmount {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+/* Status Badges */
+.statusBadge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.statusPending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.statusCompleted {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+/* ─── Empty State ──────────────────────────────────────── */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.emptyIcon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.emptyIcon svg {
+    width: 24px;
+    height: 24px;
+    color: #525252;
+}
+
+.emptyTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.emptySub {
+    font-size: 13px;
+    color: #737373;
+}
+
+/* ─── Bottom Sheet Modal (Payment Flow) ────────────────── */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modalSheet {
+    width: 100%;
+    background: #0f0f0f;
+    border-top: 1px solid #262626;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 20px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.closeButton {
+    background: #1a1a1a;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    cursor: pointer;
+}
+
+.paymentBreakdown {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.breakdownRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.breakdownRow:last-child {
+    margin-bottom: 0;
+}
+
+.breakdownLabel {
+    font-size: 14px;
+    color: #a3a3a3;
+}
+
+.breakdownValue {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fafafa;
+}
+
+.breakdownTotal {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #262626;
+    display: flex;
+    justify-content: space-between;
+}
+
+.breakdownTotal .breakdownLabel {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fafafa;
+}
+
+.breakdownTotal .breakdownValue {
+    font-size: 18px;
+    font-weight: 800;
+    color: #6d9838;
+}
+
+.methodTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.methodsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.methodCard {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.methodCardActive {
+    border-color: #6d9838;
+    background: rgba(109, 152, 56, 0.1);
+}
+
+.methodIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    color: #fafafa;
+}
+
+.methodCardActive .methodIcon {
+    background: #6d9838;
+}
+
+.methodIcon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.methodName {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fafafa;
+}
+
+.submitPaymentBtn {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    background: #6d9838;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+}
