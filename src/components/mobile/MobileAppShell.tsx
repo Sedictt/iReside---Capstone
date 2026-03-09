@@ -14,6 +14,7 @@ import TenantChatScreen from "./screens/TenantChatScreen";
 import ChatConversationScreen from "./screens/ChatConversationScreen";
 import ApplicationFormScreen from "./screens/ApplicationFormScreen";
 import ApplicationTrackerScreen from "./screens/ApplicationTrackerScreen";
+import LeaseScreen from "./screens/LeaseScreen";
 import {
     Home,
     Search,
@@ -169,6 +170,7 @@ function ScreenRouter() {
         chatConversation: ChatConversationScreen,
         applicationForm: ApplicationFormScreen,
         applicationTracker: ApplicationTrackerScreen,
+        leaseList: LeaseScreen,
         // Screens will be registered here as they're built
     };
 

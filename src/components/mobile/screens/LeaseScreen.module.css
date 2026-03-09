@@ -1,0 +1,403 @@
+/* ═══════════════════════════════════════════════════════════
+   Lease List & Detail Screens
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Header View ──────────────────────────────────────── */
+.header {
+    padding: 12px 20px 20px;
+    flex-shrink: 0;
+}
+
+.headerTitle {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 2px;
+}
+
+.headerSub {
+    font-size: 12px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.headerSub span {
+    color: #6d9838;
+    font-weight: 700;
+}
+
+/* ─── Top Bar (Detail View) ────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 8px;
+    flex-shrink: 0;
+}
+
+.backButton, .actionButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active, .actionButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg, .actionButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.topBarTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    text-align: center;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Lease Card (List View) ───────────────────────────── */
+.leaseCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.leaseCard:last-child {
+    margin-bottom: 0;
+}
+
+.leaseCard:active {
+    transform: scale(0.98);
+    background: #1a1a1a;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 16px 12px;
+    border-bottom: 1px dashed #1e1e1e;
+}
+
+.propertyName {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+}
+
+.unitName {
+    font-size: 12px;
+    color: #a3a3a3;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.unitName svg {
+    width: 12px;
+    height: 12px;
+}
+
+.cardBody {
+    padding: 12px 16px 16px;
+}
+
+.detailRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.detailRow:last-child {
+    margin-bottom: 0;
+}
+
+.detailLabel {
+    font-size: 12px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.detailValue {
+    font-size: 12px;
+    color: #e5e5e5;
+    font-weight: 600;
+}
+
+.priceValue {
+    color: #6d9838;
+    font-weight: 800;
+}
+
+/* ─── Status Badges ────────────────────────────────────── */
+.statusBadge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.statusActive {
+    background: rgba(109, 152, 56, 0.15);
+    color: #6d9838;
+}
+
+.statusPending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.statusExpired {
+    background: rgba(115, 115, 115, 0.15);
+    color: #a3a3a3;
+}
+
+/* ─── Detail View Components ───────────────────────────── */
+.detailHeader {
+    text-align: center;
+    padding: 10px 0 24px;
+}
+
+.detailPropertyName {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+}
+
+.detailAddress {
+    font-size: 13px;
+    color: #a3a3a3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.detailAddress svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ─── Info Section ─────────────────────────────────────── */
+.section {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6d9838;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sectionTitle svg {
+    width: 14px;
+    height: 14px;
+}
+
+.divider {
+    height: 1px;
+    background: #1e1e1e;
+    margin: 12px 0;
+}
+
+/* ─── Landlord Info ────────────────────────────────────── */
+.landlordCard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.landlordAvatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #737373;
+}
+
+.landlordDetails {
+    flex: 1;
+}
+
+.landlordName {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fafafa;
+}
+
+.landlordRole {
+    font-size: 11px;
+    color: #525252;
+}
+
+.contactButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.contactBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    cursor: pointer;
+}
+
+/* ─── Document Button ──────────────────────────────────── */
+.docButton {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    border: 1.5px solid #262626;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    color: #fafafa;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+    margin-top: 24px;
+}
+
+.docButton:active {
+    background: #1a1a1a;
+    border-color: #333333;
+    transform: scale(0.98);
+}
+
+.docIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(109, 152, 56, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6d9838;
+}
+
+.docIcon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.docText {
+    flex: 1;
+    text-align: left;
+}
+
+.docDownload {
+    color: #525252;
+}
+
+/* ─── Empty State ──────────────────────────────────────── */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 12px;
+    padding: 40px;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.emptyIcon svg {
+    width: 28px;
+    height: 28px;
+    color: #333333;
+}
+
+.emptyTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.emptySub {
+    font-size: 13px;
+    color: #525252;
+    line-height: 1.5;
+}
