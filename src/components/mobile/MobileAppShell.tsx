@@ -16,6 +16,7 @@ import ApplicationFormScreen from "./screens/ApplicationFormScreen";
 import ApplicationTrackerScreen from "./screens/ApplicationTrackerScreen";
 import LeaseScreen from "./screens/LeaseScreen";
 import PaymentsScreen from "./screens/PaymentsScreen";
+import TenantProfileScreen from "./screens/TenantProfileScreen";
 import {
     Home,
     Search,
@@ -173,6 +174,7 @@ function ScreenRouter() {
         applicationTracker: ApplicationTrackerScreen,
         leaseList: LeaseScreen,
         payments: PaymentsScreen,
+        tenantProfile: TenantProfileScreen,
         // Screens will be registered here as they're built
     };
 
