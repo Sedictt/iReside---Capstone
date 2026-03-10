@@ -1,7 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import { Building2, Facebook, Eye } from "lucide-react";
+import { useState } from "react";
+import { signIn } from "@/lib/supabase/auth";
 
 export default function LoginPage() {
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+
+        const formData = new FormData(e.currentTarget);
+        const result = await signIn(formData);
+
+        if (result?.error) {
+            setError(result.error);
+        }
+        setLoading(false);
+    };
     return (
         <div className="flex min-h-screen bg-[#0f1218] text-white font-sans">
             {/* Left Panel - Hero Image & Branding */}
@@ -44,7 +64,12 @@ export default function LoginPage() {
                         <p className="text-slate-400">Manage your residency and stay connected.</p>
                     </div>
 
-                    <form className="space-y-6">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        {error && (
+                            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4">
+                                <p className="text-sm font-medium text-red-500">{error}</p>
+                            </div>
+                        )}
                         <div className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-wide text-slate-200" htmlFor="email">
@@ -52,7 +77,9 @@ export default function LoginPage() {
                                 </label>
                                 <input
                                     id="email"
+                                    name="email"
                                     type="email"
+                                    required
                                     placeholder="name@email.com"
                                     className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-3.5 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                                 />
@@ -64,7 +91,9 @@ export default function LoginPage() {
                                 <div className="relative">
                                     <input
                                         id="password"
+                                        name="password"
                                         type="password"
+                                        required
                                         placeholder="Enter your password"
                                         className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-3.5 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                                     />
@@ -91,9 +120,10 @@ export default function LoginPage() {
 
                         <button
                             type="submit"
-                            className="w-full rounded-lg bg-blue-600 py-3.5 font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98]"
+                            disabled={loading}
+                            className="w-full rounded-lg bg-blue-600 py-3.5 font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Log In
+                            {loading ? "Logging in..." : "Log In"}
                         </button>
                     </form>
 
@@ -119,7 +149,7 @@ export default function LoginPage() {
 
                     <div className="text-center text-sm text-slate-400">
                         Don&apos;t have an account?{" "}
-                        <Link href="/" className="font-bold text-blue-500 hover:text-blue-400 hover:underline">
+                        <Link href="/signup" className="font-bold text-blue-500 hover:text-blue-400 hover:underline">
                             Sign Up
                         </Link>
                     </div>

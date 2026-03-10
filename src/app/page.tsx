@@ -24,7 +24,10 @@ import {
   ArrowRight,
   TrendingUp,
   Map as MapIcon,
-  Globe
+  Globe,
+  Menu,
+  X,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,6 +38,15 @@ import { cn } from "@/lib/utils";
 export default function LandingPage() {
   const [activeCategory, setActiveCategory] = useState("All Rentals");
   const [isLiked, setIsLiked] = useState<Record<string, boolean>>({});
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(false);
+  const [selectedPropertyType, setSelectedPropertyType] = useState("Apartments");
+  const [isPriceRangeOpen, setIsPriceRangeOpen] = useState(false);
+  const [selectedPriceRange, setSelectedPriceRange] = useState("₱5,000 - ₱15,000");
+
+  const propertyTypes = ["Any Type", "Apartments", "Bedspaces", "Houses for Rent"];
+  const priceRanges = ["Any Budget", "Under ₱5,000", "₱5,000 - ₱15,000", "₱15,000 - ₱30,000", "₱30,000+"];
 
   const toggleLike = (id: string) => {
     setIsLiked(prev => ({ ...prev, [id]: !prev[id] }));
@@ -53,109 +65,223 @@ export default function LandingPage() {
     <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30">
 
       {/* Navigation */}
-      <nav className="fixed top-0 z-[100] w-full px-6 py-5 flex justify-between items-center bg-black/50 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center gap-2 font-black text-2xl tracking-tighter">
-          <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center">
-            <div className="h-4 w-4 bg-black rounded-sm" />
-          </div>
-          iRESIDE
-        </div>
-
-        <div className="hidden lg:flex items-center gap-8 text-[11px] font-bold tracking-[0.2em] uppercase opacity-60">
-          <Link href="/search" className="hover:opacity-100 transition-opacity">Find Homes</Link>
-          <Link href="/login" className="hover:opacity-100 transition-opacity">For Landlords</Link>
-          <Link href="#" className="hover:opacity-100 transition-opacity">iRis AI</Link>
-          <Link href="#" className="hover:opacity-100 transition-opacity">About</Link>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-xs font-bold tracking-widest uppercase hover:text-primary transition-colors">Log In</Link>
-          <Link href="/search" className="px-6 py-2.5 rounded-full bg-white text-black text-xs font-bold tracking-widest uppercase hover:bg-white/90 transition-all">
-            Get Started
+      <div className="fixed top-0 z-[100] w-full flex justify-center pt-6 px-4 md:px-6 transition-all duration-300">
+        <nav className="w-full max-w-7xl bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center justify-between px-4 md:px-6 py-4 shadow-2xl">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 md:gap-3 font-black text-lg md:text-xl tracking-wide">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="h-3 w-3 bg-white rounded-sm drop-shadow-md" />
+            </div>
+            iRESIDE
           </Link>
-        </div>
-      </nav>
+
+          {/* Desktop Links - Pill Container */}
+          <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] p-1 rounded-full border border-white/[0.05]">
+            <Link href="/search" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">Rent a Home</Link>
+            <Link href="/login" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">List a Property</Link>
+            <Link href="#" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">AI Assistant</Link>
+            <Link href="#" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">How it Works</Link>
+          </div>
+
+          {/* Actions */}
+          <div className="hidden lg:flex items-center gap-4">
+            <Link href="/login" className="px-4 py-2 text-sm font-semibold text-white/80 hover:text-white transition-colors">Log In</Link>
+            <Link href="/search" className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:-translate-y-0.5 transition-all">
+              Get Started
+            </Link>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="lg:hidden p-2 text-white/70 hover:text-white transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </nav>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              className="absolute top-[88px] left-4 right-4 md:left-6 md:right-6 bg-neutral-900/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-2 lg:hidden"
+            >
+              <Link href="/search" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">Rent a Home</Link>
+              <Link href="/login" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">List a Property</Link>
+              <Link href="#" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">AI Assistant</Link>
+              <Link href="#" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">How it Works</Link>
+              <div className="h-[1px] w-full bg-white/10 my-2" />
+              <Link href="/login" className="p-3 text-center text-base font-semibold text-white hover:text-primary transition-colors">Log In</Link>
+              <Link href="/search" className="p-3 text-center rounded-xl bg-white text-black text-base font-bold shadow-lg transition-all">
+                Get Started
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Hero Section - Klook Style */}
-      <section className="relative h-[95vh] w-full flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2675&auto=format&fit=crop"
-            alt="Luxury Penthouse"
-            fill
-            className="object-cover opacity-60 scale-105 animate-[slow-zoom_20s_infinite_alternate]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90" />
+      <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center overflow-hidden pt-32 pb-20">
+        {/* Cinematic 3-Column Background */}
+        <div className="absolute inset-0 grid grid-cols-3 w-full h-full opacity-40 select-none pointer-events-none">
+          {/* Apartment Column */}
+          <div className="relative h-full w-full overflow-hidden border-r border-white/5">
+            <div className="absolute top-0 w-full flex flex-col animate-[scroll-up_50s_linear_infinite]">
+              <div className="relative h-[100vh] w-full"><Image alt="Apartments 1" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Apartments 2" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Apartments 3" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Apartments 4" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
+            </div>
+          </div>
+
+          {/* Dorm Column */}
+          <div className="relative h-full w-full overflow-hidden border-r border-white/5">
+            <div className="absolute top-0 w-full flex flex-col animate-[scroll-down_45s_linear_infinite]">
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 1" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 2" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 3" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 4" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+            </div>
+          </div>
+
+          {/* Boarding House Column */}
+          <div className="relative h-full w-full overflow-hidden">
+            <div className="absolute top-0 w-full flex flex-col animate-[scroll-up_55s_linear_infinite]">
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 1" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 2" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 3" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 4" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
+            </div>
+          </div>
         </div>
 
-        <div className="container mx-auto px-6 relative z-10 text-center">
+        {/* Global Dark Gradient Overlay for perfect text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black pointer-events-none" />
+
+        <div className="container mx-auto px-6 relative z-10 w-full flex flex-col items-center">
+
+          {/* Main Hero Copy Container */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-8"
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-center max-w-4xl mx-auto mb-12 flex flex-col items-center mt-8"
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-black tracking-[0.3em] uppercase mb-6">
-              <Sparkles className="h-3 w-3 text-amber-400" /> Hassle-Free Renting
-            </span>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-6">
-              FIND YOUR <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-primary">NEXT HOME.</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 text-[11px] font-black tracking-[0.25em] text-white uppercase mb-8 shadow-2xl">
+              <Sparkles className="h-4 w-4 text-emerald-400" />
+              <span>A new standard for renting</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-8 text-white drop-shadow-2xl">
+              RENTING MADE <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-primary to-emerald-500 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">EFFORTLESS.</span>
             </h1>
-            <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-              Looking for a bedspace, apartment, or a budget-friendly home? iReside is here to make your rental journey fast and easy.
+            <p className="text-slate-300 text-lg md:text-xl font-medium leading-relaxed max-w-2xl text-center shadow-black drop-shadow-md">
+              Find your ideal apartment, dorm, or boarding house seamlessly. Connect with verified landlords and manage everything in one place.
             </p>
           </motion.div>
 
-          {/* Search Dock */}
+          {/* Search Dock Container */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="max-w-5xl mx-auto"
+            className="w-full max-w-5xl"
           >
-            <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl shadow-black/80 flex flex-col md:flex-row items-center gap-2">
+            <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-3 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center gap-2">
               {/* Location Input */}
-              <div className="flex-1 w-full px-6 py-4 flex items-center gap-4 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/5 transition-colors group rounded-l-[2rem]">
+              <div className="flex-1 w-full px-6 py-4 flex items-center gap-4 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/10 transition-colors group rounded-[2rem] md:rounded-r-none md:rounded-l-[2rem]">
                 <MapPin className="h-5 w-5 text-primary" />
                 <div className="text-left w-full">
-                  <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Location</p>
+                  <p className="text-[10px] font-black tracking-widest text-slate-400 group-hover:text-emerald-300 transition-colors uppercase">Location</p>
                   <input
                     type="text"
                     placeholder="Where do you want to live?"
-                    className="bg-transparent border-none text-white placeholder-slate-400 focus:outline-none w-full font-bold text-sm"
+                    className="bg-transparent border-none text-white placeholder-slate-500 focus:outline-none w-full font-bold text-sm"
                   />
                 </div>
               </div>
 
               {/* Property Type */}
-              <div className="flex-1 w-full px-6 py-4 flex items-center gap-4 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/5 transition-colors group">
+              <div
+                className="flex-1 w-full px-6 py-4 flex items-center gap-4 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/10 transition-colors group rounded-[2rem] md:rounded-none relative cursor-pointer"
+                onClick={() => { setIsPropertyTypeOpen(!isPropertyTypeOpen); setIsPriceRangeOpen(false); }}
+              >
                 <House className="h-5 w-5 text-primary" />
-                <div className="text-left w-full">
-                  <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Property Type</p>
-                  <select className="bg-transparent border-none text-white focus:outline-none w-full font-bold text-sm appearance-none cursor-pointer">
-                    <option className="bg-neutral-900">Any Type</option>
-                    <option className="bg-neutral-900">Apartments</option>
-                    <option className="bg-neutral-900">Bedspaces</option>
-                    <option className="bg-neutral-900">Houses for Rent</option>
-                  </select>
+                <div className="text-left w-full relative">
+                  <p className="text-[10px] font-black tracking-widest text-slate-400 group-hover:text-emerald-300 transition-colors uppercase">Property Type</p>
+                  <div className="flex items-center justify-between w-full">
+                    <p className="font-bold text-sm text-white">{selectedPropertyType}</p>
+                    <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-300", isPropertyTypeOpen ? "rotate-180" : "")} />
+                  </div>
                 </div>
+
+                <AnimatePresence>
+                  {isPropertyTypeOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-[110%] left-0 w-full min-w-[200px] bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50 text-left"
+                    >
+                      {propertyTypes.map((type) => (
+                        <div
+                          key={type}
+                          onClick={(e) => { e.stopPropagation(); setSelectedPropertyType(type); setIsPropertyTypeOpen(false); }}
+                          className="px-6 py-3.5 hover:bg-white/10 text-white text-sm font-semibold transition-colors cursor-pointer border-b border-white/5 last:border-0"
+                        >
+                          {type}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Price Range */}
-              <div className="flex-1 w-full px-6 py-4 flex items-center gap-4 hover:bg-white/5 transition-colors group mr-2">
+              <div
+                className="flex-1 w-full px-6 py-4 flex items-center gap-4 hover:bg-white/10 transition-colors group rounded-[2rem] md:rounded-none mr-2 relative cursor-pointer"
+                onClick={() => { setIsPriceRangeOpen(!isPriceRangeOpen); setIsPropertyTypeOpen(false); }}
+              >
                 <Wallet className="h-5 w-5 text-primary" />
-                <div className="text-left w-full">
-                  <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Price Range</p>
-                  <p className="font-bold text-sm text-white">Any Budget</p>
+                <div className="text-left w-full relative">
+                  <p className="text-[10px] font-black tracking-widest text-slate-400 group-hover:text-emerald-300 transition-colors uppercase">Price Range</p>
+                  <div className="flex items-center justify-between w-full">
+                    <p className="font-bold text-sm text-white">{selectedPriceRange}</p>
+                    <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-300", isPriceRangeOpen ? "rotate-180" : "")} />
+                  </div>
                 </div>
+
+                <AnimatePresence>
+                  {isPriceRangeOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-[110%] left-0 w-full min-w-[200px] bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50 text-left"
+                    >
+                      {priceRanges.map((range) => (
+                        <div
+                          key={range}
+                          onClick={(e) => { e.stopPropagation(); setSelectedPriceRange(range); setIsPriceRangeOpen(false); }}
+                          className="px-6 py-3.5 hover:bg-white/10 text-white text-sm font-semibold transition-colors cursor-pointer border-b border-white/5 last:border-0"
+                        >
+                          {range}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Search Button */}
               <Link
                 href="/search"
-                className="w-full md:w-[200px] h-14 md:h-16 flex items-center justify-center gap-3 bg-white text-black rounded-full md:rounded-[1.8rem] font-black text-xs tracking-widest uppercase hover:bg-primary hover:text-white transition-all duration-300 group"
+                className="w-full md:w-[200px] h-14 md:h-16 flex items-center justify-center gap-3 bg-white text-black rounded-full md:rounded-[1.8rem] font-black text-xs tracking-widest uppercase hover:bg-primary shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:text-white transition-all duration-300 group"
               >
                 <Search className="h-4 w-4 transition-transform group-hover:scale-125" />
                 Search
@@ -364,6 +490,14 @@ export default function LandingPage() {
         @keyframes slow-zoom {
           from { transform: scale(1.05); }
           to { transform: scale(1.15); }
+        }
+        @keyframes scroll-up {
+          from { transform: translateY(0); }
+          to { transform: translateY(-50%); }
+        }
+        @keyframes scroll-down {
+          from { transform: translateY(-50%); }
+          to { transform: translateY(0); }
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none;
