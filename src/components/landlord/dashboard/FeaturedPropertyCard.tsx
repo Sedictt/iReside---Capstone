@@ -16,7 +16,7 @@ export function FeaturedPropertyCard({
     propertyName = "Sunset Valley Apartments",
     totalSales = 243,
     totalViews = "20K+",
-    image = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop", // Modern apartment image
+    image = "/hero-images/apartment-03.png", // Temporarily using local hero-image
     className,
     simplifiedMode = false
 }: FeaturedPropertyCardProps) {

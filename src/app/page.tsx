@@ -124,15 +124,15 @@ export default function LandingPage() {
       </div>
 
       {/* Hero Section - Klook Style */}
-      <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center overflow-hidden pt-32 pb-20">
+      <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center pt-32 pb-20">
         {/* Cinematic 3-Column Background */}
-        <div className="absolute inset-0 grid grid-cols-3 w-full h-full opacity-40 select-none pointer-events-none">
+        <div className="absolute inset-0 grid grid-cols-3 w-full h-full opacity-40 select-none pointer-events-none overflow-hidden">
           {/* Apartment Column */}
           <div className="relative h-full w-full overflow-hidden border-r border-white/5">
             <div className="absolute top-0 w-full flex flex-col animate-[scroll-up_50s_linear_infinite]">
               <div className="relative h-[100vh] w-full"><Image alt="Apartments 1" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Apartments 2" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Apartments 3" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Apartments 2" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Apartments 3" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
               <div className="relative h-[100vh] w-full"><Image alt="Apartments 4" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
             </div>
           </div>
@@ -140,20 +140,20 @@ export default function LandingPage() {
           {/* Dorm Column */}
           <div className="relative h-full w-full overflow-hidden border-r border-white/5">
             <div className="absolute top-0 w-full flex flex-col animate-[scroll-down_45s_linear_infinite]">
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 1" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 2" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 3" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 4" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 1" src="/hero-images/dorm-01.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 2" src="/hero-images/dorm-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 3" src="/hero-images/dorm-03.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Dorms 4" src="/hero-images/dorm-01.png" fill className="object-cover" unoptimized /></div>
             </div>
           </div>
 
           {/* Boarding House Column */}
           <div className="relative h-full w-full overflow-hidden">
             <div className="absolute top-0 w-full flex flex-col animate-[scroll-up_55s_linear_infinite]">
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 1" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 2" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 1" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 2" src="/hero-images/dorm-03.png" fill className="object-cover" unoptimized /></div>
               <div className="relative h-[100vh] w-full"><Image alt="Boarding 3" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 4" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
+              <div className="relative h-[100vh] w-full"><Image alt="Boarding 4" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
             </div>
           </div>
         </div>
@@ -396,44 +396,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* iRis AI Assistant Canvas */}
-      <section className="relative py-40 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[160px] opacity-50" />
-
-        <div className="container mx-auto px-6 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="inline-block p-1 rounded-3xl bg-gradient-to-tr from-primary/20 via-white/10 to-blue-500/20 mb-12"
-          >
-            <div className="px-10 py-16 rounded-[2.5rem] bg-black/40 backdrop-blur-2xl border border-white/10">
-              <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-primary to-blue-600 flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(62,123,57,0.4)]">
-                <Sparkles className="h-10 w-10 text-white animate-pulse" />
-              </div>
-              <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 underline decoration-primary/40 underline-offset-8">MEET iRIS.</h2>
-              <p className="text-xl text-slate-300 max-w-2xl mx-auto font-medium mb-12 leading-relaxed">
-                iRis has got your back! She&apos;ll help you find the right place and make talking to your landlord a breeze whenever you need something.
-              </p>
-
-              <div className="flex flex-wrap justify-center gap-6">
-                <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10">
-                  <div className="h-2 w-2 rounded-full bg-primary" />
-                  <span className="text-[10px] font-black tracking-[0.2em] uppercase">Easy Search</span>
-                </div>
-                <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  <span className="text-[10px] font-black tracking-[0.2em] uppercase">24/7 Support</span>
-                </div>
-                <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10">
-                  <div className="h-2 w-2 rounded-full bg-purple-500" />
-                  <span className="text-[10px] font-black tracking-[0.2em] uppercase">Fast Process</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Landlord CTA - Final Pitch */}
       <section className="py-32 px-6">

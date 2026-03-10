@@ -5,20 +5,18 @@ import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
+    BarElement,
     Tooltip,
     TooltipItem,
     ScriptableContext
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import { cn } from "@/lib/utils";
 
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
+    BarElement,
     Tooltip
 );
 
@@ -52,25 +50,28 @@ export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifi
             {
                 label: "Amount",
                 data: getCurrentData(),
-                borderColor: (context: ScriptableContext<"line">) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, context.chart.width, 0);
-                    // Dynamically change color based on tab for better visual distinction? 
-                    // Keeping orange theme for now as per original design, or subtle shift?
-                    // Let's keep the warm orange as it fits the dark theme well.
-                    gradient.addColorStop(0, '#fdba74'); // Orange-300
-                    gradient.addColorStop(0.5, '#f97316'); // Orange-500
-                    gradient.addColorStop(1, '#c2410c'); // Orange-700
+                backgroundColor: (context: ScriptableContext<"bar">) => {
+                    if (!context.chart.chartArea) {
+                        return '#f97316';
+                    }
+                    const { ctx, chartArea: { top, bottom } } = context.chart;
+                    const gradient = ctx.createLinearGradient(0, bottom, 0, top);
+                    if (activeTab === "expenses") {
+                        gradient.addColorStop(0, '#b91c1c'); // Red-700
+                        gradient.addColorStop(1, '#fca5a5'); // Red-300
+                    } else if (activeTab === "netIncome") {
+                        gradient.addColorStop(0, '#047857'); // Emerald-700
+                        gradient.addColorStop(1, '#6ee7b7'); // Emerald-300
+                    } else {
+                        gradient.addColorStop(0, '#c2410c'); // Orange-700
+                        gradient.addColorStop(1, '#fdba74'); // Orange-300
+                    }
                     return gradient;
                 },
-                borderWidth: 4,
-                tension: 0.5, // Smoother bezier curve
-                pointRadius: 0,
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor: '#ffffff',
-                pointHoverBorderColor: '#f97316',
-                pointHoverBorderWidth: 3,
-                fill: false,
+                borderRadius: 6,
+                borderSkipped: false,
+                barThickness: 40,
+                maxBarThickness: 50,
             }
         ]
     };
@@ -90,7 +91,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifi
                 cornerRadius: 8,
                 callbacks: {
                     title: () => '', // Hide title
-                    label: (context: TooltipItem<"line">) => `₱${context.raw}`,
+                    label: (context: TooltipItem<"bar">) => `₱${context.raw}`,
                 },
                 yAlign: 'bottom' as const,
                 borderColor: '#334155',
@@ -175,7 +176,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifi
 
             {/* Chart Area */}
             <div className="flex-1 w-full min-h-0 relative">
-                <Line
+                <Bar
                     data={data}
                     options={options}
                 />

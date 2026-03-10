@@ -41,10 +41,10 @@ export const properties: Property[] = [
         description: "Experience modern urban living in this stunning loft. Featuring floor-to-ceiling windows, polished concrete floors, and a chef's kitchen with smart appliances. Located in the heart of the innovation district.",
         houseRules: ["Pets Allowed", "No Smoking", "No Parties"],
         images: [
-            "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=1000&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1000&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?q=80&w=1000&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1595846519845-68e298c2edd8?q=80&w=1000&auto=format&fit=crop"
+            "/hero-images/apartment-01.png",
+            "/hero-images/apartment-02.png",
+            "/hero-images/apartment-03.png",
+            "/hero-images/dorm-01.png"
         ],
         matchScore: 98,
         isNew: true,
@@ -65,7 +65,7 @@ export const properties: Property[] = [
         amenities: ["Parking", "Garden", "Kitchen", "Laundry"],
         description: "Spacious family home with a private garden.",
         houseRules: ["No Smoking"],
-        images: ["https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=1000&auto=format&fit=crop"],
+        images: ["/hero-images/apartment-02.png"],
         matchScore: 85,
         type: "House"
     },
@@ -83,7 +83,7 @@ export const properties: Property[] = [
         amenities: ["WiFi", "Air Con", "Cable TV"],
         description: "Perfect for students or young professionals.",
         houseRules: ["No Pets", "No Smoking"],
-        images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1000&auto=format&fit=crop"],
+        images: ["/hero-images/dorm-01.png"],
         matchScore: 92,
         type: "Studio"
     },
@@ -101,7 +101,7 @@ export const properties: Property[] = [
         amenities: ["Pool", "Parking", "WiFi", "Fireplace", "Balcony"],
         description: "Luxurious villa with a clear view of the lake.",
         houseRules: ["Pets Allowed", "No Smoking"],
-        images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1000&auto=format&fit=crop"],
+        images: ["/hero-images/apartment-03.png"],
         matchScore: 95,
         featured: true,
         type: "House"
@@ -120,7 +120,7 @@ export const properties: Property[] = [
         amenities: ["WiFi", "Water", "Security"],
         description: "Conveniently located near the city center.",
         houseRules: ["No Pets"],
-        images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1000&auto=format&fit=crop"],
+        images: ["/hero-images/dorm-02.png"],
         matchScore: 88,
         type: "Apartment"
     }

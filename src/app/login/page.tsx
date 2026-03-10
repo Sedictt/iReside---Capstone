@@ -28,7 +28,7 @@ export default function LoginPage() {
             <div className="relative hidden w-[55%] flex-col justify-end overflow-hidden lg:flex">
                 {/* Background Image */}
                 <img
-                    src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=2000&auto=format&fit=crop"
+                    src="/hero-images/apartment-03.png"
                     alt="Modern Residence"
                     className="absolute inset-0 w-full h-full object-cover"
                 />
