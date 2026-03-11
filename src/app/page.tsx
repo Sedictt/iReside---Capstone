@@ -31,8 +31,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { properties } from "@/lib/data";
+import { properties, Property } from "@/lib/data";
 import PropertyCard from "@/components/PropertyCard";
+import PropertyDetailModal from "@/components/PropertyDetailModal";
 import { cn } from "@/lib/utils";
 import SearchMapView from "@/components/SearchMapView";
 import { useAuth } from "@/hooks/useAuth";
@@ -126,6 +127,14 @@ export default function LandingPage() {
     { name: "Budget", icon: Wallet },
     { name: "Trending", icon: Flame },
   ];
+
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const handleOpenDetails = (property: Property) => {
+    setSelectedProperty(property);
+    setDetailsOpen(true);
+  };
 
   const toggleLike = (id: string) => {
     setIsLiked(prev => ({ ...prev, [id]: !prev[id] }));
@@ -571,7 +580,7 @@ export default function LandingPage() {
                           property={property as any}
                           isLiked={!!isLiked[property.id]}
                           onLike={() => toggleLike(property.id)}
-                          onClick={() => { }}
+                          onClick={handleOpenDetails}
                         />
                       ))}
                     </div>
@@ -641,7 +650,7 @@ export default function LandingPage() {
                           property={property as any}
                           isLiked={!!isLiked[property.id]}
                           onLike={() => toggleLike(property.id)}
-                          onClick={() => { }}
+                          onClick={handleOpenDetails}
                         />
                       ))}
                     </div>
@@ -667,7 +676,7 @@ export default function LandingPage() {
                             property={property as any}
                             isLiked={!!isLiked[property.id]}
                             onLike={() => toggleLike(property.id)}
-                            onClick={() => { }}
+                            onClick={handleOpenDetails}
                           />
                         </div>
                       ))}
@@ -880,7 +889,7 @@ export default function LandingPage() {
                         property={property as any}
                         isLiked={!!isLiked[property.id]}
                         onLike={() => toggleLike(property.id)}
-                        onClick={() => { }}
+                        onClick={handleOpenDetails}
                       />
                     </div>
                   ))}
@@ -942,6 +951,14 @@ export default function LandingPage() {
           scrollbar-width: none;
         }
       `}</style>
-    </div >
+
+      <PropertyDetailModal
+        property={selectedProperty}
+        isLiked={selectedProperty ? !!isLiked[selectedProperty.id] : false}
+        onLike={toggleLike}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+      />
+    </div>
   );
 }

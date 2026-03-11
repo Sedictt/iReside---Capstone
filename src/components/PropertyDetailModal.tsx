@@ -5,7 +5,8 @@ import {
     Heart, Share, Navigation, X, RotateCw, Bed, Bath, LayoutTemplate,
     Wifi, Snowflake, Dumbbell, WashingMachine, Droplets, Wind, ChevronUp,
     Flame, Car, UtensilsCrossed, Shield, Tv, CircleUser, CheckCircle2, Ban,
-    Send, MessageSquare, ChevronsDown, Zap, Users, Trash2
+    Send, MessageSquare, ChevronsDown, Zap, Users, Trash2,
+    ChevronLeft, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Property } from "@/lib/data";
@@ -18,15 +19,22 @@ interface PropertyDetailModalProps {
     onOpenChange: (open: boolean) => void;
 }
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function PropertyDetailModal({ property, isLiked, onLike, open, onOpenChange }: PropertyDetailModalProps) {
     const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
+    const [activeImage, setActiveImage] = useState(0);
+    const thumbsRef = useRef<HTMLDivElement>(null);
 
     const [rulesOpen, setRulesOpen] = useState(false);
     const [messageOpen, setMessageOpen] = useState(false);
     const [messageSent, setMessageSent] = useState(false);
     const [messageText, setMessageText] = useState("");
+
+    // Reset to first image whenever a new property is opened
+    useEffect(() => {
+        if (open) setActiveImage(0);
+    }, [open, property?.id]);
 
 
     if (!property) return null;
@@ -35,20 +43,28 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
         <>
             <Dialog.Root open={open} onOpenChange={onOpenChange}>
                 <Dialog.Portal>
-                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/70 z-[60]" />
-                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] h-[90vh] max-h-[90vh] w-[95vw] max-w-[1100px] rounded-2xl bg-background shadow-2xl focus:outline-none z-[70] flex border border-neutral-800/50 overflow-hidden">
+                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/70 z-[110]" />
+                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] h-[90vh] max-h-[90vh] w-[95vw] max-w-[1100px] rounded-2xl bg-background shadow-2xl focus:outline-none z-[120] flex border border-neutral-800/50 overflow-hidden">
 
-                        {/* Left: Image Gallery */}
-                        <div className="hidden md:flex flex-col w-[60%] bg-black relative">
-                            <div className="relative h-[65%] w-full">
+                        {/* Left: Image Carousel */}
+                        <div className="hidden md:flex flex-col w-[60%] bg-black relative select-none">
+
+                            {/* ── Main viewer ── */}
+                            <div className="relative flex-1 w-full overflow-hidden">
                                 <Image
-                                    src={property.images[0]}
-                                    alt={property.name}
+                                    key={activeImage}
+                                    src={property.images[activeImage]}
+                                    alt={`${property.name} – photo ${activeImage + 1}`}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover transition-opacity duration-300"
+                                    priority
                                 />
-                                {/* Top Left Controls */}
-                                <div className="absolute top-4 left-4 flex gap-2">
+
+                                {/* Dark vignette at bottom for readability */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                                {/* Top-left action buttons */}
+                                <div className="absolute top-4 left-4 flex gap-2 z-10">
                                     <button
                                         onClick={() => property && onLike(property.id)}
                                         className={cn(
@@ -64,14 +80,76 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                     </button>
                                 </div>
 
-                            </div>
-                            <div className="h-[35%] w-full grid grid-cols-3 gap-1 p-1 bg-background">
-                                {property.images.slice(1, 4).map((img: string, i: number) => (
-                                    <div key={i} className="relative h-full w-full rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
-                                        <Image src={img} alt={`Gallery ${i}`} fill className="object-cover" />
+                                {/* Photo counter badge */}
+                                <div className="absolute top-4 right-4 z-10 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10">
+                                    {activeImage + 1} / {property.images.length}
+                                </div>
+
+                                {/* Prev / Next arrows — only shown if more than one image */}
+                                {property.images.length > 1 && (
+                                    <>
+                                        <button
+                                            onClick={() => setActiveImage(i => (i - 1 + property.images.length) % property.images.length)}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 h-9 w-9 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all hover:scale-105 active:scale-95"
+                                        >
+                                            <ChevronLeft className="h-5 w-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveImage(i => (i + 1) % property.images.length)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 h-9 w-9 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-all hover:scale-105 active:scale-95"
+                                        >
+                                            <ChevronRight className="h-5 w-5" />
+                                        </button>
+                                    </>
+                                )}
+
+                                {/* Dot indicators */}
+                                {property.images.length > 1 && (
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+                                        {property.images.map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setActiveImage(i)}
+                                                className={cn(
+                                                    "rounded-full transition-all duration-200",
+                                                    i === activeImage
+                                                        ? "w-5 h-2 bg-white"
+                                                        : "w-2 h-2 bg-white/40 hover:bg-white/70"
+                                                )}
+                                            />
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                             </div>
+
+                            {/* ── Thumbnail strip ── */}
+                            {property.images.length > 1 && (
+                                <div
+                                    ref={thumbsRef}
+                                    className="flex gap-2 px-3 py-3 bg-neutral-950 overflow-x-auto custom-scrollbar shrink-0"
+                                    style={{ maxHeight: "110px" }}
+                                >
+                                    {property.images.map((img: string, i: number) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setActiveImage(i)}
+                                            className={cn(
+                                                "relative shrink-0 rounded-lg overflow-hidden transition-all duration-200 border-2",
+                                                "w-[80px] h-[70px]",
+                                                i === activeImage
+                                                    ? "border-primary scale-105 shadow-lg shadow-primary/30"
+                                                    : "border-transparent opacity-60 hover:opacity-90 hover:border-white/30"
+                                            )}
+                                        >
+                                            <Image src={img} alt={i === 0 ? "Main" : `Photo ${i + 1}`} fill className="object-cover" />
+                                            {/* Label overlay */}
+                                            <div className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] font-bold text-white text-center py-0.5 truncate px-1">
+                                                {i === 0 ? "Main" : `Photo ${i + 1}`}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Right: Details */}
@@ -361,8 +439,8 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
             {/* Apt Rules Modal */}
             <Dialog.Root open={rulesOpen} onOpenChange={setRulesOpen}>
                 <Dialog.Portal>
-                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[80] backdrop-blur-sm" />
-                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] h-auto max-h-[85vh] w-[90vw] max-w-[600px] rounded-2xl bg-neutral-900 shadow-2xl focus:outline-none z-[90] flex flex-col border border-neutral-800 overflow-hidden">
+                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[130] backdrop-blur-sm" />
+                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] h-auto max-h-[85vh] w-[90vw] max-w-[600px] rounded-2xl bg-neutral-900 shadow-2xl focus:outline-none z-[140] flex flex-col border border-neutral-800 overflow-hidden">
 
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-neutral-800 bg-neutral-900 w-full z-10 shrink-0">
@@ -501,8 +579,8 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
             {/* Message Modal */}
             <Dialog.Root open={messageOpen} onOpenChange={setMessageOpen}>
                 <Dialog.Portal>
-                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[80] backdrop-blur-sm" />
-                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] w-[90vw] max-w-[500px] rounded-2xl bg-neutral-900 shadow-2xl focus:outline-none z-[90] flex flex-col border border-neutral-800 overflow-hidden">
+                    <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[130] backdrop-blur-sm" />
+                    <Dialog.Content className="modal-content fixed left-[50%] top-[50%] w-[90vw] max-w-[500px] rounded-2xl bg-neutral-900 shadow-2xl focus:outline-none z-[140] flex flex-col border border-neutral-800 overflow-hidden">
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-neutral-800 bg-neutral-900 w-full z-10 shrink-0">
                             <div className="flex items-center gap-3">

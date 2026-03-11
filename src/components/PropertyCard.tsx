@@ -95,7 +95,13 @@ export default function PropertyCard({ property, isLiked, onLike, onClick }: Pro
                 </div>
 
                 {/* Action Button */}
-                <button className="w-full bg-white text-black font-bold text-sm py-3.5 rounded-full flex items-center justify-center gap-2 hover:bg-neutral-200 transition-colors shadow-lg active:scale-[0.98]">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClick(property);
+                    }}
+                    className="w-full bg-white text-black font-bold text-sm py-3.5 rounded-full flex items-center justify-center gap-2 hover:bg-neutral-200 transition-colors shadow-lg active:scale-[0.98]"
+                >
                     <Calendar className="h-4 w-4" />
                     View Details
                 </button>
