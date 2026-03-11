@@ -241,7 +241,7 @@ export default function LeasesPage() {
 
                         <div className="w-20 h-20 rounded-full bg-background border-2 border-border/50 flex items-center justify-center mb-4 overflow-hidden relative shadow-lg group-hover:border-primary/50 transition-colors">
                             <Image
-                                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&auto=format&fit=crop"
+                                src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"
                                 alt="Property Manager"
                                 fill
                                 className="object-cover"

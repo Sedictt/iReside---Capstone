@@ -17,7 +17,7 @@ import {
 
 
 export default function TenantProfilePage() {
-    const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop");
+    const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80");
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Crop state

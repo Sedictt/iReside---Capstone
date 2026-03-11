@@ -2632,7 +2632,7 @@ const UnitDetailsPanel = ({
                                         <div className="w-12 h-12 rounded-full p-0.5 border-2 border-sky-500 relative">
                                             <div className="w-full h-full rounded-full bg-slate-700 overflow-hidden">
                                                 <img
-                                                    src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop"
+                                                    src="https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"
                                                     alt="Tenant"
                                                     className="w-full h-full object-cover"
                                                 />

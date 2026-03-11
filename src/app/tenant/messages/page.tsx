@@ -34,8 +34,8 @@ import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 // Mock Data
 const CONTACTS = [
     { id: "iris", name: "iRis Assistant", unit: "AI Concierge", unread: 0, lastContact: "Always Available", avatar: "/iris-avatar.png", isAI: true },
-    { id: "c1", name: "Property Manager", unit: "iReside Support", unread: 1, lastContact: "10:42 AM", avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80", isAI: false },
-    { id: "c2", name: "Maintenance Team", unit: "Building Services", unread: 0, lastContact: "Yesterday", avatar: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80", isAI: false }
+    { id: "c1", name: "Property Manager", unit: "iReside Support", unread: 1, lastContact: "10:42 AM", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80", isAI: false },
+    { id: "c2", name: "Maintenance Team", unit: "Building Services", unread: 0, lastContact: "Yesterday", avatar: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80", isAI: false }
 ];
 
 const MESSAGES = [
@@ -715,7 +715,7 @@ export default function TenantMessagesPage() {
                                             {[
                                                 { src: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=150&q=80", type: "img" },
                                                 { src: "https://images.unsplash.com/photo-1588600878108-578307a3cc9d?auto=format&fit=crop&w=150&q=80", type: "img" },
-                                                { src: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80", type: "img" },
+                                                { src: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80", type: "img" },
                                                 { src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=150&q=80", type: "img" },
                                             ].map((img, idx) => (
                                                 <div key={idx} className="group relative rounded-2xl overflow-hidden border border-white/10 aspect-square cursor-pointer bg-neutral-800">

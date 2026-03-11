@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Building2, Facebook, Eye } from "lucide-react";
 import { useState } from "react";
 import { signUp } from "@/lib/supabase/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignUpPage() {
     const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,23 @@ export default function SignUpPage() {
         }
         setLoading(false);
     };
+
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        setError(null);
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+        if (error) {
+            setError(error.message);
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex min-h-screen bg-[#0f1218] text-white font-sans">
             {/* Left Panel - Hero Image & Branding */}
@@ -145,7 +163,12 @@ export default function SignUpPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <button className="flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-transparent py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            disabled={loading}
+                            className="flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-transparent py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                        >
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="h-5 w-5" alt="Google" />
                             Google
                         </button>

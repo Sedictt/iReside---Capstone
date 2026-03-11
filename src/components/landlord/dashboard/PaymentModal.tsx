@@ -11,18 +11,18 @@ interface PaymentModalProps {
 
 const mockPayments = {
     "Overdue": [
-        { tenant: "Marcus Johnson", unit: "Unit 102", amount: 13000, date: "Feb 20, 2026", avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Emily Thorne", unit: "Unit 405", amount: 14500, date: "Feb 15, 2026", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" }
+        { tenant: "Marcus Johnson", unit: "Unit 102", amount: 13000, date: "Feb 20, 2026", avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80" },
+        { tenant: "Emily Thorne", unit: "Unit 405", amount: 14500, date: "Feb 15, 2026", avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80" }
     ],
     "Near Due": [
-        { tenant: "Alex Reyes", unit: "Unit 201", amount: 15000, date: "Mar 5, 2026", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Jason Lee", unit: "Unit 101", amount: 12000, date: "Mar 7, 2026", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" }
+        { tenant: "Alex Reyes", unit: "Unit 201", amount: 15000, date: "Mar 5, 2026", avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80" },
+        { tenant: "Jason Lee", unit: "Unit 101", amount: 12000, date: "Mar 7, 2026", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" }
     ],
     "Paid": [
-        { tenant: "Sarah Wilson", unit: "Studio A", amount: 12500, date: "Feb 28, 2026", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Michael Chen", unit: "Unit 305", amount: 18000, date: "Feb 27, 2026", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Jessica Alba", unit: "Unit 202", amount: 15500, date: "Feb 25, 2026", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "David Kim", unit: "Unit 301", amount: 17000, date: "Feb 25, 2026", avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80" }
+        { tenant: "Sarah Wilson", unit: "Studio A", amount: 12500, date: "Feb 28, 2026", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" },
+        { tenant: "Michael Chen", unit: "Unit 305", amount: 18000, date: "Feb 27, 2026", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" },
+        { tenant: "Jessica Alba", unit: "Unit 202", amount: 15500, date: "Feb 25, 2026", avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80" },
+        { tenant: "David Kim", unit: "Unit 301", amount: 17000, date: "Feb 25, 2026", avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80" }
     ]
 };
 

@@ -21,7 +21,7 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_1",
         name: "Property Manager",
-        avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80",
+        avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80",
         lastMessage: "Received with thanks, Marcus. Enjoy your week as well.",
         time: "15m ago",
         unread: false
@@ -29,7 +29,7 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_2",
         name: "Maintenance Team",
-        avatar: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80",
+        avatar: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80",
         lastMessage: "Maintenance Request #M-104 resolved successfully.",
         time: "1h ago",
         unread: true
@@ -37,7 +37,7 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_3",
         name: "Community Admin",
-        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
+        avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80",
         lastMessage: "Just a reminder that the water will be shut off tomorrow.",
         time: "Yesterday"
     }
@@ -211,7 +211,7 @@ export function TenantContactsSidebar() {
                                     name="Property Manager"
                                     unit="iReside Support"
                                     phone="+1 800 123 4567"
-                                    avatar="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80"
                                     status="Active"
                                     isExpanded={isHovered}
                                 />
@@ -219,7 +219,7 @@ export function TenantContactsSidebar() {
                                     name="Maintenance Team"
                                     unit="Building Services"
                                     phone="+1 800 123 8888"
-                                    avatar="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80"
                                     status="Active"
                                     isExpanded={isHovered}
                                 />
@@ -227,7 +227,7 @@ export function TenantContactsSidebar() {
                                     name="Community Admin"
                                     unit="Announcements"
                                     phone="+1 800 123 9999"
-                                    avatar="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"
                                     status="Active"
                                     isExpanded={isHovered}
                                 />

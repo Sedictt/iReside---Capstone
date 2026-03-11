@@ -11,7 +11,6 @@ export function TenantNavbar() {
 
     const NAV_ITEMS = [
         { label: 'Home', href: '/' },
-        { label: 'Search', href: '/search' },
         { label: 'Dashboard', href: '/tenant/dashboard' },
         { label: 'Applications', href: '/tenant/applications' },
         { label: 'Leases', href: '/tenant/lease' },
@@ -59,14 +58,6 @@ export function TenantNavbar() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <div className="relative group hidden md:block">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            className="bg-muted/50 border border-border rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 w-64 transition-all placeholder:text-muted-foreground"
-                        />
-                    </div>
                     <button className="text-muted-foreground hover:text-foreground transition-colors">
                         <Bell className="h-5 w-5" />
                     </button>
@@ -76,7 +67,7 @@ export function TenantNavbar() {
                         <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-emerald-500 p-[1px] cursor-pointer hover:shadow-lg hover:shadow-primary/20 transition-all">
                             <div className="h-full w-full rounded-full overflow-hidden relative border-2 border-background">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop"
+                                    src="https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"
                                     alt="Profile"
                                     fill
                                     className="object-cover"

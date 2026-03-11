@@ -33,9 +33,9 @@ import Link from "next/link";
 
 // Mock Data
 const CONTACTS = [
-    { id: "c1", name: "Marcus Johnson", unit: "Unit 102", unread: 2, lastContact: "10:42 AM", avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80" },
-    { id: "c2", name: "Sarah Wilson", unit: "Studio A", unread: 0, lastContact: "Yesterday", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80" },
-    { id: "c3", name: "Alex Reyes", unit: "Unit 201", unread: 0, lastContact: "Tuesday", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" }
+    { id: "c1", name: "Marcus Johnson", unit: "Unit 102", unread: 2, lastContact: "10:42 AM", avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80" },
+    { id: "c2", name: "Sarah Wilson", unit: "Studio A", unread: 0, lastContact: "Yesterday", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" },
+    { id: "c3", name: "Alex Reyes", unit: "Unit 201", unread: 0, lastContact: "Tuesday", avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80" }
 ];
 
 const MESSAGES = [
@@ -747,7 +747,7 @@ export default function MessagesPage() {
                                     {[
                                         { src: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=150&q=80", type: "img" },
                                         { src: "https://images.unsplash.com/photo-1588600878108-578307a3cc9d?auto=format&fit=crop&w=150&q=80", type: "img" },
-                                        { src: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=150&q=80", type: "img" },
+                                        { src: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80", type: "img" },
                                         { src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=150&q=80", type: "img" },
                                     ].map((img, idx) => (
                                         <div key={idx} className="group relative rounded-2xl overflow-hidden border border-white/10 aspect-square cursor-pointer bg-neutral-800">

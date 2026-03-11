@@ -35,8 +35,12 @@ import { properties } from "@/lib/data";
 import PropertyCard from "@/components/PropertyCard";
 import { cn } from "@/lib/utils";
 import SearchMapView from "@/components/SearchMapView";
+import { useAuth } from "@/hooks/useAuth";
+import { TenantNavbar } from "@/components/tenant/TenantNavbar";
+import { LandlordNavbar } from "@/components/landlord/LandlordNavbar";
 
 export default function LandingPage() {
+  const { profile, user, loading } = useAuth();
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All Rentals");
@@ -166,51 +170,61 @@ export default function LandingPage() {
   return (
     <div className={cn("bg-[#0a0a0a] text-white font-sans selection:bg-primary/30 relative", viewMode === "list" ? "min-h-screen pb-20" : "h-screen overflow-hidden flex flex-col")}>
 
-      {/* Navigation - Dark Mode Restored */}
-      <nav className="fixed top-0 z-[100] w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-6 md:px-12 xl:px-20 py-4 shadow-sm">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 md:gap-3 font-black text-xl tracking-wide shrink-0">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center shadow-lg shadow-primary/20">
-            <div className="h-3 w-3 bg-white rounded-sm drop-shadow-md" />
-          </div>
-          <span className="hidden md:block">iRESIDE</span>
-        </Link>
+      {/* Navigation */}
+      {(() => {
+        if (loading) return <div className="fixed top-0 z-[100] h-[72px] w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5" />;
+        const role = user ? (profile?.role || user.user_metadata?.role || 'tenant') : null;
 
-        {/* Desktop Search Bar Mock */}
-        <div className="hidden md:flex flex-1 max-w-xl mx-8 relative group">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search for homes, locations, or keywords..."
-            className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-slate-500"
-          />
-        </div>
+        if (role === 'tenant') return <div className="fixed top-0 w-full z-[100]"><TenantNavbar /></div>;
+        if (role === 'landlord') return <div className="fixed top-0 w-full z-[100]"><LandlordNavbar /></div>;
 
-        {/* Actions Desktop */}
-        <div className="hidden lg:flex items-center gap-6 shrink-0 font-medium">
-          <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">List a Property</Link>
-          <div className="w-px h-4 bg-white/10" />
-          <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">Log In</Link>
-          <Link href="/search" className="px-6 py-2 rounded-full bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-all">
-            Sign Up
+        return (
+          <nav className="fixed top-0 z-[100] w-full bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-6 md:px-12 xl:px-20 py-4 shadow-sm">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 md:gap-3 font-black text-xl tracking-wide shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="h-3 w-3 bg-white rounded-sm drop-shadow-md" />
+            </div>
+            <span className="hidden md:block">iRESIDE</span>
           </Link>
-        </div>
 
-        {/* Mobile Menu Toggle */}
-        <div className="flex items-center gap-4 lg:hidden">
-          <button className="p-2 text-white/70 hover:text-white transition-colors">
-            <Search className="h-5 w-5" />
-          </button>
-          <button
-            className="p-2 text-white/70 hover:text-white transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-      </nav>
+          {/* Desktop Search Bar Mock */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-8 relative group">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search for homes, locations, or keywords..."
+              className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-slate-500"
+            />
+          </div>
+
+          {/* Actions Desktop */}
+          <div className="hidden lg:flex items-center gap-6 shrink-0 font-medium">
+            <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">List a Property</Link>
+            <div className="w-px h-4 bg-white/10" />
+            <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">Log In</Link>
+            <Link href="/search" className="px-6 py-2 rounded-full bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-all">
+              Sign Up
+            </Link>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className="flex items-center gap-4 lg:hidden">
+            <button className="p-2 text-white/70 hover:text-white transition-colors">
+              <Search className="h-5 w-5" />
+            </button>
+            <button
+              className="p-2 text-white/70 hover:text-white transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </nav>
+        );
+      })()}
       {viewMode === "list" ? (
         <div className="overflow-y-auto h-full w-full">
 

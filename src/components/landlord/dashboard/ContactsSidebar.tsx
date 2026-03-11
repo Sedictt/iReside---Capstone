@@ -19,7 +19,7 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_1",
         name: "John Doe",
-        avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80",
+        avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80",
         lastMessage: "Is it possible to move in earlier than the agreed date?",
         time: "15m ago",
         unread: true
@@ -27,14 +27,14 @@ const mockMessages: ChatUser[] = [
     {
         id: "usr_2",
         name: "Sarah Wilson",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80",
+        avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80",
         lastMessage: "Thank you for the quick repair on the faucet!",
         time: "1h ago"
     },
     {
         id: "usr_3",
         name: "Alex Reyes",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+        avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80",
         lastMessage: "I'll be paying the rent this Friday.",
         time: "Yesterday"
     }
@@ -178,7 +178,7 @@ export function ContactsSidebar() {
                                     name="Maria Clara"
                                     unit="Unit 105"
                                     phone="+63 912 345 6789"
-                                    avatar="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"
                                     status="Active"
                                     isExpanded={isHovered}
                                 />
@@ -186,7 +186,7 @@ export function ContactsSidebar() {
                                     name="Juan Dela Cruz"
                                     unit="Unit 402"
                                     phone="+63 998 765 4321"
-                                    avatar="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80"
                                     status="Active"
                                     isExpanded={isHovered}
                                 />
@@ -194,7 +194,7 @@ export function ContactsSidebar() {
                                     name="Sarah Wilson"
                                     unit="Studio A"
                                     phone="+63 917 111 2222"
-                                    avatar="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80"
                                     status="Moving In"
                                     isExpanded={isHovered}
                                 />
@@ -202,7 +202,7 @@ export function ContactsSidebar() {
                                     name="Alex Reyes"
                                     unit="Unit 201"
                                     phone="+63 920 333 4444"
-                                    avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80"
                                     status="Late Payment"
                                     isExpanded={isHovered}
                                 />
@@ -210,7 +210,7 @@ export function ContactsSidebar() {
                                     name="Michael Chen"
                                     unit="Unit 305"
                                     phone="+63 915 555 6666"
-                                    avatar="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80"
+                                    avatar="https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80"
                                     status="Active"
                                     isExpanded={isHovered}
                                 />

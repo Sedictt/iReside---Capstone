@@ -54,7 +54,7 @@ export default function LandlordDashboard() {
                                 amount={13000}
                                 status="Overdue"
                                 date="Feb 20, 2026"
-                                avatar="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=150&q=80"
+                                avatar="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80"
                             />
                         </div>
                     </div>
@@ -75,7 +75,7 @@ export default function LandlordDashboard() {
                                 amount={15000}
                                 status="Near Due"
                                 date="Mar 5, 2026"
-                                avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+                                avatar="https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80"
                             />
                         </div>
                     </div>
@@ -96,7 +96,7 @@ export default function LandlordDashboard() {
                                 amount={12500}
                                 status="Paid"
                                 date="Feb 28, 2026"
-                                avatar="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80"
+                                avatar="https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80"
                             />
                         </div>
                     </div>
