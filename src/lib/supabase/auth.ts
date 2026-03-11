@@ -26,7 +26,7 @@ export async function signUp(formData: FormData) {
         return { error: error.message }
     }
 
-    redirect(role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard')
+    return { error: null, url: role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard' }
 }
 
 export async function signIn(formData: FormData) {
@@ -48,14 +48,14 @@ export async function signIn(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     const role = user?.user_metadata?.role || 'tenant'
 
-    redirect(role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard')
+    return { error: null, url: role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard' }
 }
 
-export async function signOut() {
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-}
+    export async function signOut() {
+        const supabase = await createClient()
+        await supabase.auth.signOut()
+        redirect('/login')
+    }
 
 export async function getCurrentUser() {
     const supabase = await createClient()

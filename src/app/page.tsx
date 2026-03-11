@@ -38,11 +38,19 @@ import { cn } from "@/lib/utils";
 import SearchMapView from "@/components/SearchMapView";
 import { useAuth } from "@/hooks/useAuth";
 import { TenantNavbar } from "@/components/tenant/TenantNavbar";
-import { LandlordNavbar } from "@/components/landlord/LandlordNavbar";
+import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
   const { profile, user, loading } = useAuth();
   const role = profile?.role || (user?.user_metadata?.role as string) || (user ? 'tenant' : null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && role === 'landlord') {
+      router.push('/landlord/dashboard');
+    }
+  }, [loading, role, router]);
+
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All Rentals");
@@ -177,6 +185,10 @@ export default function LandingPage() {
     return true;
   }) : [];
 
+  if (!loading && role === 'landlord') {
+    return null; // The useEffect will handle the redirect
+  }
+
   return (
     <div className={cn("bg-[#0a0a0a] text-white font-sans selection:bg-primary/30 relative", viewMode === "list" ? "min-h-screen pb-20" : "h-screen overflow-hidden flex flex-col")}>
 
@@ -186,8 +198,6 @@ export default function LandingPage() {
         <div className="fixed top-0 z-[100] w-full h-[65px] bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5" />
       ) : role === 'tenant' ? (
         <TenantNavbar />
-      ) : role === 'landlord' ? (
-        <LandlordNavbar />
       ) : (
         <nav className="fixed top-0 z-[100] w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-6 md:px-12 xl:px-20 py-4 shadow-sm">
           {/* Logo */}

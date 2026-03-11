@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { signOut } from "@/lib/supabase/auth";
+import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/landlord/dashboard" },

@@ -27,6 +27,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
     const thumbsRef = useRef<HTMLDivElement>(null);
 
     const [rulesOpen, setRulesOpen] = useState(false);
+    const [hasReadRules, setHasReadRules] = useState(false);
     const [messageOpen, setMessageOpen] = useState(false);
     const [messageSent, setMessageSent] = useState(false);
     const [messageText, setMessageText] = useState("");
@@ -34,6 +35,10 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
     // Reset to first image whenever a new property is opened
     useEffect(() => {
         if (open) setActiveImage(0);
+    }, [open, property?.id]);
+
+    useEffect(() => {
+        if (open) setHasReadRules(false);
     }, [open, property?.id]);
 
 
@@ -342,17 +347,30 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                 <div className="flex gap-3">
                                     <Link
                                         href={`/tenant/applications/${property.id}/apply`}
-                                        className="group relative flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-2xl text-sm flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 overflow-hidden active:scale-[0.98]"
+                                        aria-disabled={!hasReadRules}
+                                        tabIndex={hasReadRules ? 0 : -1}
+                                        onClick={(event) => {
+                                            if (!hasReadRules) {
+                                                event.preventDefault();
+                                                setRulesOpen(true);
+                                            }
+                                        }}
+                                        className={cn(
+                                            "group relative flex-1 text-white font-bold py-4 rounded-2xl text-sm flex items-center justify-center gap-3 transition-all overflow-hidden",
+                                            hasReadRules
+                                                ? "bg-primary hover:bg-primary-dark shadow-xl shadow-primary/20 active:scale-[0.98]"
+                                                : "bg-primary/40 cursor-not-allowed pointer-events-auto"
+                                        )}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-                                        <Send className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                        {hasReadRules && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />}
+                                        <Send className={cn("h-4 w-4 transition-transform", hasReadRules && "group-hover:translate-x-1 group-hover:-translate-y-1")} />
                                         <span className="relative z-10">Rent Now</span>
                                     </Link>
                                     <button
                                         onClick={() => setRulesOpen(true)}
                                         className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all border border-neutral-700">
                                         <Ban className="h-4 w-4" />
-                                        Apt Rules
+                                        Rules
                                     </button>
                                     <button
                                         onClick={() => {
@@ -436,7 +454,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
             `}</style>
             </Dialog.Root>
 
-            {/* Apt Rules Modal */}
+            {/* Rules Modal */}
             <Dialog.Root open={rulesOpen} onOpenChange={setRulesOpen}>
                 <Dialog.Portal>
                     <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[130] backdrop-blur-sm" />
@@ -448,7 +466,7 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                 <div className="p-2 bg-neutral-800 rounded-lg">
                                     <Ban className="h-5 w-5 text-neutral-400" />
                                 </div>
-                                <Dialog.Title className="text-xl font-bold text-white">Apartment Rules</Dialog.Title>
+                                <Dialog.Title className="text-xl font-bold text-white">Rules</Dialog.Title>
                             </div>
                             <Dialog.Close className="h-8 w-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors">
                                 <X className="h-4 w-4" />
@@ -567,7 +585,10 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                         {/* Footer */}
                         <div className="p-6 border-t border-neutral-800 bg-neutral-900 shrink-0">
                             <Dialog.Close asChild>
-                                <button className="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3.5 rounded-xl text-sm transition-all border border-neutral-700">
+                                <button
+                                    onClick={() => setHasReadRules(true)}
+                                    className="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3.5 rounded-xl text-sm transition-all border border-neutral-700"
+                                >
                                     I Understand
                                 </button>
                             </Dialog.Close>

@@ -5,10 +5,12 @@ import { Building2, Facebook, Eye } from "lucide-react";
 import { useState } from "react";
 import { signIn } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -20,6 +22,9 @@ export default function LoginPage() {
 
         if (result?.error) {
             setError(result.error);
+        } else if (result?.url) {
+            router.push(result.url);
+            return; // keep loading true while redirecting
         }
         setLoading(false);
     };

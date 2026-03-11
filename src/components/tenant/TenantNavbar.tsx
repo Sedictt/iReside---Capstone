@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Bell, Search, User, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { signOut } from '@/lib/supabase/auth';
+import { signOut } from '@/lib/supabase/client-auth';
 
 export function TenantNavbar() {
     const pathname = usePathname();
