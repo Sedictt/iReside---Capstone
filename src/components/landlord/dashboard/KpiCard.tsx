@@ -99,6 +99,7 @@ export function KpiCard({
         plugins: {
             legend: { display: false },
             tooltip: { enabled: false },
+            datalabels: { display: false }
         },
         scales: {
             x: { display: false },

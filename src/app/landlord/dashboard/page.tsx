@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
 import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
+import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
 
 export default function LandlordDashboard() {
     const [mounted, setMounted] = useState(false);
@@ -124,6 +125,10 @@ export default function LandlordDashboard() {
             />
             <ContactsSidebar />
             <QuickActions />
+
+            <div className="pt-2 w-full">
+                <RecentInquiries />
+            </div>
         </div>
     );
 }

@@ -7,7 +7,6 @@ import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
 import { FinancialPerformanceChart } from "@/components/landlord/dashboard/FinancialPerformanceChart";
 import { FeaturedPropertyCard } from "@/components/landlord/dashboard/FeaturedPropertyCard";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
-import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
 
 export default function StatisticsPage() {
     const [mounted, setMounted] = useState(false);
@@ -202,11 +201,6 @@ export default function StatisticsPage() {
                         simplifiedMode={simplifiedMode}
                     />
                 </div>
-            </div>
-
-            {/* Recent Inquiries */}
-            <div className="w-full">
-                <RecentInquiries simplifiedMode={simplifiedMode} />
             </div>
         </div >
     );
