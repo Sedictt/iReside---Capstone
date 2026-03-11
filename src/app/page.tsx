@@ -41,6 +41,7 @@ import { LandlordNavbar } from "@/components/landlord/LandlordNavbar";
 
 export default function LandingPage() {
   const { profile, user, loading } = useAuth();
+  const role = profile?.role || (user?.user_metadata?.role as string) || (user ? 'tenant' : null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All Rentals");
@@ -171,15 +172,15 @@ export default function LandingPage() {
     <div className={cn("bg-[#0a0a0a] text-white font-sans selection:bg-primary/30 relative", viewMode === "list" ? "min-h-screen pb-20" : "h-screen overflow-hidden flex flex-col")}>
 
       {/* Navigation */}
-      {(() => {
-        if (loading) return <div className="fixed top-0 z-[100] h-[72px] w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5" />;
-        const role = user ? (profile?.role || user.user_metadata?.role || 'tenant') : null;
-
-        if (role === 'tenant') return <div className="fixed top-0 w-full z-[100]"><TenantNavbar /></div>;
-        if (role === 'landlord') return <div className="fixed top-0 w-full z-[100]"><LandlordNavbar /></div>;
-
-        return (
-          <nav className="fixed top-0 z-[100] w-full bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-6 md:px-12 xl:px-20 py-4 shadow-sm">
+      {loading ? (
+        /* Placeholder bar while auth resolves — prevents flash of visitor nav */
+        <div className="fixed top-0 z-[100] w-full h-[65px] bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5" />
+      ) : role === 'tenant' ? (
+        <TenantNavbar />
+      ) : role === 'landlord' ? (
+        <LandlordNavbar />
+      ) : (
+        <nav className="fixed top-0 z-[100] w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border-b border-white/5 flex items-center justify-between px-6 md:px-12 xl:px-20 py-4 shadow-sm">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 md:gap-3 font-black text-xl tracking-wide shrink-0">
             <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center shadow-lg shadow-primary/20">
@@ -205,7 +206,7 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">List a Property</Link>
             <div className="w-px h-4 bg-white/10" />
             <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">Log In</Link>
-            <Link href="/search" className="px-6 py-2 rounded-full bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-all">
+            <Link href="/signup" className="px-6 py-2 rounded-full bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-all">
               Sign Up
             </Link>
           </div>
@@ -223,8 +224,7 @@ export default function LandingPage() {
             </button>
           </div>
         </nav>
-        );
-      })()}
+      )}
       {viewMode === "list" ? (
         <div className="overflow-y-auto h-full w-full">
 
@@ -248,7 +248,7 @@ export default function LandingPage() {
           </AnimatePresence>
 
           {/* Big Bright Hero Image with Unified Search Form */}
-          <div className="relative pt-[72px] z-50">
+          <div className={cn("relative z-10", !role && "pt-[72px]")}>
             <div className="h-[480px] md:h-[520px] w-full relative">
               {/* Cinematic 3-Column Background */}
               <div className="absolute inset-0 grid grid-cols-3 w-full h-full opacity-60 select-none pointer-events-none overflow-hidden">

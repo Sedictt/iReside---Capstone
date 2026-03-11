@@ -5,9 +5,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Bell, Search, User, Settings, LogOut, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { signOut } from '@/lib/supabase/auth';
 
 export function TenantNavbar() {
     const pathname = usePathname();
+    const { profile, user } = useAuth();
+    const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
 
     const NAV_ITEMS = [
         { label: 'Home', href: '/' },
@@ -18,7 +22,7 @@ export function TenantNavbar() {
     ];
 
     return (
-        <nav className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <nav className="border-b border-border bg-background backdrop-blur-md sticky top-0 z-[100]">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-12">
                     <Link href="/" className="flex items-center gap-2">
@@ -67,7 +71,7 @@ export function TenantNavbar() {
                         <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-emerald-500 p-[1px] cursor-pointer hover:shadow-lg hover:shadow-primary/20 transition-all">
                             <div className="h-full w-full rounded-full overflow-hidden relative border-2 border-background">
                                 <Image
-                                    src="https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"
+                                    src={profile?.avatar_url || user?.user_metadata?.avatar_url || "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
                                     alt="Profile"
                                     fill
                                     className="object-cover"
@@ -76,9 +80,9 @@ export function TenantNavbar() {
                         </div>
 
                         {/* Dropdown Menu */}
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-[110]">
                             <div className="p-3 border-b border-border bg-muted/30">
-                                <p className="text-sm font-bold text-foreground">Jane Cooper</p>
+                                <p className="text-sm font-bold text-foreground truncate">{displayName}</p>
                                 <p className="text-[10px] text-muted-foreground">Tenant Account</p>
                             </div>
                             <div className="p-1">
@@ -96,7 +100,10 @@ export function TenantNavbar() {
                                 </Link>
                             </div>
                             <div className="p-1 border-t border-border">
-                                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left">
+                                <button 
+                                    onClick={() => signOut()}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                                >
                                     <LogOut className="h-4 w-4" />
                                     Log Out
                                 </button>

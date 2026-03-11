@@ -23,22 +23,28 @@ export function useAuth() {
     useEffect(() => {
         const supabase = createClient()
 
-        // Get initial session
+        // Fetch profile in background — does NOT block loading
+        const fetchProfile = async (userId: string) => {
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single()
+            if (data) {
+                setState(prev => ({ ...prev, profile: data }))
+            }
+        }
+
+        // Get initial session — resolve loading immediately from session data
         const getInitialSession = async () => {
             const { data: { session } } = await supabase.auth.getSession()
             const user = session?.user ?? null
 
-            let profile: Profile | null = null
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single()
-                profile = data
-            }
+            // Set loading: false immediately so the navbar renders right away
+            setState({ user, profile: null, session, loading: false })
 
-            setState({ user, profile, session, loading: false })
+            // Then fetch full profile in the background
+            if (user) fetchProfile(user.id)
         }
 
         getInitialSession()
@@ -48,17 +54,15 @@ export function useAuth() {
             async (event, session) => {
                 const user = session?.user ?? null
 
-                let profile: Profile | null = null
-                if (user) {
-                    const { data } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', user.id)
-                        .single()
-                    profile = data
-                }
+                // Again, resolve immediately from session
+                setState(prev => ({ ...prev, user, session, loading: false }))
 
-                setState({ user, profile, session, loading: false })
+                // Fetch profile in background
+                if (user) {
+                    fetchProfile(user.id)
+                } else {
+                    setState(prev => ({ ...prev, profile: null }))
+                }
             }
         )
 

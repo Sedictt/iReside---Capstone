@@ -1,9 +1,11 @@
 "use client";
 
-import { Bell, Search, Settings, Building2, User } from "lucide-react";
+import { Bell, Search, Settings, Building2, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { signOut } from "@/lib/supabase/auth";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/landlord/dashboard" },
@@ -13,6 +15,8 @@ const NAV_ITEMS = [
 
 export function LandlordNavbar() {
     const pathname = usePathname();
+    const { profile, user } = useAuth();
+    const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Landlord';
 
     return (
         <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/10 bg-[#0f172a] px-6 text-white shadow-sm">
@@ -45,13 +49,16 @@ export function LandlordNavbar() {
                 <div className="h-8 w-px bg-white/10 mx-2" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-medium text-white">Elite Property Group</p>
-                        <p className="text-xs text-slate-400">Landlord ID: #99291</p>
+                        <p className="text-sm font-medium text-white truncate max-w-[150px]">{displayName}</p>
+                        <p className="text-xs text-slate-400 truncate max-w-[150px]">{profile?.email || user?.email}</p>
                     </div>
-                    <div className="h-10 w-10 overflow-hidden rounded-full bg-emerald-500/20 ring-2 ring-white/10 flex items-center justify-center">
-                        {/* Placeholder Avatar */}
-                        <span className="font-bold text-emerald-500">EP</span>
-                    </div>
+                    <button 
+                        onClick={() => signOut()}
+                        className="h-10 w-10 overflow-hidden rounded-full bg-red-500/20 ring-2 ring-white/10 flex items-center justify-center text-red-500 hover:bg-red-500/30 transition-colors"
+                        title="Log Out"
+                    >
+                        <LogOut className="h-5 w-5" />
+                    </button>
                 </div>
             </div>
         </nav>
