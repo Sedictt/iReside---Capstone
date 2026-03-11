@@ -222,7 +222,7 @@ export default function LandingPage() {
 
           {/* Actions Desktop */}
           <div className="hidden lg:flex items-center gap-6 shrink-0 font-medium">
-            <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">List a Property</Link>
+            <Link href="/become-a-landlord" className="text-sm text-slate-300 hover:text-white transition-colors">List a Property</Link>
             <div className="w-px h-4 bg-white/10" />
             <Link href="/login" className="text-sm text-slate-300 hover:text-white transition-colors">Log In</Link>
             <Link href="/signup" className="px-6 py-2 rounded-full bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-all">
@@ -258,7 +258,7 @@ export default function LandingPage() {
                 className="fixed top-[72px] left-4 right-4 bg-neutral-900/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-2 z-[90] lg:hidden"
               >
                 <Link href="/search" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">Rent a Home</Link>
-                <Link href="/login" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">List a Property</Link>
+                <Link href="/become-a-landlord" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">List a Property</Link>
                 <div className="h-[1px] w-full bg-white/10 my-2" />
                 <Link href="/login" className="p-3 text-center text-base font-semibold text-slate-300 hover:text-white transition-colors">Log In</Link>
                 <Link href="/login" className="p-3 text-center text-base font-bold bg-white text-black rounded-xl shadow-md">Sign Up</Link>
@@ -829,11 +829,8 @@ export default function LandingPage() {
                   <div>
                     <h4 className="text-lg font-bold text-white mb-6">Partnerships</h4>
                     <ul className="space-y-4">
-                      {['Landlord sign up', 'Landlord log in'].map(link => (
-                        <li key={link}>
-                          <Link href="#" className="text-sm font-medium text-slate-400 hover:text-primary transition-colors">{link}</Link>
-                        </li>
-                      ))}
+                      <li><Link href="/become-a-landlord" className="text-sm font-medium text-slate-400 hover:text-primary transition-colors">Landlord sign up</Link></li>
+                      <li><Link href="/login" className="text-sm font-medium text-slate-400 hover:text-primary transition-colors">Landlord log in</Link></li>
                     </ul>
                   </div>
                   <div>

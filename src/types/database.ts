@@ -53,6 +53,43 @@ export interface Database {
                     updated_at?: string
                 }
             }
+            landlord_applications: {
+                Row: {
+                    id: string
+                    profile_id: string
+                    phone: string
+                    identity_document_url: string | null
+                    ownership_document_url: string | null
+                    liveness_document_url: string | null
+                    status: ApplicationStatus
+                    admin_notes: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    profile_id: string
+                    phone: string
+                    identity_document_url?: string | null
+                    ownership_document_url?: string | null
+                    liveness_document_url?: string | null
+                    status?: ApplicationStatus
+                    admin_notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    profile_id?: string
+                    phone?: string
+                    identity_document_url?: string | null
+                    ownership_document_url?: string | null
+                    liveness_document_url?: string | null
+                    status?: ApplicationStatus
+                    admin_notes?: string | null
+                    updated_at?: string
+                }
+            }
             properties: {
                 Row: {
                     id: string

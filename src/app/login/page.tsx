@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { Building2, Facebook, Eye } from "lucide-react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginContent() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect');
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -23,7 +25,7 @@ export default function LoginPage() {
         if (result?.error) {
             setError(result.error);
         } else if (result?.url) {
-            router.push(result.url);
+            router.push(redirectUrl || result.url);
             return; // keep loading true while redirecting
         }
         setLoading(false);
@@ -36,7 +38,7 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: `${window.location.origin}/auth/callback${redirectUrl ? `?next=${redirectUrl}` : ''}`,
             },
         });
         if (error) {
@@ -190,5 +192,12 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }

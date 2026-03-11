@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { Building2, Facebook, Eye } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signUp } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SignUpPage() {
+function SignUpContent() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const params = useSearchParams();
+    const [role, setRole] = useState<'tenant' | 'landlord'>(
+        (params.get('role') as 'tenant' | 'landlord') || 'tenant'
+    );
+    const redirectUrl = params.get('redirect');
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -23,20 +28,23 @@ export default function SignUpPage() {
         if (result?.error) {
             setError(result.error);
         } else if (result?.url) {
-            router.push(result.url);
+            router.push(redirectUrl || result.url);
             return; // keep loading true while redirecting
         }
         setLoading(false);
     };
 
-    const handleGoogleLogin = async () => {
+    const handleGoogleLogin = async (selectedRole: string) => {
         setLoading(true);
         setError(null);
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: `${window.location.origin}/auth/callback${redirectUrl ? `?next=${redirectUrl}` : ''}`,
+                queryParams: {
+                    prompt: 'consent',
+                }
             },
         });
         if (error) {
@@ -88,11 +96,15 @@ export default function SignUpPage() {
                     </div>
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
+                        {/* Hidden role input */}
+                        <input type="hidden" name="role" value={role} />
+
                         {error && (
                             <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4">
                                 <p className="text-sm font-medium text-red-500">{error}</p>
                             </div>
                         )}
+
                         <div className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-wide text-slate-200" htmlFor="name">
@@ -170,7 +182,7 @@ export default function SignUpPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             type="button"
-                            onClick={handleGoogleLogin}
+                            onClick={() => handleGoogleLogin('tenant')}
                             disabled={loading}
                             className="flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-transparent py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                         >
@@ -198,5 +210,13 @@ export default function SignUpPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SignUpPage() {
+    return (
+        <Suspense fallback={<div className="flex min-h-screen bg-[#0f1218] text-white" />}>
+            <SignUpContent />
+        </Suspense>
     );
 }
