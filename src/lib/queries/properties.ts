@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Property } from '@/types/database'
+import type { Property, PropertyType } from '@/types/database'
 
 /**
  * Fetch all properties with optional filters.
@@ -35,7 +35,7 @@ export async function getProperties(filters?: {
         query = query.eq('city', filters.city)
     }
     if (filters?.type) {
-        query = query.eq('type', filters.type)
+        query = query.eq('type', filters.type as PropertyType)
     }
     if (filters?.featured) {
         query = query.eq('is_featured', true)

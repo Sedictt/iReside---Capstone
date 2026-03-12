@@ -258,7 +258,6 @@ export default function LandingPage() {
                 className="fixed top-[72px] left-4 right-4 bg-neutral-900/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-2 z-[90] lg:hidden"
               >
                 <Link href="/search" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">Rent a Home</Link>
-                <Link href="/become-a-landlord" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">List a Property</Link>
                 <div className="h-[1px] w-full bg-white/10 my-2" />
                 <Link href="/login" className="p-3 text-center text-base font-semibold text-slate-300 hover:text-white transition-colors">Log In</Link>
                 <Link href="/login" className="p-3 text-center text-base font-bold bg-white text-black rounded-xl shadow-md">Sign Up</Link>
@@ -921,7 +920,7 @@ export default function LandingPage() {
 
       {/* Floating Toggle Button */}
       {viewMode === "list" && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100]">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4">
           <button
             onClick={() => setViewMode("map")}
             className="bg-neutral-900 border border-neutral-700 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 hover:bg-neutral-800 transition-colors font-bold group"
@@ -931,7 +930,7 @@ export default function LandingPage() {
         </div>
       )}
       {viewMode === "map" && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100]">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4">
           <button
             onClick={() => setViewMode("list")}
             className="bg-neutral-900 border border-neutral-700 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 hover:bg-neutral-800 transition-colors font-bold group"

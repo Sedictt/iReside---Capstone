@@ -20,6 +20,7 @@ export default function BecomeLandlordPage() {
         identityDocument: null as File | null,
         ownershipDocument: null as File | null,
         livenessDocument: null as File | null,
+        agreedToTerms: false,
     });
 
     useEffect(() => {
@@ -202,187 +203,193 @@ export default function BecomeLandlordPage() {
                         </div>
                     )}
 
-                    {step === 1 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-                            <div className="space-y-3">
-                                <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">Contact Info</h2>
-                                <p className="text-neutral-400 text-lg">Verify the primary contact details for your landlord profile.</p>
+                    {success ? (
+                        <div className="flex flex-col items-center justify-center text-center py-6 animate-in zoom-in-95 duration-500">
+                            <div className="relative mb-8">
+                                <div className="absolute inset-0 bg-primary/30 blur-[40px] rounded-full" />
+                                <div className="h-28 w-28 bg-primary/20 border border-primary/30 rounded-full flex items-center justify-center relative shadow-inner">
+                                    <CheckCircle2 className="h-12 w-12 text-primary" />
+                                </div>
                             </div>
-
-                            <div className="space-y-6">
-                                <div className="space-y-2.5">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-neutral-500 ml-1">Full Name</label>
-                                    <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-600" />
-                                        <input
-                                            type="text"
-                                            disabled
-                                            value={profile?.full_name || ""}
-                                            className="w-full rounded-2xl bg-[#171717] border border-neutral-800 pl-12 pr-4 py-4 text-neutral-400 cursor-not-allowed opacity-60"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2.5">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-neutral-500 ml-1">Email Address</label>
-                                    <input
-                                        type="text"
-                                        disabled
-                                        value={profile?.email || ""}
-                                        className="w-full rounded-2xl bg-[#171717] border border-neutral-800 px-5 py-4 text-neutral-400 cursor-not-allowed opacity-60"
-                                    />
-                                </div>
-                                <div className="space-y-2.5">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-neutral-300 ml-1">Phone Number <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
-                                        <input
-                                            type="tel"
-                                            required
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            placeholder="+63 912 345 6789"
-                                            className="w-full rounded-2xl bg-[#0a0a0a] border border-neutral-700 hover:border-neutral-600 focus:border-primary focus:ring-4 focus:ring-primary/10 pl-12 pr-4 py-4 text-white placeholder-neutral-500 outline-none transition-all"
-                                        />
-                                    </div>
+                            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white mb-4">Application Sent</h2>
+                            <p className="text-neutral-400 text-lg max-w-sm mx-auto mb-8">
+                                Your documents have been securely transmitted to our administrative team for review.
+                            </p>
+                            
+                            <div className="p-6 rounded-[24px] bg-primary/10 border border-primary/20 w-full mb-8 text-left flex gap-4 items-start">
+                                <ShieldCheck className="h-7 w-7 text-primary shrink-0" />
+                                <div>
+                                    <h4 className="font-bold text-white text-base">Under Review</h4>
+                                    <p className="text-sm text-neutral-300 mt-1.5 leading-relaxed">
+                                        Approval usually takes 1-2 business days. You will receive an email confirmation once your portal is unlocked.
+                                    </p>
                                 </div>
                             </div>
 
                             <button
-                                onClick={() => {
-                                    if (formData.phone) setStep(2);
-                                    else setError("Please enter your phone number.");
-                                }}
-                                className="w-full group rounded-2xl bg-primary text-white py-4 font-bold tracking-wide shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                                onClick={() => router.push('/tenant/dashboard')}
+                                className="w-full rounded-2xl border border-neutral-700 bg-[#171717] text-white py-4.5 font-bold shadow-md hover:bg-neutral-800 hover:text-white transition-all active:scale-[0.98]"
                             >
-                                Continue to Documents <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                Return to Dashboard
                             </button>
                         </div>
-                    )}
+                    ) : (
+                        <>
+                            {step === 1 && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                                    <div className="space-y-3">
+                                        <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">Contact Info</h2>
+                                        <p className="text-neutral-400 text-lg">Verify the primary contact details for your landlord profile.</p>
+                                    </div>
 
-                    {step === 2 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-                            <div className="space-y-3">
-                                <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">Verification</h2>
-                                <p className="text-neutral-400 text-lg">Upload official documents to secure your property listings.</p>
-                            </div>
-
-                            <div className="space-y-5">
-                                {/* ID Document */}
-                                <div className={`relative overflow-hidden rounded-2xl border ${formData.identityDocument ? 'border-primary/50 bg-primary/5' : 'border-neutral-700 bg-[#171717]'} p-1.5 transition-all`}>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0a] rounded-[10px] gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${formData.identityDocument ? 'bg-primary/10 text-primary' : 'bg-neutral-800 text-neutral-400'}`}>
-                                                <Upload className="h-6 w-6" />
-                                            </div>
-                                            <div className="overflow-hidden">
-                                                <h4 className="font-bold text-white">Government ID</h4>
-                                                <p className="text-xs text-neutral-400 truncate max-w-[200px]">{formData.identityDocument ? formData.identityDocument.name : "Passport, Driver's License"}</p>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2.5">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-neutral-500 ml-1">Full Name</label>
+                                            <div className="relative">
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-600" />
+                                                <input
+                                                    type="text"
+                                                    disabled
+                                                    value={profile?.full_name || ""}
+                                                    className="w-full rounded-2xl bg-[#171717] border border-neutral-800 pl-12 pr-4 py-4 text-neutral-400 cursor-not-allowed opacity-60"
+                                                />
                                             </div>
                                         </div>
-                                        <label className={`cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors text-center shrink-0 ${formData.identityDocument ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}>
-                                            {formData.identityDocument ? 'Change' : 'Browse'}
-                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setFormData({...formData, identityDocument: e.target.files?.[0] || null})} />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Ownership Document */}
-                                <div className={`relative overflow-hidden rounded-2xl border ${formData.ownershipDocument ? 'border-primary/50 bg-primary/5' : 'border-neutral-700 bg-[#171717]'} p-1.5 transition-all`}>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0a] rounded-[10px] gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${formData.ownershipDocument ? 'bg-primary/10 text-primary' : 'bg-neutral-800 text-neutral-400'}`}>
-                                                <FileText className="h-6 w-6" />
-                                            </div>
-                                            <div className="overflow-hidden">
-                                                <h4 className="font-bold text-white">Proof of Ownership</h4>
-                                                <p className="text-xs text-neutral-400 truncate max-w-[200px]">{formData.ownershipDocument ? formData.ownershipDocument.name : "Deed or Tax forms"}</p>
-                                            </div>
+                                        <div className="space-y-2.5">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-neutral-500 ml-1">Email Address</label>
+                                            <input
+                                                type="text"
+                                                disabled
+                                                value={profile?.email || ""}
+                                                className="w-full rounded-2xl bg-[#171717] border border-neutral-800 px-5 py-4 text-neutral-400 cursor-not-allowed opacity-60"
+                                            />
                                         </div>
-                                        <label className={`cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors text-center shrink-0 ${formData.ownershipDocument ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}>
-                                            {formData.ownershipDocument ? 'Change' : 'Browse'}
-                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setFormData({...formData, ownershipDocument: e.target.files?.[0] || null})} />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Liveness Document */}
-                                <div className={`relative overflow-hidden rounded-2xl border ${formData.livenessDocument ? 'border-primary/50 bg-primary/5' : 'border-neutral-700 bg-[#171717]'} p-1.5 transition-all`}>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0a] rounded-[10px] gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${formData.livenessDocument ? 'bg-primary/10 text-primary' : 'bg-neutral-800 text-neutral-400'}`}>
-                                                <Camera className="h-6 w-6" />
+                                        <div className="space-y-2.5">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-neutral-300 ml-1">Phone Number <span className="text-red-500">*</span></label>
+                                            <div className="relative">
+                                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                                                <input
+                                                    type="tel"
+                                                    required
+                                                    value={formData.phone}
+                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                    placeholder="+63 912 345 6789"
+                                                    className="w-full rounded-2xl bg-[#0a0a0a] border border-neutral-700 hover:border-neutral-600 focus:border-primary focus:ring-4 focus:ring-primary/10 pl-12 pr-4 py-4 text-white placeholder-neutral-500 outline-none transition-all"
+                                                />
                                             </div>
-                                            <div className="overflow-hidden">
-                                                <h4 className="font-bold text-white">Selfie Check</h4>
-                                                <p className="text-xs text-neutral-400 truncate max-w-[200px]">{formData.livenessDocument ? formData.livenessDocument.name : "Clear selfie holding ID"}</p>
-                                            </div>
-                                        </div>
-                                        <label className={`cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors text-center shrink-0 ${formData.livenessDocument ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}>
-                                            {formData.livenessDocument ? 'Change' : 'Capture'}
-                                            <input type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => setFormData({...formData, livenessDocument: e.target.files?.[0] || null})} />
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4 pt-4">
-                                <button
-                                    onClick={() => setStep(1)}
-                                    className="rounded-2xl border border-neutral-700 bg-[#0a0a0a] px-8 py-4 font-bold text-neutral-300 hover:bg-[#171717] transition-all hover:text-white"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (!formData.identityDocument || !formData.ownershipDocument || !formData.livenessDocument) {
-                                            setError("Please provide all three verification documents to proceed.");
-                                        } else {
-                                            setError(null);
-                                            setStep(3);
-                                        }
-                                    }}
-                                    className="flex-1 group rounded-2xl bg-primary text-white py-4 font-bold tracking-wide shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
-                                >
-                                    Review Application <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 3 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
-                            {success ? (
-                                <div className="flex flex-col items-center justify-center text-center py-6 animate-in zoom-in-95 duration-500">
-                                    <div className="relative mb-8">
-                                        <div className="absolute inset-0 bg-primary/30 blur-[40px] rounded-full" />
-                                        <div className="h-28 w-28 bg-primary/20 border border-primary/30 rounded-full flex items-center justify-center relative shadow-inner">
-                                            <CheckCircle2 className="h-12 w-12 text-primary" />
-                                        </div>
-                                    </div>
-                                    <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white mb-4">Application Sent</h2>
-                                    <p className="text-neutral-400 text-lg max-w-sm mx-auto mb-8">
-                                        Your documents have been securely transmitted to our administrative team for review.
-                                    </p>
-                                    
-                                    <div className="p-6 rounded-[24px] bg-primary/10 border border-primary/20 w-full mb-8 text-left flex gap-4 items-start">
-                                        <ShieldCheck className="h-7 w-7 text-primary shrink-0" />
-                                        <div>
-                                            <h4 className="font-bold text-white text-base">Under Review</h4>
-                                            <p className="text-sm text-neutral-300 mt-1.5 leading-relaxed">
-                                                Approval usually takes 1-2 business days. You will receive an email confirmation once your portal is unlocked.
-                                            </p>
                                         </div>
                                     </div>
 
                                     <button
-                                        onClick={() => router.push('/tenant/dashboard')}
-                                        className="w-full rounded-2xl border border-neutral-700 bg-[#171717] text-white py-4.5 font-bold shadow-md hover:bg-neutral-800 hover:text-white transition-all active:scale-[0.98]"
+                                        onClick={() => {
+                                            if (formData.phone) setStep(2);
+                                            else setError("Please enter your phone number.");
+                                        }}
+                                        className="w-full group rounded-2xl bg-primary text-white py-4 font-bold tracking-wide shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                                     >
-                                        Return to Dashboard
+                                        Continue to Documents <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
-                            ) : (
-                                <>
+                            )}
+
+                            {step === 2 && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
+                                    <div className="space-y-3">
+                                        <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">Verification</h2>
+                                        <p className="text-neutral-400 text-lg">Upload official documents to secure your property listings.</p>
+                                        <div className="flex items-center gap-2 mt-2 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                                            <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0" />
+                                            <p className="text-xs text-emerald-300 font-medium">Your information is encrypted and securely stored. It will not be shared publicly.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-5">
+                                        {/* ID Document */}
+                                        <div className={`relative overflow-hidden rounded-2xl border ${formData.identityDocument ? 'border-primary/50 bg-primary/5' : 'border-neutral-700 bg-[#171717]'} p-1.5 transition-all`}>
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0a] rounded-[10px] gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${formData.identityDocument ? 'bg-primary/10 text-primary' : 'bg-neutral-800 text-neutral-400'}`}>
+                                                        <Upload className="h-6 w-6" />
+                                                    </div>
+                                                    <div className="overflow-hidden">
+                                                        <h4 className="font-bold text-white">Government ID</h4>
+                                                        <p className="text-xs text-neutral-400 truncate max-w-[200px]">{formData.identityDocument ? formData.identityDocument.name : "Passport, Driver's License"}</p>
+                                                    </div>
+                                                </div>
+                                                <label className={`cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors text-center shrink-0 ${formData.identityDocument ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}>
+                                                    {formData.identityDocument ? 'Change' : 'Browse'}
+                                                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setFormData({...formData, identityDocument: e.target.files?.[0] || null})} />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {/* Ownership Document */}
+                                        <div className={`relative overflow-hidden rounded-2xl border ${formData.ownershipDocument ? 'border-primary/50 bg-primary/5' : 'border-neutral-700 bg-[#171717]'} p-1.5 transition-all`}>
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0a] rounded-[10px] gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${formData.ownershipDocument ? 'bg-primary/10 text-primary' : 'bg-neutral-800 text-neutral-400'}`}>
+                                                        <FileText className="h-6 w-6" />
+                                                    </div>
+                                                    <div className="overflow-hidden">
+                                                        <h4 className="font-bold text-white">Proof of Ownership</h4>
+                                                        <p className="text-xs text-neutral-400 truncate max-w-[200px]">{formData.ownershipDocument ? formData.ownershipDocument.name : "Deed or Tax forms"}</p>
+                                                    </div>
+                                                </div>
+                                                <label className={`cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors text-center shrink-0 ${formData.ownershipDocument ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}>
+                                                    {formData.ownershipDocument ? 'Change' : 'Browse'}
+                                                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setFormData({...formData, ownershipDocument: e.target.files?.[0] || null})} />
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {/* Liveness Document */}
+                                        <div className={`relative overflow-hidden rounded-2xl border ${formData.livenessDocument ? 'border-primary/50 bg-primary/5' : 'border-neutral-700 bg-[#171717]'} p-1.5 transition-all`}>
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-[#0a0a0a] rounded-[10px] gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${formData.livenessDocument ? 'bg-primary/10 text-primary' : 'bg-neutral-800 text-neutral-400'}`}>
+                                                        <Camera className="h-6 w-6" />
+                                                    </div>
+                                                    <div className="overflow-hidden">
+                                                        <h4 className="font-bold text-white">Selfie Check</h4>
+                                                        <p className="text-xs text-neutral-400 truncate max-w-[200px]">{formData.livenessDocument ? formData.livenessDocument.name : "Clear selfie holding ID"}</p>
+                                                    </div>
+                                                </div>
+                                                <label className={`cursor-pointer rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors text-center shrink-0 ${formData.livenessDocument ? 'bg-primary/20 text-primary hover:bg-primary/30' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}>
+                                                    {formData.livenessDocument ? 'Change' : 'Capture'}
+                                                    <input type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => setFormData({...formData, livenessDocument: e.target.files?.[0] || null})} />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4 pt-2">
+                                        <button
+                                            onClick={() => setStep(1)}
+                                            disabled={submitting}
+                                            className="rounded-2xl border border-neutral-700 bg-[#0a0a0a] px-8 py-4 font-bold text-neutral-300 hover:bg-[#171717] transition-all hover:text-white disabled:opacity-50"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (!formData.identityDocument || !formData.ownershipDocument || !formData.livenessDocument) {
+                                                    setError("Please provide all three verification documents to proceed.");
+                                                } else {
+                                                    setError(null);
+                                                    setStep(3);
+                                                }
+                                            }}
+                                            disabled={submitting}
+                                            className="flex-1 group rounded-2xl bg-primary text-white py-4 font-bold tracking-wide shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Review Application <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 3 && (
+                                <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500">
                                     <div className="space-y-3">
                                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mb-2 border border-primary/20">
                                             <FileText className="h-6 w-6 text-primary" />
@@ -393,7 +400,13 @@ export default function BecomeLandlordPage() {
 
                                     <div className="p-6 rounded-3xl bg-[#171717] border border-neutral-700 space-y-4 shadow-inner">
                                         <div className="flex items-start gap-4">
-                                            <input type="checkbox" id="terms" defaultChecked className="mt-1 h-5 w-5 shrink-0 rounded-[6px] border-neutral-600 bg-[#0a0a0a] text-primary focus:ring-primary focus:ring-offset-[#0a0a0a] cursor-pointer" />
+                                            <input 
+                                                type="checkbox" 
+                                                id="terms" 
+                                                checked={formData.agreedToTerms}
+                                                onChange={(e) => setFormData({...formData, agreedToTerms: e.target.checked})}
+                                                className="mt-1 h-5 w-5 shrink-0 rounded-[6px] border-neutral-600 bg-[#0a0a0a] text-primary focus:ring-primary focus:ring-offset-[#0a0a0a] cursor-pointer" 
+                                            />
                                             <label htmlFor="terms" className="text-neutral-300 cursor-pointer text-sm leading-relaxed">
                                                 I confirm that all uploaded documents are authentic and accurate. I agree to the iReside <span className="text-primary hover:opacity-80 hover:underline">Terms of Service</span>, <span className="text-primary hover:opacity-80 hover:underline">Landlord Agreement</span>, and <span className="text-primary hover:opacity-80 hover:underline">Privacy Policy</span>.
                                             </label>
@@ -410,7 +423,7 @@ export default function BecomeLandlordPage() {
                                         </button>
                                         <button
                                             onClick={handleUpgrade}
-                                            disabled={submitting}
+                                            disabled={submitting || !formData.agreedToTerms}
                                             className="flex-1 group rounded-2xl bg-primary text-white py-4 font-bold tracking-wide shadow-lg shadow-primary/20 hover:opacity-90 hover:shadow-primary/30 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
                                             {submitting ? (
@@ -423,9 +436,9 @@ export default function BecomeLandlordPage() {
                                             )}
                                         </button>
                                     </div>
-                                </>
+                                </div>
                             )}
-                        </div>
+                        </>
                     )}
                 </div>
             </div>

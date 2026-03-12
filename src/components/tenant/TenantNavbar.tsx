@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Bell, Search, User, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { Bell, Search, User, Settings, LogOut, LayoutDashboard, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/supabase/client-auth';
@@ -62,6 +62,13 @@ export function TenantNavbar() {
                 </div>
 
                 <div className="flex items-center gap-6">
+                    <Link href="/become-a-landlord" className="hidden md:flex text-sm font-bold text-emerald-500 hover:text-emerald-400 transition-colors items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Register as Landlord
+                    </Link>
+
+                    <div className="w-px h-4 bg-border hidden md:block" />
+
                     <button className="text-muted-foreground hover:text-foreground transition-colors">
                         <Bell className="h-5 w-5" />
                     </button>

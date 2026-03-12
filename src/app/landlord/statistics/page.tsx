@@ -11,7 +11,7 @@ import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner
 export default function StatisticsPage() {
     const [mounted, setMounted] = useState(false);
     const [showMoreKpis, setShowMoreKpis] = useState(false);
-    const [simplifiedMode, setSimplifiedMode] = useState(false);
+    const [simplifiedMode, setSimplifiedMode] = useState(true);
 
     useEffect(() => {
         setMounted(true);
@@ -127,7 +127,7 @@ export default function StatisticsPage() {
                     showMoreKpis ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0 mt-0"
                 )}
             >
-                <div className="overflow-hidden min-h-0">
+                <div className={cn("min-h-0", showMoreKpis ? "overflow-visible" : "overflow-hidden")}>
                     <div className={cn(
                         "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-transform duration-500",
                         showMoreKpis ? "translate-y-0" : "-translate-y-4"

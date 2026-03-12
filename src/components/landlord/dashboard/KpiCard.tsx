@@ -1,15 +1,14 @@
 "use client";
 
 import { ArrowRight, CircleHelp, X } from "lucide-react";
-import { Line } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import { cn } from "@/lib/utils";
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
-    LineController,
+    BarElement,
+    BarController,
     Title,
     Tooltip,
     Filler,
@@ -17,16 +16,16 @@ import {
     ChartData,
     ChartOptions
 } from "chart.js";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
 
 // Register ChartJS components
 ChartJS.register(
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
-    LineController,
+    BarElement,
+    BarController,
     Title,
     Tooltip,
     Filler
@@ -63,37 +62,42 @@ export function KpiCard({
 }: KpiCardProps) {
     const [showAiTooltip, setShowAiTooltip] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
-    const displayTitle = simplifiedMode && simplifiedTitle ? simplifiedTitle : title;
-    const displayChange = simplifiedMode && simplifiedChange ? simplifiedChange : change;
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    const displayTitle = title;
+    const displayChange = change;
 
     // Prepare chart data locally to handle gradients and simplified props
-    const chartData = useMemo<ChartData<"line">>(() => ({
+    const chartData = useMemo<ChartData<"bar">>(() => ({
         labels: data.map((_, i) => i.toString()), // Dummy labels
         datasets: [
             {
                 data: data,
-                borderColor: (context: ScriptableContext<"line">) => {
+                backgroundColor: (context: ScriptableContext<"bar">) => {
                     const ctx = context.chart.ctx;
                     const chartArea = context.chart.chartArea;
                     if (!chartArea) {
                         return trendlineProperties.colors[0];
                     }
-                    const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    // Vertical gradient for bars from bottom to top
+                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
                     gradient.addColorStop(0, trendlineProperties.colors[0]);
                     gradient.addColorStop(1, trendlineProperties.colors[1]);
                     return gradient;
                 },
-                borderWidth: 3,
-                tension: 0.4,
-                pointRadius: 0,
-                pointHoverRadius: 0,
-                fill: false,
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8,
             }
         ]
     }), [data, trendlineProperties]);
 
-    const options: ChartOptions<"line"> = {
+    const options: ChartOptions<"bar"> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -105,13 +109,16 @@ export function KpiCard({
             x: { display: false },
             y: {
                 display: false,
-                min: Math.min(...data) * 0.8, // Dynamic min just to ensure curve has room
+                min: 0, // Bars usually start from 0 or slightly below min for visual balance
                 max: Math.max(...data) * 1.1,
             },
         },
         layout: {
             padding: {
-                bottom: 10 // Ensure the line doesn't get cut off at the very bottom
+                bottom: 10, // Ensure the bar doesn't get cut off at the very bottom
+                left: 10,
+                right: 10,
+                top: 10
             }
         },
         interaction: {
@@ -173,64 +180,67 @@ export function KpiCard({
             )}
 
             {/* AI Details Modal */}
-            <AnimatePresence>
-                {showAiModal && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowAiModal(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#171717] border border-white/10 rounded-2xl shadow-2xl z-[101] p-6"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                                        <CircleHelp className="h-5 w-5 text-primary" />
+            {isClient && createPortal(
+                <AnimatePresence>
+                    {showAiModal && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowAiModal(false)}
+                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#171717] border border-white/10 rounded-2xl shadow-2xl z-[101] p-6"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                                            <CircleHelp className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-white">i.R.i.s. Analysis: {title}</h3>
                                     </div>
-                                    <h3 className="text-lg font-bold text-white">i.R.i.s. Analysis: {title}</h3>
-                                </div>
-                                <button
-                                    onClick={() => setShowAiModal(false)}
-                                    className="p-1 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
-                                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Current Status</h4>
-                                    <p className="text-sm text-white leading-relaxed">
-                                        Your {title} is currently <span className="font-bold text-emerald-400">{changeType === 'positive' ? 'Trending Up' : changeType === 'negative' ? 'Trending Down' : 'Stable'}</span>.
-                                        Based on historical data, this is performing {changeType === 'positive' ? 'better' : 'worse'} than expected for this quarter.
-                                    </p>
+                                    <button
+                                        onClick={() => setShowAiModal(false)}
+                                        className="p-1 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
                                 </div>
 
-                                <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
-                                    <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Recommendation</h4>
-                                    <p className="text-sm text-neutral-300 leading-relaxed">
-                                        Consider simplifying tenant communications or reviewing recent maintenance logs to deduce impact on {title}. i.R.i.s. suggests a review of recent operational costs to optimize this further.
-                                    </p>
-                                </div>
+                                <div className="space-y-4">
+                                    <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
+                                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Current Status</h4>
+                                        <p className="text-sm text-white leading-relaxed">
+                                            Your {title} is currently <span className="font-bold text-emerald-400">{changeType === 'positive' ? 'Trending Up' : changeType === 'negative' ? 'Trending Down' : 'Stable'}</span>.
+                                            Based on historical data, this is performing {changeType === 'positive' ? 'better' : 'worse'} than expected for this quarter.
+                                        </p>
+                                    </div>
 
-                                <button
-                                    onClick={() => setShowAiModal(false)}
-                                    className="w-full py-2.5 rounded-xl bg-gradient-to-br from-lime-600 to-emerald-800 hover:from-lime-700 hover:to-emerald-900 text-white font-medium text-sm transition-all shadow-lg shadow-lime-900/20"
-                                >
-                                    Got it, thanks!
-                                </button>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                                    <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
+                                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Recommendation</h4>
+                                        <p className="text-sm text-neutral-300 leading-relaxed">
+                                            Consider simplifying tenant communications or reviewing recent maintenance logs to deduce impact on {title}. i.R.i.s. suggests a review of recent operational costs to optimize this further.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setShowAiModal(false)}
+                                        className="w-full py-2.5 rounded-xl bg-gradient-to-br from-lime-600 to-emerald-800 hover:from-lime-700 hover:to-emerald-900 text-white font-medium text-sm transition-all shadow-lg shadow-lime-900/20"
+                                    >
+                                        Got it, thanks!
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
 
             {/* Header Content - Top Section */}
             <div className="p-6 pb-2 z-10 w-full">
@@ -253,7 +263,7 @@ export function KpiCard({
             {/* Chart Section - Bottom Section */}
             {!simplifiedMode && (
                 <div className="relative h-24 w-full mt-2">
-                    <Line
+                    <Bar
                         data={chartData}
                         options={options}
                     />

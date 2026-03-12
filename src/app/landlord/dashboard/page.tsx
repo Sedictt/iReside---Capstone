@@ -7,6 +7,7 @@ import { QuickActions } from "@/components/landlord/dashboard/QuickActions";
 import {
     Building2,
     CreditCard,
+    AlertTriangle,
     ExternalLink as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
@@ -104,17 +105,21 @@ export default function LandlordDashboard() {
             </div>
 
             {/* Announcement Card */}
-            <div className="p-6 rounded-3xl bg-neutral-800/50 border border-white/5 relative overflow-hidden group flex flex-col justify-between">
-                <div className="relative z-10 space-y-4">
-                    <div className="flex items-center gap-3">
-                        <Building2 className="h-5 w-5 text-amber-500" />
-                        <h3 className="font-bold text-white text-lg">System Advisory</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-8 rounded-3xl bg-amber-500/10 border border-amber-500/20 relative overflow-hidden group gap-6 min-h-[140px]">
+                <div className="relative z-10 flex items-center gap-5">
+                    <div className="p-4 bg-amber-500/20 rounded-2xl">
+                        <AlertTriangle className="h-8 w-8 text-amber-500" />
                     </div>
-                    <p className="text-sm text-neutral-300 leading-relaxed font-medium">Maintenance scheduled for March 15th at 2:00 AM. Expect brief downtime.</p>
-                    <button className="px-4 py-2 mt-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors border border-white/10">Read Details</button>
+                    <div>
+                        <h3 className="font-bold text-white text-lg sm:text-xl">System Advisory</h3>
+                        <p className="text-sm sm:text-base text-neutral-300 font-medium mt-1">Maintenance scheduled for March 15th at 2:00 AM. Expect brief downtime.</p>
+                    </div>
                 </div>
-                <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 group-hover:opacity-10 transition-all duration-500">
-                    <Building2 className="h-32 w-32" />
+                <button className="relative z-10 px-6 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold text-sm sm:text-base hover:bg-amber-400 transition-colors w-full sm:w-auto text-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                    Read Details
+                </button>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none transition-transform duration-500 group-hover:scale-110">
+                    <AlertTriangle className="h-48 w-48 translate-x-1/4" />
                 </div>
             </div>
 

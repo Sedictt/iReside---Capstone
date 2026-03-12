@@ -28,11 +28,11 @@ export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifi
 
     const [timeWindow, setTimeWindow] = useState<"week" | "month" | "year">("month");
 
-    // labels mapping
+    // Keep KPI terminology consistent in both default and simplified views.
     const labels = {
-        earnings: simplifiedMode ? "Money In" : "Total Earnings",
-        expenses: simplifiedMode ? "Money Out" : "Expenses",
-        netIncome: simplifiedMode ? "Money Left" : "Net Income"
+        earnings: "Total Earnings",
+        expenses: "Expenses",
+        netIncome: "Net Income"
     };
 
     // Data structures for different timeframes

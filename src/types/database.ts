@@ -52,6 +52,7 @@ export interface Database {
                     phone?: string | null
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             landlord_applications: {
                 Row: {
@@ -89,6 +90,7 @@ export interface Database {
                     admin_notes?: string | null
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             properties: {
                 Row: {
@@ -140,6 +142,7 @@ export interface Database {
                     is_featured?: boolean
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             units: {
                 Row: {
@@ -179,6 +182,7 @@ export interface Database {
                     baths?: number
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             leases: {
                 Row: {
@@ -230,6 +234,7 @@ export interface Database {
                     signed_at?: string | null
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             payments: {
                 Row: {
@@ -278,6 +283,7 @@ export interface Database {
                     landlord_confirmed?: boolean
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             payment_items: {
                 Row: {
@@ -302,6 +308,7 @@ export interface Database {
                     amount?: number
                     category?: string
                 }
+                Relationships: any[]
             }
             applications: {
                 Row: {
@@ -347,6 +354,7 @@ export interface Database {
                     reviewed_at?: string | null
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             maintenance_requests: {
                 Row: {
@@ -392,6 +400,7 @@ export interface Database {
                     resolved_at?: string | null
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             move_out_requests: {
                 Row: {
@@ -428,6 +437,7 @@ export interface Database {
                     notes?: string | null
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             conversations: {
                 Row: {
@@ -443,6 +453,7 @@ export interface Database {
                 Update: {
                     updated_at?: string
                 }
+                Relationships: any[]
             }
             conversation_participants: {
                 Row: {
@@ -461,6 +472,7 @@ export interface Database {
                     conversation_id?: string
                     user_id?: string
                 }
+                Relationships: any[]
             }
             messages: {
                 Row: {
@@ -491,6 +503,7 @@ export interface Database {
                     metadata?: Json | null
                     read_at?: string | null
                 }
+                Relationships: any[]
             }
             notifications: {
                 Row: {
@@ -521,6 +534,7 @@ export interface Database {
                     data?: Json | null
                     read?: boolean
                 }
+                Relationships: any[]
             }
             saved_properties: {
                 Row: {
@@ -539,6 +553,7 @@ export interface Database {
                     user_id?: string
                     property_id?: string
                 }
+                Relationships: any[]
             }
         }
         Views: {
@@ -560,6 +575,9 @@ export interface Database {
             move_out_status: MoveOutStatus
             message_type: MessageType
             notification_type: NotificationType
+        }
+        CompositeTypes: {
+            [_ in never]: never
         }
     }
 }
@@ -611,3 +629,4 @@ export type ConversationWithParticipants = Conversation & {
     participants: (ConversationParticipant & { profile: Profile })[]
     last_message?: Message
 }
+
