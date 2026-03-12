@@ -15,8 +15,9 @@ import {
     Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InvoiceModal, Invoice } from "@/components/landlord/invoices/InvoiceModal";
 
-const MOCK_INVOICES = [
+const MOCK_INVOICES: Invoice[] = [
     {
         id: "INV-2026-001",
         tenant: "Eleanor Pena",
@@ -88,6 +89,7 @@ const MOCK_INVOICES = [
 export default function InvoicesPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
     const filteredInvoices = MOCK_INVOICES.filter(invoice => {
         const matchesSearch = invoice.tenant.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -259,7 +261,11 @@ export default function InvoicesPage() {
                                                     <Send className="w-4 h-4" />
                                                 </button>
                                             )}
-                                            <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" title="View Invoice">
+                                            <button 
+                                                onClick={() => setSelectedInvoice(invoice)}
+                                                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" 
+                                                title="View Invoice"
+                                            >
                                                 <Eye className="w-4 h-4" />
                                             </button>
                                             <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" title="Download PDF">
@@ -289,6 +295,13 @@ export default function InvoicesPage() {
                     </table>
                 </div>
             </div>
+
+            {selectedInvoice && (
+                <InvoiceModal 
+                    invoice={selectedInvoice} 
+                    onClose={() => setSelectedInvoice(null)} 
+                />
+            )}
         </div>
     );
 }

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import RevenueChart from "@/components/RevenueChart";
 import {
     Search,
     Plus,
@@ -89,6 +91,7 @@ const properties = [
 export function PropertiesDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"All" | "Performing" | "Attention Required">("All");
+    const [expandedStatsId, setExpandedStatsId] = useState<string | null>(null);
 
     const filteredProperties = properties.filter(prop => {
         const matchesSearch = prop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -261,9 +264,12 @@ export function PropertiesDashboard() {
 
                                     {/* Actions */}
                                     <div className="flex items-center gap-3 w-full lg:w-auto self-end lg:self-auto">
-                                        <button className="flex-1 lg:flex-none h-12 px-6 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-bold transition-colors border border-primary/20 flex items-center justify-center gap-2">
+                                        <button 
+                                            onClick={() => setExpandedStatsId(expandedStatsId === property.id ? null : property.id)}
+                                            className="flex-1 lg:flex-none h-12 px-6 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-bold transition-colors border border-primary/20 flex items-center justify-center gap-2"
+                                        >
                                             <TrendingUp className="h-4 w-4" />
-                                            View Stats
+                                            {expandedStatsId === property.id ? "Hide Stats" : "View Stats"}
                                         </button>
                                         <button className="flex-1 lg:flex-none h-12 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/5 flex items-center justify-center gap-2">
                                             <Settings className="h-4 w-4" />
@@ -273,6 +279,67 @@ export function PropertiesDashboard() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Collapsible Stats Panel */}
+                        <AnimatePresence>
+                            {expandedStatsId === property.id && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                                    className="border-t border-white/5 overflow-hidden"
+                                >
+                                    <div className="p-6 lg:p-8 bg-[#151515] grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        {/* Financial Highlights */}
+                                        <div className="space-y-6">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Wallet className="h-4 w-4 text-neutral-400" />
+                                                    <h4 className="text-sm font-medium text-neutral-400">Financial Highlights</h4>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <div className="flex justify-between items-end border-b border-white/5 pb-4">
+                                                        <div>
+                                                            <p className="text-xs text-neutral-500 mb-1">Net Operating Income (NOI)</p>
+                                                            <p className="text-white font-bold text-xl">{property.noi}</p>
+                                                        </div>
+                                                        <div className="text-emerald-400 text-sm font-medium flex items-center gap-1">
+                                                            <TrendingUp className="h-3 w-3" /> +12% y/y
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-end border-b border-white/5 pb-4">
+                                                        <div>
+                                                            <p className="text-xs text-neutral-500 mb-1">Estimated Valuation</p>
+                                                            <p className="text-white font-bold text-xl">{property.valuation}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex justify-between items-end">
+                                                        <div>
+                                                            <p className="text-xs text-neutral-500 mb-1">Capitalization Rate</p>
+                                                            <p className="text-white font-bold text-xl">{property.capRate}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Revenue Chart */}
+                                        <div className="lg:col-span-2">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <Zap className="h-4 w-4 text-neutral-400" />
+                                                    <h4 className="text-sm font-medium text-neutral-400">Revenue Trend (YTD)</h4>
+                                                </div>
+                                            </div>
+                                            <div className="h-[200px] w-full bg-[#111] rounded-xl border border-white/5 p-4">
+                                                <RevenueChart />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 ))}
 
