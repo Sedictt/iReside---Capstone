@@ -47,6 +47,7 @@ interface Corridor {
 type FloorId = string;
 
 interface FloorLayout {
+    name?: string;
     units: Unit[];
     corridors: Corridor[];
     structures: Structure[];
@@ -165,14 +166,15 @@ const parseFloorNumber = (floorId: FloorId) => {
     return Number.isFinite(parsed) ? parsed : null;
 };
 
-const getFloorDisplayLabel = (floorId: FloorId) => {
+const getFloorDisplayLabel = (floorId: FloorId, customName?: string) => {
+    if (customName) return customName;
     if (floorId === "ground") return "Ground";
     const floorNumber = parseFloorNumber(floorId);
     if (floorNumber !== null) return `Floor ${floorNumber}`;
     return floorId.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const formatFloorWatermark = (floorId: FloorId) => getFloorDisplayLabel(floorId).toUpperCase();
+const formatFloorWatermark = (floorId: FloorId, customName?: string) => getFloorDisplayLabel(floorId, customName).toUpperCase();
 
 export default function VisualBuilder() {
     const GRID_SIZE = 20;
@@ -214,10 +216,10 @@ export default function VisualBuilder() {
     const [resizingCorridorId, setResizingCorridorId] = useState<string | null>(null);
     const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(DEFAULT_FLOOR_LAYOUTS);
     const [hasHydratedFloorState, setHasHydratedFloorState] = useState(false);
-    const [showFloorTabsScrollHint, setShowFloorTabsScrollHint] = useState(false);
+    const [isRenamingFloor, setIsRenamingFloor] = useState(false);
+    const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
     const trashRef = useRef<HTMLDivElement>(null);
-    const floorTabsScrollRef = useRef<HTMLDivElement>(null);
     const historyRef = useRef<FloorLayout[]>([DEFAULT_FLOOR_LAYOUTS[DEFAULT_ACTIVE_FLOOR]]);
     const historyIndexRef = useRef(0);
     const isUndoingRef = useRef(false);
@@ -572,6 +574,7 @@ export default function VisualBuilder() {
         if (nextFloor === activeFloor) return;
 
         const snapshot: FloorLayout = {
+            ...(floorLayouts[activeFloor] || {}),
             units,
             corridors,
             structures,
@@ -623,6 +626,7 @@ export default function VisualBuilder() {
         if (nextFloorId === activeFloor) return;
 
         const snapshot: FloorLayout = {
+            ...(floorLayouts[activeFloor] || {}),
             units,
             corridors,
             structures,
@@ -1024,6 +1028,7 @@ export default function VisualBuilder() {
         const layoutsToPersist: Record<FloorId, FloorLayout> = {
             ...floorLayouts,
             [activeFloor]: {
+                ...(floorLayouts[activeFloor] || {}),
                 units,
                 corridors,
                 structures,
@@ -1033,26 +1038,6 @@ export default function VisualBuilder() {
         window.localStorage.setItem(FLOOR_LAYOUTS_STORAGE_KEY, JSON.stringify(layoutsToPersist));
         window.localStorage.setItem(ACTIVE_FLOOR_STORAGE_KEY, activeFloor);
     }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures]);
-
-    useEffect(() => {
-        const tabsScroller = floorTabsScrollRef.current;
-        if (!tabsScroller) return;
-
-        const updateScrollHintVisibility = () => {
-            const hasOverflow = tabsScroller.scrollWidth > tabsScroller.clientWidth + 1;
-            const canScrollRight = tabsScroller.scrollLeft + tabsScroller.clientWidth < tabsScroller.scrollWidth - 1;
-            setShowFloorTabsScrollHint(hasOverflow && canScrollRight);
-        };
-
-        updateScrollHintVisibility();
-        tabsScroller.addEventListener("scroll", updateScrollHintVisibility, { passive: true });
-        window.addEventListener("resize", updateScrollHintVisibility);
-
-        return () => {
-            tabsScroller.removeEventListener("scroll", updateScrollHintVisibility);
-            window.removeEventListener("resize", updateScrollHintVisibility);
-        };
-    }, [floorLayouts, activeFloor, units.length, corridors.length, structures.length]);
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {
@@ -1394,15 +1379,16 @@ export default function VisualBuilder() {
 
     const minimapViewport = getViewportInMinimap();
     const isDraggingCanvasItem = draggingUnitId !== null || draggingCorridorId !== null || draggingStructureId !== null;
-    const floorWatermarkLabel = formatFloorWatermark(activeFloor);
     const floorLayoutsWithActiveSnapshot: Record<FloorId, FloorLayout> = {
         ...floorLayouts,
         [activeFloor]: {
+            ...(floorLayouts[activeFloor] || {}),
             units,
             corridors,
             structures,
         },
     };
+    const floorWatermarkLabel = formatFloorWatermark(activeFloor, floorLayoutsWithActiveSnapshot[activeFloor]?.name);
     const floorTabs: Array<{ id: FloorId; title: string; floorNumber: number | null }> = Object.keys(floorLayoutsWithActiveSnapshot)
         .sort((leftFloor, rightFloor) => {
             if (leftFloor === "ground") return -1;
@@ -1419,9 +1405,13 @@ export default function VisualBuilder() {
         })
         .map((floorId) => ({
             id: floorId,
-            title: getFloorDisplayLabel(floorId),
+            title: getFloorDisplayLabel(floorId, floorLayoutsWithActiveSnapshot[floorId]?.name),
             floorNumber: parseFloorNumber(floorId),
         }));
+    const activeFloorLayout = floorLayoutsWithActiveSnapshot[activeFloor];
+    const activeFloorItemCount = activeFloorLayout
+        ? activeFloorLayout.units.length + activeFloorLayout.corridors.length + activeFloorLayout.structures.length
+        : 0;
 
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30">
@@ -1442,50 +1432,92 @@ export default function VisualBuilder() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className="bg-slate-100 dark:bg-background-dark p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-1 min-w-0 max-w-[620px] relative">
-                        <div ref={floorTabsScrollRef} className={`flex items-center gap-1 overflow-x-auto min-w-0 ${styles.scrollbarHide}`}>
-                            {floorTabs.map((floorTab) => {
-                                const layout = floorLayoutsWithActiveSnapshot[floorTab.id];
-                                const totalItems = layout.units.length + layout.corridors.length + layout.structures.length;
-                                const isActive = activeFloor === floorTab.id;
-
-                                return (
-                                    <button
-                                        key={floorTab.id}
-                                        onClick={() => switchFloor(floorTab.id)}
-                                        className={`shrink-0 min-w-[88px] px-2.5 py-1.5 rounded-lg transition-all text-left border ${isActive
-                                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                                            : "bg-transparent border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-700/70"
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="flex items-center gap-1.5">
-                                                {floorTab.id === "ground" ? (
-                                                    <span className={`material-icons-round text-sm ${isActive ? "text-white" : "text-primary"}`}>terrain</span>
-                                                ) : (
-                                                    <span className={`w-4 h-4 rounded-[3px] border text-[10px] leading-none font-bold flex items-center justify-center ${isActive ? "border-white/40 bg-white/15 text-white" : "border-primary/40 bg-primary/10 text-primary"}`}>
-                                                        {floorTab.floorNumber ?? "?"}
-                                                    </span>
-                                                )}
-                                                <span className={`text-[11px] ${isActive ? "font-bold" : "font-semibold"}`}>{floorTab.title}</span>
-                                            </span>
-                                            <span className={`text-[10px] font-mono rounded px-1.5 py-0.5 border ${isActive ? "border-white/30 bg-white/10 text-white" : "border-slate-500/30 text-slate-500 dark:text-slate-300"}`}>
-                                                {totalItems}
-                                            </span>
-                                        </div>
-                                    </button>
-                                );
-                            })}
+                    <div className="bg-slate-100/80 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 flex items-center shadow-sm backdrop-blur-sm">
+                        <div className="flex items-center pl-2 pr-1 border-r border-slate-200 dark:border-slate-700 hidden sm:flex" title="Current Level">
+                            <span className="material-icons-round text-slate-500 dark:text-slate-400 text-[18px]">layers</span>
                         </div>
-                        {showFloorTabsScrollHint && (
-                            <div className="pointer-events-none absolute right-9 top-1/2 -translate-y-1/2 flex items-center gap-1 pl-6 pr-2 py-1 rounded-md bg-gradient-to-l from-slate-100/95 via-slate-100/85 dark:from-background-dark/95 dark:via-background-dark/85 to-transparent backdrop-blur-[1px]">
-                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Scroll</span>
-                                <span className="material-icons-round text-xs text-primary animate-pulse">chevron_right</span>
+                        
+                        {isRenamingFloor ? (
+                            <form 
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    setFloorLayouts(prev => ({
+                                        ...prev,
+                                        [activeFloor]: {
+                                            ...prev[activeFloor],
+                                            name: editingFloorName.trim() || undefined
+                                        }
+                                    }));
+                                    setIsRenamingFloor(false);
+                                }}
+                                className="flex items-center mx-1"
+                            >
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    value={editingFloorName}
+                                    onChange={(e) => setEditingFloorName(e.target.value)}
+                                    onBlur={() => {
+                                        setFloorLayouts(prev => ({
+                                            ...prev,
+                                            [activeFloor]: {
+                                                ...prev[activeFloor],
+                                                name: editingFloorName.trim() || undefined
+                                            }
+                                        }));
+                                        setIsRenamingFloor(false);
+                                    }}
+                                    className="bg-white dark:bg-slate-900 border border-primary text-sm font-bold text-slate-800 dark:text-slate-100 px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none"
+                                    placeholder="Floor Name"
+                                />
+                            </form>
+                        ) : (
+                            <div className="relative flex items-center mx-1 group cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-colors rounded-lg">
+                                <select
+                                    id="floor-selector"
+                                    value={activeFloor}
+                                    onChange={(event) => switchFloor(event.target.value)}
+                                    className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-bold text-slate-800 dark:text-slate-100 w-[140px] md:w-[180px] cursor-pointer focus:outline-none z-10"
+                                >
+                                    {floorTabs.map((floorTab) => (
+                                        <option key={floorTab.id} value={floorTab.id}>
+                                            {floorTab.title}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-2 pointer-events-none text-slate-400 group-hover:text-primary transition-colors flex items-center">
+                                    <span className="material-icons-round text-[18px]">unfold_more</span>
+                                </div>
                             </div>
                         )}
-                        <button onClick={createFloor} className="shrink-0 p-1 text-slate-500 hover:text-primary rounded-md" title="Add floor">
-                            <span className="material-icons-round text-sm">add</span>
-                        </button>
+                        
+                        <div className="flex items-center gap-1 pl-1 pr-1 border-l border-slate-200 dark:border-slate-700">
+                            {!isRenamingFloor && (
+                                <button 
+                                    onClick={() => {
+                                        setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
+                                        setIsRenamingFloor(true);
+                                    }}
+                                    className="flex items-center justify-center w-7 h-7 bg-white dark:bg-background-dark hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-all text-slate-500 hover:text-primary shadow-sm"
+                                    title="Rename Floor"
+                                >
+                                    <span className="material-icons-round text-[16px]">edit</span>
+                                </button>
+                            )}
+                            <div className="flex items-center bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 shadow-sm h-7" title={`${activeFloorItemCount} items on this floor`}>
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary/80 mr-2"></span>
+                                <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                                    {activeFloorItemCount}
+                                </span>
+                            </div>
+                            <button 
+                                onClick={createFloor} 
+                                className="flex items-center justify-center w-7 h-7 bg-white dark:bg-background-dark hover:bg-primary hover:border-primary dark:hover:bg-primary border border-slate-200 dark:border-slate-700 rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white shadow-sm"
+                                title="Add New Floor"
+                            >
+                                <span className="material-icons-round text-[18px]">add</span>
+                            </button>
+                        </div>
                     </div>
                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-200 dark:border-slate-600">
@@ -2510,7 +2542,7 @@ export default function VisualBuilder() {
                 </main>
 
                 {/* Sidebar */}
-                <aside className="w-72 bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col z-10 shadow-2xl">
+                <aside className="w-[340px] shrink-0 bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col z-10 shadow-2xl">
                     {selectedItem?.kind === "unit" ? (
                         <UnitDetailsPanel
                             unit={units.find(u => u.id === selectedItem.id)!}
@@ -2549,12 +2581,20 @@ const UnitDetailsPanel = ({
 }) => {
     const [isEditing, setIsEditing] = useState(false);
 
+    const unitAreaSqftByType: Record<Unit["type"], number> = {
+        Studio: 400,
+        "1BR": 650,
+        "2BR": 950,
+        "3BR": 1200,
+    };
+    const unitAreaSqm = Math.round(unitAreaSqftByType[unit.type] * 0.092903);
+
     // Status configuration for consistent styling
     const statusConfig = {
-        occupied: { color: 'text-emerald-400', label: 'Occupied', icon: 'check_circle' },
-        vacant: { color: 'text-blue-400', label: 'Available Now', icon: 'vpn_key' },
-        maintenance: { color: 'text-amber-400', label: 'Maintenance', icon: 'build' },
-        neardue: { color: 'text-rose-400', label: 'Near Due', icon: 'warning' }
+        occupied: { color: 'text-blue-400', label: 'Occupied', icon: 'check_circle' },
+        vacant: { color: 'text-emerald-400', label: 'Available Now', icon: 'vpn_key' },
+        maintenance: { color: 'text-rose-400', label: 'Maintenance', icon: 'build' },
+        neardue: { color: 'text-amber-400', label: 'Near Due', icon: 'warning' }
     };
 
     const currentStatus = statusConfig[unit.status] || statusConfig.vacant;
@@ -2570,6 +2610,13 @@ const UnitDetailsPanel = ({
     };
 
     const daysRemaining = getDaysRemaining();
+    const unitLayoutLabel = unit.type === '1BR'
+        ? '1 Bed • 1 Bath'
+        : unit.type === '2BR'
+            ? '2 Bed • 2 Bath'
+            : unit.type === '3BR'
+                ? '3 Bed • 2.5 Bath'
+                : 'Studio • 1 Bath';
 
     return (
         <div className="flex flex-col h-full bg-[#1a1c23] border-l border-slate-800 shadow-2xl overflow-hidden relative font-sans">
@@ -2594,20 +2641,19 @@ const UnitDetailsPanel = ({
 
                 {/* Bottom Content */}
                 <div className="absolute bottom-6 left-6 right-6 z-20">
-                    <h1 className="text-4xl font-bold text-white tracking-tight drop-shadow-lg mb-2">{unit.name}</h1>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                            <span className="material-icons-round text-xs text-primary-400">king_bed</span>
-                            <span className="text-xs font-medium text-white/90">
-                                {unit.type === '1BR' ? '1 Bed / 1 Bath' :
-                                    unit.type === '2BR' ? '2 Bed / 2 Bath' :
-                                        unit.type === '3BR' ? '3 Bed / 2.5 Bath' : 'Studio / 1 Bath'}
-                            </span>
+                    <h1 className="text-[2.6rem] leading-none font-bold text-white tracking-tight drop-shadow-lg mb-4">{unit.name}</h1>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                            <span className="material-icons-round text-[14px] text-primary-300">king_bed</span>
+                            <span className="text-xs font-semibold text-white tracking-wide">{unitLayoutLabel}</span>
                         </div>
-                        <div className="w-1 h-1 rounded-full bg-white/30"></div>
-                        <div className="flex items-center gap-1.5">
-                            <span className={`material-icons-round text-xs ${currentStatus.color}`}>event_available</span>
-                            <span className="text-xs font-medium text-white/90">{currentStatus.label}</span>
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                            <span className={`material-icons-round text-[14px] drop-shadow-md ${currentStatus.color}`}>event_available</span>
+                            <span className="text-xs font-semibold text-white tracking-wide">{currentStatus.label}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                            <span className="material-icons-round text-[14px] text-cyan-300 drop-shadow-md">aspect_ratio</span>
+                            <span className="text-xs font-semibold text-white tracking-wide">{unitAreaSqm} m²</span>
                         </div>
                     </div>
                 </div>
@@ -2742,7 +2788,7 @@ const UnitDetailsPanel = ({
                                         </label>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-6">
                                         <div className="group relative">
                                             <select
                                                 value={unit.type}
@@ -2760,35 +2806,43 @@ const UnitDetailsPanel = ({
                                         </div>
 
                                         <div className="group relative">
-                                            <select
-                                                value={unit.status}
-                                                onChange={(e) => onUpdate({ status: e.target.value as Unit["status"] })}
-                                                className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
-                                            >
-                                                <option value="occupied">Occupied</option>
-                                                <option value="vacant">Vacant</option>
-                                                <option value="maintenance">Maint.</option>
-                                                <option value="neardue">Near Due</option>
-                                            </select>
-                                            <label className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary">
-                                                Status
-                                            </label>
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-3 pl-1">Unit Status</label>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {[
+                                                    { id: 'vacant', label: 'Vacant', icon: 'vpn_key', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
+                                                    { id: 'occupied', label: 'Occupied', icon: 'check_circle', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/30' },
+                                                    { id: 'neardue', label: 'Near Due', icon: 'warning', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/30' },
+                                                    { id: 'maintenance', label: 'Maint.', icon: 'build', color: 'text-rose-400', bg: 'bg-rose-400/10 border-rose-400/30' }
+                                                ].map((s) => (
+                                                    <button
+                                                        key={s.id}
+                                                        type="button"
+                                                        onClick={(e) => { e.preventDefault(); onUpdate({ status: s.id as Unit["status"] }); }}
+                                                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${unit.status === s.id ? s.bg + ' ring-1 ring-white/20 shadow-lg scale-[1.02]' : 'border-slate-700/50 bg-[#23242f] hover:bg-slate-800'}`}
+                                                    >
+                                                        <span className={`material-icons-round text-xl ${unit.status === s.id ? s.color : 'text-slate-500'}`}>{s.icon}</span>
+                                                        <span className={`text-xs font-bold ${unit.status === s.id ? 'text-white' : 'text-slate-400'}`}>{s.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="group relative mt-6">
-                                        <input
-                                            type="text"
-                                            value={unit.tenant || ''}
-                                            onChange={(e) => onUpdate({ tenant: e.target.value })}
-                                            className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
-                                            placeholder="Tenant Name"
-                                            id="tenantName"
-                                        />
-                                        <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
-                                            Tenant Name
-                                        </label>
-                                    </div>
+                                    {(unit.status === 'occupied' || unit.status === 'neardue') && (
+                                        <div className="group relative mt-6 animate-in slide-in-from-top-2 fade-in duration-300">
+                                            <input
+                                                type="text"
+                                                value={unit.tenant || ''}
+                                                onChange={(e) => onUpdate({ tenant: e.target.value })}
+                                                className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                                placeholder="Tenant Name"
+                                                id="tenantName"
+                                            />
+                                            <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                                Tenant Name
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </section>
@@ -3010,22 +3064,6 @@ const SidebarBlockLibrary = ({
                             <div className="text-center">
                                 <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Spiral</p>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
-                        <span className="material-icons-round text-primary text-sm">pool</span>
-                        Amenities
-                    </h3>
-                    <div className="space-y-2">
-                        <div className="cursor-grab active:cursor-grabbing w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" draggable="true">
-                            <span className="material-icons-round text-slate-400 text-lg">fitness_center</span>
-                            <span className="text-xs text-slate-300">Gym / Fitness</span>
-                        </div>
-                        <div className="cursor-grab active:cursor-grabbing w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" draggable="true">
-                            <span className="material-icons-round text-slate-400 text-lg">local_laundry_service</span>
-                            <span className="text-xs text-slate-300">Laundry Room</span>
                         </div>
                     </div>
                 </div>

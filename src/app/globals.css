@@ -25,10 +25,10 @@
   /* Neutral Black */
   --color-surface-dark: #171717;
   /* Neutral Dark Grey */
-  --color-status-vacant: #3b82f6;
-  /* Blue for Vacant */
-  --color-status-occupied: #3E7B39;
-  /* Fern for Occupied/Active */
+  --color-status-vacant: #3E7B39;
+  /* Fern for Vacant (Available/Good) */
+  --color-status-occupied: #3b82f6;
+  /* Blue for Occupied */
   --color-status-due: #F59E0B;
   --color-status-maintenance: #EF4444;
 
