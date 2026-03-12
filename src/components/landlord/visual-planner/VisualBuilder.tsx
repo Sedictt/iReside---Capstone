@@ -5,8 +5,9 @@ import { motion } from "framer-motion";
 import { flushSync } from "react-dom";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
+import { UnitListingWizard } from "./UnitListingWizard";
 
-interface Unit {
+export interface Unit {
     id: string;
     name: string;
     type: "Studio" | "1BR" | "2BR" | "3BR";
@@ -2580,6 +2581,7 @@ const UnitDetailsPanel = ({
     onClose: () => void;
 }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [isListingWizardOpen, setIsListingWizardOpen] = useState(false);
 
     const unitAreaSqftByType: Record<Unit["type"], number> = {
         Studio: 400,
@@ -2665,7 +2667,35 @@ const UnitDetailsPanel = ({
                 {!isEditing ? (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
 
+                        {/* Public Listing Action */}
+                        <div className="bg-gradient-to-br from-primary/10 to-[#23242f] border border-white/5 rounded-2xl p-5 relative overflow-hidden group hover:border-primary/20 transition-colors">
+                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
+                            <div className="flex items-center justify-between relative z-10 gap-2">
+                                <div>
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <span className="material-icons-round text-[16px] text-primary">storefront</span>
+                                        <h3 className="text-white font-bold text-sm">Unit Listing</h3>
+                                    </div>
+                                    <p className="text-slate-400 text-[10px] leading-relaxed mt-1">
+                                        Open listing wizard to publish this unit.
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => setIsListingWizardOpen(true)}
+                                    className="bg-primary hover:bg-primary/90 text-white rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary/20 active:scale-95 shrink-0"
+                                >
+                                    <span className="material-icons-round text-[16px]">rocket_launch</span>
+                                    List Unit
+                                </button>
+                            </div>
+                        </div>
 
+                        {/* Wizard */}
+                        <UnitListingWizard 
+                            isOpen={isListingWizardOpen} 
+                            onClose={() => setIsListingWizardOpen(false)} 
+                            unit={unit} 
+                        />
 
                         {/* Tenant Section */}
                         <div className="mt-4">
