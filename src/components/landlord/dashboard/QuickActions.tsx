@@ -1,16 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Bell, FileText, Users, Plus } from "lucide-react";
+import { Building2, Bell, FileText, Users, Plus, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const actions = [
+    {
+        label: "Unit Map",
+        icon: Map,
+        color: "text-rose-400",
+        bgcolor: "bg-rose-500",
+        route: "/landlord/unit-map",
+        delay: 0.15
+    },
     {
         label: "Add Property",
         icon: Building2,
         color: "text-blue-400",
         bgcolor: "bg-blue-500",
+        route: "/landlord/properties/new",
         delay: 0.1
     },
     {
@@ -18,6 +28,7 @@ const actions = [
         icon: FileText,
         color: "text-emerald-400",
         bgcolor: "bg-emerald-500",
+        route: "/landlord/invoices",
         delay: 0.05
     },
     {
@@ -25,6 +36,7 @@ const actions = [
         icon: Users,
         color: "text-purple-400",
         bgcolor: "bg-purple-500",
+        route: "/landlord/tenants",
         delay: 0
     },
     {
@@ -32,12 +44,14 @@ const actions = [
         icon: Bell,
         color: "text-amber-400",
         bgcolor: "bg-amber-500",
+        route: "/landlord/messages",
         delay: -0.05
     }
 ];
 
 export function QuickActions({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
+    const router = useRouter();
 
     const displayActions = actions.map(action => ({
         ...action,
@@ -45,7 +59,8 @@ export function QuickActions({ simplifiedMode = false }: { simplifiedMode?: bool
             action.label === "Add Property" ? "List a House" :
                 action.label === "Create Invoice" ? "Send a Bill" :
                     action.label === "New Lease" ? "Sign New Tenant" :
-                        action.label === "Announce" ? "Tell Everyone" : action.label
+                        action.label === "Announce" ? "Tell Everyone" : 
+                            action.label === "Unit Map" ? "View Map" : action.label
         ) : action.label
     }));
 
@@ -57,6 +72,7 @@ export function QuickActions({ simplifiedMode = false }: { simplifiedMode?: bool
                         {displayActions.map((action) => (
                             <motion.button
                                 key={action.label}
+                                onClick={() => router.push(action.route)}
                                 initial={{ opacity: 0, y: 20, scale: 0.8 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 20, scale: 0.8 }}

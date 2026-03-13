@@ -1,7 +1,7 @@
 "use client";
 
-import { MessageSquare, Clock, Home, ArrowRight, Mail, MoreVertical, Eye, Archive, Trash2, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { MessageSquare, Clock, Home, ArrowRight, Mail, MoreVertical, Eye, Archive, Trash2, CheckCircle, X, Send } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -61,6 +61,9 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const menuRef = useRef<HTMLDivElement>(null);
+    const [activeChat, setActiveChat] = useState<Inquiry | null>(null);
+    const [messageInput, setMessageInput] = useState("");
+    const [sentMessages, setSentMessages] = useState<Record<string, string[]>>({});
 
     const handleMenuOpen = (inquiryId: string) => {
         if (openMenuId === inquiryId) {
@@ -216,7 +219,10 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     </div>
 
                                     {/* Action Button */}
-                                    <button className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-sm font-bold transition-all shadow-lg hover:shadow-xl">
+                                    <button 
+                                        onClick={() => setActiveChat(inquiry)}
+                                        className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-sm font-bold transition-all shadow-lg hover:shadow-xl"
+                                    >
                                         {simplifiedMode ? "Answer Now" : "Reply now"}
                                     </button>
                                 </div>
@@ -306,6 +312,91 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                 </motion.div>,
                 document.body
             )}
+
+            {/* Chatbox Modal */}
+            <AnimatePresence>
+                {activeChat && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed bottom-6 right-6 w-full max-w-[360px] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl flex flex-col z-[9999] overflow-hidden"
+                        style={{ height: "450px" }}
+                    >
+                        {/* Chat Header */}
+                        <div className="p-4 border-b border-white/10 bg-neutral-800/80 backdrop-blur-md flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
+                                    {activeChat.prospectName.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-white font-bold text-sm">{activeChat.prospectName}</span>
+                                    <span className="text-neutral-400 text-xs truncate max-w-[150px]">{activeChat.propertyName}</span>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setActiveChat(null);
+                                    setMessageInput("");
+                                }}
+                                className="p-2 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {/* Chat Messages */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#0a0a0a]">
+                            <div className="flex flex-col gap-1 items-start">
+                                <span className="text-[10px] text-neutral-500 ml-1">{activeChat.timestamp}</span>
+                                <div className="bg-neutral-800 border border-white/5 text-neutral-200 text-sm p-3 rounded-2xl rounded-tl-sm max-w-[85%]">
+                                    {activeChat.messagePreview}
+                                </div>
+                            </div>
+
+                            {sentMessages[activeChat.id]?.map((msg, idx) => (
+                                <div key={idx} className="flex flex-col gap-1 items-end">
+                                    <div className="bg-gradient-to-br from-lime-600 to-emerald-700 text-white text-sm p-3 rounded-2xl rounded-tr-sm max-w-[85%]">
+                                        {msg}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Chat Input */}
+                        <div className="p-3 border-t border-white/10 bg-neutral-900">
+                            <form 
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (!messageInput.trim()) return;
+                                    setSentMessages(prev => ({
+                                        ...prev,
+                                        [activeChat.id]: [...(prev[activeChat.id] || []), messageInput]
+                                    }));
+                                    setMessageInput("");
+                                }}
+                                className="flex items-center gap-2"
+                            >
+                                <input
+                                    type="text"
+                                    value={messageInput}
+                                    onChange={(e) => setMessageInput(e.target.value)}
+                                    placeholder="Type a message..."
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-lime-500/50 placeholder:text-neutral-500"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!messageInput.trim()}
+                                    className="p-2.5 rounded-xl bg-lime-600 hover:bg-lime-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+                                >
+                                    <Send className="h-4 w-4" />
+                                </button>
+                            </form>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, Home, Users, Wrench, ClipboardList } from "lucide-react";
+import { Search, Bell, Home, Users, Wrench, ClipboardList, Map } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 
@@ -109,6 +109,10 @@ export function DashboardBanner({
                         <Link href="/landlord/applications" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
                             <ClipboardList className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
                             <span className="text-sm font-medium text-white">Applications</span>
+                        </Link>
+                        <Link href="/landlord/unit-map" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
+                            <Map className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-white">Unit Map</span>
                         </Link>
                     </div>
                 </div>
