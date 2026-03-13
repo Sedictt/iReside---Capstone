@@ -1,6 +1,7 @@
+"use client";
 
-import React from "react";
-import { ArrowUpRight } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowUpRight, X, TrendingUp, Users, DollarSign, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FeaturedPropertyCardProps {
@@ -20,11 +21,16 @@ export function FeaturedPropertyCard({
     className,
     simplifiedMode = false
 }: FeaturedPropertyCardProps) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
-        <div className={cn(
-            "relative w-full h-full min-h-[300px] overflow-hidden rounded-3xl text-white p-6 md:p-8 flex flex-col justify-between group shadow-xl border border-white/10",
-            className
-        )}>
+        <>
+            <div 
+                onClick={() => setIsModalOpen(true)}
+                className={cn(
+                    "cursor-pointer relative w-full h-full min-h-[300px] overflow-hidden rounded-3xl text-white p-6 md:p-8 flex flex-col justify-between group shadow-xl border border-white/10",
+                    className
+                )}>
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
                 <img
@@ -67,6 +73,84 @@ export function FeaturedPropertyCard({
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+
+            {/* Quick View Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div 
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
+                        onClick={() => setIsModalOpen(false)}
+                    />
+                    <div className="relative w-full max-w-md bg-neutral-900 border border-white/10 rounded-3xl p-6 shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200">
+                        <button 
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute top-4 right-4 p-2 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="mb-6">
+                            <span className="inline-block px-3 py-1 mb-3 text-xs font-bold text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                                {simplifiedMode ? "Best Performing" : "Top Asset MTD"}
+                            </span>
+                            <h2 className="text-2xl font-bold text-white mb-1">{propertyName}</h2>
+                            <p className="text-sm text-neutral-400">
+                                {simplifiedMode ? "Here is why this is your best house this month." : "Performance overview for your top property."}
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                                    <DollarSign className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-neutral-400">{simplifiedMode ? "Money Made (Total)" : "Gross Revenue"}</p>
+                                    <p className="text-xl font-bold text-white">{totalSales}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div className="p-3 bg-blue-500/20 text-blue-400 rounded-lg">
+                                    <TrendingUp className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-neutral-400">{simplifiedMode ? "Growth" : "MoM Growth"}</p>
+                                    <p className="text-xl font-bold text-white">+12.4%</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div className="p-3 bg-purple-500/20 text-purple-400 rounded-lg">
+                                    <Users className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-neutral-400">Occupancy</p>
+                                    <p className="text-xl font-bold text-white">100%</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div className="p-3 bg-orange-500/20 text-orange-400 rounded-lg">
+                                    <Activity className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-neutral-400">{simplifiedMode ? "People Looking" : "Profile Views"}</p>
+                                    <p className="text-xl font-bold text-white">{totalViews}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => setIsModalOpen(false)}
+                            className="w-full mt-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
