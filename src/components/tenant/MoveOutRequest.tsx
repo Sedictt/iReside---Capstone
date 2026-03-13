@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { LogOut, AlertOctagon, X, CheckCircle2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,11 @@ interface MoveOutRequestProps {
 export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [status, setStatus] = useState<"idle" | "scanning" | "blocked">("idle");
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleRequest = () => {
         setIsOpen(true);
@@ -58,8 +64,8 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
             )}
 
             {/* Modal */}
-            {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+            {mounted && isOpen ? createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
                     <div className="relative w-full max-w-lg bg-card rounded-2xl overflow-hidden border border-border shadow-2xl flex flex-col">
 
                         {/* Header */}
@@ -153,7 +159,7 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
                         )}
                     </div>
                 </div>
-            )}
+            , document.body) : null}
         </>
     );
 }

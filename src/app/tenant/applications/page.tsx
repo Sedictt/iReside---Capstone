@@ -345,35 +345,6 @@ export default function MyApplicationsPage() {
                                 Discover More Properties
                             </Link>
                         </div>
-
-                        {/* Pro Subscription CTA - Refined */}
-                        <div className="relative rounded-[3rem] p-10 overflow-hidden group shadow-2xl">
-                            {/* Animated Background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/5 to-black transition-all group-hover:scale-110 duration-1000"></div>
-                            <div className="absolute inset-0 backdrop-blur-3xl"></div>
-
-                            {/* Mesh effect */}
-                            <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-primary/20 blur-[100px] animate-pulse pointer-events-none" />
-
-                            <div className="relative z-10 space-y-6">
-                                <div className="w-16 h-16 mx-auto bg-black rounded-[1.5rem] flex items-center justify-center shadow-2xl border border-primary/20 text-primary">
-                                    <Sparkles className="w-8 h-8 fill-primary/20 animate-pulse" />
-                                </div>
-                                <div className="text-center">
-                                    <h3 className="text-white text-2xl font-black tracking-tight mb-2">Priority Selection</h3>
-                                    <p className="text-white/50 text-xs font-medium leading-relaxed max-w-[220px] mx-auto">Skip the line. Get instant landlord badges and early viewing slots.</p>
-                                </div>
-                                <button className="w-full bg-white text-black text-xs font-black py-5 rounded-[1.5rem] hover:bg-primary transition-all shadow-2xl active:scale-95 uppercase tracking-widest">
-                                    Upgrade to Elite
-                                </button>
-
-                                <div className="flex items-center justify-center gap-4 opacity-30">
-                                    <ShieldCheck className="w-4 h-4 text-white" />
-                                    <div className="h-px w-4 bg-white/20" />
-                                    <Lock className="w-4 h-4 text-white" />
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
