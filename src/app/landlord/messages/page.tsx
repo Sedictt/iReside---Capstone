@@ -61,6 +61,14 @@ export default function MessagesPage() {
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
 
+    const prettifyRedactedText = (text: string) => {
+        return text
+            .replace(/█{3,}/g, '*****')
+            .replace(/\[REDACTED\]/g, '*****')
+            .replace(/(\*{5}\s*){2,}/g, '***** ')
+            .trim();
+    };
+
     const handleDownloadImage = async (elementId: string, filename: string) => {
         try {
             setIsDownloading(true);
@@ -92,22 +100,64 @@ export default function MessagesPage() {
         }
     };
 
-    const handleSendMessage = () => {
+    const fallbackRedact = (text: string) => {
+        let redacted = text;
+        const token = '*****';
+        const patterns: RegExp[] = [
+            /\b(?:password|passcode|pin|otp|cvv|cvc|gcash|bank\s?account|account\s?number|routing\s?number)\b\s*(?:is|:|=)?\s*([A-Za-z0-9!@#$%^&*()_+\-=]{3,})/gi,
+            /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
+            /\b09\d{9}\b/g,
+            /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
+        ];
+
+        for (const pattern of patterns) {
+            redacted = redacted.replace(pattern, token);
+        }
+
+        redacted = redacted.replace(/(\*{5}\s*){2,}/g, token + ' ').trim();
+
+        return {
+            isSensitive: redacted !== text,
+            redactedMessage: redacted,
+        };
+    };
+
+    const handleSendMessage = async () => {
         if (!messageInput.trim()) return;
 
-        // Improved regex to capture the actual sensitive data following the keyword, e.g. "password is 1234" -> captures "1234"
-        const regex = /(?:gcash|password|account|pin|bank|credit card)[\s:=]+([a-zA-Z0-9_-]+)|\b(\d{4}[-\s]?\d{4})\b|\b(09\d{9})\b/i;
-        const match = messageInput.match(regex);
+        const originalMessage = messageInput;
+        let isSensitive = false;
+        let redactedMessage = originalMessage;
 
-        // Match[1] is the text after keyword, Match[2]/[3] are the raw numbers
-        const sensitiveString = match ? (match[1] || match[2] || match[3] || match[0]) : null;
-        const isSensitive = !!match;
+        try {
+            const response = await fetch('/api/iris/redact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: originalMessage }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                isSensitive = !!data.isSensitive;
+                redactedMessage = typeof data.redactedMessage === 'string' ? data.redactedMessage : originalMessage;
+            } else {
+                const fallback = fallbackRedact(originalMessage);
+                isSensitive = fallback.isSensitive;
+                redactedMessage = fallback.redactedMessage;
+            }
+        } catch {
+            const fallback = fallbackRedact(originalMessage);
+            isSensitive = fallback.isSensitive;
+            redactedMessage = fallback.redactedMessage;
+        }
 
         const newMessage = {
             id: `m_${Date.now()}`,
             type: "landlord",
-            content: messageInput,
-            sensitiveMatch: sensitiveString,
+            content: originalMessage,
+            redactedContent: redactedMessage,
             timestamp: "Just now",
             isRedacted: isSensitive,
             isConfirmedDisclosed: false
@@ -473,7 +523,7 @@ export default function MessagesPage() {
                                             </span>
                                             <div className="text-sm leading-relaxed whitespace-pre-wrap">
                                                 {msg.isRedacted && !msg.isConfirmedDisclosed
-                                                    ? (msg.sensitiveMatch ? msg.content.replace(msg.sensitiveMatch, '█'.repeat(msg.sensitiveMatch.length)) : msg.content)
+                                                    ? prettifyRedactedText(msg.redactedContent || msg.content)
                                                     : msg.content
                                                 }
                                             </div>

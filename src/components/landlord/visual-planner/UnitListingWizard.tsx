@@ -72,7 +72,7 @@ export function UnitListingWizard({
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <span className="material-icons-round text-primary">storefront</span>
-                List Unit {unit.label || "Unit"}
+                List Unit {unit.name || "Unit"}
               </h2>
               <p className="text-slate-400 text-sm mt-1">
                 Publish your unit to our marketplace and instantly attract verified tenants.

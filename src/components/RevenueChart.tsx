@@ -41,7 +41,7 @@ const options = {
                 font: {
                     family: "inherit",
                     size: 13,
-                    weight: "600",
+                    weight: "bold" as const,
                 }
             }
         },
@@ -82,7 +82,7 @@ const options = {
             border: { display: false },
             ticks: {
                 color: "#94a3b8",
-                font: { family: "inherit", size: 12, weight: "500" },
+                font: { family: "inherit", size: 12, weight: "normal" as const },
                 padding: 10,
             },
         },
@@ -94,7 +94,7 @@ const options = {
             },
             ticks: {
                 color: "#94a3b8",
-                font: { family: "inherit", size: 12, weight: "500" },
+                font: { family: "inherit", size: 12, weight: "normal" as const },
                 maxTicksLimit: 6,
                 padding: 16,
                 callback: (value: any) => `₱${value >= 1000 ? (value / 1000) + 'k' : value}`,

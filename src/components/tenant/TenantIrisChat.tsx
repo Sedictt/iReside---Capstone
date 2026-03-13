@@ -34,7 +34,7 @@ export function TenantIrisChat() {
         scrollToBottom();
     }, [messages, isTyping]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!input.trim()) return;
 
         const userMsg: Message = {
@@ -45,23 +45,55 @@ export function TenantIrisChat() {
         };
 
         setMessages(prev => [...prev, userMsg]);
+        const userInput = input;
         setInput("");
         setIsTyping(true);
 
-        // Simulate iRis response
-        setTimeout(() => {
-            const isWifi = userMsg.content.toLowerCase().includes("wifi") || userMsg.content.toLowerCase().includes("internet");
+        try {
+            // Call the iRis API
+            const response = await fetch('/api/iris/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: userInput,
+                    conversationHistory: messages.map(msg => ({
+                        role: msg.role === 'user' ? 'user' : 'assistant',
+                        content: msg.content,
+                    })),
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get response from iRis');
+            }
+
+            const data = await response.json();
 
             const irisMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "iris",
-                content: isWifi ? "I can help with that! Here are the details for the Lobby network:" : "I've checked the building records for that. Is there anything specific you'd like to know about it?",
+                content: data.response,
                 timestamp: new Date(),
-                hasDataCard: isWifi
+                hasDataCard: data.hasDataCard || false,
             };
+
             setMessages(prev => [...prev, irisMsg]);
+        } catch (error) {
+            console.error('Error calling iRis API:', error);
+
+            // Show error message to user
+            const errorMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: "iris",
+                content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+                timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     return (
