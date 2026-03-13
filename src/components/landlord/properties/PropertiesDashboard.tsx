@@ -332,7 +332,7 @@ export function PropertiesDashboard() {
                                                     <h4 className="text-sm font-medium text-neutral-400">Revenue Trend (YTD)</h4>
                                                 </div>
                                             </div>
-                                            <div className="h-[200px] w-full bg-[#111] rounded-xl border border-white/5 p-4">
+                                            <div className="h-[300px] w-full bg-[#111] rounded-xl border border-white/5 p-4">
                                                 <RevenueChart />
                                             </div>
                                         </div>
