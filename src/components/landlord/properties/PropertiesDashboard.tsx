@@ -20,7 +20,10 @@ import {
     Wallet,
     Home,
     Wrench,
-    Users
+    Users,
+    X,
+    Map,
+    Edit3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +95,7 @@ export function PropertiesDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"All" | "Performing" | "Attention Required">("All");
     const [expandedStatsId, setExpandedStatsId] = useState<string | null>(null);
+    const [hubModalId, setHubModalId] = useState<string | null>(null);
 
     const filteredProperties = properties.filter(prop => {
         const matchesSearch = prop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -271,7 +275,10 @@ export function PropertiesDashboard() {
                                             <TrendingUp className="h-4 w-4" />
                                             {expandedStatsId === property.id ? "Hide Stats" : "View Stats"}
                                         </button>
-                                        <button className="flex-1 lg:flex-none h-12 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/5 flex items-center justify-center gap-2">
+                                        <button 
+                                            onClick={() => setHubModalId(property.id)}
+                                            className="flex-1 lg:flex-none h-12 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/5 flex items-center justify-center gap-2"
+                                        >
                                             <Settings className="h-4 w-4" />
                                             Manage Hub
                                         </button>
@@ -351,6 +358,79 @@ export function PropertiesDashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Manage Hub Modal */}
+            <AnimatePresence>
+                {hubModalId && (() => {
+                    const activeProperty = properties.find(p => p.id === hubModalId);
+                    if (!activeProperty) return null;
+
+                    return (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setHubModalId(null)}
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            />
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                className="relative w-full max-w-lg bg-[#111] border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-6 lg:p-8 z-10"
+                            >
+                                <button 
+                                    onClick={() => setHubModalId(null)}
+                                    className="absolute top-6 right-6 p-2 text-neutral-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                                
+                                <div className="mb-6 flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 relative">
+                                        <Image src={activeProperty.image} fill alt="Property" className="object-cover" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-emerald-400 mb-1 tracking-wider uppercase">Quick Actions</p>
+                                        <h2 className="text-2xl font-bold text-white leading-tight">{activeProperty.name}</h2>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Link href={`/landlord/properties/new`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                        <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Edit3 className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-medium text-white">Edit Details</span>
+                                    </Link>
+                                    
+                                    <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                        <div className="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Map className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-medium text-white">Unit Map</span>
+                                    </Link>
+
+                                    <Link href="/landlord/tenants" className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                        <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Users className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-medium text-white">View Tenants</span>
+                                    </Link>
+
+                                    <Link href="/landlord/maintenance" className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                        <div className="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Wrench className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-medium text-white">Maintenance</span>
+                                    </Link>
+                                </div>
+                            </motion.div>
+                        </div>
+                    );
+                })()}
+            </AnimatePresence>
         </div>
     );
 }
