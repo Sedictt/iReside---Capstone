@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
     Building2,
     MapPin,
@@ -25,14 +25,52 @@ import { SmartContractBuilderModal } from "@/components/landlord/properties/Smar
 
 type Step = 1 | 2 | 3 | 4;
 
-export default function NewAssetPage() {
+function NewAssetContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const mode = searchParams.get("mode");
+    const id = searchParams.get("id");
+    const isEditMode = mode === "edit";
+
     const [step, setStep] = useState<Step>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isContractBuilderOpen, setIsContractBuilderOpen] = useState(false);
     const [isContractGenerated, setIsContractGenerated] = useState(false);
     const [customAmenity, setCustomAmenity] = useState("");
     const [customAmenities, setCustomAmenities] = useState<string[]>([]);
+    
+    // Form fields mapped for prepopulating if editing
+    const [formData, setFormData] = useState({
+        propertyName: "",
+        propertyType: "Apartment Complex",
+        yearBuilt: "",
+        address: "",
+        totalUnits: "1",
+        description: "" // Add other fields as necessary
+    });
+
+    useEffect(() => {
+        if (isEditMode && id) {
+            // In a real app, fetch data based on the ID.
+            // Using mock data for demonstration prepopulation.
+            const mockData = {
+                propertyName: `Sunset Heights - Unit ${id.split("-")[1] || "108"}`,
+                propertyType: "Condominium",
+                yearBuilt: "2020",
+                address: "123 Skyline Avenue, Metro Manila",
+                totalUnits: "1",
+                description: "Existing property descriptions..."
+            };
+            setFormData(mockData);
+        }
+    }, [isEditMode, id]);
+
+    const handleInputChange = (field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     const handleAddCustomAmenity = () => {
         const value = customAmenity.trim();
@@ -59,7 +97,7 @@ export default function NewAssetPage() {
 
     const handleSubmit = () => {
         setIsSubmitting(true);
-        // Simulate API call
+        // Simulate API call for creation or update
         setTimeout(() => {
             router.push("/landlord/properties");
         }, 1500);
@@ -91,7 +129,7 @@ export default function NewAssetPage() {
                         {step === 1 ? "Cancel" : "Go Back"}
                     </button>
                     <div className="text-sm font-semibold text-neutral-500 uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
-                        Asset Creation Wizard
+                        {isEditMode ? "Asset Editor Wizard" : "Asset Creation Wizard"}
                     </div>
                 </div>
 
@@ -103,8 +141,12 @@ export default function NewAssetPage() {
 
                         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                             <div className="space-y-2">
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight">Onboard New Asset</h1>
-                                <p className="text-neutral-400">Add a new property to your portfolio in 4 simple steps.</p>
+                                <h1 className="text-3xl font-extrabold text-white tracking-tight">Property Wizard</h1>
+                                <p className="text-neutral-400">
+                                    {isEditMode 
+                                        ? `Editing listing details for ${formData.propertyName || "your selected property"}.`
+                                        : "Add a property to your portfolio in 4 simple steps."}
+                                </p>
                             </div>
 
                             {/* Circular Progress (Visual only) */}
@@ -149,13 +191,23 @@ export default function NewAssetPage() {
                                 <div className="space-y-6">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Property Name</label>
-                                        <input type="text" placeholder="e.g. Grand View Residences" className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g. Grand View Residences" 
+                                            value={formData.propertyName}
+                                            onChange={(e) => handleInputChange("propertyName", e.target.value)}
+                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium" 
+                                        />
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Property Type</label>
-                                            <select className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium appearance-none cursor-pointer">
+                                            <select 
+                                                value={formData.propertyType}
+                                                onChange={(e) => handleInputChange("propertyType", e.target.value)}
+                                                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium appearance-none cursor-pointer"
+                                            >
                                                 <option>Apartment Complex</option>
                                                 <option>Condominium</option>
                                                 <option>Single Family Home</option>
@@ -165,14 +217,26 @@ export default function NewAssetPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Year Built</label>
-                                            <input type="number" placeholder="e.g. 2018" className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium" />
+                                            <input 
+                                                type="number" 
+                                                placeholder="e.g. 2018" 
+                                                value={formData.yearBuilt}
+                                                onChange={(e) => handleInputChange("yearBuilt", e.target.value)}
+                                                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium" 
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Full Address</label>
-                                        <div className="relative">
-                                            <textarea rows={3} placeholder="123 Skyline Avenue, Metro Manila..." className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium resize-none shadow-sm" />
+                                    <div className="relative">
+                                            <textarea 
+                                                rows={3} 
+                                                placeholder="123 Skyline Avenue, Metro Manila..." 
+                                                value={formData.address}
+                                                onChange={(e) => handleInputChange("address", e.target.value)}
+                                                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium resize-none shadow-sm" 
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -197,7 +261,13 @@ export default function NewAssetPage() {
                                             <div>
                                                 <p className="text-sm text-neutral-400 font-medium">Total Units</p>
                                                 <div className="flex items-center gap-3">
-                                                    <input type="number" defaultValue="1" min="1" className="w-20 bg-transparent text-2xl font-bold text-white focus:outline-none border-b border-white/20 focus:border-primary transition-colors pb-1" />
+                                                    <input 
+                                                        type="number" 
+                                                        value={formData.totalUnits}
+                                                        onChange={(e) => handleInputChange("totalUnits", e.target.value)}
+                                                        min="1" 
+                                                        className="w-20 bg-transparent text-2xl font-bold text-white focus:outline-none border-b border-white/20 focus:border-primary transition-colors pb-1" 
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -378,24 +448,30 @@ export default function NewAssetPage() {
                                     <Building2 className="w-10 h-10 text-primary" />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-black text-white mb-2">Submit for Verification</h2>
+                                    <h2 className="text-3xl font-black text-white mb-2">{isEditMode ? "Review Changes" : "Submit for Verification"}</h2>
                                     <p className="text-neutral-400 max-w-md mx-auto">
-                                        Your asset profile is complete. Once submitted, our admins will verify your business and building permits before your asset goes live and is ready for tenant onboarding.
+                                        {isEditMode 
+                                            ? "Review your updated property details before saving the changes to your portfolio."
+                                            : "Your asset profile is complete. Once submitted, our admins will verify your business and building permits before your asset goes live and is ready for tenant onboarding."}
                                     </p>
                                 </div>
 
                                 <div className="w-full max-w-sm bg-white/[0.02] border border-white/5 rounded-2xl p-6 text-left space-y-4">
                                     <div className="flex justify-between items-center pb-4 border-b border-white/5">
                                         <span className="text-sm text-neutral-400">Name</span>
-                                        <span className="font-semibold text-white">Grand View Residences</span>
+                                        <span className="font-semibold text-white">{formData.propertyName || "Grand View Residences"}</span>
                                     </div>
                                     <div className="flex justify-between items-center pb-4 border-b border-white/5">
                                         <span className="text-sm text-neutral-400">Units</span>
-                                        <span className="font-semibold text-white">45 Units</span>
+                                        <span className="font-semibold text-white">{formData.totalUnits || "1"} Units</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-neutral-400">Status</span>
-                                        <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md">Pending Admin Verification</span>
+                                        {isEditMode ? (
+                                            <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md">Published</span>
+                                        ) : (
+                                            <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md">Pending Admin Verification</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -420,16 +496,16 @@ export default function NewAssetPage() {
                             disabled={isSubmitting}
                             className={cn(
                                 "px-8 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] flex items-center gap-2 hover:scale-105",
-                                step === 4 ? "bg-amber-500 hover:bg-amber-500/90 text-black shadow-[rgba(245,158,11,0.3)] hover:shadow-[rgba(245,158,11,0.5)]" : "bg-primary hover:bg-primary/90 text-black"
+                                step === 4 && !isEditMode ? "bg-amber-500 hover:bg-amber-500/90 text-black shadow-[rgba(245,158,11,0.3)] hover:shadow-[rgba(245,158,11,0.5)]" : "bg-primary hover:bg-primary/90 text-black"
                             )}
                         >
                             {isSubmitting ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                    Submitting...
+                                    {isEditMode ? "Saving Changes..." : "Submitting..."}
                                 </>
                             ) : step === 4 ? (
-                                <>Submit for Verification <CheckCircle2 className="w-4 h-4" /></>
+                                isEditMode ? <>Save Changes <CheckCircle2 className="w-4 h-4" /></> : <>Submit for Verification <CheckCircle2 className="w-4 h-4" /></>
                             ) : (
                                 <>Next Step <ArrowRight className="w-4 h-4" /></>
                             )}
@@ -446,3 +522,11 @@ export default function NewAssetPage() {
         </div>
     );
 }
+
+export default function NewAssetPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+            <NewAssetContent />
+        </Suspense>
+    );    
+} 
