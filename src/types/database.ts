@@ -92,6 +92,41 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            landlord_statistics_exports: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    format: 'csv' | 'pdf'
+                    report_range: string
+                    mode: 'Simplified' | 'Detailed'
+                    include_expanded_kpis: boolean
+                    row_count: number
+                    metadata: Json
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    format: 'csv' | 'pdf'
+                    report_range: string
+                    mode: 'Simplified' | 'Detailed'
+                    include_expanded_kpis?: boolean
+                    row_count?: number
+                    metadata?: Json
+                    created_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    format?: 'csv' | 'pdf'
+                    report_range?: string
+                    mode?: 'Simplified' | 'Detailed'
+                    include_expanded_kpis?: boolean
+                    row_count?: number
+                    metadata?: Json
+                    created_at?: string
+                }
+                Relationships: any[]
+            }
             properties: {
                 Row: {
                     id: string
@@ -597,6 +632,7 @@ export type ConversationParticipant = Database['public']['Tables']['conversation
 export type Message = Database['public']['Tables']['messages']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
 export type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
+export type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']
 
 // ---------- Joined / view types for common queries ----------
 export type UnitWithProperty = Unit & {

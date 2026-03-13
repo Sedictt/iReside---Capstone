@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "dom-to-image": "^2.6.0",
     "framer-motion": "^12.34.0",
+    "jspdf": "^4.2.0",
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "lucide-react": "^0.564.0",
