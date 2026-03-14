@@ -2,11 +2,15 @@
 
 This document provides a comprehensive overview of the iReside architecture, including high-level system components, data flows, and the database schema.
 
+iReside follows a modern serverless-first architecture, leveraging **Next.js** for the application layer and **Supabase** for the backend infrastructure.
+
+### 🧩 Data Flow Diagrams
+- **[Level 0 (Context Diagram)](./dfd-level-0.md)**: High-level overview of system boundaries and external entities.
+- **[Level 1 (Logical Diagram)](./dfd-level-1.md)**: Decomposition of core business processes.
+
 ---
 
 ## 🏗️ System Overview (Container Diagram)
-
-iReside follows a modern serverless-first architecture, leveraging **Next.js** for the application layer and **Supabase** for the backend infrastructure.
 
 ```mermaid
 graph TD
