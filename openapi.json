@@ -1,1 +1,207 @@
-{"message":"Access to schema is forbidden","hint":"Accessing the schema via the Data API is only allowed using a secret API key."}
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "iReside API",
+    "description": "API documentation for the iReside property management platform. Most endpoints require authentication via Supabase.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/iris/chat": {
+      "post": {
+        "summary": "Interact with iRis AI Assistant",
+        "description": "Sends a message to the iRis AI concierge (Llama 3.1) with tenant context.",
+        "security": [{ "supabaseAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": { "type": "string", "example": "What is the WiFi password?" },
+                  "conversationHistory": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": { "type": "string", "enum": ["user", "assistant"] },
+                        "content": { "type": "string" }
+                      }
+                    }
+                  }
+                },
+                "required": ["message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI response generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "response": { "type": "string" },
+                    "hasDataCard": { "type": "boolean" },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "model": { "type": "string" },
+                        "tokens": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/landlord/statistics/insights": {
+      "post": {
+        "summary": "Generate AI Insights for Landlords",
+        "description": "Analyzes KPI data to provide natural language insights and recommendations.",
+        "security": [{ "supabaseAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rangeStart": { "type": "string", "format": "date" },
+                  "rangeEnd": { "type": "string", "format": "date" },
+                  "kpis": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": { "type": "string" },
+                        "value": { "type": "string" },
+                        "change": { "type": "string" },
+                        "trendData": { "type": "array", "items": { "type": "number" } },
+                        "changeType": { "type": "string", "enum": ["positive", "negative", "neutral"] }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Insights generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "insights": { "type": "object" },
+                    "source": { "type": "string", "enum": ["ai", "fallback"] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages/conversations": {
+      "get": {
+        "summary": "List User Conversations",
+        "security": [{ "supabaseAuth": [] }],
+        "responses": {
+          "200": { "description": "List of conversation summaries" }
+        }
+      },
+      "post": {
+        "summary": "Create/Find Conversation",
+        "security": [{ "supabaseAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "participantIds": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Conversation created" },
+          "200": { "description": "Existing conversation found" }
+        }
+      }
+    },
+    "/api/messages/conversations/{conversationId}": {
+      "get": {
+        "summary": "Get Messages in Conversation",
+        "parameters": [
+          { "name": "conversationId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "List of messages" }
+        }
+      },
+      "post": {
+        "summary": "Send Message",
+        "parameters": [
+          { "name": "conversationId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string" },
+                  "type": { "type": "string", "enum": ["text", "system", "image", "file"] },
+                  "metadata": { "type": "object", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Message sent" }
+        }
+      }
+    },
+    "/api/messages/users": {
+        "get": {
+          "summary": "Search Users for Messaging",
+          "parameters": [
+            { "name": "q", "in": "query", "required": true, "description": "Search query (min 2 chars)", "schema": { "type": "string" } },
+            { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 8 } }
+          ],
+          "responses": {
+            "200": { "description": "List of matching users" }
+          }
+        }
+      }
+  },
+  "components": {
+    "securitySchemes": {
+      "supabaseAuth": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "description": "Supabase JWT token"
+      }
+    }
+  }
+}
