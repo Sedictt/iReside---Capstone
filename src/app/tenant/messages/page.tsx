@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Search,
     MoreVertical,
@@ -25,44 +25,183 @@ import {
     AlertCircle,
     ImageIcon,
     Folder,
-    File
+    File,
+    Check,
+    CheckCheck,
+    Clock3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
+import { useAuth } from "@/hooks/useAuth";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
+import {
+    createOrGetDirectConversation,
+    fetchConversationMessages,
+    fetchConversations,
+    markConversationAsRead,
+    searchMessageUsers,
+    sendConversationMessage,
+    type ConversationMessage,
+    type ConversationSummary,
+    type MessageUserSearchResult,
+} from "@/lib/messages/client";
 
-// Mock Data
-const CONTACTS = [
-    { id: "iris", name: "iRis Assistant", unit: "AI Concierge", unread: 0, lastContact: "Always Available", avatar: "/iris-avatar.png", isAI: true },
-    { id: "c1", name: "Property Manager", unit: "iReside Support", unread: 1, lastContact: "10:42 AM", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80", isAI: false },
-    { id: "c2", name: "Maintenance Team", unit: "Building Services", unread: 0, lastContact: "Yesterday", avatar: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80", isAI: false }
-];
+type ContactItem = {
+    id: string;
+    name: string;
+    unit: string;
+    unread: number;
+    lastContact: string;
+    avatar: string;
+    isAI: boolean;
+};
 
-const MESSAGES = [
-    { id: "m1", type: "system", systemType: "lease", content: "Lease Agreement signed digitally by Marcus Johnson.", timestamp: "Feb 1, 2026, 09:00 AM" },
-    { id: "m2", type: "tenant", content: "Hi! I just moved in. Everything looks great, but I noticed the bathroom sink drains a little slowly.", timestamp: "Feb 2, 2026, 10:30 AM" },
-    { id: "m3", type: "landlord", content: "Welcome, Marcus! I'm glad you're settling in. I'll have maintenance take a look at the sink drain this afternoon.", timestamp: "Feb 2, 2026, 10:45 AM" },
-    { id: "m4", type: "system", systemType: "maintenance", content: "Maintenance Request #M-104 'Bathroom Sink Drain' created by System.", timestamp: "Feb 2, 2026, 10:45 AM" },
-    { id: "m5", type: "system", systemType: "maintenance_resolved", content: "Maintenance Request #M-104 resolved successfully.", timestamp: "Feb 2, 2026, 03:20 PM" },
-    { id: "m6", type: "tenant", content: "They fixed it, works perfectly now. Thank you!", timestamp: "Feb 2, 2026, 04:10 PM" },
-    { id: "m7", type: "system", systemType: "payment_submitted", paymentAmount: "13,000", receiptImg: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=400&q=80", content: "You submitted a rent payment of ₱13,000 via GCash for Rent (February).", timestamp: "Feb 28, 2026, 08:15 AM" },
-    { id: "m8", type: "tenant", content: "Just sent over the rent for this month. Have a great week!", timestamp: "Feb 28, 2026, 08:20 AM" },
-    { id: "m9", type: "landlord", content: "Received with thanks, Marcus. Enjoy your week as well.", timestamp: "Feb 28, 2026, 09:00 AM" },
-    {
-        id: "m10", type: "system", systemType: "invoice", invoiceId: "INV-2026-6482", tenantName: "Marcus Johnson", unit: "Unit 102", amount: "13,000", date: "February 28, 2026", description: "Monthly Rent - February 2026", content: "Official Electronic Invoice Generated", timestamp: "Feb 28, 2026, 09:15 AM"
-    }
-];
+type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";
+
+type UiMessage = {
+    id: string;
+    type: "tenant" | "landlord" | "system";
+    content: string;
+    redactedContent?: string;
+    timestamp: string;
+    isRedacted?: boolean;
+    isConfirmedDisclosed?: boolean;
+    systemType?: string;
+    paymentAmount?: string;
+    receiptImg?: string;
+    invoiceId?: string;
+    tenantName?: string;
+    unit?: string;
+    amount?: string;
+    date?: string;
+    description?: string;
+    status?: OutboundStatus;
+};
+
+const IRIS_CONTACT: ContactItem = {
+    id: "iris",
+    name: "iRis Assistant",
+    unit: "AI Concierge",
+    unread: 0,
+    lastContact: "Always Available",
+    avatar: "/iris-avatar.png",
+    isAI: true,
+};
+
+const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
 export default function TenantMessagesPage() {
-    const [activeContact, setActiveContact] = useState(CONTACTS[0]);
+    const { user } = useAuth();
+    const supabase = useMemo(() => createSupabaseClient(), []);
+
+    const [contacts, setContacts] = useState<ContactItem[]>([IRIS_CONTACT]);
+    const [activeConversationId, setActiveConversationId] = useState<string>("iris");
     const [irisAssistActive, setIrisAssistActive] = useState(false);
-    const [messagesState, setMessagesState] = useState<any[]>(MESSAGES);
+    const [messagesState, setMessagesState] = useState<UiMessage[]>([]);
     const [messageInput, setMessageInput] = useState("");
     const [showInfoSidebar, setShowInfoSidebar] = useState(false);
     const [showFilesSidebar, setShowFilesSidebar] = useState(false);
     const [fileFilter, setFileFilter] = useState("all");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [conversationsError, setConversationsError] = useState<string | null>(null);
+    const [messagesError, setMessagesError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [userSearchResults, setUserSearchResults] = useState<MessageUserSearchResult[]>([]);
+    const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+    const [userSearchError, setUserSearchError] = useState<string | null>(null);
+    const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+
+    const activeChannelRef = useRef<RealtimeChannel | null>(null);
+    const typingStopTimeoutRef = useRef<number | null>(null);
+    const remoteTypingTimeoutRef = useRef<number | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+    const activeContact = useMemo(
+        () => contacts.find((contact) => contact.id === activeConversationId) ?? IRIS_CONTACT,
+        [contacts, activeConversationId]
+    );
+
+    const mapConversationToContact = (conversation: ConversationSummary): ContactItem => {
+        const other = conversation.otherParticipants[0];
+
+        return {
+            id: conversation.id,
+            name: other?.fullName ?? "Conversation",
+            unit: other?.role === "landlord" ? "Landlord" : other?.role === "tenant" ? "Tenant" : "Participant",
+            unread: conversation.unreadCount,
+            lastContact: conversation.lastMessage
+                ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                : "No messages yet",
+            avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            isAI: false,
+        };
+    };
+
+    const mapMessageToUi = (message: ConversationMessage) => {
+        const metadata = (message.metadata && typeof message.metadata === "object")
+            ? (message.metadata as Record<string, unknown>)
+            : null;
+
+        const isOwn = user?.id === message.senderId;
+        const redactedContent = typeof metadata?.redactedContent === "string" ? metadata.redactedContent : message.content;
+        const isRedacted = Boolean(metadata?.isRedacted);
+        const isConfirmedDisclosed = metadata?.isConfirmedDisclosed === true;
+
+        return {
+            id: message.id,
+            type: isOwn ? "tenant" : "landlord",
+            content: message.content,
+            redactedContent,
+            timestamp: new Date(message.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+            isRedacted,
+            isConfirmedDisclosed,
+            systemType: typeof metadata?.systemType === "string" ? metadata.systemType : undefined,
+            paymentAmount: typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined,
+            receiptImg: typeof metadata?.receiptImg === "string" ? metadata.receiptImg : undefined,
+            status: isOwn ? (message.readAt ? "seen" : "delivered") : undefined,
+        };
+    };
+
+    const refreshConversations = async () => {
+        if (!user) return;
+
+        const { data: list, error } = await fetchConversations();
+        setConversationsError(error);
+        const mapped = [IRIS_CONTACT, ...list.map(mapConversationToContact)];
+        setContacts(mapped);
+
+        setActiveConversationId((current) => {
+            if (current === "iris") return current;
+            if (mapped.some((contact) => contact.id === current)) {
+                return current;
+            }
+            return mapped[0]?.id ?? "iris";
+        });
+    };
+
+    const refreshMessages = async (conversationId: string) => {
+        const { data: list, error } = await fetchConversationMessages(conversationId, 200);
+        setMessagesError(error);
+        const mapped = list.map(mapMessageToUi);
+        setMessagesState((prev) => {
+            const optimistic = prev.filter(
+                (msg) =>
+                    msg.type === "tenant" &&
+                    (msg.status === "sending" || msg.status === "sent") &&
+                    !mapped.some((serverMessage) => serverMessage.id === msg.id)
+            );
+            return [...mapped, ...optimistic];
+        });
+
+        if (error) {
+            return;
+        }
+
+        await markConversationAsRead(conversationId);
+    };
 
     const prettifyRedactedText = (text: string) => {
         return text
@@ -125,9 +264,40 @@ export default function TenantMessagesPage() {
     };
 
     const handleSendMessage = async () => {
-        if (!messageInput.trim()) return;
+        if (!messageInput.trim() || activeConversationId === "iris") return;
 
-        const originalMessage = messageInput;
+        if (activeChannelRef.current && user?.id) {
+            void activeChannelRef.current.send({
+                type: "broadcast",
+                event: "typing",
+                payload: {
+                    conversationId: activeConversationId,
+                    userId: user.id,
+                    isTyping: false,
+                },
+            });
+        }
+
+        const originalMessage = messageInput.trim();
+        const optimisticId = `local-${Date.now()}`;
+        const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+        setMessageInput("");
+        setIrisAssistActive(false);
+        setMessagesState((prev) => [
+            ...prev,
+            {
+                id: optimisticId,
+                type: "tenant",
+                content: originalMessage,
+                redactedContent: originalMessage,
+                timestamp: optimisticTimestamp,
+                isRedacted: false,
+                isConfirmedDisclosed: false,
+                status: "sending",
+            },
+        ]);
+
         let isSensitive = false;
         let redactedMessage = originalMessage;
 
@@ -155,19 +325,141 @@ export default function TenantMessagesPage() {
             redactedMessage = fallback.redactedMessage;
         }
 
-        const newMessage = {
-            id: `m_${Date.now()}`,
-            type: "tenant",
-            content: originalMessage,
-            redactedContent: redactedMessage,
-            timestamp: "Just now",
-            isRedacted: isSensitive,
-            isConfirmedDisclosed: false
-        };
+        try {
+            const created = await sendConversationMessage(activeConversationId, originalMessage, {
+                isRedacted: isSensitive,
+                redactedContent: redactedMessage,
+                isConfirmedDisclosed: false,
+            });
 
-        setMessagesState(prev => [...prev, newMessage]);
-        setMessageInput("");
-        setIrisAssistActive(false);
+            setMessagesState((prev) =>
+                prev.map((msg) =>
+                    msg.id === optimisticId
+                        ? {
+                            ...msg,
+                            id: created.id,
+                            content: created.content,
+                            redactedContent: redactedMessage,
+                            timestamp: new Date(created.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+                            isRedacted: isSensitive,
+                            isConfirmedDisclosed: false,
+                            status: "sent",
+                        }
+                        : msg
+                )
+            );
+
+            window.setTimeout(() => {
+                setMessagesState((prev) =>
+                    prev.map((msg) => (msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg))
+                );
+            }, 350);
+
+            void refreshConversations();
+            void refreshMessages(activeConversationId);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to send message.";
+            setMessagesError(message);
+            setMessagesState((prev) =>
+                prev.map((msg) => (msg.id === optimisticId ? { ...msg, status: "failed" } : msg))
+            );
+        }
+    };
+
+    const handleMessageInputChange = (value: string) => {
+        setMessageInput(value);
+
+        if (!activeConversationId || activeConversationId === "iris" || !user || !activeChannelRef.current) {
+            return;
+        }
+
+        const isTyping = value.trim().length > 0;
+
+        void activeChannelRef.current.send({
+            type: "broadcast",
+            event: "typing",
+            payload: {
+                conversationId: activeConversationId,
+                userId: user.id,
+                isTyping,
+            },
+        });
+
+        if (!isTyping) {
+            if (typingStopTimeoutRef.current) {
+                window.clearTimeout(typingStopTimeoutRef.current);
+                typingStopTimeoutRef.current = null;
+            }
+            return;
+        }
+
+        if (typingStopTimeoutRef.current) {
+            window.clearTimeout(typingStopTimeoutRef.current);
+        }
+
+        typingStopTimeoutRef.current = window.setTimeout(() => {
+            if (!activeChannelRef.current || !user?.id || !activeConversationId || activeConversationId === "iris") {
+                return;
+            }
+
+            void activeChannelRef.current.send({
+                type: "broadcast",
+                event: "typing",
+                payload: {
+                    conversationId: activeConversationId,
+                    userId: user.id,
+                    isTyping: false,
+                },
+            });
+            typingStopTimeoutRef.current = null;
+        }, 1200);
+    };
+
+    const renderOutgoingStatus = (status: OutboundStatus | undefined, timestamp: string) => {
+        switch (status) {
+            case "sending":
+                return (
+                    <>
+                        <Clock3 className="h-3 w-3" />
+                        <span>Sending</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            case "sent":
+                return (
+                    <>
+                        <Check className="h-3 w-3" />
+                        <span>Sent</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            case "delivered":
+                return (
+                    <>
+                        <CheckCheck className="h-3 w-3" />
+                        <span>Delivered</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            case "seen":
+                return (
+                    <>
+                        <CheckCheck className="h-3 w-3 text-emerald-400" />
+                        <span className="text-emerald-400">Seen</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            case "failed":
+                return (
+                    <>
+                        <AlertTriangle className="h-3 w-3 text-red-400" />
+                        <span className="text-red-400">Failed</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            default:
+                return <span>{timestamp}</span>;
+        }
     };
 
     const confirmDisclose = (id: string) => {
@@ -182,6 +474,146 @@ export default function TenantMessagesPage() {
             handleSendMessage();
         }
     };
+
+    const handleStartConversation = async (targetUserId: string) => {
+        try {
+            const conversationId = await createOrGetDirectConversation(targetUserId);
+            await refreshConversations();
+            setActiveConversationId(conversationId);
+            setSearchQuery("");
+            setUserSearchResults([]);
+            setUserSearchError(null);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to start conversation.";
+            setUserSearchError(message);
+        }
+    };
+
+    useEffect(() => {
+        if (!user) return;
+        refreshConversations();
+    }, [user]);
+
+    useEffect(() => {
+        if (!activeConversationId || activeConversationId === "iris") {
+            setMessagesState([]);
+            setIsOtherUserTyping(false);
+            return;
+        }
+
+        refreshMessages(activeConversationId);
+    }, [activeConversationId]);
+
+    useEffect(() => {
+        if (!activeConversationId || activeConversationId === "iris") return;
+
+        const channel = supabase
+            .channel(`messages-${activeConversationId}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                    filter: `conversation_id=eq.${activeConversationId}`,
+                },
+                async () => {
+                    await refreshMessages(activeConversationId);
+                    await refreshConversations();
+                }
+            )
+            .on(
+                "broadcast",
+                { event: "typing" },
+                ({ payload }) => {
+                    if (!payload || typeof payload !== "object") {
+                        return;
+                    }
+
+                    const candidate = payload as { conversationId?: string; userId?: string; isTyping?: boolean };
+                    if (candidate.conversationId !== activeConversationId) {
+                        return;
+                    }
+                    if (!candidate.userId || candidate.userId === user?.id) {
+                        return;
+                    }
+
+                    setIsOtherUserTyping(Boolean(candidate.isTyping));
+
+                    if (remoteTypingTimeoutRef.current) {
+                        window.clearTimeout(remoteTypingTimeoutRef.current);
+                        remoteTypingTimeoutRef.current = null;
+                    }
+
+                    if (candidate.isTyping) {
+                        remoteTypingTimeoutRef.current = window.setTimeout(() => {
+                            setIsOtherUserTyping(false);
+                            remoteTypingTimeoutRef.current = null;
+                        }, 1800);
+                    }
+                }
+            )
+            .subscribe();
+
+        activeChannelRef.current = channel;
+
+        return () => {
+            activeChannelRef.current = null;
+            supabase.removeChannel(channel);
+        };
+    }, [activeConversationId, supabase, user?.id]);
+
+    useEffect(() => {
+        if (!messagesEndRef.current || activeConversationId === "iris") {
+            return;
+        }
+
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, [messagesState, isOtherUserTyping, activeConversationId]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const intervalId = window.setInterval(() => {
+            if (document.visibilityState !== "visible") {
+                return;
+            }
+
+            void refreshConversations();
+            if (activeConversationId && activeConversationId !== "iris") {
+                void refreshMessages(activeConversationId);
+            }
+        }, 5000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [user, activeConversationId]);
+
+    useEffect(() => {
+        const query = searchQuery.trim();
+        if (query.length < 2) {
+            setUserSearchResults([]);
+            setUserSearchError(null);
+            setIsSearchingUsers(false);
+            return;
+        }
+
+        let cancelled = false;
+        const timeout = setTimeout(async () => {
+            setIsSearchingUsers(true);
+            const { data, error } = await searchMessageUsers(query, 8);
+            if (cancelled) return;
+            setUserSearchResults(data);
+            setUserSearchError(error);
+            setIsSearchingUsers(false);
+        }, 250);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timeout);
+        };
+    }, [searchQuery]);
 
     const renderSystemIcon = (type: string) => {
         switch (type) {
@@ -215,21 +647,67 @@ export default function TenantMessagesPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
                         <input
                             type="text"
-                            placeholder="Search messages..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search users to message..."
                             className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-primary transition-all"
                         />
+
+                        {searchQuery.trim().length >= 2 && (
+                            <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-neutral-950/95 p-1 shadow-2xl backdrop-blur">
+                                {isSearchingUsers && (
+                                    <div className="px-3 py-2 text-xs text-neutral-400">Searching users...</div>
+                                )}
+                                {!isSearchingUsers && userSearchError && (
+                                    <div className="px-3 py-2 text-xs text-red-300">{userSearchError}</div>
+                                )}
+                                {!isSearchingUsers && !userSearchError && userSearchResults.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-neutral-400">No matching users found.</div>
+                                )}
+                                {!isSearchingUsers && !userSearchError && userSearchResults.map((result) => (
+                                    <button
+                                        key={result.id}
+                                        onClick={() => handleStartConversation(result.id)}
+                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/10"
+                                    >
+                                        <img
+                                            src={result.avatarUrl || FALLBACK_AVATAR}
+                                            alt={result.fullName}
+                                            className="h-8 w-8 rounded-full border border-white/10 object-cover"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-sm font-semibold text-white">{result.fullName}</div>
+                                            <div className="truncate text-[11px] text-neutral-400">{result.role} • {result.email}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
+                    {conversationsError && (
+                        <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
+                            <div className="flex-1 leading-relaxed">{conversationsError}</div>
+                            <button
+                                onClick={() => setConversationsError(null)}
+                                className="rounded p-0.5 text-red-200/80 hover:bg-white/10 hover:text-red-100"
+                                aria-label="Dismiss conversation error"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Contacts */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-                    {CONTACTS.map(contact => (
+                    {contacts.map(contact => (
                         <button
                             key={contact.id}
-                            onClick={() => setActiveContact(contact)}
+                            onClick={() => setActiveConversationId(contact.id)}
                             className={cn(
                                 "w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left",
-                                activeContact.id === contact.id ? "bg-white/10 border border-white/10" : "hover:bg-white/[0.03] border border-transparent"
+                                activeConversationId === contact.id ? "bg-white/10 border border-white/10" : "hover:bg-white/[0.03] border border-transparent"
                             )}
                         >
                             <div className="relative shrink-0">
@@ -263,7 +741,7 @@ export default function TenantMessagesPage() {
             </div>
 
             {/* Chat Area */}
-            {activeContact.id === 'iris' ? (
+            {activeConversationId === 'iris' ? (
                 <TenantIrisChat />
             ) : (
                 <>
@@ -317,6 +795,20 @@ export default function TenantMessagesPage() {
                                 </button>
                             </div>
                         </div>
+
+                        {messagesError && (
+                            <div className="mx-6 mt-4 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
+                                <div className="flex-1 leading-relaxed">{messagesError}</div>
+                                <button
+                                    onClick={() => setMessagesError(null)}
+                                    className="rounded p-0.5 text-red-200/80 hover:bg-white/10 hover:text-red-100"
+                                    aria-label="Dismiss message error"
+                                >
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        )}
 
                         {/* Messages List */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full">
@@ -467,30 +959,28 @@ export default function TenantMessagesPage() {
                                     const isMe = msg.type === "tenant";
 
                                     return (
-                                        <div key={msg.id} className={cn("flex flex-col w-full gap-1.5 mb-2", isMe ? "items-end" : "items-start")}>
+                                        <div key={msg.id} className={cn("flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
                                             <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                                                 {!isMe && (
                                                     <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-white/10 shrink-0" alt="avatar" />
                                                 )}
                                                 <div className={cn(
-                                                    "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative group transition-all duration-500",
+                                                    "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
                                                     isMe
                                                         ? "bg-primary text-black rounded-3xl rounded-br-sm font-medium border border-primary mr-2"
                                                         : "bg-neutral-800 text-white rounded-3xl rounded-bl-sm border border-white/5"
                                                 )}>
-                                                    <span className={cn(
-                                                        "absolute -bottom-5 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity",
-                                                        isMe ? "right-1 text-neutral-500" : "left-1 text-neutral-500"
-                                                    )}>
-                                                        {msg.timestamp}
-                                                    </span>
-                                                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                                                    <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
                                                         {msg.isRedacted && !msg.isConfirmedDisclosed
                                                             ? prettifyRedactedText(msg.redactedContent || msg.content)
                                                             : msg.content
                                                         }
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            <div className={cn("px-2 text-[10px] flex items-center gap-1", isMe ? "text-neutral-500" : "text-neutral-600")}>
+                                                {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
                                             </div>
 
                                             {msg.isRedacted && !msg.isConfirmedDisclosed && (
@@ -517,6 +1007,21 @@ export default function TenantMessagesPage() {
                                         </div>
                                     );
                                 })}
+
+                                {isOtherUserTyping && (
+                                    <div className="flex items-end gap-3 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
+                                        <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-white/10 shrink-0" alt="avatar" />
+                                        <div className="px-4 py-3 bg-neutral-800 text-white rounded-3xl rounded-bl-sm border border-white/5 shadow-lg">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
+                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
+                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div ref={messagesEndRef} />
                             </div>
                         </div>
 
@@ -559,7 +1064,7 @@ export default function TenantMessagesPage() {
                                 <div className="flex items-end gap-3 rounded-3xl bg-black/40 border border-white/10 p-2 pl-4 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                                     <textarea
                                         value={messageInput}
-                                        onChange={(e) => setMessageInput(e.target.value)}
+                                        onChange={(e) => handleMessageInputChange(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Type your message..."
                                         className="w-full bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-neutral-500 resize-none max-h-32 py-2.5 custom-scrollbar"

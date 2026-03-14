@@ -35,6 +35,12 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // Let API route handlers return structured JSON auth errors (401/403)
+    // instead of redirecting fetch requests to HTML pages.
+    if (request.nextUrl.pathname.startsWith('/api')) {
+        return supabaseResponse
+    }
+
     // If user is already logged in, prevent them from accessing auth pages
     if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
         const role = user.user_metadata?.role || 'tenant'
