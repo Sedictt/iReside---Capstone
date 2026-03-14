@@ -4,6 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
 import type { Json, MessageType } from "@/types/database";
 
+const DEFAULT_FILES_BUCKET = "message-files";
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
 type MessageBody = {
     content?: string;
     type?: MessageType;
@@ -52,7 +55,40 @@ export async function GET(
         const senderIds = Array.from(new Set((messages ?? []).map((message) => message.sender_id)));
         const profileMap = await getProfilePreviewMap(supabase, senderIds);
 
-        const payload = (messages ?? []).map((message) => ({
+        const messagesWithSignedUrls = await Promise.all(
+            (messages ?? []).map(async (message) => {
+                const rawMetadata = message.metadata;
+                if (!rawMetadata || typeof rawMetadata !== "object") {
+                    return message;
+                }
+
+                const metadata = rawMetadata as Record<string, unknown>;
+                const filePath = typeof metadata.filePath === "string" ? metadata.filePath : null;
+
+                if (!filePath) {
+                    return message;
+                }
+
+                const bucket = typeof metadata.bucket === "string" ? metadata.bucket : DEFAULT_FILES_BUCKET;
+                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                    .from(bucket)
+                    .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
+
+                if (signedUrlError || !signedUrlData?.signedUrl) {
+                    return message;
+                }
+
+                return {
+                    ...message,
+                    metadata: {
+                        ...metadata,
+                        fileUrl: signedUrlData.signedUrl,
+                    } as Json,
+                };
+            })
+        );
+
+        const payload = messagesWithSignedUrls.map((message) => ({
             id: message.id,
             conversationId: message.conversation_id,
             senderId: message.sender_id,

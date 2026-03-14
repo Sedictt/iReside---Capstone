@@ -35,6 +35,94 @@ export type ConversationMessage = {
     createdAt: string;
 };
 
+export type UploadedConversationFile = {
+    message: {
+        id: string;
+        conversationId: string;
+        senderId: string;
+        type: "text" | "system" | "image" | "file";
+        content: string;
+        metadata: Record<string, unknown> | null;
+        readAt: string | null;
+        createdAt: string;
+    };
+    file: {
+        name: string;
+        size: number;
+        mimeType: string;
+        url: string;
+        path: string;
+    };
+};
+
+const IMAGE_MAX_DIMENSION = 1600;
+const IMAGE_OUTPUT_QUALITY = 0.82;
+
+const optimizeImageForUpload = async (file: File): Promise<File> => {
+    if (!file.type.startsWith("image/")) {
+        return file;
+    }
+
+    // Keep animated/vector formats untouched.
+    if (file.type === "image/gif" || file.type === "image/svg+xml") {
+        return file;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+        const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Failed to decode image."));
+            img.src = objectUrl;
+        });
+
+        const { width, height } = image;
+        if (!width || !height) {
+            return file;
+        }
+
+        const scale = Math.min(1, IMAGE_MAX_DIMENSION / Math.max(width, height));
+        const targetWidth = Math.max(1, Math.round(width * scale));
+        const targetHeight = Math.max(1, Math.round(height * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            return file;
+        }
+
+        ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+        const optimizedBlob = await new Promise<Blob | null>((resolve) => {
+            canvas.toBlob(resolve, "image/webp", IMAGE_OUTPUT_QUALITY);
+        });
+
+        if (!optimizedBlob) {
+            return file;
+        }
+
+        // Keep original when optimization doesn't materially reduce size.
+        if (optimizedBlob.size >= file.size * 0.95) {
+            return file;
+        }
+
+        const safeBaseName = file.name.replace(/\.[^.]+$/, "") || "image";
+        return new File([optimizedBlob], `${safeBaseName}.webp`, {
+            type: "image/webp",
+            lastModified: Date.now(),
+        });
+    } catch {
+        return file;
+    } finally {
+        URL.revokeObjectURL(objectUrl);
+    }
+};
+
 export type ListFetchResult<T> = {
     data: T[];
     error: string | null;
@@ -137,14 +225,15 @@ export const fetchConversationMessages = async (conversationId: string, limit = 
 export const sendConversationMessage = async (
     conversationId: string,
     content: string,
-    metadata?: Record<string, unknown> | null
+    metadata?: Record<string, unknown> | null,
+    type: "text" | "system" | "image" | "file" = "text"
 ) => {
     const response = await fetch(`/api/messages/conversations/${conversationId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             content,
-            type: "text",
+            type,
             metadata: metadata ?? null,
         }),
     });
@@ -172,6 +261,64 @@ export const sendConversationMessage = async (
     }
 
     return payload.message;
+};
+
+export const uploadConversationFile = async (
+    conversationId: string,
+    file: File,
+    onProgress?: (percent: number) => void
+) => {
+    const preparedFile = await optimizeImageForUpload(file);
+    const body = new FormData();
+    body.append("file", preparedFile);
+
+    return await new Promise<UploadedConversationFile>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `/api/messages/conversations/${conversationId}/files`, true);
+
+        xhr.upload.onprogress = (event) => {
+            if (!onProgress || !event.lengthComputable) {
+                return;
+            }
+
+            const percent = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)));
+            onProgress(percent);
+        };
+
+        xhr.onload = () => {
+            const status = xhr.status;
+            const text = xhr.responseText || "";
+
+            let payload: unknown = null;
+            try {
+                payload = text ? JSON.parse(text) : null;
+            } catch {
+                payload = null;
+            }
+
+            if (status < 200 || status >= 300) {
+                const detail =
+                    payload && typeof payload === "object" && "error" in payload && typeof (payload as { error?: unknown }).error === "string"
+                        ? (payload as { error: string }).error
+                        : "";
+                reject(new Error(detail || `Failed to upload file. Status: ${status}.`));
+                return;
+            }
+
+            if (!payload || typeof payload !== "object") {
+                reject(new Error("Invalid upload response."));
+                return;
+            }
+
+            resolve(payload as UploadedConversationFile);
+        };
+
+        xhr.onerror = () => {
+            reject(new Error("Failed to upload file due to a network issue."));
+        };
+
+        xhr.send(body);
+    });
 };
 
 export const markConversationAsRead = async (conversationId: string) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Search,
     MoreVertical,
@@ -43,6 +43,7 @@ import {
     markConversationAsRead,
     searchMessageUsers,
     sendConversationMessage,
+    uploadConversationFile,
     type ConversationMessage,
     type ConversationSummary,
     type MessageUserSearchResult,
@@ -63,14 +64,21 @@ type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";
 type UiMessage = {
     id: string;
     type: "tenant" | "landlord" | "system";
+    messageType?: "text" | "system" | "image" | "file";
     content: string;
     redactedContent?: string;
     timestamp: string;
+    createdAt: string;
     isRedacted?: boolean;
     isConfirmedDisclosed?: boolean;
     systemType?: string;
     paymentAmount?: string;
     receiptImg?: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileMimeType?: string;
+    filePath?: string;
     invoiceId?: string;
     tenantName?: string;
     unit?: string;
@@ -91,6 +99,24 @@ const IRIS_CONTACT: ContactItem = {
 };
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const MESSAGE_CACHE_KEY_PREFIX = "ireside:tenant:messages-cache";
+
+type SharedFileItem = {
+    id: string;
+    url: string;
+    name: string;
+    size: number;
+    mimeType: string;
+    createdAt: string;
+    timestampLabel: string;
+    isMedia: boolean;
+};
+
+type PendingAttachment = {
+    file: File;
+    isImage: boolean;
+    previewUrl: string | null;
+};
 
 export default function TenantMessagesPage() {
     const { user } = useAuth();
@@ -115,11 +141,63 @@ export default function TenantMessagesPage() {
     const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
     const [isSidebarLoading, setIsSidebarLoading] = useState(true);
     const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+    const [isUploadingFile, setIsUploadingFile] = useState(false);
+    const [fileUploadError, setFileUploadError] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const [isComposerDragOver, setIsComposerDragOver] = useState(false);
+    const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
+    const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
+    const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
     const remoteTypingTimeoutRef = useRef<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const dragDepthRef = useRef(0);
+    const messagesCacheRef = useRef<Map<string, UiMessage[]>>(new Map());
+    const activeConversationIdRef = useRef<string>("iris");
+
+    useEffect(() => {
+        return () => {
+            if (pendingAttachment?.previewUrl) {
+                URL.revokeObjectURL(pendingAttachment.previewUrl);
+            }
+        };
+    }, [pendingAttachment]);
+
+    useEffect(() => {
+        activeConversationIdRef.current = activeConversationId;
+    }, [activeConversationId]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            messagesCacheRef.current.clear();
+            return;
+        }
+
+        try {
+            const raw = sessionStorage.getItem(`${MESSAGE_CACHE_KEY_PREFIX}:${user.id}`);
+            if (!raw) {
+                messagesCacheRef.current.clear();
+                return;
+            }
+
+            const parsed = JSON.parse(raw) as Record<string, UiMessage[]>;
+            const entries = Object.entries(parsed).filter((entry): entry is [string, UiMessage[]] => Array.isArray(entry[1]));
+            messagesCacheRef.current = new Map(entries);
+        } catch {
+            messagesCacheRef.current.clear();
+        }
+    }, [user?.id]);
+
+    const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
+        if (!messagesEndRef.current || activeConversationId === "iris") {
+            return;
+        }
+
+        messagesEndRef.current.scrollIntoView({ behavior, block: "end" });
+    }, [activeConversationId]);
 
     const activeContact = useMemo(
         () => contacts.find((contact) => contact.id === activeConversationId) ?? IRIS_CONTACT,
@@ -151,21 +229,66 @@ export default function TenantMessagesPage() {
         const redactedContent = typeof metadata?.redactedContent === "string" ? metadata.redactedContent : message.content;
         const isRedacted = Boolean(metadata?.isRedacted);
         const isConfirmedDisclosed = metadata?.isConfirmedDisclosed === true;
+        const fileUrl = typeof metadata?.fileUrl === "string" ? metadata.fileUrl : undefined;
+        const fileName = typeof metadata?.fileName === "string" ? metadata.fileName : undefined;
+        const filePath = typeof metadata?.filePath === "string" ? metadata.filePath : undefined;
+        const fileMimeType = typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
+        const fileSize = typeof metadata?.fileSize === "number" ? metadata.fileSize : undefined;
 
         return {
             id: message.id,
             type: isOwn ? "tenant" : "landlord",
+            messageType: message.type,
             content: message.content,
             redactedContent,
             timestamp: new Date(message.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+            createdAt: message.createdAt,
             isRedacted,
             isConfirmedDisclosed,
             systemType: typeof metadata?.systemType === "string" ? metadata.systemType : undefined,
             paymentAmount: typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined,
             receiptImg: typeof metadata?.receiptImg === "string" ? metadata.receiptImg : undefined,
+            fileUrl,
+            fileName,
+            filePath,
+            fileMimeType,
+            fileSize,
             status: isOwn ? (message.readAt ? "seen" : "delivered") : undefined,
         };
     };
+
+    const formatFileSize = (bytes: number) => {
+        if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const sharedFiles = useMemo<SharedFileItem[]>(() => {
+        return messagesState
+            .filter((message) => Boolean(message.fileUrl))
+            .map((message) => {
+                const mimeType = message.fileMimeType ?? "application/octet-stream";
+                const isMedia = mimeType.startsWith("image/");
+
+                return {
+                    id: message.id,
+                    url: message.fileUrl as string,
+                    name: message.fileName ?? message.content,
+                    size: message.fileSize ?? 0,
+                    mimeType,
+                    createdAt: message.createdAt,
+                    timestampLabel: new Date(message.createdAt).toLocaleDateString([], { month: "short", day: "numeric" }),
+                    isMedia,
+                };
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [messagesState]);
+
+    const totalSharedSize = useMemo(
+        () => sharedFiles.reduce((sum, file) => sum + file.size, 0),
+        [sharedFiles]
+    );
 
     const refreshConversations = async () => {
         if (!user) return;
@@ -192,15 +315,30 @@ export default function TenantMessagesPage() {
         const { data: list, error } = await fetchConversationMessages(conversationId, 200);
         setMessagesError(error);
         const mapped: UiMessage[] = list.map(mapMessageToUi);
-        setMessagesState((prev) => {
-            const optimistic = prev.filter(
-                (msg) =>
-                    msg.type === "tenant" &&
-                    (msg.status === "sending" || msg.status === "sent") &&
-                    !mapped.some((serverMessage) => serverMessage.id === msg.id)
-            );
-            return [...mapped, ...optimistic];
-        });
+        messagesCacheRef.current.set(conversationId, mapped);
+
+        if (user?.id) {
+            try {
+                sessionStorage.setItem(
+                    `${MESSAGE_CACHE_KEY_PREFIX}:${user.id}`,
+                    JSON.stringify(Object.fromEntries(messagesCacheRef.current.entries()))
+                );
+            } catch {
+                // Ignore quota or serialization errors; in-memory cache still works for this session.
+            }
+        }
+
+        if (activeConversationIdRef.current === conversationId) {
+            setMessagesState((prev) => {
+                const optimistic = prev.filter(
+                    (msg) =>
+                        msg.type === "tenant" &&
+                        (msg.status === "sending" || msg.status === "sent") &&
+                        !mapped.some((serverMessage) => serverMessage.id === msg.id)
+                );
+                return [...mapped, ...optimistic];
+            });
+        }
 
         if (error) {
             return;
@@ -269,8 +407,42 @@ export default function TenantMessagesPage() {
         };
     };
 
+    const clearPendingAttachment = () => {
+        setPendingAttachment((current) => {
+            if (current?.previewUrl) {
+                URL.revokeObjectURL(current.previewUrl);
+            }
+            return null;
+        });
+    };
+
+    const queueSelectedFile = (file: File) => {
+        if (!activeConversationId || activeConversationId === "iris") {
+            setFileUploadError("File sharing is only available in direct conversations.");
+            return;
+        }
+
+        setFileUploadError(null);
+        setPendingAttachment((current) => {
+            if (current?.previewUrl) {
+                URL.revokeObjectURL(current.previewUrl);
+            }
+
+            const isImage = file.type.startsWith("image/");
+            return {
+                file,
+                isImage,
+                previewUrl: isImage ? URL.createObjectURL(file) : null,
+            };
+        });
+    };
+
     const handleSendMessage = async () => {
-        if (!messageInput.trim() || activeConversationId === "iris") return;
+        const textMessage = messageInput.trim();
+        const hasText = textMessage.length > 0;
+        const hasAttachment = Boolean(pendingAttachment);
+
+        if ((!hasText && !hasAttachment) || activeConversationId === "iris") return;
 
         if (activeChannelRef.current && user?.id) {
             void activeChannelRef.current.send({
@@ -284,93 +456,259 @@ export default function TenantMessagesPage() {
             });
         }
 
-        const originalMessage = messageInput.trim();
-        const optimisticId = `local-${Date.now()}`;
-        const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-
-        setMessageInput("");
         setIrisAssistActive(false);
-        setMessagesState((prev) => [
-            ...prev,
-            {
-                id: optimisticId,
-                type: "tenant",
-                content: originalMessage,
-                redactedContent: originalMessage,
-                timestamp: optimisticTimestamp,
-                isRedacted: false,
-                isConfirmedDisclosed: false,
-                status: "sending",
-            },
-        ]);
 
-        let isSensitive = false;
-        let redactedMessage = originalMessage;
+        if (hasText) {
+            const optimisticId = `local-${Date.now()}`;
+            const optimisticTimestamp = new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-        try {
-            const response = await fetch('/api/iris/redact', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            setMessageInput("");
+            setMessagesState((prev) => [
+                ...prev,
+                {
+                    id: optimisticId,
+                    type: "tenant",
+                    messageType: "text",
+                    content: textMessage,
+                    redactedContent: textMessage,
+                    timestamp: optimisticTimestamp,
+                    createdAt: new Date().toISOString(),
+                    isRedacted: false,
+                    isConfirmedDisclosed: false,
+                    status: "sending",
                 },
-                body: JSON.stringify({ message: originalMessage }),
-            });
+            ]);
 
-            if (response.ok) {
-                const data = await response.json();
-                isSensitive = !!data.isSensitive;
-                redactedMessage = typeof data.redactedMessage === 'string' ? data.redactedMessage : originalMessage;
-            } else {
-                const fallback = fallbackRedact(originalMessage);
+            let isSensitive = false;
+            let redactedMessage = textMessage;
+
+            try {
+                const response = await fetch('/api/iris/redact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: textMessage }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    isSensitive = !!data.isSensitive;
+                    redactedMessage = typeof data.redactedMessage === 'string' ? data.redactedMessage : textMessage;
+                } else {
+                    const fallback = fallbackRedact(textMessage);
+                    isSensitive = fallback.isSensitive;
+                    redactedMessage = fallback.redactedMessage;
+                }
+            } catch {
+                const fallback = fallbackRedact(textMessage);
                 isSensitive = fallback.isSensitive;
                 redactedMessage = fallback.redactedMessage;
             }
-        } catch {
-            const fallback = fallbackRedact(originalMessage);
-            isSensitive = fallback.isSensitive;
-            redactedMessage = fallback.redactedMessage;
-        }
 
-        try {
-            const created = await sendConversationMessage(activeConversationId, originalMessage, {
-                isRedacted: isSensitive,
-                redactedContent: redactedMessage,
-                isConfirmedDisclosed: false,
-            });
+            try {
+                const created = await sendConversationMessage(activeConversationId, textMessage, {
+                    isRedacted: isSensitive,
+                    redactedContent: redactedMessage,
+                    isConfirmedDisclosed: false,
+                });
 
-            setMessagesState((prev) =>
-                prev.map((msg) =>
-                    msg.id === optimisticId
-                        ? {
-                            ...msg,
-                            id: created.id,
-                            content: created.content,
-                            redactedContent: redactedMessage,
-                            timestamp: new Date(created.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
-                            isRedacted: isSensitive,
-                            isConfirmedDisclosed: false,
-                            status: "sent",
-                        }
-                        : msg
-                )
-            );
-
-            window.setTimeout(() => {
                 setMessagesState((prev) =>
-                    prev.map((msg) => (msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg))
+                    prev.map((msg) =>
+                        msg.id === optimisticId
+                            ? {
+                                ...msg,
+                                id: created.id,
+                                content: created.content,
+                                redactedContent: redactedMessage,
+                                timestamp: new Date(created.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
+                                createdAt: created.createdAt,
+                                messageType: created.type,
+                                isRedacted: isSensitive,
+                                isConfirmedDisclosed: false,
+                                status: "sent",
+                            }
+                            : msg
+                    )
                 );
-            }, 350);
 
-            void refreshConversations();
-            void refreshMessages(activeConversationId);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "Failed to send message.";
-            setMessagesError(message);
-            setMessagesState((prev) =>
-                prev.map((msg) => (msg.id === optimisticId ? { ...msg, status: "failed" } : msg))
-            );
+                window.setTimeout(() => {
+                    setMessagesState((prev) =>
+                        prev.map((msg) => (msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg))
+                    );
+                }, 350);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Failed to send message.";
+                setMessagesError(message);
+                setMessagesState((prev) =>
+                    prev.map((msg) => (msg.id === optimisticId ? { ...msg, status: "failed" } : msg))
+                );
+            }
         }
+
+        if (hasAttachment && pendingAttachment) {
+            setFileUploadError(null);
+            setMessagesError(null);
+            setIsUploadingFile(true);
+            setUploadProgress(0);
+
+            try {
+                const result = await uploadConversationFile(activeConversationId, pendingAttachment.file, (percent) => {
+                    setUploadProgress(percent);
+                });
+
+                const created = result.message;
+                const mapped = mapMessageToUi({
+                    id: created.id,
+                    conversationId: created.conversationId,
+                    senderId: created.senderId,
+                    sender: null,
+                    type: created.type,
+                    content: created.content,
+                    metadata: created.metadata,
+                    readAt: created.readAt,
+                    createdAt: created.createdAt,
+                });
+
+                setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
+                window.setTimeout(() => {
+                    setMessagesState((prev) =>
+                        prev.map((msg) => (msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg))
+                    );
+                }, 350);
+
+                clearPendingAttachment();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Failed to upload file.";
+                setFileUploadError(message);
+            } finally {
+                setIsUploadingFile(false);
+                window.setTimeout(() => setUploadProgress(null), 500);
+            }
+        }
+
+        void refreshConversations();
+        void refreshMessages(activeConversationId);
     };
+
+    const handleFilePickerOpen = () => {
+        if (activeConversationId === "iris") {
+            setFileUploadError("File sharing is only available in direct conversations.");
+            return;
+        }
+
+        fileInputRef.current?.click();
+    };
+
+    const uploadSelectedFile = useCallback(async (selectedFile: File) => {
+        queueSelectedFile(selectedFile);
+    }, [activeConversationId]);
+
+    const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = event.target.files?.[0];
+        event.target.value = "";
+
+        if (!selectedFile) {
+            return;
+        }
+
+        await uploadSelectedFile(selectedFile);
+    };
+
+    const handleComposerDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+
+        if (activeConversationId === "iris") {
+            setFileUploadError("File sharing is only available in direct conversations.");
+            return;
+        }
+
+        setIsComposerDragOver(true);
+    };
+
+    const handleComposerDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+
+        const nextTarget = event.relatedTarget as Node | null;
+        if (nextTarget && event.currentTarget.contains(nextTarget)) {
+            return;
+        }
+
+        setIsComposerDragOver(false);
+    };
+
+    const handleComposerDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        setIsComposerDragOver(false);
+
+        if (activeConversationId === "iris") {
+            setFileUploadError("File sharing is only available in direct conversations.");
+            return;
+        }
+
+        const file = event.dataTransfer.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        await uploadSelectedFile(file);
+    };
+
+    useEffect(() => {
+        const hasFiles = (event: DragEvent) => event.dataTransfer?.types?.includes("Files") ?? false;
+
+        const handleWindowDragEnter = (event: DragEvent) => {
+            if (!hasFiles(event)) return;
+            event.preventDefault();
+            dragDepthRef.current += 1;
+            setIsGlobalFileDrag(true);
+        };
+
+        const handleWindowDragOver = (event: DragEvent) => {
+            if (!hasFiles(event)) return;
+            event.preventDefault();
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = "copy";
+            }
+        };
+
+        const handleWindowDragLeave = (event: DragEvent) => {
+            if (!hasFiles(event)) return;
+            event.preventDefault();
+            dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+            if (dragDepthRef.current === 0) {
+                setIsGlobalFileDrag(false);
+                setIsComposerDragOver(false);
+            }
+        };
+
+        const handleWindowDrop = (event: DragEvent) => {
+            if (!hasFiles(event)) return;
+            event.preventDefault();
+            dragDepthRef.current = 0;
+            setIsGlobalFileDrag(false);
+            setIsComposerDragOver(false);
+
+            const file = event.dataTransfer?.files?.[0];
+            if (!file) {
+                return;
+            }
+
+            void uploadSelectedFile(file);
+        };
+
+        window.addEventListener("dragenter", handleWindowDragEnter);
+        window.addEventListener("dragover", handleWindowDragOver);
+        window.addEventListener("dragleave", handleWindowDragLeave);
+        window.addEventListener("drop", handleWindowDrop);
+
+        return () => {
+            window.removeEventListener("dragenter", handleWindowDragEnter);
+            window.removeEventListener("dragover", handleWindowDragOver);
+            window.removeEventListener("dragleave", handleWindowDragLeave);
+            window.removeEventListener("drop", handleWindowDrop);
+        };
+    }, [uploadSelectedFile]);
 
     const handleMessageInputChange = (value: string) => {
         setMessageInput(value);
@@ -508,6 +846,14 @@ export default function TenantMessagesPage() {
             return;
         }
 
+        const cached = messagesCacheRef.current.get(activeConversationId);
+        if (cached) {
+            setMessagesState(cached);
+            setIsOtherUserTyping(false);
+            setIsMessagesLoading(false);
+            return;
+        }
+
         setMessagesState([]);
         setIsOtherUserTyping(false);
         setIsMessagesLoading(true);
@@ -585,12 +931,22 @@ export default function TenantMessagesPage() {
     }, [activeConversationId, supabase, user?.id]);
 
     useEffect(() => {
-        if (!messagesEndRef.current || activeConversationId === "iris") {
+        if (activeConversationId === "iris") {
             return;
         }
 
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, [messagesState, isOtherUserTyping, activeConversationId]);
+        const frame = window.requestAnimationFrame(() => {
+            scrollToLatest("auto");
+        });
+        const timeout = window.setTimeout(() => {
+            scrollToLatest("auto");
+        }, 80);
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+            window.clearTimeout(timeout);
+        };
+    }, [messagesState, isOtherUserTyping, activeConversationId, isMessagesLoading, scrollToLatest]);
 
     useEffect(() => {
         if (!user) return;
@@ -650,6 +1006,20 @@ export default function TenantMessagesPage() {
 
     return (
         <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700">
+            {isGlobalFileDrag && (
+                <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="rounded-3xl border border-primary/40 bg-neutral-900/90 px-10 py-8 shadow-2xl shadow-primary/20 text-center">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
+                            <Paperclip className="h-6 w-6 text-primary" />
+                        </div>
+                        <p className="text-lg font-bold text-white">
+                            {activeConversationId === "iris" ? "File sharing unavailable in Iris chat" : "Drop here to upload"}
+                        </p>
+                        <p className="mt-1 text-xs text-neutral-400">Release to add this file to the composer</p>
+                    </div>
+                </div>
+            )}
+
             {/* Sidebar Contact List */}
             <div className="w-80 lg:w-96 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col shrink-0 h-full overflow-hidden shadow-2xl">
                 {/* Header */}
@@ -1016,6 +1386,8 @@ export default function TenantMessagesPage() {
                                     }
 
                                     const isMe = msg.type === "tenant";
+                                    const hasImageAttachment = Boolean(msg.fileUrl && msg.fileMimeType?.startsWith("image/"));
+                                    const hasFileAttachment = Boolean(msg.fileUrl && !msg.fileMimeType?.startsWith("image/"));
 
                                     return (
                                         <div key={msg.id} className={cn("flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
@@ -1027,14 +1399,45 @@ export default function TenantMessagesPage() {
                                                     "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
                                                     isMe
                                                         ? "bg-primary text-black rounded-3xl rounded-br-sm font-medium border border-primary mr-2"
-                                                        : "bg-neutral-800 text-white rounded-3xl rounded-bl-sm border border-white/5"
+                                                        : "bg-neutral-800 text-white rounded-3xl rounded-bl-sm border border-white/5",
+                                                    hasFileAttachment && "px-0 py-0 bg-transparent border-none shadow-none mr-0"
                                                 )}>
-                                                    <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                                                        {msg.isRedacted && !msg.isConfirmedDisclosed
-                                                            ? prettifyRedactedText(msg.redactedContent || msg.content)
-                                                            : msg.content
-                                                        }
-                                                    </div>
+                                                    {hasImageAttachment && (
+                                                        <button
+                                                            onClick={() => setPreviewImageUrl(msg.fileUrl || null)}
+                                                            className="block mb-2 rounded-2xl overflow-hidden border border-white/10 bg-black/40 w-full"
+                                                        >
+                                                            <img src={msg.fileUrl} alt={msg.fileName || "Shared image"} className="w-full max-h-64 object-contain" />
+                                                        </button>
+                                                    )}
+
+                                                    {hasFileAttachment && (
+                                                        <a
+                                                            href={msg.fileUrl}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="mb-2 flex items-center gap-3 rounded-2xl border p-3 border-white/10 bg-neutral-900/80"
+                                                        >
+                                                            <div className="p-2 rounded-lg bg-white/10">
+                                                                <File className="w-4 h-4 text-neutral-100" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs font-bold truncate text-neutral-100">{msg.fileName || msg.content}</p>
+                                                                <p className="text-[10px] text-neutral-400">
+                                                                    {formatFileSize(msg.fileSize ?? 0)}
+                                                                </p>
+                                                            </div>
+                                                        </a>
+                                                    )}
+
+                                                    {!msg.fileUrl && (
+                                                        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                                                            {msg.isRedacted && !msg.isConfirmedDisclosed
+                                                                ? prettifyRedactedText(msg.redactedContent || msg.content)
+                                                                : msg.content
+                                                            }
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -1122,7 +1525,45 @@ export default function TenantMessagesPage() {
                                     </div>
                                 )}
 
-                                <div className="flex items-end gap-3 rounded-3xl bg-black/40 border border-white/10 p-2 pl-4 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                                {pendingAttachment && (
+                                    <div className="relative w-36 rounded-2xl border border-white/10 bg-black/30 p-2">
+                                        <button
+                                            onClick={clearPendingAttachment}
+                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-neutral-900 border border-white/20 flex items-center justify-center text-neutral-300 hover:text-white hover:bg-neutral-800"
+                                            aria-label="Remove attachment"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                        {pendingAttachment.isImage && pendingAttachment.previewUrl ? (
+                                            <img
+                                                src={pendingAttachment.previewUrl}
+                                                alt="Attachment preview"
+                                                className="h-24 w-full rounded-xl bg-black/40 object-contain"
+                                            />
+                                        ) : (
+                                            <div className="h-24 w-full rounded-xl border border-white/10 bg-neutral-900/50 p-3 flex flex-col justify-center">
+                                                <File className="w-4 h-4 text-primary mb-2" />
+                                                <p className="text-[10px] text-neutral-300 font-semibold truncate">{pendingAttachment.file.name}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div
+                                    onDragOver={handleComposerDragOver}
+                                    onDragLeave={handleComposerDragLeave}
+                                    onDrop={handleComposerDrop}
+                                    className={cn(
+                                        "flex items-end gap-3 rounded-3xl bg-black/40 border border-white/10 p-2 pl-4 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all",
+                                        isComposerDragOver && "border-primary/80 bg-primary/10"
+                                    )}
+                                >
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        className="hidden"
+                                        onChange={handleFileSelected}
+                                    />
                                     <textarea
                                         value={messageInput}
                                         onChange={(e) => handleMessageInputChange(e.target.value)}
@@ -1144,23 +1585,45 @@ export default function TenantMessagesPage() {
                                         >
                                             <Sparkles className="w-5 h-5" />
                                         </button>
-                                        <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                                        <button
+                                            onClick={handleFilePickerOpen}
+                                            disabled={isUploadingFile || activeConversationId === "iris"}
+                                            className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
                                             <Paperclip className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={handleSendMessage}
-                                            className="p-2 bg-primary text-black hover:bg-primary/90 hover:scale-105 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
+                                            disabled={!messageInput.trim() && !pendingAttachment}
+                                            className="p-2 bg-primary text-black hover:bg-primary/90 hover:scale-105 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                                         >
                                             <Send className="w-5 h-5" />
                                         </button>
                                     </div>
                                 </div>
+                                {isUploadingFile && (
+                                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                        <div
+                                            className="h-full bg-primary transition-all duration-150"
+                                            style={{ width: `${uploadProgress ?? 0}%` }}
+                                        />
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-[10px] text-neutral-500 flex items-center gap-1">
                                         <ShieldCheck className="w-3 h-3" /> Secure connection
                                     </span>
-                                    <span className="text-[10px] text-neutral-500">Press Enter to send, Shift + Enter for new line</span>
+                                    <span className="text-[10px] text-neutral-500">
+                                        {isUploadingFile
+                                            ? `Uploading file... ${uploadProgress ?? 0}%`
+                                            : isComposerDragOver
+                                                ? "Drop file to upload"
+                                                : "Press Enter to send, Shift + Enter for new line"}
+                                    </span>
                                 </div>
+                                {fileUploadError && (
+                                    <p className="text-[11px] text-red-400 px-2">{fileUploadError}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1289,7 +1752,9 @@ export default function TenantMessagesPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-white text-base">Shared Files</h3>
-                                        <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">12 Items • 34 MB</p>
+                                        <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+                                            {sharedFiles.length} Items • {formatFileSize(totalSharedSize)}
+                                        </p>
                                     </div>
                                 </div>
                                 <button
@@ -1329,25 +1794,33 @@ export default function TenantMessagesPage() {
                                                 <ImageIcon className="w-4 h-4 text-blue-400" /> Recent Media
                                             </h4>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {[
-                                                { src: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=150&q=80", type: "img" },
-                                                { src: "https://images.unsplash.com/photo-1588600878108-578307a3cc9d?auto=format&fit=crop&w=150&q=80", type: "img" },
-                                                { src: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80", type: "img" },
-                                                { src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=150&q=80", type: "img" },
-                                            ].map((img, idx) => (
-                                                <div key={idx} className="group relative rounded-2xl overflow-hidden border border-white/10 aspect-square cursor-pointer bg-neutral-800">
-                                                    <img src={img.src} alt={`Media ${idx}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 group-hover:scale-110" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                                        <div className="w-full flex justify-end">
-                                                            <div className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-colors">
-                                                                <Download className="w-4 h-4 text-white" />
+                                        {sharedFiles.filter((item) => item.isMedia).length === 0 ? (
+                                            <p className="text-xs text-neutral-500">No media shared in this conversation yet.</p>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {sharedFiles
+                                                    .filter((item) => item.isMedia)
+                                                    .map((item) => (
+                                                        <a
+                                                            key={item.id}
+                                                            href={item.url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="group relative rounded-2xl overflow-hidden border border-white/10 aspect-square cursor-pointer bg-neutral-800"
+                                                        >
+                                                            <img src={item.url} alt={item.name} className="w-full h-full object-contain bg-black/40 opacity-90 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                                                <div className="w-full flex justify-between items-center">
+                                                                    <span className="text-[9px] text-white/90 font-semibold truncate max-w-[70%]">{item.name}</span>
+                                                                    <div className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-colors">
+                                                                        <Download className="w-4 h-4 text-white" />
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                        </a>
+                                                    ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -1359,31 +1832,45 @@ export default function TenantMessagesPage() {
                                                 <FileText className="w-4 h-4 text-primary" /> Shared Documents
                                             </h4>
                                         </div>
-                                        <div className="flex flex-col gap-3">
-                                            {[
-                                                { name: "Lease_Agreement_SIGNED.pdf", icon: <FileText className="w-4 h-4 text-primary" />, color: "primary", size: "2.4 MB", date: "Feb 1" },
-                                                { name: "Move_In_Checklist.pdf", icon: <File className="w-4 h-4 text-blue-500" />, color: "blue-500", size: "840 KB", date: "Feb 1" },
-                                                { name: "Unit102_Inventory.xlsx", icon: <File className="w-4 h-4 text-emerald-500" />, color: "emerald-500", size: "1.2 MB", date: "Jan 15" },
-                                                { name: "Building_Rules_2026.pdf", icon: <FileText className="w-4 h-4 text-neutral-300" />, color: "neutral-500", size: "3.5 MB", date: "Jan 10" },
-                                            ].map((doc, idx) => (
-                                                <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-black/20 hover:bg-white/[0.05] hover:border-white/10 cursor-pointer transition-all group">
-                                                    <div className={`p-2.5 bg-${doc.color.split('-')[0]}/10 rounded-xl shrink-0 border border-${doc.color.split('-')[0]}/20 group-hover:scale-105 transition-transform`}>
-                                                        {doc.icon}
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-xs text-neutral-200 font-bold truncate group-hover:text-white transition-colors">{doc.name}</p>
-                                                        <div className="flex items-center gap-2 mt-1 blur-0">
-                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{doc.size}</span>
-                                                            <span className="w-1 h-1 rounded-full bg-white/10"></span>
-                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{doc.date}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="p-2 text-neutral-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                                                        <Download className="w-4 h-4" />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                        {sharedFiles.filter((item) => !item.isMedia).length === 0 ? (
+                                            <p className="text-xs text-neutral-500">No documents shared in this conversation yet.</p>
+                                        ) : (
+                                            <div className="flex flex-col gap-3">
+                                                {sharedFiles
+                                                    .filter((item) => !item.isMedia)
+                                                    .map((item) => (
+                                                        <a
+                                                            key={item.id}
+                                                            href={item.url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-black/20 hover:bg-white/[0.05] hover:border-white/10 cursor-pointer transition-all group"
+                                                        >
+                                                            <div className="p-2.5 bg-primary/10 rounded-xl shrink-0 border border-primary/20 group-hover:scale-105 transition-transform">
+                                                                <File className="w-4 h-4 text-primary" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-xs text-neutral-200 font-bold truncate group-hover:text-white transition-colors">{item.name}</p>
+                                                                <div className="flex items-center gap-2 mt-1 blur-0">
+                                                                    <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{formatFileSize(item.size)}</span>
+                                                                    <span className="w-1 h-1 rounded-full bg-white/10"></span>
+                                                                    <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{item.timestampLabel}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="p-2 text-neutral-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                                                <Download className="w-4 h-4" />
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {sharedFiles.length === 0 && fileFilter === "all" && (
+                                    <div className="rounded-2xl border border-white/5 bg-black/20 p-4 text-center">
+                                        <p className="text-xs text-neutral-400">No shared files yet.</p>
+                                        <p className="text-[10px] text-neutral-600 mt-1">Use the paperclip button in chat to upload files.</p>
                                     </div>
                                 )}
                             </div>
@@ -1475,6 +1962,27 @@ export default function TenantMessagesPage() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {previewImageUrl && (
+                <div
+                    className="fixed inset-0 z-[80] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+                    onClick={() => setPreviewImageUrl(null)}
+                >
+                    <button
+                        onClick={() => setPreviewImageUrl(null)}
+                        className="absolute top-5 right-5 p-2 rounded-xl border border-white/20 bg-black/50 text-white hover:bg-black/70"
+                        aria-label="Close image preview"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                    <img
+                        src={previewImageUrl}
+                        alt="Full resolution preview"
+                        className="max-w-[95vw] max-h-[90vh] object-contain"
+                        onClick={(event) => event.stopPropagation()}
+                    />
                 </div>
             )}
         </div>
