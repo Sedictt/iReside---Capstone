@@ -87,8 +87,11 @@ iReside is built with a modern, high-performance stack for maximum scalability a
 │   ├── lib/            # Utilities & AI Logic (iRis context)
 │   ├── types/          # TypeScript Type Definitions
 ├── supabase/           # Database Migrations & Seed Data
+├── docs/               # Documentation (Architecture, API, etc.)
 └── public/             # Static Assets
 ```
+
+For a deeper dive into the system design, check out our [Architecture Documentation](./docs/ARCHITECTURE.md).
 
 ---
 
