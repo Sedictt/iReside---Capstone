@@ -101,6 +101,8 @@ export default function MessagesPage() {
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);
     const [userSearchError, setUserSearchError] = useState<string | null>(null);
     const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+    const [isSidebarLoading, setIsSidebarLoading] = useState(true);
+    const [isMessagesLoading, setIsMessagesLoading] = useState(false);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -164,17 +166,21 @@ export default function MessagesPage() {
     const refreshConversations = async () => {
         if (!user) return;
 
-        const { data: list, error } = await fetchConversations();
-        setConversationsError(error);
-        const mapped = list.map(mapConversationToContact);
-        setContacts(mapped);
+        try {
+            const { data: list, error } = await fetchConversations();
+            setConversationsError(error);
+            const mapped = list.map(mapConversationToContact);
+            setContacts(mapped);
 
-        setActiveConversationId((current) => {
-            if (current && mapped.some((contact) => contact.id === current)) {
-                return current;
-            }
-            return mapped[0]?.id ?? null;
-        });
+            setActiveConversationId((current) => {
+                if (current && mapped.some((contact) => contact.id === current)) {
+                    return current;
+                }
+                return mapped[0]?.id ?? null;
+            });
+        } finally {
+            setIsSidebarLoading(false);
+        }
     };
 
     const refreshMessages = async (conversationId: string) => {
@@ -532,10 +538,25 @@ export default function MessagesPage() {
         if (!activeConversationId) {
             setMessagesState([]);
             setIsOtherUserTyping(false);
+            setIsMessagesLoading(false);
             return;
         }
 
-        refreshMessages(activeConversationId);
+        setMessagesState([]);
+        setIsOtherUserTyping(false);
+        setIsMessagesLoading(true);
+
+        let cancelled = false;
+        void (async () => {
+            await refreshMessages(activeConversationId);
+            if (!cancelled) {
+                setIsMessagesLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
     }, [activeConversationId]);
 
     useEffect(() => {
@@ -735,32 +756,48 @@ export default function MessagesPage() {
 
                 {/* Contacts */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-                    {contacts.map(contact => (
-                        <button
-                            key={contact.id}
-                            onClick={() => setActiveConversationId(contact.id)}
-                            className={cn(
-                                "w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left",
-                                activeConversationId === contact.id ? "bg-white/10 border border-white/10" : "hover:bg-white/[0.03] border border-transparent"
-                            )}
-                        >
-                            <div className="relative shrink-0">
-                                <img src={contact.avatar} alt={contact.name} className="w-12 h-12 rounded-full object-cover border border-white/10" />
-                                {contact.unread > 0 && (
-                                    <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-[#0a0a0a] flex items-center justify-center">
-                                        <span className="text-[9px] font-bold text-white">{contact.unread}</span>
+                    {isSidebarLoading ? (
+                        <div className="space-y-2" aria-live="polite" aria-busy="true">
+                            {Array.from({ length: 6 }).map((_, index) => (
+                                <div key={`sidebar-skeleton-${index}`} className="w-full flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] animate-pulse">
+                                    <div className="w-12 h-12 rounded-full bg-neutral-700/70" />
+                                    <div className="flex-1 min-w-0 space-y-2">
+                                        <div className="h-3.5 w-1/2 rounded bg-neutral-700/70" />
+                                        <div className="h-2.5 w-2/3 rounded bg-neutral-800/70" />
                                     </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-0.5">
-                                    <h4 className="font-bold text-white text-sm truncate pr-2">{contact.name}</h4>
-                                    <span className="text-[10px] text-neutral-500 shrink-0">{contact.lastContact}</span>
                                 </div>
-                                <p className="text-xs text-neutral-400 font-medium truncate">{contact.unit}</p>
-                            </div>
-                        </button>
-                    ))}
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            {contacts.map(contact => (
+                                <button
+                                    key={contact.id}
+                                    onClick={() => setActiveConversationId(contact.id)}
+                                    className={cn(
+                                        "w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left",
+                                        activeConversationId === contact.id ? "bg-white/10 border border-white/10" : "hover:bg-white/[0.03] border border-transparent"
+                                    )}
+                                >
+                                    <div className="relative shrink-0">
+                                        <img src={contact.avatar} alt={contact.name} className="w-12 h-12 rounded-full object-cover border border-white/10" />
+                                        {contact.unread > 0 && (
+                                            <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-[#0a0a0a] flex items-center justify-center">
+                                                <span className="text-[9px] font-bold text-white">{contact.unread}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <h4 className="font-bold text-white text-sm truncate pr-2">{contact.name}</h4>
+                                            <span className="text-[10px] text-neutral-500 shrink-0">{contact.lastContact}</span>
+                                        </div>
+                                        <p className="text-xs text-neutral-400 font-medium truncate">{contact.unit}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -839,6 +876,28 @@ export default function MessagesPage() {
                             </span>
                         </div>
 
+                        {isMessagesLoading ? (
+                            <div className="w-full space-y-4" aria-live="polite" aria-busy="true">
+                                {Array.from({ length: 6 }).map((_, index) => {
+                                    const isMe = index % 3 === 2;
+
+                                    return (
+                                        <div key={`message-skeleton-${index}`} className={cn("flex items-end gap-3 w-full", isMe ? "justify-end" : "justify-start")}>
+                                            {!isMe && <div className="w-8 h-8 rounded-full bg-neutral-700/70 animate-pulse shrink-0" />}
+                                            <div
+                                                className={cn(
+                                                    "animate-pulse border",
+                                                    isMe
+                                                        ? "h-14 w-[45%] max-w-sm rounded-3xl rounded-br-sm bg-primary/25 border-primary/20"
+                                                        : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm bg-neutral-800 border-white/5"
+                                                )}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <>
                         {messagesState.map((msg) => {
                             if (msg.type === "system") {
                                 return (
@@ -1055,6 +1114,8 @@ export default function MessagesPage() {
                                     </div>
                                 </div>
                             </div>
+                        )}
+                            </>
                         )}
 
                         <div ref={messagesEndRef} />

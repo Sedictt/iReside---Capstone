@@ -29,6 +29,9 @@ interface Message {
 }
 
 export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+    const INITIAL_CHAT_SKELETON_COUNT = 6;
+    const CHAT_ENGINE_BOOT_MS = 900;
+
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
@@ -39,6 +42,7 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [isChatInitializing, setIsChatInitializing] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -51,7 +55,18 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         }
     }, [messages, isOpen, isTyping]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const timer = window.setTimeout(() => {
+            setIsChatInitializing(false);
+        }, CHAT_ENGINE_BOOT_MS);
+
+        return () => window.clearTimeout(timer);
+    }, [isOpen]);
+
     const handleSend = async () => {
+        if (isChatInitializing) return;
         if (!input.trim()) return;
 
         const userMsg: Message = {
@@ -165,43 +180,72 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
                     {/* Chat Area */}
                     <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar bg-gray-50/30 dark:bg-black/20">
-                        {messages.map((msg) => (
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                className={cn(
-                                    "flex gap-3 max-w-[88%]",
-                                    msg.role === "user" ? "ml-auto flex-row-reverse" : ""
-                                )}
-                            >
-                                {msg.role === "iris" && (
-                                    <div className="flex-shrink-0 mt-auto mb-1">
-                                        <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20">
-                                            <Image
-                                                src="/iris-avatar.png"
-                                                alt="iRis"
-                                                width={28} height={28}
+                        {isChatInitializing ? (
+                            <div className="space-y-4" aria-live="polite" aria-busy="true">
+                                {Array.from({ length: INITIAL_CHAT_SKELETON_COUNT }).map((_, index) => {
+                                    const isRight = index % 3 === 2;
+
+                                    return (
+                                        <div
+                                            key={`skeleton-${index}`}
+                                            className={cn("flex gap-3 max-w-[88%]", isRight ? "ml-auto flex-row-reverse" : "")}
+                                        >
+                                            {!isRight && (
+                                                <div className="h-7 w-7 rounded-full bg-gray-200/80 dark:bg-gray-700/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
+                                            )}
+                                            <div
+                                                className={cn(
+                                                    "rounded-[1.25rem] animate-pulse",
+                                                    isRight
+                                                        ? "bg-primary/25 rounded-br-none h-16 w-40"
+                                                        : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-none h-20 w-52"
+                                                )}
                                             />
                                         </div>
-                                    </div>
-                                )}
-                                <div className={cn(
-                                    "px-4 py-3 rounded-[1.25rem] text-sm leading-relaxed shadow-sm",
-                                    msg.role === "user"
-                                        ? "bg-primary text-white rounded-br-none shadow-primary/20"
-                                        : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-700"
-                                )}>
-                                    <p>{msg.content}</p>
-                                    <span className={cn(
-                                        "text-[9px] mt-1 block opacity-50 font-medium",
-                                        msg.role === "user" ? "text-right" : ""
-                                    )}>
-                                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
-                            </motion.div>
-                        ))}
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <>
+                                {messages.map((msg) => (
+                                    <motion.div
+                                        key={msg.id}
+                                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        className={cn(
+                                            "flex gap-3 max-w-[88%]",
+                                            msg.role === "user" ? "ml-auto flex-row-reverse" : ""
+                                        )}
+                                    >
+                                        {msg.role === "iris" && (
+                                            <div className="flex-shrink-0 mt-auto mb-1">
+                                                <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20">
+                                                    <Image
+                                                        src="/iris-avatar.png"
+                                                        alt="iRis"
+                                                        width={28} height={28}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className={cn(
+                                            "px-4 py-3 rounded-[1.25rem] text-sm leading-relaxed shadow-sm",
+                                            msg.role === "user"
+                                                ? "bg-primary text-white rounded-br-none shadow-primary/20"
+                                                : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-700"
+                                        )}>
+                                            <p>{msg.content}</p>
+                                            <span className={cn(
+                                                "text-[9px] mt-1 block opacity-50 font-medium",
+                                                msg.role === "user" ? "text-right" : ""
+                                            )}>
+                                                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </>
+                        )}
 
                         {isTyping && (
                             <motion.div
@@ -249,12 +293,13 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                                     placeholder="Type a message..."
+                                    disabled={isChatInitializing}
                                     className="relative w-full bg-gray-100/80 dark:bg-gray-800/80 border border-transparent focus:border-primary/20 rounded-full px-5 py-3 text-sm focus:ring-0 outline-none placeholder-gray-400 dark:text-white transition-all backdrop-blur-sm"
                                 />
                             </div>
                             <button
                                 onClick={handleSend}
-                                disabled={!input.trim()}
+                                disabled={!input.trim() || isChatInitializing}
                                 className="h-11 w-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-white shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
                             >
                                 <ArrowUp className="w-5 h-5" />

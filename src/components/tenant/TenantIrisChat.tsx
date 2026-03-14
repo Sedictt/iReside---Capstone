@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, ArrowUp, Wifi, Copy, Brain, ShieldCheck } from "lucide-react";
+import { ArrowUp, Wifi, Copy, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 interface Message {
     id: string;
@@ -14,6 +13,9 @@ interface Message {
 }
 
 export function TenantIrisChat() {
+    const INITIAL_CHAT_SKELETON_COUNT = 6;
+    const CHAT_ENGINE_BOOT_MS = 900;
+
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
@@ -24,6 +26,7 @@ export function TenantIrisChat() {
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [isChatInitializing, setIsChatInitializing] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -34,7 +37,16 @@ export function TenantIrisChat() {
         scrollToBottom();
     }, [messages, isTyping]);
 
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            setIsChatInitializing(false);
+        }, CHAT_ENGINE_BOOT_MS);
+
+        return () => window.clearTimeout(timer);
+    }, []);
+
     const handleSend = async () => {
+        if (isChatInitializing) return;
         if (!input.trim()) return;
 
         const userMsg: Message = {
@@ -117,7 +129,6 @@ export function TenantIrisChat() {
                         </div>
                     </div>
                 </div>
-
             </div>
 
             {/* Chat Area */}
@@ -132,66 +143,91 @@ export function TenantIrisChat() {
                         </span>
                     </div>
 
-                    {messages.map((msg) => (
-                        <div key={msg.id} className={cn("flex w-full gap-4", msg.role === "user" ? "justify-end" : "justify-start")}>
-                            {msg.role === "iris" && (
-                                <div className="shrink-0 mt-auto">
-                                    <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-white/10">
-                                        <img src="/iris-avatar.png" alt="iRis" className="w-7 h-7 object-cover" />
+                    {isChatInitializing ? (
+                        <div className="space-y-4" aria-live="polite" aria-busy="true">
+                            {Array.from({ length: INITIAL_CHAT_SKELETON_COUNT }).map((_, index) => {
+                                const isRight = index % 3 === 2;
+
+                                return (
+                                    <div key={`skeleton-${index}`} className={cn("flex w-full gap-4", isRight ? "justify-end" : "justify-start")}>
+                                        {!isRight && <div className="w-8 h-8 rounded-full bg-neutral-700/70 animate-pulse" />}
+                                        <div
+                                            className={cn(
+                                                "animate-pulse rounded-2xl",
+                                                isRight
+                                                    ? "h-16 w-40 bg-primary/25 rounded-br-sm"
+                                                    : "h-20 w-64 bg-neutral-800 border border-white/5 rounded-bl-sm"
+                                            )}
+                                        />
+                                        {isRight && <div className="w-8 h-8 rounded-full bg-neutral-800 animate-pulse" />}
                                     </div>
-                                </div>
-                            )}
-
-                            <div className={cn("flex flex-col gap-1.5 max-w-[80%] md:max-w-[70%]", msg.role === "user" ? "items-end" : "items-start")}>
-                                <div className={cn(
-                                    "px-5 py-3.5 rounded-2xl shadow-sm text-sm md:text-base leading-relaxed",
-                                    msg.role === "user"
-                                        ? "bg-primary text-black rounded-br-sm font-medium shadow-[0_4px_15px_rgb(109,152,56,0.3)]"
-                                        : "bg-neutral-800 text-neutral-200 rounded-bl-sm border border-white/5"
-                                )}>
-                                    <p>{msg.content}</p>
-                                </div>
-
-                                {msg.hasDataCard && (
-                                    <div className="w-full bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-lg mt-1 relative group">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className="p-4 border-b border-white/5 flex justify-between items-center relative z-10">
-                                            <div className="flex-1">
-                                                <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-1">Network Name</p>
-                                                <p className="text-primary font-mono font-medium text-sm md:text-base select-all">TheLofts_Guest</p>
-                                            </div>
-                                            <button className="p-2 text-neutral-500 hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                                <Wifi className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                        <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-white/[0.02] transition-colors">
-                                            <div className="flex-1">
-                                                <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-1">Password</p>
-                                                <p className="text-primary font-mono font-medium text-sm md:text-base select-all">WelcomeHome2024</p>
-                                            </div>
-                                            <button className="p-2 text-neutral-500 hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                                <Copy className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <span className={cn("text-[10px] font-medium text-neutral-600 px-1", msg.role === "user" ? "text-right" : "text-left")}>
-                                    {msg.role === "user" ? "Seen" : msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </div>
-
-                            {msg.role === "user" && (
-                                <div className="shrink-0 mt-auto">
-                                    <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center font-bold text-xs text-neutral-400 border border-white/10">
-                                        MJ
-                                    </div>
-                                </div>
-                            )}
+                                );
+                            })}
                         </div>
-                    ))}
+                    ) : (
+                        <>
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={cn("flex w-full gap-4", msg.role === "user" ? "justify-end" : "justify-start")}>
+                                    {msg.role === "iris" && (
+                                        <div className="shrink-0 mt-auto">
+                                            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-white/10">
+                                                <img src="/iris-avatar.png" alt="iRis" className="w-7 h-7 object-cover" />
+                                            </div>
+                                        </div>
+                                    )}
 
-                    {isTyping && (
+                                    <div className={cn("flex flex-col gap-1.5 max-w-[80%] md:max-w-[70%]", msg.role === "user" ? "items-end" : "items-start")}>
+                                        <div className={cn(
+                                            "px-5 py-3.5 rounded-2xl shadow-sm text-sm md:text-base leading-relaxed",
+                                            msg.role === "user"
+                                                ? "bg-primary text-black rounded-br-sm font-medium shadow-[0_4px_15px_rgb(109,152,56,0.3)]"
+                                                : "bg-neutral-800 text-neutral-200 rounded-bl-sm border border-white/5"
+                                        )}>
+                                            <p>{msg.content}</p>
+                                        </div>
+
+                                        {msg.hasDataCard && (
+                                            <div className="w-full bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-lg mt-1 relative group">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <div className="p-4 border-b border-white/5 flex justify-between items-center relative z-10">
+                                                    <div className="flex-1">
+                                                        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-1">Network Name</p>
+                                                        <p className="text-primary font-mono font-medium text-sm md:text-base select-all">TheLofts_Guest</p>
+                                                    </div>
+                                                    <button className="p-2 text-neutral-500 hover:text-primary transition rounded-lg hover:bg-primary/10">
+                                                        <Wifi className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                                <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-white/[0.02] transition-colors">
+                                                    <div className="flex-1">
+                                                        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-1">Password</p>
+                                                        <p className="text-primary font-mono font-medium text-sm md:text-base select-all">WelcomeHome2024</p>
+                                                    </div>
+                                                    <button className="p-2 text-neutral-500 hover:text-primary transition rounded-lg hover:bg-primary/10">
+                                                        <Copy className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <span className={cn("text-[10px] font-medium text-neutral-600 px-1", msg.role === "user" ? "text-right" : "text-left")}>
+                                            {msg.role === "user" ? "Seen" : msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+
+                                    {msg.role === "user" && (
+                                        <div className="shrink-0 mt-auto">
+                                            <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center font-bold text-xs text-neutral-400 border border-white/10">
+                                                MJ
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </>
+                    )}
+
+                    {isTyping && !isChatInitializing && (
                         <div className="flex w-full gap-4 justify-start">
                             <div className="shrink-0 mt-auto">
                                 <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-white/10">
@@ -240,12 +276,13 @@ export function TenantIrisChat() {
                                     }
                                 }}
                                 placeholder="Message iRis Assistant..."
+                                disabled={isChatInitializing}
                                 className="flex-1 bg-transparent border-none outline-none resize-none pt-2.5 px-3 min-h-[44px] max-h-[120px] text-sm text-white placeholder:text-neutral-500 custom-scrollbar"
                                 rows={1}
                             />
                             <button
                                 onClick={handleSend}
-                                disabled={!input.trim()}
+                                disabled={!input.trim() || isChatInitializing}
                                 className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-black shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
                             >
                                 <ArrowUp className="w-5 h-5" />
