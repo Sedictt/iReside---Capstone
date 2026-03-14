@@ -40,6 +40,13 @@ type ExportAuditItem = {
     generatedAt: string;
 };
 
+type KpiInsight = {
+    summary: string;
+    status: string;
+    recommendation: string;
+    source?: "ai" | "fallback";
+};
+
 const RANGE_OPTIONS: RangeOption[] = [
     { id: "7d", label: "7D", days: 7 },
     { id: "30d", label: "30D", days: 30 },
@@ -88,8 +95,10 @@ export default function StatisticsPage() {
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportFormat, setExportFormat] = useState<"csv" | "pdf">("pdf");
     const [exportHistory, setExportHistory] = useState<ExportAuditItem[]>([]);
+    const [kpiInsights, setKpiInsights] = useState<Record<string, KpiInsight>>({});
+    const [insightSource, setInsightSource] = useState<"ai" | "fallback" | null>(null);
 
-    const primaryKpis: KpiItem[] = [
+    const primaryKpis = useMemo<KpiItem[]>(() => [
         {
             title: "Estimated Earnings",
             simplifiedTitle: "Money Earned",
@@ -134,9 +143,9 @@ export default function StatisticsPage() {
             iconColor: "bg-red-500",
             trendlineProperties: { colors: ["#ef4444", "#ec4899"] },
         },
-    ];
+    ], []);
 
-    const extendedKpis: KpiItem[] = [
+    const extendedKpis = useMemo<KpiItem[]>(() => [
         {
             title: "Maintenance Cost",
             simplifiedTitle: "Repair Costs",
@@ -181,10 +190,33 @@ export default function StatisticsPage() {
             iconColor: "bg-yellow-500",
             trendlineProperties: { colors: ["#facc15", "#eab308"] },
         },
-    ];
+    ], []);
 
     const reportStartDate = useMemo(() => new Date(`${startDate}T00:00:00`), [startDate]);
     const reportEndDate = useMemo(() => new Date(`${endDate}T23:59:59`), [endDate]);
+
+    const buildLocalFallbackInsight = (kpi: KpiItem): KpiInsight => {
+        const status =
+            kpi.changeType === "positive"
+                ? "This KPI is trending in a healthy direction."
+                : kpi.changeType === "negative"
+                  ? "This KPI is weakening and should be reviewed soon."
+                  : "This KPI is stable right now.";
+
+        const recommendation =
+            kpi.changeType === "positive"
+                ? "Keep using the same strategy and track what actions are causing this improvement."
+                : kpi.changeType === "negative"
+                  ? "Review recent tenant activity, maintenance timing, and pricing decisions to identify the likely cause."
+                  : "Keep monitoring this weekly and set an alert so changes are caught early.";
+
+        return {
+            summary: `${kpi.title} is currently ${kpi.value} with a recent change of ${kpi.change}.`,
+            status,
+            recommendation,
+            source: "fallback",
+        };
+    };
 
     const downloadBlob = (blob: Blob, filename: string) => {
         const url = URL.createObjectURL(blob);
@@ -359,6 +391,63 @@ export default function StatisticsPage() {
     }, [mounted]);
 
     useEffect(() => {
+        if (!mounted) return;
+
+        const allKpis = [...primaryKpis, ...extendedKpis];
+        const controller = new AbortController();
+
+        const fetchKpiInsights = async () => {
+            try {
+                const response = await fetch("/api/landlord/statistics/insights", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        rangeStart: startDate,
+                        rangeEnd: endDate,
+                        kpis: allKpis.map((kpi) => ({
+                            title: kpi.title,
+                            value: kpi.value,
+                            change: kpi.change,
+                            trendData: kpi.trendData,
+                            changeType: kpi.changeType,
+                        })),
+                    }),
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch KPI insights");
+                }
+
+                const payload = (await response.json()) as {
+                    insights?: Record<string, KpiInsight>;
+                    source?: "ai" | "fallback";
+                };
+
+                const mappedInsights: Record<string, KpiInsight> = {};
+                allKpis.forEach((kpi) => {
+                    mappedInsights[kpi.title] = payload.insights?.[kpi.title] ?? buildLocalFallbackInsight(kpi);
+                });
+
+                setKpiInsights(mappedInsights);
+                setInsightSource(payload.source ?? "fallback");
+            } catch {
+                const fallback: Record<string, KpiInsight> = {};
+                allKpis.forEach((kpi) => {
+                    fallback[kpi.title] = buildLocalFallbackInsight(kpi);
+                });
+
+                setKpiInsights(fallback);
+                setInsightSource("fallback");
+            }
+        };
+
+        fetchKpiInsights();
+
+        return () => controller.abort();
+    }, [mounted, startDate, endDate, primaryKpis, extendedKpis]);
+
+    useEffect(() => {
         if (!toastMessage) return;
         const timeout = setTimeout(() => setToastMessage(null), 2600);
         return () => clearTimeout(timeout);
@@ -419,6 +508,9 @@ export default function StatisticsPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div className="text-[11px] px-2.5 py-1 rounded-full border border-white/10 bg-black/30 text-neutral-300">
+                        {insightSource === "ai" ? "iRis AI Insights: Live" : "iRis Insights: Fallback"}
+                    </div>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border border-white/10 text-white bg-white/5 hover:bg-white/10 transition-colors"
@@ -444,6 +536,7 @@ export default function StatisticsPage() {
                         trendlineProperties={kpi.trendlineProperties}
                         data={kpi.trendData}
                         simplifiedMode={simplifiedMode}
+                        aiInsight={kpiInsights[kpi.title]}
                     />
                 ))}
 
@@ -474,6 +567,7 @@ export default function StatisticsPage() {
                                 trendlineProperties={kpi.trendlineProperties}
                                 data={kpi.trendData}
                                 simplifiedMode={simplifiedMode}
+                                aiInsight={kpiInsights[kpi.title]}
                             />
                         ))}
                     </div>

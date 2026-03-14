@@ -16,7 +16,7 @@ import {
     ChartData,
     ChartOptions
 } from "chart.js";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
 
@@ -45,6 +45,12 @@ interface KpiCardProps {
     iconColor?: string;
     className?: string;
     simplifiedMode?: boolean;
+    aiInsight?: {
+        summary: string;
+        status: string;
+        recommendation: string;
+        source?: "ai" | "fallback";
+    };
 }
 
 export function KpiCard({
@@ -58,18 +64,17 @@ export function KpiCard({
     trendlineProperties = { colors: ["#3b82f6", "#06b6d4"] }, // Default Blue to Cyan
     iconColor = "bg-blue-500",
     className,
-    simplifiedMode = false
+    simplifiedMode = false,
+    aiInsight
 }: KpiCardProps) {
     const [showAiTooltip, setShowAiTooltip] = useState(false);
     const [showAiModal, setShowAiModal] = useState(false);
-    const [isClient, setIsClient] = useState(false);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    const displayTitle = title;
-    const displayChange = change;
+    const displayTitle = simplifiedMode && simplifiedTitle ? simplifiedTitle : title;
+    const displayChange = simplifiedMode && simplifiedChange ? simplifiedChange : change;
+    const insightSummary = aiInsight?.summary ?? `Your ${title} is currently ${value}. iRis is analyzing this metric and will share a personalized explanation shortly.`;
+    const insightStatus = aiInsight?.status ?? "Trend analysis is loading.";
+    const insightRecommendation = aiInsight?.recommendation ?? "Check back in a moment for a practical next step based on this KPI.";
 
     // Prepare chart data locally to handle gradients and simplified props
     const chartData = useMemo<ChartData<"bar">>(() => ({
@@ -158,9 +163,7 @@ export function KpiCard({
                                     <span className="text-sm font-bold text-primary">i.R.i.s. Insight</span>
                                 </div>
                                 <p className="text-sm text-neutral-300 leading-relaxed font-medium">
-                                    Your <strong className="text-white">{title}</strong> is currently <span className="text-white">{value}</span>.
-                                    This represents a <span className={cn(changeType === "positive" ? "text-emerald-400" : changeType === "negative" ? "text-red-400" : "text-neutral-400")}>{change}</span> shift,
-                                    suggesting {changeType === 'positive' ? 'strong growth' : changeType === 'negative' ? 'a decline to monitor' : 'stability'} in your portfolio.
+                                    {insightSummary}
                                 </p>
                                 <div className="mt-3 pt-2 border-t border-white/10 flex items-center gap-1.5 bg-primary/5 rounded-lg px-2 py-1.5">
                                     <svg
@@ -180,7 +183,7 @@ export function KpiCard({
             )}
 
             {/* AI Details Modal */}
-            {isClient && createPortal(
+            {typeof document !== "undefined" && createPortal(
                 <AnimatePresence>
                     {showAiModal && (
                         <>
@@ -216,15 +219,14 @@ export function KpiCard({
                                     <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
                                         <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Current Status</h4>
                                         <p className="text-sm text-white leading-relaxed">
-                                            Your {title} is currently <span className="font-bold text-emerald-400">{changeType === 'positive' ? 'Trending Up' : changeType === 'negative' ? 'Trending Down' : 'Stable'}</span>.
-                                            Based on historical data, this is performing {changeType === 'positive' ? 'better' : 'worse'} than expected for this quarter.
+                                            {insightStatus}
                                         </p>
                                     </div>
 
                                     <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
                                         <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Recommendation</h4>
                                         <p className="text-sm text-neutral-300 leading-relaxed">
-                                            Consider simplifying tenant communications or reviewing recent maintenance logs to deduce impact on {title}. i.R.i.s. suggests a review of recent operational costs to optimize this further.
+                                            {insightRecommendation}
                                         </p>
                                     </div>
 
