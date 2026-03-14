@@ -140,7 +140,7 @@ export default function TenantMessagesPage() {
         };
     };
 
-    const mapMessageToUi = (message: ConversationMessage) => {
+    const mapMessageToUi = (message: ConversationMessage): UiMessage => {
         const metadata = (message.metadata && typeof message.metadata === "object")
             ? (message.metadata as Record<string, unknown>)
             : null;
@@ -185,7 +185,7 @@ export default function TenantMessagesPage() {
     const refreshMessages = async (conversationId: string) => {
         const { data: list, error } = await fetchConversationMessages(conversationId, 200);
         setMessagesError(error);
-        const mapped = list.map(mapMessageToUi);
+        const mapped: UiMessage[] = list.map(mapMessageToUi);
         setMessagesState((prev) => {
             const optimistic = prev.filter(
                 (msg) =>
