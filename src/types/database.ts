@@ -271,6 +271,37 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            landlord_reviews: {
+                Row: {
+                    id: string
+                    lease_id: string
+                    landlord_id: string
+                    tenant_id: string
+                    rating: number
+                    comment: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    lease_id: string
+                    landlord_id: string
+                    tenant_id: string
+                    rating: number
+                    comment?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    lease_id?: string
+                    landlord_id?: string
+                    tenant_id?: string
+                    rating?: number
+                    comment?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
             payments: {
                 Row: {
                     id: string
@@ -687,6 +718,7 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Property = Database['public']['Tables']['properties']['Row']
 export type Unit = Database['public']['Tables']['units']['Row']
 export type Lease = Database['public']['Tables']['leases']['Row']
+export type LandlordReview = Database['public']['Tables']['landlord_reviews']['Row']
 export type Payment = Database['public']['Tables']['payments']['Row']
 export type PaymentItem = Database['public']['Tables']['payment_items']['Row']
 export type Application = Database['public']['Tables']['applications']['Row']

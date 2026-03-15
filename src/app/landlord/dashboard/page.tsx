@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
-import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
 import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
 
 export default function LandlordDashboard() {
@@ -27,7 +26,7 @@ export default function LandlordDashboard() {
 
     return (
         <>
-            <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 md:pr-24 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
                 <DashboardBanner />
 
             {/* Payment Overview */}
@@ -135,7 +134,6 @@ export default function LandlordDashboard() {
                     <RecentInquiries />
                 </div>
             </div>
-            <ContactsSidebar />
         </>
     );
 }
