@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
         // Parse request body
         const body = await request.json()
-        const { message, conversationHistory } = body
+        const { message } = body
 
         if (!message || typeof message !== 'string') {
             return NextResponse.json(
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         const context = await getTenantContext(user.id)
         const systemPrompt = formatContextForAI(context)
 
-        // Build conversation messages
+        // Build conversation messages from persisted history.
         const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
             {
                 role: 'system',
@@ -48,17 +48,26 @@ export async function POST(request: Request) {
             },
         ]
 
-        // Add conversation history if provided
-        if (conversationHistory && Array.isArray(conversationHistory)) {
-            conversationHistory.forEach((msg: any) => {
-                if (msg.role === 'user' || msg.role === 'assistant') {
-                    messages.push({
-                        role: msg.role,
-                        content: msg.content,
-                    })
-                }
-            })
+        const db = supabase as any
+        const { data: historyRows, error: historyError } = await db
+            .from('iris_chat_messages')
+            .select('role, content')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: true })
+            .limit(80)
+
+        if (historyError) {
+            console.warn('Failed to load persisted iRis history:', historyError)
         }
+
+        ;((historyRows ?? []) as Array<{ role: 'user' | 'assistant'; content: string }>).forEach((entry) => {
+            if ((entry.role === 'user' || entry.role === 'assistant') && typeof entry.content === 'string') {
+                messages.push({
+                    role: entry.role,
+                    content: entry.content,
+                })
+            }
+        })
 
         // Add current user message
         messages.push({
@@ -89,6 +98,28 @@ export async function POST(request: Request) {
         const hasWifiInfo = message.toLowerCase().includes('wifi') || 
                            message.toLowerCase().includes('internet') ||
                            message.toLowerCase().includes('network')
+
+        const { error: persistError } = await db.from('iris_chat_messages').insert([
+            {
+                user_id: user.id,
+                role: 'user',
+                content: message,
+                metadata: null,
+            },
+            {
+                user_id: user.id,
+                role: 'assistant',
+                content: aiResponse,
+                metadata: {
+                    model: 'llama-3.1-8b-instant',
+                    tokens: completion.usage?.total_tokens || 0,
+                },
+            },
+        ])
+
+        if (persistError) {
+            console.warn('Failed to persist iRis chat messages:', persistError)
+        }
 
         // Return response
         return NextResponse.json({

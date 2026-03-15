@@ -27,8 +27,139 @@ export type ConversationSummary = {
     updatedAt: string;
     participants: ProfilePreview[];
     otherParticipants: ProfilePreview[];
+    relationshipStatus: "tenant_landlord" | "prospective" | "stranger";
+    hasPaymentHistory: boolean;
+    isArchived: boolean;
+    isBlocked: boolean;
     lastMessage: MessagePreview | null;
     unreadCount: number;
+};
+
+const PARTNER_RELEVANT_APPLICATION_STATUSES: Database["public"]["Enums"]["application_status"][] = [
+    "pending",
+    "reviewing",
+    "approved",
+];
+
+const resolvePartnerRelationshipData = async (
+    supabase: DbClient,
+    currentUserId: string,
+    partnerIds: string[]
+) => {
+    const uniquePartnerIds = Array.from(new Set(partnerIds));
+    if (uniquePartnerIds.length === 0) {
+        return {
+            leasePartnerIds: new Set<string>(),
+            applicationPartnerIds: new Set<string>(),
+            paymentPartnerIds: new Set<string>(),
+        };
+    }
+
+    const [
+        { data: tenantLeases, error: tenantLeasesError },
+        { data: landlordLeases, error: landlordLeasesError },
+        { data: tenantApplications, error: tenantApplicationsError },
+        { data: landlordApplications, error: landlordApplicationsError },
+        { data: tenantPayments, error: tenantPaymentsError },
+        { data: landlordPayments, error: landlordPaymentsError },
+    ] = await Promise.all([
+        supabase
+            .from("leases")
+            .select("landlord_id")
+            .eq("tenant_id", currentUserId)
+            .in("landlord_id", uniquePartnerIds),
+        supabase
+            .from("leases")
+            .select("tenant_id")
+            .eq("landlord_id", currentUserId)
+            .in("tenant_id", uniquePartnerIds),
+        supabase
+            .from("applications")
+            .select("landlord_id")
+            .eq("applicant_id", currentUserId)
+            .in("landlord_id", uniquePartnerIds)
+            .in("status", PARTNER_RELEVANT_APPLICATION_STATUSES),
+        supabase
+            .from("applications")
+            .select("applicant_id")
+            .eq("landlord_id", currentUserId)
+            .in("applicant_id", uniquePartnerIds)
+            .in("status", PARTNER_RELEVANT_APPLICATION_STATUSES),
+        supabase
+            .from("payments")
+            .select("landlord_id")
+            .eq("tenant_id", currentUserId)
+            .in("landlord_id", uniquePartnerIds),
+        supabase
+            .from("payments")
+            .select("tenant_id")
+            .eq("landlord_id", currentUserId)
+            .in("tenant_id", uniquePartnerIds),
+    ]);
+
+    if (tenantLeasesError || landlordLeasesError) {
+        throw new Error("Failed to load lease relationships.");
+    }
+
+    if (tenantApplicationsError || landlordApplicationsError) {
+        throw new Error("Failed to load application relationships.");
+    }
+
+    if (tenantPaymentsError || landlordPaymentsError) {
+        throw new Error("Failed to load payment history relationships.");
+    }
+
+    const leasePartnerIds = new Set<string>([
+        ...(tenantLeases ?? []).map((row) => row.landlord_id),
+        ...(landlordLeases ?? []).map((row) => row.tenant_id),
+    ]);
+
+    const applicationPartnerIds = new Set<string>([
+        ...(tenantApplications ?? []).map((row) => row.landlord_id),
+        ...(landlordApplications ?? []).map((row) => row.applicant_id),
+    ]);
+
+    const paymentPartnerIds = new Set<string>([
+        ...(tenantPayments ?? []).map((row) => row.landlord_id),
+        ...(landlordPayments ?? []).map((row) => row.tenant_id),
+    ]);
+
+    return {
+        leasePartnerIds,
+        applicationPartnerIds,
+        paymentPartnerIds,
+    };
+};
+
+const resolvePartnerActionState = async (
+    supabase: DbClient,
+    currentUserId: string,
+    partnerIds: string[]
+) => {
+    const uniquePartnerIds = Array.from(new Set(partnerIds));
+    if (uniquePartnerIds.length === 0) {
+        return new Map<string, { archived: boolean; blocked: boolean }>();
+    }
+
+    const { data, error } = await supabase
+        .from("message_user_actions")
+        .select("target_user_id, archived, blocked")
+        .eq("actor_user_id", currentUserId)
+        .in("target_user_id", uniquePartnerIds);
+
+    if (error) {
+        throw new Error("Failed to load message action state.");
+    }
+
+    const actionMap = new Map<string, { archived: boolean; blocked: boolean }>();
+    ((data ?? []) as Array<{ target_user_id: string; archived: boolean; blocked: boolean }>).forEach((row) => {
+        actionMap.set(row.target_user_id, {
+            archived: Boolean(row.archived),
+            blocked: Boolean(row.blocked),
+        });
+    });
+
+    return actionMap;
 };
 
 export const getProfilePreviewMap = async (supabase: DbClient, userIds: string[]) => {
@@ -179,18 +310,49 @@ export const buildConversationSummaries = async (supabase: DbClient, currentUser
         participantsByConversation.set(row.conversation_id, arr);
     }
 
+    const partnerIds = conversationIds
+        .map((conversationId) => {
+            const participantIdsForConversation = participantsByConversation.get(conversationId) ?? [];
+            return participantIdsForConversation.find((id) => id !== currentUserId) ?? null;
+        })
+        .filter((id): id is string => Boolean(id));
+
+    const { leasePartnerIds, applicationPartnerIds, paymentPartnerIds } = await resolvePartnerRelationshipData(
+        supabase,
+        currentUserId,
+        partnerIds
+    );
+    const partnerActionState = await resolvePartnerActionState(supabase, currentUserId, partnerIds);
+
     return (conversations ?? []).map((conv) => {
         const participantIdsForConversation = participantsByConversation.get(conv.id) ?? [];
         const participants = participantIdsForConversation
             .map((id) => profileMap.get(id))
             .filter((profile): profile is ProfilePreview => Boolean(profile));
+        const otherParticipants = participants.filter((profile) => profile.id !== currentUserId);
+        const primaryOtherParticipant = otherParticipants[0] ?? null;
+
+        const relationshipStatus: ConversationSummary["relationshipStatus"] = primaryOtherParticipant
+            ? leasePartnerIds.has(primaryOtherParticipant.id)
+                ? "tenant_landlord"
+                : applicationPartnerIds.has(primaryOtherParticipant.id)
+                    ? "prospective"
+                    : "stranger"
+            : "stranger";
+        const actionState = primaryOtherParticipant
+            ? partnerActionState.get(primaryOtherParticipant.id) ?? { archived: false, blocked: false }
+            : { archived: false, blocked: false };
 
         return {
             id: conv.id,
             createdAt: conv.created_at,
             updatedAt: conv.updated_at,
             participants,
-            otherParticipants: participants.filter((profile) => profile.id !== currentUserId),
+            otherParticipants,
+            relationshipStatus,
+            hasPaymentHistory: primaryOtherParticipant ? paymentPartnerIds.has(primaryOtherParticipant.id) : false,
+            isArchived: actionState.archived,
+            isBlocked: actionState.blocked,
             lastMessage: lastMessageMap.get(conv.id) ?? null,
             unreadCount: unreadCounts.get(conv.id) ?? 0,
         };

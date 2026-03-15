@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
@@ -50,11 +51,16 @@ import {
 
 type ContactItem = {
     id: string;
+    participantUserId: string | null;
     name: string;
     unit: string;
     unread: number;
     lastContact: string;
     avatar: string;
+    relationshipStatus: "tenant_landlord" | "prospective" | "stranger";
+    hasPaymentHistory: boolean;
+    isArchived: boolean;
+    isBlocked: boolean;
 };
 
 type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";
@@ -106,7 +112,124 @@ type PendingAttachment = {
     previewUrl: string | null;
 };
 
+type QuickAction = {
+    key: string;
+    icon: typeof Hammer;
+    labelTop: string;
+    labelBottom: string;
+    iconClassName: string;
+    iconContainerClassName: string;
+};
+
+type ConfirmActionType = "archive" | "block";
+
+const LANDLORD_QUICK_ACTIONS_BY_RELATIONSHIP: Record<ContactItem["relationshipStatus"], QuickAction[]> = {
+    tenant_landlord: [
+        {
+            key: "request-payment",
+            icon: CreditCard,
+            labelTop: "Request",
+            labelBottom: "Payment",
+            iconClassName: "text-emerald-500",
+            iconContainerClassName: "bg-emerald-500/10",
+        },
+        {
+            key: "schedule-repair",
+            icon: Hammer,
+            labelTop: "Schedule",
+            labelBottom: "Repair",
+            iconClassName: "text-amber-500",
+            iconContainerClassName: "bg-amber-500/10",
+        },
+        {
+            key: "view-lease",
+            icon: FileText,
+            labelTop: "View",
+            labelBottom: "Lease",
+            iconClassName: "text-blue-400",
+            iconContainerClassName: "bg-blue-500/10",
+        },
+        {
+            key: "send-notice",
+            icon: Bell,
+            labelTop: "Send",
+            labelBottom: "Notice",
+            iconClassName: "text-purple-400",
+            iconContainerClassName: "bg-purple-500/10",
+        },
+    ],
+    prospective: [
+        {
+            key: "review-application",
+            icon: FileText,
+            labelTop: "Review",
+            labelBottom: "Application",
+            iconClassName: "text-blue-400",
+            iconContainerClassName: "bg-blue-500/10",
+        },
+        {
+            key: "schedule-viewing",
+            icon: CalendarClock,
+            labelTop: "Schedule",
+            labelBottom: "Viewing",
+            iconClassName: "text-amber-500",
+            iconContainerClassName: "bg-amber-500/10",
+        },
+        {
+            key: "share-requirements",
+            icon: Bell,
+            labelTop: "Share",
+            labelBottom: "Requirements",
+            iconClassName: "text-primary",
+            iconContainerClassName: "bg-primary/10",
+        },
+        {
+            key: "share-listing",
+            icon: Search,
+            labelTop: "Share",
+            labelBottom: "Listing",
+            iconClassName: "text-neutral-300",
+            iconContainerClassName: "bg-neutral-500/10",
+        },
+    ],
+    stranger: [
+        {
+            key: "view-profile",
+            icon: Search,
+            labelTop: "View",
+            labelBottom: "Profile",
+            iconClassName: "text-blue-400",
+            iconContainerClassName: "bg-blue-500/10",
+        },
+        {
+            key: "archive-chat",
+            icon: FileText,
+            labelTop: "Archive",
+            labelBottom: "Chat",
+            iconClassName: "text-neutral-300",
+            iconContainerClassName: "bg-neutral-500/10",
+        },
+        {
+            key: "report-user",
+            icon: AlertTriangle,
+            labelTop: "Report",
+            labelBottom: "User",
+            iconClassName: "text-red-500",
+            iconContainerClassName: "bg-red-500/10",
+        },
+        {
+            key: "block-contact",
+            icon: X,
+            labelTop: "Block",
+            labelBottom: "Contact",
+            iconClassName: "text-orange-400",
+            iconContainerClassName: "bg-orange-500/10",
+        },
+    ],
+};
+
 export default function MessagesPage() {
+    const router = useRouter();
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
 
@@ -136,6 +259,13 @@ export default function MessagesPage() {
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
     const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
     const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+    const [pendingConfirmAction, setPendingConfirmAction] = useState<ConfirmActionType | null>(null);
+    const [isSubmittingConfirmAction, setIsSubmittingConfirmAction] = useState(false);
+    const [showReportWizard, setShowReportWizard] = useState(false);
+    const [reportCategory, setReportCategory] = useState("spam");
+    const [reportDetails, setReportDetails] = useState("");
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+    const [reportWizardError, setReportWizardError] = useState<string | null>(null);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -187,18 +317,33 @@ export default function MessagesPage() {
         messagesEndRef.current.scrollIntoView({ behavior, block: "end" });
     }, []);
 
-    const activeContact = useMemo(
-        () => contacts.find((contact) => contact.id === activeConversationId) ?? null,
-        [contacts, activeConversationId]
+    const visibleContacts = useMemo(
+        () => contacts.filter((contact) => !contact.isArchived && !contact.isBlocked),
+        [contacts]
     );
+
+    const activeContact = useMemo(
+        () => visibleContacts.find((contact) => contact.id === activeConversationId) ?? null,
+        [visibleContacts, activeConversationId]
+    );
+
+    const activeRelationshipStatus = activeContact?.relationshipStatus ?? "stranger";
+    const activeQuickActions = LANDLORD_QUICK_ACTIONS_BY_RELATIONSHIP[activeRelationshipStatus];
+    const canShowPaymentHistory =
+        activeRelationshipStatus === "tenant_landlord" && (activeContact?.hasPaymentHistory ?? false);
 
     const displayContact = activeContact ?? {
         id: "",
+        participantUserId: null,
         name: "No conversation selected",
         unit: "",
         unread: 0,
         lastContact: "",
         avatar: FALLBACK_AVATAR,
+        relationshipStatus: "stranger",
+        hasPaymentHistory: false,
+        isArchived: false,
+        isBlocked: false,
     };
 
     const mapConversationToContact = (conversation: ConversationSummary): ContactItem => {
@@ -206,6 +351,7 @@ export default function MessagesPage() {
 
         return {
             id: conversation.id,
+            participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
             unit: other?.role === "tenant" ? "Tenant" : other?.role === "landlord" ? "Landlord" : "Participant",
             unread: conversation.unreadCount,
@@ -213,8 +359,175 @@ export default function MessagesPage() {
                 ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                 : "No messages yet",
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            relationshipStatus: conversation.relationshipStatus,
+            hasPaymentHistory: conversation.hasPaymentHistory,
+            isArchived: conversation.isArchived,
+            isBlocked: conversation.isBlocked,
         };
     };
+
+    useEffect(() => {
+        if (!canShowPaymentHistory && showPaymentHistoryModal) {
+            setShowPaymentHistoryModal(false);
+        }
+    }, [canShowPaymentHistory, showPaymentHistoryModal]);
+
+    useEffect(() => {
+        if (!activeConversationId) {
+            return;
+        }
+
+        const stillVisible = visibleContacts.some((contact) => contact.id === activeConversationId);
+        if (stillVisible) {
+            return;
+        }
+
+        setShowInfoSidebar(false);
+        setShowFilesSidebar(false);
+        setActiveConversationId(visibleContacts[0]?.id ?? null);
+    }, [activeConversationId, visibleContacts]);
+
+    const updateActiveContactActionState = useCallback((nextState: { archived?: boolean; blocked?: boolean }) => {
+        if (!activeConversationId) {
+            return;
+        }
+
+        setContacts((prev) => prev.map((contact) => {
+            if (contact.id !== activeConversationId) {
+                return contact;
+            }
+
+            return {
+                ...contact,
+                isArchived: nextState.archived ?? contact.isArchived,
+                isBlocked: nextState.blocked ?? contact.isBlocked,
+            };
+        }));
+    }, [activeConversationId]);
+
+    const submitMessageUserAction = useCallback(async (action: "archive" | "block") => {
+        if (!activeContact?.participantUserId) {
+            return;
+        }
+
+        setIsSubmittingConfirmAction(true);
+        setUserSearchError(null);
+
+        try {
+            const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/actions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as {
+                error?: string;
+                state?: { archived?: boolean; blocked?: boolean };
+            } | null;
+
+            if (!response.ok) {
+                throw new Error(payload?.error ?? "Failed to update action.");
+            }
+
+            updateActiveContactActionState({
+                archived: Boolean(payload?.state?.archived),
+                blocked: Boolean(payload?.state?.blocked),
+            });
+
+            await refreshConversations();
+            setPendingConfirmAction(null);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to update action.";
+            setUserSearchError(message);
+        } finally {
+            setIsSubmittingConfirmAction(false);
+        }
+    }, [activeContact?.participantUserId, refreshConversations, updateActiveContactActionState]);
+
+    const submitUserReport = useCallback(async () => {
+        if (!activeContact?.participantUserId || !activeConversationId) {
+            return;
+        }
+
+        setReportWizardError(null);
+        setIsSubmittingReport(true);
+
+        try {
+            const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/reports`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    conversationId: activeConversationId,
+                    category: reportCategory,
+                    details: reportDetails,
+                }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+            if (!response.ok) {
+                throw new Error(payload?.error ?? "Failed to submit report.");
+            }
+
+            setShowReportWizard(false);
+            setReportCategory("spam");
+            setReportDetails("");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to submit report.";
+            setReportWizardError(message);
+        } finally {
+            setIsSubmittingReport(false);
+        }
+    }, [activeContact?.participantUserId, activeConversationId, reportCategory, reportDetails]);
+
+    const handleLandlordQuickAction = useCallback((actionKey: QuickAction["key"]) => {
+        switch (actionKey) {
+            case "request-payment":
+                setMessageInput("Friendly reminder: please settle your outstanding rent balance by the due date.");
+                break;
+            case "schedule-repair":
+                router.push("/landlord/maintenance");
+                break;
+            case "view-lease":
+                router.push("/landlord/tenants");
+                break;
+            case "send-notice":
+                setMessageInput("Notice: ");
+                break;
+            case "review-application":
+                router.push("/landlord/applications");
+                break;
+            case "schedule-viewing":
+                setMessageInput("Thanks for your interest. Please share your preferred dates and times for a property viewing.");
+                break;
+            case "share-requirements":
+                setMessageInput("Before we proceed, please submit the required documents and references for screening.");
+                break;
+            case "share-listing":
+                router.push("/landlord/listings");
+                break;
+            case "view-profile":
+                if (activeContact?.participantUserId) {
+                    router.push(`/visitor/${activeContact.participantUserId}`);
+                }
+                break;
+            case "archive-chat":
+                setPendingConfirmAction("archive");
+                break;
+            case "report-user":
+                setReportWizardError(null);
+                setShowReportWizard(true);
+                break;
+            case "block-contact":
+                setPendingConfirmAction("block");
+                break;
+            default:
+                break;
+        }
+    }, [activeContact?.participantUserId, router]);
 
     const mapMessageToUi = (message: ConversationMessage): UiMessage => {
         const metadata = (message.metadata && typeof message.metadata === "object")
@@ -286,7 +599,7 @@ export default function MessagesPage() {
         [sharedFiles]
     );
 
-    const refreshConversations = async () => {
+    async function refreshConversations() {
         if (!user) return;
 
         try {
@@ -304,7 +617,7 @@ export default function MessagesPage() {
         } finally {
             setIsSidebarLoading(false);
         }
-    };
+    }
 
     const refreshMessages = async (conversationId: string) => {
         const { data: list, error } = await fetchConversationMessages(conversationId, 200);
@@ -1138,7 +1451,7 @@ export default function MessagesPage() {
                         </div>
                     ) : (
                         <>
-                            {contacts.map(contact => (
+                            {visibleContacts.map(contact => (
                                 <button
                                     key={contact.id}
                                     onClick={() => setActiveConversationId(contact.id)}
@@ -1659,7 +1972,13 @@ export default function MessagesPage() {
             {showInfoSidebar && (
                 <div className="w-72 shrink-0 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col h-full overflow-hidden shadow-2xl animate-in slide-in-from-right-8 duration-300">
                     <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/30">
-                        <h3 className="font-bold text-white">Details</h3>
+                        <h3 className="font-bold text-white">
+                            {activeRelationshipStatus === "tenant_landlord"
+                                ? "Tenant Details"
+                                : activeRelationshipStatus === "prospective"
+                                    ? "Applicant Details"
+                                    : "Contact Details"}
+                        </h3>
                         <button
                             onClick={() => setShowInfoSidebar(false)}
                             className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -1677,36 +1996,31 @@ export default function MessagesPage() {
                                 </h4>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                    <div className="bg-emerald-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                        <CreditCard className="w-4 h-4 text-emerald-500" />
-                                    </div>
-                                    <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">Request<br />Payment</span>
-                                </button>
-                                <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                    <div className="bg-amber-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                        <Hammer className="w-4 h-4 text-amber-500" />
-                                    </div>
-                                    <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">Schedule<br />Repair</span>
-                                </button>
-                                <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                    <div className="bg-blue-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                        <FileText className="w-4 h-4 text-blue-400" />
-                                    </div>
-                                    <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">View<br />Lease</span>
-                                </button>
-                                <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                    <div className="bg-purple-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                        <Bell className="w-4 h-4 text-purple-400" />
-                                    </div>
-                                    <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">Send<br />Notice</span>
-                                </button>
+                                {activeQuickActions.map((action) => {
+                                    const ActionIcon = action.icon;
+
+                                    return (
+                                        <button
+                                            key={action.key}
+                                            onClick={() => handleLandlordQuickAction(action.key)}
+                                            className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group"
+                                        >
+                                            <div className={cn("p-2 rounded-lg group-hover:scale-110 transition-transform", action.iconContainerClassName)}>
+                                                <ActionIcon className={cn("w-4 h-4", action.iconClassName)} />
+                                            </div>
+                                            <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">
+                                                {action.labelTop}<br />{action.labelBottom}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
 
 
                         {/* Payment History Section */}
+                        {canShowPaymentHistory && (
                         <div className="pb-4">
                             <div className="flex items-center justify-between mb-4">
                                 <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
@@ -1761,6 +2075,7 @@ export default function MessagesPage() {
                                 </div>
                             </div>
                         </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -1905,7 +2220,7 @@ export default function MessagesPage() {
             )}
 
             {/* Payment History Full Modal Overlay */}
-            {showPaymentHistoryModal && (
+            {showPaymentHistoryModal && canShowPaymentHistory && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div id="payment-statement" className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
                         {/* Modal Header */}
@@ -1984,6 +2299,98 @@ export default function MessagesPage() {
                                 )}
                             >
                                 {isDownloading ? "Generating..." : "Download Statement (Image)"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {pendingConfirmAction && (
+                <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-6 space-y-4">
+                        <h4 className="text-lg font-bold text-white">
+                            {pendingConfirmAction === "archive" ? "Archive this conversation?" : "Block this contact?"}
+                        </h4>
+                        <p className="text-sm text-neutral-300 leading-relaxed">
+                            {pendingConfirmAction === "archive"
+                                ? "Archived chats are hidden from your list but can be restored later by support."
+                                : "Blocked contacts are removed from your message list and future direct messaging should be restricted."}
+                        </p>
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <button
+                                onClick={() => setPendingConfirmAction(null)}
+                                disabled={isSubmittingConfirmAction}
+                                className="px-3 py-2 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => void submitMessageUserAction(pendingConfirmAction)}
+                                disabled={isSubmittingConfirmAction}
+                                className="px-3 py-2 rounded-lg bg-primary text-black font-bold hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                {isSubmittingConfirmAction ? "Applying..." : "Confirm"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showReportWizard && (
+                <div className="fixed inset-0 z-[95] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-neutral-900 p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-bold text-white">Report User</h4>
+                            <button
+                                onClick={() => setShowReportWizard(false)}
+                                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Category</label>
+                            <select
+                                value={reportCategory}
+                                onChange={(event) => setReportCategory(event.target.value)}
+                                className="w-full rounded-xl bg-black/40 border border-white/10 text-sm text-white px-3 py-2"
+                            >
+                                <option value="spam">Spam</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="scam_or_fraud">Scam or Fraud</option>
+                                <option value="impersonation">Impersonation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase tracking-wider text-neutral-500 font-bold">What happened?</label>
+                            <textarea
+                                value={reportDetails}
+                                onChange={(event) => setReportDetails(event.target.value)}
+                                rows={5}
+                                placeholder="Describe the issue with enough detail for moderation review."
+                                className="w-full rounded-xl bg-black/40 border border-white/10 text-sm text-white placeholder:text-neutral-500 px-3 py-2 resize-none"
+                            />
+                        </div>
+
+                        {reportWizardError && <p className="text-xs text-red-400">{reportWizardError}</p>}
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <button
+                                onClick={() => setShowReportWizard(false)}
+                                disabled={isSubmittingReport}
+                                className="px-3 py-2 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => void submitUserReport()}
+                                disabled={isSubmittingReport || reportDetails.trim().length < 10}
+                                className="px-3 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-500/90 disabled:opacity-50"
+                            >
+                                {isSubmittingReport ? "Submitting..." : "Submit Report"}
                             </button>
                         </div>
                     </div>

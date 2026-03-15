@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 
 interface Message {
     id: string;
@@ -28,18 +30,23 @@ interface Message {
     timestamp: Date;
 }
 
+const getFirstName = (fullName?: string | null) => {
+    if (!fullName) return null;
+    return fullName.trim().split(/\s+/)[0] ?? null;
+};
+
+const buildWelcomeMessage = (firstName?: string | null) => {
+    const nameSegment = firstName ? `, ${firstName}` : "";
+    return `Welcome back${nameSegment}! 👋 How can I help you settle in or manage your apartment today?`;
+};
+
 export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const INITIAL_CHAT_SKELETON_COUNT = 6;
-    const CHAT_ENGINE_BOOT_MS = 900;
+    const { profile, user } = useAuth();
 
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            role: "iris",
-            content: "Welcome back, Sarah! 👋 How can I help you settle in or manage your apartment today?",
-            timestamp: new Date(),
-        }
-    ]);
+    const firstName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? null);
+
+    const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [isChatInitializing, setIsChatInitializing] = useState(true);
@@ -56,14 +63,103 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     }, [messages, isOpen, isTyping]);
 
     useEffect(() => {
-        if (!isOpen) return;
+        let isCancelled = false;
 
-        const timer = window.setTimeout(() => {
+        const loadHistory = async () => {
+            if (!user?.id) {
+                setMessages([
+                    {
+                        id: "1",
+                        role: "iris",
+                        content: buildWelcomeMessage(firstName),
+                        timestamp: new Date(),
+                    },
+                ]);
+                setIsChatInitializing(false);
+                return;
+            }
+
+            const cached = getCachedIrisHistory(user.id);
+            if (cached && cached.length > 0) {
+                setMessages(
+                    cached.map((msg) => ({
+                        id: msg.id,
+                        role: msg.role === "assistant" ? "iris" : "user",
+                        content: msg.content,
+                        timestamp: new Date(msg.created_at),
+                    }))
+                );
+                setIsChatInitializing(false);
+                return;
+            }
+
+            setIsChatInitializing(true);
+            const { data } = await fetchIrisHistory(100, { userId: user.id, useCache: true });
+            if (isCancelled) return;
+
+            if (data.length > 0) {
+                setMessages(
+                    data.map((msg) => ({
+                        id: msg.id,
+                        role: msg.role === "assistant" ? "iris" : "user",
+                        content: msg.content,
+                        timestamp: new Date(msg.created_at),
+                    }))
+                );
+                setIsChatInitializing(false);
+                return;
+            }
+
+            setMessages([
+                {
+                    id: "1",
+                    role: "iris",
+                    content: buildWelcomeMessage(firstName),
+                    timestamp: new Date(),
+                },
+            ]);
             setIsChatInitializing(false);
-        }, CHAT_ENGINE_BOOT_MS);
+        };
 
-        return () => window.clearTimeout(timer);
-    }, [isOpen]);
+        loadHistory();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!user?.id || messages.length === 0) {
+            return;
+        }
+
+        const normalizedMessages: IrisHistoryMessage[] = messages.map((msg) => ({
+            id: msg.id,
+            role: msg.role === "iris" ? "assistant" : "user",
+            content: msg.content,
+            metadata: null,
+            created_at: msg.timestamp.toISOString(),
+        }));
+
+        setCachedIrisHistory(user.id, normalizedMessages);
+    }, [messages, user?.id]);
+
+    useEffect(() => {
+        setMessages((prev) => {
+            const [first, ...rest] = prev;
+            if (!first || first.role !== "iris" || !first.content.toLowerCase().includes("welcome back")) {
+                return prev;
+            }
+
+            return [
+                {
+                    ...first,
+                    content: buildWelcomeMessage(firstName),
+                },
+                ...rest,
+            ];
+        });
+    }, [firstName]);
 
     const handleSend = async () => {
         if (isChatInitializing) return;
@@ -90,10 +186,6 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 },
                 body: JSON.stringify({
                     message: userInput,
-                    conversationHistory: messages.map(msg => ({
-                        role: msg.role === 'user' ? 'user' : 'assistant',
-                        content: msg.content,
-                    })),
                 }),
             });
 

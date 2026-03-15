@@ -540,6 +540,71 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            message_user_actions: {
+                Row: {
+                    id: string
+                    actor_user_id: string
+                    target_user_id: string
+                    archived: boolean
+                    blocked: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    actor_user_id: string
+                    target_user_id: string
+                    archived?: boolean
+                    blocked?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    actor_user_id?: string
+                    target_user_id?: string
+                    archived?: boolean
+                    blocked?: boolean
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            message_user_reports: {
+                Row: {
+                    id: string
+                    reporter_user_id: string
+                    target_user_id: string
+                    conversation_id: string | null
+                    category: string
+                    details: string
+                    status: string
+                    metadata: Json | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    reporter_user_id: string
+                    target_user_id: string
+                    conversation_id?: string | null
+                    category: string
+                    details: string
+                    status?: string
+                    metadata?: Json | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    reporter_user_id?: string
+                    target_user_id?: string
+                    conversation_id?: string | null
+                    category?: string
+                    details?: string
+                    status?: string
+                    metadata?: Json | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
             notifications: {
                 Row: {
                     id: string
@@ -630,6 +695,8 @@ export type MoveOutRequest = Database['public']['Tables']['move_out_requests']['
 export type Conversation = Database['public']['Tables']['conversations']['Row']
 export type ConversationParticipant = Database['public']['Tables']['conversation_participants']['Row']
 export type Message = Database['public']['Tables']['messages']['Row']
+export type MessageUserAction = Database['public']['Tables']['message_user_actions']['Row']
+export type MessageUserReport = Database['public']['Tables']['message_user_reports']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
 export type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
 export type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']

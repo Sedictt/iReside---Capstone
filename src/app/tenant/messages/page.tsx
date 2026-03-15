@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,12 +52,17 @@ import {
 
 type ContactItem = {
     id: string;
+    participantUserId: string | null;
     name: string;
     unit: string;
     unread: number;
     lastContact: string;
     avatar: string;
     isAI: boolean;
+    relationshipStatus: "tenant_landlord" | "prospective" | "stranger";
+    hasPaymentHistory: boolean;
+    isArchived: boolean;
+    isBlocked: boolean;
 };
 
 type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";
@@ -90,12 +96,17 @@ type UiMessage = {
 
 const IRIS_CONTACT: ContactItem = {
     id: "iris",
+    participantUserId: null,
     name: "iRis Assistant",
     unit: "AI Concierge",
     unread: 0,
     lastContact: "Always Available",
     avatar: "/iris-avatar.png",
     isAI: true,
+    relationshipStatus: "stranger",
+    hasPaymentHistory: false,
+    isArchived: false,
+    isBlocked: false,
 };
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
@@ -118,7 +129,124 @@ type PendingAttachment = {
     previewUrl: string | null;
 };
 
+type QuickAction = {
+    key: string;
+    icon: typeof AlertCircle;
+    labelTop: string;
+    labelBottom: string;
+    iconClassName: string;
+    iconContainerClassName: string;
+};
+
+type ConfirmActionType = "archive" | "block";
+
+const TENANT_QUICK_ACTIONS_BY_RELATIONSHIP: Record<ContactItem["relationshipStatus"], QuickAction[]> = {
+    tenant_landlord: [
+        {
+            key: "report-damage",
+            icon: AlertCircle,
+            labelTop: "Report",
+            labelBottom: "Damage",
+            iconClassName: "text-red-500",
+            iconContainerClassName: "bg-red-500/10",
+        },
+        {
+            key: "pay-rent",
+            icon: CreditCard,
+            labelTop: "Pay",
+            labelBottom: "Rent",
+            iconClassName: "text-emerald-500",
+            iconContainerClassName: "bg-emerald-500/10",
+        },
+        {
+            key: "view-lease",
+            icon: FileText,
+            labelTop: "View",
+            labelBottom: "Lease",
+            iconClassName: "text-blue-400",
+            iconContainerClassName: "bg-blue-500/10",
+        },
+        {
+            key: "property-rules",
+            icon: Home,
+            labelTop: "Property",
+            labelBottom: "Rules",
+            iconClassName: "text-amber-500",
+            iconContainerClassName: "bg-amber-500/10",
+        },
+    ],
+    prospective: [
+        {
+            key: "view-listing",
+            icon: Home,
+            labelTop: "View",
+            labelBottom: "Listing",
+            iconClassName: "text-amber-500",
+            iconContainerClassName: "bg-amber-500/10",
+        },
+        {
+            key: "application-status",
+            icon: CalendarClock,
+            labelTop: "Check",
+            labelBottom: "Status",
+            iconClassName: "text-blue-400",
+            iconContainerClassName: "bg-blue-500/10",
+        },
+        {
+            key: "request-tour",
+            icon: Wrench,
+            labelTop: "Request",
+            labelBottom: "Tour",
+            iconClassName: "text-primary",
+            iconContainerClassName: "bg-primary/10",
+        },
+        {
+            key: "share-docs",
+            icon: FileText,
+            labelTop: "Share",
+            labelBottom: "Docs",
+            iconClassName: "text-purple-400",
+            iconContainerClassName: "bg-purple-500/10",
+        },
+    ],
+    stranger: [
+        {
+            key: "view-profile",
+            icon: Search,
+            labelTop: "View",
+            labelBottom: "Profile",
+            iconClassName: "text-blue-400",
+            iconContainerClassName: "bg-blue-500/10",
+        },
+        {
+            key: "archive-chat",
+            icon: FileText,
+            labelTop: "Archive",
+            labelBottom: "Chat",
+            iconClassName: "text-neutral-300",
+            iconContainerClassName: "bg-neutral-500/10",
+        },
+        {
+            key: "report-user",
+            icon: AlertTriangle,
+            labelTop: "Report",
+            labelBottom: "User",
+            iconClassName: "text-red-500",
+            iconContainerClassName: "bg-red-500/10",
+        },
+        {
+            key: "block-contact",
+            icon: X,
+            labelTop: "Block",
+            labelBottom: "Contact",
+            iconClassName: "text-orange-400",
+            iconContainerClassName: "bg-orange-500/10",
+        },
+    ],
+};
+
 export default function TenantMessagesPage() {
+    const router = useRouter();
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
 
@@ -148,6 +276,13 @@ export default function TenantMessagesPage() {
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
     const [pendingAttachment, setPendingAttachment] = useState<PendingAttachment | null>(null);
     const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+    const [pendingConfirmAction, setPendingConfirmAction] = useState<ConfirmActionType | null>(null);
+    const [isSubmittingConfirmAction, setIsSubmittingConfirmAction] = useState(false);
+    const [showReportWizard, setShowReportWizard] = useState(false);
+    const [reportCategory, setReportCategory] = useState("spam");
+    const [reportDetails, setReportDetails] = useState("");
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+    const [reportWizardError, setReportWizardError] = useState<string | null>(null);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -199,16 +334,27 @@ export default function TenantMessagesPage() {
         messagesEndRef.current.scrollIntoView({ behavior, block: "end" });
     }, [activeConversationId]);
 
-    const activeContact = useMemo(
-        () => contacts.find((contact) => contact.id === activeConversationId) ?? IRIS_CONTACT,
-        [contacts, activeConversationId]
+    const visibleContacts = useMemo(
+        () => contacts.filter((contact) => contact.isAI || (!contact.isArchived && !contact.isBlocked)),
+        [contacts]
     );
+
+    const activeContact = useMemo(
+        () => visibleContacts.find((contact) => contact.id === activeConversationId) ?? IRIS_CONTACT,
+        [visibleContacts, activeConversationId]
+    );
+
+    const activeRelationshipStatus = activeContact.relationshipStatus;
+    const activeQuickActions = TENANT_QUICK_ACTIONS_BY_RELATIONSHIP[activeRelationshipStatus];
+    const canShowPaymentHistory =
+        activeRelationshipStatus === "tenant_landlord" && activeContact.hasPaymentHistory;
 
     const mapConversationToContact = (conversation: ConversationSummary): ContactItem => {
         const other = conversation.otherParticipants[0];
 
         return {
             id: conversation.id,
+            participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
             unit: other?.role === "landlord" ? "Landlord" : other?.role === "tenant" ? "Tenant" : "Participant",
             unread: conversation.unreadCount,
@@ -217,8 +363,174 @@ export default function TenantMessagesPage() {
                 : "No messages yet",
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
             isAI: false,
+            relationshipStatus: conversation.relationshipStatus,
+            hasPaymentHistory: conversation.hasPaymentHistory,
+            isArchived: conversation.isArchived,
+            isBlocked: conversation.isBlocked,
         };
     };
+
+    useEffect(() => {
+        if (!canShowPaymentHistory && showPaymentHistoryModal) {
+            setShowPaymentHistoryModal(false);
+        }
+    }, [canShowPaymentHistory, showPaymentHistoryModal]);
+
+    useEffect(() => {
+        if (activeConversationId === "iris") {
+            return;
+        }
+
+        const stillVisible = visibleContacts.some((contact) => contact.id === activeConversationId);
+        if (stillVisible) {
+            return;
+        }
+
+        setShowInfoSidebar(false);
+        setShowFilesSidebar(false);
+        setActiveConversationId("iris");
+    }, [activeConversationId, visibleContacts]);
+
+    const updateActiveContactActionState = useCallback((nextState: { archived?: boolean; blocked?: boolean }) => {
+        if (!activeConversationId || activeConversationId === "iris") {
+            return;
+        }
+
+        setContacts((prev) => prev.map((contact) => {
+            if (contact.id !== activeConversationId) {
+                return contact;
+            }
+
+            return {
+                ...contact,
+                isArchived: nextState.archived ?? contact.isArchived,
+                isBlocked: nextState.blocked ?? contact.isBlocked,
+            };
+        }));
+    }, [activeConversationId]);
+
+    const submitMessageUserAction = useCallback(async (action: "archive" | "block") => {
+        if (!activeContact.participantUserId) {
+            return;
+        }
+
+        setIsSubmittingConfirmAction(true);
+        setUserSearchError(null);
+
+        try {
+            const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/actions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as {
+                error?: string;
+                state?: { archived?: boolean; blocked?: boolean };
+            } | null;
+
+            if (!response.ok) {
+                throw new Error(payload?.error ?? "Failed to update action.");
+            }
+
+            updateActiveContactActionState({
+                archived: Boolean(payload?.state?.archived),
+                blocked: Boolean(payload?.state?.blocked),
+            });
+
+            await refreshConversations();
+            setPendingConfirmAction(null);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to update action.";
+            setUserSearchError(message);
+        } finally {
+            setIsSubmittingConfirmAction(false);
+        }
+    }, [activeContact.participantUserId, refreshConversations, updateActiveContactActionState]);
+
+    const submitUserReport = useCallback(async () => {
+        if (!activeContact.participantUserId) {
+            return;
+        }
+
+        setReportWizardError(null);
+        setIsSubmittingReport(true);
+
+        try {
+            const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/reports`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    conversationId: activeConversationId,
+                    category: reportCategory,
+                    details: reportDetails,
+                }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+            if (!response.ok) {
+                throw new Error(payload?.error ?? "Failed to submit report.");
+            }
+
+            setShowReportWizard(false);
+            setReportCategory("spam");
+            setReportDetails("");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to submit report.";
+            setReportWizardError(message);
+        } finally {
+            setIsSubmittingReport(false);
+        }
+    }, [activeContact.participantUserId, activeConversationId, reportCategory, reportDetails]);
+
+    const handleTenantQuickAction = useCallback((actionKey: QuickAction["key"]) => {
+        switch (actionKey) {
+            case "report-damage":
+                setMessageInput("Hi, I need to report a maintenance issue in my unit.\n\nIssue details: ");
+                break;
+            case "pay-rent":
+                router.push("/tenant/payments");
+                break;
+            case "view-lease":
+            case "property-rules":
+                router.push("/tenant/lease");
+                break;
+            case "view-listing":
+                router.push("/saved");
+                break;
+            case "application-status":
+                router.push("/tenant/applications");
+                break;
+            case "request-tour":
+                setMessageInput("Hi, I would like to request a property viewing schedule. What time slots are available?");
+                break;
+            case "share-docs":
+                setShowInfoSidebar(false);
+                setShowFilesSidebar(true);
+                break;
+            case "view-profile":
+                if (activeContact.participantUserId) {
+                    router.push(`/visitor/${activeContact.participantUserId}`);
+                }
+                break;
+            case "archive-chat":
+                setPendingConfirmAction("archive");
+                break;
+            case "report-user":
+                setReportWizardError(null);
+                setShowReportWizard(true);
+                break;
+            case "block-contact":
+                setPendingConfirmAction("block");
+                break;
+            default:
+                break;
+        }
+    }, [activeContact.participantUserId, router]);
 
     const mapMessageToUi = (message: ConversationMessage): UiMessage => {
         const metadata = (message.metadata && typeof message.metadata === "object")
@@ -290,7 +602,7 @@ export default function TenantMessagesPage() {
         [sharedFiles]
     );
 
-    const refreshConversations = async () => {
+    async function refreshConversations() {
         if (!user) return;
 
         try {
@@ -309,7 +621,7 @@ export default function TenantMessagesPage() {
         } finally {
             setIsSidebarLoading(false);
         }
-    };
+    }
 
     const refreshMessages = async (conversationId: string) => {
         const { data: list, error } = await fetchConversationMessages(conversationId, 200);
@@ -1106,7 +1418,7 @@ export default function TenantMessagesPage() {
                         </div>
                     ) : (
                         <>
-                            {contacts.map(contact => (
+                            {visibleContacts.map(contact => (
                                 <button
                                     key={contact.id}
                                     onClick={() => setActiveConversationId(contact.id)}
@@ -1632,7 +1944,13 @@ export default function TenantMessagesPage() {
                     {showInfoSidebar && (
                         <div className="w-72 shrink-0 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col h-full overflow-hidden shadow-2xl animate-in slide-in-from-right-8 duration-300">
                             <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/30">
-                                <h3 className="font-bold text-white">Landlord Info</h3>
+                                <h3 className="font-bold text-white">
+                                    {activeRelationshipStatus === "tenant_landlord"
+                                        ? "Landlord Info"
+                                        : activeRelationshipStatus === "prospective"
+                                            ? "Prospect Info"
+                                            : "Contact Info"}
+                                </h3>
                                 <button
                                     onClick={() => setShowInfoSidebar(false)}
                                     className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -1650,36 +1968,31 @@ export default function TenantMessagesPage() {
                                         </h4>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
-                                        <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                            <div className="bg-red-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                                <AlertCircle className="w-4 h-4 text-red-500" />
-                                            </div>
-                                            <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">Report<br />Damage</span>
-                                        </button>
-                                        <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                            <div className="bg-emerald-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                                <CreditCard className="w-4 h-4 text-emerald-500" />
-                                            </div>
-                                            <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">Pay<br />Rent</span>
-                                        </button>
-                                        <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                            <div className="bg-blue-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                                <FileText className="w-4 h-4 text-blue-400" />
-                                            </div>
-                                            <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">View<br />Lease</span>
-                                        </button>
-                                        <button className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group">
-                                            <div className="bg-amber-500/10 p-2 rounded-lg group-hover:scale-110 transition-transform">
-                                                <Home className="w-4 h-4 text-amber-500" />
-                                            </div>
-                                            <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">Property<br />Rules</span>
-                                        </button>
+                                        {activeQuickActions.map((action) => {
+                                            const ActionIcon = action.icon;
+
+                                            return (
+                                                <button
+                                                    key={action.key}
+                                                    onClick={() => handleTenantQuickAction(action.key)}
+                                                    className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group"
+                                                >
+                                                    <div className={cn("p-2 rounded-lg group-hover:scale-110 transition-transform", action.iconContainerClassName)}>
+                                                        <ActionIcon className={cn("w-4 h-4", action.iconClassName)} />
+                                                    </div>
+                                                    <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">
+                                                        {action.labelTop}<br />{action.labelBottom}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
 
 
                                 {/* Payment History Section */}
+                                {canShowPaymentHistory && (
                                 <div className="pb-4">
                                     <div className="flex items-center justify-between mb-4">
                                         <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
@@ -1734,6 +2047,7 @@ export default function TenantMessagesPage() {
                                         </div>
                                     </div>
                                 </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1880,7 +2194,7 @@ export default function TenantMessagesPage() {
             )}
 
             {/* Payment History Full Modal Overlay */}
-            {showPaymentHistoryModal && (
+            {showPaymentHistoryModal && canShowPaymentHistory && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div id="payment-statement" className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
                         {/* Modal Header */}
@@ -1959,6 +2273,98 @@ export default function TenantMessagesPage() {
                                 )}
                             >
                                 {isDownloading ? "Generating..." : "Download Statement (Image)"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {pendingConfirmAction && (
+                <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-6 space-y-4">
+                        <h4 className="text-lg font-bold text-white">
+                            {pendingConfirmAction === "archive" ? "Archive this conversation?" : "Block this contact?"}
+                        </h4>
+                        <p className="text-sm text-neutral-300 leading-relaxed">
+                            {pendingConfirmAction === "archive"
+                                ? "Archived chats are hidden from your list but can be restored later by support."
+                                : "Blocked contacts are removed from your message list and future direct messaging should be restricted."}
+                        </p>
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <button
+                                onClick={() => setPendingConfirmAction(null)}
+                                disabled={isSubmittingConfirmAction}
+                                className="px-3 py-2 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => void submitMessageUserAction(pendingConfirmAction)}
+                                disabled={isSubmittingConfirmAction}
+                                className="px-3 py-2 rounded-lg bg-primary text-black font-bold hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                {isSubmittingConfirmAction ? "Applying..." : "Confirm"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showReportWizard && (
+                <div className="fixed inset-0 z-[95] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-neutral-900 p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-lg font-bold text-white">Report User</h4>
+                            <button
+                                onClick={() => setShowReportWizard(false)}
+                                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Category</label>
+                            <select
+                                value={reportCategory}
+                                onChange={(event) => setReportCategory(event.target.value)}
+                                className="w-full rounded-xl bg-black/40 border border-white/10 text-sm text-white px-3 py-2"
+                            >
+                                <option value="spam">Spam</option>
+                                <option value="harassment">Harassment</option>
+                                <option value="scam_or_fraud">Scam or Fraud</option>
+                                <option value="impersonation">Impersonation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase tracking-wider text-neutral-500 font-bold">What happened?</label>
+                            <textarea
+                                value={reportDetails}
+                                onChange={(event) => setReportDetails(event.target.value)}
+                                rows={5}
+                                placeholder="Describe the issue with enough detail for moderation review."
+                                className="w-full rounded-xl bg-black/40 border border-white/10 text-sm text-white placeholder:text-neutral-500 px-3 py-2 resize-none"
+                            />
+                        </div>
+
+                        {reportWizardError && <p className="text-xs text-red-400">{reportWizardError}</p>}
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <button
+                                onClick={() => setShowReportWizard(false)}
+                                disabled={isSubmittingReport}
+                                className="px-3 py-2 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => void submitUserReport()}
+                                disabled={isSubmittingReport || reportDetails.trim().length < 10}
+                                className="px-3 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-500/90 disabled:opacity-50"
+                            >
+                                {isSubmittingReport ? "Submitting..." : "Submit Report"}
                             </button>
                         </div>
                     </div>

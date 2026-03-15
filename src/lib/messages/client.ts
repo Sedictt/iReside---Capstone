@@ -3,6 +3,10 @@ export type ConversationSummary = {
     createdAt: string;
     updatedAt: string;
     unreadCount: number;
+    relationshipStatus: "tenant_landlord" | "prospective" | "stranger";
+    hasPaymentHistory: boolean;
+    isArchived: boolean;
+    isBlocked: boolean;
     otherParticipants: Array<{
         id: string;
         fullName: string;

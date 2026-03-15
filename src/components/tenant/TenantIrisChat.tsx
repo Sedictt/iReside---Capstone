@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { ArrowUp, Wifi, Copy, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
 
 interface Message {
     id: string;
@@ -12,18 +14,34 @@ interface Message {
     hasDataCard?: boolean;
 }
 
+const getFirstName = (fullName?: string | null) => {
+    if (!fullName) return null;
+    return fullName.trim().split(/\s+/)[0] ?? null;
+};
+
+const getUserInitials = (fullName?: string | null) => {
+    if (!fullName) return "You";
+
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "You";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase() || "You";
+};
+
+const buildWelcomeMessage = (firstName?: string | null) => {
+    const nameSegment = firstName ? `, ${firstName}` : "";
+    return `Welcome back${nameSegment}! 👋 I am your virtual property assistant. How can I help you settle in or manage your apartment today?`;
+};
+
 export function TenantIrisChat() {
     const INITIAL_CHAT_SKELETON_COUNT = 6;
-    const CHAT_ENGINE_BOOT_MS = 900;
+    const { profile, user } = useAuth();
 
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            role: "iris",
-            content: "Welcome back, Marcus! 👋 I am your virtual property assistant. How can I help you settle in or manage your apartment today?",
-            timestamp: new Date(),
-        }
-    ]);
+    const firstName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? null);
+    const userInitials = getUserInitials(profile?.full_name ?? user?.user_metadata?.full_name ?? null);
+
+    const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const [isChatInitializing, setIsChatInitializing] = useState(true);
@@ -38,12 +56,103 @@ export function TenantIrisChat() {
     }, [messages, isTyping]);
 
     useEffect(() => {
-        const timer = window.setTimeout(() => {
-            setIsChatInitializing(false);
-        }, CHAT_ENGINE_BOOT_MS);
+        let isCancelled = false;
 
-        return () => window.clearTimeout(timer);
-    }, []);
+        const loadHistory = async () => {
+            if (!user?.id) {
+                setMessages([
+                    {
+                        id: "1",
+                        role: "iris",
+                        content: buildWelcomeMessage(firstName),
+                        timestamp: new Date(),
+                    },
+                ]);
+                setIsChatInitializing(false);
+                return;
+            }
+
+            const cached = getCachedIrisHistory(user.id);
+            if (cached && cached.length > 0) {
+                setMessages(
+                    cached.map((msg) => ({
+                        id: msg.id,
+                        role: msg.role === "assistant" ? "iris" : "user",
+                        content: msg.content,
+                        timestamp: new Date(msg.created_at),
+                    }))
+                );
+                setIsChatInitializing(false);
+                return;
+            }
+
+            setIsChatInitializing(true);
+            const { data } = await fetchIrisHistory(100, { userId: user.id, useCache: true });
+            if (isCancelled) return;
+
+            if (data.length > 0) {
+                setMessages(
+                    data.map((msg) => ({
+                        id: msg.id,
+                        role: msg.role === "assistant" ? "iris" : "user",
+                        content: msg.content,
+                        timestamp: new Date(msg.created_at),
+                    }))
+                );
+                setIsChatInitializing(false);
+                return;
+            }
+
+            setMessages([
+                {
+                    id: "1",
+                    role: "iris",
+                    content: buildWelcomeMessage(firstName),
+                    timestamp: new Date(),
+                },
+            ]);
+            setIsChatInitializing(false);
+        };
+
+        loadHistory();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!user?.id || messages.length === 0) {
+            return;
+        }
+
+        const normalizedMessages: IrisHistoryMessage[] = messages.map((msg) => ({
+            id: msg.id,
+            role: msg.role === "iris" ? "assistant" : "user",
+            content: msg.content,
+            metadata: null,
+            created_at: msg.timestamp.toISOString(),
+        }));
+
+        setCachedIrisHistory(user.id, normalizedMessages);
+    }, [messages, user?.id]);
+
+    useEffect(() => {
+        setMessages((prev) => {
+            const [first, ...rest] = prev;
+            if (!first || first.role !== "iris" || !first.content.toLowerCase().includes("welcome back")) {
+                return prev;
+            }
+
+            return [
+                {
+                    ...first,
+                    content: buildWelcomeMessage(firstName),
+                },
+                ...rest,
+            ];
+        });
+    }, [firstName]);
 
     const handleSend = async () => {
         if (isChatInitializing) return;
@@ -70,10 +179,6 @@ export function TenantIrisChat() {
                 },
                 body: JSON.stringify({
                     message: userInput,
-                    conversationHistory: messages.map(msg => ({
-                        role: msg.role === 'user' ? 'user' : 'assistant',
-                        content: msg.content,
-                    })),
                 }),
             });
 
@@ -218,7 +323,7 @@ export function TenantIrisChat() {
                                     {msg.role === "user" && (
                                         <div className="shrink-0 mt-auto">
                                             <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center font-bold text-xs text-neutral-400 border border-white/10">
-                                                MJ
+                                                {userInitials}
                                             </div>
                                         </div>
                                     )}
