@@ -1582,17 +1582,12 @@ export default function TenantMessagesPage() {
                                     <h3 className="font-bold text-white text-base">{activeContact.name}</h3>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-neutral-400 font-medium">{activeContact.unit}</span>
-                                        <span className="w-1 h-1 rounded-full bg-neutral-600"></span>
-                                        <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                                        <span className="text-[10px] text-emerald-500 tracking-wide">Encrypted Audit Trail Active</span>
+
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-neutral-300 text-xs font-medium">
-                                    <Download className="w-4 h-4" />
-                                    <span className="hidden md:inline">Export Audit Log</span>
-                                </button>
+
                                 <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                                     <Search className="w-4 h-4" />
                                 </button>

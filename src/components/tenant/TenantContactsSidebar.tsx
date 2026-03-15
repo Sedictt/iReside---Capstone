@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Users, Phone, MoreHorizontal, ChevronLeft, MessageSquare, Video, X, Send, Maximize2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
 import { ChatWidget } from "./ChatWidget";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
+import { fetchConversations, markConversationAsRead, type ConversationSummary } from "@/lib/messages/client";
 
 interface ChatUser {
     id: string;
@@ -14,50 +17,203 @@ interface ChatUser {
     avatar: string;
     lastMessage: string;
     time: string;
+    unit: string;
+    relationshipStatus: ConversationSummary["relationshipStatus"];
     unread?: boolean;
 }
 
-const mockMessages: ChatUser[] = [
-    {
-        id: "usr_1",
-        name: "Property Manager",
-        avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80",
-        lastMessage: "Received with thanks, Marcus. Enjoy your week as well.",
-        time: "15m ago",
-        unread: false
-    },
-    {
-        id: "usr_2",
-        name: "Maintenance Team",
-        avatar: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80",
-        lastMessage: "Maintenance Request #M-104 resolved successfully.",
-        time: "1h ago",
-        unread: true
-    },
-    {
-        id: "usr_3",
-        name: "Community Admin",
-        avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80",
-        lastMessage: "Just a reminder that the water will be shut off tomorrow.",
-        time: "Yesterday"
+type OpenChatUser = ChatUser & {
+    isActive: boolean;
+};
+
+const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+
+const formatConversationTimestamp = (iso: string | null) => {
+    if (!iso) {
+        return "No messages yet";
     }
-];
+
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) {
+        return "Recently";
+    }
+
+    return date.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
 
 export function TenantContactsSidebar() {
+    const { user } = useAuth();
+    const supabase = useMemo(() => createSupabaseClient(), []);
     const [isHovered, setIsHovered] = useState(false);
     const [activeTab, setActiveTab] = useState<"messages" | "contacts">("messages");
-    const [openChats, setOpenChats] = useState<ChatUser[]>([]);
+    const [openChats, setOpenChats] = useState<OpenChatUser[]>([]);
     const [isIrisOpen, setIsIrisOpen] = useState(false);
+    const [conversations, setConversations] = useState<ChatUser[]>([]);
+    const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+    const [conversationsError, setConversationsError] = useState<string | null>(null);
+    const openChatsRef = useRef<OpenChatUser[]>([]);
+    const channelRef = useRef<RealtimeChannel | null>(null);
 
-    const openChat = (user: ChatUser) => {
-        if (!openChats.find((c) => c.id === user.id)) {
-            // max 3 open chats to fit the screen roughly, if more, remove the oldest one
-            setOpenChats((prev) => {
-                const newChats = [...prev, user];
-                if (newChats.length > 3) newChats.shift();
-                return newChats;
-            });
+    useEffect(() => {
+        openChatsRef.current = openChats;
+    }, [openChats]);
+
+    const mapConversationToUser = useCallback((conversation: ConversationSummary): ChatUser => {
+        const other = conversation.otherParticipants[0];
+
+        return {
+            id: conversation.id,
+            name: other?.fullName ?? "Conversation",
+            avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            lastMessage: conversation.lastMessage?.content ?? "No messages yet",
+            time: formatConversationTimestamp(conversation.lastMessage?.createdAt ?? conversation.updatedAt),
+            unread: conversation.unreadCount > 0,
+            unit: other?.role === "landlord" ? "Landlord" : other?.role === "tenant" ? "Tenant" : "Participant",
+            relationshipStatus: conversation.relationshipStatus,
+        };
+    }, []);
+
+    const refreshConversations = useCallback(async (showLoader = false) => {
+        if (showLoader) {
+            setIsLoadingConversations(true);
         }
+
+        const { data, error } = await fetchConversations();
+
+        if (error) {
+            setConversationsError(error);
+        } else {
+            setConversationsError(null);
+        }
+
+        const mapped = data.map(mapConversationToUser);
+        setConversations(mapped);
+
+        if (showLoader) {
+            setIsLoadingConversations(false);
+        }
+
+        return mapped;
+    }, [mapConversationToUser]);
+
+    const activateChat = useCallback(async (conversationId: string) => {
+        setOpenChats((prev) => prev.map((chat) => ({ ...chat, isActive: chat.id === conversationId })));
+        setConversations((prev) => prev.map((conversation) => (
+            conversation.id === conversationId ? { ...conversation, unread: false } : conversation
+        )));
+        await markConversationAsRead(conversationId);
+    }, []);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        const loadConversations = async () => {
+            const mapped = await refreshConversations(true);
+            if (isCancelled) {
+                return;
+            }
+
+            setOpenChats((prev) => prev.map((chat) => {
+                const latest = mapped.find((conversation) => conversation.id === chat.id);
+                return latest ? { ...chat, ...latest, isActive: chat.isActive } : chat;
+            }));
+        };
+
+        loadConversations();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [refreshConversations]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return;
+        }
+
+        const channel = supabase
+            .channel(`tenant-sidebar-incoming-${user.id}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                },
+                async (payload) => {
+                    const incoming = payload.new as { conversation_id?: string; sender_id?: string };
+                    const conversationId = incoming.conversation_id;
+                    if (!conversationId || incoming.sender_id === user.id) {
+                        return;
+                    }
+
+                    const updatedConversations = await refreshConversations();
+                    const updatedConversation = updatedConversations.find((item) => item.id === conversationId);
+                    if (!updatedConversation) {
+                        return;
+                    }
+
+                    const activeChat = openChatsRef.current.find((chat) => chat.id === conversationId && chat.isActive);
+                    if (activeChat) {
+                        setConversations((prev) => prev.map((conversation) => (
+                            conversation.id === conversationId ? { ...conversation, unread: false } : conversation
+                        )));
+                        await markConversationAsRead(conversationId);
+                    }
+
+                    setOpenChats((prev) => {
+                        const existing = prev.find((chat) => chat.id === conversationId);
+                        if (existing) {
+                            return prev.map((chat) => (
+                                chat.id === conversationId
+                                    ? { ...chat, ...updatedConversation, isActive: chat.isActive }
+                                    : chat
+                            ));
+                        }
+
+                        const next = [...prev, { ...updatedConversation, isActive: false }];
+                        if (next.length > 3) {
+                            next.shift();
+                        }
+                        return next;
+                    });
+                }
+            )
+            .subscribe();
+
+        channelRef.current = channel;
+
+        return () => {
+            channelRef.current = null;
+            supabase.removeChannel(channel);
+        };
+    }, [refreshConversations, supabase, user?.id]);
+
+    const hasUnreadConversations = useMemo(
+        () => conversations.some((conversation) => conversation.unread),
+        [conversations]
+    );
+
+    const openChat = async (chatUser: ChatUser) => {
+        setOpenChats((prev) => {
+            const existing = prev.find((chat) => chat.id === chatUser.id);
+            if (existing) {
+                return prev.map((chat) => ({ ...chat, isActive: chat.id === chatUser.id }));
+            }
+
+            const next = [...prev.map((chat) => ({ ...chat, isActive: false })), { ...chatUser, isActive: true }];
+            if (next.length > 3) {
+                next.shift();
+            }
+            return next;
+        });
+
+        await activateChat(chatUser.id);
     };
 
     const closeChat = (id: string) => {
@@ -69,7 +225,7 @@ export function TenantContactsSidebar() {
             {/* Sidebar */}
             <div
                 className={cn(
-                    "fixed top-0 right-0 h-full bg-[#0a0a0a] border-l border-white/5 z-50 transition-all duration-500 ease-in-out flex flex-col shadow-2xl overflow-hidden",
+                    "fixed top-16 right-0 h-[calc(100%-4rem)] bg-[#0a0a0a] border-l border-white/5 z-50 transition-all duration-500 ease-in-out flex flex-col shadow-2xl overflow-hidden",
                     isHovered ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
@@ -81,7 +237,7 @@ export function TenantContactsSidebar() {
                         <div className="flex flex-col items-center gap-4">
                             <div className="relative p-2.5 bg-white/5 rounded-xl cursor-default">
                                 <MessageSquare className="h-5 w-5 text-primary" />
-                                {mockMessages.some(m => m.unread) && (
+                                {hasUnreadConversations && (
                                     <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-neutral-900 animate-pulse"></span>
                                 )}
                             </div>
@@ -161,7 +317,7 @@ export function TenantContactsSidebar() {
                                     )}
                                 </button>
 
-                                {mockMessages.map((msg) => (
+                                {conversations.map((msg) => (
                                     <button
                                         key={msg.id}
                                         onClick={() => openChat(msg)}
@@ -195,6 +351,14 @@ export function TenantContactsSidebar() {
                                         )}
                                     </button>
                                 ))}
+
+                                {!isLoadingConversations && conversations.length === 0 && (
+                                    <div className={cn("text-xs text-neutral-500", isHovered ? "px-2 pt-2" : "text-center")}>No conversations yet</div>
+                                )}
+
+                                {!isLoadingConversations && conversationsError && (
+                                    <div className={cn("text-xs text-red-400", isHovered ? "px-2 pt-2" : "text-center")}>{conversationsError}</div>
+                                )}
                             </motion.div>
                         )}
 
@@ -207,30 +371,20 @@ export function TenantContactsSidebar() {
                                 transition={{ duration: 0.2 }}
                                 className={cn("flex flex-col", isHovered ? "gap-2" : "gap-4 items-center")}
                             >
-                                <ContactCard
-                                    name="Property Manager"
-                                    unit="iReside Support"
-                                    phone="+1 800 123 4567"
-                                    avatar="https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80"
-                                    status="Active"
-                                    isExpanded={isHovered}
-                                />
-                                <ContactCard
-                                    name="Maintenance Team"
-                                    unit="Building Services"
-                                    phone="+1 800 123 8888"
-                                    avatar="https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=150&q=80"
-                                    status="Active"
-                                    isExpanded={isHovered}
-                                />
-                                <ContactCard
-                                    name="Community Admin"
-                                    unit="Announcements"
-                                    phone="+1 800 123 9999"
-                                    avatar="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"
-                                    status="Active"
-                                    isExpanded={isHovered}
-                                />
+                                {conversations.map((contact) => (
+                                    <ContactCard
+                                        key={contact.id}
+                                        name={contact.name}
+                                        unit={contact.unit}
+                                        avatar={contact.avatar}
+                                        status={contact.relationshipStatus === "tenant_landlord" ? "Active" : contact.relationshipStatus === "prospective" ? "Prospective" : "Conversation"}
+                                        isExpanded={isHovered}
+                                    />
+                                ))}
+
+                                {!isLoadingConversations && conversations.length === 0 && (
+                                    <div className={cn("text-xs text-neutral-500", isHovered ? "px-2 pt-2" : "text-center")}>No contacts yet</div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -258,10 +412,23 @@ export function TenantContactsSidebar() {
                             initial={{ y: 50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: 50, opacity: 0 }}
-                            className="w-[320px] h-[400px] bg-neutral-900 border border-white/10 rounded-t-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden"
+                            className={cn(
+                                "w-[320px] h-[400px] border rounded-t-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden transition-all",
+                                chat.isActive
+                                    ? "bg-neutral-900 border-white/10"
+                                    : "bg-neutral-900/90 border-white/20 opacity-90"
+                            )}
                         >
                             {/* Chatbox Header */}
-                            <div className="flex items-center justify-between p-3 border-b border-white/10 bg-neutral-800/50 rounded-t-2xl cursor-pointer hover:bg-neutral-800 transition-colors">
+                            <div
+                                onClick={() => void activateChat(chat.id)}
+                                className={cn(
+                                    "flex items-center justify-between p-3 border-b rounded-t-2xl cursor-pointer transition-colors",
+                                    chat.isActive
+                                        ? "border-white/10 bg-neutral-800/50 hover:bg-neutral-800"
+                                        : "border-white/20 bg-neutral-800/70 hover:bg-neutral-800"
+                                )}
+                            >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
                                         <img src={chat.avatar} alt={chat.name} className="w-8 h-8 rounded-full object-cover border border-white/10" />
@@ -269,7 +436,7 @@ export function TenantContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <h4 className="text-sm font-bold text-white truncate hover:underline">{chat.name}</h4>
-                                        <p className="text-[10px] text-emerald-400">Active Now</p>
+                                        <p className={cn("text-[10px]", chat.isActive ? "text-emerald-400" : "text-amber-300")}>{chat.isActive ? "Active" : "Inactive"}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-0.5 shrink-0 text-neutral-400">
@@ -299,6 +466,13 @@ export function TenantContactsSidebar() {
                                         {chat.lastMessage}
                                     </div>
                                 </div>
+                                {!chat.isActive && (
+                                    <div className="text-center">
+                                        <span className="text-[10px] text-amber-300 font-medium bg-amber-500/10 px-2 py-1 rounded-full border border-amber-400/20">
+                                            Click this chat to mark messages as seen
+                                        </span>
+                                    </div>
+                                )}
                                 {chat.id === "usr_1" && (
                                     <div className="flex items-end gap-2 justify-end mt-2">
                                         <div className="bg-primary text-black font-medium text-sm px-4 py-2 rounded-2xl rounded-br-sm max-w-[80%]">
@@ -317,11 +491,18 @@ export function TenantContactsSidebar() {
                                     <div className="flex-1 bg-white/5 border border-white/10 rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                                         <input
                                             type="text"
-                                            placeholder="Aa"
+                                            placeholder={chat.isActive ? "Aa" : "Click header to activate"}
+                                            disabled={!chat.isActive}
                                             className="w-full bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-neutral-500"
                                         />
                                     </div>
-                                    <button className="text-primary hover:text-primary/80 p-1.5 transition-colors">
+                                    <button
+                                        disabled={!chat.isActive}
+                                        className={cn(
+                                            "p-1.5 transition-colors",
+                                            chat.isActive ? "text-primary hover:text-primary/80" : "text-neutral-600 cursor-not-allowed"
+                                        )}
+                                    >
                                         <Send className="w-4 h-4" />
                                     </button>
                                 </div>
