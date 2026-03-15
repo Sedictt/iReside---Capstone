@@ -82,6 +82,33 @@ function formatRelativeDate(value: string) {
     return `${Math.floor(diffMs / month)} month${Math.floor(diffMs / month) === 1 ? '' : 's'} ago`;
 }
 
+function resolveGoogleAvatarUrl(user: { user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }) {
+    const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : null;
+    if (metadataAvatar && metadataAvatar.trim().length > 0) {
+        return metadataAvatar;
+    }
+
+    const metadataPicture = typeof user.user_metadata?.picture === 'string' ? user.user_metadata.picture : null;
+    if (metadataPicture && metadataPicture.trim().length > 0) {
+        return metadataPicture;
+    }
+
+    for (const identity of user.identities ?? []) {
+        const identityData = identity.identity_data;
+        const providerAvatar = typeof identityData?.avatar_url === 'string' ? identityData.avatar_url : null;
+        if (providerAvatar && providerAvatar.trim().length > 0) {
+            return providerAvatar;
+        }
+
+        const providerPicture = typeof identityData?.picture === 'string' ? identityData.picture : null;
+        if (providerPicture && providerPicture.trim().length > 0) {
+            return providerPicture;
+        }
+    }
+
+    return null;
+}
+
 export default async function LandlordProfilePage() {
     const supabase = await createClient();
 
@@ -129,10 +156,7 @@ export default async function LandlordProfilePage() {
         redirect('/login');
     }
 
-    const googleAvatarUrl =
-        typeof user.user_metadata?.avatar_url === 'string' && user.user_metadata.avatar_url.length > 0
-            ? user.user_metadata.avatar_url
-            : null;
+    const googleAvatarUrl = resolveGoogleAvatarUrl(user);
     const profileAvatarUrl = profile.avatar_url ?? googleAvatarUrl;
 
     const propertyIds = properties.map((property) => property.id);

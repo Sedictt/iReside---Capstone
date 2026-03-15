@@ -422,6 +422,37 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            landlord_inquiry_actions: {
+                Row: {
+                    id: string
+                    inquiry_id: string
+                    landlord_id: string
+                    is_read: boolean
+                    is_archived: boolean
+                    deleted_at: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    inquiry_id: string
+                    landlord_id: string
+                    is_read?: boolean
+                    is_archived?: boolean
+                    deleted_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    inquiry_id?: string
+                    landlord_id?: string
+                    is_read?: boolean
+                    is_archived?: boolean
+                    deleted_at?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
             maintenance_requests: {
                 Row: {
                     id: string
@@ -722,6 +753,7 @@ export type LandlordReview = Database['public']['Tables']['landlord_reviews']['R
 export type Payment = Database['public']['Tables']['payments']['Row']
 export type PaymentItem = Database['public']['Tables']['payment_items']['Row']
 export type Application = Database['public']['Tables']['applications']['Row']
+export type LandlordInquiryAction = Database['public']['Tables']['landlord_inquiry_actions']['Row']
 export type MaintenanceRequest = Database['public']['Tables']['maintenance_requests']['Row']
 export type MoveOutRequest = Database['public']['Tables']['move_out_requests']['Row']
 export type Conversation = Database['public']['Tables']['conversations']['Row']

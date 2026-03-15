@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import { QuickActions } from "@/components/landlord/dashboard/QuickActions";
 import {
-    Building2,
     CreditCard,
     AlertTriangle,
     ExternalLink as LinkIcon
@@ -14,12 +13,124 @@ import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
 import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
 
+type PaymentCategory = "Overdue" | "Near Due" | "Paid";
+
+type PaymentListItem = {
+    id: string;
+    tenant: string;
+    unit: string;
+    amount: number;
+    status: PaymentCategory;
+    date: string;
+    avatar: string | null;
+};
+
+type SystemAdvisory = {
+    id: string;
+    title: string;
+    message: string;
+    createdAt: string;
+};
+
+const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+
+const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; dotClass: string }> = [
+    { key: "Overdue", dotClass: "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" },
+    { key: "Near Due", dotClass: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" },
+    { key: "Paid", dotClass: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" },
+];
+
 export default function LandlordDashboard() {
     const [mounted, setMounted] = useState(false);
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
+    const [paymentsByCategory, setPaymentsByCategory] = useState<Record<PaymentCategory, PaymentListItem[]>>({
+        Overdue: [],
+        "Near Due": [],
+        Paid: [],
+    });
+    const [paymentsLoading, setPaymentsLoading] = useState(true);
+    const [paymentsError, setPaymentsError] = useState<string | null>(null);
+    const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
 
     useEffect(() => {
         setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadPayments = async () => {
+            setPaymentsLoading(true);
+            setPaymentsError(null);
+
+            try {
+                const response = await fetch("/api/landlord/payments/overview", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load payment overview");
+                }
+
+                const payload = (await response.json()) as {
+                    payments?: Record<PaymentCategory, PaymentListItem[]>;
+                };
+
+                setPaymentsByCategory({
+                    Overdue: payload.payments?.Overdue ?? [],
+                    "Near Due": payload.payments?.["Near Due"] ?? [],
+                    Paid: payload.payments?.Paid ?? [],
+                });
+            } catch (error) {
+                if ((error as Error).name === "AbortError") {
+                    return;
+                }
+
+                setPaymentsError("Unable to load payments right now.");
+            } finally {
+                setPaymentsLoading(false);
+            }
+        };
+
+        void loadPayments();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadSystemAdvisory = async () => {
+            try {
+                const response = await fetch("/api/landlord/system-advisory", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    setSystemAdvisory(null);
+                    return;
+                }
+
+                const payload = (await response.json()) as { advisory?: SystemAdvisory | null };
+                setSystemAdvisory(payload.advisory ?? null);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") {
+                    return;
+                }
+
+                setSystemAdvisory(null);
+            }
+        };
+
+        void loadSystemAdvisory();
+
+        return () => {
+            controller.abort();
+        };
     }, []);
 
     if (!mounted) return null;
@@ -39,94 +150,71 @@ export default function LandlordDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2">
-                    {/* Overdue */}
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between mb-2 px-1">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
-                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">Overdue</h3>
-                            </div>
-                            <button onClick={() => setOpenPaymentModal("Overdue")} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <PaymentCard
-                                tenant="Marcus Johnson"
-                                unit="Unit 102"
-                                amount={13000}
-                                status="Overdue"
-                                date="Feb 20, 2026"
-                                avatar="https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80"
-                            />
-                        </div>
-                    </div>
+                    {PAYMENT_CATEGORIES.map(({ key, dotClass }) => {
+                        const items = paymentsByCategory[key] ?? [];
+                        const topItem = items[0] ?? null;
 
-                    {/* Near Due */}
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between mb-2 px-1">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
-                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">Near Due</h3>
+                        return (
+                            <div key={key} className="space-y-3">
+                                <div className="flex items-center justify-between mb-2 px-1">
+                                    <div className="flex items-center gap-2">
+                                        <div className={cn("h-2 w-2 rounded-full", dotClass)} />
+                                        <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">{key}</h3>
+                                    </div>
+                                    <button onClick={() => setOpenPaymentModal(key)} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {paymentsLoading ? (
+                                        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                            <p className="text-xs text-neutral-500">Loading payments...</p>
+                                        </div>
+                                    ) : paymentsError ? (
+                                        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
+                                            <p className="text-xs text-red-300">{paymentsError}</p>
+                                        </div>
+                                    ) : topItem ? (
+                                        <PaymentCard
+                                            payment={topItem}
+                                            fallbackAvatar={FALLBACK_AVATAR}
+                                        />
+                                    ) : (
+                                        <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4">
+                                            <p className="text-sm text-neutral-300">No {key.toLowerCase()} payments.</p>
+                                            <p className="text-xs text-neutral-500 mt-1">New records will appear here once available.</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <button onClick={() => setOpenPaymentModal("Near Due")} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <PaymentCard
-                                tenant="Alex Reyes"
-                                unit="Unit 201"
-                                amount={15000}
-                                status="Near Due"
-                                date="Mar 5, 2026"
-                                avatar="https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Paid */}
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between mb-2 px-1">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                                <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">Paid</h3>
-                            </div>
-                            <button onClick={() => setOpenPaymentModal("Paid")} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <PaymentCard
-                                tenant="Sarah Wilson"
-                                unit="Studio A"
-                                amount={12500}
-                                status="Paid"
-                                date="Feb 28, 2026"
-                                avatar="https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80"
-                            />
-                        </div>
-                    </div>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* Announcement Card */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-8 rounded-3xl bg-amber-500/10 border border-amber-500/20 relative overflow-hidden group gap-6 min-h-[140px]">
-                <div className="relative z-10 flex items-center gap-5">
-                    <div className="p-4 bg-amber-500/20 rounded-2xl">
-                        <AlertTriangle className="h-8 w-8 text-amber-500" />
+            {systemAdvisory && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-8 rounded-3xl bg-amber-500/10 border border-amber-500/20 relative overflow-hidden group gap-6 min-h-[140px]">
+                    <div className="relative z-10 flex items-center gap-5">
+                        <div className="p-4 bg-amber-500/20 rounded-2xl">
+                            <AlertTriangle className="h-8 w-8 text-amber-500" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-white text-lg sm:text-xl">{systemAdvisory.title}</h3>
+                            <p className="text-sm sm:text-base text-neutral-300 font-medium mt-1">{systemAdvisory.message}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="font-bold text-white text-lg sm:text-xl">System Advisory</h3>
-                        <p className="text-sm sm:text-base text-neutral-300 font-medium mt-1">Maintenance scheduled for March 15th at 2:00 AM. Expect brief downtime.</p>
+                    <div className="relative z-10 px-6 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold text-sm sm:text-base w-full sm:w-auto text-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                        Advisory Active
+                    </div>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none transition-transform duration-500 group-hover:scale-110">
+                        <AlertTriangle className="h-48 w-48 translate-x-1/4" />
                     </div>
                 </div>
-                <button className="relative z-10 px-6 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold text-sm sm:text-base hover:bg-amber-400 transition-colors w-full sm:w-auto text-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                    Read Details
-                </button>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none transition-transform duration-500 group-hover:scale-110">
-                    <AlertTriangle className="h-48 w-48 translate-x-1/4" />
-                </div>
-            </div>
+            )}
 
                 <PaymentModal
                     isOpen={openPaymentModal !== null}
                     onClose={() => setOpenPaymentModal(null)}
                     category={openPaymentModal}
+                    paymentsByCategory={paymentsByCategory}
                 />
                 <QuickActions />
 
@@ -140,7 +228,8 @@ export default function LandlordDashboard() {
 
 
 
-function PaymentCard({ tenant, unit, amount, status, date, avatar }: any) {
+function PaymentCard({ payment, fallbackAvatar }: { payment: PaymentListItem; fallbackAvatar: string }) {
+    const { tenant, unit, amount, status, date, avatar } = payment;
     const isPaid = status === 'Paid';
     const isNearDue = status === 'Near Due';
     const [isConfirmed, setIsConfirmed] = useState(false);
@@ -156,7 +245,7 @@ function PaymentCard({ tenant, unit, amount, status, date, avatar }: any) {
         <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 hover:bg-white/[0.04] transition-all cursor-pointer group relative overflow-hidden">
             <div className="flex items-center gap-4 relative z-10">
                 <div className="relative">
-                    <img src={avatar} alt={tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
+                    <img src={avatar || fallbackAvatar} alt={tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
                     <div className={cn(
                         "absolute -bottom-0 -right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a]",
                         isConfirmed || isPaid ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : isNearDue ? "bg-amber-500" : "bg-red-500"

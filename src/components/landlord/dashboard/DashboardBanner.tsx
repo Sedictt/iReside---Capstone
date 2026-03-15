@@ -6,6 +6,53 @@ import { Search, Bell, Home, Users, Wrench, ClipboardList, Map } from "lucide-re
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 
+type BannerNotification = {
+    id: string;
+    title: string;
+    message: string;
+    read: boolean;
+    createdAt: string;
+    type: string;
+};
+
+function formatTimeAgo(value: string) {
+    const timestamp = new Date(value);
+    const now = new Date();
+    const diffMs = now.getTime() - timestamp.getTime();
+
+    if (Number.isNaN(diffMs) || diffMs < 0) {
+        return "Recently";
+    }
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diffMs < hour) {
+        const minutes = Math.max(1, Math.floor(diffMs / minute));
+        return `${minutes}m ago`;
+    }
+
+    if (diffMs < day) {
+        const hours = Math.max(1, Math.floor(diffMs / hour));
+        return `${hours}h ago`;
+    }
+
+    const days = Math.floor(diffMs / day);
+    if (days === 1) {
+        return "Yesterday";
+    }
+
+    if (days < 7) {
+        return `${days}d ago`;
+    }
+
+    return timestamp.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    });
+}
+
 interface DashboardBannerProps {
     title?: string;
     subtitle?: string;
@@ -22,6 +69,11 @@ export function DashboardBanner({
     simplifiedMode = false
 }: DashboardBannerProps) {
     const [time, setTime] = useState<Date | null>(null);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [notifications, setNotifications] = useState<BannerNotification[]>([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(true);
+    const [notificationsError, setNotificationsError] = useState<string | null>(null);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const displaySubtitle = simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle;
 
@@ -31,6 +83,50 @@ export function DashboardBanner({
             setTime(new Date());
         }, 1000);
         return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadNotifications = async () => {
+            setNotificationsLoading(true);
+            setNotificationsError(null);
+
+            try {
+                const response = await fetch("/api/landlord/notifications/recent", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load notifications");
+                }
+
+                const payload = (await response.json()) as {
+                    notifications?: BannerNotification[];
+                    unreadCount?: number;
+                };
+
+                setNotifications(Array.isArray(payload.notifications) ? payload.notifications : []);
+                setUnreadCount(typeof payload.unreadCount === "number" ? payload.unreadCount : 0);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") {
+                    return;
+                }
+
+                setNotifications([]);
+                setUnreadCount(0);
+                setNotificationsError("Unable to load notifications.");
+            } finally {
+                setNotificationsLoading(false);
+            }
+        };
+
+        void loadNotifications();
+
+        return () => {
+            controller.abort();
+        };
     }, []);
 
     return (
@@ -67,10 +163,59 @@ export function DashboardBanner({
                 <ProfileWidget />
 
                 {/* Notifications */}
-                <button className="relative p-2.5 rounded-full hover:bg-black/40 transition-colors group backdrop-blur-md border border-white/5 bg-black/20">
-                    <Bell className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
-                    <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 ring-2 ring-[#0a0a0a]"></span>
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={() => setIsNotificationsOpen((current) => !current)}
+                        className="relative p-2.5 rounded-full hover:bg-black/40 transition-colors group backdrop-blur-md border border-white/5 bg-black/20"
+                    >
+                        <Bell className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center ring-2 ring-[#0a0a0a]">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {isNotificationsOpen && (
+                        <div className="absolute right-0 mt-3 w-[320px] rounded-2xl border border-white/10 bg-neutral-900/95 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+                            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                                <p className="text-sm font-bold text-white">Notifications</p>
+                                <p className="text-xs text-neutral-400">{unreadCount} unread</p>
+                            </div>
+
+                            <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                                {notificationsLoading ? (
+                                    <div className="px-4 py-6">
+                                        <p className="text-sm text-neutral-400">Loading notifications...</p>
+                                    </div>
+                                ) : notificationsError ? (
+                                    <div className="px-4 py-6">
+                                        <p className="text-sm text-red-300">{notificationsError}</p>
+                                    </div>
+                                ) : notifications.length === 0 ? (
+                                    <div className="px-4 py-6">
+                                        <p className="text-sm text-neutral-400">No notifications yet.</p>
+                                    </div>
+                                ) : (
+                                    notifications.map((notification) => (
+                                        <div key={notification.id} className="px-4 py-3 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-white">{notification.title}</p>
+                                                    <p className="text-xs text-neutral-300 mt-1 leading-relaxed">{notification.message}</p>
+                                                    <p className="text-[11px] text-neutral-500 mt-2">{formatTimeAgo(notification.createdAt)}</p>
+                                                </div>
+                                                {!notification.read && (
+                                                    <span className="mt-1 h-2.5 w-2.5 rounded-full bg-lime-500" />
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Content Container */}

@@ -7,34 +7,30 @@ interface PaymentModalProps {
     isOpen: boolean;
     onClose: () => void;
     category: "Overdue" | "Near Due" | "Paid" | null;
+    paymentsByCategory: Record<"Overdue" | "Near Due" | "Paid", PaymentListItem[]>;
 }
 
-const mockPayments = {
-    "Overdue": [
-        { tenant: "Marcus Johnson", unit: "Unit 102", amount: 13000, date: "Feb 20, 2026", avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Emily Thorne", unit: "Unit 405", amount: 14500, date: "Feb 15, 2026", avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80" }
-    ],
-    "Near Due": [
-        { tenant: "Alex Reyes", unit: "Unit 201", amount: 15000, date: "Mar 5, 2026", avatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Jason Lee", unit: "Unit 101", amount: 12000, date: "Mar 7, 2026", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" }
-    ],
-    "Paid": [
-        { tenant: "Sarah Wilson", unit: "Studio A", amount: 12500, date: "Feb 28, 2026", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Michael Chen", unit: "Unit 305", amount: 18000, date: "Feb 27, 2026", avatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "Jessica Alba", unit: "Unit 202", amount: 15500, date: "Feb 25, 2026", avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80" },
-        { tenant: "David Kim", unit: "Unit 301", amount: 17000, date: "Feb 25, 2026", avatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80" }
-    ]
-};
+interface PaymentListItem {
+    id: string;
+    tenant: string;
+    unit: string;
+    amount: number;
+    date: string;
+    avatar: string | null;
+}
 
-export function PaymentModal({ isOpen, onClose, category }: PaymentModalProps) {
-    if (!category) return null;
+const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
-    const payments = mockPayments[category] || [];
+export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: PaymentModalProps) {
     const [confirmedPayments, setConfirmedPayments] = useState<string[]>([]);
 
-    const handleConfirm = (e: React.MouseEvent, tenant: string) => {
+    if (!category) return null;
+
+    const payments = paymentsByCategory[category] || [];
+
+    const handleConfirm = (e: React.MouseEvent, paymentId: string) => {
         e.stopPropagation();
-        setConfirmedPayments(prev => [...prev, tenant]);
+        setConfirmedPayments(prev => [...prev, paymentId]);
     };
 
     const getStatusStyles = () => {
@@ -105,60 +101,67 @@ export function PaymentModal({ isOpen, onClose, category }: PaymentModalProps) {
 
                         {/* List */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
-                            {payments.map((payment, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 hover:bg-white/[0.04] transition-all cursor-pointer group">
-                                    <div className="flex items-center gap-4">
-                                        <div className="relative">
-                                            <img src={payment.avatar} alt={payment.tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
-                                            <div className={cn(
-                                                "absolute -bottom-0 -right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a]",
-                                                confirmedPayments.includes(payment.tenant) || category === "Paid" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : getDotColor()
-                                            )} />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{payment.tenant}</h4>
-                                            <p className="text-xs text-neutral-400 font-medium">{payment.unit}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end relative overflow-hidden min-w-[120px]">
-                                        <h4 className={cn(
-                                            "text-sm font-bold text-white mb-0.5 transition-all",
-                                            !confirmedPayments.includes(payment.tenant) && category !== "Paid" && "group-hover:opacity-0"
-                                        )}>₱{payment.amount.toLocaleString()}</h4>
-                                        <div className={cn(
-                                            "flex items-center justify-end gap-1.5 mt-1 transition-all",
-                                            !confirmedPayments.includes(payment.tenant) && category !== "Paid" && "group-hover:opacity-0"
-                                        )}>
-                                            <span className={cn(
-                                                "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border",
-                                                confirmedPayments.includes(payment.tenant) || category === "Paid" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : getStatusStyles()
-                                            )}>
-                                                {confirmedPayments.includes(payment.tenant) ? "Paid" : category}
-                                            </span>
-                                            <span className="text-[10px] text-neutral-500 font-medium">{payment.date}</span>
-                                        </div>
-
-                                        {/* Hover Confirm Button */}
-                                        {category !== "Paid" && !confirmedPayments.includes(payment.tenant) && (
-                                            <button
-                                                onClick={(e) => handleConfirm(e, payment.tenant)}
-                                                className="absolute inset-y-0 right-0 opacity-0 group-hover:opacity-100 flex items-center gap-2 bg-primary text-black px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all translate-x-4 group-hover:translate-x-0 active:scale-95 whitespace-nowrap"
-                                            >
-                                                <CreditCard className="w-3.5 h-3.5" />
-                                                Confirm Payment
-                                            </button>
-                                        )}
-
-                                        {/* Success State */}
-                                        {confirmedPayments.includes(payment.tenant) && (
-                                            <div className="absolute inset-y-0 right-0 flex items-center text-emerald-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-right-2 duration-300">
-                                                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                                                Invoice Sent
-                                            </div>
-                                        )}
-                                    </div>
+                            {payments.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-6">
+                                    <p className="text-sm text-neutral-200 font-semibold">No {category.toLowerCase()} payments found.</p>
+                                    <p className="text-xs text-neutral-500 mt-1">New payment records will appear here once available.</p>
                                 </div>
-                            ))}
+                            ) : (
+                                payments.map((payment) => (
+                                    <div key={payment.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 hover:bg-white/[0.04] transition-all cursor-pointer group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative">
+                                                <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
+                                                <div className={cn(
+                                                    "absolute -bottom-0 -right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a]",
+                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : getDotColor()
+                                                )} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{payment.tenant}</h4>
+                                                <p className="text-xs text-neutral-400 font-medium">{payment.unit}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right flex flex-col items-end relative overflow-hidden min-w-[120px]">
+                                            <h4 className={cn(
+                                                "text-sm font-bold text-white mb-0.5 transition-all",
+                                                !confirmedPayments.includes(payment.id) && category !== "Paid" && "group-hover:opacity-0"
+                                            )}>₱{payment.amount.toLocaleString()}</h4>
+                                            <div className={cn(
+                                                "flex items-center justify-end gap-1.5 mt-1 transition-all",
+                                                !confirmedPayments.includes(payment.id) && category !== "Paid" && "group-hover:opacity-0"
+                                            )}>
+                                                <span className={cn(
+                                                    "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border",
+                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : getStatusStyles()
+                                                )}>
+                                                    {confirmedPayments.includes(payment.id) ? "Paid" : category}
+                                                </span>
+                                                <span className="text-[10px] text-neutral-500 font-medium">{payment.date}</span>
+                                            </div>
+
+                                            {/* Hover Confirm Button */}
+                                            {category !== "Paid" && !confirmedPayments.includes(payment.id) && (
+                                                <button
+                                                    onClick={(e) => handleConfirm(e, payment.id)}
+                                                    className="absolute inset-y-0 right-0 opacity-0 group-hover:opacity-100 flex items-center gap-2 bg-primary text-black px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all translate-x-4 group-hover:translate-x-0 active:scale-95 whitespace-nowrap"
+                                                >
+                                                    <CreditCard className="w-3.5 h-3.5" />
+                                                    Confirm Payment
+                                                </button>
+                                            )}
+
+                                            {/* Success State */}
+                                            {confirmedPayments.includes(payment.id) && (
+                                                <div className="absolute inset-y-0 right-0 flex items-center text-emerald-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-right-2 duration-300">
+                                                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                                                    Invoice Sent
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </motion.div>
                 </>

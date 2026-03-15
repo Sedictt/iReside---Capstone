@@ -2,7 +2,6 @@
 
 import { MessageSquare, Clock, Home, ArrowRight, Mail, MoreVertical, Eye, Archive, Trash2, CheckCircle, X, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -17,53 +16,94 @@ interface Inquiry {
     isUnread: boolean;
 }
 
-const MOCK_INQUIRIES: Inquiry[] = [
-    {
-        id: "1",
-        prospectName: "Sarah Martinez",
-        propertyName: "Skyline Tower Unit 402",
-        propertyImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-        messagePreview: "Hi! I'm very interested in this unit. Is it still available for viewing this weekend?",
-        timestamp: "5 minutes ago",
-        isUnread: true
-    },
-    {
-        id: "2",
-        prospectName: "Michael Chen",
-        propertyName: "Garden View Apartments B-12",
-        propertyImage: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
-        messagePreview: "I'd like to know more about the lease terms and if pets are allowed...",
-        timestamp: "2 hours ago",
-        isUnread: true
-    },
-    {
-        id: "3",
-        prospectName: "Emma Rodriguez",
-        propertyName: "Downtown Loft 503",
-        propertyImage: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-        messagePreview: "Is parking included? Also, what utilities are covered in the rent?",
-        timestamp: "Yesterday",
-        isUnread: false
-    },
-    {
-        id: "4",
-        prospectName: "James Wilson",
-        propertyName: "Riverside Condos #208",
-        propertyImage: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop",
-        messagePreview: "I'm relocating for work next month. Can we schedule a virtual tour?",
-        timestamp: "2 days ago",
-        isUnread: false
-    }
-];
+const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
 export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
-    console.log('RecentInquiries component rendering');
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
     const menuRef = useRef<HTMLDivElement>(null);
     const [activeChat, setActiveChat] = useState<Inquiry | null>(null);
     const [messageInput, setMessageInput] = useState("");
     const [sentMessages, setSentMessages] = useState<Record<string, string[]>>({});
+    const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const applyInquiryAction = async (inquiryId: string, action: "read" | "unread" | "archive" | "delete") => {
+        try {
+            const response = await fetch(`/api/landlord/inquiries/${inquiryId}/actions`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action }),
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            setInquiries((prev) => {
+                if (action === "archive" || action === "delete") {
+                    return prev.filter((item) => item.id !== inquiryId);
+                }
+
+                return prev.map((item) =>
+                    item.id === inquiryId
+                        ? {
+                              ...item,
+                              isUnread: action === "unread",
+                          }
+                        : item
+                );
+            });
+
+            if (activeChat?.id === inquiryId && (action === "archive" || action === "delete")) {
+                setActiveChat(null);
+                setMessageInput("");
+            }
+        } catch {
+            // Keep UI state unchanged when action persistence fails.
+        } finally {
+            setOpenMenuId(null);
+        }
+    };
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadInquiries = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch("/api/landlord/inquiries/recent", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load recent inquiries");
+                }
+
+                const payload = (await response.json()) as { inquiries?: Inquiry[] };
+                setInquiries(Array.isArray(payload.inquiries) ? payload.inquiries : []);
+            } catch (fetchError) {
+                if ((fetchError as Error).name === "AbortError") {
+                    return;
+                }
+
+                setError("Unable to load inquiries right now.");
+                setInquiries([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void loadInquiries();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
 
     const handleMenuOpen = (inquiryId: string) => {
         if (openMenuId === inquiryId) {
@@ -127,8 +167,17 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                 {/* Inquiries Grid - Compact Card Layout */}
                 <div className="p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {MOCK_INQUIRIES.map((inquiry, index) => (
+                    {loading ? (
+                        <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
+                            <p className="text-sm text-neutral-400">Loading recent inquiries...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
+                            <p className="text-sm text-red-300">{error}</p>
+                        </div>
+                    ) : inquiries.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {inquiries.map((inquiry, index) => (
                             <motion.div
                                 key={inquiry.id}
                                 initial={{ opacity: 0, y: 20 }}
@@ -185,9 +234,17 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     {/* Avatar positioned at bottom */}
                                     <div className="absolute bottom-3 left-4 flex items-center gap-3 z-10">
                                         <div className="h-14 w-14 rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30">
-                                            <span className="text-lg font-bold text-white">
-                                                {inquiry.prospectName.split(' ').map(n => n[0]).join('')}
-                                            </span>
+                                            {inquiry.prospectAvatar ? (
+                                                <img
+                                                    src={inquiry.prospectAvatar}
+                                                    alt={inquiry.prospectName}
+                                                    className="h-14 w-14 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-lg font-bold text-white">
+                                                    {inquiry.prospectName.split(' ').map(n => n[0]).join('')}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -227,22 +284,21 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     </button>
                                 </div>
                             </motion.div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="p-6 text-center rounded-2xl border border-dashed border-white/10 bg-black/20">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-800/50 mb-4">
+                                <MessageSquare className="h-8 w-8 text-neutral-600" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white mb-2">No Recent Inquiries</h3>
+                            <p className="text-sm text-neutral-400 max-w-sm mx-auto">
+                                When potential tenants message you through applications, they will appear here.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
-                {/* Empty State (if no inquiries) */}
-                {MOCK_INQUIRIES.length === 0 && (
-                    <div className="p-12 text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-800/50 mb-4">
-                            <MessageSquare className="h-8 w-8 text-neutral-600" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">No Recent Inquiries</h3>
-                        <p className="text-sm text-neutral-400 max-w-sm mx-auto">
-                            When potential tenants message you about your listings, they'll appear here.
-                        </p>
-                    </div>
-                )}
             </div>
 
             {/* Portal Dropdown Menu */}
@@ -258,14 +314,19 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                     <div className="py-1">
                         <button
                             onClick={() => {
-                                console.log('Toggle read status');
-                                setOpenMenuId(null);
+                                const inquiry = inquiries.find((item) => item.id === openMenuId);
+                                if (!inquiry) {
+                                    setOpenMenuId(null);
+                                    return;
+                                }
+
+                                void applyInquiryAction(inquiry.id, inquiry.isUnread ? "read" : "unread");
                             }}
                             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left group/item"
                         >
                             <CheckCircle className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
                             <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
-                                {simplifiedMode ? "Got it" : (MOCK_INQUIRIES.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
+                                {simplifiedMode ? "Got it" : (inquiries.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
                             </span>
                         </button>
 
@@ -284,8 +345,12 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                         <button
                             onClick={() => {
-                                console.log('Archive inquiry');
-                                setOpenMenuId(null);
+                                if (!openMenuId) {
+                                    setOpenMenuId(null);
+                                    return;
+                                }
+
+                                void applyInquiryAction(openMenuId, "archive");
                             }}
                             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left group/item"
                         >
@@ -298,8 +363,12 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         <div className="border-t border-white/5 my-1" />
                         <button
                             onClick={() => {
-                                console.log('Delete inquiry');
-                                setOpenMenuId(null);
+                                if (!openMenuId) {
+                                    setOpenMenuId(null);
+                                    return;
+                                }
+
+                                void applyInquiryAction(openMenuId, "delete");
                             }}
                             className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-red-500/10 transition-colors text-left group/item"
                         >
@@ -328,7 +397,15 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         <div className="p-4 border-b border-white/10 bg-neutral-800/80 backdrop-blur-md flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
-                                    {activeChat.prospectName.split(' ').map(n => n[0]).join('')}
+                                    {activeChat.prospectAvatar ? (
+                                        <img
+                                            src={activeChat.prospectAvatar || FALLBACK_AVATAR}
+                                            alt={activeChat.prospectName}
+                                            className="h-10 w-10 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        activeChat.prospectName.split(' ').map(n => n[0]).join('')
+                                    )}
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-white font-bold text-sm">{activeChat.prospectName}</span>

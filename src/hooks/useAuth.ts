@@ -23,6 +23,11 @@ export function useAuth() {
     useEffect(() => {
         const supabase = createClient()
 
+        const fetchFullUser = async () => {
+            const { data } = await supabase.auth.getUser()
+            return data.user ?? null
+        }
+
         // Fetch profile in background — does NOT block loading
         const fetchProfile = async (userId: string) => {
             const { data } = await supabase
@@ -38,7 +43,9 @@ export function useAuth() {
         // Get initial session — resolve loading immediately from session data
         const getInitialSession = async () => {
             const { data: { session } } = await supabase.auth.getSession()
-            const user = session?.user ?? null
+            const sessionUser = session?.user ?? null
+            const fullUser = sessionUser ? await fetchFullUser() : null
+            const user = fullUser ?? sessionUser
 
             // Set loading: false immediately so the navbar renders right away
             setState({ user, profile: null, session, loading: false })
@@ -52,7 +59,9 @@ export function useAuth() {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                const user = session?.user ?? null
+                const sessionUser = session?.user ?? null
+                const fullUser = sessionUser ? await fetchFullUser() : null
+                const user = fullUser ?? sessionUser
 
                 // Again, resolve immediately from session
                 setState(prev => ({ ...prev, user, session, loading: false }))
