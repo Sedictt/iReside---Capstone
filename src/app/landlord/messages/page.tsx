@@ -93,6 +93,8 @@ type UiMessage = {
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:landlord:messages-cache";
+const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:landlord:conversations-cache";
+const CONVERSATIONS_CACHE_TTL_MS = 60_000;
 
 type SharedFileItem = {
     id: string;
@@ -342,6 +344,46 @@ export default function MessagesPage() {
             messagesCacheRef.current.clear();
         }
     }, [user?.id]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return;
+        }
+
+        try {
+            const raw = sessionStorage.getItem(`${CONVERSATIONS_CACHE_KEY_PREFIX}:${user.id}`);
+            if (!raw) {
+                return;
+            }
+
+            const parsed = JSON.parse(raw) as { cachedAt?: number; contacts?: ContactItem[] };
+            if (!Array.isArray(parsed.contacts)) {
+                return;
+            }
+
+            if (typeof parsed.cachedAt === "number" && Date.now() - parsed.cachedAt > CONVERSATIONS_CACHE_TTL_MS) {
+                return;
+            }
+
+            const cachedConversations = parsed.contacts
+                .filter((contact): contact is ContactItem => Boolean(contact && typeof contact === "object" && typeof contact.id === "string"));
+
+            setContacts(cachedConversations);
+            setIsSidebarLoading(false);
+
+            setActiveConversationId((current) => {
+                if (conversationFromUrl && cachedConversations.some((contact) => contact.id === conversationFromUrl)) {
+                    return conversationFromUrl;
+                }
+                if (current && cachedConversations.some((contact) => contact.id === current)) {
+                    return current;
+                }
+                return cachedConversations[0]?.id ?? null;
+            });
+        } catch {
+            // Ignore cache parse errors and continue with network fetch.
+        }
+    }, [conversationFromUrl, user?.id]);
 
     const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
         if (!messagesEndRef.current) {
@@ -645,6 +687,17 @@ export default function MessagesPage() {
             setConversationsError(error);
             const mapped = list.map(mapConversationToContact);
             setContacts(mapped);
+
+            if (user.id) {
+                try {
+                    sessionStorage.setItem(
+                        `${CONVERSATIONS_CACHE_KEY_PREFIX}:${user.id}`,
+                        JSON.stringify({ cachedAt: Date.now(), contacts: mapped })
+                    );
+                } catch {
+                    // Ignore storage errors; live data is already in memory.
+                }
+            }
 
             setActiveConversationId((current) => {
                 if (conversationFromUrl && mapped.some((contact) => contact.id === conversationFromUrl)) {
@@ -1390,8 +1443,7 @@ export default function MessagesPage() {
 
     const shouldShowLoadingOverlay =
         isSidebarLoading ||
-        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl) ||
-        (Boolean(activeConversationId) && isMessagesLoading);
+        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
 
     return (
         <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700">

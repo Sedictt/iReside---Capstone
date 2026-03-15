@@ -110,6 +110,8 @@ const IRIS_CONTACT: ContactItem = {
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:tenant:messages-cache";
+const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:tenant:conversations-cache";
+const CONVERSATIONS_CACHE_TTL_MS = 60_000;
 
 type SharedFileItem = {
     id: string;
@@ -359,6 +361,48 @@ export default function TenantMessagesPage() {
             messagesCacheRef.current.clear();
         }
     }, [user?.id]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return;
+        }
+
+        try {
+            const raw = sessionStorage.getItem(`${CONVERSATIONS_CACHE_KEY_PREFIX}:${user.id}`);
+            if (!raw) {
+                return;
+            }
+
+            const parsed = JSON.parse(raw) as { cachedAt?: number; contacts?: ContactItem[] };
+            if (!Array.isArray(parsed.contacts)) {
+                return;
+            }
+
+            if (typeof parsed.cachedAt === "number" && Date.now() - parsed.cachedAt > CONVERSATIONS_CACHE_TTL_MS) {
+                return;
+            }
+
+            const cachedConversations = parsed.contacts
+                .filter((contact): contact is ContactItem => Boolean(contact && typeof contact === "object" && typeof contact.id === "string"))
+                .filter((contact) => contact.id !== "iris");
+            const hydratedContacts: ContactItem[] = [IRIS_CONTACT, ...cachedConversations];
+
+            setContacts(hydratedContacts);
+            setIsSidebarLoading(false);
+
+            setActiveConversationId((current) => {
+                if (conversationFromUrl && hydratedContacts.some((contact) => contact.id === conversationFromUrl)) {
+                    return conversationFromUrl;
+                }
+                if (hydratedContacts.some((contact) => contact.id === current)) {
+                    return current;
+                }
+                return hydratedContacts[0]?.id ?? "iris";
+            });
+        } catch {
+            // Ignore cache parse errors and continue with network fetch.
+        }
+    }, [conversationFromUrl, user?.id]);
 
     const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
         if (!messagesEndRef.current || activeConversationId === "iris") {
@@ -648,6 +692,17 @@ export default function TenantMessagesPage() {
             setConversationsError(error);
             const mapped = [IRIS_CONTACT, ...list.map(mapConversationToContact)];
             setContacts(mapped);
+
+            if (user.id) {
+                try {
+                    sessionStorage.setItem(
+                        `${CONVERSATIONS_CACHE_KEY_PREFIX}:${user.id}`,
+                        JSON.stringify({ cachedAt: Date.now(), contacts: mapped })
+                    );
+                } catch {
+                    // Ignore storage errors; live data is already in memory.
+                }
+            }
 
             setActiveConversationId((current) => {
                 if (conversationFromUrl && mapped.some((contact) => contact.id === conversationFromUrl)) {
@@ -1356,8 +1411,7 @@ export default function TenantMessagesPage() {
 
     const shouldShowLoadingOverlay =
         isSidebarLoading ||
-        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl) ||
-        (activeConversationId !== "iris" && isMessagesLoading);
+        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
 
     return (
         <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700">
