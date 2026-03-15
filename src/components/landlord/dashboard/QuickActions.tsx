@@ -65,7 +65,7 @@ export function QuickActions({ simplifiedMode = false }: { simplifiedMode?: bool
     }));
 
     return (
-        <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
+        <div className="fixed bottom-8 right-8 z-[70] flex flex-col items-end gap-4">
             <AnimatePresence>
                 {isOpen && (
                     <div className="flex flex-col items-end gap-3 mb-2">

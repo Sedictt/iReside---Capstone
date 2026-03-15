@@ -1,0 +1,7 @@
+src/app/landlord/dashboard/page.tsx
+src/app/landlord/messages/page.tsx
+src/app/tenant/messages/page.tsx
+src/components/landlord/dashboard/ContactsSidebar.tsx
+src/components/landlord/dashboard/QuickActions.tsx
+src/components/tenant/ChatWidget.tsx
+src/components/tenant/TenantContactsSidebar.tsx

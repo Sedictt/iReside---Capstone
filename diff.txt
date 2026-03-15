@@ -1,0 +1,76 @@
+diff --git a/src/app/landlord/messages/page.tsx b/src/app/landlord/messages/page.tsx
+index 070eb1e..eb7b057 100644
+--- a/src/app/landlord/messages/page.tsx
++++ b/src/app/landlord/messages/page.tsx
+@@ -236,6 +236,7 @@ export default function MessagesPage() {
+     const { user } = useAuth();
+     const supabase = useMemo(() => createSupabaseClient(), []);
+     const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
++    const panelFromUrl = searchParams.get("panel")?.trim() || null;
+ 
+     const [contacts, setContacts] = useState<ContactItem[]>([]);
+     const [activeConversationId, setActiveConversationId] = useState<string | null>(() => conversationFromUrl);
+@@ -304,6 +305,25 @@ export default function MessagesPage() {
+         setActiveConversationId(conversationFromUrl);
+     }, [activeConversationId, contacts, conversationFromUrl]);
+ 
++    useEffect(() => {
++        if (panelFromUrl !== "files") {
++            return;
++        }
++
++        if (!conversationFromUrl || activeConversationId !== conversationFromUrl) {
++            return;
++        }
++
++        setShowInfoSidebar(false);
++        setShowFilesSidebar(true);
++
++        const nextParams = new URLSearchParams(searchParams.toString());
++        nextParams.delete("panel");
++        const nextQuery = nextParams.toString();
++        const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
++        router.replace(nextHref, { scroll: false });
++    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, router, searchParams]);
++
+     useEffect(() => {
+         const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;
+         const nextConversationForUrl = activeConversationId;
+diff --git a/src/app/tenant/messages/page.tsx b/src/app/tenant/messages/page.tsx
+index bc7a102..d0d9300 100644
+--- a/src/app/tenant/messages/page.tsx
++++ b/src/app/tenant/messages/page.tsx
+@@ -253,6 +253,7 @@ export default function TenantMessagesPage() {
+     const { user } = useAuth();
+     const supabase = useMemo(() => createSupabaseClient(), []);
+     const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
++    const panelFromUrl = searchParams.get("panel")?.trim() || null;
+ 
+     const [contacts, setContacts] = useState<ContactItem[]>([IRIS_CONTACT]);
+     const [activeConversationId, setActiveConversationId] = useState<string>(() => conversationFromUrl ?? "iris");
+@@ -321,6 +322,25 @@ export default function TenantMessagesPage() {
+         setActiveConversationId(conversationFromUrl);
+     }, [activeConversationId, contacts, conversationFromUrl]);
+ 
++    useEffect(() => {
++        if (panelFromUrl !== "files") {
++            return;
++        }
++
++        if (!conversationFromUrl || activeConversationId !== conversationFromUrl || activeConversationId === "iris") {
++            return;
++        }
++
++        setShowInfoSidebar(false);
++        setShowFilesSidebar(true);
++
++        const nextParams = new URLSearchParams(searchParams.toString());
++        nextParams.delete("panel");
++        const nextQuery = nextParams.toString();
++        const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
++        router.replace(nextHref, { scroll: false });
++    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, router, searchParams]);
++
+     useEffect(() => {
+         const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;
+         const nextConversationForUrl = activeConversationId === "iris" ? null : activeConversationId;

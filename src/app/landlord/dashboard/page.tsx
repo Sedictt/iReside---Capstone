@@ -26,8 +26,9 @@ export default function LandlordDashboard() {
     if (!mounted) return null;
 
     return (
-        <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 md:pr-24 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
-            <DashboardBanner />
+        <>
+            <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 md:pr-24 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
+                <DashboardBanner />
 
             {/* Payment Overview */}
             <div className="p-6 rounded-3xl bg-neutral-900 border border-white/5 space-y-4 pt-6">
@@ -123,18 +124,19 @@ export default function LandlordDashboard() {
                 </div>
             </div>
 
-            <PaymentModal
-                isOpen={openPaymentModal !== null}
-                onClose={() => setOpenPaymentModal(null)}
-                category={openPaymentModal}
-            />
-            <ContactsSidebar />
-            <QuickActions />
+                <PaymentModal
+                    isOpen={openPaymentModal !== null}
+                    onClose={() => setOpenPaymentModal(null)}
+                    category={openPaymentModal}
+                />
+                <QuickActions />
 
-            <div className="pt-2 w-full">
-                <RecentInquiries />
+                <div className="pt-2 w-full">
+                    <RecentInquiries />
+                </div>
             </div>
-        </div>
+            <ContactsSidebar />
+        </>
     );
 }
 

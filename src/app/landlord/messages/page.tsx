@@ -236,6 +236,7 @@ export default function MessagesPage() {
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
     const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
+    const panelFromUrl = searchParams.get("panel")?.trim() || null;
 
     const [contacts, setContacts] = useState<ContactItem[]>([]);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(() => conversationFromUrl);
@@ -303,6 +304,25 @@ export default function MessagesPage() {
 
         setActiveConversationId(conversationFromUrl);
     }, [activeConversationId, contacts, conversationFromUrl]);
+
+    useEffect(() => {
+        if (panelFromUrl !== "files") {
+            return;
+        }
+
+        if (!conversationFromUrl || activeConversationId !== conversationFromUrl) {
+            return;
+        }
+
+        setShowInfoSidebar(false);
+        setShowFilesSidebar(true);
+
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.delete("panel");
+        const nextQuery = nextParams.toString();
+        const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+        router.replace(nextHref, { scroll: false });
+    }, [activeConversationId, conversationFromUrl, panelFromUrl, pathname, router, searchParams]);
 
     useEffect(() => {
         const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;

@@ -40,7 +40,15 @@ const buildWelcomeMessage = (firstName?: string | null) => {
     return `Welcome back${nameSegment}! 👋 How can I help you settle in or manage your apartment today?`;
 };
 
-export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function ChatWidget({
+    isOpen,
+    onClose,
+    embedded = false,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    embedded?: boolean;
+}) {
     const INITIAL_CHAT_SKELETON_COUNT = 6;
     const { profile, user } = useAuth();
 
@@ -223,10 +231,15 @@ export function ChatWidget({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 40, filter: "blur(10px)" }}
-                    animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, scale: 0.9, y: 40, filter: "blur(10px)" }}
-                    className="w-[380px] h-[580px] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-t-2xl shadow-2xl border border-white/20 dark:border-white/5 flex flex-col pointer-events-auto overflow-hidden"
+                    initial={{ opacity: 0, scale: 0.98, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, scale: 0.98, filter: "blur(10px)" }}
+                    style={embedded ? undefined : { bottom: "max(0px, env(safe-area-inset-bottom))" }}
+                    className={cn(
+                        "w-[380px] h-[580px] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-t-2xl border border-b-0 border-white/20 dark:border-white/5 flex flex-col pointer-events-auto overflow-hidden",
+                        "shadow-[0_-18px_40px_rgba(0,0,0,0.28)]",
+                        embedded ? "" : "fixed bottom-0 left-6 z-[60]"
+                    )}
                 >
                     {/* Header */}
                     <header className="bg-primary/95 dark:bg-primary/90 p-5 text-white flex items-center justify-between backdrop-blur-md">

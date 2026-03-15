@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2 } from "lucide-react";
+import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,10 +9,18 @@ import { ChatWidget } from "./ChatWidget";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { fetchConversations, markConversationAsRead, type ConversationSummary } from "@/lib/messages/client";
+import {
+    fetchConversationMessages,
+    fetchConversations,
+    markConversationAsRead,
+    sendConversationMessage,
+    uploadConversationFile,
+    type ConversationSummary,
+} from "@/lib/messages/client";
 
 interface ChatUser {
     id: string;
+    participantUserId: string | null;
     name: string;
     avatar: string;
     lastMessage: string;
@@ -25,6 +33,40 @@ interface ChatUser {
 type OpenChatUser = ChatUser & {
     isActive: boolean;
 };
+
+type MiniChatMessage = {
+    id: string;
+    senderId: string;
+    content: string;
+    createdAt: string;
+    isOwn: boolean;
+    status?: "sending" | "delivered" | "seen";
+    messageType?: "text" | "system" | "image" | "file";
+    fileUrl?: string | null;
+    fileMimeType?: string | null;
+};
+
+type MiniChatState = {
+    messages: MiniChatMessage[];
+    draft: string;
+    isLoading: boolean;
+    isSending: boolean;
+    isUploading: boolean;
+    isOtherUserTyping: boolean;
+    error: string | null;
+};
+
+const DEFAULT_CHAT_STATE: MiniChatState = {
+    messages: [],
+    draft: "",
+    isLoading: false,
+    isSending: false,
+    isUploading: false,
+    isOtherUserTyping: false,
+    error: null,
+};
+
+const MESSAGE_CACHE_TTL_MS = 2 * 60 * 1000;
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
@@ -46,6 +88,20 @@ const formatConversationTimestamp = (iso: string | null) => {
     });
 };
 
+const formatMiniTimestamp = (iso: string) => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) {
+        return "Now";
+    }
+
+    return date.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
+
 export function TenantContactsSidebar() {
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
@@ -56,18 +112,49 @@ export function TenantContactsSidebar() {
     const [conversations, setConversations] = useState<ChatUser[]>([]);
     const [isLoadingConversations, setIsLoadingConversations] = useState(true);
     const [conversationsError, setConversationsError] = useState<string | null>(null);
+    const [chatStateById, setChatStateById] = useState<Record<string, MiniChatState>>({});
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [menuActionId, setMenuActionId] = useState<string | null>(null);
+    const [sharedFilesChatId, setSharedFilesChatId] = useState<string | null>(null);
     const openChatsRef = useRef<OpenChatUser[]>([]);
     const channelRef = useRef<RealtimeChannel | null>(null);
+    const refreshInFlightRef = useRef<Promise<ChatUser[]> | null>(null);
+    const incomingQueueRef = useRef<Set<string>>(new Set());
+    const lastTypingBroadcastRef = useRef<Map<string, boolean>>(new Map());
+    const unreadSnapshotRef = useRef<Map<string, boolean>>(new Map());
+    const hasUnreadSnapshotBootstrappedRef = useRef(false);
+    const chatScrollRef = useRef<Record<string, HTMLDivElement | null>>({});
+    const chatStateByIdRef = useRef<Record<string, MiniChatState>>({});
+    const messageLoadedAtRef = useRef<Record<string, number>>({});
+
+    const typingStopTimeoutRef = useRef<Map<string, number>>(new Map());
+    const remoteTypingTimeoutRef = useRef<Map<string, number>>(new Map());
 
     useEffect(() => {
         openChatsRef.current = openChats;
     }, [openChats]);
+
+    useEffect(() => {
+        chatStateByIdRef.current = chatStateById;
+    }, [chatStateById]);
+
+    useEffect(() => {
+        openChats.forEach((chat) => {
+            const container = chatScrollRef.current[chat.id];
+            if (!container) {
+                return;
+            }
+
+            container.scrollTop = container.scrollHeight;
+        });
+    }, [chatStateById, openChats]);
 
     const mapConversationToUser = useCallback((conversation: ConversationSummary): ChatUser => {
         const other = conversation.otherParticipants[0];
 
         return {
             id: conversation.id,
+            participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
             lastMessage: conversation.lastMessage?.content ?? "No messages yet",
@@ -79,6 +166,11 @@ export function TenantContactsSidebar() {
     }, []);
 
     const refreshConversations = useCallback(async (showLoader = false) => {
+        if (!showLoader && refreshInFlightRef.current) {
+            return refreshInFlightRef.current;
+        }
+
+        const requestPromise = (async () => {
         if (showLoader) {
             setIsLoadingConversations(true);
         }
@@ -99,6 +191,19 @@ export function TenantContactsSidebar() {
         }
 
         return mapped;
+        })();
+
+        if (!showLoader) {
+            refreshInFlightRef.current = requestPromise;
+        }
+
+        try {
+            return await requestPromise;
+        } finally {
+            if (refreshInFlightRef.current === requestPromise) {
+                refreshInFlightRef.current = null;
+            }
+        }
     }, [mapConversationToUser]);
 
     const activateChat = useCallback(async (conversationId: string) => {
@@ -108,6 +213,244 @@ export function TenantContactsSidebar() {
         )));
         await markConversationAsRead(conversationId);
     }, []);
+
+    const ensureChatState = useCallback((conversationId: string) => {
+        setChatStateById((prev) => {
+            if (prev[conversationId]) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                [conversationId]: DEFAULT_CHAT_STATE,
+            };
+        });
+    }, []);
+
+    const loadChatMessages = useCallback(async (conversationId: string, options?: { force?: boolean }) => {
+        const force = Boolean(options?.force);
+        const cachedState = chatStateByIdRef.current[conversationId];
+        const cachedAt = messageLoadedAtRef.current[conversationId] ?? 0;
+        const hasFreshCache = !force
+            && Boolean(cachedState)
+            && cachedState!.messages.length > 0
+            && (Date.now() - cachedAt) < MESSAGE_CACHE_TTL_MS;
+
+        if (hasFreshCache) {
+            const activeChat = openChatsRef.current.find((chat) => chat.id === conversationId && chat.isActive);
+            if (activeChat) {
+                await markConversationAsRead(conversationId);
+                setConversations((prev) => prev.map((conversation) => (
+                    conversation.id === conversationId ? { ...conversation, unread: false } : conversation
+                )));
+            }
+            return;
+        }
+
+        ensureChatState(conversationId);
+        setChatStateById((prev) => ({
+            ...prev,
+            [conversationId]: {
+                ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                isLoading: true,
+                error: null,
+            },
+        }));
+
+        const { data, error } = await fetchConversationMessages(conversationId, 80);
+        const mapped: MiniChatMessage[] = data.map((message) => ({
+            id: message.id,
+            senderId: message.senderId,
+            content: message.content,
+            createdAt: message.createdAt,
+            isOwn: message.senderId === user?.id,
+            status: message.senderId === user?.id ? (message.readAt ? "seen" : "delivered") : undefined,
+            messageType: message.type,
+            fileUrl: typeof message.metadata?.fileUrl === "string" ? message.metadata.fileUrl : null,
+            fileMimeType: typeof message.metadata?.mimeType === "string" ? message.metadata.mimeType : null,
+        }));
+
+        setChatStateById((prev) => ({
+            ...prev,
+            [conversationId]: {
+                ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                messages: mapped,
+                isLoading: false,
+                error,
+            },
+        }));
+
+        if (!error) {
+            messageLoadedAtRef.current[conversationId] = Date.now();
+        }
+
+        const activeChat = openChatsRef.current.find((chat) => chat.id === conversationId && chat.isActive);
+        if (activeChat && !error) {
+            await markConversationAsRead(conversationId);
+            setConversations((prev) => prev.map((conversation) => (
+                conversation.id === conversationId ? { ...conversation, unread: false } : conversation
+            )));
+        }
+    }, [ensureChatState, user?.id]);
+
+    const updateDraft = useCallback((conversationId: string, draft: string) => {
+        setChatStateById((prev) => ({
+            ...prev,
+            [conversationId]: {
+                ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                draft,
+            },
+        }));
+
+        if (!user?.id || !channelRef.current) {
+            return;
+        }
+
+        const isTyping = draft.trim().length > 0;
+        const previouslyTyping = lastTypingBroadcastRef.current.get(conversationId) ?? false;
+        if (isTyping !== previouslyTyping) {
+            void channelRef.current.send({
+                type: "broadcast",
+                event: "typing",
+                payload: {
+                    conversationId,
+                    userId: user.id,
+                    isTyping,
+                },
+            });
+            lastTypingBroadcastRef.current.set(conversationId, isTyping);
+        }
+
+        const existingTimeout = typingStopTimeoutRef.current.get(conversationId);
+        if (existingTimeout) {
+            window.clearTimeout(existingTimeout);
+            typingStopTimeoutRef.current.delete(conversationId);
+        }
+
+        if (isTyping) {
+            const timeoutId = window.setTimeout(() => {
+                if (!channelRef.current || !user?.id) {
+                    return;
+                }
+
+                void channelRef.current.send({
+                    type: "broadcast",
+                    event: "typing",
+                    payload: {
+                        conversationId,
+                        userId: user.id,
+                        isTyping: false,
+                    },
+                });
+                lastTypingBroadcastRef.current.set(conversationId, false);
+                typingStopTimeoutRef.current.delete(conversationId);
+            }, 1100);
+            typingStopTimeoutRef.current.set(conversationId, timeoutId);
+        }
+    }, [user?.id]);
+
+    const sendMiniMessage = useCallback(async (conversationId: string) => {
+        const current = chatStateById[conversationId] ?? DEFAULT_CHAT_STATE;
+        const text = current.draft.trim();
+        if (!text) {
+            return;
+        }
+
+        const localId = `local-${Date.now()}`;
+        setChatStateById((prev) => {
+            const existing = prev[conversationId] ?? DEFAULT_CHAT_STATE;
+            return {
+                ...prev,
+                [conversationId]: {
+                    ...existing,
+                    draft: "",
+                    isSending: true,
+                    error: null,
+                    messages: [
+                        ...existing.messages,
+                        {
+                            id: localId,
+                            senderId: user?.id ?? "",
+                            content: text,
+                            createdAt: new Date().toISOString(),
+                            isOwn: true,
+                            status: "sending",
+                            messageType: "text",
+                        },
+                    ],
+                },
+            };
+        });
+
+        try {
+            await sendConversationMessage(conversationId, text);
+            await loadChatMessages(conversationId, { force: true });
+            await refreshConversations();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to send message.";
+            setChatStateById((prev) => {
+                const existing = prev[conversationId] ?? DEFAULT_CHAT_STATE;
+                return {
+                    ...prev,
+                    [conversationId]: {
+                        ...existing,
+                        isSending: false,
+                        error: message,
+                        draft: text,
+                        messages: existing.messages.filter((entry) => entry.id !== localId),
+                    },
+                };
+            });
+            return;
+        }
+
+        setChatStateById((prev) => ({
+            ...prev,
+            [conversationId]: {
+                ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                isSending: false,
+                error: null,
+            },
+        }));
+    }, [chatStateById, loadChatMessages, refreshConversations, user?.id]);
+
+    const uploadMiniFile = useCallback(async (conversationId: string, file: File) => {
+        if (!file) {
+            return;
+        }
+
+        setChatStateById((prev) => ({
+            ...prev,
+            [conversationId]: {
+                ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                isUploading: true,
+                error: null,
+            },
+        }));
+
+        try {
+            await uploadConversationFile(conversationId, file);
+            await loadChatMessages(conversationId, { force: true });
+            await refreshConversations();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to upload file.";
+            setChatStateById((prev) => ({
+                ...prev,
+                [conversationId]: {
+                    ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                    error: message,
+                },
+            }));
+        } finally {
+            setChatStateById((prev) => ({
+                ...prev,
+                [conversationId]: {
+                    ...(prev[conversationId] ?? DEFAULT_CHAT_STATE),
+                    isUploading: false,
+                },
+            }));
+        }
+    }, [loadChatMessages, refreshConversations]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -122,6 +465,9 @@ export function TenantContactsSidebar() {
                 const latest = mapped.find((conversation) => conversation.id === chat.id);
                 return latest ? { ...chat, ...latest, isActive: chat.isActive } : chat;
             }));
+
+            const openIds = openChatsRef.current.map((chat) => chat.id);
+            await Promise.all(openIds.map((conversationId) => loadChatMessages(conversationId)));
         };
 
         loadConversations();
@@ -129,7 +475,7 @@ export function TenantContactsSidebar() {
         return () => {
             isCancelled = true;
         };
-    }, [refreshConversations]);
+    }, [loadChatMessages, refreshConversations]);
 
     useEffect(() => {
         if (!user?.id) {
@@ -152,9 +498,17 @@ export function TenantContactsSidebar() {
                         return;
                     }
 
+                    if (incomingQueueRef.current.has(conversationId)) {
+                        return;
+                    }
+                    incomingQueueRef.current.add(conversationId);
+
+                    try {
+
                     const updatedConversations = await refreshConversations();
                     const updatedConversation = updatedConversations.find((item) => item.id === conversationId);
                     if (!updatedConversation) {
+                        incomingQueueRef.current.delete(conversationId);
                         return;
                     }
 
@@ -166,22 +520,71 @@ export function TenantContactsSidebar() {
                         await markConversationAsRead(conversationId);
                     }
 
+                    await loadChatMessages(conversationId, { force: true });
+
                     setOpenChats((prev) => {
-                        const existing = prev.find((chat) => chat.id === conversationId);
-                        if (existing) {
-                            return prev.map((chat) => (
-                                chat.id === conversationId
-                                    ? { ...chat, ...updatedConversation, isActive: chat.isActive }
+                        const base = prev.map((chat) => ({ ...chat, isActive: false }));
+                        const existingIndex = base.findIndex((chat) => chat.id === conversationId);
+                        if (existingIndex >= 0) {
+                            return base.map((chat, index) => (
+                                index === existingIndex
+                                    ? { ...chat, ...updatedConversation, isActive: true }
                                     : chat
                             ));
                         }
 
-                        const next = [...prev, { ...updatedConversation, isActive: false }];
+                        ensureChatState(conversationId);
+                        const next = [...base, { ...updatedConversation, isActive: true }];
                         if (next.length > 3) {
                             next.shift();
                         }
                         return next;
                     });
+                    } finally {
+                        incomingQueueRef.current.delete(conversationId);
+                    }
+                }
+            )
+            .on(
+                "broadcast",
+                { event: "typing" },
+                ({ payload }) => {
+                    if (!payload || typeof payload !== "object") {
+                        return;
+                    }
+
+                    const candidate = payload as { conversationId?: string; userId?: string; isTyping?: boolean };
+                    if (!candidate.conversationId || !candidate.userId || candidate.userId === user.id) {
+                        return;
+                    }
+
+                    setChatStateById((prev) => ({
+                        ...prev,
+                        [candidate.conversationId!]: {
+                            ...(prev[candidate.conversationId!] ?? DEFAULT_CHAT_STATE),
+                            isOtherUserTyping: Boolean(candidate.isTyping),
+                        },
+                    }));
+
+                    const currentTimeout = remoteTypingTimeoutRef.current.get(candidate.conversationId);
+                    if (currentTimeout) {
+                        window.clearTimeout(currentTimeout);
+                        remoteTypingTimeoutRef.current.delete(candidate.conversationId);
+                    }
+
+                    if (candidate.isTyping) {
+                        const timeoutId = window.setTimeout(() => {
+                            setChatStateById((prev) => ({
+                                ...prev,
+                                [candidate.conversationId!]: {
+                                    ...(prev[candidate.conversationId!] ?? DEFAULT_CHAT_STATE),
+                                    isOtherUserTyping: false,
+                                },
+                            }));
+                            remoteTypingTimeoutRef.current.delete(candidate.conversationId!);
+                        }, 1700);
+                        remoteTypingTimeoutRef.current.set(candidate.conversationId, timeoutId);
+                    }
                 }
             )
             .subscribe();
@@ -191,8 +594,14 @@ export function TenantContactsSidebar() {
         return () => {
             channelRef.current = null;
             supabase.removeChannel(channel);
+            typingStopTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+            remoteTypingTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+            typingStopTimeoutRef.current.clear();
+            remoteTypingTimeoutRef.current.clear();
+            lastTypingBroadcastRef.current.clear();
+            incomingQueueRef.current.clear();
         };
-    }, [refreshConversations, supabase, user?.id]);
+    }, [ensureChatState, loadChatMessages, refreshConversations, supabase, user?.id]);
 
     const hasUnreadConversations = useMemo(
         () => conversations.some((conversation) => conversation.unread),
@@ -200,6 +609,7 @@ export function TenantContactsSidebar() {
     );
 
     const openChat = async (chatUser: ChatUser) => {
+        ensureChatState(chatUser.id);
         setOpenChats((prev) => {
             const existing = prev.find((chat) => chat.id === chatUser.id);
             if (existing) {
@@ -213,11 +623,201 @@ export function TenantContactsSidebar() {
             return next;
         });
 
+        await loadChatMessages(chatUser.id);
         await activateChat(chatUser.id);
     };
 
     const closeChat = (id: string) => {
         setOpenChats((prev) => prev.filter((c) => c.id !== id));
+        if (sharedFilesChatId === id) {
+            setSharedFilesChatId(null);
+        }
+    };
+
+    const popOutIncomingChat = useCallback((conversation: ChatUser, isActive: boolean) => {
+        ensureChatState(conversation.id);
+        setOpenChats((prev) => {
+            const base = prev.map((chat) => ({ ...chat, isActive: isActive ? false : chat.isActive }));
+            const existingIndex = base.findIndex((chat) => chat.id === conversation.id);
+
+            if (existingIndex >= 0) {
+                return base.map((chat, index) => (
+                    index === existingIndex
+                        ? { ...chat, ...conversation, isActive }
+                        : chat
+                ));
+            }
+
+            const next = [...base, { ...conversation, isActive }];
+            if (next.length > 3) {
+                next.shift();
+            }
+            return next;
+        });
+    }, [ensureChatState]);
+
+    const sharedFiles = useMemo(() => {
+        if (!sharedFilesChatId) {
+            return [] as MiniChatMessage[];
+        }
+
+        const messages = chatStateById[sharedFilesChatId]?.messages ?? [];
+        return messages.filter((message) => Boolean(message.fileUrl));
+    }, [chatStateById, sharedFilesChatId]);
+
+    useEffect(() => {
+        const snapshot = new Map<string, boolean>();
+        conversations.forEach((conversation) => {
+            snapshot.set(conversation.id, Boolean(conversation.unread));
+        });
+        unreadSnapshotRef.current = snapshot;
+        hasUnreadSnapshotBootstrappedRef.current = true;
+    }, [conversations]);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            void (async () => {
+                const mapped = await refreshConversations(false);
+                if (!hasUnreadSnapshotBootstrappedRef.current) {
+                    return;
+                }
+
+                const previous = unreadSnapshotRef.current;
+                const next = new Map<string, boolean>();
+
+                mapped.forEach((conversation) => {
+                    const nowUnread = Boolean(conversation.unread);
+                    const wasUnread = previous.get(conversation.id) ?? false;
+                    next.set(conversation.id, nowUnread);
+
+                    if (!wasUnread && nowUnread) {
+                        popOutIncomingChat(conversation, false);
+                        void loadChatMessages(conversation.id, { force: true });
+                    }
+                });
+
+                unreadSnapshotRef.current = next;
+            })();
+        }, 6000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [loadChatMessages, popOutIncomingChat, refreshConversations, user?.id]);
+
+    const submitMenuAction = useCallback(async (chat: OpenChatUser, action: "archive" | "block") => {
+        if (!chat.participantUserId) {
+            setConversationsError("Unable to identify this user for the selected action.");
+            setOpenMenuId(null);
+            return;
+        }
+
+        const actionToken = `${chat.id}:${action}`;
+        setMenuActionId(actionToken);
+        setConversationsError(null);
+
+        try {
+            const response = await fetch(`/api/messages/users/${chat.participantUserId}/actions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+            if (!response.ok) {
+                throw new Error(payload?.error ?? "Failed to update action.");
+            }
+
+            await refreshConversations();
+            closeChat(chat.id);
+            setOpenMenuId(null);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to update action.";
+            setConversationsError(message);
+        } finally {
+            setMenuActionId(null);
+        }
+    }, [refreshConversations]);
+
+    const submitMenuReport = useCallback(async (chat: OpenChatUser) => {
+        if (!chat.participantUserId) {
+            setConversationsError("Unable to identify this user for reporting.");
+            setOpenMenuId(null);
+            return;
+        }
+
+        const actionToken = `${chat.id}:report`;
+        setMenuActionId(actionToken);
+        setConversationsError(null);
+
+        try {
+            const response = await fetch(`/api/messages/users/${chat.participantUserId}/reports`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    conversationId: chat.id,
+                    category: "other",
+                    details: "Submitted from mini chat widget.",
+                }),
+            });
+
+            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+            if (!response.ok) {
+                throw new Error(payload?.error ?? "Failed to submit report.");
+            }
+
+            setOpenMenuId(null);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to submit report.";
+            setConversationsError(message);
+        } finally {
+            setMenuActionId(null);
+        }
+    }, []);
+
+    const renderOutgoingStatus = (status: MiniChatMessage["status"], timestamp: string) => {
+        switch (status) {
+            case "sending":
+                return (
+                    <>
+                        <Clock3 className="h-3 w-3" />
+                        <span>Sending</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            case "delivered":
+                return (
+                    <>
+                        <CheckCheck className="h-3 w-3" />
+                        <span>Delivered</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            case "seen":
+                return (
+                    <>
+                        <CheckCheck className="h-3 w-3 text-emerald-400" />
+                        <span className="text-emerald-400">Seen</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+            default:
+                return (
+                    <>
+                        <Check className="h-3 w-3" />
+                        <span>Sent</span>
+                        <span className="text-neutral-600">• {timestamp}</span>
+                    </>
+                );
+        }
     };
 
     return (
@@ -404,16 +1004,26 @@ export function TenantContactsSidebar() {
             <div className={cn(
                 "fixed bottom-0 flex items-end gap-4 z-[55] pointer-events-none transition-all duration-500 ease-in-out",
                 isHovered ? "right-[340px]" : "right-[110px]"
-            )}>
+            )}
+                style={{ bottom: "max(0px, env(safe-area-inset-bottom))" }}
+            >
                 <AnimatePresence>
                     {openChats.map((chat) => (
+                        (() => {
+                            const chatState = chatStateById[chat.id] ?? DEFAULT_CHAT_STATE;
+                            return (
                         <motion.div
                             key={chat.id}
-                            initial={{ y: 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 50, opacity: 0 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClickCapture={() => {
+                                if (!chat.isActive) {
+                                    void activateChat(chat.id);
+                                }
+                            }}
                             className={cn(
-                                "w-[320px] h-[400px] border rounded-t-2xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden transition-all",
+                                "w-[320px] h-[400px] border border-b-0 rounded-t-2xl shadow-[0_-18px_40px_rgba(0,0,0,0.32)] flex flex-col pointer-events-auto overflow-hidden transition-all",
                                 chat.isActive
                                     ? "bg-neutral-900 border-white/10"
                                     : "bg-neutral-900/90 border-white/20 opacity-90"
@@ -421,12 +1031,11 @@ export function TenantContactsSidebar() {
                         >
                             {/* Chatbox Header */}
                             <div
-                                onClick={() => void activateChat(chat.id)}
                                 className={cn(
                                     "flex items-center justify-between p-3 border-b rounded-t-2xl cursor-pointer transition-colors",
                                     chat.isActive
-                                        ? "border-white/10 bg-neutral-800/50 hover:bg-neutral-800"
-                                        : "border-white/20 bg-neutral-800/70 hover:bg-neutral-800"
+                                        ? "border-emerald-400/25 bg-emerald-500/12 hover:bg-emerald-500/20"
+                                        : "border-amber-400/20 bg-amber-500/10 hover:bg-amber-500/15"
                                 )}
                             >
                                 <div className="flex items-center gap-2 overflow-hidden">
@@ -436,19 +1045,88 @@ export function TenantContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <h4 className="text-sm font-bold text-white truncate hover:underline">{chat.name}</h4>
-                                        <p className={cn("text-[10px]", chat.isActive ? "text-emerald-400" : "text-amber-300")}>{chat.isActive ? "Active" : "Inactive"}</p>
+                                        {chat.isActive && (
+                                            <p className="text-[10px] text-emerald-400">Active</p>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-0.5 shrink-0 text-neutral-400">
+                                <div className="flex items-center gap-0.5 shrink-0 text-neutral-400 relative">
                                     <Link href="/tenant/messages" className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
                                         <Maximize2 className="w-3.5 h-3.5" />
                                     </Link>
-                                    <button className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
-                                        <Phone className="w-4 h-4" />
-                                    </button>
-                                    <button className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
-                                        <Video className="w-4 h-4" />
-                                    </button>
+                                    <div className="relative">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                                            }}
+                                            className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors"
+                                        >
+                                            <MoreVertical className="w-4 h-4" />
+                                        </button>
+                                        
+                                        {/* Kebab Menu Dropdown */}
+                                        {openMenuId === chat.id && (
+                                            <>
+                                                <div 
+                                                    className="fixed inset-0 z-40" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenMenuId(null);
+                                                    }} 
+                                                />
+                                                <div className="absolute right-0 top-full mt-1 w-40 bg-neutral-800 border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-200">
+                                                    <Link 
+                                                        href={chat.participantUserId ? `/visitor/${chat.participantUserId}` : "/tenant/messages"}
+                                                        onClick={() => setOpenMenuId(null)}
+                                                        className="w-full text-left px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/5 transition-colors block"
+                                                    >
+                                                        View Profile
+                                                    </Link>
+                                                    <button
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setSharedFilesChatId(chat.id);
+                                                            setOpenMenuId(null);
+                                                        }}
+                                                        className="w-full text-left px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/5 transition-colors block"
+                                                    >
+                                                        View Shared Files
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            void submitMenuAction(chat, "archive");
+                                                        }}
+                                                        disabled={menuActionId !== null}
+                                                        className="w-full text-left px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {menuActionId === `${chat.id}:archive` ? "Archiving..." : "Archive Chat"}
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            void submitMenuReport(chat);
+                                                        }}
+                                                        disabled={menuActionId !== null}
+                                                        className="w-full text-left px-4 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors border-t border-white/5 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {menuActionId === `${chat.id}:report` ? "Reporting..." : "Report User"}
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            void submitMenuAction(chat, "block");
+                                                        }}
+                                                        disabled={menuActionId !== null}
+                                                        className="w-full text-left px-4 py-2 text-xs text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {menuActionId === `${chat.id}:block` ? "Blocking..." : "Block Contact"}
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                     <button onClick={() => closeChat(chat.id)} className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
                                         <X className="w-4 h-4" />
                                     </button>
@@ -456,58 +1134,132 @@ export function TenantContactsSidebar() {
                             </div>
 
                             {/* Chatbox Body (Dummy Content) */}
-                            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-[#0a0a0a]/50">
-                                <div className="text-center">
-                                    <span className="text-[10px] text-neutral-500 font-medium bg-neutral-800 px-2 py-1 rounded-full">{chat.time}</span>
-                                </div>
-                                <div className="flex items-end gap-2">
-                                    <img src={chat.avatar} className="w-6 h-6 rounded-full shrink-0" alt="avatar" />
-                                    <div className="bg-neutral-800 text-neutral-200 text-sm px-4 py-2 rounded-2xl rounded-bl-sm max-w-[80%] border border-white/5">
-                                        {chat.lastMessage}
-                                    </div>
-                                </div>
-                                {!chat.isActive && (
-                                    <div className="text-center">
-                                        <span className="text-[10px] text-amber-300 font-medium bg-amber-500/10 px-2 py-1 rounded-full border border-amber-400/20">
-                                            Click this chat to mark messages as seen
-                                        </span>
-                                    </div>
+                            <div
+                                ref={(node) => {
+                                    chatScrollRef.current[chat.id] = node;
+                                }}
+                                className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-[#0a0a0a]/50"
+                            >
+                                {chatState.isLoading && (
+                                    <p className="text-xs text-neutral-500 text-center">Loading conversation...</p>
                                 )}
-                                {chat.id === "usr_1" && (
-                                    <div className="flex items-end gap-2 justify-end mt-2">
-                                        <div className="bg-primary text-black font-medium text-sm px-4 py-2 rounded-2xl rounded-br-sm max-w-[80%]">
-                                            Got it, thanks!
+                                {!chatState.isLoading && chatState.messages.length === 0 && (
+                                    <p className="text-xs text-neutral-500 text-center">No messages yet</p>
+                                )}
+                                {chatState.messages.map((message) => {
+                                    const hasImage = Boolean(message.fileUrl && message.fileMimeType?.startsWith("image/"));
+                                    const hasFile = Boolean(message.fileUrl && !message.fileMimeType?.startsWith("image/"));
+
+                                    return (
+                                    <div key={message.id} className={cn("flex flex-col w-full gap-1 mb-2 animate-in fade-in duration-300", message.isOwn ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
+                                        <div className={cn(
+                                            "text-sm px-4 py-2.5 rounded-2xl max-w-[85%] border break-words [overflow-wrap:anywhere]",
+                                            message.isOwn
+                                                ? "bg-primary text-black border-primary/30 rounded-br-sm font-medium shadow-sm transition-all"
+                                                : "bg-neutral-800 text-neutral-200 border-white/5 rounded-bl-sm",
+                                            hasFile && "px-0 py-0 bg-transparent border-none shadow-none text-white mr-0",
+                                            hasImage && "p-1 bg-black/40 border-white/10"
+                                        )}>
+                                            {hasImage && message.fileUrl && (
+                                                <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden w-full bg-black/40">
+                                                    <img src={message.fileUrl} alt="Shared image" className="w-full max-h-48 object-contain" />
+                                                </a>
+                                            )}
+
+                                            {hasFile && message.fileUrl && (
+                                                <a
+                                                    href={message.fileUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-3 rounded-2xl border p-3 border-white/10 bg-neutral-900/80"
+                                                >
+                                                    <div className="p-2 rounded-lg bg-white/10 shrink-0">
+                                                        <File className="w-4 h-4 text-neutral-100" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-bold truncate text-neutral-100">{message.content || "Attachment"}</p>
+                                                    </div>
+                                                </a>
+                                            )}
+
+                                            {!message.fileUrl && (
+                                                <span className="leading-relaxed whitespace-pre-wrap">{message.content}</span>
+                                            )}
+                                        </div>
+                                        <div className={cn("text-[10px] flex items-center gap-1", message.isOwn ? "text-neutral-500" : "text-neutral-600 px-1")}>
+                                            {message.isOwn
+                                                ? renderOutgoingStatus(message.status, formatMiniTimestamp(message.createdAt))
+                                                : <span>{formatMiniTimestamp(message.createdAt)}</span>
+                                            }
                                         </div>
                                     </div>
+                                )})}
+                                {chatState.isOtherUserTyping && (
+                                    <div className="flex items-end gap-2 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
+                                        <div className="px-3 py-2 bg-neutral-800 text-white rounded-2xl rounded-bl-sm border border-white/5 shadow-sm">
+                                            <div className="flex items-center gap-1">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
+                                                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
+                                                <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                {chatState.error && (
+                                    <p className="text-xs text-red-400 text-center">{chatState.error}</p>
                                 )}
                             </div>
 
                             {/* Chatbox Input */}
                             <div className="p-3 border-t border-white/10 bg-neutral-900 flex flex-col gap-2 shrink-0">
                                 <div className="flex items-center gap-2">
-                                    <button className="text-neutral-400 hover:text-white p-1.5 transition-colors">
+                                    <label className={cn("p-1.5 transition-colors", chat.isActive ? "text-neutral-400 hover:text-white cursor-pointer" : "text-neutral-600 cursor-not-allowed")}>
                                         <MoreHorizontal className="w-4 h-4" />
-                                    </button>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            disabled={!chat.isActive || chatState.isUploading}
+                                            onChange={(event) => {
+                                                const file = event.target.files?.[0];
+                                                event.currentTarget.value = "";
+                                                if (file) {
+                                                    void uploadMiniFile(chat.id, file);
+                                                }
+                                            }}
+                                        />
+                                    </label>
                                     <div className="flex-1 bg-white/5 border border-white/10 rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                                         <input
                                             type="text"
                                             placeholder={chat.isActive ? "Aa" : "Click header to activate"}
                                             disabled={!chat.isActive}
+                                            value={chatState.draft}
+                                            onChange={(event) => updateDraft(chat.id, event.target.value)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === "Enter" && !event.shiftKey) {
+                                                    event.preventDefault();
+                                                    void sendMiniMessage(chat.id);
+                                                }
+                                            }}
                                             className="w-full bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-neutral-500"
                                         />
                                     </div>
                                     <button
-                                        disabled={!chat.isActive}
+                                        disabled={!chat.isActive || chatState.isSending || chatState.isUploading}
+                                        onClick={() => void sendMiniMessage(chat.id)}
                                         className={cn(
                                             "p-1.5 transition-colors",
-                                            chat.isActive ? "text-primary hover:text-primary/80" : "text-neutral-600 cursor-not-allowed"
+                                            chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "text-neutral-600 cursor-not-allowed"
                                         )}
                                     >
                                         <Send className="w-4 h-4" />
                                     </button>
                                 </div>
+                                {chatState.isUploading && <p className="text-[10px] text-neutral-400">Uploading attachment...</p>}
                             </div>
                         </motion.div>
+                            );
+                        })()
                     ))}
                 </AnimatePresence>
 
@@ -515,8 +1267,76 @@ export function TenantContactsSidebar() {
                 <ChatWidget
                     isOpen={isIrisOpen}
                     onClose={() => setIsIrisOpen(false)}
+                    embedded
                 />
             </div>
+
+            <AnimatePresence>
+                {sharedFilesChatId && (
+                    <>
+                        <motion.button
+                            type="button"
+                            className="fixed inset-0 bg-black/60 z-[75]"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSharedFilesChatId(null)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 16, scale: 0.98 }}
+                            className="fixed z-[80] right-6 bottom-6 w-[360px] max-h-[70vh] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                        >
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-neutral-900/90">
+                                <div className="min-w-0">
+                                    <p className="text-sm font-bold text-white truncate">Shared Files</p>
+                                    <p className="text-[11px] text-neutral-400 truncate">
+                                        {openChats.find((chat) => chat.id === sharedFilesChatId)?.name ?? "Conversation"}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSharedFilesChatId(null)}
+                                    className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="max-h-[calc(70vh-62px)] overflow-y-auto custom-scrollbar p-3 space-y-2">
+                                {sharedFiles.length === 0 && (
+                                    <p className="text-xs text-neutral-500 text-center py-5">No shared files in this chat yet.</p>
+                                )}
+                                {sharedFiles.map((message) => {
+                                    const isImage = Boolean(message.fileMimeType?.startsWith("image/"));
+                                    return (
+                                        <a
+                                            key={message.id}
+                                            href={message.fileUrl ?? "#"}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block rounded-xl border border-white/10 bg-black/30 hover:bg-black/50 transition-colors p-2"
+                                        >
+                                            {isImage && message.fileUrl ? (
+                                                <img
+                                                    src={message.fileUrl}
+                                                    alt="Shared file"
+                                                    className="w-full max-h-36 object-contain rounded-lg bg-black/60"
+                                                />
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-neutral-100">
+                                                    <span className="p-2 rounded-lg bg-white/10"><File className="w-4 h-4" /></span>
+                                                    <span className="text-xs font-medium truncate">{message.content || "Attachment"}</span>
+                                                </div>
+                                            )}
+                                            <p className="mt-2 text-[10px] text-neutral-500">{formatMiniTimestamp(message.createdAt)}</p>
+                                        </a>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </>
     );
 }

@@ -1,0 +1,8 @@
+ M src/app/landlord/dashboard/page.tsx
+M  src/app/landlord/messages/page.tsx
+M  src/app/tenant/messages/page.tsx
+ M src/components/landlord/dashboard/ContactsSidebar.tsx
+ M src/components/landlord/dashboard/QuickActions.tsx
+ M src/components/tenant/ChatWidget.tsx
+ M src/components/tenant/TenantContactsSidebar.tsx
+?? status.txt
