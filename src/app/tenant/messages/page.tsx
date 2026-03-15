@@ -6,7 +6,6 @@ import {
     MoreVertical,
     Send,
     Paperclip,
-    Sparkles,
     ShieldCheck,
     Download,
     CheckCircle2,
@@ -32,7 +31,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 import { useAuth } from "@/hooks/useAuth";
@@ -247,12 +246,14 @@ const TENANT_QUICK_ACTIONS_BY_RELATIONSHIP: Record<ContactItem["relationshipStat
 
 export default function TenantMessagesPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
+    const conversationFromUrl = searchParams.get("conversation")?.trim() || null;
 
     const [contacts, setContacts] = useState<ContactItem[]>([IRIS_CONTACT]);
-    const [activeConversationId, setActiveConversationId] = useState<string>("iris");
-    const [irisAssistActive, setIrisAssistActive] = useState(false);
+    const [activeConversationId, setActiveConversationId] = useState<string>(() => conversationFromUrl ?? "iris");
     const [messagesState, setMessagesState] = useState<UiMessage[]>([]);
     const [messageInput, setMessageInput] = useState("");
     const [showInfoSidebar, setShowInfoSidebar] = useState(false);
@@ -291,7 +292,7 @@ export default function TenantMessagesPage() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const dragDepthRef = useRef(0);
     const messagesCacheRef = useRef<Map<string, UiMessage[]>>(new Map());
-    const activeConversationIdRef = useRef<string>("iris");
+    const activeConversationIdRef = useRef<string>(conversationFromUrl ?? "iris");
 
     useEffect(() => {
         return () => {
@@ -304,6 +305,39 @@ export default function TenantMessagesPage() {
     useEffect(() => {
         activeConversationIdRef.current = activeConversationId;
     }, [activeConversationId]);
+
+    useEffect(() => {
+        if (!conversationFromUrl || conversationFromUrl === activeConversationId) {
+            return;
+        }
+
+        const isConversationKnown = contacts.some((contact) => contact.id === conversationFromUrl);
+        if (!isConversationKnown) {
+            return;
+        }
+
+        setActiveConversationId(conversationFromUrl);
+    }, [activeConversationId, contacts, conversationFromUrl]);
+
+    useEffect(() => {
+        const currentConversationInUrl = searchParams.get("conversation")?.trim() || null;
+        const nextConversationForUrl = activeConversationId === "iris" ? null : activeConversationId;
+
+        if (currentConversationInUrl === nextConversationForUrl) {
+            return;
+        }
+
+        const nextParams = new URLSearchParams(searchParams.toString());
+        if (!nextConversationForUrl) {
+            nextParams.delete("conversation");
+        } else {
+            nextParams.set("conversation", nextConversationForUrl);
+        }
+
+        const nextQuery = nextParams.toString();
+        const nextHref = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+        router.replace(nextHref, { scroll: false });
+    }, [activeConversationId, pathname, router, searchParams]);
 
     useEffect(() => {
         if (!user?.id) {
@@ -381,6 +415,10 @@ export default function TenantMessagesPage() {
             return;
         }
 
+        if (isSidebarLoading) {
+            return;
+        }
+
         const stillVisible = visibleContacts.some((contact) => contact.id === activeConversationId);
         if (stillVisible) {
             return;
@@ -389,7 +427,7 @@ export default function TenantMessagesPage() {
         setShowInfoSidebar(false);
         setShowFilesSidebar(false);
         setActiveConversationId("iris");
-    }, [activeConversationId, visibleContacts]);
+    }, [activeConversationId, isSidebarLoading, visibleContacts]);
 
     const updateActiveContactActionState = useCallback((nextState: { archived?: boolean; blocked?: boolean }) => {
         if (!activeConversationId || activeConversationId === "iris") {
@@ -612,7 +650,9 @@ export default function TenantMessagesPage() {
             setContacts(mapped);
 
             setActiveConversationId((current) => {
-                if (current === "iris") return current;
+                if (conversationFromUrl && mapped.some((contact) => contact.id === conversationFromUrl)) {
+                    return conversationFromUrl;
+                }
                 if (mapped.some((contact) => contact.id === current)) {
                     return current;
                 }
@@ -767,8 +807,6 @@ export default function TenantMessagesPage() {
                 },
             });
         }
-
-        setIrisAssistActive(false);
 
         if (hasText) {
             const optimisticId = `local-${Date.now()}`;
@@ -1316,8 +1354,25 @@ export default function TenantMessagesPage() {
         }
     };
 
+    const shouldShowLoadingOverlay =
+        isSidebarLoading ||
+        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl) ||
+        (activeConversationId !== "iris" && isMessagesLoading);
+
     return (
         <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700">
+            {shouldShowLoadingOverlay && (
+                <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-neutral-900/80 px-8 py-6 text-center shadow-2xl">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-600 border-t-primary" aria-hidden="true" />
+                        <div>
+                            <p className="text-sm font-semibold text-white">Loading conversation...</p>
+                            <p className="mt-1 text-xs text-neutral-400">Preparing your messages.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {isGlobalFileDrag && (
                 <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="rounded-3xl border border-primary/40 bg-neutral-900/90 px-10 py-8 shadow-2xl shadow-primary/20 text-center">
@@ -1813,30 +1868,6 @@ export default function TenantMessagesPage() {
                                     </span>
                                 </div>
 
-                                {/* Iris Assist Suggestions (expandable) */}
-                                {irisAssistActive && (
-                                    <div className="flex flex-wrap gap-2 pt-1 pb-3 pl-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                        {[
-                                            "I have a question about my lease",
-                                            "Can I schedule a repair?",
-                                            "How do I pay rent online?",
-                                            "I am renewing my contract"
-                                        ].map((suggestion, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => {
-                                                    setMessageInput(suggestion);
-                                                    setIrisAssistActive(false);
-                                                }}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-xs font-medium text-blue-400 transition-colors"
-                                            >
-                                                <Sparkles className="w-3 h-3" />
-                                                {suggestion}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
                                 {pendingAttachment && (
                                     <div className="relative w-36 rounded-2xl border border-white/10 bg-black/30 p-2">
                                         <button
@@ -1885,18 +1916,6 @@ export default function TenantMessagesPage() {
                                         rows={1}
                                     />
                                     <div className="flex items-center gap-1 shrink-0 pb-1">
-                                        <button
-                                            onClick={() => setIrisAssistActive(!irisAssistActive)}
-                                            className={cn(
-                                                "p-2 rounded-xl transition-all duration-300",
-                                                irisAssistActive
-                                                    ? "bg-blue-500 text-black shadow-[0_0_12px_rgba(59,130,246,0.5)]"
-                                                    : "text-blue-400 hover:bg-white/10"
-                                            )}
-                                            title="Iris AI Assist"
-                                        >
-                                            <Sparkles className="w-5 h-5" />
-                                        </button>
                                         <button
                                             onClick={handleFilePickerOpen}
                                             disabled={isUploadingFile || activeConversationId === "iris"}
