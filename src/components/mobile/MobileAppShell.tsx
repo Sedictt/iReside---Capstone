@@ -41,7 +41,13 @@ import {
     BatteryFull,
     Wifi,
     Smartphone,
+    Briefcase,
+    LayoutGrid,
+    Settings,
+    Bell,
+    Bot,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import styles from "./MobileAppShell.module.css";
 
 // ─── Tab Configuration ─────────────────────────────────────
@@ -216,6 +222,21 @@ function ScreenRouter() {
 // ─── Main App Shell ────────────────────────────────────────
 export default function MobileAppShell() {
     const { currentScreen, role } = useNavigation();
+    const [isSwitchingRole, setIsSwitchingRole] = useState(false);
+    const [prevRole, setPrevRole] = useState(role);
+
+    useEffect(() => {
+        if (role !== prevRole && role !== null && prevRole !== null) {
+            setIsSwitchingRole(true);
+            const timer = setTimeout(() => {
+                setIsSwitchingRole(false);
+                setPrevRole(role);
+            }, 800);
+            return () => clearTimeout(timer);
+        } else if (role !== prevRole) {
+            setPrevRole(role);
+        }
+    }, [role, prevRole]);
 
     const showTabBar =
         role !== null && !SCREENS_WITHOUT_TABS.includes(currentScreen);
@@ -235,6 +256,18 @@ export default function MobileAppShell() {
 
                 {/* Bottom Tab Bar */}
                 {showTabBar && <BottomTabBar />}
+
+                {/* Role Switcher Overlay */}
+                {isSwitchingRole && (
+                    <div className={styles.roleSwitcherOverlay}>
+                        <div className={styles.roleSwitcherLogo}>
+                            <LayoutGrid size={32} />
+                        </div>
+                        <div className={styles.roleSwitcherText}>
+                            Switching to {role === 'landlord' ? 'Landlord' : 'Tenant'} view...
+                        </div>
+                    </div>
+                )}
 
                 {/* Home Indicator */}
                 <div className={styles.homeIndicator} />
