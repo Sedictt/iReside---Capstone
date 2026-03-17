@@ -1,0 +1,385 @@
+/* ═══════════════════════════════════════════════════════════
+   Landlord Property & Unit Detail Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    flex-shrink: 0;
+    background: #0a0a0a;
+    z-index: 10;
+}
+
+.backButton, .actionButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active, .actionButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg, .actionButton svg {
+    width: 20px;
+    height: 20px;
+}
+
+.topBarTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    text-align: center;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 24px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Property Header (Image & Title) ───────────────────── */
+.imageHeader {
+    width: 100%;
+    height: 180px;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    margin-top: 8px;
+    position: relative;
+    background: #1a1a1a;
+}
+
+.imageHeader img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.imageOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px 16px 16px;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.9));
+}
+
+.propertyTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+}
+
+.propertyAddress {
+    font-size: 13px;
+    color: #d4d4d4;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.propertyAddress svg {
+    width: 14px;
+    height: 14px;
+}
+
+.editButton {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+/* ─── Overview Stats Grid ──────────────────────────────── */
+.statsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.statCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.statCard.highlight {
+    background: linear-gradient(135deg, rgba(109, 152, 56, 0.1) 0%, #141414 100%);
+    border-color: rgba(109, 152, 56, 0.3);
+}
+
+.statValue {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.statCard.highlight .statValue {
+    color: #6d9838;
+}
+
+.statLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ─── Units Section ────────────────────────────────────── */
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.addUnitBtn {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6d9838;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ─── Unit List ────────────────────────────────────────── */
+.unitList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.unitCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s ease;
+}
+
+.unitCard:active {
+    background: #1a1a1a;
+}
+
+.unitLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.unitIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #737373;
+}
+
+.unitIcon.occupied {
+    background: rgba(109, 152, 56, 0.1);
+    color: #6d9838;
+}
+
+.unitIcon.vacant {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.unitName {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.unitTenant {
+    font-size: 13px;
+    color: #a3a3a3;
+}
+
+.unitStatus {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.unitStatus.occupied {
+    background: rgba(109, 152, 56, 0.15);
+    color: #6d9838;
+}
+
+.unitStatus.vacant {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+/* =========================================================
+   Unit Detail Specific Styles
+   ========================================================= */
+
+.tenantCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.tenantAvatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.tenantName {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.tenantContact {
+    font-size: 13px;
+    color: #737373;
+    margin-bottom: 16px;
+}
+
+.contactActions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.actionBtn {
+    flex: 1;
+    height: 44px;
+    border-radius: 12px;
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    color: #fafafa;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.actionBtn.primary {
+    background: #6d9838;
+    color: #fff;
+    border: none;
+}
+
+.leaseInfoBox {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.leaseRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed #262626;
+}
+
+.leaseRow:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.leaseRow:first-child {
+    padding-top: 0;
+}
+
+.leaseLabel {
+    font-size: 13px;
+    color: #737373;
+}
+
+.leaseValue {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fafafa;
+}
