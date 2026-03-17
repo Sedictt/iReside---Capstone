@@ -66,26 +66,9 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data: paymentRows, error } = await supabase
         .from("payments")
-        .select(
-            `
-            id,
-            amount,
-            status,
-            due_date,
-            paid_at,
-            tenant:profiles!payments_tenant_id_fkey (
-                full_name,
-                avatar_url
-            ),
-            lease:leases (
-                unit:units (
-                    name
-                )
-            )
-            `
-        )
+        .select("id, amount, status, due_date, paid_at, tenant_id, lease_id")
         .eq("landlord_id", user.id)
         .order("due_date", { ascending: true })
         .limit(200);
@@ -94,13 +77,55 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch payment overview." }, { status: 500 });
     }
 
+    const tenantIds = Array.from(
+        new Set((paymentRows ?? []).map((row) => row.tenant_id).filter((value): value is string => Boolean(value)))
+    );
+    const leaseIds = Array.from(
+        new Set((paymentRows ?? []).map((row) => row.lease_id).filter((value): value is string => Boolean(value)))
+    );
+
+    const { data: tenantRows, error: tenantsError } =
+        tenantIds.length > 0
+            ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", tenantIds)
+            : { data: [], error: null };
+
+    if (tenantsError) {
+        return NextResponse.json({ error: "Failed to fetch tenant profiles." }, { status: 500 });
+    }
+
+    const { data: leaseRows, error: leasesError } =
+        leaseIds.length > 0
+            ? await supabase.from("leases").select("id, unit_id").in("id", leaseIds)
+            : { data: [], error: null };
+
+    if (leasesError) {
+        return NextResponse.json({ error: "Failed to fetch leases." }, { status: 500 });
+    }
+
+    const unitIds = Array.from(
+        new Set((leaseRows ?? []).map((row) => row.unit_id).filter((value): value is string => Boolean(value)))
+    );
+
+    const { data: unitRows, error: unitsError } =
+        unitIds.length > 0
+            ? await supabase.from("units").select("id, name").in("id", unitIds)
+            : { data: [], error: null };
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to fetch units." }, { status: 500 });
+    }
+
+    const tenantMap = new Map((tenantRows ?? []).map((row) => [row.id, row]));
+    const leaseMap = new Map((leaseRows ?? []).map((row) => [row.id, row]));
+    const unitMap = new Map((unitRows ?? []).map((row) => [row.id, row]));
+
     const grouped: Record<PaymentCategory, PaymentItem[]> = {
         Overdue: [],
         "Near Due": [],
         Paid: [],
     };
 
-    (data ?? []).forEach((row) => {
+    (paymentRows ?? []).forEach((row) => {
         const category = getPaymentCategory({
             status: row.status,
             due_date: row.due_date,
@@ -111,8 +136,12 @@ export async function GET() {
             return;
         }
 
-        const unitName = row.lease?.unit?.name ?? "Unknown unit";
-        const tenantName = row.tenant?.full_name ?? "Unknown tenant";
+        const tenant = tenantMap.get(row.tenant_id);
+        const lease = leaseMap.get(row.lease_id);
+        const unit = lease ? unitMap.get(lease.unit_id) : null;
+
+        const unitName = unit?.name ?? "Unknown unit";
+        const tenantName = tenant?.full_name ?? "Unknown tenant";
 
         grouped[category].push({
             id: row.id,
@@ -120,7 +149,7 @@ export async function GET() {
             unit: unitName,
             amount: Number(row.amount ?? 0),
             date: formatDate(category === "Paid" ? row.paid_at : row.due_date),
-            avatar: row.tenant?.avatar_url ?? null,
+            avatar: tenant?.avatar_url ?? null,
             status: category,
         });
     });

@@ -37,10 +37,11 @@ import PropertyDetailModal from "@/components/PropertyDetailModal";
 import { cn } from "@/lib/utils";
 import SearchMapView from "@/components/SearchMapView";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from '@/context/AuthContext';
 import { TenantNavbar } from "@/components/tenant/TenantNavbar";
 import { useRouter } from "next/navigation";
 
-export default function LandingPage() {
+function LandingPageContent() {
   const { profile, user, loading } = useAuth();
   const role = profile?.role || (user?.user_metadata?.role as string) || (user ? 'tenant' : null);
   const router = useRouter();
@@ -966,5 +967,13 @@ export default function LandingPage() {
         onOpenChange={setDetailsOpen}
       />
     </div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <AuthProvider>
+      <LandingPageContent />
+    </AuthProvider>
   );
 }

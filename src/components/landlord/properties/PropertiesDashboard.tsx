@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,15 +10,11 @@ import {
     Plus,
     Filter,
     MapPin,
-    ArrowUpRight,
-    ArrowDownRight,
     Building2,
     Zap,
     TrendingUp,
     Settings,
-    MoreVertical,
     Wallet,
-    Home,
     Wrench,
     Users,
     X,
@@ -27,84 +23,107 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Expanded Mock Data
-const properties = [
-    {
-        id: "PROP-001",
-        name: "Grand View Residences",
-        address: "123 Skyline Avenue, Metro Manila",
-        type: "Apartment Complex",
-        capRate: "7.2%",
-        noi: "₱12.5M",
-        valuation: "₱175M",
-        metrics: {
-            occupied: 42,
-            total: 45,
-            maintenance: 2
-        },
-        recentActivity: "Lease renewed for Unit 401 (+5% increase)",
-        status: "Performing",
-        image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80",
-        color: "from-emerald-500/20 to-emerald-500/0",
-        iconColor: "text-emerald-500",
-        bgIcon: "bg-emerald-500/10",
-    },
-    {
-        id: "PROP-002",
-        name: "Oasis Lofts & Studios",
-        address: "45 Greenfield Subd, Quezon City",
-        type: "Condominium",
-        capRate: "6.8%",
-        noi: "₱28.2M",
-        valuation: "₱415M",
-        metrics: {
-            occupied: 110,
-            total: 120,
-            maintenance: 5
-        },
-        recentActivity: "HVAC repair completed in Lobby",
-        status: "Stable",
-        image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&auto=format&fit=crop&q=80",
+type PropertyStatus = "Performing" | "Stable" | "Attention Required";
+
+type PropertyCard = {
+    id: string;
+    name: string;
+    address: string;
+    type: string;
+    capRate: string;
+    noi: string;
+    valuation: string;
+    metrics: {
+        occupied: number;
+        total: number;
+        maintenance: number;
+    };
+    recentActivity: string;
+    status: PropertyStatus;
+    image: string;
+};
+
+const getStyleByStatus = (status: PropertyStatus) => {
+    if (status === "Performing") {
+        return {
+            color: "from-emerald-500/20 to-emerald-500/0",
+            iconColor: "text-emerald-500",
+            bgIcon: "bg-emerald-500/10",
+        };
+    }
+
+    if (status === "Attention Required") {
+        return {
+            color: "from-amber-500/20 to-amber-500/0",
+            iconColor: "text-amber-500",
+            bgIcon: "bg-amber-500/10",
+        };
+    }
+
+    return {
         color: "from-blue-500/20 to-blue-500/0",
         iconColor: "text-blue-500",
         bgIcon: "bg-blue-500/10",
-    },
-    {
-        id: "PROP-003",
-        name: "The Heights Serviced Apts",
-        address: "202 Peak Drive, Makati City",
-        type: "Serviced Apartment",
-        capRate: "8.5%",
-        noi: "₱18.8M",
-        valuation: "₱220M",
-        metrics: {
-            occupied: 25,
-            total: 30,
-            maintenance: 8
-        },
-        recentActivity: "3 new maintenance requests (Plumbing)",
-        status: "Attention Required",
-        image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=1200&auto=format&fit=crop&q=80",
-        color: "from-amber-500/20 to-amber-500/0",
-        iconColor: "text-amber-500",
-        bgIcon: "bg-amber-500/10",
-    }
-];
+    };
+};
 
 export function PropertiesDashboard() {
+    const [properties, setProperties] = useState<PropertyCard[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"All" | "Performing" | "Attention Required">("All");
     const [expandedStatsId, setExpandedStatsId] = useState<string | null>(null);
     const [hubModalId, setHubModalId] = useState<string | null>(null);
 
-    const filteredProperties = properties.filter(prop => {
-        const matchesSearch = prop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            prop.address.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTab = activeTab === "All" ||
-            (activeTab === "Performing" && (prop.status === "Performing" || prop.status === "Stable")) ||
-            (activeTab === "Attention Required" && prop.status === "Attention Required");
-        return matchesSearch && matchesTab;
-    });
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadProperties = async () => {
+            setIsLoading(true);
+            setLoadError(null);
+
+            try {
+                const response = await fetch("/api/landlord/properties/overview", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                const payload = (await response.json()) as { properties?: PropertyCard[]; error?: string };
+
+                if (!response.ok) {
+                    throw new Error(payload.error || "Failed to load properties.");
+                }
+
+                setProperties(payload.properties ?? []);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") return;
+                setLoadError(error instanceof Error ? error.message : "Failed to load properties.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        void loadProperties();
+
+        return () => {
+            controller.abort();
+        };
+    }, [reloadKey]);
+
+    const filteredProperties = useMemo(() => {
+        return properties.filter((prop) => {
+            const matchesSearch =
+                prop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                prop.address.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesTab =
+                activeTab === "All" ||
+                (activeTab === "Performing" && (prop.status === "Performing" || prop.status === "Stable")) ||
+                (activeTab === "Attention Required" && prop.status === "Attention Required");
+            return matchesSearch && matchesTab;
+        });
+    }, [properties, searchQuery, activeTab]);
 
     return (
         <div className="space-y-8 min-h-screen pb-12">
@@ -176,10 +195,35 @@ export function PropertiesDashboard() {
 
             {/* Assets Stack View */}
             <div className="space-y-6">
-                {filteredProperties.map((property) => (
+                {isLoading && (
+                    <div className="text-center py-20 bg-[#111] rounded-3xl border border-white/5">
+                        <Building2 className="h-12 w-12 text-neutral-600 mx-auto mb-4 animate-pulse" />
+                        <h3 className="text-xl font-bold text-white mb-2">Loading properties...</h3>
+                        <p className="text-neutral-500">Fetching your portfolio from the database.</p>
+                    </div>
+                )}
+
+                {!isLoading && loadError && (
+                    <div className="text-center py-20 bg-[#111] rounded-3xl border border-red-500/20">
+                        <Building2 className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-white mb-2">Failed to load portfolio</h3>
+                        <p className="text-red-300 mb-6">{loadError}</p>
+                        <button
+                            onClick={() => setReloadKey((value) => value + 1)}
+                            className="h-11 px-5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-medium transition-colors"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
+                {!isLoading && !loadError && filteredProperties.map((property) => {
+                    const style = getStyleByStatus(property.status);
+
+                    return (
                     <div key={property.id} className="group relative bg-[#111] border border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-all duration-500">
                         {/* Ambient Glow */}
-                        <div className={cn("absolute top-0 left-0 w-full h-32 bg-gradient-to-b opacity-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-40", property.color)} />
+                        <div className={cn("absolute top-0 left-0 w-full h-32 bg-gradient-to-b opacity-20 pointer-events-none transition-opacity duration-500 group-hover:opacity-40", style.color)} />
 
                         <div className="flex flex-col lg:flex-row relative z-10">
                             {/* Left Image Section */}
@@ -251,8 +295,8 @@ export function PropertiesDashboard() {
 
                                         {/* Maintenance Status */}
                                         <div className="flex items-center gap-4">
-                                            <div className={cn("w-14 h-14 rounded-full flex items-center justify-center", property.bgIcon)}>
-                                                <Wrench className={cn("h-6 w-6", property.iconColor)} />
+                                            <div className={cn("w-14 h-14 rounded-full flex items-center justify-center", style.bgIcon)}>
+                                                <Wrench className={cn("h-6 w-6", style.iconColor)} />
                                             </div>
                                             <div>
                                                 <p className="text-sm text-neutral-400 font-medium">Maintenance</p>
@@ -348,9 +392,10 @@ export function PropertiesDashboard() {
                             )}
                         </AnimatePresence>
                     </div>
-                ))}
+                    );
+                })}
 
-                {filteredProperties.length === 0 && (
+                {!isLoading && !loadError && filteredProperties.length === 0 && (
                     <div className="text-center py-20 bg-[#111] rounded-3xl border border-white/5">
                         <Building2 className="h-12 w-12 text-neutral-600 mx-auto mb-4" />
                         <h3 className="text-xl font-bold text-white mb-2">No matching assets</h3>
@@ -398,7 +443,7 @@ export function PropertiesDashboard() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Link href={`/landlord/properties/new`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                    <Link href={`/landlord/properties/new?id=${activeProperty.id}&mode=edit`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
                                         <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                             <Edit3 className="w-5 h-5" />
                                         </div>

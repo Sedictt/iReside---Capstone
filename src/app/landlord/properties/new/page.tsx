@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import Link from "next/link";
+import { useState, useEffect, Suspense, type ChangeEvent, type DragEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     Building2,
@@ -18,12 +17,47 @@ import {
     Trees,
     FileText,
     ClipboardList,
-    ShieldCheck
+    ShieldCheck,
+    Trash2,
+    ArrowUp,
+    Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SmartContractBuilderModal } from "@/components/landlord/properties/SmartContractBuilderModal";
+import { createClient } from "@/lib/supabase/client";
 
 type Step = 1 | 2 | 3 | 4;
+
+const PROPERTY_TYPE_TO_ENUM: Record<string, "apartment" | "condo" | "house" | "townhouse" | "studio"> = {
+    "Apartment Complex": "apartment",
+    Condominium: "condo",
+    "Single Family Home": "house",
+    Townhouse: "townhouse",
+    Studio: "studio",
+    "Commercial Space": "apartment",
+};
+
+const ENUM_TO_PROPERTY_TYPE: Record<string, string> = {
+    apartment: "Apartment Complex",
+    condo: "Condominium",
+    house: "Single Family Home",
+    townhouse: "Townhouse",
+    studio: "Studio",
+};
+
+const PRESET_AMENITIES = [
+    "PWD Friendly",
+    "Gym Facility",
+    "24/7 Security",
+    "Parking",
+    "Coworking Space",
+    "Pet Friendly",
+    "Roof Deck",
+    "Lobby Lounge",
+];
+
+const MAX_PROPERTY_UPLOAD_FILES = 12;
+const SAVE_SAFETY_TIMEOUT_MS = 45_000;
 
 function NewAssetContent() {
     const router = useRouter();
@@ -34,10 +68,23 @@ function NewAssetContent() {
 
     const [step, setStep] = useState<Step>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [saveStage, setSaveStage] = useState<string | null>(null);
+    const [isLoadingProperty, setIsLoadingProperty] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [isContractBuilderOpen, setIsContractBuilderOpen] = useState(false);
     const [isContractGenerated, setIsContractGenerated] = useState(false);
     const [customAmenity, setCustomAmenity] = useState("");
     const [customAmenities, setCustomAmenities] = useState<string[]>([]);
+    const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+    const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+    const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+    const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
+    const [coverExistingUrl, setCoverExistingUrl] = useState<string | null>(null);
+    const [coverNewIndex, setCoverNewIndex] = useState<number | null>(null);
+    const [draggingExistingIndex, setDraggingExistingIndex] = useState<number | null>(null);
+    const [dragOverExistingIndex, setDragOverExistingIndex] = useState<number | null>(null);
+    const [draggingNewIndex, setDraggingNewIndex] = useState<number | null>(null);
+    const [dragOverNewIndex, setDragOverNewIndex] = useState<number | null>(null);
     
     // Form fields mapped for prepopulating if editing
     const [formData, setFormData] = useState({
@@ -49,21 +96,99 @@ function NewAssetContent() {
         description: "" // Add other fields as necessary
     });
 
+    const hasHydratedEditData = formData.propertyName.trim().length > 0 && formData.address.trim().length > 0;
+
     useEffect(() => {
-        if (isEditMode && id) {
-            // In a real app, fetch data based on the ID.
-            // Using mock data for demonstration prepopulation.
-            const mockData = {
-                propertyName: `Sunset Heights - Unit ${id.split("-")[1] || "108"}`,
-                propertyType: "Condominium",
-                yearBuilt: "2020",
-                address: "123 Skyline Avenue, Metro Manila",
-                totalUnits: "1",
-                description: "Existing property descriptions..."
-            };
-            setFormData(mockData);
-        }
+        if (!isEditMode || !id) return;
+
+        const loadProperty = async () => {
+            setIsLoadingProperty(true);
+            setLoadError(null);
+
+            try {
+                const supabase = createClient();
+                const {
+                    data: { user },
+                    error: userError,
+                } = await supabase.auth.getUser();
+
+                if (userError || !user) {
+                    throw new Error("You must be logged in to edit a property.");
+                }
+
+                const { data: property, error: propertyError } = await supabase
+                    .from("properties")
+                    .select("id, name, type, address, description, amenities, images")
+                    .eq("id", id)
+                    .eq("landlord_id", user.id)
+                    .maybeSingle();
+
+                if (propertyError) {
+                    throw new Error("Failed to load property details.");
+                }
+
+                if (!property) {
+                    throw new Error("Property not found or access denied.");
+                }
+
+                const { count: unitCount, error: unitCountError } = await supabase
+                    .from("units")
+                    .select("id", { count: "exact", head: true })
+                    .eq("property_id", property.id);
+
+                if (unitCountError) {
+                    throw new Error("Failed to load property units.");
+                }
+
+                setFormData({
+                    propertyName: property.name,
+                    propertyType: ENUM_TO_PROPERTY_TYPE[property.type] ?? "Apartment Complex",
+                    yearBuilt: "",
+                    address: property.address,
+                    totalUnits: String(unitCount ?? 1),
+                    description: property.description ?? "",
+                });
+
+                const incomingAmenities = Array.isArray(property.amenities)
+                    ? property.amenities.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+                    : [];
+
+                const presetAmenityLookup = new Set(PRESET_AMENITIES.map((item) => item.toLowerCase()));
+                const nextCustomAmenities = incomingAmenities.filter(
+                    (amenity) => !presetAmenityLookup.has(amenity.toLowerCase())
+                );
+
+                setSelectedAmenities(incomingAmenities);
+                setCustomAmenities(nextCustomAmenities);
+                setExistingImageUrls(
+                    Array.isArray(property.images)
+                        ? property.images.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+                        : []
+                );
+                const firstImage =
+                    Array.isArray(property.images) && typeof property.images[0] === "string" && property.images[0].trim().length > 0
+                        ? property.images[0]
+                        : null;
+                setCoverExistingUrl(firstImage);
+                setCoverNewIndex(null);
+            } catch (error) {
+                setLoadError(error instanceof Error ? error.message : "Failed to load property details.");
+            } finally {
+                setIsLoadingProperty(false);
+            }
+        };
+
+        void loadProperty();
     }, [isEditMode, id]);
+
+    useEffect(() => {
+        const nextPreviewUrls = mediaFiles.map((file) => URL.createObjectURL(file));
+        setMediaPreviewUrls(nextPreviewUrls);
+
+        return () => {
+            nextPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+        };
+    }, [mediaFiles]);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
@@ -82,7 +207,170 @@ function NewAssetContent() {
         if (!alreadyExists) {
             setCustomAmenities((prev) => [...prev, value]);
         }
+        setSelectedAmenities((prev) => {
+            if (prev.some((amenity) => amenity.toLowerCase() === value.toLowerCase())) {
+                return prev;
+            }
+
+            return [...prev, value];
+        });
         setCustomAmenity("");
+    };
+
+    const handleToggleAmenity = (amenity: string) => {
+        setSelectedAmenities((prev) => {
+            const exists = prev.some((item) => item.toLowerCase() === amenity.toLowerCase());
+
+            if (exists) {
+                return prev.filter((item) => item.toLowerCase() !== amenity.toLowerCase());
+            }
+
+            return [...prev, amenity];
+        });
+    };
+
+    const handleMediaFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) {
+            return;
+        }
+
+        const nextFiles = Array.from(files);
+
+        setMediaFiles((prev) => {
+            const merged = [...prev, ...nextFiles];
+            const capped = merged.slice(0, MAX_PROPERTY_UPLOAD_FILES);
+
+            if (merged.length > MAX_PROPERTY_UPLOAD_FILES) {
+                setLoadError(`You can upload up to ${MAX_PROPERTY_UPLOAD_FILES} images only.`);
+            } else {
+                setLoadError((current) =>
+                    current === `You can upload up to ${MAX_PROPERTY_UPLOAD_FILES} images only.` ? null : current
+                );
+            }
+
+            if (coverExistingUrl === null && coverNewIndex === null && capped.length > 0) {
+                setCoverNewIndex(0);
+            }
+
+            return capped;
+        });
+
+        // Allow re-selecting the same file(s) in the next pick operation.
+        event.target.value = "";
+    };
+
+    const moveExistingImage = (index: number, direction: -1 | 1) => {
+        const target = index + direction;
+        if (target < 0 || target >= existingImageUrls.length) return;
+
+        const nextImages = [...existingImageUrls];
+        const [moved] = nextImages.splice(index, 1);
+        nextImages.splice(target, 0, moved);
+        setExistingImageUrls(nextImages);
+    };
+
+    const reorderExistingImages = (fromIndex: number, toIndex: number) => {
+        if (fromIndex === toIndex) return;
+        if (fromIndex < 0 || fromIndex >= existingImageUrls.length) return;
+        if (toIndex < 0 || toIndex >= existingImageUrls.length) return;
+
+        const nextImages = [...existingImageUrls];
+        const [moved] = nextImages.splice(fromIndex, 1);
+        nextImages.splice(toIndex, 0, moved);
+        setExistingImageUrls(nextImages);
+    };
+
+    const handleExistingDragStart = (index: number) => {
+        setDraggingExistingIndex(index);
+        setDragOverExistingIndex(index);
+    };
+
+    const handleExistingDragOver = (event: DragEvent<HTMLDivElement>, index: number) => {
+        event.preventDefault();
+        if (dragOverExistingIndex !== index) {
+            setDragOverExistingIndex(index);
+        }
+    };
+
+    const handleExistingDrop = (index: number) => {
+        if (draggingExistingIndex === null) return;
+        reorderExistingImages(draggingExistingIndex, index);
+        setDraggingExistingIndex(null);
+        setDragOverExistingIndex(null);
+    };
+
+    const handleExistingDragEnd = () => {
+        setDraggingExistingIndex(null);
+        setDragOverExistingIndex(null);
+    };
+
+    const reorderNewFiles = (fromIndex: number, toIndex: number) => {
+        if (fromIndex === toIndex) return;
+        if (fromIndex < 0 || fromIndex >= mediaFiles.length) return;
+        if (toIndex < 0 || toIndex >= mediaFiles.length) return;
+
+        const nextFiles = [...mediaFiles];
+        const [moved] = nextFiles.splice(fromIndex, 1);
+        nextFiles.splice(toIndex, 0, moved);
+        setMediaFiles(nextFiles);
+
+        if (coverNewIndex === null) return;
+        if (coverNewIndex === fromIndex) {
+            setCoverNewIndex(toIndex);
+            return;
+        }
+
+        if (fromIndex < toIndex && coverNewIndex > fromIndex && coverNewIndex <= toIndex) {
+            setCoverNewIndex(coverNewIndex - 1);
+            return;
+        }
+
+        if (fromIndex > toIndex && coverNewIndex >= toIndex && coverNewIndex < fromIndex) {
+            setCoverNewIndex(coverNewIndex + 1);
+        }
+    };
+
+    const handleNewDragStart = (index: number) => {
+        setDraggingNewIndex(index);
+        setDragOverNewIndex(index);
+    };
+
+    const handleNewDragOver = (event: DragEvent<HTMLDivElement>, index: number) => {
+        event.preventDefault();
+        if (dragOverNewIndex !== index) {
+            setDragOverNewIndex(index);
+        }
+    };
+
+    const handleNewDrop = (index: number) => {
+        if (draggingNewIndex === null) return;
+        reorderNewFiles(draggingNewIndex, index);
+        setDraggingNewIndex(null);
+        setDragOverNewIndex(null);
+    };
+
+    const handleNewDragEnd = () => {
+        setDraggingNewIndex(null);
+        setDragOverNewIndex(null);
+    };
+
+    const removeExistingImage = (urlToRemove: string) => {
+        const nextImages = existingImageUrls.filter((url) => url !== urlToRemove);
+        setExistingImageUrls(nextImages);
+
+        if (coverExistingUrl === urlToRemove) {
+            if (nextImages.length > 0) {
+                setCoverExistingUrl(nextImages[0]);
+                setCoverNewIndex(null);
+            } else if (mediaFiles.length > 0) {
+                setCoverExistingUrl(null);
+                setCoverNewIndex(0);
+            } else {
+                setCoverExistingUrl(null);
+                setCoverNewIndex(null);
+            }
+        }
     };
 
     const handleNext = () => {
@@ -95,12 +383,221 @@ function NewAssetContent() {
         else router.push("/landlord/properties");
     };
 
-    const handleSubmit = () => {
+    const syncUnits = async (
+        supabase: ReturnType<typeof createClient>,
+        propertyId: string,
+        requestedTotalUnits: string
+    ) => {
+        const desiredUnitCount = Math.max(1, Math.floor(Number(requestedTotalUnits) || 1));
+
+        const { data: existingUnits, error: unitsError } = await supabase
+            .from("units")
+            .select("id, status, created_at")
+            .eq("property_id", propertyId)
+            .order("created_at", { ascending: true });
+
+        if (unitsError) {
+            throw new Error("Failed to load existing units.");
+        }
+
+        const unitCount = existingUnits?.length ?? 0;
+
+        if (desiredUnitCount > unitCount) {
+            const unitsToCreate = Array.from({ length: desiredUnitCount - unitCount }, (_, index) => ({
+                property_id: propertyId,
+                name: `Unit ${unitCount + index + 1}`,
+                floor: 1,
+                status: "vacant" as const,
+                rent_amount: 0,
+                beds: 1,
+                baths: 1,
+            }));
+
+            const { error: insertUnitsError } = await supabase.from("units").insert(unitsToCreate);
+            if (insertUnitsError) {
+                throw new Error("Failed to create additional units.");
+            }
+            return;
+        }
+
+        if (desiredUnitCount < unitCount) {
+            const unitsToRemove = unitCount - desiredUnitCount;
+            const removableUnits = (existingUnits ?? []).filter((unit) => unit.status === "vacant").reverse();
+
+            if (removableUnits.length < unitsToRemove) {
+                throw new Error("Unable to reduce unit count because some units are occupied or under maintenance.");
+            }
+
+            const idsToDelete = removableUnits.slice(0, unitsToRemove).map((unit) => unit.id);
+            const { error: deleteUnitsError } = await supabase.from("units").delete().in("id", idsToDelete);
+
+            if (deleteUnitsError) {
+                throw new Error("Failed to remove extra units.");
+            }
+        }
+    };
+
+    const handleSubmit = async () => {
         setIsSubmitting(true);
-        // Simulate API call for creation or update
-        setTimeout(() => {
+        setLoadError(null);
+        setSaveStage("Preparing save...");
+
+        const safetyTimeout = window.setTimeout(() => {
+            setLoadError("Saving is taking longer than expected. Please try again.");
+            setIsSubmitting(false);
+            setSaveStage(null);
+        }, SAVE_SAFETY_TIMEOUT_MS);
+
+        try {
+            const supabase = createClient();
+            setSaveStage("Verifying account...");
+            const {
+                data: { user },
+                error: userError,
+            } = await supabase.auth.getUser();
+
+            if (userError || !user) {
+                throw new Error("You must be logged in to save a property.");
+            }
+
+            const payload = {
+                name: formData.propertyName.trim(),
+                type: PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment",
+                address: formData.address.trim(),
+                description: formData.description.trim() || null,
+                amenities: selectedAmenities,
+            };
+
+            if (!payload.name || !payload.address) {
+                throw new Error("Property name and address are required.");
+            }
+
+            let propertyId = id ?? "";
+
+            if (isEditMode && id) {
+                setSaveStage("Saving property details...");
+                const { error } = await supabase
+                    .from("properties")
+                    .update(payload)
+                    .eq("id", id)
+                    .eq("landlord_id", user.id);
+
+                if (error) {
+                    throw new Error("Failed to update property.");
+                }
+
+                await syncUnits(supabase, id, formData.totalUnits);
+                propertyId = id;
+            } else {
+                setSaveStage("Creating property...");
+                const { data: insertedProperty, error } = await supabase
+                    .from("properties")
+                    .insert({
+                        ...payload,
+                        landlord_id: user.id,
+                        city: "Valenzuela",
+                    })
+                    .select("id")
+                    .single();
+
+                if (error) {
+                    throw new Error("Failed to create property.");
+                }
+
+                if (!insertedProperty?.id) {
+                    throw new Error("Property was created but no id was returned.");
+                }
+
+                await syncUnits(supabase, insertedProperty.id, formData.totalUnits);
+                propertyId = insertedProperty.id;
+            }
+
+            if (mediaFiles.length > 0) {
+                setSaveStage("Uploading media...");
+                if (!propertyId) {
+                    throw new Error("Property id missing for media upload.");
+                }
+
+                const mediaFormData = new FormData();
+                mediaFormData.append("propertyId", propertyId);
+
+                mediaFiles.forEach((file) => {
+                    mediaFormData.append("files", file);
+                });
+
+                const uploadResponse = await fetch("/api/landlord/properties/media", {
+                    method: "POST",
+                    body: mediaFormData,
+                });
+
+                const uploadPayload = (await uploadResponse.json()) as { imageUrls?: string[]; error?: string };
+
+                if (!uploadResponse.ok || !Array.isArray(uploadPayload.imageUrls)) {
+                    throw new Error(uploadPayload.error || "Failed to upload property media.");
+                }
+
+                let mergedImages = [
+                    ...uploadPayload.imageUrls,
+                    ...existingImageUrls.filter((url) => !uploadPayload.imageUrls?.includes(url)),
+                ];
+
+                if (coverExistingUrl && mergedImages.includes(coverExistingUrl)) {
+                    mergedImages = [
+                        coverExistingUrl,
+                        ...mergedImages.filter((url) => url !== coverExistingUrl),
+                    ];
+                } else if (
+                    coverNewIndex !== null &&
+                    coverNewIndex >= 0 &&
+                    coverNewIndex < uploadPayload.imageUrls.length
+                ) {
+                    const selectedUploadedUrl = uploadPayload.imageUrls[coverNewIndex];
+                    mergedImages = [
+                        selectedUploadedUrl,
+                        ...mergedImages.filter((url) => url !== selectedUploadedUrl),
+                    ];
+                }
+
+                const { error: imageUpdateError } = await supabase
+                    .from("properties")
+                    .update({ images: mergedImages })
+                    .eq("id", propertyId)
+                    .eq("landlord_id", user.id);
+
+                if (imageUpdateError) {
+                    throw new Error("Failed to save property image URLs.");
+                }
+            } else if (isEditMode && propertyId) {
+                setSaveStage("Updating image order...");
+                let orderedExisting = [...existingImageUrls];
+
+                if (coverExistingUrl && orderedExisting.includes(coverExistingUrl)) {
+                    orderedExisting = [
+                        coverExistingUrl,
+                        ...orderedExisting.filter((url) => url !== coverExistingUrl),
+                    ];
+                }
+
+                const { error: imageUpdateError } = await supabase
+                    .from("properties")
+                    .update({ images: orderedExisting })
+                    .eq("id", propertyId)
+                    .eq("landlord_id", user.id);
+
+                if (imageUpdateError) {
+                    throw new Error("Failed to save property image URLs.");
+                }
+            }
+
+            setSaveStage("Redirecting...");
             router.push("/landlord/properties");
-        }, 1500);
+        } catch (error) {
+            setLoadError(error instanceof Error ? error.message : "Failed to save property.");
+            setIsSubmitting(false);
+            setSaveStage(null);
+        } finally {
+            window.clearTimeout(safetyTimeout);
+        }
     };
 
     const STEPS = [
@@ -180,6 +677,18 @@ function NewAssetContent() {
 
                     {/* Step Content */}
                     <div className={cn("p-8 sm:p-12", step === 2 ? "min-h-[260px]" : "min-h-[400px]")}>
+                        {loadError && (
+                            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                                {loadError}
+                            </div>
+                        )}
+
+                        {isLoadingProperty && isEditMode && !hasHydratedEditData && (
+                            <div className="mb-6 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-300">
+                                Loading property details...
+                            </div>
+                        )}
+
                         {/* 1. Details */}
                         {step === 1 && (
                             <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
@@ -308,25 +817,186 @@ function NewAssetContent() {
                                                 <Upload className="w-5 h-5" />
                                             </div>
                                             <p className="mb-2 text-sm text-neutral-300"><span className="font-semibold text-white">Click to upload</span> high-res image</p>
-                                            <p className="text-xs text-neutral-500 font-medium">Must be at least 1200x800px</p>
+                                            <p className="text-xs text-neutral-500 font-medium">You can select multiple images (max 12, 8 MB each)</p>
+                                            {(mediaFiles.length > 0 || existingImageUrls.length > 0) && (
+                                                <p className="mt-2 text-xs text-primary font-semibold">
+                                                    {mediaFiles.length > 0
+                                                        ? `${mediaFiles.length} new image${mediaFiles.length === 1 ? "" : "s"} queued`
+                                                        : "No new uploads queued"}
+                                                    {existingImageUrls.length > 0 ? ` • ${existingImageUrls.length} existing image${existingImageUrls.length === 1 ? "" : "s"}` : ""}
+                                                </p>
+                                            )}
                                         </div>
-                                        <input type="file" className="hidden" accept="image/*" />
+                                        <input type="file" className="hidden" accept="image/*" multiple onChange={handleMediaFileChange} />
                                     </label>
+
+                                    {existingImageUrls.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Existing Images</p>
+                                            <p className="text-[11px] text-neutral-500">Drag cards to reorder. First image is used as default cover unless you set one.</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {existingImageUrls.map((url, index) => {
+                                                    const isCover = coverExistingUrl === url;
+                                                    const isDragOver = dragOverExistingIndex === index && draggingExistingIndex !== null;
+                                                    return (
+                                                        <div
+                                                            key={url}
+                                                            draggable
+                                                            onDragStart={() => handleExistingDragStart(index)}
+                                                            onDragOver={(event) => handleExistingDragOver(event, index)}
+                                                            onDrop={() => handleExistingDrop(index)}
+                                                            onDragEnd={handleExistingDragEnd}
+                                                            className={cn(
+                                                                "rounded-xl border bg-white/[0.02] p-3 space-y-2 transition-colors",
+                                                                isDragOver ? "border-primary/50" : "border-white/10"
+                                                            )}
+                                                        >
+                                                            <img src={url} alt={`Property image ${index + 1}`} className="h-28 w-full rounded-lg object-cover" />
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setCoverExistingUrl(url);
+                                                                        setCoverNewIndex(null);
+                                                                    }}
+                                                                    className={cn(
+                                                                        "text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1",
+                                                                        isCover
+                                                                            ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-white/20"
+                                                                    )}
+                                                                >
+                                                                    <Star className="w-3.5 h-3.5" />
+                                                                    {isCover ? "Cover" : "Set Cover"}
+                                                                </button>
+
+                                                                <div className="flex items-center gap-1">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => moveExistingImage(index, -1)}
+                                                                        disabled={index === 0}
+                                                                        className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-neutral-300 hover:text-white disabled:opacity-40"
+                                                                        title="Move up"
+                                                                    >
+                                                                        <ArrowUp className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => moveExistingImage(index, 1)}
+                                                                        disabled={index === existingImageUrls.length - 1}
+                                                                        className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-neutral-300 hover:text-white disabled:opacity-40 rotate-180"
+                                                                        title="Move down"
+                                                                    >
+                                                                        <ArrowUp className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeExistingImage(url)}
+                                                                        className="p-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                                                                        title="Remove image"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {mediaPreviewUrls.length > 0 && (
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">New Uploads</p>
+                                            <p className="text-[11px] text-neutral-500">Drag cards to reorder upload order before saving.</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {mediaPreviewUrls.map((url, index) => {
+                                                    const isCover = coverExistingUrl === null && coverNewIndex === index;
+                                                    const isDragOver = dragOverNewIndex === index && draggingNewIndex !== null;
+                                                    return (
+                                                        <div
+                                                            key={`${url}-${index}`}
+                                                            draggable
+                                                            onDragStart={() => handleNewDragStart(index)}
+                                                            onDragOver={(event) => handleNewDragOver(event, index)}
+                                                            onDrop={() => handleNewDrop(index)}
+                                                            onDragEnd={handleNewDragEnd}
+                                                            className={cn(
+                                                                "rounded-xl border bg-white/[0.02] p-3 space-y-2 transition-colors",
+                                                                isDragOver ? "border-primary/50" : "border-white/10"
+                                                            )}
+                                                        >
+                                                            <img src={url} alt={`New upload ${index + 1}`} className="h-28 w-full rounded-lg object-cover" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setCoverExistingUrl(null);
+                                                                    setCoverNewIndex(index);
+                                                                }}
+                                                                className={cn(
+                                                                    "text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1",
+                                                                    isCover
+                                                                        ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                                                                        : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-white/20"
+                                                                )}
+                                                            >
+                                                                <Star className="w-3.5 h-3.5" />
+                                                                {isCover ? "Cover" : "Set Cover"}
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4">
                                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><Trees className="w-4 h-4" /> Key Amenities</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {['PWD Friendly', 'Gym Facility', '24/7 Security', 'Parking', 'Coworking Space', 'Pet Friendly', 'Roof Deck', 'Lobby Lounge'].map((amenity, i) => (
-                                            <button key={i} type="button" className="px-4 py-2 rounded-full border border-white/10 bg-white/5 text-sm font-medium text-neutral-300 hover:text-white hover:border-primary hover:bg-primary/10 transition-all focus:bg-primary focus:text-black focus:border-primary">
-                                                {amenity}
-                                            </button>
-                                        ))}
-                                        {customAmenities.map((amenity, i) => (
-                                            <span key={`${amenity}-${i}`} className="px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-sm font-medium text-primary">
-                                                {amenity}
-                                            </span>
-                                        ))}
+                                        {PRESET_AMENITIES.map((amenity, i) => {
+                                            const isSelected = selectedAmenities.some(
+                                                (item) => item.toLowerCase() === amenity.toLowerCase()
+                                            );
+
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    onClick={() => handleToggleAmenity(amenity)}
+                                                    className={cn(
+                                                        "px-4 py-2 rounded-full border text-sm font-medium transition-all",
+                                                        isSelected
+                                                            ? "border-primary/30 bg-primary/10 text-primary"
+                                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-primary hover:bg-primary/10"
+                                                    )}
+                                                >
+                                                    {amenity}
+                                                </button>
+                                            );
+                                        })}
+                                        {customAmenities.map((amenity, i) => {
+                                            const isSelected = selectedAmenities.some(
+                                                (item) => item.toLowerCase() === amenity.toLowerCase()
+                                            );
+
+                                            return (
+                                                <button
+                                                    key={`${amenity}-${i}`}
+                                                    type="button"
+                                                    onClick={() => handleToggleAmenity(amenity)}
+                                                    className={cn(
+                                                        "px-4 py-2 rounded-full border text-sm font-medium transition-all",
+                                                        isSelected
+                                                            ? "border-primary/30 bg-primary/10 text-primary"
+                                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-primary hover:bg-primary/10"
+                                                    )}
+                                                >
+                                                    {amenity}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                     <div className="flex flex-col sm:flex-row gap-3 pt-1">
                                         <input
@@ -479,7 +1149,12 @@ function NewAssetContent() {
                     </div>
 
                     {/* Bottom Actions */}
-                    <div className="p-6 sm:px-12 sm:py-8 border-t border-white/5 bg-[#0a0a0a] flex items-center justify-between">
+                    <div className="relative p-6 sm:px-12 sm:py-8 border-t border-white/5 bg-[#0a0a0a] flex items-center justify-between">
+                        {isSubmitting && saveStage && (
+                            <div className="absolute left-1/2 -translate-x-1/2 text-xs text-neutral-400">
+                                {saveStage}
+                            </div>
+                        )}
                         <button
                             onClick={handleBack}
                             disabled={isSubmitting}

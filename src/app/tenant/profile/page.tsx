@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, ChangeEvent, useCallback } from 'react';
+import { useState, useRef, ChangeEvent, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Cropper from 'react-easy-crop';
@@ -14,10 +14,14 @@ import {
     Check,
     ArrowUpRight
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 
 export default function TenantProfilePage() {
-    const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80");
+    const [profileImage, setProfileImage] = useState("");
+    const [displayName, setDisplayName] = useState('');
+    const [displayEmail, setDisplayEmail] = useState('');
+    const [displayPhone, setDisplayPhone] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Crop state
@@ -27,6 +31,31 @@ export default function TenantProfilePage() {
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            const supabase = createClient();
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+
+            if (!user) return;
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, email, phone, avatar_url')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (profile?.full_name) setDisplayName(profile.full_name);
+            if (profile?.email) setDisplayEmail(profile.email);
+            if (profile?.phone) setDisplayPhone(profile.phone);
+            if (profile?.avatar_url) setProfileImage(profile.avatar_url);
+        };
+
+        void loadProfile();
+    }, []);
 
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -112,14 +141,34 @@ export default function TenantProfilePage() {
     const handleSaveCroppedImage = async () => {
         if (tempImage && croppedAreaPixels) {
             try {
+                setIsSavingAvatar(true);
                 const croppedImage = await getCroppedImg(tempImage, croppedAreaPixels, rotation);
                 if (croppedImage) {
-                    setProfileImage(croppedImage);
+                    const blob = await (await fetch(croppedImage)).blob();
+                    const file = new File([blob], `avatar-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const response = await fetch('/api/profile/avatar', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const payload = (await response.json()) as { avatarUrl?: string; error?: string };
+
+                    if (!response.ok || !payload.avatarUrl) {
+                        throw new Error(payload.error || 'Failed to update profile photo.');
+                    }
+
+                    setProfileImage(payload.avatarUrl);
+                    window.dispatchEvent(new CustomEvent('profile-updated'));
                     setIsCropModalOpen(false);
                     setTempImage(null);
                 }
             } catch (e) {
                 console.error(e);
+            } finally {
+                setIsSavingAvatar(false);
             }
         }
     };
@@ -158,7 +207,7 @@ export default function TenantProfilePage() {
                                         <div className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl group-hover/avatar:border-white transition-colors">
                                             <Image
                                                 src={profileImage}
-                                                alt="Alex Thompson"
+                                                alt={displayName}
                                                 fill
                                                 className="object-cover"
                                             />
@@ -179,7 +228,7 @@ export default function TenantProfilePage() {
                                     </div>
 
                                     <div>
-                                        <h2 className="text-3xl md:text-4xl font-display text-white mb-1 drop-shadow-lg">Alex Thompson</h2>
+                                        <h2 className="text-3xl md:text-4xl font-display text-white mb-1 drop-shadow-lg">{displayName}</h2>
                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-white/80">
                                             <span className="text-[10px] font-bold tracking-widest uppercase bg-white/10 px-2 py-1 rounded backdrop-blur-sm border border-white/10">ID : IR-992034</span>
                                             <div className="flex items-center gap-1.5 opacity-90">
@@ -192,8 +241,8 @@ export default function TenantProfilePage() {
 
                                 <div className="flex flex-col items-start md:items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
                                     <div className="flex flex-col md:items-end gap-1 text-sm text-white/90 font-medium">
-                                        <a href="mailto:alex.t@example.com" className="hover:text-primary transition-colors hover:underline decoration-primary/50 underline-offset-4">alex.t@example.com</a>
-                                        <a href="tel:+155501234567" className="hover:text-primary transition-colors">+1 555 0123 4567</a>
+                                        <a href={`mailto:${displayEmail}`} className="hover:text-primary transition-colors hover:underline decoration-primary/50 underline-offset-4">{displayEmail}</a>
+                                        <a href={`tel:${displayPhone.replace(/\s+/g, '')}`} className="hover:text-primary transition-colors">{displayPhone}</a>
                                         <div className="flex flex-col md:items-end text-xs text-rose-300/90 mt-2 pt-2 border-t border-white/10 w-full">
                                             <span className="uppercase tracking-wider font-bold text-[10px] opacity-80 mb-0.5">Emergency Contact</span>
                                             <div className="flex items-center gap-1.5 font-medium">
@@ -563,9 +612,10 @@ export default function TenantProfilePage() {
                                     </button>
                                     <button
                                         onClick={handleSaveCroppedImage}
+                                        disabled={isSavingAvatar}
                                         className="px-6 py-2 rounded-full bg-white text-black hover:bg-white/90 transition-colors text-xs font-bold tracking-wide uppercase flex items-center gap-2"
                                     >
-                                        <Check className="h-3 w-3" /> Save Photo
+                                        <Check className="h-3 w-3" /> {isSavingAvatar ? 'Saving...' : 'Save Photo'}
                                     </button>
                                 </div>
                             </div>

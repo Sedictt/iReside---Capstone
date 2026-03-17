@@ -5,7 +5,6 @@ import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { signOut } from "@/lib/supabase/client-auth";
 
 function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
     const identities = user?.identities;
@@ -160,10 +159,13 @@ export function ProfileWidget() {
 
                             <div className="my-1.5 h-px bg-white/10"></div>
 
-                            <button onClick={() => signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group">
+                            <Link
+                                href="/auth/logout"
+                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group"
+                            >
                                 <LogOut className="h-4 w-4" />
                                 <span>Log Out</span>
-                            </button>
+                            </Link>
                         </div>
                     </motion.div>
                 )}

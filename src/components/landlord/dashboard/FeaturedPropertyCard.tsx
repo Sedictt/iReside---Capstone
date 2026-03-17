@@ -3,23 +3,28 @@
 import React, { useState } from "react";
 import { ArrowUpRight, X, TrendingUp, Users, DollarSign, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface FeaturedPropertyCardProps {
     propertyName?: string;
-    totalSales?: number;
+    totalSales?: number | string;
     totalViews?: string;
     image?: string;
     className?: string;
     simplifiedMode?: boolean;
+    momGrowth?: string;
+    occupancyRate?: string;
 }
 
 export function FeaturedPropertyCard({
     propertyName = "Sunset Valley Apartments",
-    totalSales = 243,
+    totalSales = "₱243,000",
     totalViews = "20K+",
     image = "/hero-images/apartment-03.png", // Temporarily using local hero-image
     className,
-    simplifiedMode = false
+    simplifiedMode = false,
+    momGrowth = "+12.4%",
+    occupancyRate = "100%",
 }: FeaturedPropertyCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -33,10 +38,11 @@ export function FeaturedPropertyCard({
                 )}>
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
-                <img
+                <Image
                     src={image}
                     alt={propertyName}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
             </div>
@@ -117,7 +123,7 @@ export function FeaturedPropertyCard({
                                 </div>
                                 <div>
                                     <p className="text-sm text-neutral-400">{simplifiedMode ? "Growth" : "MoM Growth"}</p>
-                                    <p className="text-xl font-bold text-white">+12.4%</p>
+                                    <p className="text-xl font-bold text-white">{momGrowth}</p>
                                 </div>
                             </div>
 
@@ -127,7 +133,7 @@ export function FeaturedPropertyCard({
                                 </div>
                                 <div>
                                     <p className="text-sm text-neutral-400">Occupancy</p>
-                                    <p className="text-xl font-bold text-white">100%</p>
+                                    <p className="text-xl font-bold text-white">{occupancyRate}</p>
                                 </div>
                             </div>
 

@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, CheckCircle2, ChevronRight, User, Phone, ShieldCheck, Upload, FileText, Camera, ShieldAlert, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from "@/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
-export default function BecomeLandlordPage() {
+function BecomeLandlordContent() {
     const { user, profile, loading } = useAuth();
     const router = useRouter();
     const [step, setStep] = useState(1);
@@ -443,5 +444,13 @@ export default function BecomeLandlordPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function BecomeLandlordPage() {
+    return (
+        <AuthProvider>
+            <BecomeLandlordContent />
+        </AuthProvider>
     );
 }

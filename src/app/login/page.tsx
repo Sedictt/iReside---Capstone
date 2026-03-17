@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Building2, Facebook, Eye } from "lucide-react";
 import { useState, Suspense } from "react";
-import { signIn } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -20,15 +19,29 @@ function LoginContent() {
         setLoading(true);
 
         const formData = new FormData(e.currentTarget);
-        const result = await signIn(formData);
+        const email = (formData.get("email") as string | null)?.trim() ?? "";
+        const password = (formData.get("password") as string | null) ?? "";
 
-        if (result?.error) {
-            setError(result.error);
-        } else if (result?.url) {
-            router.push(redirectUrl || result.url);
-            return; // keep loading true while redirecting
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (error) {
+            // Show friendlier guidance for the common Supabase schema query failure.
+            if (error.message.toLowerCase().includes("database error querying schema")) {
+                setError("Login failed due to a Supabase auth schema issue. Please try Google login for now, or ask admin to check Supabase Auth logs.");
+            } else {
+                setError(error.message);
+            }
+            setLoading(false);
+            return;
         }
-        setLoading(false);
+
+        const role = data.user?.user_metadata?.role || "tenant";
+        const target = role === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard";
+        router.push(redirectUrl || target);
     };
 
     const handleGoogleLogin = async () => {

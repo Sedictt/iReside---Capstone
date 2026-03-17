@@ -7,7 +7,6 @@ import {
     LinearScale,
     BarElement,
     Tooltip,
-    TooltipItem,
     ScriptableContext
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
@@ -23,7 +22,24 @@ ChartJS.register(
     ChartDataLabels
 );
 
-export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifiedMode?: boolean }) {
+export type FinancialChartWindowData = {
+    labels: string[];
+    earnings: number[];
+    expenses: number[];
+    netIncome: number[];
+};
+
+type FinancialPerformanceChartProps = {
+    simplifiedMode?: boolean;
+    dataByWindow?: {
+        week: FinancialChartWindowData;
+        month: FinancialChartWindowData;
+        year: FinancialChartWindowData;
+    };
+};
+
+export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow }: FinancialPerformanceChartProps) {
+    void simplifiedMode;
     const [activeTab, setActiveTab] = useState<"earnings" | "expenses" | "netIncome">("earnings");
 
     const [timeWindow, setTimeWindow] = useState<"week" | "month" | "year">("month");
@@ -36,7 +52,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifi
     };
 
     // Data structures for different timeframes
-    const chartData = {
+    const fallbackChartData = {
         week: {
             labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
             earnings: [45, 60, 40, 75, 55, 90, 85],
@@ -56,6 +72,8 @@ export function FinancialPerformanceChart({ simplifiedMode = false }: { simplifi
             netIncome: [220, 250, 230, 300, 270, 350, 340, 370, 400, 430, 450, 600],
         }
     };
+
+    const chartData = dataByWindow ?? fallbackChartData;
 
     const getCurrentData = () => {
         const sourceData = chartData[timeWindow];

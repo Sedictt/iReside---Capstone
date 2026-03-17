@@ -5,7 +5,7 @@ import { ChevronDown, Download, FileText, History, X } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
-import { FinancialPerformanceChart } from "@/components/landlord/dashboard/FinancialPerformanceChart";
+import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
 import { FeaturedPropertyCard } from "@/components/landlord/dashboard/FeaturedPropertyCard";
 
 type KpiItem = {
@@ -47,6 +47,24 @@ type KpiInsight = {
     source?: "ai" | "fallback";
 };
 
+type OverviewApiResponse = {
+    primaryKpis: Array<Pick<KpiItem, "title" | "value" | "change" | "simplifiedChange" | "trendData" | "changeType">>;
+    extendedKpis: Array<Pick<KpiItem, "title" | "value" | "change" | "simplifiedChange" | "trendData" | "changeType">>;
+    financialChart: {
+        week: FinancialChartWindowData;
+        month: FinancialChartWindowData;
+        year: FinancialChartWindowData;
+    };
+    featuredProperty: {
+        propertyName: string;
+        totalSales: string;
+        totalViews: string;
+        image: string;
+        momGrowth: string;
+        occupancyRate: string;
+    };
+};
+
 const RANGE_OPTIONS: RangeOption[] = [
     { id: "7d", label: "7D", days: 7 },
     { id: "30d", label: "30D", days: 30 },
@@ -54,6 +72,130 @@ const RANGE_OPTIONS: RangeOption[] = [
     { id: "1y", label: "1Y", days: 365 },
     { id: "custom", label: "Custom", days: null },
 ];
+
+const DEFAULT_PRIMARY_KPIS: KpiItem[] = [
+    {
+        title: "Estimated Earnings",
+        simplifiedTitle: "Money Earned",
+        value: "₱0.00",
+        change: "₱0 (0.0%)",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-blue-500",
+        trendlineProperties: { colors: ["#22d3ee", "#3b82f6"] },
+    },
+    {
+        title: "Active Tenants",
+        simplifiedTitle: "People Staying",
+        value: "0",
+        change: "0 vs previous period",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-purple-500",
+        trendlineProperties: { colors: ["#fb923c", "#ef4444"] },
+    },
+    {
+        title: "Occupancy Rate",
+        simplifiedTitle: "Rented Houses",
+        value: "0%",
+        change: "0.0% vs previous period",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-emerald-500",
+        trendlineProperties: { colors: ["#a855f7", "#ec4899"] },
+    },
+    {
+        title: "Pending Issues",
+        simplifiedTitle: "Things to Fix",
+        value: "0",
+        change: "0 pending",
+        simplifiedChange: "No urgent issues",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-red-500",
+        trendlineProperties: { colors: ["#ef4444", "#ec4899"] },
+    },
+];
+
+const DEFAULT_EXTENDED_KPIS: KpiItem[] = [
+    {
+        title: "Maintenance Cost",
+        simplifiedTitle: "Repair Costs",
+        value: "₱0",
+        change: "₱0 vs previous period",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-orange-500",
+        trendlineProperties: { colors: ["#f97316", "#ea580c"] },
+    },
+    {
+        title: "Lease Renewals",
+        simplifiedTitle: "Ending Contracts",
+        value: "0",
+        change: "0 due in next 30 days",
+        simplifiedChange: "No contracts ending soon",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-indigo-500",
+        trendlineProperties: { colors: ["#818cf8", "#6366f1"] },
+    },
+    {
+        title: "Avg. Tenant Duration",
+        simplifiedTitle: "Average Stay",
+        value: "0.0 Years",
+        change: "0.0 yrs vs previous period",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-teal-500",
+        trendlineProperties: { colors: ["#2dd4bf", "#14b8a6"] },
+    },
+    {
+        title: "Portfolio Value",
+        simplifiedTitle: "Total Property Value",
+        value: "₱0",
+        change: "0.0% annualized rent value",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-yellow-500",
+        trendlineProperties: { colors: ["#facc15", "#eab308"] },
+    },
+];
+
+const DEFAULT_FINANCIAL_CHART: OverviewApiResponse["financialChart"] = {
+    week: {
+        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        earnings: [0, 0, 0, 0, 0, 0, 0],
+        expenses: [0, 0, 0, 0, 0, 0, 0],
+        netIncome: [0, 0, 0, 0, 0, 0, 0],
+    },
+    month: {
+        labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
+        earnings: [0, 0, 0, 0, 0],
+        expenses: [0, 0, 0, 0, 0],
+        netIncome: [0, 0, 0, 0, 0],
+    },
+    year: {
+        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        earnings: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        expenses: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        netIncome: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    },
+};
+
+const DEFAULT_FEATURED_PROPERTY: OverviewApiResponse["featuredProperty"] = {
+    propertyName: "No Property Data Yet",
+    totalSales: "₱0",
+    totalViews: "0 inquiries",
+    image: "/hero-images/apartment-03.png",
+    momGrowth: "0.0%",
+    occupancyRate: "0%",
+};
 
 const formatIsoDate = (date: Date) => {
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
@@ -97,100 +239,12 @@ export default function StatisticsPage() {
     const [exportHistory, setExportHistory] = useState<ExportAuditItem[]>([]);
     const [kpiInsights, setKpiInsights] = useState<Record<string, KpiInsight>>({});
     const [insightSource, setInsightSource] = useState<"ai" | "fallback" | null>(null);
-
-    const primaryKpis = useMemo<KpiItem[]>(() => [
-        {
-            title: "Estimated Earnings",
-            simplifiedTitle: "Money Earned",
-            value: "₱1,345.78",
-            change: "+672.89 (+100.00%)",
-            simplifiedChange: "+₱672 since last month",
-            trendData: [800, 950, 1100, 1050, 1250, 1150, 1345],
-            changeType: "positive",
-            iconColor: "bg-blue-500",
-            trendlineProperties: { colors: ["#22d3ee", "#3b82f6"] },
-        },
-        {
-            title: "Active Tenants",
-            simplifiedTitle: "People Staying",
-            value: "142",
-            change: "+4 New this month",
-            simplifiedChange: "+4 new this month",
-            trendData: [130, 132, 135, 138, 140, 141, 142],
-            changeType: "positive",
-            iconColor: "bg-purple-500",
-            trendlineProperties: { colors: ["#fb923c", "#ef4444"] },
-        },
-        {
-            title: "Occupancy Rate",
-            simplifiedTitle: "Rented Houses",
-            value: "92%",
-            change: "-3% from last month",
-            simplifiedChange: "3% fewer than last month",
-            trendData: [95, 95, 94, 94, 93, 92, 92],
-            changeType: "negative",
-            iconColor: "bg-emerald-500",
-            trendlineProperties: { colors: ["#a855f7", "#ec4899"] },
-        },
-        {
-            title: "Pending Issues",
-            simplifiedTitle: "Things to Fix",
-            value: "3",
-            change: "+1 Critical Priority",
-            simplifiedChange: "1 new thing needs fixing",
-            trendData: [1, 1, 2, 2, 3, 3, 3],
-            changeType: "negative",
-            iconColor: "bg-red-500",
-            trendlineProperties: { colors: ["#ef4444", "#ec4899"] },
-        },
-    ], []);
-
-    const extendedKpis = useMemo<KpiItem[]>(() => [
-        {
-            title: "Maintenance Cost",
-            simplifiedTitle: "Repair Costs",
-            value: "₱12,450",
-            change: "-15% vs last month",
-            simplifiedChange: "₱1,800 less than last month",
-            trendData: [15000, 14200, 13800, 12450, 12450, 12000, 12450],
-            changeType: "positive",
-            iconColor: "bg-orange-500",
-            trendlineProperties: { colors: ["#f97316", "#ea580c"] },
-        },
-        {
-            title: "Lease Renewals",
-            simplifiedTitle: "Ending Contracts",
-            value: "8",
-            change: "Due in next 30 days",
-            simplifiedChange: "8 contracts ending soon",
-            trendData: [2, 3, 5, 8, 8, 9, 8],
-            changeType: "neutral",
-            iconColor: "bg-indigo-500",
-            trendlineProperties: { colors: ["#818cf8", "#6366f1"] },
-        },
-        {
-            title: "Avg. Tenant Duration",
-            simplifiedTitle: "Average Stay",
-            value: "1.8 Years",
-            change: "+0.2 Years YTD",
-            simplifiedChange: "People staying longer",
-            trendData: [1.5, 1.5, 1.6, 1.6, 1.7, 1.8, 1.8],
-            changeType: "positive",
-            iconColor: "bg-teal-500",
-            trendlineProperties: { colors: ["#2dd4bf", "#14b8a6"] },
-        },
-        {
-            title: "Portfolio Value",
-            simplifiedTitle: "Total Property Value",
-            value: "₱45.2M",
-            change: "+5.4% Appreciation",
-            simplifiedChange: "Your houses are worth more",
-            trendData: [42, 42.5, 43, 44, 44.5, 45, 45.2],
-            changeType: "positive",
-            iconColor: "bg-yellow-500",
-            trendlineProperties: { colors: ["#facc15", "#eab308"] },
-        },
-    ], []);
+    const [primaryKpis, setPrimaryKpis] = useState<KpiItem[]>(DEFAULT_PRIMARY_KPIS);
+    const [extendedKpis, setExtendedKpis] = useState<KpiItem[]>(DEFAULT_EXTENDED_KPIS);
+    const [financialChart, setFinancialChart] = useState<OverviewApiResponse["financialChart"]>(DEFAULT_FINANCIAL_CHART);
+    const [featuredProperty, setFeaturedProperty] = useState<OverviewApiResponse["featuredProperty"]>(DEFAULT_FEATURED_PROPERTY);
+    const [statsLoading, setStatsLoading] = useState(false);
+    const [statsError, setStatsError] = useState<string | null>(null);
 
     const reportStartDate = useMemo(() => new Date(`${startDate}T00:00:00`), [startDate]);
     const reportEndDate = useMemo(() => new Date(`${endDate}T23:59:59`), [endDate]);
@@ -393,6 +447,66 @@ export default function StatisticsPage() {
     useEffect(() => {
         if (!mounted) return;
 
+        const controller = new AbortController();
+
+        const mergeKpiValues = (
+            baseKpis: KpiItem[],
+            incomingKpis: Array<Pick<KpiItem, "title" | "value" | "change" | "simplifiedChange" | "trendData" | "changeType">>
+        ) => {
+            const incomingMap = new Map(incomingKpis.map((item) => [item.title, item]));
+
+            return baseKpis.map((kpi) => {
+                const incoming = incomingMap.get(kpi.title);
+                if (!incoming) return kpi;
+
+                return {
+                    ...kpi,
+                    value: incoming.value,
+                    change: incoming.change,
+                    simplifiedChange: incoming.simplifiedChange,
+                    trendData: incoming.trendData,
+                    changeType: incoming.changeType,
+                };
+            });
+        };
+
+        const loadOverview = async () => {
+            setStatsLoading(true);
+            setStatsError(null);
+
+            try {
+                const response = await fetch(`/api/landlord/statistics/overview?start=${startDate}&end=${endDate}`, {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load statistics overview");
+                }
+
+                const payload = (await response.json()) as OverviewApiResponse;
+                setPrimaryKpis((previous) => mergeKpiValues(previous, payload.primaryKpis ?? []));
+                setExtendedKpis((previous) => mergeKpiValues(previous, payload.extendedKpis ?? []));
+                setFinancialChart(payload.financialChart ?? DEFAULT_FINANCIAL_CHART);
+                setFeaturedProperty(payload.featuredProperty ?? DEFAULT_FEATURED_PROPERTY);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") return;
+                setStatsError("Unable to load live statistics right now.");
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        void loadOverview();
+
+        return () => {
+            controller.abort();
+        };
+    }, [mounted, startDate, endDate]);
+
+    useEffect(() => {
+        if (!mounted) return;
+
         const allKpis = [...primaryKpis, ...extendedKpis];
         const controller = new AbortController();
 
@@ -508,6 +622,16 @@ export default function StatisticsPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    {statsLoading && (
+                        <div className="text-[11px] px-2.5 py-1 rounded-full border border-blue-400/30 bg-blue-500/10 text-blue-300">
+                            Syncing with database...
+                        </div>
+                    )}
+                    {statsError && (
+                        <div className="text-[11px] px-2.5 py-1 rounded-full border border-red-400/30 bg-red-500/10 text-red-300">
+                            {statsError}
+                        </div>
+                    )}
                     <div className="text-[11px] px-2.5 py-1 rounded-full border border-white/10 bg-black/30 text-neutral-300">
                         {insightSource === "ai" ? "iRis AI Insights: Live" : "iRis Insights: Fallback"}
                     </div>
@@ -588,15 +712,18 @@ export default function StatisticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-8">
                 {/* Chart Section */}
                 <div className="lg:col-span-2 h-[400px]">
-                    <FinancialPerformanceChart simplifiedMode={simplifiedMode} />
+                    <FinancialPerformanceChart simplifiedMode={simplifiedMode} dataByWindow={financialChart} />
                 </div>
 
                 {/* Featured Property Card */}
                 <div className="lg:col-span-1 h-[400px]">
                     <FeaturedPropertyCard
-                        propertyName="Sunset Valley Apartments"
-                        totalSales={243}
-                        totalViews="20K+"
+                        propertyName={featuredProperty.propertyName}
+                        totalSales={featuredProperty.totalSales}
+                        totalViews={featuredProperty.totalViews}
+                        image={featuredProperty.image}
+                        momGrowth={featuredProperty.momGrowth}
+                        occupancyRate={featuredProperty.occupancyRate}
                         className="h-full shadow-2xl"
                         simplifiedMode={simplifiedMode}
                     />

@@ -19,6 +19,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 
 import EditableBio from '@/components/landlord/EditableBio';
+import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
 
 type LandlordProperty = {
     id: string;
@@ -259,21 +260,7 @@ export default async function LandlordProfilePage() {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div className="flex items-center gap-6">
                                 <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 group/avatar cursor-pointer">
-                                    <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse-slow"></div>
-                                    <div className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl group-hover/avatar:border-white transition-colors">
-                                        {profileAvatarUrl ? (
-                                            <Image
-                                                src={profileAvatarUrl}
-                                                alt={profile.full_name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                                                <User size={32} className="text-neutral-500" />
-                                            </div>
-                                        )}
-                                    </div>
+                                    <ProfileAvatarUploader initialAvatarUrl={profileAvatarUrl} fullName={profile.full_name} />
                                 </div>
 
                                 <div>

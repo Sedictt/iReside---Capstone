@@ -59,27 +59,9 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data: inquiryRows, error } = await supabase
         .from("applications")
-        .select(
-            `
-            id,
-            status,
-            message,
-            created_at,
-            applicant:profiles!applications_applicant_id_fkey (
-                full_name,
-                avatar_url
-            ),
-            unit:units (
-                name,
-                property:properties (
-                    name,
-                    images
-                )
-            )
-            `
-        )
+        .select("id, status, message, created_at, applicant_id, unit_id")
         .eq("landlord_id", user.id)
         .not("message", "is", null)
         .order("created_at", { ascending: false })
@@ -89,7 +71,45 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch recent inquiries." }, { status: 500 });
     }
 
-    const inquiryIds = (data ?? []).map((row) => row.id);
+    const inquiryIds = (inquiryRows ?? []).map((row) => row.id);
+
+    const applicantIds = Array.from(
+        new Set((inquiryRows ?? []).map((row) => row.applicant_id).filter((value): value is string => Boolean(value)))
+    );
+    const unitIds = Array.from(
+        new Set((inquiryRows ?? []).map((row) => row.unit_id).filter((value): value is string => Boolean(value)))
+    );
+
+    const { data: applicantRows, error: applicantsError } =
+        applicantIds.length > 0
+            ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", applicantIds)
+            : { data: [], error: null };
+
+    if (applicantsError) {
+        return NextResponse.json({ error: "Failed to fetch applicants." }, { status: 500 });
+    }
+
+    const { data: unitRows, error: unitsError } =
+        unitIds.length > 0
+            ? await supabase.from("units").select("id, name, property_id").in("id", unitIds)
+            : { data: [], error: null };
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to fetch units." }, { status: 500 });
+    }
+
+    const propertyIds = Array.from(
+        new Set((unitRows ?? []).map((row) => row.property_id).filter((value): value is string => Boolean(value)))
+    );
+
+    const { data: propertyRows, error: propertiesError } =
+        propertyIds.length > 0
+            ? await supabase.from("properties").select("id, name, images").in("id", propertyIds)
+            : { data: [], error: null };
+
+    if (propertiesError) {
+        return NextResponse.json({ error: "Failed to fetch properties." }, { status: 500 });
+    }
 
     const { data: actionRows, error: actionsError } =
         inquiryIds.length > 0
@@ -115,7 +135,11 @@ export async function GET() {
         ])
     );
 
-    const inquiries: InquiryItem[] = (data ?? [])
+    const applicantMap = new Map((applicantRows ?? []).map((row) => [row.id, row]));
+    const unitMap = new Map((unitRows ?? []).map((row) => [row.id, row]));
+    const propertyMap = new Map((propertyRows ?? []).map((row) => [row.id, row]));
+
+    const inquiries: InquiryItem[] = (inquiryRows ?? [])
         .filter((row) => {
             const action = actionMap.get(row.id);
             if (!action) return true;
@@ -125,7 +149,10 @@ export async function GET() {
         .filter((row) => typeof row.message === "string" && row.message.trim().length > 0)
         .map((row) => {
             const action = actionMap.get(row.id);
-            const propertyImages = row.unit?.property?.images;
+            const applicant = applicantMap.get(row.applicant_id);
+            const unit = unitMap.get(row.unit_id);
+            const property = unit ? propertyMap.get(unit.property_id) : null;
+            const propertyImages = property?.images;
             const propertyImage =
                 Array.isArray(propertyImages) && typeof propertyImages[0] === "string" && propertyImages[0].trim().length > 0
                     ? propertyImages[0]
@@ -133,9 +160,9 @@ export async function GET() {
 
             return {
                 id: row.id,
-                prospectName: row.applicant?.full_name ?? "Unknown prospect",
-                prospectAvatar: row.applicant?.avatar_url ?? null,
-                propertyName: row.unit?.property?.name || row.unit?.name || "Property inquiry",
+                prospectName: applicant?.full_name ?? "Unknown prospect",
+                prospectAvatar: applicant?.avatar_url ?? null,
+                propertyName: property?.name || unit?.name || "Property inquiry",
                 propertyImage,
                 messagePreview: row.message ?? "No message",
                 timestamp: formatRelativeDate(row.created_at),

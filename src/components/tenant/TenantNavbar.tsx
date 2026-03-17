@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { Bell, Search, User, Settings, LogOut, LayoutDashboard, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-import { signOut } from '@/lib/supabase/client-auth';
 
 export function TenantNavbar() {
     const pathname = usePathname();
@@ -107,13 +106,13 @@ export function TenantNavbar() {
                                 </Link>
                             </div>
                             <div className="p-1 border-t border-border">
-                                <button 
-                                    onClick={() => signOut()}
+                                <Link
+                                    href="/auth/logout"
                                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-left"
                                 >
                                     <LogOut className="h-4 w-4" />
                                     Log Out
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     </div>

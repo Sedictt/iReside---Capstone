@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { signOut } from "@/lib/supabase/client-auth";
 import {
     LayoutDashboard,
     Building2,
@@ -117,13 +116,13 @@ export function Sidebar() {
 
             {/* Profile / Logout */}
             <div className="border-t border-white/5 p-4">
-                <button
-                    onClick={() => signOut()}
+                <Link
+                    href="/auth/logout"
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-400 transition-all hover:bg-red-500/10 hover:text-red-500"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Log Out</span>
-                </button>
+                </Link>
             </div>
         </aside>
     );

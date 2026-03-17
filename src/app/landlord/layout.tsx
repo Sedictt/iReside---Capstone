@@ -5,6 +5,7 @@ import { InPersonPaymentModal } from "@/components/landlord/InPersonPaymentModal
 import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function LandlordLayout({
     children,
@@ -17,13 +18,16 @@ export default function LandlordLayout({
     const showContactsSidebar = !isMessages && !isUnitMap;
 
     return (
-        <div className="flex h-screen bg-[#0a0a0a]">
-            {!isMessages && <Sidebar />}
-            <main className={cn("flex-1 overflow-y-auto", !isMessages ? "ml-64" : "", showContactsSidebar ? "md:pr-24" : "")}>
-                {children}
-            </main>
-            {showContactsSidebar && <ContactsSidebar />}
-            <InPersonPaymentModal />
-        </div>
+        <AuthProvider>
+            <div className="flex h-screen bg-[#0a0a0a]">
+                {!isMessages && <Sidebar />}
+                <main className={cn("flex-1 overflow-y-auto", !isMessages ? "ml-64" : "", showContactsSidebar ? "md:pr-24" : "")}>
+                    {children}
+                </main>
+                {showContactsSidebar && <ContactsSidebar />}
+                <InPersonPaymentModal />
+            </div>
+        </AuthProvider>
     );
 }
+

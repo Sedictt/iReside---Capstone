@@ -337,6 +337,20 @@ CREATE TABLE IF NOT EXISTS "public"."conversations" (
 ALTER TABLE "public"."conversations" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."iris_chat_messages" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "role" "text" NOT NULL,
+    "content" "text" NOT NULL,
+    "metadata" "jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "iris_chat_messages_role_check" CHECK (("role" = ANY (ARRAY['user'::"text", 'assistant'::"text"])))
+);
+
+
+ALTER TABLE "public"."iris_chat_messages" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."landlord_applications" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "profile_id" "uuid" NOT NULL,
@@ -352,6 +366,38 @@ CREATE TABLE IF NOT EXISTS "public"."landlord_applications" (
 
 
 ALTER TABLE "public"."landlord_applications" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."landlord_inquiry_actions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "inquiry_id" "uuid" NOT NULL,
+    "landlord_id" "uuid" NOT NULL,
+    "is_read" boolean DEFAULT false NOT NULL,
+    "is_archived" boolean DEFAULT false NOT NULL,
+    "deleted_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."landlord_inquiry_actions" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."landlord_reviews" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "lease_id" "uuid" NOT NULL,
+    "landlord_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "rating" smallint NOT NULL,
+    "comment" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "landlord_reviews_no_self_review" CHECK (("landlord_id" <> "tenant_id")),
+    CONSTRAINT "landlord_reviews_rating_check" CHECK ((("rating" >= 1) AND ("rating" <= 5)))
+);
+
+
+ALTER TABLE "public"."landlord_reviews" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."landlord_statistics_exports" (
@@ -413,6 +459,40 @@ CREATE TABLE IF NOT EXISTS "public"."maintenance_requests" (
 
 
 ALTER TABLE "public"."maintenance_requests" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."message_user_actions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "actor_user_id" "uuid" NOT NULL,
+    "target_user_id" "uuid" NOT NULL,
+    "archived" boolean DEFAULT false NOT NULL,
+    "blocked" boolean DEFAULT false NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "message_user_actions_no_self_target" CHECK (("actor_user_id" <> "target_user_id"))
+);
+
+
+ALTER TABLE "public"."message_user_actions" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."message_user_reports" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "reporter_user_id" "uuid" NOT NULL,
+    "target_user_id" "uuid" NOT NULL,
+    "conversation_id" "uuid",
+    "category" "text" NOT NULL,
+    "details" "text" NOT NULL,
+    "status" "text" DEFAULT 'open'::"text" NOT NULL,
+    "metadata" "jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "message_user_reports_no_self_target" CHECK (("reporter_user_id" <> "target_user_id")),
+    CONSTRAINT "message_user_reports_status_check" CHECK (("status" = ANY (ARRAY['open'::"text", 'reviewing'::"text", 'resolved'::"text", 'dismissed'::"text"])))
+);
+
+
+ALTER TABLE "public"."message_user_reports" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."messages" (
@@ -579,8 +659,33 @@ ALTER TABLE ONLY "public"."conversations"
 
 
 
+ALTER TABLE ONLY "public"."iris_chat_messages"
+    ADD CONSTRAINT "iris_chat_messages_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."landlord_applications"
     ADD CONSTRAINT "landlord_applications_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."landlord_inquiry_actions"
+    ADD CONSTRAINT "landlord_inquiry_actions_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."landlord_inquiry_actions"
+    ADD CONSTRAINT "landlord_inquiry_actions_unique" UNIQUE ("inquiry_id", "landlord_id");
+
+
+
+ALTER TABLE ONLY "public"."landlord_reviews"
+    ADD CONSTRAINT "landlord_reviews_one_per_lease" UNIQUE ("lease_id");
+
+
+
+ALTER TABLE ONLY "public"."landlord_reviews"
+    ADD CONSTRAINT "landlord_reviews_pkey" PRIMARY KEY ("id");
 
 
 
@@ -596,6 +701,21 @@ ALTER TABLE ONLY "public"."leases"
 
 ALTER TABLE ONLY "public"."maintenance_requests"
     ADD CONSTRAINT "maintenance_requests_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."message_user_actions"
+    ADD CONSTRAINT "message_user_actions_actor_target_unique" UNIQUE ("actor_user_id", "target_user_id");
+
+
+
+ALTER TABLE ONLY "public"."message_user_actions"
+    ADD CONSTRAINT "message_user_actions_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."message_user_reports"
+    ADD CONSTRAINT "message_user_reports_pkey" PRIMARY KEY ("id");
 
 
 
@@ -688,6 +808,26 @@ CREATE INDEX "idx_conv_participants_user" ON "public"."conversation_participants
 
 
 
+CREATE INDEX "idx_iris_chat_messages_user_created_at" ON "public"."iris_chat_messages" USING "btree" ("user_id", "created_at");
+
+
+
+CREATE INDEX "idx_landlord_inquiry_actions_inquiry" ON "public"."landlord_inquiry_actions" USING "btree" ("inquiry_id");
+
+
+
+CREATE INDEX "idx_landlord_inquiry_actions_landlord" ON "public"."landlord_inquiry_actions" USING "btree" ("landlord_id", "updated_at" DESC);
+
+
+
+CREATE INDEX "idx_landlord_reviews_landlord_created" ON "public"."landlord_reviews" USING "btree" ("landlord_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_landlord_reviews_tenant_created" ON "public"."landlord_reviews" USING "btree" ("tenant_id", "created_at" DESC);
+
+
+
 CREATE INDEX "idx_landlord_statistics_exports_landlord_created" ON "public"."landlord_statistics_exports" USING "btree" ("landlord_id", "created_at" DESC);
 
 
@@ -717,6 +857,18 @@ CREATE INDEX "idx_maintenance_status" ON "public"."maintenance_requests" USING "
 
 
 CREATE INDEX "idx_maintenance_tenant" ON "public"."maintenance_requests" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_message_user_actions_actor_target" ON "public"."message_user_actions" USING "btree" ("actor_user_id", "target_user_id");
+
+
+
+CREATE INDEX "idx_message_user_reports_reporter_created" ON "public"."message_user_reports" USING "btree" ("reporter_user_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_message_user_reports_target" ON "public"."message_user_reports" USING "btree" ("target_user_id", "created_at" DESC);
 
 
 
@@ -865,8 +1017,38 @@ ALTER TABLE ONLY "public"."conversation_participants"
 
 
 
+ALTER TABLE ONLY "public"."iris_chat_messages"
+    ADD CONSTRAINT "iris_chat_messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."landlord_applications"
     ADD CONSTRAINT "landlord_applications_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."landlord_inquiry_actions"
+    ADD CONSTRAINT "landlord_inquiry_actions_inquiry_id_fkey" FOREIGN KEY ("inquiry_id") REFERENCES "public"."applications"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."landlord_inquiry_actions"
+    ADD CONSTRAINT "landlord_inquiry_actions_landlord_id_fkey" FOREIGN KEY ("landlord_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."landlord_reviews"
+    ADD CONSTRAINT "landlord_reviews_landlord_id_fkey" FOREIGN KEY ("landlord_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."landlord_reviews"
+    ADD CONSTRAINT "landlord_reviews_lease_id_fkey" FOREIGN KEY ("lease_id") REFERENCES "public"."leases"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."landlord_reviews"
+    ADD CONSTRAINT "landlord_reviews_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -902,6 +1084,31 @@ ALTER TABLE ONLY "public"."maintenance_requests"
 
 ALTER TABLE ONLY "public"."maintenance_requests"
     ADD CONSTRAINT "maintenance_requests_unit_id_fkey" FOREIGN KEY ("unit_id") REFERENCES "public"."units"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."message_user_actions"
+    ADD CONSTRAINT "message_user_actions_actor_user_id_fkey" FOREIGN KEY ("actor_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."message_user_actions"
+    ADD CONSTRAINT "message_user_actions_target_user_id_fkey" FOREIGN KEY ("target_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."message_user_reports"
+    ADD CONSTRAINT "message_user_reports_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "public"."conversations"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."message_user_reports"
+    ADD CONSTRAINT "message_user_reports_reporter_user_id_fkey" FOREIGN KEY ("reporter_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."message_user_reports"
+    ADD CONSTRAINT "message_user_reports_target_user_id_fkey" FOREIGN KEY ("target_user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
 
 
 
@@ -1008,6 +1215,12 @@ CREATE POLICY "Landlords can create leases" ON "public"."leases" FOR INSERT WITH
 
 
 
+CREATE POLICY "Landlords can create own inquiry actions" ON "public"."landlord_inquiry_actions" FOR INSERT WITH CHECK ((("auth"."uid"() = "landlord_id") AND (EXISTS ( SELECT 1
+   FROM "public"."applications"
+  WHERE (("applications"."id" = "landlord_inquiry_actions"."inquiry_id") AND ("applications"."landlord_id" = "auth"."uid"()))))));
+
+
+
 CREATE POLICY "Landlords can delete own properties" ON "public"."properties" FOR DELETE USING (("auth"."uid"() = "landlord_id"));
 
 
@@ -1044,6 +1257,10 @@ CREATE POLICY "Landlords can update move-out requests" ON "public"."move_out_req
 
 
 
+CREATE POLICY "Landlords can update own inquiry actions" ON "public"."landlord_inquiry_actions" FOR UPDATE USING (("auth"."uid"() = "landlord_id")) WITH CHECK (("auth"."uid"() = "landlord_id"));
+
+
+
 CREATE POLICY "Landlords can update own leases" ON "public"."leases" FOR UPDATE USING (("auth"."uid"() = "landlord_id"));
 
 
@@ -1070,11 +1287,19 @@ CREATE POLICY "Landlords can view move-out requests" ON "public"."move_out_reque
 
 
 
+CREATE POLICY "Landlords can view own inquiry actions" ON "public"."landlord_inquiry_actions" FOR SELECT USING (("auth"."uid"() = "landlord_id"));
+
+
+
 CREATE POLICY "Landlords can view own leases" ON "public"."leases" FOR SELECT USING (("auth"."uid"() = "landlord_id"));
 
 
 
 CREATE POLICY "Landlords can view own payments" ON "public"."payments" FOR SELECT USING (("auth"."uid"() = "landlord_id"));
+
+
+
+CREATE POLICY "Landlords can view own reviews" ON "public"."landlord_reviews" FOR SELECT USING (("auth"."uid"() = "landlord_id"));
 
 
 
@@ -1138,6 +1363,12 @@ CREATE POLICY "System can create payments" ON "public"."payments" FOR INSERT WIT
 
 
 
+CREATE POLICY "Tenants can create lease-based landlord reviews" ON "public"."landlord_reviews" FOR INSERT WITH CHECK ((("auth"."uid"() = "tenant_id") AND (EXISTS ( SELECT 1
+   FROM "public"."leases"
+  WHERE (("leases"."id" = "landlord_reviews"."lease_id") AND ("leases"."tenant_id" = "auth"."uid"()) AND ("leases"."landlord_id" = "leases"."landlord_id"))))));
+
+
+
 CREATE POLICY "Tenants can create maintenance requests" ON "public"."maintenance_requests" FOR INSERT WITH CHECK (("auth"."uid"() = "tenant_id"));
 
 
@@ -1151,6 +1382,10 @@ CREATE POLICY "Tenants can update own leases for signing" ON "public"."leases" F
 
 
 CREATE POLICY "Tenants can update own maintenance requests" ON "public"."maintenance_requests" FOR UPDATE USING (("auth"."uid"() = "tenant_id"));
+
+
+
+CREATE POLICY "Tenants can update own reviews" ON "public"."landlord_reviews" FOR UPDATE USING (("auth"."uid"() = "tenant_id")) WITH CHECK (("auth"."uid"() = "tenant_id"));
 
 
 
@@ -1170,11 +1405,27 @@ CREATE POLICY "Tenants can view own payments" ON "public"."payments" FOR SELECT 
 
 
 
+CREATE POLICY "Tenants can view own submitted reviews" ON "public"."landlord_reviews" FOR SELECT USING (("auth"."uid"() = "tenant_id"));
+
+
+
 CREATE POLICY "Units are viewable by everyone" ON "public"."units" FOR SELECT USING (true);
 
 
 
+CREATE POLICY "Users can create own message actions" ON "public"."message_user_actions" FOR INSERT WITH CHECK (("auth"."uid"() = "actor_user_id"));
+
+
+
+CREATE POLICY "Users can create own message reports" ON "public"."message_user_reports" FOR INSERT WITH CHECK (("auth"."uid"() = "reporter_user_id"));
+
+
+
 CREATE POLICY "Users can create their own applications" ON "public"."landlord_applications" FOR INSERT WITH CHECK (("auth"."uid"() = "profile_id"));
+
+
+
+CREATE POLICY "Users can insert own iRis chat messages" ON "public"."iris_chat_messages" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -1186,11 +1437,27 @@ CREATE POLICY "Users can unsave properties" ON "public"."saved_properties" FOR D
 
 
 
+CREATE POLICY "Users can update own message actions" ON "public"."message_user_actions" FOR UPDATE USING (("auth"."uid"() = "actor_user_id")) WITH CHECK (("auth"."uid"() = "actor_user_id"));
+
+
+
 CREATE POLICY "Users can update own notifications" ON "public"."notifications" FOR UPDATE USING (("auth"."uid"() = "user_id"));
 
 
 
 CREATE POLICY "Users can update own profile" ON "public"."profiles" FOR UPDATE USING (("auth"."uid"() = "id"));
+
+
+
+CREATE POLICY "Users can view own iRis chat messages" ON "public"."iris_chat_messages" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can view own message actions" ON "public"."message_user_actions" FOR SELECT USING (("auth"."uid"() = "actor_user_id"));
+
+
+
+CREATE POLICY "Users can view own message reports" ON "public"."message_user_reports" FOR SELECT USING (("auth"."uid"() = "reporter_user_id"));
 
 
 
@@ -1225,7 +1492,16 @@ ALTER TABLE "public"."conversation_participants" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."conversations" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."iris_chat_messages" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."landlord_applications" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."landlord_inquiry_actions" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."landlord_reviews" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."landlord_statistics_exports" ENABLE ROW LEVEL SECURITY;
@@ -1235,6 +1511,12 @@ ALTER TABLE "public"."leases" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."maintenance_requests" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."message_user_actions" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."message_user_reports" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."messages" ENABLE ROW LEVEL SECURITY;
@@ -1493,9 +1775,27 @@ GRANT ALL ON TABLE "public"."conversations" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."iris_chat_messages" TO "anon";
+GRANT ALL ON TABLE "public"."iris_chat_messages" TO "authenticated";
+GRANT ALL ON TABLE "public"."iris_chat_messages" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."landlord_applications" TO "anon";
 GRANT ALL ON TABLE "public"."landlord_applications" TO "authenticated";
 GRANT ALL ON TABLE "public"."landlord_applications" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."landlord_inquiry_actions" TO "anon";
+GRANT ALL ON TABLE "public"."landlord_inquiry_actions" TO "authenticated";
+GRANT ALL ON TABLE "public"."landlord_inquiry_actions" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."landlord_reviews" TO "anon";
+GRANT ALL ON TABLE "public"."landlord_reviews" TO "authenticated";
+GRANT ALL ON TABLE "public"."landlord_reviews" TO "service_role";
 
 
 
@@ -1514,6 +1814,18 @@ GRANT ALL ON TABLE "public"."leases" TO "service_role";
 GRANT ALL ON TABLE "public"."maintenance_requests" TO "anon";
 GRANT ALL ON TABLE "public"."maintenance_requests" TO "authenticated";
 GRANT ALL ON TABLE "public"."maintenance_requests" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."message_user_actions" TO "anon";
+GRANT ALL ON TABLE "public"."message_user_actions" TO "authenticated";
+GRANT ALL ON TABLE "public"."message_user_actions" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."message_user_reports" TO "anon";
+GRANT ALL ON TABLE "public"."message_user_reports" TO "authenticated";
+GRANT ALL ON TABLE "public"."message_user_reports" TO "service_role";
 
 
 
