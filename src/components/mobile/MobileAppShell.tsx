@@ -22,6 +22,8 @@ import LandlordHomeScreen from "./screens/LandlordHomeScreen";
 import LandlordPropertiesScreen from "./screens/LandlordPropertiesScreen";
 import LandlordPropertyDetailScreen from "./screens/LandlordPropertyDetailScreen";
 import LandlordUnitDetailScreen from "./screens/LandlordUnitDetailScreen";
+import LandlordApplicationsScreen from "./screens/LandlordApplicationsScreen";
+import LandlordApplicationReviewScreen from "./screens/LandlordApplicationReviewScreen";
 import {
     Home,
     Search,
@@ -185,6 +187,8 @@ function ScreenRouter() {
         landlordProperties: LandlordPropertiesScreen,
         landlordPropertyDetail: LandlordPropertyDetailScreen,
         landlordUnitDetail: LandlordUnitDetailScreen,
+        landlordApplications: LandlordApplicationsScreen,
+        landlordApplicationReview: LandlordApplicationReviewScreen,
         // Screens will be registered here as they're built
     };
 

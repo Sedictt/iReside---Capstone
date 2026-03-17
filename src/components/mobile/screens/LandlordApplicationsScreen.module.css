@@ -1,0 +1,432 @@
+/* ═══════════════════════════════════════════════════════════
+   Landlord Applications Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+   .container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px 16px;
+    flex-shrink: 0;
+}
+
+.headerTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.headerTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.headerFilterBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.headerFilterBtn:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
+}
+
+.headerFilterBtn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Filter Tabs (Pending, Approved, Rejected) ───────── */
+.filterTabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px; /* space for scrollbar if any */
+    -webkit-overflow-scrolling: touch;
+}
+
+.filterTabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tabChip {
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: #1a1a1a;
+    color: #a3a3a3;
+    border: 1px solid #262626;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.tabChip.active {
+    background: #fafafa;
+    color: #000;
+    border-color: #fafafa;
+}
+
+.tabBadge {
+    background: #333;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+}
+
+.tabChip.active .tabBadge {
+    background: #000;
+    color: #fff;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Application Card ─────────────────────────────────── */
+.applicationCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s ease;
+}
+
+.applicationCard:active {
+    background: #1a1a1a;
+}
+
+.cardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.applicantInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.applicantAvatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fafafa;
+    font-weight: 800;
+    font-size: 16px;
+}
+
+.applicantName {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.applyDate {
+    font-size: 12px;
+    color: #737373;
+}
+
+.statusBadge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.statusBadge.pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.statusBadge.approved {
+    background: rgba(109, 152, 56, 0.15);
+    color: #6d9838;
+}
+
+.statusBadge.rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.cardDivider {
+    height: 1px;
+    background: #1e1e1e;
+    margin: 12px 0;
+}
+
+.propertyInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a3a3a3;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.propertyInfo svg {
+    color: #737373;
+}
+
+
+/* =========================================================
+   Application Review Detail Specific Styles
+   ========================================================= */
+
+.reviewTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    flex-shrink: 0;
+    background: #0a0a0a;
+    z-index: 10;
+}
+
+.reviewBackButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+}
+
+.reviewTopBarTitle {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    text-align: center;
+}
+
+.reviewHeader {
+    text-align: center;
+    padding: 24px 0 16px;
+}
+
+.reviewAvatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #262626;
+    color: #fff;
+    font-size: 32px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.reviewName {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.reviewTarget {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 13px;
+    color: #a3a3a3;
+}
+
+/* Document List */
+.sectionTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #a3a3a3;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 24px 0 12px;
+}
+
+.docList {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.docItem {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #1e1e1e;
+}
+
+.docItem:last-child {
+    border-bottom: none;
+}
+
+.docIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(109, 152, 56, 0.1);
+    color: #6d9838;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.docIcon.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.docInfo {
+    flex: 1;
+}
+
+.docName {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.docStatus {
+    font-size: 12px;
+    color: #737373;
+}
+
+.docAction {
+    color: #6d9838;
+}
+
+/* Info Grid */
+.infoGrid {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.infoItemBox {
+    display: flex;
+    flex-direction: column;
+}
+
+.infoLabel {
+    font-size: 11px;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.infoValue {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fafafa;
+}
+
+.infoValue.highlight {
+    color: #6d9838;
+}
+
+/* Sticky Action Bar */
+.actionFooter {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px 24px;
+    background: #0a0a0a;
+    border-top: 1px solid #1e1e1e;
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+
+.rejectBtn, .approveBtn {
+    flex: 1;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+}
+
+.rejectBtn {
+    background: #1a1a1a;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.approveBtn {
+    background: #6d9838;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(109, 152, 56, 0.3);
+}
+
+.rejectBtn:active, .approveBtn:active {
+    transform: scale(0.96);
+}
