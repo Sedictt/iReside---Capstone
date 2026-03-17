@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Search,
     Filter,
-    MoreVertical,
     Wallet,
     Clock,
     AlertCircle,
@@ -18,84 +17,86 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const MOCK_TENANTS = [
-    {
-        id: "TEN-001",
-        name: "Eleanor Pena",
-        property: "Grand View Residences",
-        unit: "Unit 1204",
-        status: "Active",
-        rentAmount: 25000,
-        leaseEnd: "2026-10-15",
-        phone: "+63 917 123 4567",
-        email: "eleanor.pena@example.com",
-        avatar: "EP",
-        avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg",
-        paymentStatus: "paid"
-    },
-    {
-        id: "TEN-002",
-        name: "Brooklyn Simmons",
-        property: "Oasis Apartments",
-        unit: "Bldg 2 - 14",
-        status: "Moving Out",
-        rentAmount: 18500,
-        leaseEnd: "2026-04-01",
-        phone: "+63 917 234 5678",
-        email: "bsimmons@example.com",
-        avatar: "BS",
-        avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg",
-        paymentStatus: "paid"
-    },
-    {
-        id: "TEN-003",
-        name: "Jerome Bell",
-        property: "Grand View Residences",
-        unit: "Unit 0811",
-        status: "Active",
-        rentAmount: 26000,
-        leaseEnd: "2027-01-20",
-        phone: "+63 917 345 6789",
-        email: "j.bell@example.com",
-        avatar: "JB",
-        avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg",
-        paymentStatus: "late"
-    },
-    {
-        id: "TEN-004",
-        name: "Kristin Watson",
-        property: "Skyline Towers",
-        unit: "Penthouse B",
-        status: "Active",
-        rentAmount: 45000,
-        leaseEnd: "2026-12-01",
-        phone: "+63 917 456 7890",
-        email: "kwatson.design@example.com",
-        avatar: "KW",
-        avatarUrl: "https://randomuser.me/api/portraits/women/26.jpg",
-        paymentStatus: "pending"
-    },
-    {
-        id: "TEN-005",
-        name: "Cody Fisher",
-        property: "Oasis Apartments",
-        unit: "Bldg 1 - 02",
-        status: "Active",
-        rentAmount: 17000,
-        leaseEnd: "2026-08-15",
-        phone: "+63 917 567 8901",
-        email: "cody.fish@example.com",
-        avatar: "CF",
-        avatarUrl: "https://randomuser.me/api/portraits/men/46.jpg",
-        paymentStatus: "paid"
+type TenantStatus = "Active" | "Moving Out" | "Evicted";
+type TenantPaymentStatus = "paid" | "late" | "pending";
+
+type Tenant = {
+    id: string;
+    name: string;
+    property: string;
+    unit: string;
+    status: TenantStatus;
+    rentAmount: number | null;
+    leaseEnd: string | null;
+    phone: string;
+    email: string;
+    avatar: string;
+    avatarUrl: string | null;
+    paymentStatus: TenantPaymentStatus;
+};
+
+const formatCurrency = (value: number | null) => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "Not provided";
     }
-];
+
+    return `₱${value.toLocaleString()}`;
+};
+
+const formatLeaseEnd = (value: string | null) => {
+    if (!value) return "Not set";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Not set";
+
+    return parsed.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+};
 
 export default function TenantsPage() {
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All");
+    const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All");
+    const [tenants, setTenants] = useState<Tenant[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const filteredTenants = MOCK_TENANTS.filter(tenant => {
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadTenants = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch("/api/landlord/tenants", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load tenants");
+                }
+
+                const payload = (await response.json()) as { tenants?: Tenant[] };
+                setTenants(Array.isArray(payload.tenants) ? payload.tenants : []);
+            } catch (fetchError) {
+                if ((fetchError as Error).name === "AbortError") {
+                    return;
+                }
+
+                setError("Unable to load tenants right now.");
+                setTenants([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void loadTenants();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
+    const filteredTenants = tenants.filter(tenant => {
         const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             tenant.unit.toLowerCase().includes(searchQuery.toLowerCase()) ||
             tenant.property.toLowerCase().includes(searchQuery.toLowerCase());
@@ -103,7 +104,7 @@ export default function TenantsPage() {
         return matchesSearch && matchesStatus;
     });
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: TenantStatus) => {
         switch (status) {
             case "Active": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
             case "Moving Out": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
@@ -112,7 +113,7 @@ export default function TenantsPage() {
         }
     };
 
-    const getPaymentStatusIcon = (status: string) => {
+    const getPaymentStatusIcon = (status: TenantPaymentStatus) => {
         switch (status) {
             case "paid": return <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> Paid</div>;
             case "late": return <div className="flex items-center gap-1.5 text-xs font-medium text-red-400"><AlertCircle className="w-3.5 h-3.5" /> Overdue</div>;
@@ -172,7 +173,17 @@ export default function TenantsPage() {
             </div>
 
             {/* Tenant Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {loading ? (
+                <div className="rounded-3xl border border-white/5 bg-[#111] p-6 text-sm text-neutral-400">
+                    Loading tenants...
+                </div>
+            ) : error ? (
+                <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
+                    {error}
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredTenants.map((tenant, idx) => (
                     <div
                         key={tenant.id}
@@ -221,14 +232,14 @@ export default function TenantsPage() {
                                 <p className="text-xs font-medium text-neutral-500 mb-1.5 flex items-center gap-1.5">
                                     <Wallet className="w-3.5 h-3.5" /> Rent
                                 </p>
-                                <p className="font-bold text-white text-[15px]">₱{tenant.rentAmount.toLocaleString()}</p>
+                                <p className="font-bold text-white text-[15px]">{formatCurrency(tenant.rentAmount)}</p>
                             </div>
                             <div className="bg-white/[0.02] p-3 rounded-2xl border border-white/5">
                                 <p className="text-xs font-medium text-neutral-500 mb-1.5 flex items-center gap-1.5">
                                     <Calendar className="w-3.5 h-3.5" /> Lease Ends
                                 </p>
                                 <p className="font-bold text-white text-[15px]">
-                                    {new Date(tenant.leaseEnd).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                                    {formatLeaseEnd(tenant.leaseEnd)}
                                 </p>
                             </div>
                         </div>
@@ -254,14 +265,16 @@ export default function TenantsPage() {
                 ))}
             </div>
 
-            {filteredTenants.length === 0 && (
-                <div className="col-span-full py-20 text-center bg-[#111] border border-white/5 rounded-3xl animate-in fade-in zoom-in duration-500">
-                    <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-neutral-500 mx-auto mb-5">
-                        <Search className="w-8 h-8" />
-                    </div>
-                    <p className="text-xl text-white font-bold mb-2">No tenants found</p>
-                    <p className="text-neutral-500 max-w-sm mx-auto">We couldn't find any tenants matching your current filters and search query.</p>
-                </div>
+                    {filteredTenants.length === 0 && (
+                        <div className="col-span-full py-20 text-center bg-[#111] border border-white/5 rounded-3xl animate-in fade-in zoom-in duration-500">
+                            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-neutral-500 mx-auto mb-5">
+                                <Search className="w-8 h-8" />
+                            </div>
+                            <p className="text-xl text-white font-bold mb-2">No tenants found</p>
+                            <p className="text-neutral-500 max-w-sm mx-auto">We couldn't find any tenants matching your current filters and search query.</p>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

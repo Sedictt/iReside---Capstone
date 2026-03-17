@@ -12,7 +12,7 @@ export interface Invoice {
     unit: string;
     amount: number;
     dueDate: string;
-    status: string;
+    status: "paid" | "overdue" | "pending";
     type: string;
     issuedDate: string;
 }
