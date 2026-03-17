@@ -1,0 +1,209 @@
+/* ═══════════════════════════════════════════════════════════
+   Landlord Maintenance Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px 16px;
+    flex-shrink: 0;
+}
+
+.headerTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.headerTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+/* ─── Stats Grid ───────────────────────────────────────── */
+.statsRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.statCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.statValue {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.statLabel {
+    font-size: 10px;
+    font-weight: 600;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.statValue.pending { color: #ef4444; }
+.statValue.active { color: #f59e0b; }
+.statValue.resolved { color: #6d9838; }
+
+/* ─── Tabs ─────────────────────────────────────────────── */
+.tabs {
+    display: flex;
+    gap: 16px;
+    border-bottom: 1px solid #1e1e1e;
+    margin-bottom: 16px;
+}
+
+.tab {
+    padding: 8px 4px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #737373;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab.active {
+    color: #fafafa;
+    border-bottom-color: #6d9838;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 20px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Maintenance Card ─────────────────────────────────── */
+.ticketCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.ticketTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.categoryInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iconBox {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconBox.plumbing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.iconBox.electrical { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.iconBox.hvac { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.iconBox.other { background: rgba(163, 163, 163, 0.1); color: #a3a3a3; }
+
+.subject {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fafafa;
+}
+
+.unitInfo {
+    font-size: 12px;
+    color: #737373;
+    margin-top: 2px;
+}
+
+.statusBadge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.statusBadge.pending { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.statusBadge.active { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.statusBadge.resolved { background: rgba(109, 152, 56, 0.1); color: #6d9838; }
+
+.ticketBody {
+    margin-bottom: 16px;
+}
+
+.description {
+    font-size: 13px;
+    color: #a3a3a3;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ticketFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px dashed #262626;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #525252;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.assignment {
+    font-size: 12px;
+    color: #6d9838;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
