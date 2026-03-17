@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════════════
+   Landlord Profile Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 32px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Profile Header ───────────────────────────────────── */
+.profileHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 24px;
+    background: linear-gradient(to bottom, #141414 0%, #0a0a0a 100%);
+}
+
+.avatarContainer {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #1e1e1e;
+}
+
+.avatarPlaceholder {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.editAvatarBtn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    background: #6d9838;
+    color: #fff;
+    border: 2px solid #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.userName {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+}
+
+.userEmail {
+    font-size: 14px;
+    color: #737373;
+    font-weight: 500;
+}
+
+/* ─── Role Switcher ────────────────────────────────────── */
+.roleSwitcherCard {
+    margin: 0 20px 24px;
+    padding: 16px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #141414 100%);
+    border: 1px solid #262626;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.roleSwitcherCard:active {
+    transform: scale(0.98);
+}
+
+.roleLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.roleIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(109, 152, 56, 0.1);
+    color: #6d9838;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roleText h3 {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.roleText p {
+    font-size: 12px;
+    color: #737373;
+}
+
+.roleRight {
+    color: #404040;
+}
+
+/* ─── Quick Stats ──────────────────────────────────────── */
+.statsRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 0 20px 24px;
+}
+
+.statCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.statValue {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.statLabel {
+    font-size: 10px;
+    font-weight: 700;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ─── Menu Sections ────────────────────────────────────── */
+.menuSection {
+    margin-bottom: 28px;
+    padding: 0 20px;
+}
+
+.sectionTitle {
+    font-size: 12px;
+    font-weight: 800;
+    color: #6d9838;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    padding-left: 4px;
+}
+
+.menuBlock {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.menuItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid #1e1e1e;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+
+.menuItem:last-child {
+    border-bottom: none;
+}
+
+.menuItem:active {
+    background: #1a1a1a;
+}
+
+.menuItemIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    margin-right: 12px;
+}
+
+.menuItemIcon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.menuItemLabel {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: #e5e5e5;
+}
+
+.menuItemRight {
+    color: #404040;
+}
+
+.dangerItem .menuItemLabel {
+    color: #ef4444;
+}
+
+.dangerItem .menuItemIcon {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.appVersion {
+    text-align: center;
+    font-size: 11px;
+    color: #404040;
+    margin-top: 8px;
+    font-weight: 600;
+}
