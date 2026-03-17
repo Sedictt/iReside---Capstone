@@ -10,6 +10,7 @@ import {
   Wrench,
   ChevronRight,
   TrendingUp,
+  Bell,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordHomeScreen.module.css";
@@ -66,9 +67,18 @@ export default function LandlordHomeScreen() {
           <h1>Dashboard</h1>
           <p>Welcome back, Landlord</p>
         </div>
-        <div className={styles.headerDate}>
-          <Calendar />
-          {REVENUE_DATA.month} 2026
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className={styles.headerDate}>
+            <Calendar />
+            {REVENUE_DATA.month} 2026
+          </div>
+          <button 
+            style={{ background: 'none', border: 'none', color: '#a3a3a3', position: 'relative' }}
+            onClick={() => navigate("notifications")}
+          >
+            <Bell size={24} />
+            <div style={{ position: 'absolute', top: 2, right: 2, width: 8, height: 8, background: '#6d9838', borderRadius: 4, border: '2px solid #0a0a0a' }} />
+          </button>
         </div>
       </div>
 

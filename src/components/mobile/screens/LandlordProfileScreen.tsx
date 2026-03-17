@@ -98,7 +98,7 @@ export default function LandlordProfileScreen() {
                                 <ChevronRight />
                             </div>
                         </button>
-                        <button className={styles.menuItem}>
+                        <button className={styles.menuItem} onClick={() => navigate("notifications")}>
                             <div className={styles.menuItemIcon}>
                                 <Bell />
                             </div>

@@ -29,6 +29,7 @@ import LandlordMaintenanceScreen from "./screens/LandlordMaintenanceScreen";
 import LandlordProfileScreen from "./screens/LandlordProfileScreen";
 import LandlordChatScreen from "./screens/LandlordChatScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
+import IrisChatScreen from "./screens/IrisChatScreen";
 import {
     Home,
     Search,
@@ -199,6 +200,7 @@ function ScreenRouter() {
         landlordProfile: LandlordProfileScreen,
         landlordChat: LandlordChatScreen,
         notifications: NotificationsScreen,
+        irisChat: IrisChatScreen,
         // Screens will be registered here as they're built
     };
 
