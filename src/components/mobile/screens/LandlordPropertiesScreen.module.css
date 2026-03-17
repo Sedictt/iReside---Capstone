@@ -1,0 +1,259 @@
+/* ═══════════════════════════════════════════════════════════
+   Landlord Properties Screen Styles
+   ═══════════════════════════════════════════════════════════ */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+    position: relative;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px 16px;
+    flex-shrink: 0;
+}
+
+.headerTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.headerTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.headerFilterBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background: #141414;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.headerFilterBtn:active {
+    background: #1a1a1a;
+    transform: scale(0.95);
+}
+
+.headerFilterBtn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ─── Search Bar ───────────────────────────────────────── */
+.searchContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    color: #737373;
+    pointer-events: none;
+}
+
+.searchIcon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.searchInput {
+    width: 100%;
+    height: 44px;
+    border-radius: 12px;
+    background: #141414;
+    border: 1px solid #262626;
+    padding: 0 16px 0 40px;
+    color: #fafafa;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.searchInput::placeholder {
+    color: #525252;
+}
+
+.searchInput:focus {
+    border-color: #6d9838;
+}
+
+/* ─── Scroll Area ──────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 20px 80px; /* extra padding for FAB */
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Property Card ────────────────────────────────────── */
+.propertyCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.propertyCard:active {
+    transform: scale(0.98);
+    background: #1a1a1a;
+}
+
+.cardImageWrapper {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    background: #262626;
+}
+
+.cardImageWrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Gradient overlay to make text pop if we overlay any, but here just decoration */
+.cardImageOverlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.8));
+}
+
+.statusBadge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: #fafafa;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.statusBadge.full {
+    background: rgba(109, 152, 56, 0.9);
+    color: #fff;
+    border: none;
+}
+
+.cardBody {
+    padding: 16px;
+}
+
+.propertyName {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+}
+
+.propertyAddress {
+    font-size: 13px;
+    color: #737373;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.propertyAddress svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Stats Row */
+.statsRow {
+    display: flex;
+    gap: 12px;
+}
+
+.statBox {
+    flex: 1;
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.statValue {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.statLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: #a3a3a3;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.revenueText {
+    color: #6d9838;
+}
+
+/* ─── Floating Action Button (FAB) ─────────────────────── */
+.fab {
+    position: absolute;
+    bottom: 24px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: #6d9838;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(109, 152, 56, 0.3);
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+.fab:active {
+    transform: scale(0.9);
+}
+
+.fab svg {
+    width: 24px;
+    height: 24px;
+}

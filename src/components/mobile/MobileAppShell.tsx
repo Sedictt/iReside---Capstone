@@ -19,6 +19,7 @@ import PaymentsScreen from "./screens/PaymentsScreen";
 import TenantProfileScreen from "./screens/TenantProfileScreen";
 import TenantSettingsScreen from "./screens/TenantSettingsScreen";
 import LandlordHomeScreen from "./screens/LandlordHomeScreen";
+import LandlordPropertiesScreen from "./screens/LandlordPropertiesScreen";
 import {
     Home,
     Search,
@@ -179,6 +180,7 @@ function ScreenRouter() {
         tenantProfile: TenantProfileScreen,
         tenantSettings: TenantSettingsScreen,
         landlordHome: LandlordHomeScreen,
+        landlordProperties: LandlordPropertiesScreen,
         // Screens will be registered here as they're built
     };
 
