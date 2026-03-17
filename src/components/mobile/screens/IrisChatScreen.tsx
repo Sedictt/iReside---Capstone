@@ -127,15 +127,13 @@ export default function IrisChatScreen() {
             </div>
 
             {/* Suggestions */}
-            {!isTyping && messages.length < 5 && (
-                <div className={styles.suggestions}>
-                    {SUGGESTIONS.map((s, i) => (
-                        <button key={i} className={styles.suggestionChip} onClick={() => handleSend(s)}>
-                            {s}
-                        </button>
-                    ))}
-                </div>
-            )}
+            <div className={styles.suggestions}>
+                {SUGGESTIONS.map((s, i) => (
+                    <button key={i} className={styles.suggestionChip} onClick={() => handleSend(s)}>
+                        {s}
+                    </button>
+                ))}
+            </div>
 
             {/* Input */}
             <footer className={styles.inputArea}>
