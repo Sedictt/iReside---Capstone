@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Slider from "@radix-ui/react-slider";
 import {
@@ -74,6 +74,9 @@ function LandingPageContent() {
   const budgetRef = useRef<HTMLDivElement>(null);
   const typeRef = useRef<HTMLDivElement>(null);
   const amenitiesRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -85,6 +88,10 @@ function LandingPageContent() {
       }
       if (amenitiesRef.current && !amenitiesRef.current.contains(event.target as Node)) {
         setIsAmenitiesOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchSuggestions(false);
+        setActiveSuggestionIndex(-1);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -145,6 +152,73 @@ function LandingPageContent() {
 
   const [selectedProperty, setSelectedProperty] = useState<FeedProperty | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [dynamicPlaces, setDynamicPlaces] = useState<SearchSuggestion[]>([]);
+
+  useEffect(() => {
+    const query = location.trim();
+    if (query.length < 2) {
+      setDynamicPlaces([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/locations?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        if (data.locations) {
+          setDynamicPlaces(data.locations);
+        }
+      } catch (err) {
+        console.error("Failed to fetch location suggestions:", err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [location]);
+
+  type SearchSuggestion = {
+    id: string;
+    label: string;
+    subLabel: string;
+    kind: "listing" | "place";
+  };
+
+  const searchSuggestions = useMemo<SearchSuggestion[]>(() => {
+    const query = location.trim().toLowerCase();
+    if (query.length < 2) return [];
+
+    const listingMatches: SearchSuggestion[] = dbProperties
+      .filter((property) => {
+        return (
+          property.name.toLowerCase().includes(query) ||
+          property.address.toLowerCase().includes(query)
+        );
+      })
+      .slice(0, 4)
+      .map((property) => ({
+        id: `listing-${property.id}`,
+        label: property.name,
+        subLabel: property.address,
+        kind: "listing",
+      }));
+
+    const combined = [...listingMatches];
+    // Add dynamic places if they haven't been added yet (avoid exact duplicates by label)
+    for (const place of dynamicPlaces) {
+      if (!combined.some((item) => item.label.toLowerCase() === place.label.toLowerCase())) {
+        combined.push(place);
+      }
+    }
+
+    return combined.slice(0, 6);
+  }, [location, dbProperties, dynamicPlaces]);
+
+  const applySuggestion = (suggestion: SearchSuggestion) => {
+    setLocation(suggestion.label);
+    setShowSearchSuggestions(false);
+    setActiveSuggestionIndex(-1);
+    setIsSearchActive(true);
+  };
 
   const handleOpenDetails = (property: FeedProperty) => {
     setSelectedProperty(property);
@@ -315,19 +389,104 @@ function LandingPageContent() {
                 {/* Comprehensive Filter Bar */}
                 <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-3 w-full max-w-5xl flex flex-col md:flex-row items-center shadow-2xl gap-2 backdrop-blur-3xl">
                   {/* Where */}
-                  <div className="flex-1 flex items-center bg-transparent border-b md:border-b-0 md:border-r border-white/10 px-6 py-3 w-full focus-within:bg-white/5 transition-colors group rounded-l-[2rem]">
+                  <div ref={searchRef} className="relative flex-1 flex items-center bg-transparent border-b md:border-b-0 md:border-r border-white/10 px-6 py-3 w-full focus-within:bg-white/5 transition-colors group rounded-l-[2rem]">
                     <MapPin className="h-5 w-5 text-primary mr-3 shrink-0" />
                     <div className="flex flex-col w-full">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">Location</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 leading-none mb-1">Search</span>
                       <input
                         type="text"
                         value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && setIsSearchActive(true)}
-                        placeholder="Where do you want to live?"
+                        onFocus={() => {
+                          if (searchSuggestions.length > 0) {
+                            setShowSearchSuggestions(true);
+                          }
+                        }}
+                        onChange={(e) => {
+                          setLocation(e.target.value);
+                          setShowSearchSuggestions(true);
+                          setActiveSuggestionIndex(-1);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "ArrowDown") {
+                            if (!showSearchSuggestions && searchSuggestions.length > 0) {
+                              setShowSearchSuggestions(true);
+                              setActiveSuggestionIndex(0);
+                              return;
+                            }
+
+                            if (searchSuggestions.length > 0) {
+                              e.preventDefault();
+                              setActiveSuggestionIndex((prev) =>
+                                prev < searchSuggestions.length - 1 ? prev + 1 : 0
+                              );
+                            }
+                            return;
+                          }
+
+                          if (e.key === "ArrowUp") {
+                            if (searchSuggestions.length > 0) {
+                              e.preventDefault();
+                              setActiveSuggestionIndex((prev) =>
+                                prev > 0 ? prev - 1 : searchSuggestions.length - 1
+                              );
+                            }
+                            return;
+                          }
+
+                          if (e.key === "Escape") {
+                            setShowSearchSuggestions(false);
+                            setActiveSuggestionIndex(-1);
+                            return;
+                          }
+
+                          if (e.key === "Enter") {
+                            if (
+                              showSearchSuggestions &&
+                              activeSuggestionIndex >= 0 &&
+                              activeSuggestionIndex < searchSuggestions.length
+                            ) {
+                              e.preventDefault();
+                              applySuggestion(searchSuggestions[activeSuggestionIndex]);
+                              return;
+                            }
+
+                            setIsSearchActive(true);
+                            setShowSearchSuggestions(false);
+                            setActiveSuggestionIndex(-1);
+                          }
+                        }}
+                        placeholder="Search by property, unit, or location"
                         className="bg-transparent border-none outline-none text-white w-full placeholder:text-slate-600 font-bold text-sm md:text-base p-0"
                       />
                     </div>
+
+                    <AnimatePresence>
+                      {showSearchSuggestions && searchSuggestions.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          className="absolute top-full left-4 right-4 mt-2 rounded-2xl border border-white/10 bg-[#0f0f0f] shadow-2xl overflow-hidden z-[110]"
+                        >
+                          {searchSuggestions.map((suggestion, index) => (
+                            <button
+                              key={suggestion.id}
+                              type="button"
+                              onClick={() => applySuggestion(suggestion)}
+                              className={cn(
+                                "w-full px-4 py-3 text-left transition-colors border-b border-white/5 last:border-b-0",
+                                index === activeSuggestionIndex
+                                  ? "bg-white/10"
+                                  : "bg-transparent hover:bg-white/5"
+                              )}
+                            >
+                              <p className="text-sm font-semibold text-white">{suggestion.label}</p>
+                              <p className="text-xs text-slate-400 truncate">{suggestion.subLabel}</p>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
 

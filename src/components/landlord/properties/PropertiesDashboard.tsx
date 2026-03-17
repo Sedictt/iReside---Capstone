@@ -19,7 +19,8 @@ import {
     Users,
     X,
     Map,
-    Edit3
+    Edit3,
+    Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -455,6 +456,13 @@ export function PropertiesDashboard() {
                                             <Map className="w-5 h-5" />
                                         </div>
                                         <span className="text-sm font-medium text-white">Unit Map</span>
+                                    </Link>
+
+                                    <Link href={`/landlord/listings?propertyId=${activeProperty.id}`} className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">
+                                        <div className="w-12 h-12 bg-violet-500/20 text-violet-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Megaphone className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-medium text-white">Create Listing</span>
                                     </Link>
 
                                     <Link href="/landlord/tenants" className="flex flex-col items-center justify-center p-4 bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl transition-all group">

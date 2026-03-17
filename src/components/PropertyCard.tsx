@@ -60,7 +60,7 @@ export default function PropertyCard({ property, isLiked, onLike, onClick }: Pro
             <div className="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col gap-4">
                 <div>
                     <div className="flex justify-between items-center mb-1">
-                        <h3 className="font-bold text-white text-xl tracking-tight leading-snug truncate pr-2">
+                        <h3 className="font-bold text-white text-xl tracking-tight leading-snug pr-2 whitespace-normal break-words">
                             {property.name}
                         </h3>
                         <div className="flex items-center gap-1 text-orange-400 flex-shrink-0 bg-neutral-900/30 backdrop-blur-sm px-2 py-0.5 rounded-lg border border-white/5">

@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Building2, Eye, Megaphone, PauseCircle, PlayCircle, Search, SquarePen, MapPin, TrendingUp, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,70 +24,39 @@ interface ListingItem {
     image: string;
     color: string;
     address: string;
+    propertyId: string;
+    unitId: string | null;
 }
 
-const MOCK_LISTINGS: ListingItem[] = [
-    {
-        id: "LST-001",
-        title: "Sunset Heights - Unit 108",
-        property: "Sunset Heights Complex",
-        unit: "Unit 108",
-        type: "unit",
-        rent: 25000,
-        status: "published",
-        views: 128,
-        leads: 14,
-        updatedAt: "2h ago",
-        image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80",
-        color: "from-emerald-500/20 to-emerald-500/0",
-        address: "123 Skyline Avenue, Metro Manila",
-    },
-    {
-        id: "LST-002",
-        title: "Sunset Heights - Unit 204",
-        property: "Sunset Heights Complex",
-        unit: "Unit 204",
-        type: "unit",
-        rent: 22000,
-        status: "draft",
-        views: 0,
-        leads: 0,
-        updatedAt: "1d ago",
-        image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&auto=format&fit=crop&q=80",
-        color: "from-amber-500/20 to-amber-500/0",
-        address: "123 Skyline Avenue, Metro Manila",
-    },
-    {
-        id: "LST-003",
-        title: "Grand View Residences - 3B",
-        property: "Grand View Residences",
-        unit: "3B",
-        type: "unit",
-        rent: 32000,
-        status: "paused",
-        views: 304,
-        leads: 29,
-        updatedAt: "3d ago",
-        image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=1200&auto=format&fit=crop&q=80",
-        color: "from-slate-500/20 to-slate-500/0",
-        address: "45 Greenfield Subd, Quezon City",
-    },
-    {
-        id: "LST-004",
-        title: "Oasis Villa",
-        property: "Oasis Villa",
-        unit: "Entire Property",
-        type: "property",
-        rent: 150000,
-        status: "published",
-        views: 89,
-        leads: 5,
-        updatedAt: "12h ago",
-        image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80",
-        color: "from-emerald-500/20 to-emerald-500/0",
-        address: "88 Palm Drive, Taguig City",
-    },
-];
+type ListingOptionUnit = {
+    id: string;
+    name: string;
+    status: "vacant" | "occupied" | "maintenance";
+    rentAmount: number;
+};
+
+type ListingOptionProperty = {
+    id: string;
+    name: string;
+    address: string;
+    image: string | null;
+    units: ListingOptionUnit[];
+};
+
+type ListingsPayload = {
+    listings: ListingItem[];
+    options: ListingOptionProperty[];
+    error?: string;
+};
+
+type OperationNotice = {
+    type: "success" | "error";
+    text: string;
+};
+
+const normalizeListingTitle = (title: string) => title.replace(/entire property/gi, "Apartment Listing");
+
+const listingTypeLabel = (type: ListingType) => (type === "unit" ? "Unit Listing" : "Apartment Listing");
 
 const STATUS_META: Record<ListingStatus, { label: string; chip: string; icon: React.ComponentType<{ className?: string }> }> = {
     published: {
@@ -107,12 +77,140 @@ const STATUS_META: Record<ListingStatus, { label: string; chip: string; icon: Re
 };
 
 export function ListingsDashboard() {
+    const searchParams = useSearchParams();
+    const preferredPropertyId = searchParams.get("propertyId");
+
+    const [listings, setListings] = useState<ListingItem[]>([]);
+    const [listingOptions, setListingOptions] = useState<ListingOptionProperty[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [notice, setNotice] = useState<OperationNotice | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingListing, setEditingListing] = useState<ListingItem | null>(null);
+    const [hasShortcutAutoOpened, setHasShortcutAutoOpened] = useState(false);
+
+    // Edit state
+    const [editTitle, setEditTitle] = useState("");
+    const [editRent, setEditRent] = useState("");
+    const [editStatus, setEditStatus] = useState<ListingStatus>("draft");
+
     const [query, setQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<"all" | ListingStatus>("all");
     const [typeFilter, setTypeFilter] = useState<"all" | ListingType>("all");
+    const [createScope, setCreateScope] = useState<ListingType>("property");
+    const [createPropertyId, setCreatePropertyId] = useState("");
+    const [createUnitId, setCreateUnitId] = useState("");
+    const [createStatus, setCreateStatus] = useState<ListingStatus>("draft");
+    const [createRent, setCreateRent] = useState("");
+    const [createTitle, setCreateTitle] = useState("");
+    const [createError, setCreateError] = useState<string | null>(null);
+    const [editError, setEditError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!notice) return;
+
+        const timeout = window.setTimeout(() => {
+            setNotice(null);
+        }, 4500);
+
+        return () => {
+            window.clearTimeout(timeout);
+        };
+    }, [notice]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadListings = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch("/api/landlord/listings", {
+                    method: "GET",
+                    signal: controller.signal,
+                    cache: "no-store",
+                });
+
+                const payload = (await response.json()) as ListingsPayload;
+                if (!response.ok) {
+                    throw new Error(payload.error || "Failed to load listings.");
+                }
+
+                setListings(payload.listings ?? []);
+                setListingOptions(payload.options ?? []);
+
+                const hasPreferred = preferredPropertyId && (payload.options ?? []).some((option) => option.id === preferredPropertyId);
+                const firstPropertyId = payload.options?.[0]?.id ?? "";
+                const chosenPropertyId = hasPreferred ? preferredPropertyId! : firstPropertyId;
+                setCreatePropertyId(chosenPropertyId);
+                setCreateUnitId("");
+            } catch (loadError) {
+                if ((loadError as Error).name === "AbortError") return;
+                setError(loadError instanceof Error ? loadError.message : "Failed to load listings.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        void loadListings();
+
+        return () => {
+            controller.abort();
+        };
+    }, [reloadKey, preferredPropertyId]);
+
+    useEffect(() => {
+        if (!preferredPropertyId) {
+            setHasShortcutAutoOpened(false);
+            return;
+        }
+
+        if (hasShortcutAutoOpened) return;
+
+        const propertyExists = listingOptions.some((option) => option.id === preferredPropertyId);
+        if (!propertyExists) return;
+
+        setCreatePropertyId(preferredPropertyId);
+        setIsCreateOpen(true);
+        setHasShortcutAutoOpened(true);
+    }, [preferredPropertyId, listingOptions, hasShortcutAutoOpened]);
+
+    const selectedProperty = listingOptions.find((property) => property.id === createPropertyId) ?? null;
+    const availableUnits = (selectedProperty?.units ?? []).filter((unit) => unit.status === "vacant");
+
+    useEffect(() => {
+        if (createScope !== "unit") {
+            setCreateUnitId("");
+            return;
+        }
+
+        if (!availableUnits.some((unit) => unit.id === createUnitId)) {
+            setCreateUnitId(availableUnits[0]?.id ?? "");
+        }
+    }, [createScope, createUnitId, availableUnits]);
+
+    useEffect(() => {
+        if (!selectedProperty) {
+            setCreateRent("");
+            return;
+        }
+
+        if (createScope === "property") {
+            const firstVacantUnitRent = selectedProperty.units.find((unit) => unit.status === "vacant")?.rentAmount ?? 0;
+            setCreateRent(firstVacantUnitRent > 0 ? String(firstVacantUnitRent) : "");
+            return;
+        }
+
+        const selectedUnit = selectedProperty.units.find((unit) => unit.id === createUnitId);
+        setCreateRent(selectedUnit && selectedUnit.rentAmount > 0 ? String(selectedUnit.rentAmount) : "");
+    }, [selectedProperty, createScope, createUnitId]);
 
     const filteredListings = useMemo(() => {
-        return MOCK_LISTINGS.filter((item) => {
+        return listings.filter((item) => {
             const matchesStatus = activeFilter === "all" || item.status === activeFilter;
             const matchesType = typeFilter === "all" || item.type === typeFilter;
             const q = query.trim().toLowerCase();
@@ -124,7 +222,141 @@ export function ListingsDashboard() {
 
             return matchesStatus && matchesType && matchesQuery;
         });
-    }, [activeFilter, typeFilter, query]);
+    }, [activeFilter, typeFilter, query, listings]);
+
+    const handleCreateListing = async () => {
+        if (!createPropertyId) {
+            setCreateError("Select a property before creating a listing.");
+            return;
+        }
+
+        if (createScope === "unit" && !createUnitId) {
+            setCreateError("Select a vacant unit to create a unit listing.");
+            return;
+        }
+
+        const rentAmount = Number(createRent || 0);
+        if (!Number.isFinite(rentAmount) || rentAmount < 0) {
+            setCreateError("Rent amount must be a valid non-negative number.");
+            return;
+        }
+
+        setIsSaving(true);
+        setCreateError(null);
+        setNotice(null);
+
+        try {
+            const response = await fetch("/api/landlord/listings", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    scope: createScope,
+                    propertyId: createPropertyId,
+                    unitId: createScope === "unit" ? createUnitId : null,
+                    title: createTitle.trim() || undefined,
+                    rentAmount,
+                    status: createStatus,
+                }),
+            });
+
+            const payload = (await response.json()) as { error?: string };
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to create listing.");
+            }
+
+            setIsCreateOpen(false);
+            setCreateTitle("");
+            setCreateError(null);
+            setNotice({ type: "success", text: "Listing saved successfully." });
+            setReloadKey((value) => value + 1);
+        } catch (createError) {
+            setCreateError(createError instanceof Error ? createError.message : "Failed to create listing.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleEditClick = (listing: ListingItem) => {
+        setEditingListing(listing);
+        setEditTitle(listing.title);
+        setEditRent(String(listing.rent));
+        setEditStatus(listing.status);
+        setEditError(null);
+        setIsEditOpen(true);
+    };
+
+    const handleUpdateListing = async () => {
+        if (!editingListing) return;
+
+        const rentAmount = Number(editRent || 0);
+        if (!Number.isFinite(rentAmount) || rentAmount < 0) {
+            setEditError("Rent amount must be a valid non-negative number.");
+            return;
+        }
+
+        setIsSaving(true);
+        setEditError(null);
+        setNotice(null);
+
+        try {
+            const response = await fetch(`/api/landlord/listings/${editingListing.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    title: editTitle.trim() || undefined,
+                    rentAmount,
+                    status: editStatus,
+                }),
+            });
+
+            const payload = (await response.json()) as { error?: string };
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to update listing.");
+            }
+
+            setIsEditOpen(false);
+            setEditingListing(null);
+            setNotice({ type: "success", text: "Listing changes saved." });
+            setReloadKey((value) => value + 1);
+        } catch (updateError) {
+            setEditError(updateError instanceof Error ? updateError.message : "Failed to update listing.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteListing = async () => {
+        if (!editingListing) return;
+        if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) return;
+
+        setIsSaving(true);
+        setEditError(null);
+        setNotice(null);
+
+        try {
+            const response = await fetch(`/api/landlord/listings/${editingListing.id}`, {
+                method: "DELETE",
+            });
+
+            const payload = (await response.json()) as { error?: string };
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to delete listing.");
+            }
+
+            setIsEditOpen(false);
+            setEditingListing(null);
+            setNotice({ type: "success", text: "Listing deleted successfully." });
+            setReloadKey((value) => value + 1);
+        } catch (deleteError) {
+            setEditError(deleteError instanceof Error ? deleteError.message : "Failed to delete listing.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] p-8 space-y-6">
@@ -140,14 +372,37 @@ export function ListingsDashboard() {
                         <p className="mt-2 text-neutral-400">Track published, draft, and paused listings from one command center.</p>
                     </div>
                     <Link
-                        href="/landlord/unit-map"
+                        href="#"
+                        onClick={(event) => {
+                            event.preventDefault();
+                            setIsCreateOpen(true);
+                        }}
                         className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-black hover:bg-primary/90 transition-colors"
                     >
                         <Building2 className="h-4 w-4" />
-                        Create From Unit Map
+                        New Listing
                     </Link>
                 </div>
             </section>
+
+            {error && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                    {error}
+                </div>
+            )}
+
+            {notice && (
+                <div
+                    className={cn(
+                        "rounded-xl px-4 py-3 text-sm border",
+                        notice.type === "success"
+                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                            : "border-red-500/30 bg-red-500/10 text-red-200"
+                    )}
+                >
+                    {notice.text}
+                </div>
+            )}
 
             <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex w-full max-w-md items-center gap-2 rounded-xl border border-white/10 bg-[#111] px-3">
@@ -192,7 +447,14 @@ export function ListingsDashboard() {
             </section>
 
             <section className="grid gap-6">
-                {filteredListings.map((listing) => {
+                {isLoading && (
+                    <div className="rounded-2xl border border-white/10 bg-[#111] p-10 text-center">
+                        <h3 className="text-lg font-semibold text-white">Loading listings...</h3>
+                        <p className="mt-2 text-sm text-neutral-400">Pulling your latest listing records from the database.</p>
+                    </div>
+                )}
+
+                {!isLoading && filteredListings.map((listing) => {
                     const meta = STATUS_META[listing.status];
                     const StatusIcon = meta.icon;
 
@@ -231,9 +493,9 @@ export function ListingsDashboard() {
 
                                     <div className="absolute bottom-6 left-6 pr-6">
                                         <div className="inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md mb-2">
-                                            {listing.type === "unit" ? "Unit" : "Entire Property"}
+                                            {listingTypeLabel(listing.type)}
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{listing.title}</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{normalizeListingTitle(listing.title)}</h3>
                                         <div className="flex items-center text-neutral-300 text-sm gap-1.5">
                                             <MapPin className="h-4 w-4" />
                                             <span>{listing.address}</span>
@@ -286,13 +548,13 @@ export function ListingsDashboard() {
 
                                         {/* Actions */}
                                         <div className="flex items-center gap-3 w-full lg:w-auto self-end lg:self-auto">
-                                            <Link 
-                                                href={`/landlord/properties/new?id=${listing.id}&mode=edit`}
+                                            <button 
+                                                onClick={() => handleEditClick(listing)}
                                                 className="flex-1 lg:flex-none h-12 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/5 flex items-center justify-center gap-2"
                                             >
                                                 <Settings className="h-4 w-4" />
                                                 Edit
-                                            </Link>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -301,13 +563,237 @@ export function ListingsDashboard() {
                     );
                 })}
 
-                {filteredListings.length === 0 && (
+                {!isLoading && filteredListings.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-white/15 bg-[#111] p-10 text-center">
                         <h3 className="text-lg font-semibold text-white">No listings found</h3>
-                        <p className="mt-2 text-sm text-neutral-400">Try another filter or create a listing from the unit map wizard.</p>
+                        <p className="mt-2 text-sm text-neutral-400">Try another filter or create a listing for a property or specific unit.</p>
                     </div>
                 )}
             </section>
+
+            {isCreateOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <button
+                        type="button"
+                        onClick={() => setIsCreateOpen(false)}
+                        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                    />
+
+                    <div className="relative z-10 w-full max-w-2xl rounded-3xl border border-white/10 bg-[#111] p-8 space-y-6">
+                        <div>
+                            <h2 className="text-2xl font-black text-white">Create Listing</h2>
+                            <p className="text-sm text-neutral-400 mt-1">Choose whether to create an apartment listing (tenants pick units) or a direct unit listing.</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            {(["property", "unit"] as const).map((scope) => (
+                                <button
+                                    key={scope}
+                                    type="button"
+                                    onClick={() => setCreateScope(scope)}
+                                    className={cn(
+                                        "h-11 rounded-xl border text-sm font-semibold transition-colors",
+                                        createScope === scope
+                                            ? "border-primary/40 bg-primary/15 text-primary"
+                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white"
+                                    )}
+                                >
+                                    {scope === "property" ? "Apartment Listing" : "Unit Listing"}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Property</label>
+                                <select
+                                    value={createPropertyId}
+                                    onChange={(event) => setCreatePropertyId(event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white focus:outline-none focus:border-white/30"
+                                >
+                                    {listingOptions.map((property) => (
+                                        <option key={property.id} value={property.id}>
+                                            {property.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {createScope === "unit" && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Unit (vacant only)</label>
+                                    <select
+                                        value={createUnitId}
+                                        onChange={(event) => setCreateUnitId(event.target.value)}
+                                        className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white focus:outline-none focus:border-white/30"
+                                    >
+                                        {availableUnits.map((unit) => (
+                                            <option key={unit.id} value={unit.id}>
+                                                {unit.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Listing Title (optional)</label>
+                                <input
+                                    value={createTitle}
+                                    onChange={(event) => setCreateTitle(event.target.value)}
+                                    placeholder="Auto-generated if empty"
+                                    className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Monthly Rent</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={createRent}
+                                    onChange={(event) => setCreateRent(event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 max-w-xs">
+                            <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Initial Status</label>
+                            <select
+                                value={createStatus}
+                                onChange={(event) => setCreateStatus(event.target.value as ListingStatus)}
+                                className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white focus:outline-none focus:border-white/30"
+                            >
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="paused">Paused</option>
+                            </select>
+                        </div>
+
+                        {createError && (
+                            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                                {createError}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsCreateOpen(false)}
+                                className="h-11 px-5 rounded-xl border border-white/10 bg-white/5 text-sm font-semibold text-white hover:bg-white/10"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isSaving}
+                                onClick={handleCreateListing}
+                                className="h-11 px-5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-70"
+                            >
+                                {isSaving ? "Creating..." : "Create Listing"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isEditOpen && editingListing && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <button
+                        type="button"
+                        onClick={() => setIsEditOpen(false)}
+                        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                    />
+
+                    <div className="relative z-10 w-full max-w-2xl rounded-3xl border border-white/10 bg-[#111] p-8 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-black text-white">Edit Listing</h2>
+                                <p className="text-sm text-neutral-400 mt-1">Update price, title, or status for this listing.</p>
+                            </div>
+                            <button
+                                onClick={handleDeleteListing}
+                                className="text-xs font-bold uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors"
+                            >
+                                Delete Listing
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Listing Title</label>
+                                <input
+                                    value={editTitle}
+                                    onChange={(event) => setEditTitle(event.target.value)}
+                                    placeholder="e.g. Spacious Studio in Makati"
+                                    className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-white/30"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Monthly Rent</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editRent}
+                                    onChange={(event) => setEditRent(event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white focus:outline-none focus:border-white/30"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2 max-w-xs">
+                            <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">Status</label>
+                            <select
+                                value={editStatus}
+                                onChange={(event) => setEditStatus(event.target.value as ListingStatus)}
+                                className="h-11 w-full rounded-xl border border-white/10 bg-[#0d0d0d] px-3 text-sm text-white focus:outline-none focus:border-white/30"
+                            >
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="paused">Paused</option>
+                            </select>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-3">
+                                <Building2 className="h-5 w-5 text-neutral-400" />
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Linked to</p>
+                                    <p className="text-sm font-medium text-white">{editingListing.property} • {editingListing.unit}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {editError && (
+                            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                                {editError}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsEditOpen(false)}
+                                className="h-11 px-5 rounded-xl border border-white/10 bg-white/5 text-sm font-semibold text-white hover:bg-white/10"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isSaving}
+                                onClick={handleUpdateListing}
+                                className="h-11 px-5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 disabled:opacity-70"
+                            >
+                                {isSaving ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

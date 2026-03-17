@@ -18,6 +18,9 @@ export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
 export type MessageType = 'text' | 'system' | 'image' | 'file'
 export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application'
+export type ListingScope = 'property' | 'unit'
+export type ListingStatus = 'draft' | 'published' | 'paused'
+export type LocationType = 'city' | 'barangay' | 'street'
 
 export interface Database {
     public: {
@@ -51,6 +54,36 @@ export interface Database {
                     avatar_url?: string | null
                     phone?: string | null
                     updated_at?: string
+                }
+                Relationships: any[]
+            }
+            geo_locations: {
+                Row: {
+                    id: string
+                    name: string
+                    type: LocationType
+                    city_name: string | null
+                    barangay_name: string | null
+                    full_label: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    name: string
+                    type: LocationType
+                    city_name?: string | null
+                    barangay_name?: string | null
+                    full_label: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    name?: string
+                    type?: LocationType
+                    city_name?: string | null
+                    barangay_name?: string | null
+                    full_label?: string
+                    created_at?: string
                 }
                 Relationships: any[]
             }
@@ -124,6 +157,49 @@ export interface Database {
                     row_count?: number
                     metadata?: Json
                     created_at?: string
+                }
+                Relationships: any[]
+            }
+            listings: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    property_id: string
+                    unit_id: string | null
+                    scope: ListingScope
+                    title: string
+                    rent_amount: number
+                    status: ListingStatus
+                    views: number
+                    leads: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    property_id: string
+                    unit_id?: string | null
+                    scope: ListingScope
+                    title: string
+                    rent_amount: number
+                    status?: ListingStatus
+                    views?: number
+                    leads?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    property_id?: string
+                    unit_id?: string | null
+                    scope?: ListingScope
+                    title?: string
+                    rent_amount?: number
+                    status?: ListingStatus
+                    views?: number
+                    leads?: number
+                    updated_at?: string
                 }
                 Relationships: any[]
             }
