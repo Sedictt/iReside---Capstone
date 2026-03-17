@@ -10,9 +10,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Property } from "@/lib/data";
+import type { FeedProperty } from "@/hooks/useProperties";
 import Link from "next/link";
 interface PropertyDetailModalProps {
-    property: Property | null;
+    property: Property | FeedProperty | null;
     isLiked: boolean;
     onLike: (id: string) => void;
     open: boolean;

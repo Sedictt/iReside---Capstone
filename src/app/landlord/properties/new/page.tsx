@@ -23,7 +23,10 @@ import {
     Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SmartContractBuilderModal } from "@/components/landlord/properties/SmartContractBuilderModal";
+import {
+    SmartContractBuilderModal,
+    type SmartContractTemplate,
+} from "@/components/landlord/properties/SmartContractBuilderModal";
 import { createClient } from "@/lib/supabase/client";
 
 type Step = 1 | 2 | 3 | 4;
@@ -58,6 +61,36 @@ const PRESET_AMENITIES = [
 
 const MAX_PROPERTY_UPLOAD_FILES = 12;
 const SAVE_SAFETY_TIMEOUT_MS = 45_000;
+const MEDIA_UPLOAD_TIMEOUT_MS = 25_000;
+const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
+
+const isSmartContractTemplate = (value: unknown): value is SmartContractTemplate => {
+    if (!value || typeof value !== "object") return false;
+
+    const candidate = value as {
+        answers?: unknown;
+        customClauses?: unknown;
+    };
+
+    const answersValid =
+        candidate.answers !== undefined &&
+        typeof candidate.answers === "object" &&
+        candidate.answers !== null;
+
+    const clauses = candidate.customClauses;
+    const clausesValid =
+        Array.isArray(clauses) &&
+        clauses.every(
+            (item) =>
+                item &&
+                typeof item === "object" &&
+                typeof (item as { id?: unknown }).id === "number" &&
+                typeof (item as { title?: unknown }).title === "string" &&
+                typeof (item as { description?: unknown }).description === "string"
+        );
+
+    return answersValid && clausesValid;
+};
 
 function NewAssetContent() {
     const router = useRouter();
@@ -71,8 +104,11 @@ function NewAssetContent() {
     const [saveStage, setSaveStage] = useState<string | null>(null);
     const [isLoadingProperty, setIsLoadingProperty] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [saveWarning, setSaveWarning] = useState<string | null>(null);
+    const [reloadPropertyKey, setReloadPropertyKey] = useState(0);
     const [isContractBuilderOpen, setIsContractBuilderOpen] = useState(false);
     const [isContractGenerated, setIsContractGenerated] = useState(false);
+    const [contractTemplate, setContractTemplate] = useState<SmartContractTemplate | null>(null);
     const [customAmenity, setCustomAmenity] = useState("");
     const [customAmenities, setCustomAmenities] = useState<string[]>([]);
     const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -101,51 +137,51 @@ function NewAssetContent() {
     useEffect(() => {
         if (!isEditMode || !id) return;
 
+        const controller = new AbortController();
+        let didTimeout = false;
+        const timeout = window.setTimeout(() => {
+            didTimeout = true;
+            controller.abort();
+        }, PROPERTY_LOAD_TIMEOUT_MS);
+
         const loadProperty = async () => {
             setIsLoadingProperty(true);
             setLoadError(null);
 
             try {
-                const supabase = createClient();
-                const {
-                    data: { user },
-                    error: userError,
-                } = await supabase.auth.getUser();
+                const response = await fetch(`/api/landlord/properties/${id}`, {
+                    method: "GET",
+                    signal: controller.signal,
+                    cache: "no-store",
+                });
 
-                if (userError || !user) {
-                    throw new Error("You must be logged in to edit a property.");
+                const payload = (await response.json()) as {
+                    property?: {
+                        id: string;
+                        name: string;
+                        type: string;
+                        address: string;
+                        description: string | null;
+                        amenities: string[] | null;
+                        images: string[] | null;
+                        contract_template: unknown;
+                        unitCount: number;
+                    };
+                    error?: string;
+                };
+
+                if (!response.ok || !payload.property) {
+                    throw new Error(payload.error || "Failed to load property details.");
                 }
 
-                const { data: property, error: propertyError } = await supabase
-                    .from("properties")
-                    .select("id, name, type, address, description, amenities, images")
-                    .eq("id", id)
-                    .eq("landlord_id", user.id)
-                    .maybeSingle();
-
-                if (propertyError) {
-                    throw new Error("Failed to load property details.");
-                }
-
-                if (!property) {
-                    throw new Error("Property not found or access denied.");
-                }
-
-                const { count: unitCount, error: unitCountError } = await supabase
-                    .from("units")
-                    .select("id", { count: "exact", head: true })
-                    .eq("property_id", property.id);
-
-                if (unitCountError) {
-                    throw new Error("Failed to load property units.");
-                }
+                const property = payload.property;
 
                 setFormData({
                     propertyName: property.name,
                     propertyType: ENUM_TO_PROPERTY_TYPE[property.type] ?? "Apartment Complex",
                     yearBuilt: "",
                     address: property.address,
-                    totalUnits: String(unitCount ?? 1),
+                    totalUnits: String(property.unitCount ?? 1),
                     description: property.description ?? "",
                 });
 
@@ -171,15 +207,34 @@ function NewAssetContent() {
                         : null;
                 setCoverExistingUrl(firstImage);
                 setCoverNewIndex(null);
+                const resolvedContractTemplate = isSmartContractTemplate(property.contract_template)
+                    ? property.contract_template
+                    : null;
+                setContractTemplate(resolvedContractTemplate);
+                setIsContractGenerated(Boolean(resolvedContractTemplate));
+                setLoadError(null);
             } catch (error) {
+                if ((error as Error).name === "AbortError") {
+                    if (didTimeout) {
+                        setLoadError("Loading property details timed out. Please retry.");
+                    }
+                    return;
+                } else {
                 setLoadError(error instanceof Error ? error.message : "Failed to load property details.");
+                }
             } finally {
+                window.clearTimeout(timeout);
                 setIsLoadingProperty(false);
             }
         };
 
         void loadProperty();
-    }, [isEditMode, id]);
+
+        return () => {
+            window.clearTimeout(timeout);
+            controller.abort();
+        };
+    }, [isEditMode, id, reloadPropertyKey]);
 
     useEffect(() => {
         const nextPreviewUrls = mediaFiles.map((file) => URL.createObjectURL(file));
@@ -396,11 +451,10 @@ function NewAssetContent() {
             .eq("property_id", propertyId)
             .order("created_at", { ascending: true });
 
-        if (unitsError) {
-            throw new Error("Failed to load existing units.");
-        }
+        if (unitsError) throw new Error("Failed to load existing units.");
 
         const unitCount = existingUnits?.length ?? 0;
+        if (unitCount === desiredUnitCount) return;
 
         if (desiredUnitCount > unitCount) {
             const unitsToCreate = Array.from({ length: desiredUnitCount - unitCount }, (_, index) => ({
@@ -414,13 +468,8 @@ function NewAssetContent() {
             }));
 
             const { error: insertUnitsError } = await supabase.from("units").insert(unitsToCreate);
-            if (insertUnitsError) {
-                throw new Error("Failed to create additional units.");
-            }
-            return;
-        }
-
-        if (desiredUnitCount < unitCount) {
+            if (insertUnitsError) throw new Error("Failed to create additional units.");
+        } else {
             const unitsToRemove = unitCount - desiredUnitCount;
             const removableUnits = (existingUnits ?? []).filter((unit) => unit.status === "vacant").reverse();
 
@@ -430,66 +479,62 @@ function NewAssetContent() {
 
             const idsToDelete = removableUnits.slice(0, unitsToRemove).map((unit) => unit.id);
             const { error: deleteUnitsError } = await supabase.from("units").delete().in("id", idsToDelete);
-
-            if (deleteUnitsError) {
-                throw new Error("Failed to remove extra units.");
-            }
+            if (deleteUnitsError) throw new Error("Failed to remove extra units.");
         }
     };
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
         setLoadError(null);
-        setSaveStage("Preparing save...");
+        setSaveWarning(null);
+        setSaveStage("Verifying credentials...");
 
         const safetyTimeout = window.setTimeout(() => {
-            setLoadError("Saving is taking longer than expected. Please try again.");
+            setLoadError("Saving is taking longer than expected. Please check your connection and try again.");
             setIsSubmitting(false);
             setSaveStage(null);
         }, SAVE_SAFETY_TIMEOUT_MS);
 
         try {
             const supabase = createClient();
-            setSaveStage("Verifying account...");
-            const {
-                data: { user },
-                error: userError,
-            } = await supabase.auth.getUser();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-            if (userError || !user) {
-                throw new Error("You must be logged in to save a property.");
+            if (userError || !user) throw new Error("Authentication failed. Please log in again.");
+
+            // Prepare property data
+            const name = formData.propertyName.trim();
+            const address = formData.address.trim();
+            if (!name || !address) throw new Error("Property name and address are required.");
+
+            let mergedImages = [...existingImageUrls];
+            if (coverExistingUrl && mergedImages.includes(coverExistingUrl)) {
+                mergedImages = [coverExistingUrl, ...mergedImages.filter(url => url !== coverExistingUrl)];
             }
 
             const payload = {
-                name: formData.propertyName.trim(),
+                name,
                 type: PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment",
-                address: formData.address.trim(),
+                address,
                 description: formData.description.trim() || null,
                 amenities: selectedAmenities,
+                contract_template: contractTemplate,
+                images: mergedImages,
             };
-
-            if (!payload.name || !payload.address) {
-                throw new Error("Property name and address are required.");
-            }
 
             let propertyId = id ?? "";
 
             if (isEditMode && id) {
-                setSaveStage("Saving property details...");
+                setSaveStage("Updating property details...");
                 const { error } = await supabase
                     .from("properties")
                     .update(payload)
                     .eq("id", id)
                     .eq("landlord_id", user.id);
 
-                if (error) {
-                    throw new Error("Failed to update property.");
-                }
-
-                await syncUnits(supabase, id, formData.totalUnits);
+                if (error) throw new Error(`Failed to update property: ${error.message}`);
                 propertyId = id;
             } else {
-                setSaveStage("Creating property...");
+                setSaveStage("Creating property profile...");
                 const { data: insertedProperty, error } = await supabase
                     .from("properties")
                     .insert({
@@ -500,99 +545,68 @@ function NewAssetContent() {
                     .select("id")
                     .single();
 
-                if (error) {
-                    throw new Error("Failed to create property.");
-                }
-
-                if (!insertedProperty?.id) {
-                    throw new Error("Property was created but no id was returned.");
-                }
-
-                await syncUnits(supabase, insertedProperty.id, formData.totalUnits);
+                if (error) throw new Error(`Failed to create property: ${error.message}`);
+                if (!insertedProperty?.id) throw new Error("Property created but ID missing.");
                 propertyId = insertedProperty.id;
             }
 
+            // Sync units
+            setSaveStage("Configuring units...");
+            await syncUnits(supabase, propertyId, formData.totalUnits);
+
+            // Handle media uploads if any
+            let mediaSaveWarning: string | null = null;
             if (mediaFiles.length > 0) {
-                setSaveStage("Uploading media...");
-                if (!propertyId) {
-                    throw new Error("Property id missing for media upload.");
-                }
+                try {
+                    setSaveStage(`Uploading ${mediaFiles.length} images...`);
+                    const mediaFormData = new FormData();
+                    mediaFormData.append("propertyId", propertyId);
+                    mediaFiles.forEach(file => mediaFormData.append("files", file));
 
-                const mediaFormData = new FormData();
-                mediaFormData.append("propertyId", propertyId);
+                    const controller = new AbortController();
+                    const mediaTimeout = window.setTimeout(() => controller.abort(), MEDIA_UPLOAD_TIMEOUT_MS);
 
-                mediaFiles.forEach((file) => {
-                    mediaFormData.append("files", file);
-                });
+                    const uploadResponse = await fetch("/api/landlord/properties/media", {
+                        method: "POST",
+                        body: mediaFormData,
+                        signal: controller.signal,
+                    });
 
-                const uploadResponse = await fetch("/api/landlord/properties/media", {
-                    method: "POST",
-                    body: mediaFormData,
-                });
+                    window.clearTimeout(mediaTimeout);
 
-                const uploadPayload = (await uploadResponse.json()) as { imageUrls?: string[]; error?: string };
+                    const uploadPayload = await uploadResponse.json();
+                    if (!uploadResponse.ok) throw new Error(uploadPayload.error || "Media upload failed.");
 
-                if (!uploadResponse.ok || !Array.isArray(uploadPayload.imageUrls)) {
-                    throw new Error(uploadPayload.error || "Failed to upload property media.");
-                }
+                    const finalImages = [...uploadPayload.imageUrls, ...mergedImages];
 
-                let mergedImages = [
-                    ...uploadPayload.imageUrls,
-                    ...existingImageUrls.filter((url) => !uploadPayload.imageUrls?.includes(url)),
-                ];
+                    // Final update with all images including new ones
+                    setSaveStage("Finalizing media...");
+                    const { error: finalUpdateError } = await supabase
+                        .from("properties")
+                        .update({ images: finalImages })
+                        .eq("id", propertyId)
+                        .eq("landlord_id", user.id);
 
-                if (coverExistingUrl && mergedImages.includes(coverExistingUrl)) {
-                    mergedImages = [
-                        coverExistingUrl,
-                        ...mergedImages.filter((url) => url !== coverExistingUrl),
-                    ];
-                } else if (
-                    coverNewIndex !== null &&
-                    coverNewIndex >= 0 &&
-                    coverNewIndex < uploadPayload.imageUrls.length
-                ) {
-                    const selectedUploadedUrl = uploadPayload.imageUrls[coverNewIndex];
-                    mergedImages = [
-                        selectedUploadedUrl,
-                        ...mergedImages.filter((url) => url !== selectedUploadedUrl),
-                    ];
-                }
-
-                const { error: imageUpdateError } = await supabase
-                    .from("properties")
-                    .update({ images: mergedImages })
-                    .eq("id", propertyId)
-                    .eq("landlord_id", user.id);
-
-                if (imageUpdateError) {
-                    throw new Error("Failed to save property image URLs.");
-                }
-            } else if (isEditMode && propertyId) {
-                setSaveStage("Updating image order...");
-                let orderedExisting = [...existingImageUrls];
-
-                if (coverExistingUrl && orderedExisting.includes(coverExistingUrl)) {
-                    orderedExisting = [
-                        coverExistingUrl,
-                        ...orderedExisting.filter((url) => url !== coverExistingUrl),
-                    ];
-                }
-
-                const { error: imageUpdateError } = await supabase
-                    .from("properties")
-                    .update({ images: orderedExisting })
-                    .eq("id", propertyId)
-                    .eq("landlord_id", user.id);
-
-                if (imageUpdateError) {
-                    throw new Error("Failed to save property image URLs.");
+                    if (finalUpdateError) throw new Error("Failed to finalize image order.");
+                } catch (mediaError) {
+                    console.error("Media upload warning:", mediaError);
+                    mediaSaveWarning = "Property details were saved, but image upload timed out or failed. Re-open edit and retry media upload.";
                 }
             }
 
-            setSaveStage("Redirecting...");
+            if (mediaSaveWarning) {
+                setSaveWarning(mediaSaveWarning);
+                setIsSubmitting(false);
+                setSaveStage(null);
+                return;
+            }
+
+            setSaveStage("Success! Redirecting...");
             router.push("/landlord/properties");
+            router.refresh();
         } catch (error) {
-            setLoadError(error instanceof Error ? error.message : "Failed to save property.");
+            console.error("Submit Error:", error);
+            setLoadError(error instanceof Error ? error.message : "An unexpected error occurred while saving.");
             setIsSubmitting(false);
             setSaveStage(null);
         } finally {
@@ -679,7 +693,24 @@ function NewAssetContent() {
                     <div className={cn("p-8 sm:p-12", step === 2 ? "min-h-[260px]" : "min-h-[400px]")}>
                         {loadError && (
                             <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                                {loadError}
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <span>{loadError}</span>
+                                    {isEditMode && id && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setReloadPropertyKey((value) => value + 1)}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 border border-white/20 text-white"
+                                        >
+                                            Retry
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {saveWarning && (
+                            <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                                {saveWarning}
                             </div>
                         )}
 
@@ -721,6 +752,7 @@ function NewAssetContent() {
                                                 <option>Condominium</option>
                                                 <option>Single Family Home</option>
                                                 <option>Townhouse</option>
+                                                <option>Studio</option>
                                                 <option>Commercial Space</option>
                                             </select>
                                         </div>
@@ -1192,7 +1224,11 @@ function NewAssetContent() {
             <SmartContractBuilderModal
                 isOpen={isContractBuilderOpen}
                 onClose={() => setIsContractBuilderOpen(false)}
-                onSave={() => setIsContractGenerated(true)}
+                initialTemplate={contractTemplate}
+                onSave={(template) => {
+                    setContractTemplate(template);
+                    setIsContractGenerated(true);
+                }}
             />
         </div>
     );

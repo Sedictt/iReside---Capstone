@@ -3,12 +3,13 @@ import Image from "next/image";
 import { Heart, Star, MapPin, Bed, Bath, LayoutGrid, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Property } from "@/lib/data";
+import type { FeedProperty } from "@/hooks/useProperties";
 
 interface PropertyCardProps {
-    property: Property;
+    property: Property | FeedProperty;
     isLiked: boolean;
     onLike: (id: string) => void;
-    onClick: (p: Property) => void;
+    onClick: (p: Property | FeedProperty) => void;
 }
 
 export default function PropertyCard({ property, isLiked, onLike, onClick }: PropertyCardProps) {

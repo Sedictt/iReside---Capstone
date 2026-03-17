@@ -140,6 +140,7 @@ export interface Database {
                     lng: number | null
                     amenities: string[]
                     house_rules: string[]
+                    contract_template: Json | null
                     images: string[]
                     is_featured: boolean
                     created_at: string
@@ -157,6 +158,7 @@ export interface Database {
                     lng?: number | null
                     amenities?: string[]
                     house_rules?: string[]
+                    contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
                     created_at?: string
@@ -173,6 +175,7 @@ export interface Database {
                     lng?: number | null
                     amenities?: string[]
                     house_rules?: string[]
+                    contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
                     updated_at?: string

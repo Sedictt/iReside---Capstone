@@ -1,13 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, ArrowRight, ArrowLeft, CheckCircle2, Check, FileText, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export type SmartContractClause = {
+    id: number;
+    title: string;
+    description: string;
+};
+
+export type SmartContractTemplate = {
+    answers: Record<string, string | string[]>;
+    customClauses: SmartContractClause[];
+};
 
 interface SmartContractBuilderModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: () => void;
+    onSave: (template: SmartContractTemplate) => void;
+    initialTemplate?: SmartContractTemplate | null;
 }
 
 const QUESTIONS = [
@@ -67,11 +79,30 @@ const QUESTIONS = [
     }
 ];
 
-export function SmartContractBuilderModal({ isOpen, onClose, onSave }: SmartContractBuilderModalProps) {
+const DEFAULT_CUSTOM_CLAUSES: SmartContractClause[] = [{ id: 1, title: "", description: "" }];
+
+export function SmartContractBuilderModal({ isOpen, onClose, onSave, initialTemplate }: SmartContractBuilderModalProps) {
     const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [answers, setAnswers] = useState<Record<string, any>>({});
-    const [customClauses, setCustomClauses] = useState([{ id: 1, title: '', description: '' }]);
+    const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+    const [customClauses, setCustomClauses] = useState<SmartContractClause[]>(DEFAULT_CUSTOM_CLAUSES);
     const [isGenerating, setIsGenerating] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        setCurrentQuestion(0);
+        setAnswers(initialTemplate?.answers ?? {});
+        const seededClauses = initialTemplate?.customClauses?.length
+            ? initialTemplate.customClauses
+            : DEFAULT_CUSTOM_CLAUSES;
+        setCustomClauses(
+            seededClauses.map((clause, index) => ({
+                id: Number.isFinite(clause.id) ? clause.id : Date.now() + index,
+                title: clause.title ?? "",
+                description: clause.description ?? "",
+            }))
+        );
+    }, [isOpen, initialTemplate]);
 
     if (!isOpen) return null;
 
@@ -96,18 +127,24 @@ export function SmartContractBuilderModal({ isOpen, onClose, onSave }: SmartCont
         setIsGenerating(true);
         setTimeout(() => {
             setIsGenerating(false);
-            onSave();
+            const nonEmptyClauses = customClauses.filter(
+                (clause) => clause.title.trim().length > 0 || clause.description.trim().length > 0
+            );
+            onSave({
+                answers,
+                customClauses: nonEmptyClauses,
+            });
             onClose();
             // Reset state for next time
             setTimeout(() => {
                 setCurrentQuestion(0);
                 setAnswers({});
-                setCustomClauses([{ id: 1, title: '', description: '' }]);
+                setCustomClauses(DEFAULT_CUSTOM_CLAUSES);
             }, 500);
         }, 3000);
     };
 
-    const updateAnswer = (val: any) => {
+    const updateAnswer = (val: string | string[]) => {
         setAnswers(prev => ({ ...prev, [q.id]: val }));
     };
 

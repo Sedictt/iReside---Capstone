@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { properties, Property } from "@/lib/data";
+import { useProperties, FeedProperty } from "@/hooks/useProperties";
 import PropertyCard from "@/components/PropertyCard";
 import PropertyDetailModal from "@/components/PropertyDetailModal";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,7 @@ function LandingPageContent() {
   const { profile, user, loading } = useAuth();
   const role = profile?.role || (user?.user_metadata?.role as string) || (user ? 'tenant' : null);
   const router = useRouter();
+  const { properties: dbProperties, loading: propsLoading } = useProperties();
 
   useEffect(() => {
     if (!loading && role === 'landlord') {
@@ -91,26 +92,32 @@ function LandingPageContent() {
   }, []);
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [trendingProps, setTrendingProps] = useState(properties.slice(0, 3));
+  const [trendingProps, setTrendingProps] = useState<FeedProperty[]>([]);
+
+  // Set default trending when DB data loads
+  useEffect(() => {
+    if (dbProperties.length > 0 && trendingProps.length === 0) {
+      setTrendingProps(dbProperties.slice(0, 3));
+    }
+  }, [dbProperties]);
 
   useEffect(() => {
+    if (dbProperties.length === 0) return;
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation([latitude, longitude]);
 
-          // Helper to calculate distance
           const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-            const R = 6371; // Radius of the earth in km
+            const R = 6371;
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           };
 
-          // Sort properties by distance to user
-          const sorted = [...properties].sort((a, b) => {
+          const sorted = [...dbProperties].sort((a, b) => {
             const distA = getDistance(latitude, longitude, a.lat, a.lng);
             const distB = getDistance(latitude, longitude, b.lat, b.lng);
             return distA - distB;
@@ -120,11 +127,10 @@ function LandingPageContent() {
         },
         (error) => {
           console.error("Error getting location:", error);
-          // Keep default trending properties if location fails
         }
       );
     }
-  }, []);
+  }, [dbProperties]);
 
   // Reverting to the original icon structure without forced color classes
   const categories = [
@@ -137,10 +143,10 @@ function LandingPageContent() {
     { name: "Trending", icon: Flame },
   ];
 
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<FeedProperty | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const handleOpenDetails = (property: Property) => {
+  const handleOpenDetails = (property: FeedProperty) => {
     setSelectedProperty(property);
     setDetailsOpen(true);
   };
@@ -149,11 +155,9 @@ function LandingPageContent() {
     setIsLiked(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const filteredProperties = isSearchActive ? properties.filter((p) => {
-    // Basic Price
+  const filteredProperties = isSearchActive ? dbProperties.filter((p) => {
     if (p.numericPrice < priceRange[0] || p.numericPrice > priceRange[1]) return false;
 
-    // Type Filter (selectedType is a single string like "Apartments" or "Any")
     if (selectedType !== "Any" && p.type) {
       const typeLower = selectedType.toLowerCase();
       const pTypeLower = (p.type || "").toLowerCase();
@@ -163,7 +167,6 @@ function LandingPageContent() {
       if (typeLower === "dormitories" && !pTypeLower.includes("dorm")) return false;
     }
 
-    // Amenities
     if (selectedAmenities.length > 0) {
       const hasAllAmenities = selectedAmenities.every(selected => {
         const selectedLower = selected.toLowerCase();
@@ -175,7 +178,6 @@ function LandingPageContent() {
       if (!hasAllAmenities) return false;
     }
 
-    // Location string filter
     if (location.trim() !== "") {
       const query = location.toLowerCase();
       if (!p.address.toLowerCase().includes(query) && !p.name.toLowerCase().includes(query)) {
@@ -654,7 +656,7 @@ function LandingPageContent() {
                       </Link>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                      {[...properties].reverse().slice(0, 3).map((property, idx) => (
+                      {[...dbProperties].reverse().slice(0, 3).map((property, idx) => (
                         <PropertyCard
                           key={`${property.id}-rated-${idx}`}
                           property={property as any}
@@ -680,7 +682,7 @@ function LandingPageContent() {
                       </Link>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 xl:gap-5">
-                      {properties.filter((_, idx) => idx % 2 === 0).slice(0, 4).map((property, idx) => (
+                      {[...dbProperties].sort((a, b) => a.numericPrice - b.numericPrice).slice(0, 4).map((property, idx) => (
                         <div key={`${property.id}-budget-${idx}`} className="xl:scale-[0.98] origin-top xl:-mx-2">
                           <PropertyCard
                             property={property as any}

@@ -1309,19 +1309,19 @@ CREATE POLICY "Landlords can view own statistics exports" ON "public"."landlord_
 
 CREATE POLICY "Participants can send messages" ON "public"."messages" FOR INSERT WITH CHECK ((("auth"."uid"() = "sender_id") AND (EXISTS ( SELECT 1
    FROM "public"."conversation_participants"
-  WHERE (("conversation_participants"."conversation_id" = "conversation_participants"."conversation_id") AND ("conversation_participants"."user_id" = "auth"."uid"()))))));
+  WHERE (("conversation_participants"."conversation_id" = "messages"."conversation_id") AND ("conversation_participants"."user_id" = "auth"."uid"()))))));
 
 
 
 CREATE POLICY "Participants can view conversations" ON "public"."conversations" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."conversation_participants"
-  WHERE (("conversation_participants"."conversation_id" = "conversation_participants"."id") AND ("conversation_participants"."user_id" = "auth"."uid"())))));
+  WHERE (("conversation_participants"."conversation_id" = "conversations"."id") AND ("conversation_participants"."user_id" = "auth"."uid"())))));
 
 
 
 CREATE POLICY "Participants can view messages" ON "public"."messages" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."conversation_participants"
-  WHERE (("conversation_participants"."conversation_id" = "conversation_participants"."conversation_id") AND ("conversation_participants"."user_id" = "auth"."uid"())))));
+  WHERE (("conversation_participants"."conversation_id" = "messages"."conversation_id") AND ("conversation_participants"."user_id" = "auth"."uid"())))));
 
 
 
@@ -1351,7 +1351,7 @@ CREATE POLICY "Properties are viewable by everyone" ON "public"."properties" FOR
 
 CREATE POLICY "Recipient can update message read status" ON "public"."messages" FOR UPDATE USING ((EXISTS ( SELECT 1
    FROM "public"."conversation_participants"
-  WHERE (("conversation_participants"."conversation_id" = "conversation_participants"."conversation_id") AND ("conversation_participants"."user_id" = "auth"."uid"())))));
+  WHERE (("conversation_participants"."conversation_id" = "messages"."conversation_id") AND ("conversation_participants"."user_id" = "auth"."uid"())))));
 
 
 
@@ -1479,7 +1479,7 @@ CREATE POLICY "Users can view their own applications" ON "public"."landlord_appl
 
 CREATE POLICY "View co-participants" ON "public"."conversation_participants" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."conversation_participants" "cp"
-  WHERE (("cp"."conversation_id" = "cp"."conversation_id") AND ("cp"."user_id" = "auth"."uid"())))));
+  WHERE (("cp"."conversation_id" = "conversation_participants"."conversation_id") AND ("cp"."user_id" = "auth"."uid"())))));
 
 
 

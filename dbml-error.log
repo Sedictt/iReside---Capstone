@@ -1,0 +1,48 @@
+2026-03-17T03:06:30.178Z
+Error: PostgreSQL connection error: AggregateError
+    at D (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:1:1741)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ae (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:218:278)
+    at async connectionHandler (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\lib\index.js:1179:22)
+
+2026-03-17T03:07:25.621Z
+Error: PostgreSQL connection error: AggregateError
+    at D (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:1:1741)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ae (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:218:278)
+    at async connectionHandler (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\lib\index.js:1179:22)
+
+2026-03-17T03:08:21.177Z
+undefined
+
+2026-03-17T03:08:32.219Z
+undefined
+
+2026-03-17T03:12:34.153Z
+Error: PostgreSQL connection error: Error: getaddrinfo ENOTFOUND db.hlpgsiqyrtndqdgvttcr.supabase.co
+    at D (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:1:1741)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ae (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:218:278)
+    at async connectionHandler (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\lib\index.js:1179:22)
+
+2026-03-17T03:12:48.103Z
+Error: PostgreSQL connection error: Error: getaddrinfo ENOTFOUND db.hlpgsiqyrtndqdgvttcr.supabase.co
+    at D (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:1:1741)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ae (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:218:278)
+    at async connectionHandler (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\lib\index.js:1179:22)
+
+2026-03-17T03:13:25.425Z
+Error: PostgreSQL connection error: Error: getaddrinfo ENOTFOUND db.hlpgsiqyrtndqdgvttcr.supabase.co
+    at D (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:1:1741)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ae (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:218:278)
+    at async connectionHandler (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\lib\index.js:1179:22)
+
+2026-03-17T03:15:17.355Z
+Error: PostgreSQL connection error: Error: getaddrinfo ENOTFOUND db.hlpgsiqyrtndqdgvttcr.supabase.co
+    at D (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:1:1741)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ae (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\node_modules\@dbml\connector\dist\index.js:218:278)
+    at async connectionHandler (C:\Users\JV\AppData\Roaming\npm\node_modules\@dbml\cli\lib\index.js:1179:22)
+
