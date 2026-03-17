@@ -30,16 +30,16 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────
-type ApplicationStatus = "pending" | "reviewing" | "approved" | "rejected";
+type ApplicationStatus = "pending" | "reviewing" | "approved" | "rejected" | "withdrawn";
 
 interface Applicant {
     name: string;
     email: string;
     phone: string;
     occupation: string;
-    monthlyIncome: number;
-    creditScore: number;
-    avatar?: string;
+    monthlyIncome: number | null;
+    creditScore: number | null;
+    avatar?: string | null;
 }
 
 interface RentApplication {
@@ -48,142 +48,64 @@ interface RentApplication {
     propertyName: string;
     unitNumber: string;
     propertyImage: string;
-    requestedMoveIn: string;
-    monthlyRent: number;
-    leaseTerm: string;
+    requestedMoveIn: string | null;
+    monthlyRent: number | null;
     status: ApplicationStatus;
     submittedDate: string;
-    notes?: string;
+    notes?: string | null;
     documents: string[];
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────
-const MOCK_APPLICATIONS: RentApplication[] = [
-    {
-        id: "APP-001",
-        applicant: {
-            name: "Isabella Torres",
-            email: "isabella.torres@email.com",
-            phone: "+63 917 123 4567",
-            occupation: "Software Engineer",
-            monthlyIncome: 120000,
-            creditScore: 750,
-        },
-        propertyName: "Skyline Tower",
-        unitNumber: "Unit 402",
-        propertyImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-        requestedMoveIn: "March 1, 2026",
-        monthlyRent: 28000,
-        leaseTerm: "12 months",
-        status: "pending",
-        submittedDate: "Feb 15, 2026",
-        notes: "Relocating from Cebu for work. Currently employed at a tech company. Has one pet cat.",
-        documents: ["ID Verification", "Proof of Income", "Employment Letter"],
-    },
-    {
-        id: "APP-002",
-        applicant: {
-            name: "Marco Reyes",
-            email: "marco.reyes@email.com",
-            phone: "+63 918 234 5678",
-            occupation: "Marketing Director",
-            monthlyIncome: 95000,
-            creditScore: 710,
-        },
-        propertyName: "Garden View Apartments",
-        unitNumber: "B-12",
-        propertyImage: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
-        requestedMoveIn: "March 15, 2026",
-        monthlyRent: 22000,
-        leaseTerm: "6 months",
-        status: "reviewing",
-        submittedDate: "Feb 12, 2026",
-        notes: "Looking for a quiet place to work from home. Needs stable internet connection.",
-        documents: ["ID Verification", "Proof of Income", "Previous Landlord Reference"],
-    },
-    {
-        id: "APP-003",
-        applicant: {
-            name: "Camille Santos",
-            email: "camille.santos@email.com",
-            phone: "+63 919 345 6789",
-            occupation: "Registered Nurse",
-            monthlyIncome: 65000,
-            creditScore: 690,
-        },
-        propertyName: "Downtown Loft",
-        unitNumber: "503",
-        propertyImage: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-        requestedMoveIn: "April 1, 2026",
-        monthlyRent: 18000,
-        leaseTerm: "12 months",
-        status: "approved",
-        submittedDate: "Feb 8, 2026",
-        documents: ["ID Verification", "Proof of Income", "Employment Letter", "Background Check"],
-    },
-    {
-        id: "APP-004",
-        applicant: {
-            name: "Daniel Kim",
-            email: "daniel.kim@email.com",
-            phone: "+63 920 456 7890",
-            occupation: "Freelance Designer",
-            monthlyIncome: 45000,
-            creditScore: 580,
-        },
-        propertyName: "Riverside Condos",
-        unitNumber: "#208",
-        propertyImage: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop",
-        requestedMoveIn: "March 1, 2026",
-        monthlyRent: 25000,
-        leaseTerm: "12 months",
-        status: "rejected",
-        submittedDate: "Feb 5, 2026",
-        notes: "Insufficient income-to-rent ratio. Recommended reapplying with a co-signer.",
-        documents: ["ID Verification", "Proof of Income"],
-    },
-    {
-        id: "APP-005",
-        applicant: {
-            name: "Angela Cruz",
-            email: "angela.c@email.com",
-            phone: "+63 921 567 8901",
-            occupation: "Financial Analyst",
-            monthlyIncome: 110000,
-            creditScore: 780,
-        },
-        propertyName: "Skyline Tower",
-        unitNumber: "Unit 801",
-        propertyImage: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-        requestedMoveIn: "March 10, 2026",
-        monthlyRent: 35000,
-        leaseTerm: "24 months",
-        status: "pending",
-        submittedDate: "Feb 16, 2026",
-        documents: ["ID Verification", "Proof of Income", "Employment Letter", "Bank Statements"],
-    },
-    {
-        id: "APP-006",
-        applicant: {
-            name: "Rafael Mendoza",
-            email: "r.mendoza@email.com",
-            phone: "+63 922 678 9012",
-            occupation: "Restaurant Manager",
-            monthlyIncome: 55000,
-            creditScore: 660,
-        },
-        propertyName: "Garden View Apartments",
-        unitNumber: "A-7",
-        propertyImage: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
-        requestedMoveIn: "April 15, 2026",
-        monthlyRent: 20000,
-        leaseTerm: "12 months",
-        status: "reviewing",
-        submittedDate: "Feb 14, 2026",
-        notes: "Plans to move in with spouse and one child. Looking for family-friendly environment.",
-        documents: ["ID Verification", "Proof of Income", "Marriage Certificate"],
-    },
-];
+const FALLBACK_PROPERTY_IMAGE =
+    "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
+
+const formatCurrency = (value: number | null) => {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return "Not provided";
+    }
+
+    return `₱${value.toLocaleString()}`;
+};
+
+const formatDate = (value: string | null) => {
+    if (!value) return "Not specified";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Not specified";
+
+    return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+};
+
+const formatDocumentLabel = (value: string) => {
+    if (!value) return "Document";
+    const trimmed = value.trim();
+    if (!trimmed) return "Document";
+    const lastSlash = trimmed.lastIndexOf("/");
+    const fileName = lastSlash >= 0 ? trimmed.slice(lastSlash + 1) : trimmed;
+    try {
+        return decodeURIComponent(fileName || trimmed);
+    } catch {
+        return fileName || trimmed;
+    }
+};
+
+const formatRatio = (income: number | null, rent: number | null) => {
+    if (typeof income !== "number" || !Number.isFinite(income)) return "N/A";
+    if (typeof rent !== "number" || !Number.isFinite(rent) || rent <= 0) return "N/A";
+    return `${(income / rent).toFixed(1)}x`;
+};
+
+const resolveImage = (value: string | null | undefined) => {
+    if (typeof value !== "string" || value.trim().length === 0) {
+        return FALLBACK_PROPERTY_IMAGE;
+    }
+
+    return value;
+};
 
 // ─── Status Config ────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bgColor: string; borderColor: string; icon: React.ElementType }> = {
@@ -215,17 +137,26 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; b
         borderColor: "border-red-500/20",
         icon: XCircle,
     },
+    withdrawn: {
+        label: "Withdrawn",
+        color: "text-neutral-400",
+        bgColor: "bg-white/5",
+        borderColor: "border-white/10",
+        icon: AlertCircle,
+    },
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────
-function getCreditScoreColor(score: number) {
+function getCreditScoreColor(score: number | null) {
+    if (score === null || Number.isNaN(score)) return "text-neutral-500";
     if (score >= 750) return "text-emerald-400";
     if (score >= 700) return "text-lime-400";
     if (score >= 650) return "text-amber-400";
     return "text-red-400";
 }
 
-function getCreditScoreLabel(score: number) {
+function getCreditScoreLabel(score: number | null) {
+    if (score === null || Number.isNaN(score)) return "Not provided";
     if (score >= 750) return "Excellent";
     if (score >= 700) return "Good";
     if (score >= 650) return "Fair";
@@ -238,15 +169,87 @@ export function RentApplications() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<ApplicationStatus | "all">("all");
     const [selectedApp, setSelectedApp] = useState<RentApplication | null>(null);
+    const [applications, setApplications] = useState<RentApplication[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadApplications = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch("/api/landlord/applications", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load applications");
+                }
+
+                const payload = (await response.json()) as { applications?: RentApplication[] };
+                setApplications(Array.isArray(payload.applications) ? payload.applications : []);
+            } catch (fetchError) {
+                if ((fetchError as Error).name === "AbortError") {
+                    return;
+                }
+
+                setError("Unable to load applications right now.");
+                setApplications([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void loadApplications();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
+    const updateApplicationStatus = async (
+        applicationId: string,
+        status: "approved" | "rejected" | "reviewing"
+    ) => {
+        setActionError(null);
+        setUpdatingStatusId(applicationId);
+
+        try {
+            const response = await fetch(`/api/landlord/applications/${applicationId}/actions`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to update status");
+            }
+
+            setApplications((prev) =>
+                prev.map((app) => (app.id === applicationId ? { ...app, status } : app))
+            );
+            setSelectedApp((prev) => (prev?.id === applicationId ? { ...prev, status } : prev));
+        } catch {
+            setActionError("Unable to update the application status.");
+        } finally {
+            setUpdatingStatusId(null);
+        }
+    };
+
     if (!mounted) return null;
 
     // Derived data
-    const filteredApplications = MOCK_APPLICATIONS.filter((app) => {
+    const filteredApplications = applications.filter((app) => {
         const matchesSearch =
             app.applicant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             app.propertyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -256,11 +259,12 @@ export function RentApplications() {
     });
 
     const stats = {
-        total: MOCK_APPLICATIONS.length,
-        pending: MOCK_APPLICATIONS.filter((a) => a.status === "pending").length,
-        reviewing: MOCK_APPLICATIONS.filter((a) => a.status === "reviewing").length,
-        approved: MOCK_APPLICATIONS.filter((a) => a.status === "approved").length,
-        rejected: MOCK_APPLICATIONS.filter((a) => a.status === "rejected").length,
+        total: applications.length,
+        pending: applications.filter((a) => a.status === "pending").length,
+        reviewing: applications.filter((a) => a.status === "reviewing").length,
+        approved: applications.filter((a) => a.status === "approved").length,
+        rejected: applications.filter((a) => a.status === "rejected").length,
+        withdrawn: applications.filter((a) => a.status === "withdrawn").length,
     };
 
     const filterTabs: { label: string; value: ApplicationStatus | "all"; count: number }[] = [
@@ -269,7 +273,10 @@ export function RentApplications() {
         { label: "Reviewing", value: "reviewing", count: stats.reviewing },
         { label: "Approved", value: "approved", count: stats.approved },
         { label: "Rejected", value: "rejected", count: stats.rejected },
+        { label: "Withdrawn", value: "withdrawn", count: stats.withdrawn },
     ];
+
+    const isUpdatingSelectedApp = selectedApp ? updatingStatusId === selectedApp.id : false;
 
     return (
         <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar relative">
@@ -373,128 +380,152 @@ export function RentApplications() {
 
                 {/* Grid Format Interface */}
                 <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <AnimatePresence mode="popLayout">
-                            {filteredApplications.map((app, index) => {
-                                const statusConfig = STATUS_CONFIG[app.status];
-                                const StatusIcon = statusConfig.icon;
-                                const isPending = app.status === "pending";
-
-                                return (
-                                    <motion.div
-                                        key={app.id}
-                                        layout
-                                        initial={{ opacity: 0, y: 15 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        transition={{ delay: index * 0.05, duration: 0.3 }}
-                                        onClick={() => setSelectedApp(app)}
-                                        className="group relative flex flex-col bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl"
-                                    >
-                                        {/* Status Glow Bar */}
-                                        {isPending && (
-                                            <div className="absolute top-0 inset-x-0 h-1 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-10 animate-pulse" />
-                                        )}
-
-                                        {/* Top Card Section: Property Image bg */}
-                                        <div className="relative h-28 w-full bg-neutral-900 overflow-hidden shrink-0">
-                                            <img
-                                                src={app.propertyImage}
-                                                alt={app.propertyName}
-                                                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay transition-transform duration-700 group-hover:scale-110"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-neutral-950/20" />
-
-                                            {/* Top Status */}
-                                            <div className="absolute top-3 left-3 z-10">
-                                                <span className={cn(
-                                                    "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-lg",
-                                                    statusConfig.bgColor,
-                                                    statusConfig.borderColor,
-                                                    statusConfig.color,
-                                                    app.status === "pending" ? "bg-amber-500 text-black border-amber-400" :
-                                                        app.status === "approved" ? "bg-emerald-500/90 text-black border-emerald-400/50" : ""
-                                                )}>
-                                                    <StatusIcon className="w-3 h-3" />
-                                                    {statusConfig.label}
-                                                </span>
-                                            </div>
-
-                                            {/* Score Metric Top Right */}
-                                            <div className="absolute top-3 right-3 z-10 flex flex-col items-end">
-                                                <span className="text-[9px] uppercase tracking-widest font-bold text-neutral-400">Credit</span>
-                                                <span className={cn("text-lg font-black leading-none drop-shadow-md", getCreditScoreColor(app.applicant.creditScore))}>
-                                                    {app.applicant.creditScore}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Main Content Body */}
-                                        <div className="p-5 flex flex-col flex-1 bg-gradient-to-b from-neutral-950 to-neutral-900 border-t border-white/5 relative">
-
-                                            {/* Floating Avatar */}
-                                            <div className="absolute -top-10 left-4 h-14 w-14 rounded-full bg-neutral-900 border-4 border-neutral-950 ring-1 ring-white/10 flex items-center justify-center overflow-hidden shadow-2xl z-20 group-hover:ring-primary/50 transition-colors">
-                                                <span className="text-lg font-black text-primary">
-                                                    {app.applicant.name.split(" ").map((n) => n[0]).join("")}
-                                                </span>
-                                            </div>
-
-                                            {/* Applicant Core Details */}
-                                            <div className="mt-4 mb-4">
-                                                <h3 className="text-base font-bold text-white mb-0.5 group-hover:text-primary transition-colors">{app.applicant.name}</h3>
-                                                <p className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium">
-                                                    <Briefcase className="w-3 h-3" />
-                                                    {app.applicant.occupation}
-                                                </p>
-                                            </div>
-
-                                            {/* Critical Property Info */}
-                                            <div className="grid grid-cols-2 gap-3 mb-4 bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                                <div>
-                                                    <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Property</span>
-                                                    <span className="text-xs font-bold text-white truncate block">{app.propertyName}</span>
-                                                    <span className="text-[10px] font-bold text-primary mt-0.5 block">{app.unitNumber}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Rental Rate</span>
-                                                    <span className="text-xs font-bold text-white block">₱{app.monthlyRent.toLocaleString()}</span>
-                                                    <span className="text-[10px] font-bold text-neutral-400 flex items-center gap-1 mt-0.5">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {app.requestedMoveIn}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex-1 min-h-[8px]" />
-
-                                            {/* Footer Actions */}
-                                            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                                                <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 font-mono tracking-wider">
-                                                    {app.id}
-                                                </div>
-
-                                                <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-white/10 hover:text-primary border border-white/10 px-3 py-1.5 rounded-lg transition-all shadow-sm">
-                                                    Review
-                                                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </AnimatePresence>
-                    </div>
-
-                    {filteredApplications.length === 0 && (
-                        <div className="py-24 flex flex-col items-center justify-center text-center">
-                            <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mb-5 ring-1 ring-white/10 shadow-xl">
-                                <Users className="w-8 h-8 text-neutral-600" />
-                            </div>
-                            <h3 className="text-xl font-black text-white mb-2">No Active Applications</h3>
-                            <p className="text-neutral-400 text-sm max-w-sm font-medium">
-                                Everything is quiet. When prospective tenants apply for residency, their profiles will appear here for review.
-                            </p>
+                    {loading ? (
+                        <div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-neutral-400">
+                            Loading applications...
                         </div>
+                    ) : error ? (
+                        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
+                            {error}
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <AnimatePresence mode="popLayout">
+                                    {filteredApplications.map((app, index) => {
+                                        const statusConfig = STATUS_CONFIG[app.status];
+                                        const StatusIcon = statusConfig.icon;
+                                        const isPending = app.status === "pending";
+
+                                        return (
+                                            <motion.div
+                                                key={app.id}
+                                                layout
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                transition={{ delay: index * 0.05, duration: 0.3 }}
+                                                onClick={() => {
+                                                    setSelectedApp(app);
+                                                    setActionError(null);
+                                                }}
+                                                className="group relative flex flex-col bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl"
+                                            >
+                                                {/* Status Glow Bar */}
+                                                {isPending && (
+                                                    <div className="absolute top-0 inset-x-0 h-1 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-10 animate-pulse" />
+                                                )}
+
+                                                {/* Top Card Section: Property Image bg */}
+                                                <div className="relative h-28 w-full bg-neutral-900 overflow-hidden shrink-0">
+                                                    <img
+                                                        src={resolveImage(app.propertyImage)}
+                                                        alt={app.propertyName}
+                                                        className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay transition-transform duration-700 group-hover:scale-110"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-neutral-950/20" />
+
+                                                    {/* Top Status */}
+                                                    <div className="absolute top-3 left-3 z-10">
+                                                        <span className={cn(
+                                                            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-lg",
+                                                            statusConfig.bgColor,
+                                                            statusConfig.borderColor,
+                                                            statusConfig.color,
+                                                            app.status === "pending" ? "bg-amber-500 text-black border-amber-400" :
+                                                                app.status === "approved" ? "bg-emerald-500/90 text-black border-emerald-400/50" :
+                                                                    app.status === "withdrawn" ? "bg-white/10 text-neutral-200 border-white/20" : ""
+                                                        )}>
+                                                            <StatusIcon className="w-3 h-3" />
+                                                            {statusConfig.label}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Score Metric Top Right */}
+                                                    <div className="absolute top-3 right-3 z-10 flex flex-col items-end">
+                                                        <span className="text-[9px] uppercase tracking-widest font-bold text-neutral-400">Credit</span>
+                                                        <span className={cn("text-lg font-black leading-none drop-shadow-md", getCreditScoreColor(app.applicant.creditScore))}>
+                                                            {app.applicant.creditScore ?? "N/A"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Main Content Body */}
+                                                <div className="p-5 flex flex-col flex-1 bg-gradient-to-b from-neutral-950 to-neutral-900 border-t border-white/5 relative">
+
+                                                    {/* Floating Avatar */}
+                                                    <div className="absolute -top-10 left-4 h-14 w-14 rounded-full bg-neutral-900 border-4 border-neutral-950 ring-1 ring-white/10 flex items-center justify-center overflow-hidden shadow-2xl z-20 group-hover:ring-primary/50 transition-colors">
+                                                        {app.applicant.avatar ? (
+                                                            <img
+                                                                src={app.applicant.avatar}
+                                                                alt={app.applicant.name}
+                                                                className="h-full w-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-lg font-black text-primary">
+                                                                {app.applicant.name.split(" ").map((n) => n[0]).join("")}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Applicant Core Details */}
+                                                    <div className="mt-4 mb-4">
+                                                        <h3 className="text-base font-bold text-white mb-0.5 group-hover:text-primary transition-colors">{app.applicant.name}</h3>
+                                                        <p className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium">
+                                                            <Briefcase className="w-3 h-3" />
+                                                            {app.applicant.occupation || "Not provided"}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Critical Property Info */}
+                                                    <div className="grid grid-cols-2 gap-3 mb-4 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                                                        <div>
+                                                            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Property</span>
+                                                            <span className="text-xs font-bold text-white truncate block">{app.propertyName}</span>
+                                                            <span className="text-[10px] font-bold text-primary mt-0.5 block">{app.unitNumber}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Rental Rate</span>
+                                                            <span className="text-xs font-bold text-white block">{formatCurrency(app.monthlyRent)}</span>
+                                                            <span className="text-[10px] font-bold text-neutral-400 flex items-center gap-1 mt-0.5">
+                                                                <Calendar className="w-3 h-3" />
+                                                                {formatDate(app.requestedMoveIn)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex-1 min-h-[8px]" />
+
+                                                    {/* Footer Actions */}
+                                                    <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 font-mono tracking-wider">
+                                                            {app.id}
+                                                        </div>
+
+                                                        <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-white/10 hover:text-primary border border-white/10 px-3 py-1.5 rounded-lg transition-all shadow-sm">
+                                                            Review
+                                                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </AnimatePresence>
+                            </div>
+
+                            {filteredApplications.length === 0 && (
+                                <div className="py-24 flex flex-col items-center justify-center text-center">
+                                    <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mb-5 ring-1 ring-white/10 shadow-xl">
+                                        <Users className="w-8 h-8 text-neutral-600" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-white mb-2">No Active Applications</h3>
+                                    <p className="text-neutral-400 text-sm max-w-sm font-medium">
+                                        Everything is quiet. When prospective tenants apply for residency, their profiles will appear here for review.
+                                    </p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
@@ -507,7 +538,10 @@ export function RentApplications() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedApp(null)}
+                            onClick={() => {
+                                setSelectedApp(null);
+                                setActionError(null);
+                            }}
                             className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 transition-opacity"
                         />
 
@@ -525,7 +559,10 @@ export function RentApplications() {
                                     <h2 className="text-lg font-black text-white tracking-tight">Application Dossier</h2>
                                 </div>
                                 <button
-                                    onClick={() => setSelectedApp(null)}
+                                    onClick={() => {
+                                        setSelectedApp(null);
+                                        setActionError(null);
+                                    }}
                                     className="p-2 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 transition-colors"
                                 >
                                     <X className="h-4 w-4" />
@@ -539,7 +576,7 @@ export function RentApplications() {
                                 <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl group">
                                     <div className="h-48 w-full bg-neutral-900 border-b border-white/5">
                                         <img
-                                            src={selectedApp.propertyImage}
+                                            src={resolveImage(selectedApp.propertyImage)}
                                             alt={selectedApp.propertyName}
                                             className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-700"
                                         />
@@ -556,7 +593,7 @@ export function RentApplications() {
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 block mb-1">Monthly Rent</span>
-                                                <span className="text-2xl font-black text-white">₱{selectedApp.monthlyRent.toLocaleString()}</span>
+                                                <span className="text-2xl font-black text-white">{formatCurrency(selectedApp.monthlyRent)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -609,10 +646,10 @@ export function RentApplications() {
                                         <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                                         <Banknote className="h-6 w-6 text-emerald-400 mb-4" />
                                         <span className="text-[10px] uppercase font-black tracking-widest text-neutral-500 block mb-1">Monthly Income</span>
-                                        <span className="text-2xl font-black text-white">₱{selectedApp.applicant.monthlyIncome.toLocaleString()}</span>
+                                        <span className="text-2xl font-black text-white">{formatCurrency(selectedApp.applicant.monthlyIncome)}</span>
                                         <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded bg-black/40 border border-white/5 text-[10px] font-bold text-neutral-400">
                                             <TrendingUp className="w-3 h-3 text-emerald-500" />
-                                            Ratio: {(selectedApp.applicant.monthlyIncome / selectedApp.monthlyRent).toFixed(1)}x
+                                            Ratio: {formatRatio(selectedApp.applicant.monthlyIncome, selectedApp.monthlyRent)}
                                         </div>
                                     </div>
 
@@ -621,11 +658,12 @@ export function RentApplications() {
                                         <Shield className="h-6 w-6 text-blue-400 mb-4" />
                                         <span className="text-[10px] uppercase font-black tracking-widest text-neutral-500 block mb-1">Credit Score</span>
                                         <span className={cn("text-2xl font-black", getCreditScoreColor(selectedApp.applicant.creditScore))}>
-                                            {selectedApp.applicant.creditScore}
+                                            {selectedApp.applicant.creditScore ?? "N/A"}
                                         </span>
                                         <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 rounded bg-black/40 border border-white/5 text-[10px] font-bold">
                                             <span className={cn("w-2 h-2 rounded-full", getCreditScoreColor(selectedApp.applicant.creditScore).replace('text-', 'bg-'))} />
-                                            {getCreditScoreLabel(selectedApp.applicant.creditScore)} Rating
+                                            {getCreditScoreLabel(selectedApp.applicant.creditScore)}
+                                            {selectedApp.applicant.creditScore === null ? "" : " Rating"}
                                         </div>
                                     </div>
                                 </div>
@@ -637,19 +675,27 @@ export function RentApplications() {
                                         <span className="bg-white/10 text-white px-2 py-0.5 rounded-full">{selectedApp.documents.length} Files</span>
                                     </h4>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {selectedApp.documents.map((doc) => (
-                                            <div
-                                                key={doc}
-                                                className="flex items-center justify-between p-3 rounded-2xl bg-neutral-900 border border-white/5 hover:border-primary/50 hover:bg-white/[0.02] transition-all cursor-pointer group shadow-sm"
-                                            >
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <div className="p-2 bg-neutral-950 rounded-xl border border-white/5 group-hover:border-primary/30 transition-colors shrink-0">
-                                                        <FileText className="h-4 w-4 text-neutral-500 group-hover:text-primary transition-colors" />
-                                                    </div>
-                                                    <span className="text-xs font-bold text-neutral-300 truncate group-hover:text-white transition-colors">{doc}</span>
-                                                </div>
+                                        {selectedApp.documents.length === 0 ? (
+                                            <div className="col-span-full rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-4 text-center text-xs font-semibold text-neutral-500">
+                                                No documents uploaded.
                                             </div>
-                                        ))}
+                                        ) : (
+                                            selectedApp.documents.map((doc) => (
+                                                <div
+                                                    key={doc}
+                                                    className="flex items-center justify-between p-3 rounded-2xl bg-neutral-900 border border-white/5 hover:border-primary/50 hover:bg-white/[0.02] transition-all cursor-pointer group shadow-sm"
+                                                >
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        <div className="p-2 bg-neutral-950 rounded-xl border border-white/5 group-hover:border-primary/30 transition-colors shrink-0">
+                                                            <FileText className="h-4 w-4 text-neutral-500 group-hover:text-primary transition-colors" />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-neutral-300 truncate group-hover:text-white transition-colors">
+                                                            {formatDocumentLabel(doc)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
 
@@ -657,25 +703,50 @@ export function RentApplications() {
 
                             {/* Docked Action Footer */}
                             <div className="p-6 md:p-8 bg-neutral-950 border-t border-white/5 mt-auto">
+                                {actionError && (
+                                    <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-300">
+                                        {actionError}
+                                    </div>
+                                )}
                                 {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
                                     <div className="flex items-center gap-4">
-                                        <button className="flex-1 flex justify-center items-center gap-2 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 font-black hover:bg-red-500 hover:text-white transition-all focus:ring-4 focus:ring-red-500/20 active:scale-95">
+                                        <button
+                                            disabled={isUpdatingSelectedApp}
+                                            onClick={() => updateApplicationStatus(selectedApp.id, "rejected")}
+                                            className={cn(
+                                                "flex-1 flex justify-center items-center gap-2 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 font-black hover:bg-red-500 hover:text-white transition-all focus:ring-4 focus:ring-red-500/20 active:scale-95",
+                                                isUpdatingSelectedApp && "opacity-60 cursor-not-allowed"
+                                            )}
+                                        >
                                             <XCircle className="h-5 w-5" />
-                                            Decline Profile
+                                            {isUpdatingSelectedApp ? "Updating..." : "Decline Profile"}
                                         </button>
-                                        <button className="flex-1 flex justify-center items-center gap-2 py-4 rounded-2xl bg-primary text-black font-black hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] focus:ring-4 focus:ring-primary/40 active:scale-95">
+                                        <button
+                                            disabled={isUpdatingSelectedApp}
+                                            onClick={() => updateApplicationStatus(selectedApp.id, "approved")}
+                                            className={cn(
+                                                "flex-1 flex justify-center items-center gap-2 py-4 rounded-2xl bg-primary text-black font-black hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] focus:ring-4 focus:ring-primary/40 active:scale-95",
+                                                isUpdatingSelectedApp && "opacity-60 cursor-not-allowed"
+                                            )}
+                                        >
                                             <CheckCircle2 className="h-5 w-5" />
-                                            Approve & Proceed
+                                            {isUpdatingSelectedApp ? "Updating..." : "Approve & Proceed"}
                                         </button>
                                     </div>
                                 ) : (
                                     <div className="w-full flex items-center justify-center p-4 rounded-2xl border border-white/5 bg-white/[0.02]">
                                         <span className={cn(
                                             "text-sm font-black flex items-center gap-2",
-                                            selectedApp.status === "approved" ? "text-emerald-500" : "text-red-500"
+                                            selectedApp.status === "approved"
+                                                ? "text-emerald-500"
+                                                : selectedApp.status === "withdrawn"
+                                                ? "text-neutral-300"
+                                                : "text-red-500"
                                         )}>
                                             {selectedApp.status === "approved" ? (
                                                 <><CheckCircle2 className="w-5 h-5" /> Application Finalized: Approved</>
+                                            ) : selectedApp.status === "withdrawn" ? (
+                                                <><AlertCircle className="w-5 h-5" /> Application Finalized: Withdrawn</>
                                             ) : (
                                                 <><XCircle className="w-5 h-5" /> Application Finalized: Rejected</>
                                             )}

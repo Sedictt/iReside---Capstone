@@ -164,6 +164,8 @@ Table "geo_locations" {
   Indexes {
     name [type: btree, name: "idx_geo_locations_name"]
     type [type: btree, name: "idx_geo_locations_type"]
+    name [type: gin, name: "idx_geo_locations_name_trgm"]
+    full_label [type: gin, name: "idx_geo_locations_full_label_trgm"]
   }
 }
 
@@ -215,13 +217,15 @@ Table "listings" {
   "created_at" timestamp [not null, default: `"now"()`]
   "updated_at" timestamp [not null, default: `"now"()`]
 
+  Note: 'Listing views and leads are tracked via the public.increment_listing_metric(listing_id, metric_type) function.'
+
   Checks {
     `("rent_amount" >= (0)::numeric)` [name: 'listings_rent_amount_check']
     `((("scope" = 'property'::"public"."listing_scope") AND ("unit_id" IS NULL)) OR (("scope" = 'unit'::"public"."listing_scope") AND ("unit_id" IS NOT NULL)))` [name: 'listings_scope_unit_consistency']
   }
 
   Indexes {
-    (landlord_id, created_at) [type: btree, name: "idx_listings_landlord_created"]
+    (landlord_id, created_at) [type: btree, name: "idx_listings_landlord_created", note: 'Sorted by created_at DESC']
     property_id [type: btree, name: "idx_listings_property"]
     unit_id [type: btree, name: "idx_listings_unit"]
     status [type: btree, name: "idx_listings_status"]
@@ -504,6 +508,9 @@ Table "properties" {
     city [type: btree, name: "idx_properties_city"]
     landlord_id [type: btree, name: "idx_properties_landlord"]
     type [type: btree, name: "idx_properties_type"]
+    name [type: gin, name: "idx_properties_name_trgm"]
+    address [type: gin, name: "idx_properties_address_trgm"]
+    city [type: gin, name: "idx_properties_city_trgm"]
   }
 }
 
