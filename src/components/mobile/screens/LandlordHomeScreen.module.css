@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Landlord Home Screen
+   Landlord Home Screen Styles
    ═══════════════════════════════════════════════════════════ */
 
 .container {
@@ -11,21 +11,42 @@
 
 /* ─── Header ───────────────────────────────────────────── */
 .header {
-    padding: 12px 20px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 24px;
+    flex-shrink: 0;
 }
 
-.greeting {
+.headerLeft h1 {
     font-size: 24px;
     font-weight: 900;
     color: #fafafa;
     letter-spacing: -0.5px;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 
-.date {
+.headerLeft p {
     font-size: 13px;
-    color: #737373;
+    color: #a3a3a3;
     font-weight: 500;
+}
+
+.headerDate {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6d9838;
+    background: rgba(109, 152, 56, 0.1);
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-weight: 700;
+}
+
+.headerDate svg {
+    width: 14px;
+    height: 14px;
 }
 
 /* ─── Scroll Area ──────────────────────────────────────── */
@@ -40,96 +61,140 @@
     display: none;
 }
 
-/* ─── Revenue Overview ─────────────────────────────────── */
-.revenueCard {
-    background: linear-gradient(135deg, rgba(109, 152, 56, 0.15) 0%, rgba(20, 20, 20, 0.8) 100%);
+/* ─── Revenue Overview Widget ──────────────────────────── */
+.revenueWidget {
+    background: linear-gradient(135deg, #1f2910 0%, #141414 100%);
     border: 1px solid rgba(109, 152, 56, 0.3);
     border-radius: 20px;
     padding: 24px;
     margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
 }
 
-.revenueRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+/* Subtle decorative circle behind revenue */
+.revenueWidget::after {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -20px;
+    width: 120px;
+    height: 120px;
+    background: rgba(109, 152, 56, 0.05);
+    border-radius: 50%;
+    pointer-events: none;
 }
 
 .revenueLabel {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #a3a3a3;
-    margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .revenueAmount {
-    font-size: 36px;
+    font-size: 38px;
     font-weight: 900;
     color: #fafafa;
     letter-spacing: -1px;
+    margin-bottom: 12px;
 }
 
-.revenueTrend {
+.revenueStats {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #22c55e;
-    background: rgba(34, 197, 94, 0.15);
-    padding: 6px 10px;
-    border-radius: 99px;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
-.revenueTrend svg {
-    width: 14px;
-    height: 14px;
-}
-
-.revenueDivider {
-    height: 1px;
-    background: rgba(109, 152, 56, 0.2);
-    margin: 20px 0;
-}
-
-.statsGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.statItem {
+.revStatBox {
     display: flex;
     flex-direction: column;
 }
 
-.statItemLabel {
-    font-size: 12px;
+.revStatLabel {
+    font-size: 11px;
     color: #737373;
-    font-weight: 600;
-    margin-bottom: 4px;
-    text-transform: uppercase;
+    font-weight: 500;
 }
 
-.statItemValue {
-    font-size: 18px;
+.revStatValue {
+    font-size: 16px;
+    color: #e5e5e5;
+    font-weight: 700;
+}
+
+.revStatValue.collected {
+    color: #6d9838;
+}
+
+.revStatValue.pending {
+    color: #f59e0b;
+}
+
+/* ─── Metric Cards Grid (Occupancy, Units) ─────────────── */
+.metricsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.metricCard {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.metricHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.metricIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+}
+
+.metricValue {
+    font-size: 24px;
     font-weight: 800;
     color: #fafafa;
 }
 
-/* ─── Generic Section ──────────────────────────────────── */
+.metricLabel {
+    font-size: 13px;
+    font-weight: 500;
+    color: #737373;
+    margin-top: 4px;
+}
+
+/* ─── Action Needed Section ────────────────────────────── */
 .sectionHeader {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     margin-bottom: 16px;
-    margin-top: 28px;
-}
-
-.sectionHeader:first-child {
-    margin-top: 0;
 }
 
 .sectionTitle {
@@ -141,102 +206,19 @@
 
 .sectionLink {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     color: #6d9838;
     cursor: pointer;
 }
 
-/* ─── Pending Actions (Cards) ──────────────────────────── */
-.actionsScroll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 8px;
-    margin: 0 -20px;
-    padding-left: 20px;
-    padding-right: 20px;
-}
-
-.actionsScroll::-webkit-scrollbar {
-    display: none;
-}
-
-.actionCard {
-    min-width: 140px;
-    background: #141414;
-    border: 1px solid #1e1e1e;
-    border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.actionCard:active {
-    transform: scale(0.95);
-    background: #1a1a1a;
-}
-
-.actionIcon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-}
-
-.actionIcon svg {
-    width: 18px;
-    height: 18px;
-}
-
-/* Action Card Colors */
-.actionPurple {
-    background: rgba(168, 85, 247, 0.1);
-    color: #a855f7;
-}
-
-.actionAmber {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
-}
-
-.actionBlue {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
-}
-
-.actionRed {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-}
-
-.actionCount {
-    font-size: 24px;
-    font-weight: 800;
-    color: #fafafa;
-    margin-bottom: 2px;
-}
-
-.actionLabel {
-    font-size: 12px;
-    font-weight: 600;
-    color: #737373;
-}
-
-/* ─── Recent Activity ──────────────────────────────────── */
-.activityList {
+.actionList {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    margin-bottom: 28px;
 }
 
-.activityItem {
+.actionItem {
     background: #141414;
     border: 1px solid #1e1e1e;
     border-radius: 16px;
@@ -244,47 +226,73 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.activityIcon {
+.actionItem:active {
+    background: #1a1a1a;
+}
+
+.actionIcon {
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #1a1a1a;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #6d9838;
 }
 
-.activityIcon svg {
-    width: 20px;
-    height: 20px;
+.actionIcon.urgent {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
 }
 
-.activityInfo {
+.actionIcon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.actionIcon.info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.actionContent {
     flex: 1;
 }
 
-.activityTitle {
+.actionTitle {
     font-size: 15px;
     font-weight: 700;
     color: #fafafa;
     margin-bottom: 4px;
 }
 
-.activityDesc {
-    font-size: 12px;
-    color: #a3a3a3;
-    line-height: 1.4;
+.actionDesc {
+    font-size: 13px;
+    color: #737373;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.activityTime {
-    font-size: 11px;
+.actionRight {
     color: #525252;
-    font-weight: 600;
-    flex-shrink: 0;
-    align-self: flex-start;
-    margin-top: 2px;
+}
+
+/* ─── Empty/Placeholder for Recent Activity ───────────── */
+.emptyState {
+    background: transparent;
+    border: 1px dashed #262626;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+}
+
+.emptyState p {
+    font-size: 13px;
+    color: #737373;
 }

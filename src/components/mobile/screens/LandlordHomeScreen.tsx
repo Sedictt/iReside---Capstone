@@ -1,185 +1,164 @@
 "use client";
 
 import {
-    TrendingUp,
-    FileText,
-    Clock,
-    Wrench,
-    AlertCircle,
-    Users,
-    Building2,
-    CheckCircle2,
+  Calendar,
+  Wallet,
+  Building2,
+  Users,
+  AlertCircle,
+  Clock,
+  Wrench,
+  ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordHomeScreen.module.css";
 
-// ─── Mock Data ─────────────────────────────────────────────
+// ─── Mock Data ──────────────────────────────────────────────
 const REVENUE_DATA = {
-    total: "₱245,000",
-    trend: "+12.5%",
-    collected: "18 / 20",
-    occupancy: "95%",
+  totalExpected: "₱145,000",
+  collected: "₱110,000",
+  pending: "₱35,000",
+  month: "March",
 };
 
-const PENDING_ACTIONS = [
-    {
-        id: "apps",
-        label: "New Apps",
-        count: 3,
-        icon: FileText,
-        color: "Purple",
-        screen: "applicationTracker" as const, // We'll reuse tracker or build a new one
-    },
-    {
-        id: "maintenance",
-        label: "Repairs",
-        count: 2,
-        icon: Wrench,
-        color: "Amber",
-        screen: "notifications" as const,
-    },
-    {
-        id: "overdue",
-        label: "Overdue",
-        count: 1,
-        icon: AlertCircle,
-        color: "Red",
-        screen: "payments" as const,
-    },
-    {
-        id: "leases",
-        label: "Expiring",
-        count: 4,
-        icon: Clock,
-        color: "Blue",
-        screen: "leaseList" as const,
-    },
+const METRICS = [
+  { id: "units", label: "Total Units", value: "24", icon: Building2 },
+  { id: "occupancy", label: "Occupancy Rate", value: "92%", icon: Users },
 ];
 
-const RECENT_ACTIVITY = [
-    {
-        id: 1,
-        title: "Payment Received",
-        desc: "₱15,000 from Unit 12A (Skyline Lofts)",
-        time: "2 hours ago",
-        icon: CheckCircle2,
-    },
-    {
-        id: 2,
-        title: "Maintenance Request",
-        desc: "Leaking faucet in Unit 4B (Dalandanan)",
-        time: "5 hours ago",
-        icon: Wrench,
-    },
-    {
-        id: 3,
-        title: "New Application",
-        desc: "Maria Santos applied for Metro Studio C",
-        time: "Yesterday",
-        icon: FileText,
-    },
-    {
-        id: 4,
-        title: "Lease Signed",
-        desc: "John Doe signed lease for Unit 8C",
-        time: "Yesterday",
-        icon: FileText,
-    },
+const ACTION_ITEMS = [
+  {
+    id: "a1",
+    title: "2 Pending Applications",
+    desc: "Metro Studio B needs review",
+    type: "warning",
+    icon: Clock,
+    screen: "landlordApplications" as const,
+  },
+  {
+    id: "a2",
+    title: "1 Maintenance Request",
+    desc: "Unit 12A Plumbing Issue",
+    type: "urgent",
+    icon: Wrench,
+    screen: "landlordMaintenance" as const,
+  },
+  {
+    id: "a3",
+    title: "3 Overdue Payments",
+    desc: "Totaling ₱45,000",
+    type: "info",
+    icon: AlertCircle,
+    screen: "landlordInvoices" as const,
+  },
 ];
 
+// ─── Component ──────────────────────────────────────────────
 export default function LandlordHomeScreen() {
-    const { navigate } = useNavigation();
-    const currentDate = new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-    });
+  const { navigate } = useNavigation();
 
-    return (
-        <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <h1 className={styles.greeting}>Overview</h1>
-                <p className={styles.date}>{currentDate}</p>
-            </div>
-
-            <div className={styles.scrollArea}>
-                {/* Revenue Card */}
-                <div className={styles.revenueCard}>
-                    <div className={styles.revenueRow}>
-                        <div>
-                            <div className={styles.revenueLabel}>Monthly Revenue</div>
-                            <div className={styles.revenueAmount}>{REVENUE_DATA.total}</div>
-                        </div>
-                        <div className={styles.revenueTrend}>
-                            <TrendingUp /> {REVENUE_DATA.trend}
-                        </div>
-                    </div>
-
-                    <div className={styles.revenueDivider} />
-
-                    <div className={styles.statsGrid}>
-                        <div className={styles.statItem}>
-                            <span className={styles.statItemLabel}>Rent Collected</span>
-                            <span className={styles.statItemValue}>{REVENUE_DATA.collected}</span>
-                        </div>
-                        <div className={styles.statItem}>
-                            <span className={styles.statItemLabel}>Occupancy</span>
-                            <span className={styles.statItemValue}>{REVENUE_DATA.occupancy}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Pending Actions */}
-                <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>Requires Attention</h2>
-                </div>
-                <div className={styles.actionsScroll}>
-                    {PENDING_ACTIONS.map((action) => {
-                        const Icon = action.icon;
-                        const colorClass = styles[`action${action.color}` as keyof typeof styles];
-
-                        return (
-                            <div
-                                key={action.id}
-                                className={styles.actionCard}
-                                onClick={() => navigate(action.screen as any)}
-                            >
-                                <div>
-                                    <div className={`${styles.actionIcon} ${colorClass}`}>
-                                        <Icon />
-                                    </div>
-                                    <div className={styles.actionCount}>{action.count}</div>
-                                    <div className={styles.actionLabel}>{action.label}</div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Recent Activity */}
-                <div className={styles.sectionHeader}>
-                    <h2 className={styles.sectionTitle}>Recent Activity</h2>
-                    <span className={styles.sectionLink}>View All</span>
-                </div>
-                <div className={styles.activityList}>
-                    {RECENT_ACTIVITY.map((activity) => {
-                        const Icon = activity.icon;
-                        return (
-                            <div key={activity.id} className={styles.activityItem}>
-                                <div className={styles.activityIcon}>
-                                    <Icon />
-                                </div>
-                                <div className={styles.activityInfo}>
-                                    <div className={styles.activityTitle}>{activity.title}</div>
-                                    <div className={styles.activityDesc}>{activity.desc}</div>
-                                    <div className={styles.activityTime}>{activity.time}</div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+  return (
+    <div className={styles.container}>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <h1>Dashboard</h1>
+          <p>Welcome back, Landlord</p>
         </div>
-    );
+        <div className={styles.headerDate}>
+          <Calendar />
+          {REVENUE_DATA.month} 2026
+        </div>
+      </div>
+
+      <div className={styles.scrollArea}>
+        {/* Revenue Widget */}
+        <div className={styles.revenueWidget}>
+          <div className={styles.revenueLabel}>
+            Expected Revenue <TrendingUp size={14} />
+          </div>
+          <div className={styles.revenueAmount}>{REVENUE_DATA.totalExpected}</div>
+
+          <div className={styles.revenueStats}>
+            <div className={styles.revStatBox}>
+              <span className={styles.revStatLabel}>Collected</span>
+              <span className={`${styles.revStatValue} ${styles.collected}`}>
+                {REVENUE_DATA.collected}
+              </span>
+            </div>
+            <div className={styles.revStatBox}>
+              <span className={styles.revStatLabel}>Pending</span>
+              <span className={`${styles.revStatValue} ${styles.pending}`}>
+                {REVENUE_DATA.pending}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className={styles.metricsGrid}>
+          {METRICS.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div
+                key={metric.id}
+                className={styles.metricCard}
+                onClick={() => {
+                  if (metric.id === "units") navigate("landlordProperties");
+                }}
+              >
+                <div className={styles.metricHeader}>
+                  <div className={styles.metricIcon}>
+                    <Icon size={16} />
+                  </div>
+                </div>
+                <div className={styles.metricValue}>{metric.value}</div>
+                <div className={styles.metricLabel}>{metric.label}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Action Needed Section */}
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Action Needed</h2>
+          <span className={styles.sectionLink}>View All</span>
+        </div>
+        <div className={styles.actionList}>
+          {ACTION_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const styleColor = styles[item.type as keyof typeof styles];
+
+            return (
+              <div
+                key={item.id}
+                className={styles.actionItem}
+                onClick={() => navigate(item.screen)}
+              >
+                <div className={`${styles.actionIcon} ${styleColor}`}>
+                  <Icon size={20} />
+                </div>
+                <div className={styles.actionContent}>
+                  <div className={styles.actionTitle}>{item.title}</div>
+                  <div className={styles.actionDesc}>{item.desc}</div>
+                </div>
+                <div className={styles.actionRight}>
+                  <ChevronRight size={20} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Recent Activity Section */}
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Recent Activity</h2>
+        </div>
+        <div className={styles.emptyState}>
+          <p>No recent activity in the last 24 hours.</p>
+        </div>
+      </div>
+    </div>
+  );
 }
