@@ -538,89 +538,89 @@ Table "units" {
   }
 }
 
-Ref "applications_applicant_id_fkey":"profiles"."id" < "applications"."applicant_id" [delete: cascade]
+Ref "submits":"profiles"."id" < "applications"."applicant_id" [delete: cascade]
 
-Ref "applications_landlord_id_fkey":"profiles"."id" < "applications"."landlord_id" [delete: cascade]
+Ref "receives":"profiles"."id" < "applications"."landlord_id" [delete: cascade]
 
-Ref "applications_unit_id_fkey":"units"."id" < "applications"."unit_id" [delete: cascade]
+Ref "applied_to":"units"."id" < "applications"."unit_id" [delete: cascade]
 
-Ref "conversation_participants_conversation_id_fkey":"conversations"."id" < "conversation_participants"."conversation_id" [delete: cascade]
+Ref "has_participants":"conversations"."id" < "conversation_participants"."conversation_id" [delete: cascade]
 
-Ref "conversation_participants_user_id_fkey":"profiles"."id" < "conversation_participants"."user_id" [delete: cascade]
+Ref "participates_in":"profiles"."id" < "conversation_participants"."user_id" [delete: cascade]
 
-Ref "iris_chat_messages_user_id_fkey":"profiles"."id" < "iris_chat_messages"."user_id" [delete: cascade]
+Ref "chats_with":"profiles"."id" < "iris_chat_messages"."user_id" [delete: cascade]
 
-Ref "landlord_applications_profile_id_fkey":"profiles"."id" < "landlord_applications"."profile_id" [delete: cascade]
+Ref "applies_for_landlord":"profiles"."id" < "landlord_applications"."profile_id" [delete: cascade]
 
-Ref "landlord_inquiry_actions_inquiry_id_fkey":"applications"."id" < "landlord_inquiry_actions"."inquiry_id" [delete: cascade]
+Ref "tracks_inquiry":"applications"."id" < "landlord_inquiry_actions"."inquiry_id" [delete: cascade]
 
-Ref "landlord_inquiry_actions_landlord_id_fkey":"profiles"."id" < "landlord_inquiry_actions"."landlord_id" [delete: cascade]
+Ref "manages_inquiry":"profiles"."id" < "landlord_inquiry_actions"."landlord_id" [delete: cascade]
 
-Ref "landlord_reviews_landlord_id_fkey":"profiles"."id" < "landlord_reviews"."landlord_id" [delete: cascade]
+Ref "is_reviewed":"profiles"."id" < "landlord_reviews"."landlord_id" [delete: cascade]
 
-Ref "landlord_reviews_lease_id_fkey":"leases"."id" < "landlord_reviews"."lease_id" [delete: cascade]
+Ref "references_lease":"leases"."id" < "landlord_reviews"."lease_id" [delete: cascade]
 
-Ref "landlord_reviews_tenant_id_fkey":"profiles"."id" < "landlord_reviews"."tenant_id" [delete: cascade]
+Ref "writes_review":"profiles"."id" < "landlord_reviews"."tenant_id" [delete: cascade]
 
-Ref "landlord_statistics_exports_landlord_id_fkey":"profiles"."id" < "landlord_statistics_exports"."landlord_id" [delete: cascade]
+Ref "exports_stats":"profiles"."id" < "landlord_statistics_exports"."landlord_id" [delete: cascade]
 
-Ref "listings_landlord_id_fkey":"profiles"."id" < "listings"."landlord_id" [delete: cascade]
+Ref "manages_listing":"profiles"."id" < "listings"."landlord_id" [delete: cascade]
 
-Ref "listings_property_id_fkey":"properties"."id" < "listings"."property_id" [delete: cascade]
+Ref "lists_property":"properties"."id" < "listings"."property_id" [delete: cascade]
 
-Ref "listings_unit_id_fkey":"units"."id" < "listings"."unit_id" [delete: cascade]
+Ref "lists_unit":"units"."id" < "listings"."unit_id" [delete: cascade]
 
-Ref "leases_landlord_id_fkey":"profiles"."id" < "leases"."landlord_id" [delete: restrict]
+Ref "manages_lease":"profiles"."id" < "leases"."landlord_id" [delete: restrict]
 
-Ref "leases_tenant_id_fkey":"profiles"."id" < "leases"."tenant_id" [delete: restrict]
+Ref "holds_lease":"profiles"."id" < "leases"."tenant_id" [delete: restrict]
 
-Ref "leases_unit_id_fkey":"units"."id" < "leases"."unit_id" [delete: restrict]
+Ref "leased_in":"units"."id" < "leases"."unit_id" [delete: restrict]
 
-Ref "maintenance_requests_landlord_id_fkey":"profiles"."id" < "maintenance_requests"."landlord_id" [delete: cascade]
+Ref "oversees_maintenance":"profiles"."id" < "maintenance_requests"."landlord_id" [delete: cascade]
 
-Ref "maintenance_requests_tenant_id_fkey":"profiles"."id" < "maintenance_requests"."tenant_id" [delete: cascade]
+Ref "requests_maintenance":"profiles"."id" < "maintenance_requests"."tenant_id" [delete: cascade]
 
-Ref "maintenance_requests_unit_id_fkey":"units"."id" < "maintenance_requests"."unit_id" [delete: cascade]
+Ref "requires_maintenance":"units"."id" < "maintenance_requests"."unit_id" [delete: cascade]
 
-Ref "message_user_actions_actor_user_id_fkey":"profiles"."id" < "message_user_actions"."actor_user_id" [delete: cascade]
+Ref "performs_action":"profiles"."id" < "message_user_actions"."actor_user_id" [delete: cascade]
 
-Ref "message_user_actions_target_user_id_fkey":"profiles"."id" < "message_user_actions"."target_user_id" [delete: cascade]
+Ref "subject_of_action":"profiles"."id" < "message_user_actions"."target_user_id" [delete: cascade]
 
-Ref "message_user_reports_conversation_id_fkey":"conversations"."id" < "message_user_reports"."conversation_id" [delete: set null]
+Ref "reported_context":"conversations"."id" < "message_user_reports"."conversation_id" [delete: set null]
 
-Ref "message_user_reports_reporter_user_id_fkey":"profiles"."id" < "message_user_reports"."reporter_user_id" [delete: cascade]
+Ref "files_report":"profiles"."id" < "message_user_reports"."reporter_user_id" [delete: cascade]
 
-Ref "message_user_reports_target_user_id_fkey":"profiles"."id" < "message_user_reports"."target_user_id" [delete: cascade]
+Ref "is_reported":"profiles"."id" < "message_user_reports"."target_user_id" [delete: cascade]
 
-Ref "messages_conversation_id_fkey":"conversations"."id" < "messages"."conversation_id" [delete: cascade]
+Ref "contains_messages":"conversations"."id" < "messages"."conversation_id" [delete: cascade]
 
-Ref "messages_sender_id_fkey":"profiles"."id" < "messages"."sender_id" [delete: cascade]
+Ref "sends_message":"profiles"."id" < "messages"."sender_id" [delete: cascade]
 
-Ref "move_out_requests_landlord_id_fkey":"profiles"."id" < "move_out_requests"."landlord_id" [delete: cascade]
+Ref "reviews_move_out":"profiles"."id" < "move_out_requests"."landlord_id" [delete: cascade]
 
-Ref "move_out_requests_lease_id_fkey":"leases"."id" < "move_out_requests"."lease_id" [delete: cascade]
+Ref "terminates_lease":"leases"."id" < "move_out_requests"."lease_id" [delete: cascade]
 
-Ref "move_out_requests_tenant_id_fkey":"profiles"."id" < "move_out_requests"."tenant_id" [delete: cascade]
+Ref "requests_move_out":"profiles"."id" < "move_out_requests"."tenant_id" [delete: cascade]
 
-Ref "notifications_user_id_fkey":"profiles"."id" < "notifications"."user_id" [delete: cascade]
+Ref "receives_notification":"profiles"."id" < "notifications"."user_id" [delete: cascade]
 
-Ref "payment_items_payment_id_fkey":"payments"."id" < "payment_items"."payment_id" [delete: cascade]
+Ref "includes_item":"payments"."id" < "payment_items"."payment_id" [delete: cascade]
 
-Ref "payments_landlord_id_fkey":"profiles"."id" < "payments"."landlord_id" [delete: restrict]
+Ref "collects_payment":"profiles"."id" < "payments"."landlord_id" [delete: restrict]
 
-Ref "payments_lease_id_fkey":"leases"."id" < "payments"."lease_id" [delete: restrict]
+Ref "fulfills_lease":"leases"."id" < "payments"."lease_id" [delete: restrict]
 
-Ref "payments_tenant_id_fkey":"profiles"."id" < "payments"."tenant_id" [delete: restrict]
+Ref "pays_rent":"profiles"."id" < "payments"."tenant_id" [delete: restrict]
 
-Ref "profiles_id_fkey":"auth"."users"."id" < "profiles"."id" [delete: cascade]
+Ref "identifies":"auth"."users"."id" < "profiles"."id" [delete: cascade]
 
-Ref "properties_landlord_id_fkey":"profiles"."id" < "properties"."landlord_id" [delete: cascade]
+Ref "owns_property":"profiles"."id" < "properties"."landlord_id" [delete: cascade]
 
-Ref "saved_properties_property_id_fkey":"properties"."id" < "saved_properties"."property_id" [delete: cascade]
+Ref "bookmarks_property":"properties"."id" < "saved_properties"."property_id" [delete: cascade]
 
-Ref "saved_properties_user_id_fkey":"profiles"."id" < "saved_properties"."user_id" [delete: cascade]
+Ref "saves_property":"profiles"."id" < "saved_properties"."user_id" [delete: cascade]
 
-Ref "units_property_id_fkey":"properties"."id" < "units"."property_id" [delete: cascade]
+Ref "contains_units":"properties"."id" < "units"."property_id" [delete: cascade]
 
 Table "auth"."users" {
   "id" uuid [pk]

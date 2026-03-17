@@ -154,10 +154,18 @@ function LandingPageContent() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [dynamicPlaces, setDynamicPlaces] = useState<SearchSuggestion[]>([]);
 
+  const suggestionCache = useRef<Record<string, SearchSuggestion[]>>({});
+
   useEffect(() => {
     const query = location.trim();
     if (query.length < 2) {
       setDynamicPlaces([]);
+      return;
+    }
+
+    // Check cache first
+    if (suggestionCache.current[query]) {
+      setDynamicPlaces(suggestionCache.current[query]);
       return;
     }
 
@@ -166,6 +174,7 @@ function LandingPageContent() {
         const response = await fetch(`/api/locations?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         if (data.locations) {
+          suggestionCache.current[query] = data.locations;
           setDynamicPlaces(data.locations);
         }
       } catch (err) {

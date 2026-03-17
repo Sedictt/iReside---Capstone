@@ -118,21 +118,36 @@ function toFeedProperty(listing: ListingRow, property: PropertyRow, units: UnitR
   };
 }
 
+// Simple global cache to store properties across component mounts
+let cachedProperties: FeedProperty[] | null = null;
+let lastFetchTime: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Hook: fetches published listings for the public marketplace
  * and returns them as FeedProperty[] for both apartment and unit listings.
  */
-export function useProperties() {
-  const [properties, setProperties] = useState<FeedProperty[]>([]);
-  const [loading, setLoading] = useState(true);
+export function useProperties(forceRefresh = false) {
+  const [properties, setProperties] = useState<FeedProperty[]>(cachedProperties || []);
+  const [loading, setLoading] = useState(!cachedProperties || forceRefresh);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     const supabase = createClient();
 
+    // Skip fetch if we have fresh data and aren't forcing a refresh
+    const isCacheFresh = cachedProperties && (Date.now() - lastFetchTime < CACHE_DURATION);
+    if (isCacheFresh && !forceRefresh) {
+      if (loading) setLoading(false);
+      return;
+    }
+
     async function fetch() {
-      setLoading(true);
+      if (!forceRefresh && !cachedProperties) {
+        setLoading(true);
+      }
+      
       const { data: listings, error: listingError } = await supabase
         .from("listings")
         .select("id, property_id, unit_id, scope, title, rent_amount, created_at")
@@ -151,13 +166,15 @@ export function useProperties() {
       const listingRows = (listings ?? []) as ListingRow[];
       if (listingRows.length === 0) {
         setProperties([]);
+        cachedProperties = [];
+        lastFetchTime = Date.now();
         setLoading(false);
         return;
       }
 
       const propertyIds = Array.from(new Set(listingRows.map((listing) => listing.property_id)));
 
-      const [{ data: properties, error: propertyError }, { data: units, error: unitError }] = await Promise.all([
+      const [{ data: propertiesData, error: propertyError }, { data: units, error: unitError }] = await Promise.all([
         supabase
           .from("properties")
           .select("id, name, address, description, type, lat, lng, amenities, house_rules, images, is_featured, created_at")
@@ -184,7 +201,7 @@ export function useProperties() {
         return;
       }
 
-      const propertyById = new Map(((properties ?? []) as PropertyRow[]).map((property) => [property.id, property]));
+      const propertyById = new Map(((propertiesData ?? []) as PropertyRow[]).map((property) => [property.id, property]));
       const unitsByProperty = new Map<string, UnitRow[]>();
       for (const unit of (units ?? []) as UnitRow[]) {
         const existing = unitsByProperty.get(unit.property_id) ?? [];
@@ -203,6 +220,8 @@ export function useProperties() {
         .filter((item): item is FeedProperty => Boolean(item));
 
       setProperties(feed);
+      cachedProperties = feed;
+      lastFetchTime = Date.now();
       setLoading(false);
     }
 
@@ -210,7 +229,7 @@ export function useProperties() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [forceRefresh]);
 
   return { properties, loading, error };
 }

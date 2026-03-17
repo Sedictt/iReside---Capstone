@@ -419,4 +419,20 @@ ON CONFLICT (id) DO UPDATE SET reporter_user_id=EXCLUDED.reporter_user_id, targe
   conversation_id=EXCLUDED.conversation_id, category=EXCLUDED.category, details=EXCLUDED.details,
   status=EXCLUDED.status, metadata=EXCLUDED.metadata, updated_at=now();
 
+-- ---------------------------------------------------------------------------
+-- 14) Listings
+-- ---------------------------------------------------------------------------
+INSERT INTO public.listings (id, landlord_id, property_id, unit_id, scope, title, rent_amount, status, views, leads) VALUES
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e01', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', 'unit', 'Modern 2BR at Maple Grove', 14500.00, 'published', 150, 5),
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e02', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb11', 'unit', 'Luxury Penthouse with Skyline View', 18000.00, 'published', 320, 12),
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e03', '22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb12', 'unit', 'Comfortable Townhome for Family', 19500.00, 'published', 85, 3),
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e04', '11111111-1111-1111-1111-111111111113', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb16', 'unit', 'Affordable Studio for Professionals', 9000.00, 'published', 210, 8),
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e05', '11111111-1111-1111-1111-111111111113', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa6', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb18', 'unit', 'Spacious Villa for Large Group', 25000.00, 'published', 45, 1),
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e06', '11111111-1111-1111-1111-111111111114', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa7', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb21', 'unit', 'Downtown Urban Living', 11000.00, 'published', 130, 4),
+  ('1e1e1e1e-1e1e-1e1e-1e1e-1e1e1e1e1e07', '11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', NULL, 'property', 'Skyline Lofts - Premium Condo Living', 15000.00, 'published', 500, 25)
+ON CONFLICT (id) DO UPDATE SET
+  landlord_id=EXCLUDED.landlord_id, property_id=EXCLUDED.property_id, unit_id=EXCLUDED.unit_id,
+  scope=EXCLUDED.scope, title=EXCLUDED.title, rent_amount=EXCLUDED.rent_amount,
+  status=EXCLUDED.status, views=EXCLUDED.views, leads=EXCLUDED.leads, updated_at=now();
+
 COMMIT;

@@ -62,5 +62,12 @@ export async function GET(request: Request) {
         return true;
     });
 
-    return NextResponse.json({ locations: unique.slice(0, 10) });
+    return NextResponse.json(
+        { locations: unique.slice(0, 10) },
+        {
+            headers: {
+                "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+            },
+        }
+    );
 }

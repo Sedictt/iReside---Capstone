@@ -22,10 +22,14 @@ interface PropertyDetailModalProps {
 
 import { useState, useEffect, useRef } from "react";
 
+const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 export default function PropertyDetailModal({ property, isLiked, onLike, open, onOpenChange }: PropertyDetailModalProps) {
     const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
     const [activeImage, setActiveImage] = useState(0);
     const thumbsRef = useRef<HTMLDivElement>(null);
+    const lastTrackedListingRef = useRef<string | null>(null);
 
     const [rulesOpen, setRulesOpen] = useState(false);
     const [hasReadRules, setHasReadRules] = useState(false);
@@ -40,6 +44,24 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
 
     useEffect(() => {
         if (open) setHasReadRules(false);
+    }, [open, property?.id]);
+
+    useEffect(() => {
+        if (!open) {
+            lastTrackedListingRef.current = null;
+            return;
+        }
+
+        if (!property?.id || !isUuid(property.id)) return;
+        if (lastTrackedListingRef.current === property.id) return;
+
+        lastTrackedListingRef.current = property.id;
+
+        void fetch(`/api/listings/${property.id}/events`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "view" }),
+        }).catch(() => undefined);
     }, [open, property?.id]);
 
 
@@ -664,9 +686,17 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                             </Dialog.Close>
                                             <button
                                                 onClick={() => {
-                                                    if (messageText.trim()) {
-                                                        setMessageSent(true);
+                                                    if (!messageText.trim()) return;
+
+                                                    if (property?.id && isUuid(property.id)) {
+                                                        void fetch(`/api/listings/${property.id}/events`, {
+                                                            method: "POST",
+                                                            headers: { "Content-Type": "application/json" },
+                                                            body: JSON.stringify({ type: "lead" }),
+                                                        }).catch(() => undefined);
                                                     }
+
+                                                    setMessageSent(true);
                                                 }}
                                                 disabled={!messageText.trim()}
                                                 className="flex-1 bg-primary hover:bg-primary-dark disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20">
