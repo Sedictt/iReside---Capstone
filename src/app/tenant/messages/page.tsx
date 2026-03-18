@@ -293,6 +293,8 @@ export default function TenantMessagesPage() {
     const [reportDetails, setReportDetails] = useState("");
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
     const [reportWizardError, setReportWizardError] = useState<string | null>(null);
+    const [showModerationModal, setShowModerationModal] = useState(false);
+    const [moderationMessage, setModerationMessage] = useState("");
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -1017,10 +1019,16 @@ export default function TenantMessagesPage() {
                 }, 350);
             } catch (error) {
                 const message = error instanceof Error ? error.message : "Failed to send message.";
-                setMessagesError(message);
-                setMessagesState((prev) =>
-                    prev.map((msg) => (msg.id === optimisticId ? { ...msg, status: "failed" } : msg))
-                );
+                if (message.includes("blocked by AI") || message.includes("violation")) {
+                    setShowModerationModal(true);
+                    setModerationMessage(message);
+                    setMessagesState((prev) => prev.filter((msg) => msg.id !== optimisticId));
+                } else {
+                    setMessagesError(message);
+                    setMessagesState((prev) =>
+                        prev.map((msg) => (msg.id === optimisticId ? { ...msg, status: "failed" } : msg))
+                    );
+                }
             }
         }
 
@@ -2473,6 +2481,33 @@ export default function TenantMessagesPage() {
                                 className="px-3 py-2 rounded-lg bg-primary text-black font-bold hover:bg-primary/90 disabled:opacity-50"
                             >
                                 {isSubmittingConfirmAction ? "Applying..." : "Confirm"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showModerationModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-red-500/20 bg-neutral-900 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="bg-red-500/10 p-6 flex flex-col items-center text-center">
+                            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4 text-red-500">
+                                <AlertTriangle className="w-8 h-8" />
+                            </div>
+                            <h4 className="text-xl font-black text-white mb-2">Message Blocked</h4>
+                            <p className="text-sm text-neutral-300 leading-relaxed font-semibold">
+                                {moderationMessage || "Your message violated our community guidelines."}
+                            </p>
+                        </div>
+                        <div className="p-6 bg-[#0a0a0a] border-t border-white/5 space-y-4">
+                            <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-neutral-400 leading-relaxed text-center">
+                                <strong className="text-white">Warning:</strong> Repeated violations of our chat policies—including hate speech, severe profanity, harassment, or spam—may lead to formal account offense or permanent suspension.
+                            </div>
+                            <button
+                                onClick={() => setShowModerationModal(false)}
+                                className="w-full py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all focus:outline-none focus:ring-2 focus:ring-white/20"
+                            >
+                                I Understand
                             </button>
                         </div>
                     </div>
