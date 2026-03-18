@@ -39,8 +39,9 @@ This document provides a comprehensive overview of the current features and tech
 *   **Direct Management:** One-click assignment and status updates for handling facility repairs.
 
 ### 7. Digital Lease Management
-*   **Dashboard-Centric Tracking:** Real-time monitoring of lease progress and upcoming expiry dates.
-*   **Signature Capture:** Integrated digital signature modal for paperless lease signing and document verification.
+*   **Live Dashboard-Centric Tracking:** Real-time monitoring of active lease progress, visually charting days remaining, start/end dates, and calculating renewal eligibility windows dynamically from the database.
+*   **Smart Document Vault:** Centralized access to master agreements, move-in condition reports, and amendments with accurate verified/signed status tracking mapped directly to backend records.
+*   **Integrated Landlord Connectivity:** One-click capabilities to message or directly call the assigned property manager associated with the active lease.
 
 ### 8. Financial Operations & GCash Integration
 *   **Automated Billing:** Generates comprehensive digital invoices covering base rent and estimated utility (water/electricity) consumption.
