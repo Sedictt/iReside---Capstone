@@ -39,6 +39,7 @@ import {
     createOrGetDirectConversation,
     fetchConversationMessages,
     fetchConversations,
+    fetchConversationPaymentHistory,
     markConversationAsRead,
     searchMessageUsers,
     sendConversationMessage,
@@ -46,6 +47,7 @@ import {
     type ConversationMessage,
     type ConversationSummary,
     type MessageUserSearchResult,
+    type PaymentHistoryEntry,
 } from "@/lib/messages/client";
 
 type ContactItem = {
@@ -246,6 +248,10 @@ export default function MessagesPage() {
     const [showFilesSidebar, setShowFilesSidebar] = useState(false);
     const [fileFilter, setFileFilter] = useState("all");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+    const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
+    const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
+    const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
+    const [paymentHistoryError, setPaymentHistoryError] = useState<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [conversationsError, setConversationsError] = useState<string | null>(null);
     const [messagesError, setMessagesError] = useState<string | null>(null);
@@ -278,6 +284,7 @@ export default function MessagesPage() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const dragDepthRef = useRef(0);
     const messagesCacheRef = useRef<Map<string, UiMessage[]>>(new Map());
+    const paymentHistoryCacheRef = useRef<Map<string, { payments: PaymentHistoryEntry[]; totalPaid: number }>>(new Map());
     const activeConversationIdRef = useRef<string | null>(conversationFromUrl);
 
     useEffect(() => {
@@ -467,6 +474,45 @@ export default function MessagesPage() {
             setShowPaymentHistoryModal(false);
         }
     }, [canShowPaymentHistory, showPaymentHistoryModal]);
+
+    const loadPaymentHistory = useCallback(async (conversationId: string) => {
+        const cached = paymentHistoryCacheRef.current.get(conversationId);
+        if (cached) {
+            setPaymentHistory(cached.payments);
+            setPaymentHistoryTotal(cached.totalPaid);
+            return;
+        }
+
+        setPaymentHistoryLoading(true);
+        setPaymentHistoryError(null);
+
+        try {
+            const { data, error } = await fetchConversationPaymentHistory(conversationId, 50);
+            if (error) {
+                setPaymentHistoryError(error);
+            }
+            paymentHistoryCacheRef.current.set(conversationId, data);
+            setPaymentHistory(data.payments);
+            setPaymentHistoryTotal(data.totalPaid);
+        } finally {
+            setPaymentHistoryLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!activeConversationId || !canShowPaymentHistory) {
+            setPaymentHistory([]);
+            setPaymentHistoryTotal(0);
+            setPaymentHistoryError(null);
+            return;
+        }
+
+        if (!showInfoSidebar && !showPaymentHistoryModal) {
+            return;
+        }
+
+        void loadPaymentHistory(activeConversationId);
+    }, [activeConversationId, canShowPaymentHistory, loadPaymentHistory, showInfoSidebar, showPaymentHistoryModal]);
 
     useEffect(() => {
         if (!activeConversationId) {
@@ -671,6 +717,13 @@ export default function MessagesPage() {
         if (bytes < 1024) return `${bytes} B`;
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const formatAmount = (value: number | null) => {
+        if (!Number.isFinite(value ?? NaN)) return "0";
+        return new Intl.NumberFormat("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(
+            Number(value)
+        );
     };
 
     const sharedFiles = useMemo<SharedFileItem[]>(() => {
@@ -2115,60 +2168,79 @@ export default function MessagesPage() {
 
                         {/* Payment History Section */}
                         {canShowPaymentHistory && (
-                        <div className="pb-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
-                                    <History className="w-4 h-4 text-primary" /> Payment History
-                                </h4>
-                                <button
-                                    onClick={() => setShowPaymentHistoryModal(true)}
-                                    className="text-[10px] uppercase font-bold text-neutral-500 cursor-pointer hover:text-white transition-colors"
-                                >
-                                    View All
-                                </button>
+                            <div className="pb-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                        <History className="w-4 h-4 text-primary" /> Payment History
+                                    </h4>
+                                    <button
+                                        onClick={() => setShowPaymentHistoryModal(true)}
+                                        className="text-[10px] uppercase font-bold text-neutral-500 cursor-pointer hover:text-white transition-colors"
+                                    >
+                                        View All
+                                    </button>
+                                </div>
+                                {paymentHistoryLoading ? (
+                                    <p className="text-xs text-neutral-500">Loading payment history...</p>
+                                ) : paymentHistoryError ? (
+                                    <p className="text-xs text-red-300">{paymentHistoryError}</p>
+                                ) : paymentHistory.length === 0 ? (
+                                    <p className="text-xs text-neutral-500">No payment history yet.</p>
+                                ) : (
+                                    <div className="flex flex-col gap-3 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/5 before:to-transparent">
+                                        {paymentHistory.slice(0, 3).map((payment) => {
+                                            const isPaid = payment.statusTone === "paid";
+
+                                            return (
+                                                <div key={payment.id} className="relative flex items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div
+                                                            className={cn(
+                                                                "h-5 w-5 rounded-full bg-neutral-900 border-2 flex items-center justify-center relative z-10",
+                                                                isPaid
+                                                                    ? "border-white/20"
+                                                                    : "border-primary shadow-[0_0_10px_rgba(200,255,0,0.2)]"
+                                                            )}
+                                                        >
+                                                            {isPaid ? (
+                                                                <CheckCircle2 className="w-3 h-3 text-neutral-400" />
+                                                            ) : (
+                                                                <div className="h-1.5 w-1.5 bg-primary rounded-full"></div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span
+                                                                className={cn(
+                                                                    "text-[11px] font-bold",
+                                                                    isPaid ? "text-neutral-300" : "text-white"
+                                                                )}
+                                                            >
+                                                                {payment.monthLabel} {payment.typeLabel}
+                                                            </span>
+                                                            <span
+                                                                className={cn(
+                                                                    "text-[10px]",
+                                                                    isPaid ? "text-neutral-500" : "text-primary"
+                                                                )}
+                                                            >
+                                                                {isPaid ? payment.dateLabel : payment.statusLabel}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <span
+                                                        className={cn(
+                                                            "text-xs font-bold",
+                                                            isPaid ? "text-neutral-400" : "text-white"
+                                                        )}
+                                                    >
+                                                        ₱{formatAmount(payment.amount)}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-3 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/5 before:to-transparent">
-
-                                <div className="relative flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-5 w-5 rounded-full bg-neutral-900 border-2 border-primary flex items-center justify-center relative z-10 shadow-[0_0_10px_rgba(200,255,0,0.2)]">
-                                            <div className="h-1.5 w-1.5 bg-primary rounded-full"></div>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-white">February Rent</span>
-                                            <span className="text-[10px] text-primary">Pending Verification</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-bold text-white">₱13,000</span>
-                                </div>
-
-                                <div className="relative flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-5 w-5 rounded-full bg-neutral-900 border-2 border-white/20 flex items-center justify-center relative z-10">
-                                            <CheckCircle2 className="w-3 h-3 text-neutral-400" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-neutral-300">January Rent</span>
-                                            <span className="text-[10px] text-neutral-500">Jan 1, 2026</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-bold text-neutral-400">₱13,000</span>
-                                </div>
-
-                                <div className="relative flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-5 w-5 rounded-full bg-neutral-900 border-2 border-white/20 flex items-center justify-center relative z-10">
-                                            <CheckCircle2 className="w-3 h-3 text-neutral-400" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[11px] font-bold text-neutral-300">Security Deposit</span>
-                                            <span className="text-[10px] text-neutral-500">Dec 28, 2025</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-bold text-neutral-400">₱26,000</span>
-                                </div>
-                            </div>
-                        </div>
                         )}
                     </div>
                 </div>
@@ -2339,42 +2411,51 @@ export default function MessagesPage() {
                         {/* Modal Body - Detailed List */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="space-y-4">
-                                {[
-                                    { month: "February 2026", type: "Rent", amount: "13,000", status: "Pending Verification", date: "Feb 28, 2026", method: "GCash" },
-                                    { month: "January 2026", type: "Rent", amount: "13,000", status: "Paid", date: "Jan 1, 2026", method: "GCash" },
-                                    { month: "December 2025", type: "Security Deposit", amount: "26,000", status: "Paid", date: "Dec 28, 2025", method: "Bank Transfer" },
-                                    { month: "December 2025", type: "Rent", amount: "13,000", status: "Paid", date: "Dec 2, 2025", method: "GCash" },
-                                    { month: "November 2025", type: "Rent", amount: "13,000", status: "Paid", date: "Nov 3, 2025", method: "GCash" },
-                                    { month: "October 2025", type: "Rent", amount: "13,000", status: "Paid", date: "Oct 1, 2025", method: "GCash" },
-                                ].map((payment, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.05] transition-all group">
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                "p-2 rounded-xl border",
-                                                payment.status === "Paid" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-primary/10 border-primary/20 text-primary"
-                                            )}>
-                                                <CreditCard className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{payment.month}</span>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-semibold">{payment.type} via {payment.method}</span>
-                                                    <span className="w-1 h-1 rounded-full bg-neutral-700"></span>
-                                                    <span className="text-[10px] text-neutral-500">{payment.date}</span>
+                                {paymentHistoryLoading ? (
+                                    <p className="text-xs text-neutral-500">Loading payment history...</p>
+                                ) : paymentHistoryError ? (
+                                    <p className="text-xs text-red-300">{paymentHistoryError}</p>
+                                ) : paymentHistory.length === 0 ? (
+                                    <p className="text-xs text-neutral-500">No payment history yet.</p>
+                                ) : (
+                                    paymentHistory.map((payment) => {
+                                        const isPaid = payment.statusTone === "paid";
+
+                                        return (
+                                            <div key={payment.id} className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.05] transition-all group">
+                                                <div className="flex items-center gap-4">
+                                                    <div
+                                                        className={cn(
+                                                            "p-2 rounded-xl border",
+                                                            isPaid ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-primary/10 border-primary/20 text-primary"
+                                                        )}
+                                                    >
+                                                        <CreditCard className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{payment.monthLabel}</span>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-semibold">{payment.typeLabel} via {payment.methodLabel}</span>
+                                                            <span className="w-1 h-1 rounded-full bg-neutral-700"></span>
+                                                            <span className="text-[10px] text-neutral-500">{payment.dateLabel}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right flex flex-col items-end">
+                                                    <span className="text-base font-black text-white">₱{formatAmount(payment.amount)}</span>
+                                                    <span
+                                                        className={cn(
+                                                            "text-[10px] font-bold px-2 py-0.5 rounded-full mt-1",
+                                                            isPaid ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary"
+                                                        )}
+                                                    >
+                                                        {payment.statusLabel}
+                                                    </span>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="text-right flex flex-col items-end">
-                                            <span className="text-base font-black text-white">₱{payment.amount}</span>
-                                            <span className={cn(
-                                                "text-[10px] font-bold px-2 py-0.5 rounded-full mt-1",
-                                                payment.status === "Paid" ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary"
-                                            )}>
-                                                {payment.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
 
@@ -2382,7 +2463,7 @@ export default function MessagesPage() {
                         <div className="p-6 border-t border-white/5 bg-neutral-900/50 flex items-center justify-between">
                             <div className="flex flex-col">
                                 <span className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-0.5">Total Paid (Lifetime)</span>
-                                <span className="text-lg font-black text-white">₱91,000</span>
+                                <span className="text-lg font-black text-white">{paymentHistoryLoading ? "—" : `₱${formatAmount(paymentHistoryTotal)}`}</span>
                             </div>
                             <button
                                 disabled={isDownloading}
