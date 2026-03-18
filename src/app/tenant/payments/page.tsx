@@ -15,7 +15,8 @@ import {
     RefreshCw,
     Loader2,
     Zap,
-    XCircle
+    XCircle,
+    FileText
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -261,24 +262,6 @@ export default function PaymentsPage() {
                         </div>
                     </div>
 
-                    {/* Auto-Pay Status */}
-                    <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/5 to-transparent p-6 backdrop-blur-sm relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/50 to-primary/50" />
-                        <div className="flex items-start gap-5">
-                            <div className="p-3.5 rounded-2xl bg-white/10 text-white/60 group-hover:text-white transition-colors border border-white/10">
-                                <RefreshCw className="w-5 h-5 pointer-events-none" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="font-black text-sm text-white tracking-tight">Auto-Pay Disconnected</h3>
-                                <p className="text-xs text-white/50 font-medium mt-1.5 leading-relaxed">
-                                    Securely link a payment method to automatically handle incoming invoices.
-                                </p>
-                                <button className="mt-4 text-[10px] font-black uppercase tracking-widest text-white border border-white/20 hover:bg-white hover:text-black py-2 px-4 rounded-xl transition-all">
-                                    Configure Connection
-                                </button>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
             </div>
