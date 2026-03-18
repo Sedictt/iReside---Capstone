@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
     X,
@@ -10,25 +10,32 @@ import {
     Wrench,
     CheckCircle2,
     MoreVertical,
-    UserCircle2,
     ArrowRight,
     MapPin,
     Building,
     MessageSquare,
     PhoneCall,
-    ChefHat, // Close enough to icon for contractor
     ChevronLeft,
     ChevronRight
 } from "lucide-react";
+import type { MaintenanceRequest } from "./MaintenanceDashboard";
+
+const FALLBACK_AVATAR =
+    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
 interface MaintenanceRequestModalProps {
     isOpen: boolean;
     onClose: () => void;
-    request: any; // We'll type this properly in real life based on the dashboard
+    request: MaintenanceRequest | null;
 }
 
 export function MaintenanceRequestModal({ isOpen, onClose, request }: MaintenanceRequestModalProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        if (!request) return;
+        setCurrentImageIndex(0);
+    }, [request?.id]);
 
     if (!isOpen || !request) return null;
 
@@ -190,7 +197,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request }: Maintenanc
                             {/* Tenant */}
                             <div className="flex items-center justify-between bg-white/[0.02] border border-white/5 rounded-2xl p-3">
                                 <div className="flex items-center gap-3">
-                                    <img src={request.tenantAvatar} alt={request.tenant} className="w-10 h-10 rounded-full border border-white/10" />
+                                    <img
+                                        src={request.tenantAvatar || FALLBACK_AVATAR}
+                                        alt={request.tenant}
+                                        className="w-10 h-10 rounded-full border border-white/10"
+                                    />
                                     <div>
                                         <span className="text-[10px] font-bold text-neutral-500 uppercase">Tenant</span>
                                         <p className="text-sm font-bold text-white leading-tight">{request.tenant}</p>
@@ -263,4 +274,3 @@ export function MaintenanceRequestModal({ isOpen, onClose, request }: Maintenanc
         </div>
     );
 }
-

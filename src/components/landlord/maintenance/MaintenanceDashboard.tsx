@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
     Wrench,
@@ -17,18 +17,19 @@ import {
     ArrowRight,
     Image as ImageIcon
 } from "lucide-react";
+import { MaintenanceRequestModal } from "./MaintenanceRequestModal";
 
 type Priority = "Critical" | "High" | "Medium" | "Low";
 type Status = "Pending" | "Assigned" | "In Progress" | "Resolved";
 
-interface MaintenanceRequest {
+export interface MaintenanceRequest {
     id: string;
     title: string;
     description: string;
     property: string;
     unit: string;
     tenant: string;
-    tenantAvatar: string;
+    tenantAvatar: string | null;
     priority: Priority;
     status: Status;
     reportedAt: string;
@@ -37,72 +38,92 @@ interface MaintenanceRequest {
     images: string[];
 }
 
-const MOCK_REQUESTS: MaintenanceRequest[] = [
-    {
-        id: "REQ-2041",
-        title: "Water leak in master bathroom",
-        description: "There's a constant dripping from the ceiling above the shower. It started yesterday and seems to be getting worse.",
-        property: "The Azure Residences",
-        unit: "PH-02",
-        tenant: "Elena Rodriguez",
-        tenantAvatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80",
-        priority: "Critical",
-        status: "Pending",
-        reportedAt: "2 hours ago",
-        images: ["https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80"]
-    },
-    {
-        id: "REQ-2038",
-        title: "HVAC System Malfunction",
-        description: "The AC unit is blowing warm air even when set to 18°C. Makes a loud rattling noise when starting up.",
-        property: "Lumina Towers",
-        unit: "Unit 1405",
-        tenant: "Marcus Johnson",
-        tenantAvatar: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&w=150&q=80",
-        priority: "High",
-        status: "Assigned",
-        assignee: "Apex Cooling Systems",
-        reportedAt: "Yesterday",
-        images: ["https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80"]
-    },
-    {
-        id: "REQ-2035",
-        title: "Broken Kitchen Cabinet Hinge",
-        description: "One of the overhead cabinet doors is sagging and won't close properly. Needs a new hinge mechanism.",
-        property: "The Azure Residences",
-        unit: "Unit 812",
-        tenant: "David Chen",
-        tenantAvatar: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=150&q=80",
-        priority: "Medium",
-        status: "In Progress",
-        assignee: "Mike's Handyman",
-        scheduledFor: "Today, 2:00 PM",
-        reportedAt: "3 days ago",
-        images: ["https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=800&q=80"]
-    },
-    {
-        id: "REQ-2029",
-        title: "Flickering hallway lights",
-        description: "The recessed lights in the main hallway flicker randomly, especially in the evening.",
-        property: "Horizon Suites",
-        unit: "Unit 401",
-        tenant: "Sarah Wilson",
-        tenantAvatar: "https://images.unsplash.com/photo-1511044568932-338cba0ad803?auto=format&fit=crop&w=150&q=80",
-        priority: "Low",
-        status: "Resolved",
-        assignee: "Volt Electric",
-        reportedAt: "Last week",
-        images: ["https://images.unsplash.com/photo-1563720360172-67b8f3dce741?auto=format&fit=crop&w=800&q=80"]
-    }
-];
-
-import { MaintenanceRequestModal } from "./MaintenanceRequestModal";
+type MaintenanceMetrics = {
+    actionRequired: number;
+    inProgress: number;
+    scheduled: number;
+    resolvedThisMonth: number;
+};
 
 export function MaintenanceDashboard() {
     const [filter, setFilter] = useState<"All" | Status>("All");
+    const [searchQuery, setSearchQuery] = useState("");
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
+    const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+    const [metrics, setMetrics] = useState<MaintenanceMetrics>({
+        actionRequired: 0,
+        inProgress: 0,
+        scheduled: 0,
+        resolvedThisMonth: 0,
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const filteredRequests = MOCK_REQUESTS.filter(req => filter === "All" || req.status === filter);
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadRequests = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const response = await fetch("/api/landlord/maintenance", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load maintenance requests");
+                }
+
+                const payload = (await response.json()) as {
+                    requests?: MaintenanceRequest[];
+                    metrics?: MaintenanceMetrics;
+                };
+
+                setRequests(Array.isArray(payload.requests) ? payload.requests : []);
+                if (payload.metrics) {
+                    setMetrics(payload.metrics);
+                }
+            } catch (fetchError) {
+                if ((fetchError as Error).name === "AbortError") {
+                    return;
+                }
+
+                setError("Unable to load maintenance requests right now.");
+                setRequests([]);
+                setMetrics({
+                    actionRequired: 0,
+                    inProgress: 0,
+                    scheduled: 0,
+                    resolvedThisMonth: 0,
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void loadRequests();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const filteredRequests = requests.filter((req) => {
+        const matchesStatus = filter === "All" || req.status === filter;
+        if (!normalizedSearch) {
+            return matchesStatus;
+        }
+
+        const haystack = [req.id, req.tenant, req.unit, req.property, req.title]
+            .filter((value) => typeof value === "string")
+            .join(" ")
+            .toLowerCase();
+
+        return matchesStatus && haystack.includes(normalizedSearch);
+    });
 
     return (
         <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar relative">
@@ -127,7 +148,7 @@ export function MaintenanceDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Action Required"
-                    value="4"
+                    value={loading ? "..." : metrics.actionRequired.toLocaleString()}
                     subtitle="Pending requests"
                     icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
                     glowColor="rgba(239,68,68,0.15)"
@@ -135,7 +156,7 @@ export function MaintenanceDashboard() {
                 />
                 <StatCard
                     title="In Progress"
-                    value="12"
+                    value={loading ? "..." : metrics.inProgress.toLocaleString()}
                     subtitle="Active work orders"
                     icon={<Hammer className="h-5 w-5 text-amber-500" />}
                     glowColor="rgba(245,158,11,0.15)"
@@ -143,7 +164,7 @@ export function MaintenanceDashboard() {
                 />
                 <StatCard
                     title="Scheduled"
-                    value="8"
+                    value={loading ? "..." : metrics.scheduled.toLocaleString()}
                     subtitle="Upcoming visits"
                     icon={<Clock className="h-5 w-5 text-cyan-500" />}
                     glowColor="rgba(6,182,212,0.15)"
@@ -151,7 +172,7 @@ export function MaintenanceDashboard() {
                 />
                 <StatCard
                     title="Resolved"
-                    value="142"
+                    value={loading ? "..." : metrics.resolvedThisMonth.toLocaleString()}
                     subtitle="Completed this month"
                     icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
                     glowColor="rgba(16,185,129,0.15)"
@@ -186,6 +207,8 @@ export function MaintenanceDashboard() {
                             <input
                                 type="text"
                                 placeholder="Search by ID, tenant or unit..."
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
                                 className="w-full bg-neutral-950 border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
                             />
                         </div>
@@ -197,27 +220,39 @@ export function MaintenanceDashboard() {
 
                 {/* Grid Format Request List */}
                 <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredRequests.map((request) => (
-                            <MaintenanceCard
-                                key={request.id}
-                                request={request}
-                                onClick={() => setSelectedRequest(request)}
-                            />
-                        ))}
+                    {loading ? (
+                        <div className="rounded-2xl border border-white/5 bg-neutral-950 p-6 text-sm text-neutral-400">
+                            Loading maintenance requests...
+                        </div>
+                    ) : error ? (
+                        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
+                            {error}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {filteredRequests.map((request) => (
+                                <MaintenanceCard
+                                    key={request.id}
+                                    request={request}
+                                    onClick={() => setSelectedRequest(request)}
+                                />
+                            ))}
 
-                        {filteredRequests.length === 0 && (
-                            <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 py-20 flex flex-col items-center justify-center text-center">
-                                <div className="w-20 h-20 bg-neutral-800 rounded-full flex items-center justify-center mb-4">
-                                    <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                            {filteredRequests.length === 0 && (
+                                <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 py-20 flex flex-col items-center justify-center text-center">
+                                    <div className="w-20 h-20 bg-neutral-800 rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">
+                                        No {filter !== "All" ? filter.toLowerCase() : ""} requests
+                                    </h3>
+                                    <p className="text-neutral-400 text-sm max-w-sm">
+                                        You're all caught up! Everything is running smoothly across your properties.
+                                    </p>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">No {filter !== "All" ? filter.toLowerCase() : ""} requests</h3>
-                                <p className="text-neutral-400 text-sm max-w-sm">
-                                    You're all caught up! Everything is running smoothly across your properties.
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 

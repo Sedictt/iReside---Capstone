@@ -59,6 +59,22 @@ export type UploadedConversationFile = {
     };
 };
 
+export type PaymentHistoryEntry = {
+    id: string;
+    amount: number;
+    statusLabel: string;
+    statusTone: "paid" | "pending" | "failed" | "refunded";
+    methodLabel: string;
+    typeLabel: string;
+    monthLabel: string;
+    dateLabel: string;
+};
+
+export type PaymentHistoryPayload = {
+    payments: PaymentHistoryEntry[];
+    totalPaid: number;
+};
+
 const IMAGE_MAX_DIMENSION = 1600;
 const IMAGE_OUTPUT_QUALITY = 0.82;
 
@@ -164,6 +180,21 @@ const buildListFetchErrorMessage = (entity: "conversations" | "messages", status
         return `Unable to load ${entity} right now. Please try again shortly.${detailSuffix}`;
     }
     return `Unable to load ${entity} right now.${detailSuffix}`;
+};
+
+const buildPaymentHistoryErrorMessage = (status: number, detail = "") => {
+    const detailSuffix = detail ? ` (${detail})` : "";
+
+    if (status === 401) {
+        return "Your session expired. Please sign in again.";
+    }
+    if (status === 403) {
+        return "You do not have access to this payment history.";
+    }
+    if (status >= 500) {
+        return `Unable to load payment history right now. Please try again shortly.${detailSuffix}`;
+    }
+    return `Unable to load payment history right now.${detailSuffix}`;
 };
 
 export const fetchConversations = async () => {
@@ -402,4 +433,37 @@ export const createOrGetDirectConversation = async (participantId: string) => {
     }
 
     return payload.conversationId;
+};
+
+export const fetchConversationPaymentHistory = async (conversationId: string, limit = 50) => {
+    try {
+        const response = await fetch(`/api/messages/conversations/${conversationId}/payments?limit=${limit}`, {
+            method: "GET",
+            cache: "no-store",
+        });
+
+        if (!response.ok) {
+            const detail = await parseErrorDetail(response);
+            console.warn("Failed to fetch payment history", { conversationId, status: response.status, detail });
+            return {
+                data: { payments: [], totalPaid: 0 },
+                error: buildPaymentHistoryErrorMessage(response.status, detail),
+            } satisfies ListFetchResult<PaymentHistoryPayload>;
+        }
+
+        const payload = (await response.json()) as PaymentHistoryPayload;
+        return {
+            data: {
+                payments: payload.payments ?? [],
+                totalPaid: payload.totalPaid ?? 0,
+            },
+            error: null,
+        } satisfies ListFetchResult<PaymentHistoryPayload>;
+    } catch {
+        console.warn("Failed to fetch payment history due to a network or parsing issue.", { conversationId });
+        return {
+            data: { payments: [], totalPaid: 0 },
+            error: "Unable to load payment history right now. Please check your connection and try again.",
+        } satisfies ListFetchResult<PaymentHistoryPayload>;
+    }
 };
