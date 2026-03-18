@@ -273,8 +273,16 @@ export const sendConversationMessage = async (
         }),
     });
 
-    if (!response.ok) {
+        if (!response.ok) {
         const detail = await response.text().catch(() => "");
+        try {
+            const parsed = JSON.parse(detail);
+            if (parsed && typeof parsed === "object" && typeof parsed.error === "string") {
+                throw new Error(parsed.error);
+            }
+        } catch {
+            // parse err
+        }
         throw new Error(`Failed to send message. Status: ${response.status}. ${detail}`);
     }
 
