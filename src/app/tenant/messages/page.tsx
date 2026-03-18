@@ -93,6 +93,7 @@ type UiMessage = {
     date?: string;
     description?: string;
     status?: OutboundStatus;
+    isPhishing?: boolean;
 };
 
 const IRIS_CONTACT: ContactItem = {
@@ -961,6 +962,7 @@ export default function TenantMessagesPage() {
             ]);
 
             let isSensitive = false;
+            let isPhishing = false;
             let redactedMessage = textMessage;
 
             try {
@@ -975,6 +977,7 @@ export default function TenantMessagesPage() {
                 if (response.ok) {
                     const data = await response.json();
                     isSensitive = !!data.isSensitive;
+                    isPhishing = !!data.isPhishing;
                     redactedMessage = typeof data.redactedMessage === 'string' ? data.redactedMessage : textMessage;
                 } else {
                     const fallback = fallbackRedact(textMessage);
@@ -992,6 +995,7 @@ export default function TenantMessagesPage() {
                     isRedacted: isSensitive,
                     redactedContent: redactedMessage,
                     isConfirmedDisclosed: false,
+                    isPhishing,
                 });
 
                 setMessagesState((prev) =>
@@ -1006,6 +1010,7 @@ export default function TenantMessagesPage() {
                                 createdAt: created.createdAt,
                                 messageType: created.type,
                                 isRedacted: isSensitive,
+                                isPhishing: isPhishing,
                                 isConfirmedDisclosed: false,
                                 status: "sent",
                             }
@@ -1945,13 +1950,22 @@ export default function TenantMessagesPage() {
 
                                             {msg.isRedacted && !msg.isConfirmedDisclosed && (
                                                 <div className="w-full flex justify-center mt-2 mb-4">
-                                                    <div className="max-w-[75%] sm:max-w-[60%] text-[11px] text-neutral-300 bg-neutral-900/60 p-4 rounded-3xl border border-amber-500/20 backdrop-blur-md shadow-lg shadow-amber-500/5 text-center">
+                                                    <div className={cn(
+                                                        "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
+                                                        msg.isPhishing 
+                                                            ? "text-red-300 bg-red-900/40 border-red-500/40 shadow-red-500/10" 
+                                                            : "text-neutral-300 bg-neutral-900/60 border-amber-500/20 shadow-amber-500/5"
+                                                    )}>
                                                         <div className="flex items-center justify-center gap-1.5 mb-2">
-                                                            <AlertTriangle className="w-4 h-4 text-amber-500" />
-                                                            <strong className="text-amber-500 text-xs">Iris AI Intercepted</strong>
+                                                            <AlertTriangle className={cn("w-4 h-4", msg.isPhishing ? "text-red-500" : "text-amber-500")} />
+                                                            <strong className={cn("text-xs", msg.isPhishing ? "text-red-500" : "text-amber-500")}>
+                                                                {msg.isPhishing ? "Malicious Content Detected" : "Iris AI Intercepted"}
+                                                            </strong>
                                                         </div>
                                                         <p className="leading-relaxed opacity-90 text-neutral-400">
-                                                            This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions).
+                                                            {msg.isPhishing 
+                                                                ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
+                                                                : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
                                                         </p>
                                                         <div className="mt-4 flex items-center justify-center">
                                                             <button

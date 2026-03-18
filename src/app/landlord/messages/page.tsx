@@ -91,6 +91,7 @@ type UiMessage = {
     date?: string;
     description?: string;
     status?: OutboundStatus;
+    isPhishing?: boolean;
 };
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
@@ -1979,13 +1980,22 @@ export default function MessagesPage() {
 
                                     {msg.isRedacted && !msg.isConfirmedDisclosed && (
                                         <div className="w-full flex justify-center mt-2 mb-4">
-                                            <div className="max-w-[75%] sm:max-w-[60%] text-[11px] text-neutral-300 bg-neutral-900/60 p-4 rounded-3xl border border-amber-500/20 backdrop-blur-md shadow-lg shadow-amber-500/5 text-center">
+                                            <div className={cn(
+                                                "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
+                                                msg.isPhishing 
+                                                    ? "text-red-300 bg-red-900/40 border-red-500/40 shadow-red-500/10" 
+                                                    : "text-neutral-300 bg-neutral-900/60 border-amber-500/20 shadow-amber-500/5"
+                                            )}>
                                                 <div className="flex items-center justify-center gap-1.5 mb-2">
-                                                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                                                    <strong className="text-amber-500 text-xs">Iris AI Intercepted</strong>
+                                                    <AlertTriangle className={cn("w-4 h-4", msg.isPhishing ? "text-red-500" : "text-amber-500")} />
+                                                    <strong className={cn("text-xs", msg.isPhishing ? "text-red-500" : "text-amber-500")}>
+                                                        {msg.isPhishing ? "Malicious Content Detected" : "Iris AI Intercepted"}
+                                                    </strong>
                                                 </div>
                                                 <p className="leading-relaxed opacity-90 text-neutral-400">
-                                                    This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions).
+                                                    {msg.isPhishing 
+                                                        ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
+                                                        : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
                                                 </p>
                                                 <div className="mt-4 flex items-center justify-center">
                                                     <button
