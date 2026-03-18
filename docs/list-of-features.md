@@ -60,7 +60,16 @@ This document provides a comprehensive overview of the current features and tech
 
 ---
 
-## V. Technical Stack
+## V. Intelligent Tenant Lifecycle & Discovery
+
+### 11. Tenant Application Tracking
+*   **Live Backend Integration:** Fetch real-time application status directly from the Supabase database via dedicated REST endpoints.
+*   **Dynamic Status Mapping:** Transforms internal database states (e.g., 'reviewing', 'approved') into rich UI progress indicators and informative UX prompts.
+*   **Vaulted Properties & Timeline:** Provides prospective tenants with a unified view of saved properties and a chronological timeline of application events.
+
+---
+
+## VI. Technical Stack
 *   **Core:** Next.js (App Router), TypeScript, Tailwind CSS
 *   **Database & Realtime:** Supabase (PostgreSQL, RLS)
 *   **AI Engine:** Groq (Llama 3 / 3.1)
