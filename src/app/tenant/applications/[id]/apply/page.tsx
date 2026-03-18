@@ -46,12 +46,17 @@ export default function RentApplicationPage() {
     const [formData, setFormData] = useState({
         firstName: "Jane",
         lastName: "Cooper",
+        middleName: "",
         email: "jane.cooper@example.com",
         phone: "+63 912 345 6789",
         currentAddress: "123 Maple Street, Quezon City",
+        emergencyContactName: "",
+        emergencyContactPhone: "",
         occupation: "Senior UX Designer",
         employer: "Creative Tech Solutions",
         monthlyIncome: "85000",
+        referenceName: "",
+        referencePhone: "",
         moveInDate: "2024-03-15",
         leaseTerm: "12 months",
         unit: "Unit 201 (2nd Floor)",
@@ -319,10 +324,25 @@ export default function RentApplicationPage() {
                                     {currentStep === 1 && (
                                         <div className="flex flex-col gap-6">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                                <div className="md:col-span-2 p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
+                                                    <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                                    <p className="text-[10px] text-white/60 leading-relaxed uppercase tracking-wider font-bold">
+                                                        Note: Name must exactly match the name on the lease contract and government-issued ID.
+                                                    </p>
+                                                </div>
                                                 <FormField label="First Name" value={formData.firstName} onChange={(v: string) => setFormData({ ...formData, firstName: v })} placeholder="e.g. Jane" />
                                                 <FormField label="Last Name" value={formData.lastName} onChange={(v: string) => setFormData({ ...formData, lastName: v })} placeholder="e.g. Cooper" />
                                                 <FormField label="Email" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} type="email" placeholder="email@example.com" />
                                                 <FormField label="Phone" value={formData.phone} onChange={(v: string) => setFormData({ ...formData, phone: v })} placeholder="+63 900 000 0000" />
+                                                <div className="md:col-span-2">
+                                                    <div className="flex items-center gap-2 mb-4">
+                                                        <div className="h-px flex-1 bg-white/10" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Emergency Contact</span>
+                                                        <div className="h-px flex-1 bg-white/10" />
+                                                    </div>
+                                                </div>
+                                                <FormField label="Contact Person" value={formData.emergencyContactName} onChange={(v: string) => setFormData({ ...formData, emergencyContactName: v })} placeholder="Full Name" />
+                                                <FormField label="Contact Phone" value={formData.emergencyContactPhone} onChange={(v: string) => setFormData({ ...formData, emergencyContactPhone: v })} placeholder="Mobile Number" />
                                                 <div className="md:col-span-2">
                                                     <FormField label="Desired Move-in" value={formData.moveInDate} onChange={(v: string) => setFormData({ ...formData, moveInDate: v })} type="date" />
                                                 </div>
@@ -350,13 +370,26 @@ export default function RentApplicationPage() {
                                             </div>
                                             <FormField label="Company Name" value={formData.employer} onChange={(v: string) => setFormData({ ...formData, employer: v })} placeholder="e.g. Apple Inc." />
                                             <FormField label="Monthly Gross (₱)" value={formData.monthlyIncome} onChange={(v: string) => setFormData({ ...formData, monthlyIncome: v })} type="number" placeholder="0.00" />
+                                            
+                                            <div className="md:col-span-2">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="h-px flex-1 bg-white/10" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 whitespace-nowrap">Background Reference (Mandatory)</span>
+                                                    <div className="h-px flex-1 bg-white/10" />
+                                                </div>
+                                                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-2 text-center opacity-60">
+                                                    To avoid future problems and unpaid rent — References will be contacted, this is mandatory.
+                                                </p>
+                                            </div>
+                                            <FormField label="Reference Person" value={formData.referenceName} onChange={(v: string) => setFormData({ ...formData, referenceName: v })} placeholder="Employer or Previous Landlord" />
+                                            <FormField label="Reference Contact" value={formData.referencePhone} onChange={(v: string) => setFormData({ ...formData, referencePhone: v })} placeholder="Mobile Number" />
 
                                             <div className="md:col-span-2 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4 shadow-inner">
                                                 <Shield className="h-6 w-6 text-blue-400 shrink-0 mt-0.5" />
                                                 <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-blue-400/90 tracking-tight">Your data is safe with us</p>
+                                                    <p className="text-sm font-bold text-blue-400/90 tracking-tight">Source of Income Verification</p>
                                                     <p className="text-xs text-blue-300/60 leading-relaxed font-medium">
-                                                        We value your privacy. Your financial details are kept secure and are only shared with the landlord to process your application.
+                                                        To ensure stable and continuous rent payments. All financial details are strictly confidential.
                                                     </p>
                                                 </div>
                                             </div>
@@ -365,15 +398,15 @@ export default function RentApplicationPage() {
 
                                     {currentStep === 3 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <UploadCard title="Government ID" desc="Passport or Driver's License" required />
-                                            <UploadCard title="Proof of Income" desc="Latest 3 months of Payslips" required />
-                                            <UploadCard title="Credit History" desc="TransUnion or CIBI Report" />
-                                            <UploadCard title="Personal Logo/Avatar" desc="Optional for profile display" />
+                                            <UploadCard title="Government ID" desc="Any govt-issued ID (Name match is mandatory)" required />
+                                            <UploadCard title="Proof of Income" desc="COE, Latest Payslip, or Work Contract" required />
+                                            <UploadCard title="Background Check" desc="Consent for Reference Calls" required />
+                                            <UploadCard title="Move-in Photo/Video" desc="Initial unit condition records" required />
                                         </div>
                                     )}
 
                                     {currentStep === 4 && (
-                                        <div className="space-y-8 pb-4">
+                                        <div className="space-y-6 pb-4">
                                             {/* Summary Grid */}
                                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                                                 <SummaryItem label="Applicant" value={`${formData.firstName} ${formData.lastName}`} icon={User} />
@@ -381,28 +414,60 @@ export default function RentApplicationPage() {
                                                 <SummaryItem label="Planned Move" value={formData.moveInDate} icon={Calendar} />
                                             </div>
 
+                                            {/* Requirements Roadmap - Tenant View */}
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
+                                                    <span className="text-[8px] font-black bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {[
+                                                        { id: 1, label: "Valid Identification", desc: "Government ID / Exact Name Match" },
+                                                        { id: 2, label: "Source of Income", desc: "COE, Payslip, or Contract" },
+                                                        { id: 3, label: "Application Form", desc: "Completed all personal & job info" },
+                                                        { id: 4, label: "Background Checks", desc: "Employer & Reference Calls" },
+                                                        { id: 5, label: "Move-in Payments", desc: "1 month advance + 2 months deposit" },
+                                                        { id: 6, label: "Lease Signing", desc: "No signature, no key" },
+                                                        { id: 7, label: "Move-in Inspection", desc: "Photo/Video & Signed Checklist" },
+                                                    ].map((item) => (
+                                                        <div key={item.id} className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
+                                                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-black transition-all">
+                                                                <span className="text-[10px] font-black">{item.id}</span>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] font-bold text-white tracking-tight">{item.label}</p>
+                                                                <p className="text-[9px] text-white/30 font-medium leading-none mt-1">{item.desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
                                             {/* Compliance Notice */}
-                                            <div className="rounded-3xl bg-white/[0.03] border border-white/5 p-6 relative group hover:bg-white/[0.05] transition-all">
+                                            <div className="rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 p-6 relative group hover:bg-amber-500/[0.05] transition-all">
                                                 <div className="flex items-start gap-6">
-                                                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 shadow-lg">
-                                                        <Lock className="h-6 w-6 text-primary" />
+                                                    <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                                                        <Shield className="h-6 w-6 text-amber-500" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h4 className="text-white font-bold text-lg">Data Privacy & Consent</h4>
+                                                        <h4 className="text-white font-bold text-lg">Strict Acceptance Policy</h4>
                                                         <p className="text-white/40 text-sm leading-relaxed">
-                                                            I hereby declare that all information provided is accurate. I authorize iReside and the management of <span className="text-white font-medium">{property.name}</span> to conduct a standard credit background and employment verification.
+                                                            I acknowledge that completion of this form does not guarantee residency. Moving in requires <span className="text-amber-500 font-bold italic underline decoration-amber-500/30">Upfront Payment (1 Month Advance & 2 Months Security Deposit)</span>. 
+                                                            <br />
+                                                            <span className="text-red-400 font-bold text-xs">❌ No Installments. No "pay later" arrangements.</span>
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-4 p-5 rounded-[2rem] bg-primary/10 border border-primary/20">
-                                                <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0 shadow-lg">
-                                                    <CheckCircle2 className="h-6 w-6 text-primary" />
+                                            <div className="flex items-center gap-4 p-5 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20">
+                                                <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0 shadow-lg">
+                                                    <CheckCircle2 className="h-6 w-6 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Everything looks good!</h4>
-                                                    <p className="text-xs text-white/40 font-medium">Your application is complete and ready for the landlord's review.</p>
+                                                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Data Ready for Vault</h4>
+                                                    <p className="text-xs text-white/40 font-medium">By submitting, you agree to the background verification process.</p>
                                                 </div>
                                             </div>
                                         </div>

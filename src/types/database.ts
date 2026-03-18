@@ -467,6 +467,11 @@ export interface Database {
                     employment_status: string | null
                     move_in_date: string | null
                     documents: string[]
+                    emergency_contact_name: string | null
+                    emergency_contact_phone: string | null
+                    reference_name: string | null
+                    reference_phone: string | null
+                    compliance_checklist: Json | null
                     reviewed_at: string | null
                     created_at: string
                     updated_at: string
@@ -482,6 +487,11 @@ export interface Database {
                     employment_status?: string | null
                     move_in_date?: string | null
                     documents?: string[]
+                    emergency_contact_name?: string | null
+                    emergency_contact_phone?: string | null
+                    reference_name?: string | null
+                    reference_phone?: string | null
+                    compliance_checklist?: Json | null
                     reviewed_at?: string | null
                     created_at?: string
                     updated_at?: string
@@ -496,6 +506,11 @@ export interface Database {
                     employment_status?: string | null
                     move_in_date?: string | null
                     documents?: string[]
+                    emergency_contact_name?: string | null
+                    emergency_contact_phone?: string | null
+                    reference_name?: string | null
+                    reference_phone?: string | null
+                    compliance_checklist?: Json | null
                     reviewed_at?: string | null
                     updated_at?: string
                 }

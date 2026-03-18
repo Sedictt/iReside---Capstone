@@ -285,7 +285,40 @@ export default function PropertyDetailModal({ property, isLiked, onLike, open, o
                                                     ))}
                                                 </div>
                                             </div>
-
+                                            {/* Acceptance Requirements */}
+                                            <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                                                        <Shield className="h-4 w-4 text-primary" />
+                                                        Tenant Acceptance Requirements
+                                                    </h3>
+                                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest">Mandatory</span>
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    {[
+                                                        { label: "Valid Identification", desc: "Govt ID (Name must match match exactly)" },
+                                                        { label: "Source of Income Verification", desc: "COE, Payslip, or Work Contract" },
+                                                        { label: "Completed Application Form", desc: "Basic personal & job details" },
+                                                        { label: "Background / Reference Check", desc: "Employer or previous landlord check" },
+                                                        { label: "Move-in Payments (Upfront)", desc: "1mo Advance + 2mo Security Deposit" },
+                                                        { label: "Lease Contract Signing", desc: "No signature, no key" },
+                                                        { label: "Inspection & Turnover", desc: "Photo/Video & Signed Checklist" },
+                                                    ].map((req, i) => (
+                                                        <div key={i} className="flex items-start gap-3 group">
+                                                            <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0 group-hover:scale-125 transition-transform" />
+                                                            <div className="space-y-0.5">
+                                                                <p className="text-[11px] font-bold text-neutral-200">{req.label}</p>
+                                                                <p className="text-[10px] text-neutral-500 font-medium leading-tight">{req.desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="pt-2 border-t border-white/5">
+                                                    <p className="text-[10px] text-red-400 font-bold italic leading-relaxed">
+                                                        ❌ No installments. No "pay later" arrangements.
+                                                    </p>
+                                                </div>
+                                            </div>
 
                                             {/* Rules */}
                                             <div>

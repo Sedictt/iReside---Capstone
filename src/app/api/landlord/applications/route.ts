@@ -22,6 +22,23 @@ type ApplicationResponse = {
     submittedDate: string;
     notes: string | null;
     documents: string[];
+    emergencyContact?: {
+        name: string | null;
+        phone: string | null;
+    };
+    reference?: {
+        name: string | null;
+        contact: string | null;
+    };
+    complianceChecklist?: {
+        valid_id: boolean;
+        income_verified: boolean;
+        application_completed: boolean;
+        background_checked: boolean;
+        payment_received: boolean;
+        lease_signed: boolean;
+        inspection_done: boolean;
+    } | null;
 };
 
 const FALLBACK_PROPERTY_IMAGE =
@@ -45,7 +62,7 @@ export async function GET() {
     const { data: applicationRows, error: applicationsError } = await supabase
         .from("applications")
         .select(
-            "id, status, message, monthly_income, employment_status, move_in_date, documents, created_at, applicant_id, unit_id"
+            "id, status, message, monthly_income, employment_status, move_in_date, documents, created_at, applicant_id, unit_id, emergency_contact_name, emergency_contact_phone, reference_name, reference_phone, compliance_checklist"
         )
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
@@ -138,6 +155,15 @@ export async function GET() {
             documents: Array.isArray(row.documents)
                 ? row.documents.filter((doc): doc is string => isNonEmptyString(doc))
                 : [],
+            emergencyContact: {
+                name: row.emergency_contact_name ?? null,
+                phone: row.emergency_contact_phone ?? null,
+            },
+            reference: {
+                name: row.reference_name ?? null,
+                contact: row.reference_phone ?? null,
+            },
+            complianceChecklist: row.compliance_checklist as any,
         };
     });
 

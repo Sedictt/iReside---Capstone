@@ -54,6 +54,23 @@ interface RentApplication {
     submittedDate: string;
     notes?: string | null;
     documents: string[];
+    emergencyContact?: {
+        name: string | null;
+        phone: string | null;
+    };
+    reference?: {
+        name: string | null;
+        contact: string | null;
+    };
+    complianceChecklist?: {
+        valid_id: boolean;
+        income_verified: boolean;
+        application_completed: boolean;
+        background_checked: boolean;
+        payment_received: boolean;
+        lease_signed: boolean;
+        inspection_done: boolean;
+    };
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────
@@ -637,6 +654,80 @@ export function RentApplications() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Emergency Contact */}
+                                        {selectedApp.emergencyContact?.name && (
+                                            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-sm animate-pulse-slow">
+                                                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/60 leading-none block mb-1">Emergency Contact</span>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm font-black text-white">{selectedApp.emergencyContact.name}</span>
+                                                        <span className="text-[11px] font-bold text-neutral-400 tracking-tight">{selectedApp.emergencyContact.phone}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Reference Check */}
+                                        {selectedApp.reference?.name && (
+                                            <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-sm">
+                                                    <Shield className="h-5 w-5 text-blue-500" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-500/60 leading-none block mb-1">Background Reference</span>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm font-black text-white">{selectedApp.reference.name}</span>
+                                                        <span className="text-[11px] font-bold text-neutral-400 tracking-tight">{selectedApp.reference.contact}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Requirements Roadmap Checklist */}
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div className="flex items-center justify-between px-2">
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Requirements Roadmap</h4>
+                                        <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 tracking-widest">MANDATORY</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {[
+                                            { key: 'valid_id', label: '1. Valid Identification', desc: 'Any govt-issued ID (Name match is mandatory)' },
+                                            { key: 'income_verified', label: '2. Source of Income', desc: 'COE, Payslip, or Contract Verification' },
+                                            { key: 'application_completed', label: '3. Completed App Form', desc: 'Employment & Emergency Contact Details' },
+                                            { key: 'background_checked', label: '4. Background / Reference Check', desc: 'Mandatory verification — references will be reached' },
+                                            { key: 'payment_received', label: '5. Move-in Payments', desc: '1mo Advance + 2mo Deposit (No Installments)' },
+                                            { key: 'lease_signed', label: '6. Lease Contract Signing', desc: 'No signature, no key policy' },
+                                            { key: 'inspection_done', label: '7. Inspection & Turnover', desc: 'Photo/video documentation & signed checklist' },
+                                        ].map((req) => {
+                                            const isDone = (selectedApp.complianceChecklist as any)?.[req.key] || false;
+                                            return (
+                                                <div key={req.key} className={cn(
+                                                    "flex items-center gap-4 p-3 rounded-2xl border transition-all duration-300 group",
+                                                    isDone ? "bg-emerald-500/5 border-emerald-500/20" : "bg-neutral-900 border-white/5 opacity-50"
+                                                )}>
+                                                    <div className={cn(
+                                                        "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-500",
+                                                        isDone ? "bg-emerald-500 border-emerald-400 text-black shadow-[0_0_12px_rgba(16,185,129,0.3)]" : "bg-neutral-950 border-white/5 text-neutral-700"
+                                                    )}>
+                                                        {isDone ? <CheckCircle2 className="h-5 w-5" /> : <Shield className="h-4 w-4" />}
+                                                    </div>
+                                                    <div>
+                                                        <p className={cn("text-xs font-black tracking-tight", isDone ? "text-emerald-400" : "text-neutral-400")}>{req.label}</p>
+                                                        <p className="text-[10px] text-neutral-600 font-bold leading-tight mt-0.5">{req.desc}</p>
+                                                    </div>
+                                                    {isDone && (
+                                                        <div className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

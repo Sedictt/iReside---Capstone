@@ -31,6 +31,13 @@ CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
 
 
 
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA "public";
+
+
+
+
+
+
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
 
 
@@ -74,6 +81,35 @@ CREATE TYPE "public"."lease_status" AS ENUM (
 
 
 ALTER TYPE "public"."lease_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."listing_scope" AS ENUM (
+    'property',
+    'unit'
+);
+
+
+ALTER TYPE "public"."listing_scope" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."listing_status" AS ENUM (
+    'draft',
+    'published',
+    'paused'
+);
+
+
+ALTER TYPE "public"."listing_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."location_type" AS ENUM (
+    'city',
+    'barangay',
+    'street'
+);
+
+
+ALTER TYPE "public"."location_type" OWNER TO "postgres";
 
 
 CREATE TYPE "public"."maintenance_priority" AS ENUM (
@@ -247,6 +283,37 @@ $$;
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."increment_listing_metric"("p_listing_id" "uuid", "p_metric" "text") RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+DECLARE
+    updated_count integer := 0;
+BEGIN
+    IF p_metric = 'view' THEN
+        UPDATE public.listings
+        SET views = views + 1
+        WHERE id = p_listing_id
+          AND status = 'published'::public.listing_status;
+    ELSIF p_metric = 'lead' THEN
+        UPDATE public.listings
+        SET leads = leads + 1
+        WHERE id = p_listing_id
+          AND status = 'published'::public.listing_status;
+    ELSE
+        RAISE EXCEPTION 'Unknown listing metric: %', p_metric
+            USING ERRCODE = '22023';
+    END IF;
+
+    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    RETURN updated_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."increment_listing_metric"("p_listing_id" "uuid", "p_metric" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog'
@@ -335,6 +402,20 @@ CREATE TABLE IF NOT EXISTS "public"."conversations" (
 
 
 ALTER TABLE "public"."conversations" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."geo_locations" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "type" "public"."location_type" NOT NULL,
+    "city_name" "text",
+    "barangay_name" "text",
+    "full_label" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."geo_locations" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."iris_chat_messages" (
@@ -439,6 +520,27 @@ CREATE TABLE IF NOT EXISTS "public"."leases" (
 
 
 ALTER TABLE "public"."leases" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."listings" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "landlord_id" "uuid" NOT NULL,
+    "property_id" "uuid" NOT NULL,
+    "unit_id" "uuid",
+    "scope" "public"."listing_scope" NOT NULL,
+    "title" "text" NOT NULL,
+    "rent_amount" numeric(12,2) NOT NULL,
+    "status" "public"."listing_status" DEFAULT 'draft'::"public"."listing_status" NOT NULL,
+    "views" integer DEFAULT 0 NOT NULL,
+    "leads" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "listings_rent_amount_check" CHECK (("rent_amount" >= (0)::numeric)),
+    CONSTRAINT "listings_scope_unit_consistency" CHECK (((("scope" = 'property'::"public"."listing_scope") AND ("unit_id" IS NULL)) OR (("scope" = 'unit'::"public"."listing_scope") AND ("unit_id" IS NOT NULL))))
+);
+
+
+ALTER TABLE "public"."listings" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."maintenance_requests" (
@@ -608,7 +710,8 @@ CREATE TABLE IF NOT EXISTS "public"."properties" (
     "images" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
     "is_featured" boolean DEFAULT false NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "contract_template" "jsonb"
 );
 
 
@@ -659,6 +762,11 @@ ALTER TABLE ONLY "public"."conversations"
 
 
 
+ALTER TABLE ONLY "public"."geo_locations"
+    ADD CONSTRAINT "geo_locations_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."iris_chat_messages"
     ADD CONSTRAINT "iris_chat_messages_pkey" PRIMARY KEY ("id");
 
@@ -696,6 +804,11 @@ ALTER TABLE ONLY "public"."landlord_statistics_exports"
 
 ALTER TABLE ONLY "public"."leases"
     ADD CONSTRAINT "leases_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."listings"
+    ADD CONSTRAINT "listings_pkey" PRIMARY KEY ("id");
 
 
 
@@ -808,6 +921,18 @@ CREATE INDEX "idx_conv_participants_user" ON "public"."conversation_participants
 
 
 
+CREATE INDEX "idx_geo_locations_full_label_trgm" ON "public"."geo_locations" USING "gin" ("full_label" "public"."gin_trgm_ops");
+
+
+
+CREATE INDEX "idx_geo_locations_name_trgm" ON "public"."geo_locations" USING "gin" ("name" "public"."gin_trgm_ops");
+
+
+
+CREATE INDEX "idx_geo_locations_type" ON "public"."geo_locations" USING "btree" ("type");
+
+
+
 CREATE INDEX "idx_iris_chat_messages_user_created_at" ON "public"."iris_chat_messages" USING "btree" ("user_id", "created_at");
 
 
@@ -845,6 +970,22 @@ CREATE INDEX "idx_leases_tenant" ON "public"."leases" USING "btree" ("tenant_id"
 
 
 CREATE INDEX "idx_leases_unit" ON "public"."leases" USING "btree" ("unit_id");
+
+
+
+CREATE INDEX "idx_listings_landlord_created" ON "public"."listings" USING "btree" ("landlord_id", "created_at" DESC);
+
+
+
+CREATE INDEX "idx_listings_property" ON "public"."listings" USING "btree" ("property_id");
+
+
+
+CREATE INDEX "idx_listings_status" ON "public"."listings" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_listings_unit" ON "public"."listings" USING "btree" ("unit_id");
 
 
 
@@ -924,11 +1065,23 @@ CREATE INDEX "idx_payments_tenant" ON "public"."payments" USING "btree" ("tenant
 
 
 
+CREATE INDEX "idx_properties_address_trgm" ON "public"."properties" USING "gin" ("address" "public"."gin_trgm_ops");
+
+
+
 CREATE INDEX "idx_properties_city" ON "public"."properties" USING "btree" ("city");
 
 
 
+CREATE INDEX "idx_properties_city_trgm" ON "public"."properties" USING "gin" ("city" "public"."gin_trgm_ops");
+
+
+
 CREATE INDEX "idx_properties_landlord" ON "public"."properties" USING "btree" ("landlord_id");
+
+
+
+CREATE INDEX "idx_properties_name_trgm" ON "public"."properties" USING "gin" ("name" "public"."gin_trgm_ops");
 
 
 
@@ -965,6 +1118,10 @@ CREATE OR REPLACE TRIGGER "trg_conversations_updated_at" BEFORE UPDATE ON "publi
 
 
 CREATE OR REPLACE TRIGGER "trg_leases_updated_at" BEFORE UPDATE ON "public"."leases" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_listings_updated_at" BEFORE UPDATE ON "public"."listings" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at"();
 
 
 
@@ -1069,6 +1226,21 @@ ALTER TABLE ONLY "public"."leases"
 
 ALTER TABLE ONLY "public"."leases"
     ADD CONSTRAINT "leases_unit_id_fkey" FOREIGN KEY ("unit_id") REFERENCES "public"."units"("id") ON DELETE RESTRICT;
+
+
+
+ALTER TABLE ONLY "public"."listings"
+    ADD CONSTRAINT "listings_landlord_id_fkey" FOREIGN KEY ("landlord_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."listings"
+    ADD CONSTRAINT "listings_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."properties"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."listings"
+    ADD CONSTRAINT "listings_unit_id_fkey" FOREIGN KEY ("unit_id") REFERENCES "public"."units"("id") ON DELETE CASCADE;
 
 
 
@@ -1211,6 +1383,10 @@ CREATE POLICY "Authenticated users can view all profiles" ON "public"."profiles"
 
 
 
+CREATE POLICY "Geo locations are viewable by everyone" ON "public"."geo_locations" FOR SELECT USING (true);
+
+
+
 CREATE POLICY "Landlords can create leases" ON "public"."leases" FOR INSERT WITH CHECK (("auth"."uid"() = "landlord_id"));
 
 
@@ -1218,6 +1394,14 @@ CREATE POLICY "Landlords can create leases" ON "public"."leases" FOR INSERT WITH
 CREATE POLICY "Landlords can create own inquiry actions" ON "public"."landlord_inquiry_actions" FOR INSERT WITH CHECK ((("auth"."uid"() = "landlord_id") AND (EXISTS ( SELECT 1
    FROM "public"."applications"
   WHERE (("applications"."id" = "landlord_inquiry_actions"."inquiry_id") AND ("applications"."landlord_id" = "auth"."uid"()))))));
+
+
+
+CREATE POLICY "Landlords can create own listings" ON "public"."listings" FOR INSERT WITH CHECK (("auth"."uid"() = "landlord_id"));
+
+
+
+CREATE POLICY "Landlords can delete own listings" ON "public"."listings" FOR DELETE USING (("auth"."uid"() = "landlord_id"));
 
 
 
@@ -1265,6 +1449,10 @@ CREATE POLICY "Landlords can update own leases" ON "public"."leases" FOR UPDATE 
 
 
 
+CREATE POLICY "Landlords can update own listings" ON "public"."listings" FOR UPDATE USING (("auth"."uid"() = "landlord_id")) WITH CHECK (("auth"."uid"() = "landlord_id"));
+
+
+
 CREATE POLICY "Landlords can update own properties" ON "public"."properties" FOR UPDATE USING (("auth"."uid"() = "landlord_id"));
 
 
@@ -1292,6 +1480,10 @@ CREATE POLICY "Landlords can view own inquiry actions" ON "public"."landlord_inq
 
 
 CREATE POLICY "Landlords can view own leases" ON "public"."leases" FOR SELECT USING (("auth"."uid"() = "landlord_id"));
+
+
+
+CREATE POLICY "Landlords can view own listings" ON "public"."listings" FOR SELECT USING (("auth"."uid"() = "landlord_id"));
 
 
 
@@ -1346,6 +1538,10 @@ CREATE POLICY "Payment updates" ON "public"."payments" FOR UPDATE USING ((("auth
 
 
 CREATE POLICY "Properties are viewable by everyone" ON "public"."properties" FOR SELECT USING (true);
+
+
+
+CREATE POLICY "Published listings are viewable by everyone" ON "public"."listings" FOR SELECT USING (("status" = 'published'::"public"."listing_status"));
 
 
 
@@ -1492,6 +1688,9 @@ ALTER TABLE "public"."conversation_participants" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."conversations" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."geo_locations" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."iris_chat_messages" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1508,6 +1707,9 @@ ALTER TABLE "public"."landlord_statistics_exports" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."leases" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."listings" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."maintenance_requests" ENABLE ROW LEVEL SECURITY;
@@ -1562,9 +1764,17 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_in"("cstring") TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_out"("public"."gtrgm") TO "service_role";
 
 
 
@@ -1709,6 +1919,103 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
+
+
+
+
+
+
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_extract_query_trgm"("text", "internal", smallint, "internal", "internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_extract_value_trgm"("text", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_trgm_consistent"("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gin_trgm_triconsistent"("internal", smallint, "text", integer, "internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_compress"("internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_consistent"("internal", "text", smallint, "oid", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_decompress"("internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_distance"("internal", "text", smallint, "oid", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_options"("internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_penalty"("internal", "internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_picksplit"("internal", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_same"("public"."gtrgm", "public"."gtrgm", "internal") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "postgres";
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "anon";
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gtrgm_union"("internal", "internal") TO "service_role";
 
 
 
@@ -1730,15 +2037,133 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."increment_listing_metric"("p_listing_id" "uuid", "p_metric" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."increment_listing_metric"("p_listing_id" "uuid", "p_metric" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."increment_listing_metric"("p_listing_id" "uuid", "p_metric" "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "anon";
 GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "postgres";
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "anon";
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_limit"(real) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "postgres";
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "anon";
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."show_limit"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "anon";
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."show_trgm"("text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."similarity"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."similarity_dist"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."similarity_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_dist_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."strict_word_similarity_op"("text", "text") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_updated_at"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_updated_at"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_updated_at"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_commutator_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_dist_op"("text", "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "postgres";
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."word_similarity_op"("text", "text") TO "service_role";
 
 
 
@@ -1775,6 +2200,12 @@ GRANT ALL ON TABLE "public"."conversations" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."geo_locations" TO "anon";
+GRANT ALL ON TABLE "public"."geo_locations" TO "authenticated";
+GRANT ALL ON TABLE "public"."geo_locations" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."iris_chat_messages" TO "anon";
 GRANT ALL ON TABLE "public"."iris_chat_messages" TO "authenticated";
 GRANT ALL ON TABLE "public"."iris_chat_messages" TO "service_role";
@@ -1808,6 +2239,12 @@ GRANT ALL ON TABLE "public"."landlord_statistics_exports" TO "service_role";
 GRANT ALL ON TABLE "public"."leases" TO "anon";
 GRANT ALL ON TABLE "public"."leases" TO "authenticated";
 GRANT ALL ON TABLE "public"."leases" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."listings" TO "anon";
+GRANT ALL ON TABLE "public"."listings" TO "authenticated";
+GRANT ALL ON TABLE "public"."listings" TO "service_role";
 
 
 

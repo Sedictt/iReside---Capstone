@@ -32,7 +32,7 @@ function BecomeLandlordContent() {
         if (!loading && profile?.role === 'landlord') {
             router.push("/landlord/dashboard");
         }
-        if (profile?.phone && step === 1) {
+        if (profile?.phone && step === 1 && !formData.phone) {
             setFormData(prev => ({ ...prev, phone: profile.phone! }));
         }
     }, [user, profile, loading, router]);
@@ -48,33 +48,22 @@ function BecomeLandlordContent() {
         }
 
         try {
-            const supabase = createClient();
+            const uploadData = new FormData();
+            uploadData.append("phone", formData.phone);
+            uploadData.append("identityDocument", formData.identityDocument);
+            uploadData.append("ownershipDocument", formData.ownershipDocument);
+            uploadData.append("livenessDocument", formData.livenessDocument);
 
-            // Simulate file uploads purely for demo (replace with actual Supabase Storage logic in prod)
-            const fakeIdUrl = URL.createObjectURL(formData.identityDocument).split('/').pop() + ".jpg";
-            const fakeOwnUrl = URL.createObjectURL(formData.ownershipDocument).split('/').pop() + ".pdf";
-            const fakeLiveUrl = URL.createObjectURL(formData.livenessDocument).split('/').pop() + ".jpg";
+            const response = await fetch("/api/landlord-applications", {
+                method: "POST",
+                body: uploadData,
+            });
 
-            // Submit application to database
-            const { error: applicationError } = await supabase
-                .from('landlord_applications')
-                .insert({
-                    profile_id: user!.id,
-                    phone: formData.phone,
-                    identity_document_url: fakeIdUrl,
-                    ownership_document_url: fakeOwnUrl,
-                    liveness_document_url: fakeLiveUrl,
-                    status: 'pending'
-                });
+            const result = await response.json();
 
-            if (applicationError) {
-                 if (applicationError.code === '23505') {
-                     throw new Error("You already have an active application under review.");
-                 }
-                 throw applicationError;
+            if (!response.ok) {
+                throw new Error(result.error || "Failed to submit application.");
             }
-
-            await supabase.from('profiles').update({ phone: formData.phone }).eq('id', user!.id);
 
             setSuccess(true);
         } catch (err: any) {
