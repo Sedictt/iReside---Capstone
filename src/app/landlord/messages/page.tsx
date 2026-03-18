@@ -278,6 +278,7 @@ export default function MessagesPage() {
     const [reportWizardError, setReportWizardError] = useState<string | null>(null);
     const [showModerationModal, setShowModerationModal] = useState(false);
     const [moderationMessage, setModerationMessage] = useState("");
+    const [showChatRulesModal, setShowChatRulesModal] = useState(false);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -2024,12 +2025,23 @@ export default function MessagesPage() {
                 <div className="p-4 md:p-6 bg-neutral-900/50 border-t border-white/5 shrink-0 flex justify-center w-full">
                     <div className="w-full max-w-4xl flex flex-col gap-3">
                         {/* Security Announcement Banner */}
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center gap-3 shrink-0 mb-1">
-                            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                            <span className="text-xs font-medium text-amber-400/90">
-                                <strong className="text-amber-500 mr-1">Security Warning:</strong>
-                                Never share sensitive credentials, bank details, or passwords in this chat. Admins will NEVER ask for this information.
-                            </span>
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shrink-0 mb-1">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                                <span className="text-xs font-medium text-amber-400/90 hidden sm:inline">
+                                    <strong className="text-amber-500 mr-1">Security Warning:</strong>
+                                    Never share sensitive credentials or passwords. Admins will NEVER ask for this.
+                                </span>
+                                <span className="text-xs font-medium text-amber-400/90 sm:hidden">
+                                    Keep credentials private.
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setShowChatRulesModal(true)}
+                                className="text-[10px] md:text-xs shrink-0 font-bold px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors whitespace-nowrap"
+                            >
+                                Chat Rules
+                            </button>
                         </div>
 
                         {pendingAttachment && (
@@ -2540,6 +2552,61 @@ export default function MessagesPage() {
                                 className="w-full py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all focus:outline-none focus:ring-2 focus:ring-white/20"
                             >
                                 I Understand
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showChatRulesModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-neutral-900 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-neutral-900 z-10 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500">
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                                <h4 className="text-xl font-black text-white">Chat Rules & Policy</h4>
+                            </div>
+                            <button
+                                onClick={() => setShowChatRulesModal(false)}
+                                className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar text-left">
+                            <div className="space-y-2">
+                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">1. Professional Conduct</h5>
+                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                    All communications must remain professional, respectful, and courteous. Hate speech, discrimination, harassment, and severe profanity are strictly prohibited.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">2. Prohibited Content</h5>
+                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                    You may not send spam, unauthorized advertisements, explicit media, or any illegal content. Our AI moderation system actively intercepts and blocks such content.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">3. Platform Safety</h5>
+                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                    Do not attempt to bypass platform processes. Sharing external payment links, requesting off-platform security deposits, or phishing for sensitive credentials (passwords, bank details) is forbidden.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">4. Reporting Violations</h5>
+                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                    If you encounter a user violating these rules, please use the "Report User" feature. Repeated violations will result in permanent suspension of the offending account.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-6 bg-[#0a0a0a] border-t border-white/5 shrink-0 flex justify-end">
+                            <button
+                                onClick={() => setShowChatRulesModal(false)}
+                                className="px-6 py-2.5 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all focus:outline-none"
+                            >
+                                Close
                             </button>
                         </div>
                     </div>
