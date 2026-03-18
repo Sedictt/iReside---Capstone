@@ -43,10 +43,10 @@ This document provides a comprehensive overview of the current features and tech
 *   **Smart Document Vault:** Centralized access to master agreements, move-in condition reports, and amendments with accurate verified/signed status tracking mapped directly to backend records.
 *   **Integrated Landlord Connectivity:** One-click capabilities to message or directly call the assigned property manager associated with the active lease.
 
-### 8. Financial Operations & GCash Integration
-*   **Automated Billing:** Generates comprehensive digital invoices covering base rent and estimated utility (water/electricity) consumption.
-*   **Manual GCash Verification:** Tenants can upload transfer receipts directly for manual verification by the landlord.
-*   **In-Person Payment Tracking:** Support for "Cash" payment methods with live tracking status for hand-to-hand transactions.
+### 8. Financial Operations & Real-Time Payments
+*   **Live Financial Ledger:** Real-time synchronization of overdue, pending, and completed rent/utility invoices straight from the Supabase payments database.
+*   **Dynamic Payment Breakdown:** Automatically visualizes individual expense items categorized by base rent, water, and electricity with their corresponding dynamically fetched values.
+*   **Integrated Payment History:** Chronological log of paid invoices accurately denoting payment method, time, and transaction status directly inside the Tenant Portal.
 
 ## IV. Communication & Core Infrastructure
 
