@@ -112,15 +112,62 @@ export async function GET() {
     const now = new Date();
     const nowIso = now.toISOString();
 
-    const { data: leaseRows, error: leaseError } = await supabase
-        .from("leases")
-        .select("id, unit_id, landlord_id, status, start_date, end_date, monthly_rent, security_deposit")
-        .eq("tenant_id", user.id)
-        .order("end_date", { ascending: false })
-        .limit(5);
+    // Parallelize all data fetching!
+    const [
+        { data: leaseRows, error: leaseError },
+        { data: nextPayments, error: nextPaymentError },
+        { data: overdueRows, error: overdueError },
+        { data: utilityRows, error: utilityError },
+        { data: announcementRows, error: announcementError },
+        { data: activityRows, error: activityError }
+    ] = await Promise.all([
+        supabase
+            .from("leases")
+            .select(`
+                id, status, start_date, end_date, monthly_rent, security_deposit,
+                unit:units(id, name, property:properties(id, name, address, city))
+            `)
+            .eq("tenant_id", user.id)
+            .order("end_date", { ascending: false })
+            .limit(5),
+        supabase
+            .from("payments")
+            .select("id, amount, status, due_date, description")
+            .eq("tenant_id", user.id)
+            .in("status", ["pending", "processing"])
+            .order("due_date", { ascending: true })
+            .limit(1),
+        supabase
+            .from("payments")
+            .select("id, amount, status, due_date, description, reference_number")
+            .eq("tenant_id", user.id)
+            .in("status", ["pending", "processing"])
+            .lt("due_date", nowIso)
+            .order("due_date", { ascending: true })
+            .limit(5),
+        supabase
+            .from("payments")
+            .select("id, description, items:payment_items(label, amount, category)")
+            .eq("tenant_id", user.id)
+            .order("due_date", { ascending: false })
+            .limit(25),
+        supabase
+            .from("notifications")
+            .select("id, title, message, created_at")
+            .eq("user_id", user.id)
+            .eq("type", "announcement")
+            .order("created_at", { ascending: false })
+            .limit(1),
+        supabase
+            .from("notifications")
+            .select("id, type, title, message, read, created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(6)
+    ]);
 
-    if (leaseError) {
-        return NextResponse.json({ error: "Failed to load lease data." }, { status: 500 });
+    if (leaseError || nextPaymentError || overdueError) {
+        return NextResponse.json({ error: "Failed to load dashboard data." }, { status: 500 });
     }
 
     const activeLease =
@@ -129,20 +176,10 @@ export async function GET() {
         null;
 
     let leaseSummary: LeaseSummary | null = null;
-    if (activeLease) {
-        const { data: unitRow } = await supabase
-            .from("units")
-            .select("id, name, property_id")
-            .eq("id", activeLease.unit_id)
-            .maybeSingle();
-
-        const { data: propertyRow } = unitRow?.property_id
-            ? await supabase
-                .from("properties")
-                .select("id, name, address, city")
-                .eq("id", unitRow.property_id)
-                .maybeSingle()
-            : { data: null };
+    if (activeLease && activeLease.unit) {
+        // Safe access as relationship might return an array or object
+        const unit = Array.isArray(activeLease.unit) ? activeLease.unit[0] : activeLease.unit;
+        const property = unit?.property ? (Array.isArray(unit.property) ? unit.property[0] : unit.property) : null;
 
         leaseSummary = {
             id: activeLease.id,
@@ -151,23 +188,11 @@ export async function GET() {
             endDate: activeLease.end_date,
             monthlyRent: Number(activeLease.monthly_rent ?? 0),
             securityDeposit: Number(activeLease.security_deposit ?? 0),
-            unitName: unitRow?.name ?? null,
-            propertyName: propertyRow?.name ?? null,
-            propertyAddress: propertyRow?.address ?? null,
-            propertyCity: propertyRow?.city ?? null,
+            unitName: unit?.name ?? null,
+            propertyName: property?.name ?? null,
+            propertyAddress: property?.address ?? null,
+            propertyCity: property?.city ?? null,
         };
-    }
-
-    const { data: nextPayments, error: nextPaymentError } = await supabase
-        .from("payments")
-        .select("id, amount, status, due_date, description")
-        .eq("tenant_id", user.id)
-        .in("status", ["pending", "processing"])
-        .order("due_date", { ascending: true })
-        .limit(1);
-
-    if (nextPaymentError) {
-        return NextResponse.json({ error: "Failed to load next payment." }, { status: 500 });
     }
 
     const nextPaymentRow = (nextPayments ?? [])[0] ?? null;
@@ -180,21 +205,8 @@ export async function GET() {
         }
         : null;
 
-    const { data: overdueRows, error: overdueError } = await supabase
-        .from("payments")
-        .select("id, amount, status, due_date, description, reference_number")
-        .eq("tenant_id", user.id)
-        .in("status", ["pending", "processing"])
-        .lt("due_date", nowIso)
-        .order("due_date", { ascending: true })
-        .limit(5);
-
-    if (overdueError) {
-        return NextResponse.json({ error: "Failed to load overdue payments." }, { status: 500 });
-    }
-
     const overduePayments: OverduePayment[] = (overdueRows ?? [])
-        .filter((row) => isPendingStatus(row.status))
+        .filter((row) => isPendingStatus(row.status as PaymentStatus))
         .map((row) => ({
             id: row.id,
             amount: Number(row.amount ?? 0),
@@ -202,13 +214,6 @@ export async function GET() {
             description: row.description ?? null,
             reference: row.reference_number ?? null,
         }));
-
-    const { data: utilityRows, error: utilityError } = await supabase
-        .from("payments")
-        .select("id, description, items:payment_items(label, amount, category)")
-        .eq("tenant_id", user.id)
-        .order("due_date", { ascending: false })
-        .limit(25);
 
     const utilities: UtilityItem[] = utilityError
         ? []
@@ -218,14 +223,6 @@ export async function GET() {
                 items: (row.items ?? []) as Array<{ label: string; amount: number; category: string }>,
             }))
         );
-
-    const { data: announcementRows, error: announcementError } = await supabase
-        .from("notifications")
-        .select("id, title, message, created_at")
-        .eq("user_id", user.id)
-        .eq("type", "announcement")
-        .order("created_at", { ascending: false })
-        .limit(1);
 
     const announcementRow = announcementError ? null : (announcementRows ?? [])[0] ?? null;
     const announcement: Announcement | null = announcementRow
@@ -237,18 +234,11 @@ export async function GET() {
         }
         : null;
 
-    const { data: activityRows, error: activityError } = await supabase
-        .from("notifications")
-        .select("id, type, title, message, read, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(6);
-
     const recentActivity: ActivityItem[] = activityError
         ? []
         : (activityRows ?? []).map((row) => ({
             id: row.id,
-            type: row.type,
+            type: row.type as NotificationType,
             title: row.title,
             message: row.message,
             createdAt: row.created_at,

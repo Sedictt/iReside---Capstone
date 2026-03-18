@@ -10,53 +10,57 @@ export async function GET() {
     }
 
     try {
-        // Fetch the next pending/processing payment with its items
-        const { data: nextPayments, error: nextPaymentError } = await supabase
-            .from("payments")
-            .select(`
-                id,
-                amount,
-                status,
-                method,
-                description,
-                due_date,
-                payment_items (
+        const [
+            { data: nextPayments, error: nextPaymentError },
+            { data: historyRows, error: historyError }
+        ] = await Promise.all([
+            // Fetch the next pending/processing payment with its items
+            supabase
+                .from("payments")
+                .select(`
                     id,
-                    label,
                     amount,
-                    category
-                ),
-                lease:leases (
-                    unit:units (
-                        name
+                    status,
+                    method,
+                    description,
+                    due_date,
+                    payment_items (
+                        id,
+                        label,
+                        amount,
+                        category
+                    ),
+                    lease:leases (
+                        unit:units (
+                            name
+                        )
                     )
-                )
-            `)
-            .eq("tenant_id", user.id)
-            .in("status", ["pending", "processing"])
-            .order("due_date", { ascending: true })
-            .limit(1);
+                `)
+                .eq("tenant_id", user.id)
+                .in("status", ["pending", "processing"])
+                .order("due_date", { ascending: true })
+                .limit(1),
+            
+            // Fetch recent payment history
+            supabase
+                .from("payments")
+                .select(`
+                    id,
+                    amount,
+                    status,
+                    method,
+                    description,
+                    due_date,
+                    paid_at,
+                    reference_number
+                `)
+                .eq("tenant_id", user.id)
+                .not("status", "in", '("pending","processing")')
+                .order("due_date", { ascending: false })
+                .limit(10)
+        ]);
 
         if (nextPaymentError) throw nextPaymentError;
-
-        // Fetch recent payment history
-        const { data: historyRows, error: historyError } = await supabase
-            .from("payments")
-            .select(`
-                id,
-                amount,
-                status,
-                method,
-                description,
-                due_date,
-                paid_at,
-                reference_number
-            `)
-            .eq("tenant_id", user.id)
-            .not("status", "in", '("pending","processing")')
-            .order("due_date", { ascending: false })
-            .limit(10);
-
         if (historyError) throw historyError;
 
         return NextResponse.json({

@@ -10,55 +10,57 @@ export async function GET() {
     }
 
     try {
-        const { data: applicationsData, error: appError } = await supabase
-            .from("applications")
-            .select(`
-                id,
-                status,
-                documents,
-                created_at,
-                unit:units!inner (
+        const [
+            { data: applicationsData, error: appError },
+            { data: savedData, error: savedError },
+            { data: activityRows, error: activityError }
+        ] = await Promise.all([
+            supabase
+                .from("applications")
+                .select(`
                     id,
-                    name,
-                    rent_amount,
-                    property:properties!inner (
+                    status,
+                    documents,
+                    created_at,
+                    unit:units!inner (
                         id,
                         name,
-                        address,
-                        city,
-                        type,
-                        images
+                        rent_amount,
+                        property:properties!inner (
+                            id,
+                            name,
+                            address,
+                            city,
+                            type,
+                            images
+                        )
                     )
-                )
-            `)
-            .eq("applicant_id", user.id)
-            .order("created_at", { ascending: false });
+                `)
+                .eq("applicant_id", user.id)
+                .order("created_at", { ascending: false }),
+            supabase
+                .from("saved_properties")
+                .select(`
+                    id,
+                    property:properties!inner (
+                        id, name, address, images, type,
+                        units ( rent_amount )
+                    )
+                `)
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false })
+                .limit(3),
+            supabase
+                .from("notifications")
+                .select("id, type, title, message, read, created_at")
+                .eq("user_id", user.id)
+                .in("type", ["application", "lease", "message"])
+                .order("created_at", { ascending: false })
+                .limit(5)
+        ]);
 
         if (appError) throw appError;
-
-        const { data: savedData, error: savedError } = await supabase
-            .from("saved_properties")
-            .select(`
-                id,
-                property:properties!inner (
-                    id, name, address, images, type,
-                    units ( rent_amount )
-                )
-            `)
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(3);
-
         if (savedError) throw savedError;
-
-        const { data: activityRows, error: activityError } = await supabase
-            .from("notifications")
-            .select("id, type, title, message, read, created_at")
-            .eq("user_id", user.id)
-            .in("type", ["application", "lease", "message"])
-            .order("created_at", { ascending: false })
-            .limit(5);
-
         if (activityError) throw activityError;
 
         return NextResponse.json({
