@@ -220,7 +220,7 @@ export async function GET() {
         : buildUtilities(
             (utilityRows ?? []).map((row) => ({
                 description: row.description ?? null,
-                items: (row.items ?? []) as Array<{ label: string; amount: number; category: string }>,
+                items: (row.items ?? []) as unknown as Array<{ label: string; amount: number; category: string }>,
             }))
         );
 

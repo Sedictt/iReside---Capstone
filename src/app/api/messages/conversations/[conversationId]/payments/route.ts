@@ -152,7 +152,7 @@ export async function GET(
 
         const participants = participantIds
             .map((id) => profileMap.get(id))
-            .filter((profile): profile is { id: string; role: Database["public"]["Enums"]["user_role"] } => Boolean(profile));
+            .filter((profile): profile is any => Boolean(profile));
 
         const tenant = participants.find((profile) => profile.role === "tenant") ?? null;
         const landlord = participants.find((profile) => profile.role === "landlord") ?? null;

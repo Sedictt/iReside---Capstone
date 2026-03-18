@@ -52,6 +52,7 @@ This document provides a comprehensive overview of the current features and tech
 
 ### 9. Real-Time Messaging Engine
 *   **Supabase Realtime:** Instant message delivery with typing indicators and read status tracking.
+*   **AI Chat Moderation:** Instant real-time filtering of messages using Groq's Llama 3 API to block toxic content, hate speech, and spam before delivery.
 *   **Media & File Sharing:** Direct upload and retrieval of documents and photos within conversations.
 *   **Role-Based Channels:** Automated participant identification to categorize conversations between tenants and landlords.
 

@@ -448,7 +448,7 @@ export const fetchConversationPaymentHistory = async (conversationId: string, li
             return {
                 data: { payments: [], totalPaid: 0 },
                 error: buildPaymentHistoryErrorMessage(response.status, detail),
-            } satisfies ListFetchResult<PaymentHistoryPayload>;
+            };
         }
 
         const payload = (await response.json()) as PaymentHistoryPayload;
@@ -458,12 +458,12 @@ export const fetchConversationPaymentHistory = async (conversationId: string, li
                 totalPaid: payload.totalPaid ?? 0,
             },
             error: null,
-        } satisfies ListFetchResult<PaymentHistoryPayload>;
+        };
     } catch {
         console.warn("Failed to fetch payment history due to a network or parsing issue.", { conversationId });
         return {
             data: { payments: [], totalPaid: 0 },
             error: "Unable to load payment history right now. Please check your connection and try again.",
-        } satisfies ListFetchResult<PaymentHistoryPayload>;
+        };
     }
 };

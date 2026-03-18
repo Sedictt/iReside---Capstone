@@ -30,7 +30,7 @@ export async function POST(
     }
 
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc("increment_listing_metric", {
+    const { data, error } = await (supabase.rpc as any)("increment_listing_metric", {
         p_listing_id: id,
         p_metric: eventType,
     });

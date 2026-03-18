@@ -54,7 +54,7 @@ export function ProfileWidget() {
         .split(" ")
         .filter(Boolean)
         .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? "")
+        .map((part: string) => part[0]?.toUpperCase() ?? "")
         .join("") || "LD";
 
     const handleMouseEnter = () => {
@@ -83,7 +83,7 @@ export function ProfileWidget() {
             <button className="relative h-10 w-10 overflow-visible rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 ring-2 ring-white/10 hover:ring-primary/50 transition-all group flex items-center justify-center shadow-lg">
                 {shouldShowAvatar ? (
                     <img
-                        src={displayAvatar}
+                        src={displayAvatar as string}
                         alt={displayName}
                         className="h-10 w-10 rounded-full object-cover"
                         onError={() => setAvatarFailed(true)}
@@ -115,7 +115,7 @@ export function ProfileWidget() {
                                 <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 ring-2 ring-white/10 flex items-center justify-center shadow-lg relative">
                                     {shouldShowAvatar ? (
                                         <img
-                                            src={displayAvatar}
+                                            src={displayAvatar as string}
                                             alt={displayName}
                                             className="h-12 w-12 rounded-full object-cover"
                                             onError={() => setAvatarFailed(true)}

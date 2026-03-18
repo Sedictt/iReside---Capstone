@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Real-time tenant application tracking portal with dynamic Supabase backend integration
 - Live data integration for Tenant Lease Hub, offering dynamic progress tracking and document vault
 - Real-time Tenant Payments dashboard connected to the backend financial ledger
+- Autonomous AI-powered Chat Moderation feature running on Groq Llama 3 API blocking toxic behavior
 
 ### Fixed
 - Critical build error in `src/app/landlord/messages/page.tsx` due to invalid UTF-8 encoding (EM DASH char)

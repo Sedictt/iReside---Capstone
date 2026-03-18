@@ -211,7 +211,7 @@ export default function InvoicesPage() {
                     {['All', 'Pending', 'Overdue', 'Paid'].map(status => (
                         <button
                             key={status}
-                            onClick={() => setStatusFilter(status)}
+                            onClick={() => setStatusFilter(status as "All" | "Pending" | "Overdue" | "Paid")}
                             className={cn(
                                 "px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all",
                                 statusFilter === status
