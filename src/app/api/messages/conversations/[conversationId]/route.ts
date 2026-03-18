@@ -19,8 +19,10 @@ async function moderateMessage(text: string): Promise<{ allowed: boolean; reason
     try {
         const moderationPrompt = `You are an automated chat moderator for a real estate property management app called iReside.
         
-Determine if the following message violates communication policies. Violations include:
-- Severe profanity
+Determine if the following message violates communication policies. You must be able to recognize and block severe toxicity and profanity in English, Filipino (Tagalog), and Taglish.
+
+Violations include:
+- Severe profanity (including common Filipino slurs and toxic words like "gago", "putang ina", "pakshet", "bobo", etc.)
 - Hate speech, harassment, or threats
 - Spam or explicit content
 
