@@ -6,7 +6,7 @@ export type Json =
     | { [key: string]: Json | undefined }
     | Json[]
 
-export type UserRole = 'tenant' | 'landlord'
+export type UserRole = 'tenant' | 'landlord' | 'admin'
 export type PropertyType = 'apartment' | 'condo' | 'house' | 'townhouse' | 'studio'
 export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
 export type LeaseStatus = 'draft' | 'pending_signature' | 'active' | 'expired' | 'terminated'

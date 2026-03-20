@@ -435,4 +435,67 @@ ON CONFLICT (id) DO UPDATE SET
   scope=EXCLUDED.scope, title=EXCLUDED.title, rent_amount=EXCLUDED.rent_amount,
   status=EXCLUDED.status, views=EXCLUDED.views, leads=EXCLUDED.leads, updated_at=now();
 
+-- ---------------------------------------------------------------------------
+-- Admin user (deterministic UUID 00000000-0000-0000-0000-000000000001)
+-- ---------------------------------------------------------------------------
+DO $
+BEGIN
+  BEGIN
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) VALUES
+      ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000001',
+       'authenticated', 'authenticated', 'admin@ireside.local',
+       crypt('Passw0rd!', gen_salt('bf')), now(),
+       '{"provider":"email","providers":["email"]}'::jsonb,
+       '{"role":"admin"}'::jsonb,
+       now(), now())
+    ON CONFLICT (id) DO UPDATE SET
+      email = EXCLUDED.email,
+      raw_user_meta_data = EXCLUDED.raw_user_meta_data,
+      updated_at = now();
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Skipping admin auth.users seed: %', SQLERRM;
+  END;
+END $;
+
+INSERT INTO public.profiles (id, email, full_name, role) VALUES
+  ('00000000-0000-0000-0000-000000000001', 'admin@ireside.local', 'System Admin', 'admin')
+ON CONFLICT (id) DO UPDATE SET
+  email = EXCLUDED.email,
+  full_name = EXCLUDED.full_name,
+  role = EXCLUDED.role,
+  updated_at = now();
+
+-- ---------------------------------------------------------------------------
+-- Landlord applications — one row per status variant
+-- ---------------------------------------------------------------------------
+INSERT INTO public.landlord_applications (id, profile_id, phone, identity_document_url, ownership_document_url, liveness_document_url, status, admin_notes) VALUES
+  -- pending: tenant.one
+  ('fafafafa-fafa-fafa-fafa-fafafafafaf1', '33333333-3333-3333-3333-333333333333', '+639171110003',
+   '/docs/id-tenant-one.pdf', '/docs/title-tenant-one.pdf', '/docs/liveness-tenant-one.mp4',
+   'pending', NULL),
+  -- approved: tenant.two
+  ('fafafafa-fafa-fafa-fafa-fafafafafaf2', '44444444-4444-4444-4444-444444444444', '+639171110004',
+   '/docs/id-tenant-two-v2.pdf', '/docs/title-tenant-two-v2.pdf', '/docs/liveness-tenant-two-v2.mp4',
+   'approved', 'All documents verified. Application approved.'),
+  -- reviewing: tenant.three
+  ('fafafafa-fafa-fafa-fafa-fafafafafaf3', '33333333-3333-3333-3333-333333333335', '+639171110007',
+   '/docs/id-tenant-three.pdf', '/docs/title-tenant-three.pdf', '/docs/liveness-tenant-three.mp4',
+   'reviewing', 'Documents under review.'),
+  -- rejected: tenant.four
+  ('fafafafa-fafa-fafa-fafa-fafafafafaf4', '33333333-3333-3333-3333-333333333336', '+639171110008',
+   '/docs/id-tenant-four.pdf', '/docs/title-tenant-four.pdf', '/docs/liveness-tenant-four.mp4',
+   'rejected', 'Insufficient ownership documentation.')
+ON CONFLICT (id) DO UPDATE SET
+  profile_id = EXCLUDED.profile_id,
+  phone = EXCLUDED.phone,
+  identity_document_url = EXCLUDED.identity_document_url,
+  ownership_document_url = EXCLUDED.ownership_document_url,
+  liveness_document_url = EXCLUDED.liveness_document_url,
+  status = EXCLUDED.status,
+  admin_notes = EXCLUDED.admin_notes,
+  updated_at = now();
+
 COMMIT;

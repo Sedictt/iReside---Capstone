@@ -41,11 +41,37 @@ export async function updateSession(request: NextRequest) {
         return supabaseResponse
     }
 
+    // Resolve role — prefer JWT metadata (fast, no DB hit), fall back to profiles table
+    let role: string | null = user?.user_metadata?.role ?? null
+    if (user && !role) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+        role = profile?.role ?? 'tenant'
+    }
+
+    // Protect /admin routes — only allow users with admin role
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+        if (!user) {
+            const url = request.nextUrl.clone()
+            url.pathname = '/login'
+            return NextResponse.redirect(url)
+        }
+        if (role !== 'admin') {
+            const url = request.nextUrl.clone()
+            url.pathname = role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard'
+            return NextResponse.redirect(url)
+        }
+    }
+
     // If user is already logged in, prevent them from accessing auth pages
     if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
-        const role = user.user_metadata?.role || 'tenant'
         const url = request.nextUrl.clone()
-        url.pathname = role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard'
+        if (role === 'admin') url.pathname = '/admin/dashboard'
+        else if (role === 'landlord') url.pathname = '/landlord/dashboard'
+        else url.pathname = '/tenant/dashboard'
         return NextResponse.redirect(url)
     }
 

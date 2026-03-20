@@ -41,3 +41,14 @@ yarn-error.log*
 next-env.d.ts
 
 skills
+.kiro
+
+# Artifact and log files that may contain sensitive data
+*.log
+diff.txt
+component_diff.txt
+dashboard_diff.txt
+profiles_schema.txt
+my_backup
+my_backup.sql
+original_page.tsx
