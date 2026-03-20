@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 ## 2026-03-20
+### Documentation
+- Corrected platform architecture specification from native Android to Progressive Web App (PWA)
+- Added comprehensive scope and delimitations paper for thesis documentation
+- Updated technical stack documentation to reflect Next.js 16 + React 19 unified web architecture
+- Clarified cross-platform approach using responsive design and mobile-optimized UI patterns
+
+## 2026-03-20
 ### Updated
 - Overhauled Admin Portal UI across all four admin views (layout, sidebar, dashboard, users, registrations)
 - Redesigned AdminSidebar with icon containers, nav item descriptions, active gradient highlight, chevron indicator, and branded glow on the shield icon
