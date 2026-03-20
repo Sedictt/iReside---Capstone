@@ -62,16 +62,41 @@ This document provides a comprehensive overview of the current features and tech
 
 ---
 
-## V. Intelligent Tenant Lifecycle & Discovery
+## V. Admin Portal
 
-### 11. Tenant Application Tracking
+### 11. Admin Sidebar & Navigation
+*   **Contextual Nav Items:** Each sidebar link includes a description subtitle and an icon container, with an active-state gradient highlight and chevron indicator.
+*   **Role-Branded Header:** iReside Admin Portal branding with a rose gradient shield icon and ambient glow.
+*   **Destructive Sign-Out:** Logout button with red hover state isolated at the bottom of the sidebar.
+
+### 12. Admin Portal Dashboard
+*   **Live Metrics Overview:** Real-time stat cards displaying Total Users, Total Properties, Active Leases, and Pending Reviews — each with per-card accent colors and skeleton loading states.
+*   **Registration Pipeline Panel:** Visual progress bar breaking down landlord applications by Pending, Reviewing, and Approved states with proportional width segments.
+*   **User Breakdown Panel:** Side-by-side tenant vs. landlord count cards with role-specific accent colors.
+*   **Quick Actions Row:** Contextual shortcut links to high-priority admin tasks (pending reviews, user management) with live counts.
+
+### 13. Admin Users Management
+*   **Role Filter Pills:** One-click filter tabs for All, Tenant, Landlord, and Admin roles with live counts per category.
+*   **Avatar Component:** Displays user profile photos with initials-based fallback for users without avatars.
+*   **Combined Search + Filter:** Name/email search combined with role filtering for fast user lookup.
+
+### 14. Admin Registrations Review
+*   **Status Filter Tabs:** Filter tabs with live counts for all application states (Pending, Reviewing, Approved, Rejected).
+*   **Review Modal:** Full-screen backdrop modal with applicant avatar, document links, admin notes textarea, and one-click status action buttons.
+*   **Status Badges:** Color-coded badges with icons for each application state across the table and modal.
+
+---
+
+## VI. Intelligent Tenant Lifecycle & Discovery
+
+### 15. Tenant Application Tracking
 *   **Live Backend Integration:** Fetch real-time application status directly from the Supabase database via dedicated REST endpoints.
 *   **Dynamic Status Mapping:** Transforms internal database states (e.g., 'reviewing', 'approved') into rich UI progress indicators and informative UX prompts.
 *   **Vaulted Properties & Timeline:** Provides prospective tenants with a unified view of saved properties and a chronological timeline of application events.
 
 ---
 
-## VI. Technical Stack
+## VII. Technical Stack
 *   **Core:** Next.js (App Router), TypeScript, Tailwind CSS
 *   **Database & Realtime:** Supabase (PostgreSQL, RLS)
 *   **AI Engine:** Groq (Llama 3 / 3.1)

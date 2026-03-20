@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2026-03-20
+### Updated
+- Overhauled Admin Portal UI across all four admin views (layout, sidebar, dashboard, users, registrations)
+- Redesigned AdminSidebar with icon containers, nav item descriptions, active gradient highlight, chevron indicator, and branded glow on the shield icon
+- Rebuilt Admin Dashboard with accent-colored stat cards, registration pipeline progress bar, user breakdown panel, and quick actions row
+- Revamped Users page with role filter pills (live counts), avatar component with initials fallback, and combined search + role filtering
+- Revamped Registrations page with status filter tabs (live counts), polished review modal with applicant avatar, document rows with icons, and improved action buttons
+
 ## [Unreleased]
 
 ### Added
