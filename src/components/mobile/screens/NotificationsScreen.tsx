@@ -59,7 +59,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
 ];
 
 export default function NotificationsScreen() {
-    const { goBack } = useNavigation();
+    const { goBack, navigate, role } = useNavigation();
     const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
     const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
 
@@ -70,6 +70,30 @@ export default function NotificationsScreen() {
 
     const markAllRead = () => {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    };
+
+    const handleNotificationClick = (n: Notification) => {
+        // Mark as read locally
+        if (!n.read) {
+            setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
+        }
+
+        // Route to specific areas based on role and notification type
+        if (role === "landlord") {
+            switch (n.type) {
+                case "payment": navigate("landlordInvoices"); break;
+                case "maintenance": navigate("landlordMaintenance"); break;
+                case "message": navigate("landlordChat"); break;
+                case "application": navigate("landlordApplications"); break;
+            }
+        } else {
+            switch (n.type) {
+                case "payment": navigate("payments"); break;
+                case "maintenance": navigate("tenantChat"); break; // Tenants use chat for maintenance right now
+                case "message": navigate("tenantChat"); break;
+                case "application": navigate("applicationTracker"); break;
+            }
+        }
     };
 
     const getIcon = (type: Notification["type"]) => {
@@ -123,7 +147,11 @@ export default function NotificationsScreen() {
             <div className={styles.scrollArea}>
                 {filteredNotifications.length > 0 ? (
                     filteredNotifications.map((n) => (
-                        <div key={n.id} className={`${styles.notificationItem} ${!n.read ? styles.unread : ""}`}>
+                        <div 
+                            key={n.id} 
+                            className={`${styles.notificationItem} ${!n.read ? styles.unread : ""}`}
+                            onClick={() => handleNotificationClick(n)}
+                        >
                             <div className={`${styles.iconContainer} ${getIconClass(n.type)}`}>
                                 {getIcon(n.type)}
                             </div>
