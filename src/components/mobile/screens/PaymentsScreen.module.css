@@ -159,8 +159,35 @@
 }
 
 .payButton svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+}
+
+.changeMethodBtn {
+    margin-top: 10px;
+    width: 100%;
+    height: 46px;
+    border-radius: 14px;
+    border: 1.5px solid #262626;
+    background: transparent;
+    color: #fafafa;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    z-index: 1;
+}
+
+.changeMethodBtn:active {
+    background: #1a1a1a;
+    transform: scale(0.97);
 }
 
 /* ─── Section ──────────────────────────────────────────── */

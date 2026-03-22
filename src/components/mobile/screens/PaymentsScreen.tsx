@@ -78,12 +78,7 @@ export default function PaymentsScreen() {
                     <ArrowLeft />
                 </button>
                 <span className={styles.topBarTitle}>Payments</span>
-                <button 
-                    className={styles.textActionButton}
-                    onClick={() => alert("Change Payment Method flow...")}
-                >
-                    Change Payment Method
-                </button>
+                <div className={styles.actionButton}></div>
             </div>
 
             <div className={styles.scrollArea}>
@@ -101,6 +96,13 @@ export default function PaymentsScreen() {
                             <CreditCard /> Pay Now
                         </button>
                     )}
+                    
+                    <button 
+                        className={styles.changeMethodBtn}
+                        onClick={() => alert("Change Payment Method flow...")}
+                    >
+                        Change Payment Method
+                    </button>
                 </div>
 
                 {/* Filter Tabs */}
