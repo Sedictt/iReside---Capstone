@@ -12,9 +12,11 @@ import {
     Clock,
     AlertCircle,
     Megaphone,
+    ChevronRight,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./TenantHomeScreen.module.css";
+import { MOCK_NOTIFICATIONS } from "./NotificationsScreen";
 
 // ─── Mock Data ─────────────────────────────────────────────
 const RENT_DATA = {
@@ -83,6 +85,8 @@ export default function TenantHomeScreen() {
         return "Good Evening";
     };
 
+    const hasUnread = MOCK_NOTIFICATIONS.some(n => !n.read);
+
     const statusBadgeClass =
         RENT_DATA.status === "paid"
             ? styles.badgePaid
@@ -113,7 +117,7 @@ export default function TenantHomeScreen() {
                         onClick={() => navigate("notifications")}
                     >
                         <Bell />
-                        <div className={styles.notifBadge} />
+                        {hasUnread && <div className={styles.notifBadge} />}
                     </button>
                 </div>
             </div>

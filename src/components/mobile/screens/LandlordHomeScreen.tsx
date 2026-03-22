@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordHomeScreen.module.css";
+import { MOCK_NOTIFICATIONS } from "./NotificationsScreen";
 
 // ─── Mock Data ──────────────────────────────────────────────
 const REVENUE_DATA = {
@@ -58,6 +59,7 @@ const ACTION_ITEMS = [
 // ─── Component ──────────────────────────────────────────────
 export default function LandlordHomeScreen() {
   const { navigate } = useNavigation();
+  const hasUnread = MOCK_NOTIFICATIONS.some(n => !n.read);
 
   return (
     <div className={styles.container}>
@@ -77,7 +79,7 @@ export default function LandlordHomeScreen() {
             onClick={() => navigate("notifications")}
           >
             <Bell size={24} />
-            <div style={{ position: 'absolute', top: 2, right: 2, width: 8, height: 8, background: '#6d9838', borderRadius: 4, border: '2px solid #0a0a0a' }} />
+            {hasUnread && <div style={{ position: 'absolute', top: 2, right: 2, width: 8, height: 8, background: '#6d9838', borderRadius: 4, border: '2px solid #0a0a0a' }} />}
           </button>
         </div>
       </div>

@@ -15,7 +15,7 @@ interface Notification {
     read: boolean;
 }
 
-let MOCK_NOTIFICATIONS: Notification[] = [
+export let MOCK_NOTIFICATIONS: Notification[] = [
     {
         id: "n1",
         type: "payment",
