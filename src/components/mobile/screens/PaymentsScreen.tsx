@@ -78,8 +78,11 @@ export default function PaymentsScreen() {
                     <ArrowLeft />
                 </button>
                 <span className={styles.topBarTitle}>Payments</span>
-                <button className={styles.actionButton}>
-                    <Settings />
+                <button 
+                    className={styles.textActionButton}
+                    onClick={() => alert("Change Payment Method flow...")}
+                >
+                    Change Payment Method
                 </button>
             </div>
 
