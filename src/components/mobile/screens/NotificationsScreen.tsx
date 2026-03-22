@@ -15,7 +15,7 @@ interface Notification {
     read: boolean;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
+let MOCK_NOTIFICATIONS: Notification[] = [
     {
         id: "n1",
         type: "payment",
@@ -69,13 +69,16 @@ export default function NotificationsScreen() {
     });
 
     const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        MOCK_NOTIFICATIONS.forEach(n => n.read = true);
+        setNotifications([...MOCK_NOTIFICATIONS]);
     };
 
     const handleNotificationClick = (n: Notification) => {
-        // Mark as read locally
+        // Mark as read globally so it persists
         if (!n.read) {
-            setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item));
+            const index = MOCK_NOTIFICATIONS.findIndex(x => x.id === n.id);
+            if (index !== -1) MOCK_NOTIFICATIONS[index].read = true;
+            setNotifications([...MOCK_NOTIFICATIONS]);
         }
 
         // Route to specific areas based on role and notification type
