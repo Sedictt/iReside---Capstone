@@ -88,9 +88,18 @@ function LeaseListScreen({
 }: {
     onSelectLease: (id: string) => void;
 }) {
+    const { switchTab } = useNavigation();
+
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
+            <div className={styles.topBar}>
+                <button className={styles.backButton} onClick={() => switchTab("home")}>
+                    <ArrowLeft />
+                </button>
+                <div className={styles.actionButton}></div>
+            </div>
+
+            <div className={styles.header} style={{ paddingTop: 0 }}>
                 <h1 className={styles.headerTitle}>My Leases</h1>
                 <p className={styles.headerSub}>
                     View your active and past lease agreements.
