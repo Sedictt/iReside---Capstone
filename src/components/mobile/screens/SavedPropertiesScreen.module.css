@@ -7,6 +7,8 @@
     flex-direction: column;
     height: 100%;
     background: #0a0a0a;
+    position: relative;
+    overflow: hidden;
 }
 
 /* ─── Top Bar ──────────────────────────────────────────── */
@@ -327,7 +329,7 @@
 
 /* ─── Bottom Sheet Modal ───────────────────────────────── */
 .modalOverlay {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
