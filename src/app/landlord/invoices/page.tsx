@@ -208,7 +208,7 @@ export default function InvoicesPage() {
                 </div>
                 <div className="w-px h-8 bg-white/10 hidden sm:block" />
                 <div className="flex items-center w-full sm:w-auto overflow-x-auto hide-scrollbar gap-2 px-2 pb-2 sm:pb-0">
-                    {['All', 'Pending', 'Overdue', 'Paid'].map(status => (
+                    {(['All', 'Pending', 'Overdue', 'Paid'] as const).map(status => (
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status)}

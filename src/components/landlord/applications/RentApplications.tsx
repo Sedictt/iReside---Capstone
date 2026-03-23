@@ -26,8 +26,12 @@ import {
     Shield,
     AlertCircle,
     TrendingUp,
-    Users
+    Users,
+    Plus,
+    ClipboardList
 } from "lucide-react";
+import { WalkInApplicationModal } from "./WalkInApplicationModal";
+import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus = "pending" | "reviewing" | "approved" | "rejected" | "withdrawn";
@@ -191,6 +195,25 @@ export function RentApplications() {
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+    const [showWalkInModal, setShowWalkInModal] = useState(false);
+    const [showContractModal, setShowContractModal] = useState(false);
+    const [contractData, setContractData] = useState<{
+        application_id: string;
+        unit_id: string;
+        unit_name: string;
+        property_name: string;
+        applicant_name: string;
+        applicant_email: string;
+        monthly_rent: number;
+    } | null>(null);
+    const [availableUnits, setAvailableUnits] = useState<{
+        id: string;
+        name: string;
+        rent_amount: number;
+        property_id: string;
+        property_name: string;
+    }[]>([]);
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
         setMounted(true);
@@ -232,6 +255,41 @@ export function RentApplications() {
         return () => {
             controller.abort();
         };
+    }, [reloadKey]);
+
+    // Load available units for walk-in modal
+    useEffect(() => {
+        const loadUnits = async () => {
+            try {
+                const res = await fetch("/api/landlord/properties/overview");
+                if (!res.ok) return;
+                const data = await res.json();
+                // Flatten properties into units
+                const props = data.properties || [];
+                const unitsList: typeof availableUnits = [];
+                for (const prop of props) {
+                    try {
+                        const unitRes = await fetch(`/api/landlord/properties/${prop.id}`);
+                        if (!unitRes.ok) continue;
+                        const unitData = await unitRes.json();
+                        // We'll construct simple unit entries from property data
+                        unitsList.push({
+                            id: prop.id,
+                            name: prop.name,
+                            rent_amount: 0,
+                            property_id: prop.id,
+                            property_name: prop.name,
+                        });
+                    } catch {
+                        // skip
+                    }
+                }
+                setAvailableUnits(unitsList);
+            } catch {
+                // Silently fail
+            }
+        };
+        void loadUnits();
     }, []);
 
     const updateApplicationStatus = async (
@@ -302,16 +360,19 @@ export function RentApplications() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-white mb-2 flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-primary/80" />
-                        Application Control
+                        <ClipboardList className="h-8 w-8 text-primary/80" />
+                        Walk-in Applications
                     </h1>
                     <p className="text-neutral-400 font-medium tracking-wide text-sm">
-                        Review, process, and securely manage incoming residency applications.
+                        Create, manage, and track walk-in tenant inquiries and applications.
                     </p>
                 </div>
-                <button className="flex items-center gap-2 bg-gradient-to-r from-primary to-emerald-400 text-black px-6 py-3 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 border border-primary/20">
-                    <CheckCircle2 className="h-5 w-5" />
-                    Auto-Screening
+                <button
+                    onClick={() => setShowWalkInModal(true)}
+                    className="flex items-center gap-2 bg-gradient-to-r from-primary to-emerald-400 text-black px-6 py-3 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 border border-primary/20"
+                >
+                    <Plus className="h-5 w-5" />
+                    New Walk-in
                 </button>
             </div>
 
@@ -849,6 +910,25 @@ export function RentApplications() {
                     </>
                 )}
             </AnimatePresence>
+
+            {/* Walk-in Application Modal */}
+            <WalkInApplicationModal
+                isOpen={showWalkInModal}
+                onClose={() => setShowWalkInModal(false)}
+                units={availableUnits}
+                onSuccess={() => setReloadKey((k) => k + 1)}
+            />
+
+            {/* Contract Preview Modal */}
+            <ContractPreviewModal
+                isOpen={showContractModal}
+                onClose={() => {
+                    setShowContractModal(false);
+                    setContractData(null);
+                }}
+                contractData={contractData}
+                onSuccess={() => setReloadKey((k) => k + 1)}
+            />
         </div>
     );
 }
