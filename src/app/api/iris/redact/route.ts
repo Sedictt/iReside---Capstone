@@ -28,7 +28,6 @@ function fallbackRedact(message: string) {
 
     return {
         isSensitive: redacted !== message,
-        isPhishing: false,
         redactedMessage: redacted,
     }
 }
@@ -36,13 +35,12 @@ function fallbackRedact(message: string) {
 function safeParseResult(content: string, originalMessage: string) {
     try {
         const parsed = JSON.parse(content)
-        const isPhishing = !!parsed.isPhishing
         const redactedMessage = typeof parsed.redactedMessage === 'string' ? parsed.redactedMessage : originalMessage
         const isSensitive = typeof parsed.isSensitive === 'boolean'
             ? parsed.isSensitive
             : redactedMessage !== originalMessage
 
-        return { isSensitive, isPhishing, redactedMessage }
+        return { isSensitive, redactedMessage }
     } catch {
         const jsonMatch = content.match(/\{[\s\S]*\}/)
         if (!jsonMatch) {
@@ -51,13 +49,12 @@ function safeParseResult(content: string, originalMessage: string) {
 
         try {
             const parsed = JSON.parse(jsonMatch[0])
-            const isPhishing = !!parsed.isPhishing
             const redactedMessage = typeof parsed.redactedMessage === 'string' ? parsed.redactedMessage : originalMessage
             const isSensitive = typeof parsed.isSensitive === 'boolean'
                 ? parsed.isSensitive
                 : redactedMessage !== originalMessage
 
-            return { isSensitive, isPhishing, redactedMessage }
+            return { isSensitive, redactedMessage }
         } catch {
             return fallbackRedact(originalMessage)
         }
@@ -84,12 +81,11 @@ export async function POST(request: Request) {
                 {
                     role: 'system',
                     content: [
-                        'You are a strict privacy and security engine.',
+                        'You are a strict privacy redaction engine.',
                         'Redact ONLY sensitive values in user text and preserve all non-sensitive wording.',
                         'Sensitive values include: passwords, passcodes, PINs, OTPs, bank account numbers, card numbers, CVV, IDs, email addresses, phone numbers, and API keys.',
-                        'Also, detect malicious phishing patterns, such as asking for login credentials outside the platform, directing users to fake payment links, or impersonating system administrators.',
                         'Replace each sensitive substring with *****.',
-                        'Return ONLY valid JSON with shape: {"isSensitive": boolean, "isPhishing": boolean, "redactedMessage": string}.',
+                        'Return ONLY valid JSON with shape: {"isSensitive": boolean, "redactedMessage": string}.',
                     ].join(' '),
                 },
                 {

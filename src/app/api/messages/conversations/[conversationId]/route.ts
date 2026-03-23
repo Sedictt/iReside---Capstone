@@ -3,54 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
 import type { Json, MessageType } from "@/types/database";
-import OpenAI from "openai";
 
 const DEFAULT_FILES_BUCKET = "message-files";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
-
-const groq = new OpenAI({
-    apiKey: process.env.GROQ_API_KEY,
-    baseURL: "https://api.groq.com/openai/v1",
-});
-
-async function moderateMessage(text: string): Promise<{ allowed: boolean; reason?: string }> {
-    if (!process.env.GROQ_API_KEY) return { allowed: true }; // Fail open if no api key
-    
-    try {
-        const moderationPrompt = `You are an automated chat moderator for a real estate property management app called iReside.
-        
-Determine if the following message violates communication policies. You must be able to recognize and block severe toxicity and profanity in English, Filipino (Tagalog), and Taglish.
-
-Violations include:
-- Severe profanity (including common Filipino slurs and toxic words like "gago", "putang ina", "pakshet", "bobo", etc.)
-- Hate speech, harassment, or threats
-- Spam or explicit content
-
-Message to evaluate: "${text}"
-
-Reply with EXACTLY the word "ALLOW" if the message is acceptable.
-Reply with EXACTLY the word "BLOCK" if the message violates policies.
-Do not reply with any other text.`;
-
-        const response = await groq.chat.completions.create({
-            model: "llama-3.3-70b-versatile",
-            messages: [{ role: "user", content: moderationPrompt }],
-            temperature: 0,
-            max_tokens: 10,
-        });
-
-        const decision = response.choices[0]?.message?.content?.trim().toUpperCase() || "ALLOW";
-        
-        if (decision.includes("BLOCK")) {
-            return { allowed: false, reason: "Message blocked by AI moderation due to policy violation" };
-        }
-        
-        return { allowed: true };
-    } catch (error) {
-        console.error("AI Moderation failed: ", error);
-        return { allowed: true }; // Fail-open to avoid blocking chat if AI is down
-    }
-}
 
 type MessageBody = {
     content?: string;
@@ -179,13 +134,6 @@ export async function POST(
 
     if (!(["text", "system", "image", "file"] as MessageType[]).includes(messageType)) {
         return NextResponse.json({ error: "Invalid message type." }, { status: 400 });
-    }
-
-    if (messageType === "text") {
-        const moderation = await moderateMessage(content);
-        if (!moderation.allowed) {
-            return NextResponse.json({ error: moderation.reason }, { status: 400 });
-        }
     }
 
     try {

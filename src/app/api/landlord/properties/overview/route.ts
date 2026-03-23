@@ -57,33 +57,51 @@ export async function GET() {
         return NextResponse.json({ properties: [] });
     }
 
-    const [
-        { data: units, error: unitsError },
-        { data: maintenanceRows, error: maintenanceError },
-        { data: leases, error: leasesError },
-        { data: payments, error: paymentsError }
-    ] = await Promise.all([
-        supabase
-            .from("units")
-            .select("id, property_id, status, rent_amount")
-            .in("property_id", propertyIds),
-        supabase
-            .from("maintenance_requests")
-            .select("unit_id, status")
-            // Can't filter tightly by unit_id here easily without dependent fetch, 
-            // so using proper subquery filtering via property relation
-            .in("property_id", propertyIds),
-        supabase
-            .from("leases")
-            .select("id, unit_id")
-            .eq("landlord_id", user.id),
-        supabase
-            .from("payments")
-            .select("lease_id, amount, status")
-            // Fetch relevant payments by associating via the tenant relationship or globally for now
-            // Optimally, this gets joined directly, but we'll fetch all landlord payments.
-            .eq("landlord_id", user.id)
-    ]);
+    const { data: units, error: unitsError } = await supabase
+        .from("units")
+        .select("id, property_id, status, rent_amount")
+        .in("property_id", propertyIds);
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to fetch units." }, { status: 500 });
+    }
+
+    const unitIds = (units ?? []).map((unit) => unit.id);
+
+    const { data: maintenanceRows, error: maintenanceError } =
+        unitIds.length > 0
+            ? await supabase
+                  .from("maintenance_requests")
+                  .select("unit_id, status")
+                  .in("unit_id", unitIds)
+            : { data: [], error: null };
+
+    if (maintenanceError) {
+        return NextResponse.json({ error: "Failed to fetch maintenance data." }, { status: 500 });
+    }
+
+    const { data: leases, error: leasesError } =
+        unitIds.length > 0
+            ? await supabase
+                  .from("leases")
+                  .select("id, unit_id")
+                  .eq("landlord_id", user.id)
+                  .in("unit_id", unitIds)
+            : { data: [], error: null };
+
+    if (leasesError) {
+        return NextResponse.json({ error: "Failed to fetch leases." }, { status: 500 });
+    }
+
+    const leaseIds = (leases ?? []).map((lease) => lease.id);
+
+    const { data: payments, error: paymentsError } =
+        leaseIds.length > 0
+            ? await supabase
+                  .from("payments")
+                  .select("lease_id, amount, status")
+                  .in("lease_id", leaseIds)
+            : { data: [], error: null };
 
     if (paymentsError) {
         return NextResponse.json({ error: "Failed to fetch payments." }, { status: 500 });
