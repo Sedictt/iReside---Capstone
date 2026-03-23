@@ -36,6 +36,23 @@ Generate and record a new portfolio report.
 
 ---
 
+## 📝 Walk-in Applications & Leases
+
+### `POST /api/landlord/applications/walk-in`
+Create a new walk-in application.
+- **Request Body**: `status`, `applicant_name`, `applicant_phone`, etc.
+
+### `PATCH /api/landlord/applications/walk-in`
+Update an existing walk-in application.
+- **Request Body**: `id`, updated fields.
+
+### `POST /api/landlord/lease/finalize`
+Finalize a lease and automatically provision a tenant account.
+- **Request Body**: `application_id`, `unit_id`, lease terms, signatures.
+- **Returns**: Newly created lease and the temporary password for the generated tenant account.
+
+---
+
 ## 💬 Messaging System
 
 ### `GET /api/messages/conversations`

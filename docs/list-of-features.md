@@ -17,7 +17,7 @@ This document provides a comprehensive overview of the current features and tech
 
 ### 3. Real-Time Message Moderation
 *   **Toxic Content Filtering:** Instant real-time filtering of messages using Groq's Llama 3 API to block toxic content, hate speech, and spam before delivery.
-*   **Security & Safety:** Ensures a safe communication environment across both Landlord-Tenant and Public Marketplace channels.
+*   **Security & Safety:** Ensures a safe communication environment across Landlord-Tenant channels.
 
 ## II. Property & Asset Management
 
@@ -27,18 +27,18 @@ This document provides a comprehensive overview of the current features and tech
 *   **State-Persistence:** Real-time saving of all structural changes to the Supabase backend.
 
 ### 5. Unit Listing Wizard
-*   **Multi-Step Publishing Workflow:** A simplified multi-step process for moving internal units to the public marketplace.
+*   **Multi-Step Configuration Workflow:** A simplified multi-step process for defining rent, deposits, and property details for internal management.
 *   **Dynamic Pricing & Deposit Engine:** Landlords define advance rent requirements, security deposits, and customized monthly rates.
 *   **Media Management Vault:** Specialized slots for high-quality photos (Bedroom, Bathroom, Kitchen, Living Area) and custom room descriptions.
 *   **Amenity Tagging:** Granular tagging of specific unit features for enhanced discovery.
 
 ## III. Operations, Reports & Financials
 
-### 6. Smart Discovery Portal
-*   **Map-Based Search:** Leaflet-integrated discovery allowing users to search properties within specific map radii.
-*   **Proximity Intelligence:** Perform radius-based searches to find properties near specific landmarks or work locations.
-*   **Dynamic Search Suggestions:** Real-time city, barangay, and street suggestions powered by master geo-data.
-*   **Advanced Multi-Filter:** Granular controls for price range, property type, and amenity requirements.
+### 6. Walk-in Applications & Unit Showcasing
+*   **Interactive Unit Showcase:** A visually rich presentation modal displaying unit details, photos, and amenities to prospective walk-in clients directly from the landlord's dashboard.
+*   **Multi-Step Walk-in Modal:** Landlords can dynamically record applications for prospective tenants, capturing personal information, employment details, and required documents.
+*   **Pending & Approved States:** Applications with incomplete requirements are saved as 'pending' to be resumed later, while fully compliant ones are 'approved'.
+*   **Automated Tenant Provisioning:** Finalizing a lease for an approved walk-in automatically creates a tenant account and emails them their credentials.
 
 ### 7. Portfolio Reporting & Auditing
 *   **Branded PDF Reports:** Generate professional, iReside-branded PDF performance reports for property portfolios.
@@ -61,10 +61,10 @@ This document provides a comprehensive overview of the current features and tech
 *   **Dynamic Invoice Breakdown:** Automatic categorization of base rent, water, and electricity with dynamically fetched values.
 *   **Payment History & Logs:** Chronological log of transaction status, payment methods, and timestamps within the Tenant Portal.
 
-### 11. Tenant Application Tracking
-*   **Live Status Monitoring:** Real-time integration with the Supabase backend to track application progress (Reviewing, Approved, etc.).
+### 11. Walk-in Application Tracking
+*   **Live Status Monitoring:** Real-time integration with the Supabase backend to track walk-in application progress (Pending, Approved).
 *   **Dynamic Progress Indicators:** Interactive UI components that translate database states into user-friendly progress steps.
-*   **Application Timeline:** A chronological view of events, including submission dates, status changes, and required actions.
+*   **Application Timeline:** A chronological view of events, including submission dates, checklist completions, and required actions.
 
 ## IV. Communication & Core Infrastructure
 

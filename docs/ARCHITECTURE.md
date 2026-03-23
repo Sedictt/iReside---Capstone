@@ -135,12 +135,12 @@ erDiagram
 5.  **Groq API** processes the prompt and returns a response.
 6.  **Next.js** returns the AI response to the UI.
 
-### 2. Tenant Application Flow
-1.  **Tenant** browses a property and clicks "Apply".
-2.  **Application** record is created in `applications` table.
-3.  **Supabase Realtime** or a **Trigger** notifies the Landlord.
-4.  **Landlord** reviews documents and updates status.
-5.  On **Approval**, a **Lease** draft is automatically generated.
+### 2. Landlord Walk-in Application & Lease Flow
+1.  **Landlord** records a walk-in application for a prospective tenant.
+2.  **Application** record is created in `applications` table (saves as pending or approved).
+3.  On **Approval**, the Landlord generates a **Lease** agreement.
+4.  Both parties sign the **Lease** digitally via a dual-signature interface.
+5.  **Tenant Profile & Account** are automatically provisioned upon lease finalization, with credentials emailed to the tenant.
 
 ---
 
