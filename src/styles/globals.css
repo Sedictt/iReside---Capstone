@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "./design-tokens.css";
+
+:root {
+  --brand-gradient: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);
+  --base-background: #0a0a0a;
+  --card-background: #111111;
+  --text-color: #ffffff;
+}
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --primary: #6d9838;
+  --card: #171717;
+  --input: #262626;
+  --border: #262626;
+  --font-display: "Manrope", sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}

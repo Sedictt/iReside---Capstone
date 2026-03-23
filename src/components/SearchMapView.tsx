@@ -58,18 +58,27 @@ export default function SearchMapView() {
     const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
 
     useEffect(() => {
-        const savedLikes = localStorage.getItem("likedProperties");
-        if (savedLikes) {
-            setLikedProperties(new Set(JSON.parse(savedLikes)));
+        // Only run on client side after mount
+        if (typeof window === 'undefined') return;
+
+        try {
+            // Access localStorage safely - the try-catch wraps the actual calls
+            const savedLikes = localStorage.getItem("likedProperties");
+            if (savedLikes) {
+                setLikedProperties(new Set(JSON.parse(savedLikes)));
+            }
+
+            const savedHistory = localStorage.getItem("recentlyViewed");
+            if (savedHistory) {
+                setRecentlyViewed(JSON.parse(savedHistory));
+            }
+        } catch (error) {
+            // localStorage might be disabled or unavailable (e.g., Safari private browsing, or SSR issues)
+            console.warn("localStorage access failed:", error);
         }
 
-        const savedHistory = localStorage.getItem("recentlyViewed");
-        if (savedHistory) {
-            setRecentlyViewed(JSON.parse(savedHistory));
-        }
-
-        // Get initial location
-        if ("geolocation" in navigator) {
+        // Get initial location (only in browser)
+        if (typeof navigator !== 'undefined' && "geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
@@ -90,7 +99,14 @@ export default function SearchMapView() {
             } else {
                 newLiked.add(id);
             }
-            localStorage.setItem("likedProperties", JSON.stringify(Array.from(newLiked)));
+            // Safely save to localStorage (only in browser, with error handling)
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.setItem("likedProperties", JSON.stringify(Array.from(newLiked)));
+                } catch (e) {
+                    console.warn("localStorage setItem failed:", e);
+                }
+            }
             return newLiked;
         });
     };
@@ -225,7 +241,14 @@ export default function SearchMapView() {
         setDetailsOpen(true);
         setRecentlyViewed(prev => {
             const newHistory = [property.id, ...prev.filter(id => id !== property.id)].slice(0, 10);
-            localStorage.setItem("recentlyViewed", JSON.stringify(newHistory));
+            // Safely save to localStorage (only in browser)
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.setItem("recentlyViewed", JSON.stringify(newHistory));
+                } catch (e) {
+                    console.warn("localStorage setItem failed:", e);
+                }
+            }
             return newHistory;
         });
     };
