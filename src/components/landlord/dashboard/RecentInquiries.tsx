@@ -168,8 +168,23 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                 {/* Inquiries Grid - Compact Card Layout */}
                 <div className="p-6">
                     {loading ? (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-6">
-                            <p className="text-sm text-neutral-400">Loading recent inquiries...</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="group relative rounded-2xl bg-neutral-900 border border-white/5 animate-pulse overflow-hidden">
+                                    <div className="relative h-32 bg-white/5">
+                                        <div className="absolute bottom-3 left-4 h-14 w-14 rounded-full bg-white/10 ring-2 ring-neutral-900" />
+                                    </div>
+                                    <div className="p-4 pt-4">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <div className="h-5 w-32 bg-white/10 rounded mb-2" />
+                                                <div className="h-3 w-24 bg-white/5 rounded" />
+                                            </div>
+                                            <div className="h-10 w-full bg-white/5 rounded-lg" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">

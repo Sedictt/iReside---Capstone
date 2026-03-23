@@ -20,6 +20,7 @@ import {
     ArrowUpRight,
     Megaphone
 } from "lucide-react";
+import { signOut } from "@/lib/supabase/client-auth";
 
 
 interface NavItem {
@@ -116,13 +117,13 @@ export function Sidebar() {
 
             {/* Profile / Logout */}
             <div className="border-t border-white/5 p-4">
-                <Link
-                    href="/auth/logout"
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-400 transition-all hover:bg-red-500/10 hover:text-red-500"
+                <button
+                    onClick={signOut}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-400 transition-all hover:bg-red-500/10 hover:text-red-500 text-left"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Log Out</span>
-                </Link>
+                </button>
             </div>
         </aside>
     );

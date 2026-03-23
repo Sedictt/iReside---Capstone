@@ -165,8 +165,21 @@ export default function LandlordDashboard() {
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     {paymentsLoading ? (
-                                        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                                            <p className="text-xs text-neutral-500">Loading payments...</p>
+                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 relative overflow-hidden animate-pulse">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-white/10" />
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-24 bg-white/10 rounded" />
+                                                    <div className="h-3 w-16 bg-white/10 rounded" />
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end justify-center gap-2">
+                                                <div className="h-4 w-16 bg-white/10 rounded" />
+                                                <div className="flex gap-1.5 mt-1">
+                                                    <div className="h-4 w-12 bg-white/10 rounded-full" />
+                                                    <div className="h-4 w-10 bg-white/10 rounded" />
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : paymentsError ? (
                                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">

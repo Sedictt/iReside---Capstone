@@ -321,7 +321,7 @@ export default function TenantMessagesPage() {
     }, [activeConversationId]);
 
     useEffect(() => {
-        if (!conversationFromUrl || conversationFromUrl === activeConversationId) {
+        if (!conversationFromUrl) {
             return;
         }
 
@@ -330,8 +330,13 @@ export default function TenantMessagesPage() {
             return;
         }
 
+        // Use ref to compare without causing re-run
+        if (conversationFromUrl === activeConversationIdRef.current) {
+            return;
+        }
+
         setActiveConversationId(conversationFromUrl);
-    }, [activeConversationId, contacts, conversationFromUrl]);
+    }, [conversationFromUrl, contacts]); // Removed activeConversationId to prevent override loop
 
     useEffect(() => {
         if (panelFromUrl !== "files") {

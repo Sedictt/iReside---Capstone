@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iReside - Level 1 Data Flow Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 26px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            padding: 12px 20px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .legend-box {
+            width: 28px;
+            height: 28px;
+            border: 2px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        .legend-external {
+            border-color: #27ae60;
+            background: #d5f4e6;
+            color: #229954;
+        }
+
+        .legend-process {
+            border-color: #2980b9;
+            background: #d6eaf8;
+            color: #1f639b;
+            border-radius: 50%;
+        }
+
+        .legend-store {
+            border-color: #e67e22;
+            background: #fef5e6;
+            color: #d35400;
+        }
+
+        .diagram-container {
+            overflow: auto;
+            min-height: 700px;
+            max-height: 85vh;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .external {
+            fill: #d5f4e6;
+            stroke: #27ae60;
+            stroke-width: 2;
+        }
+
+        .process {
+            fill: #d6eaf8;
+            stroke: #2980b9;
+            stroke-width: 2;
+        }
+
+        .store {
+            fill: #fef5e6;
+            stroke: #e67e22;
+            stroke-width: 2;
+        }
+
+        .flow-arrow {
+            fill: none;
+            stroke: #7f8c8d;
+            stroke-width: 2;
+            marker-end: url(#arrowhead);
+        }
+
+        .flow-text {
+            font-size: 10px;
+            fill: #34495e;
+            font-weight: 500;
+        }
+
+        .title-text {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #2c3e50;
+        }
+
+        .label-text {
+            font-size: 12px;
+            fill: #34495e;
+        }
+
+        .section-header {
+            font-size: 13px;
+            fill: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .dashed {
+            stroke-dasharray: 4,3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>iReside Property Management System</h1>
+        <div class="subtitle">Level 1 Data Flow Diagram - Detailed Process View</div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box legend-external">E</div>
+                <span><strong>External Entity</strong> - User or external system</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-process">P</div>
+                <span><strong>Process</strong> - Data transformation/operation</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box legend-store">D</div>
+                <span><strong>Data Store</strong> - Database tables</span>
+            </div>
+        </div>
+
+        <div class="diagram-container">
+            <svg width="1500" height="1000" viewBox="0 0 1500 1000">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                        <polygon points="0 0, 10 3, 0 6" fill="#7f8c8d" />
+                    </marker>
+                    <marker id="arrowhead-dashed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                        <polygon points="0 0, 10 3, 0 6" fill="#95a5a6" />
+                    </marker>
+                </defs>
+
+                <!-- TITLE -->
+                <text x="750" y="35" class="title-text" text-anchor="middle">LEVEL 1 DFD - iReside System</text>
+                <text x="750" y="55" class="label-text" text-anchor="middle" fill="#7f8c8d">Next.js 16 + Supabase + Groq AI | Three User Roles: Tenant, Landlord, Admin</text>
+
+                <!-- SYSTEM BOUNDARY -->
+                <rect x="80" y="80" width="1340" height="840" fill="none" stroke="#3498db" stroke-width="1" stroke-dasharray="10,5" rx="8"/>
+                <text x="140" y="100" class="section-header" fill="#3498db">EXTERNAL ENTITIES</text>
+                <text x="900" y="100" class="section-header" fill="#3498db">PROCESSES (Next.js Application)</text>
+                <text x="1350" y="100" class="section-header" fill="#3498db">DATA STORES</text>
+
+                <!-- ========== LEFT COLUMN: EXTERNAL ENTITIES ========== -->
+                <!-- Tenant -->
+                <rect x="100" y="140" width="140" height="70" class="external" rx="8"/>
+                <text x="170" y="185" class="title-text" text-anchor="middle">Tenant</text>
+                <text x="170" y="200" class="label-text" text-anchor="middle" font-size="10">Prospective/Current</text>
+
+                <!-- Landlord -->
+                <rect x="100" y="280" width="140" height="70" class="external" rx="8"/>
+                <text x="170" y="325" class="title-text" text-anchor="middle">Landlord</text>
+                <text x="170" y="340" class="label-text" text-anchor="middle" font-size="10">Property Owner/Manager</text>
+
+                <!-- Admin -->
+                <rect x="100" y="420" width="140" height="70" class="external" rx="8"/>
+                <text x="170" y="465" class="title-text" text-anchor="middle">Admin</text>
+                <text x="170" y="480" class="label-text" text-anchor="middle" font-size="10">System Moderator</text>
+
+                <!-- Groq API -->
+                <rect x="100" y="560" width="140" height="70" class="external" rx="8"/>
+                <text x="170" y="605" class="title-text" text-anchor="middle">Groq API</text>
+                <text x="170" y="620" class="label-text" text-anchor="middle" font-size="10">Llama 3.1 AI</text>
+
+                <!-- ========== CENTER: PROCESSES ========== -->
+                <!-- P1: Authentication -->
+                <rect x="350" y="150" width="180" height="70" class="process" rx="35"/>
+                <text x="440" y="195" class="title-text" text-anchor="middle">P1</text>
+                <tspan x="440" dy="14" class="label-text" text-anchor="middle">Authentication</tspan>
+                <tspan x="440" dy="16" class="label-text" text-anchor="middle">& Authorization</tspan>
+
+                <!-- P2: Property Management -->
+                <rect x="350" y="270" width="180" height="70" class="process" rx="35"/>
+                <text x="440" y="315" class="title-text" text-anchor="middle">P2</text>
+                <tspan x="440" dy="14" class="label-text" text-anchor="middle">Property & Unit</tspan>
+                <tspan x="440" dy="16" class="label-text" text-anchor="middle">Management</tspan>
+
+                <!-- P3: Discovery & Applications -->
+                <rect x="350" y="390" width="180" height="70" class="process" rx="35"/>
+                <text x="440" y="435" class="title-text" text-anchor="middle">P3</text>
+                <tspan x="440" dy="14" class="label-text" text-anchor="middle">Discovery &</tspan>
+                <tspan x="440" dy="16" class="label-text" text-anchor="middle">Applications</tspan>
+
+                <!-- P4: Leases & Payments -->
+                <rect x="350" y="510" width="180" height="70" class="process" rx="35"/>
+                <text x="440" y="555" class="title-text" text-anchor="middle">P4</text>
+                <tspan x="440" dy="14" class="label-text" text-anchor="middle">Lease & Payment</tspan>
+                <tspan x="440" dy="16" class="label-text" text-anchor="middle">Management</tspan>
+
+                <!-- P5: Messaging -->
+                <rect x="600" y="270" width="180" height="70" class="process" rx="35"/>
+                <text x="690" y="315" class="title-text" text-anchor="middle">P5</text>
+                <tspan x="690" dy="14" class="label-text" text-anchor="middle">Real-Time</tspan>
+                <tspan x="690" dy="16" class="label-text" text-anchor="middle">Messaging</tspan>
+
+                <!-- P6: AI Assistant -->
+                <rect x="600" y="150" width="180" height="70" class="process" rx="35"/>
+                <text x="690" y="195" class="title-text" text-anchor="middle">P6</text>
+                <tspan x="690" dy="14" class="label-text" text-anchor="middle">AI Assistant</tspan>
+                <tspan x="690" dy="16" class="label-text" text-anchor="middle">(iRis)</tspan>
+
+                <!-- P7: Admin Oversight -->
+                <rect x="600" y="510" width="180" height="70" class="process" rx="35"/>
+                <text x="690" y="555" class="title-text" text-anchor="middle">P7</text>
+                <tspan x="690" dy="14" class="label-text" text-anchor="middle">Admin Oversight</tspan>
+                <tspan x="690" dy="16" class="label-text" text-anchor="middle">& Moderation</tspan>
+
+                <!-- ========== RIGHT COLUMN: DATA STORES ========== -->
+                <!-- D1: profiles -->
+                <rect x="1150" y="140" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="168" class="label-text" text-anchor="middle">D1: profiles</text>
+                <text x="1225" y="182" class="label-text" text-anchor="middle" font-size="9">users, roles</text>
+
+                <!-- D2: properties -->
+                <rect x="1150" y="200" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="228" class="label-text" text-anchor="middle">D2: properties</text>
+
+                <!-- D3: units -->
+                <rect x="1150" y="260" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="288" class="label-text" text-anchor="middle">D3: units</text>
+
+                <!-- D4: listings -->
+                <rect x="1150" y="320" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="348" class="label-text" text-anchor="middle">D4: listings</text>
+
+                <!-- D5: applications -->
+                <rect x="1150" y="380" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="408" class="label-text" text-anchor="middle">D5: applications</text>
+
+                <!-- D6: leases -->
+                <rect x="1150" y="440" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="468" class="label-text" text-anchor="middle">D6: leases</text>
+
+                <!-- D7: payments -->
+                <rect x="1150" y="500" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="528" class="label-text" text-anchor="middle">D7: payments</text>
+
+                <!-- D8: maintenance_requests -->
+                <rect x="1150" y="560" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="588" class="label-text" text-anchor="middle">D8: maintenance</text>
+                <text x="1225" y="602" class="label-text" text-anchor="middle" font-size="9">requests</text>
+
+                <!-- D9: conversations -->
+                <rect x="1150" y="620" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="648" class="label-text" text-anchor="middle">D9:</text>
+                <text x="1225" y="662" class="label-text" text-anchor="middle">conversations</text>
+
+                <!-- D10: messages -->
+                <rect x="1150" y="680" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="708" class="label-text" text-anchor="middle">D10: messages</text>
+
+                <!-- D11: notifications -->
+                <rect x="1150" y="740" width="150" height="45" class="store" rx="4"/>
+                <text x="1225" y="768" class="label-text" text-anchor="middle">D11:</text>
+                <text x="1225" y="782" class="label-text" text-anchor="middle">notifications</text>
+
+                <!-- D12: landlord_applications -->
+                <rect x="1150" y="800" width="150" height="50" class="store" rx="4"/>
+                <text x="1225" y="830" class="label-text" text-anchor="middle">D12: landlord</text>
+                <text x="1225" y="845" class="label-text" text-anchor="middle">applications</text>
+
+                <!-- ========== DATA FLOWS ========== -->
+
+                <!-- Tenant flows -->
+                <line x1="240" y1="175" x2="350" y2="185" class="flow-arrow"/>
+                <text x="290" y="168" class="flow-text" text-anchor="middle">credentials</text>
+
+                <path d="M 240 355 Q 300 355 350 355" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="290" y="348" class="flow-text" text-anchor="middle">search filters</text>
+
+                <path d="M 240 245 L 350 345" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="270" y="295" class="flow-text" text-anchor="middle">browse listings</text>
+
+                <path d="M 240 425 L 350 475" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="270" y="450" class="flow-text" text-anchor="middle">submit payment</text>
+
+                <path d="M 240 305 L 540 305" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="390" y="295" class="flow-text" text-anchor="middle">send message</text>
+
+                <path d="M 240 215 L 600 185" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="420" y="195" class="flow-text" text-anchor="middle">chat query</text>
+
+                <!-- Landlord flows -->
+                <line x1="240" y1="305" x2="350" y2="305" class="flow-arrow"/>
+                <text x="290" y="295" class="flow-text" text-anchor="middle">manage listings</text>
+
+                <path d="M 240 385 L 350 385" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="290" y="375" class="flow-text" text-anchor="middle">create listings</text>
+
+                <path d="M 240 435 L 350 505" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="270" y="470" class="flow-text" text-anchor="middle">payment records</text>
+
+                <path d="M 240 355 L 540 355" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="390" y="345" class="flow-text" text-anchor="middle">messages</text>
+
+                <path d="M 240 535 L 350 535" stroke-dasharray="4,3" stroke="#95a5a6" stroke-width="2" marker-end="url(#arrowhead-dashed)"/>
+                <text x="290" y="525" class="flow-text" text-anchor="middle" fill="#95a5a6">upload docs</text>
+
+                <!-- Admin flows -->
+                <line x1="240" y1="555" x2="350" y2="555" class="flow-arrow"/>
+                <text x="290" y="545" class="flow-text" text-anchor="middle">login</text>
+
+                <path d="M 240 635 L 350 555" stroke-dasharray="4,3" stroke="#95a5a6" stroke-width="2" marker-end="url(#arrowhead-dashed)"/>
+                <text x="290" y="595" class="flow-text" text-anchor="middle" fill="#95a5a6">moderate</text>
+
+                <!-- P1 to data stores -->
+                <line x1="530" y1="185" x2="1150" y2="175" class="flow-arrow"/>
+                <text x="840" y="180" class="flow-text" text-anchor="middle">read/write</text>
+
+                <!-- P2 to data stores -->
+                <path d="M 530 305 L 770 280 L 1150 280" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="960" y="270" class="flow-text" text-anchor="middle">CRUD</text>
+                <path d="M 1150 200 L 530 290" stroke-dasharray="4,3" stroke="#95a5a6" stroke-width="2" marker-end="url(#arrowhead-dashed)"/>
+                <text x="820" y="255" class="flow-text" text-anchor="middle" fill="#95a5a6">media uploads</text>
+
+                <!-- P3 to data stores -->
+                <path d="M 530 425 L 770 380 L 1150 380" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="930" y="395" class="flow-text" text-anchor="middle">read, create</text>
+
+                <!-- P4 to data stores -->
+                <path d="M 530 545 L 770 500 L 1150 500" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="930" y="515" class="flow-text" text-anchor="middle">CRUD</text>
+
+                <!-- P5 to data stores -->
+                <path d="M 770 355 L 770 650 L 1150 650" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="800" y="505" class="flow-text" text-anchor="middle" transform="rotate(90, 800, 505)">messages, convos</text>
+
+                <!-- P6 to data stores & Groq -->
+                <path d="M 770 185 L 770 140 L 1150 140" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="1000" y="160" class="flow-text" text-anchor="middle" transform="rotate(90, 1000, 160)">fetch context</text>
+
+                <line x1="240" y1="635" x2="600" y2="185" class="flow-arrow" stroke-dasharray="4,4"/>
+                <text x="420" y="240" class="flow-text" text-anchor="middle" fill="#95a5a6">context → Groq</text>
+
+                <line x1="600" y1="200" x2="240" y2="640" stroke-dasharray="4,4" stroke="#95a5a6" stroke-width="2" marker-end="url(#arrowhead-dashed)"/>
+                <text x="420" y="420" class="flow-text" text-anchor="middle" fill="#95a5a6">AI response</text>
+
+                <!-- P7 to data stores -->
+                <path d="M 770 545 L 770 800 L 1150 800" fill="none" stroke="#7f8c8d" stroke-width="2"/>
+                <text x="800" y="673" class="flow-text" text-anchor="middle" transform="rotate(90, 800, 673)">review, approve</text>
+
+                <!-- Supabase note -->
+                <rect x="350" y="760" width="800" height="100" fill="#f8f9fa" stroke="#9b59b6" stroke-width="2" stroke-dasharray="6,4" rx="6"/>
+                <text x="750" y="790" class="label-text" text-anchor="middle" fill="#9b59b6" font-weight="bold">BACKEND INFRASTRUCTURE (Supabase)</text>
+                <text x="750" y="810" class="label-text" text-anchor="middle" fill="#9b59b6" font-size="11">PostgreSQL Database with Row Level Security (RLS) | Authentication Service | Real-time Subscriptions | Storage</text>
+                <text x="750" y="830" class="label-text" text-anchor="middle" fill="#9b59b6" font-size="11">All data persisted through Supabase client/admin SDKs with server-side middleware</text>
+
+                <!-- Notes -->
+                <text x="750" y="960" class="label-text" text-anchor="middle" fill="#7f8c8d" font-style="italic">
+                    Dashed lines = asynchronous/background data flows | All API routes in src/app/api/** enforce authentication via middleware
+                </text>
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

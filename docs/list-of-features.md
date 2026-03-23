@@ -103,14 +103,19 @@ This document provides a comprehensive overview of the current features and tech
 *   **UI Components:** Radix UI, Lucide React
 *   **Typography:** Geist, Rethink Sans
 
-## VII. ISO 25010 Compliance Goals
+## VII. ISO/IEC 25010 Compliance Goals
 
-The system is engineered to meet eight key quality characteristics:
-1.  **Functional Suitability:** Completeness and correctness of property operations.
-2.  **Performance Efficiency:** Rapid response times for RAG and mapping engines.
-3.  **Interaction Capability:** Intuitive modular builder and discovery UX.
-4.  **Reliability:** High availability via Supabase infrastructure.
-5.  **Security:** Multi-layered RBAC and AI-powered moderation.
-6.  **Maintainability:** Modular Next.js architecture and typed interfaces.
-7.  **Flexibility:** Scalable property structures and tenant hierarchies.
-8.  **Compatibility:** Full mobile-responsiveness and cross-browser support.
+The system is engineered to assess the applicable ISO/IEC 25010 quality characteristics:
+1.  **Functional Suitability:** Functional completeness, correctness, and appropriateness of property and account operations.
+2.  **Performance Efficiency:** Responsive time behavior for search, mapping, and AI-assisted workflows.
+3.  **Compatibility:** Co-existence with common browsers and interoperability with Supabase and AI services.
+4.  **Usability:** Appropriateness recognizability, learnability, operability, user error protection, user interface aesthetics, and accessibility.
+5.  **Reliability:** Maturity, availability, fault tolerance, and recoverability supported by the backend infrastructure.
+6.  **Security:** Confidentiality, integrity, non-repudiation, accountability, and authenticity through role-based access control.
+7.  **Maintainability:** Modularity, reusability, analyzability, modifiability, and testability through the Next.js architecture.
+8.  **Flexibility:** Adaptability, scalability, installability, and replaceability across device sizes and deployment environments.
+9.  **Safety:** Operational constraint, risk identification, fail-safe behavior, hazard warnings, and safe integration where applicable.
+
+The terms User engagement, Inclusivity, User assistance, and Self-descriptiveness are not official ISO/IEC 25010 subcharacteristics and will only be used as descriptive usability considerations if needed.
+
+Only the subcharacteristics applicable to iReside will be used in the evaluation.

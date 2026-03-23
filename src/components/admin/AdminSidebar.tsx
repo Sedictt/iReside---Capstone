@@ -11,8 +11,7 @@ import {
     LogOut,
     ChevronRight,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, description: "Overview & stats" },
@@ -22,13 +21,6 @@ const NAV_ITEMS = [
 
 export function AdminSidebar() {
     const pathname = usePathname();
-    const router = useRouter();
-
-    const handleLogout = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.push("/login");
-    };
 
     return (
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col"
@@ -90,7 +82,7 @@ export function AdminSidebar() {
             {/* Bottom section */}
             <div className="px-3 py-4 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <button
-                    onClick={handleLogout}
+                    onClick={signOut}
                     className="group flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-neutral-500 hover:text-red-400 hover:bg-red-500/[0.08] transition-all duration-200 w-full"
                 >
                     <div className="h-8 w-8 rounded-lg bg-white/[0.04] group-hover:bg-red-500/10 flex items-center justify-center shrink-0 transition-all duration-200">

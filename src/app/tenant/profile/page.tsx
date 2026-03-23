@@ -205,12 +205,20 @@ export default function TenantProfilePage() {
                                     <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 group/avatar cursor-pointer">
                                         <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse-slow"></div>
                                         <div className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl group-hover/avatar:border-white transition-colors">
-                                            <Image
-                                                src={profileImage}
-                                                alt={displayName}
-                                                fill
-                                                className="object-cover"
-                                            />
+                                            {profileImage ? (
+                                                <Image
+                                                    src={profileImage}
+                                                    alt={displayName}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                                    <span className="text-2xl font-bold text-muted-foreground">
+                                                        {displayName?.charAt(0) || '?'}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                         <input
                                             type="file"

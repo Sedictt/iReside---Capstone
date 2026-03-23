@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/landlord/dashboard" },
@@ -51,13 +52,13 @@ export function LandlordNavbar() {
                         <p className="text-sm font-medium text-white truncate max-w-[150px]">{displayName}</p>
                         <p className="text-xs text-slate-400 truncate max-w-[150px]">{profile?.email || user?.email}</p>
                     </div>
-                    <Link
-                        href="/auth/logout"
+                    <button
+                        onClick={signOut}
                         className="h-10 w-10 overflow-hidden rounded-full bg-red-500/20 ring-2 ring-white/10 flex items-center justify-center text-red-500 hover:bg-red-500/30 transition-colors"
                         title="Log Out"
                     >
                         <LogOut className="h-5 w-5" />
-                    </Link>
+                    </button>
                 </div>
             </div>
         </nav>

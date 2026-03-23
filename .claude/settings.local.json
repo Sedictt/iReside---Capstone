@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -h \"CREATE TABLE\" supabase/migrations/*.sql)",
+      "Bash(grep -rh \"CREATE TABLE public\" supabase/migrations/*.sql)"
+    ]
+  }
+}

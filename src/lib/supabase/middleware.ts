@@ -90,5 +90,13 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // Add cache-control headers to prevent back-button access to protected pages
+    // These headers ensure that authenticated pages are not cached by the browser
+    if (user && supabaseResponse.headers instanceof Headers) {
+        supabaseResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+        supabaseResponse.headers.set('Pragma', 'no-cache')
+        supabaseResponse.headers.set('Expires', '0')
+    }
+
     return supabaseResponse
 }

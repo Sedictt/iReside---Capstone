@@ -1,6 +1,7 @@
 "use client";
 
 import { Settings, User, LogOut, CreditCard } from "lucide-react";
+import { signOut } from "@/lib/supabase/client-auth";
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -159,13 +160,13 @@ export function ProfileWidget() {
 
                             <div className="my-1.5 h-px bg-white/10"></div>
 
-                            <Link
-                                href="/auth/logout"
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group"
+                            <button
+                                onClick={signOut}
+                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group text-left"
                             >
                                 <LogOut className="h-4 w-4" />
                                 <span>Log Out</span>
-                            </Link>
+                            </button>
                         </div>
                     </motion.div>
                 )}

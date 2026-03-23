@@ -211,7 +211,7 @@ export default function InvoicesPage() {
                     {['All', 'Pending', 'Overdue', 'Paid'].map(status => (
                         <button
                             key={status}
-                            onClick={() => setStatusFilter(status as "All" | "Pending" | "Overdue" | "Paid")}
+                            onClick={() => setStatusFilter(status)}
                             className={cn(
                                 "px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all",
                                 statusFilter === status
@@ -243,11 +243,45 @@ export default function InvoicesPage() {
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-16 text-center text-sm text-neutral-400">
-                                        Loading invoices...
-                                    </td>
-                                </tr>
+                                <>
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-white/5 shrink-0" />
+                                                    <div className="space-y-2">
+                                                        <div className="h-4 w-24 bg-white/10 rounded" />
+                                                        <div className="flex gap-2">
+                                                            <div className="h-4 w-16 bg-white/5 rounded" />
+                                                            <div className="h-4 w-12 bg-white/5 rounded" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 hidden md:table-cell">
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-32 bg-white/10 rounded" />
+                                                    <div className="h-3 w-24 bg-white/5 rounded" />
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="h-5 w-20 bg-white/10 rounded" />
+                                            </td>
+                                            <td className="px-6 py-5 hidden lg:table-cell">
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-20 bg-white/10 rounded" />
+                                                    <div className="h-3 w-16 bg-white/5 rounded" />
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex justify-end gap-2">
+                                                    <div className="h-8 w-8 bg-white/5 rounded-lg" />
+                                                    <div className="h-8 w-8 bg-white/5 rounded-lg" />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </>
                             ) : error ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-16 text-center text-sm text-red-300">

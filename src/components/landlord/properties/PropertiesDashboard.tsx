@@ -197,10 +197,39 @@ export function PropertiesDashboard() {
             {/* Assets Stack View */}
             <div className="space-y-6">
                 {isLoading && (
-                    <div className="text-center py-20 bg-[#111] rounded-3xl border border-white/5">
-                        <Building2 className="h-12 w-12 text-neutral-600 mx-auto mb-4 animate-pulse" />
-                        <h3 className="text-xl font-bold text-white mb-2">Loading properties...</h3>
-                        <p className="text-neutral-500">Fetching your portfolio from the database.</p>
+                    <div className="space-y-6">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="animate-pulse flex flex-col lg:flex-row bg-[#111] border border-white/5 rounded-3xl overflow-hidden min-h-[240px]">
+                                <div className="lg:w-[380px] h-[240px] lg:h-auto bg-white/5 flex flex-col justify-between p-6">
+                                    <div className="h-6 w-24 bg-white/10 rounded-full" />
+                                    <div className="space-y-3">
+                                        <div className="h-8 w-48 bg-white/10 rounded" />
+                                        <div className="h-4 w-64 bg-white/5 rounded" />
+                                    </div>
+                                </div>
+                                <div className="flex-1 p-6 lg:p-8 flex items-center">
+                                    <div className="w-full flex flex-col lg:flex-row justify-between gap-8">
+                                        <div className="flex flex-wrap gap-8">
+                                            <div className="flex gap-4 items-center">
+                                                <div className="w-14 h-14 rounded-full bg-white/5"></div>
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-20 bg-white/10 rounded"></div>
+                                                    <div className="h-5 w-24 bg-white/5 rounded"></div>
+                                                </div>
+                                            </div>
+                                            <div className="py-2 space-y-2">
+                                                <div className="h-4 w-20 bg-white/10 rounded"></div>
+                                                <div className="h-5 w-24 bg-white/5 rounded"></div>
+                                            </div>
+                                            <div className="py-2 space-y-2">
+                                                <div className="h-4 w-20 bg-white/10 rounded"></div>
+                                                <div className="h-5 w-24 bg-white/5 rounded"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
 

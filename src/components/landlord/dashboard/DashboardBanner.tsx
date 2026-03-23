@@ -185,8 +185,17 @@ export function DashboardBanner({
 
                             <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
                                 {notificationsLoading ? (
-                                    <div className="px-4 py-6">
-                                        <p className="text-sm text-neutral-400">Loading notifications...</p>
+                                    <div className="px-4 py-3 space-y-4">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="animate-pulse flex items-start justify-between gap-3 pb-3 border-b border-white/5 last:border-0 last:pb-0">
+                                                <div className="space-y-2 w-full">
+                                                    <div className="h-4 w-3/4 bg-white/10 rounded" />
+                                                    <div className="h-3 w-full bg-white/5 rounded" />
+                                                    <div className="h-3 w-5/6 bg-white/5 rounded" />
+                                                    <div className="h-2 w-16 bg-white/5 rounded mt-2" />
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : notificationsError ? (
                                     <div className="px-4 py-6">

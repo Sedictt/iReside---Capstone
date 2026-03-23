@@ -174,8 +174,30 @@ export default function TenantsPage() {
 
             {/* Tenant Cards Grid */}
             {loading ? (
-                <div className="rounded-3xl border border-white/5 bg-[#111] p-6 text-sm text-neutral-400">
-                    Loading tenants...
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div key={i} className="animate-pulse bg-[#111] border border-white/5 rounded-3xl p-6 flex flex-col justify-between min-h-[320px]">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="h-6 w-16 bg-white/5 rounded-md" />
+                                <div className="h-6 w-20 bg-white/5 rounded-full" />
+                            </div>
+                            <div className="flex flex-col items-center flex-1 mt-2">
+                                <div className="w-20 h-20 rounded-full bg-white/10 mb-4" />
+                                <div className="h-5 w-32 bg-white/10 rounded mb-2" />
+                                <div className="h-3 w-40 bg-white/5 rounded" />
+                            </div>
+                            <div className="mt-6 pt-6 border-t border-white/5 flex justify-between items-end">
+                                <div className="space-y-2">
+                                    <div className="h-3 w-16 bg-white/5 rounded" />
+                                    <div className="h-5 w-20 bg-white/10 rounded" />
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="h-8 w-8 bg-white/5 rounded-full" />
+                                    <div className="h-8 w-8 bg-white/5 rounded-full" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : error ? (
                 <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
