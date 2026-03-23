@@ -9,6 +9,40 @@
     background: #0a0a0a;
 }
 
+/* ─── Top Bar ──────────────────────────────────────────── */
+.topBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 8px;
+    flex-shrink: 0;
+}
+
+.backButton, .actionButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #a3a3a3;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.backButton:active, .actionButton:active {
+    background: #141414;
+    transform: scale(0.95);
+}
+
+.backButton svg, .actionButton svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* ─── Header ───────────────────────────────────────────── */
 .header {
     display: flex;

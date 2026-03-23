@@ -8,6 +8,7 @@ import {
     Bath,
     Search,
     ArrowUpDown,
+    ArrowLeft,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import { properties } from "@/lib/data";
@@ -33,7 +34,13 @@ export default function SavedPropertiesScreen() {
     if (savedProperties.length === 0) {
         return (
             <div className={styles.container}>
-                <div className={styles.header}>
+                <div className={styles.topBar}>
+                    <button className={styles.backButton} onClick={() => navigate("tenantHome")}>
+                        <ArrowLeft />
+                    </button>
+                    <div className={styles.actionButton}></div>
+                </div>
+                <div className={styles.header} style={{ paddingTop: 0 }}>
                     <div className={styles.headerLeft}>
                         <h1 className={styles.headerTitle}>Saved Properties</h1>
                     </div>
@@ -61,8 +68,16 @@ export default function SavedPropertiesScreen() {
 
     return (
         <div className={styles.container}>
+            {/* Top Bar */}
+            <div className={styles.topBar}>
+                <button className={styles.backButton} onClick={() => navigate("tenantHome")}>
+                    <ArrowLeft />
+                </button>
+                <div className={styles.actionButton}></div>
+            </div>
+
             {/* Header */}
-            <div className={styles.header}>
+            <div className={styles.header} style={{ paddingTop: 0 }}>
                 <div className={styles.headerLeft}>
                     <h1 className={styles.headerTitle}>Saved Properties</h1>
                     <p className={styles.headerCount}>
