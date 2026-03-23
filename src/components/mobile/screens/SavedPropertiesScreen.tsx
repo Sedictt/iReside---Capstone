@@ -14,13 +14,36 @@ import { useNavigation } from "../navigation";
 import { properties } from "@/lib/data";
 import styles from "./SavedPropertiesScreen.module.css";
 
+export type SortOption = "date_desc" | "match_desc" | "price_asc" | "price_desc";
+
 export default function SavedPropertiesScreen() {
     const { navigate } = useNavigation();
 
     // Mock: start with first 3 properties as "saved"
     const [savedIds, setSavedIds] = useState<string[]>(["1", "2", "4"]);
 
+    // Sort State
+    const [showSortModal, setShowSortModal] = useState(false);
+    const [sortBy, setSortBy] = useState<SortOption>("date_desc");
+
     const savedProperties = properties.filter((p) => savedIds.includes(p.id));
+
+    // Apply Sorting
+    const sortedProperties = [...savedProperties].sort((a, b) => {
+        const getPrice = (str: string) => parseInt(str.replace(/[^\d]/g, "")) || 0;
+        switch (sortBy) {
+            case "match_desc":
+                return (b.matchScore || 0) - (a.matchScore || 0);
+            case "price_asc":
+                return getPrice(a.price) - getPrice(b.price);
+            case "price_desc":
+                return getPrice(b.price) - getPrice(a.price);
+            case "date_desc":
+            default:
+                // Mock date sort: use ID descending
+                return parseInt(b.id) - parseInt(a.id);
+        }
+    });
 
     const handleRemove = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -84,7 +107,7 @@ export default function SavedPropertiesScreen() {
                         <span>{savedProperties.length}</span> saved properties
                     </p>
                 </div>
-                <button className={styles.sortButton}>
+                <button className={styles.sortButton} onClick={() => setShowSortModal(true)}>
                     <ArrowUpDown />
                     Sort
                 </button>
@@ -92,7 +115,7 @@ export default function SavedPropertiesScreen() {
 
             {/* Grid */}
             <div className={styles.grid}>
-                {savedProperties.map((property) => (
+                {sortedProperties.map((property) => (
                     <div
                         key={property.id}
                         className={styles.card}
@@ -141,6 +164,46 @@ export default function SavedPropertiesScreen() {
                     </div>
                 ))}
             </div>
+
+            {/* Sort Modal */}
+            {showSortModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowSortModal(false)}>
+                    <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h2 className={styles.modalTitle}>Sort By</h2>
+                            <button className={styles.closeButton} onClick={() => setShowSortModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className={styles.optionsList}>
+                            <button 
+                                className={`${styles.optionBtn} ${sortBy === "date_desc" ? styles.optionActive : ""}`}
+                                onClick={() => { setSortBy("date_desc"); setShowSortModal(false); }}
+                            >
+                                Date Saved (Newest First)
+                            </button>
+                            <button 
+                                className={`${styles.optionBtn} ${sortBy === "match_desc" ? styles.optionActive : ""}`}
+                                onClick={() => { setSortBy("match_desc"); setShowSortModal(false); }}
+                            >
+                                Match Score (Highest First)
+                            </button>
+                            <button 
+                                className={`${styles.optionBtn} ${sortBy === "price_asc" ? styles.optionActive : ""}`}
+                                onClick={() => { setSortBy("price_asc"); setShowSortModal(false); }}
+                            >
+                                Rent Price (Lowest to Highest)
+                            </button>
+                            <button 
+                                className={`${styles.optionBtn} ${sortBy === "price_desc" ? styles.optionActive : ""}`}
+                                onClick={() => { setSortBy("price_desc"); setShowSortModal(false); }}
+                            >
+                                Rent Price (Highest to Lowest)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

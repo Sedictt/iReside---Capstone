@@ -324,3 +324,104 @@
     width: 16px;
     height: 16px;
 }
+
+/* ─── Bottom Sheet Modal ───────────────────────────────── */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    animation: fadeIn 0.2s ease;
+}
+
+.modalSheet {
+    background: #141414;
+    border-top: 1px solid #262626;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+}
+
+.closeButton {
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    border: none;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.closeButton:active {
+    background: #262626;
+}
+
+.optionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 20px;
+}
+
+.optionBtn {
+    width: 100%;
+    text-align: left;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid #1e1e1e;
+    background: #1a1a1a;
+    color: #a3a3a3;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.optionBtn:active {
+    background: #262626;
+    transform: scale(0.98);
+}
+
+.optionActive {
+    border-color: rgba(109, 152, 56, 0.4);
+    background: rgba(109, 152, 56, 0.12);
+    color: #6d9838;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
