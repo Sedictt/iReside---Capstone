@@ -262,7 +262,7 @@ export default function TenantDashboard() {
     } as const;
 
     return (
-        <div className="relative md:pr-[88px]">
+        <div className="relative md:pr-[104px] lg:pr-[112px]">
             {/* Ambient Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <Image

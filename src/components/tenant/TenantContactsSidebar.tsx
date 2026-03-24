@@ -825,7 +825,7 @@ export function TenantContactsSidebar() {
             {/* Sidebar */}
             <div
                 className={cn(
-                    "fixed top-16 right-0 h-[calc(100%-4rem)] bg-[#0a0a0a] border-l border-white/5 z-50 transition-all duration-500 ease-in-out flex flex-col shadow-2xl overflow-hidden",
+                    "hidden md:flex fixed top-0 right-0 h-screen bg-[#0a0a0a] border-l border-white/5 z-50 transition-all duration-500 ease-in-out flex-col shadow-2xl overflow-hidden",
                     isHovered ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
@@ -1002,7 +1002,7 @@ export function TenantContactsSidebar() {
 
             {/* Render Multiple Chatboxes Horizontally (Anchored next to Sidebar) */}
             <div className={cn(
-                "fixed bottom-0 flex items-end gap-4 z-[55] pointer-events-none transition-all duration-500 ease-in-out",
+                "hidden md:flex fixed bottom-0 items-end gap-4 z-[55] pointer-events-none transition-all duration-500 ease-in-out",
                 isHovered ? "right-[340px]" : "right-[110px]"
             )}
                 style={{ bottom: "max(0px, env(safe-area-inset-bottom))" }}
