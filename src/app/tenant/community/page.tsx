@@ -4,10 +4,15 @@ import { FormEvent, useEffect, useRef, useState, useTransition, ComponentType } 
 import { motion, AnimatePresence } from "framer-motion"
 import {
     addComment,
+    approveResidentPost,
+    createAnnouncementPost,
     createDiscussionPost,
+    createPollPost,
+    getPendingResidentPostsForModeration,
     getCurrentTenantPendingPosts,
     getCurrentTenantPosts,
     getPostComments,
+    getManagementProperties,
     reportPost,
     toggleReaction,
     votePoll
@@ -29,7 +34,11 @@ import {
     ImageIcon,
     Pin,
     X,
-    Send
+    Send,
+    Check,
+    XCircle,
+    ChevronDown,
+    Building2
 } from "lucide-react"
 
 const REACTIONS: Array<{ key: CommunityReactionType; label: string; icon: ComponentType<{ className?: string }> }> = [
@@ -115,10 +124,12 @@ function getAnnouncementConfig(title: string | null | undefined, content: string
 
 export default function TenantCommunityHubPage() {
     const { user, profile, loading } = useAuth()
+    const userRole = (user?.user_metadata?.role as string | undefined) || profile?.role || 'tenant'
+    const isManagementUser = userRole === 'landlord' || userRole === 'admin'
 
     const [showRules, setShowRules] = useState(false)
     const [isAnnouncementCollapsed, setIsAnnouncementCollapsed] = useState(false)
-    const [activeTab, setActiveTab] = useState<"live" | "mine" | "saved">("live")
+    const [activeTab, setActiveTab] = useState<"live" | "mine" | "saved" | "approvals">("live")
     const [searchQuery, setSearchQuery] = useState("")
     const [posts, setPosts] = useState<CommunityPost[]>([])
     const [savedPostIds, setSavedPostIds] = useState<string[]>([])
@@ -138,11 +149,19 @@ export default function TenantCommunityHubPage() {
     const [cursor, setCursor] = useState<string | null>(null)
     const [loadingFeed, setLoadingFeed] = useState(false)
     const [pendingPosts, setPendingPosts] = useState<CommunityPost[]>([])
+    const [moderationPosts, setModerationPosts] = useState<CommunityPost[]>([])
     const [loadingPendingPosts, setLoadingPendingPosts] = useState(false)
+    const [loadingModerationPosts, setLoadingModerationPosts] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    const [managementProperties, setManagementProperties] = useState<Array<{ id: string; name: string }>>([])
+    const [selectedPropertyId, setSelectedPropertyId] = useState<string>("")
+    const [isPropertyDropdownOpen, setIsPropertyDropdownOpen] = useState(false)
 
     const [discussionTitle, setDiscussionTitle] = useState("")
     const [discussionBody, setDiscussionBody] = useState("")
+    const [composerType, setComposerType] = useState<"discussion" | "poll" | "announcement">("discussion")
+    const [pollOptions, setPollOptions] = useState<string[]>(["", ""])
     const [reportModalPostId, setReportModalPostId] = useState<string | null>(null)
     const [reportReason, setReportReason] = useState("")
 
@@ -158,7 +177,8 @@ export default function TenantCommunityHubPage() {
 
         try {
             const targetCursor = mode === "append" ? cursor || undefined : undefined
-            const response = await getCurrentTenantPosts(12, targetCursor)
+            const propId = selectedPropertyId || undefined
+            const response = await getCurrentTenantPosts(12, targetCursor, propId)
 
             setPosts((current) => {
                 if (mode === "replace") return response.posts
@@ -186,31 +206,101 @@ export default function TenantCommunityHubPage() {
         }
     }
 
+    const loadModerationPosts = async () => {
+        if (!user?.id || !isManagementUser) return
+
+        setLoadingModerationPosts(true)
+        try {
+            const propId = selectedPropertyId || undefined
+            const response = await getPendingResidentPostsForModeration(20, propId)
+            setModerationPosts(response)
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : "Failed to load moderation queue.")
+        } finally {
+            setLoadingModerationPosts(false)
+        }
+    }
+
     useEffect(() => {
         if (loading || !user?.id) return
         void loadPosts("replace")
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, user?.id])
+    }, [loading, user?.id, selectedPropertyId])
 
     useEffect(() => {
-        if (loading || !user?.id || activeTab !== "mine") return
-        void loadPendingPosts()
+        if (loading || !user?.id || !isManagementUser) return
+        
+        async function fetchProps() {
+            try {
+                const props = await getManagementProperties()
+                setManagementProperties(props)
+                if (props.length > 0) {
+                    setSelectedPropertyId(curr => curr || props[0].id)
+                }
+            } catch (err) {
+                console.error("Failed to load management properties:", err)
+            }
+        }
+        void fetchProps()
+    }, [loading, user?.id, isManagementUser])
+
+    useEffect(() => {
+        if (loading || !user?.id) return
+
+        if (activeTab === "approvals" && isManagementUser) {
+            void loadModerationPosts()
+            return
+        }
+
+        if (activeTab === "mine" && !isManagementUser) {
+            void loadPendingPosts()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, user?.id, activeTab])
+    }, [loading, user?.id, activeTab, isManagementUser, selectedPropertyId])
 
     const handleDiscussionSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-        if (!discussionBody.trim()) return
+        if (!discussionBody.trim() && !discussionTitle.trim()) return
 
         startSubmitDiscussion(async () => {
             try {
-                await createDiscussionPost({ title: discussionTitle || "Community Post", content: discussionBody })
+                const propId = selectedPropertyId || undefined
+                if (composerType === "announcement") {
+                    await createAnnouncementPost({ title: discussionTitle || "Community Announcement", content: discussionBody, propertyId: propId })
+                } else if (composerType === "poll") {
+                    await createPollPost({
+                        title: discussionTitle || "Resident Poll",
+                        content: discussionBody,
+                        options: pollOptions,
+                        propertyId: propId
+                    })
+                } else {
+                    await createDiscussionPost({ title: discussionTitle || "Community Post", content: discussionBody, propertyId: propId })
+                }
+
                 setDiscussionTitle("")
                 setDiscussionBody("")
+                setPollOptions(["", ""])
                 await loadPosts("replace")
-                await loadPendingPosts()
+                if (isManagementUser) {
+                    await loadModerationPosts()
+                } else {
+                    await loadPendingPosts()
+                }
             } catch (submitError) {
                 setError(submitError instanceof Error ? submitError.message : "Failed to submit post.")
+            }
+        })
+    }
+
+    const handleModerationDecision = (postId: string, approved: boolean) => {
+        startPostMutation(async () => {
+            try {
+                await approveResidentPost(postId, approved)
+                await loadPosts("replace")
+                await loadModerationPosts()
+            } catch (moderationError) {
+                setError(moderationError instanceof Error ? moderationError.message : "Unable to update moderation status.")
             }
         })
     }
@@ -367,6 +457,7 @@ export default function TenantCommunityHubPage() {
     const visiblePosts = filteredBySearch.filter((post) => {
         if (activeTab === "mine") return post.author_id === user?.id
         if (activeTab === "saved") return savedPostIds.includes(post.id)
+        if (activeTab === "approvals") return false
         return true
     })
     const announcementConfig = topAnnouncement ? getAnnouncementConfig(topAnnouncement.title, topAnnouncement.content) : null
@@ -454,9 +545,72 @@ export default function TenantCommunityHubPage() {
                 </div>
                 <div className="relative p-8 md:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 z-10">
                     <div>
-                        <h1 className="text-3xl md:text-5xl font-display font-medium text-white mb-2 drop-shadow-lg">
-                            Community Hub
-                        </h1>
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-3">
+                            <h1 className="text-3xl md:text-5xl font-display font-medium text-white drop-shadow-lg">
+                                Community Hub
+                            </h1>
+                            {isManagementUser && managementProperties.length > 0 && (
+                                <div className="relative z-50">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsPropertyDropdownOpen(!isPropertyDropdownOpen)}
+                                        className="flex items-center justify-between min-w-[200px] gap-2 bg-[#1a1a1a]/80 hover:bg-[#222] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 transition-colors cursor-pointer group shadow-lg backdrop-blur-xl"
+                                    >
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                                            <span className="font-medium truncate">
+                                                {managementProperties.find(p => p.id === selectedPropertyId)?.name || 'Select Property'}
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 text-white/40 shrink-0 transition-transform ${isPropertyDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    
+                                    <AnimatePresence>
+                                        {isPropertyDropdownOpen && (
+                                            <>
+                                                <div 
+                                                    className="fixed inset-0 z-40" 
+                                                    onClick={() => setIsPropertyDropdownOpen(false)} 
+                                                />
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                    transition={{ duration: 0.15, ease: "easeOut" }}
+                                                    className="absolute top-full left-0 mt-2 w-[280px] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)] z-50 overflow-hidden ring-1 ring-white/5"
+                                                >
+                                                    <div className="max-h-[300px] overflow-y-auto p-1.5 scrollbar-hide">
+                                                        {managementProperties.length > 1 ? (
+                                                            managementProperties.map(p => (
+                                                                <button
+                                                                    key={p.id}
+                                                                    onClick={() => {
+                                                                        setSelectedPropertyId(p.id)
+                                                                        setIsPropertyDropdownOpen(false)
+                                                                    }}
+                                                                    className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center justify-between group/item ${
+                                                                        selectedPropertyId === p.id 
+                                                                        ? 'bg-emerald-500/10 text-emerald-400 font-medium' 
+                                                                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                                                    }`}
+                                                                >
+                                                                    <span className="truncate pr-2">{p.name || `Property ${p.id.substring(0,6)}`}</span>
+                                                                    {selectedPropertyId === p.id && <Check className="w-4 h-4 shrink-0" />}
+                                                                </button>
+                                                            ))
+                                                        ) : (
+                                                            <div className="px-3 py-2.5 text-xs text-white/40 text-center">
+                                                                Only 1 property managed
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </motion.div>
+                                            </>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            )}
+                        </div>
                         <p className="text-white/60 font-light text-base md:text-lg max-w-xl">Stay connected with your neighbors, discover events, and join the conversation.</p>
                     </div>
                     
@@ -507,6 +661,15 @@ export default function TenantCommunityHubPage() {
                     <MessageCircle className="w-[18px] h-[18px]" />
                     My Posts
                 </button>
+                {isManagementUser && (
+                    <button
+                        onClick={() => setActiveTab("approvals")}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${activeTab === "approvals" ? "bg-white/10 text-white border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]" : "text-white/50 hover:bg-white/5 hover:text-white border border-transparent hover:shadow-lg"}`}
+                    >
+                        <Check className="w-[18px] h-[18px]" />
+                        Approvals
+                    </button>
+                )}
                 <button
                     onClick={() => setActiveTab("saved")}
                     className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${activeTab === "saved" ? "bg-white/10 text-white border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]" : "text-white/50 hover:bg-white/5 hover:text-white border border-transparent hover:shadow-lg"}`}
@@ -564,15 +727,41 @@ export default function TenantCommunityHubPage() {
                     <section className="bg-[#151515] rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group mb-8">
                         <form onSubmit={handleDiscussionSubmit} className="relative z-10">
                             <div className="p-6">
+                                {isManagementUser && (
+                                    <div className="mb-5 flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setComposerType("discussion")}
+                                            className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${composerType === "discussion" ? "bg-white/15 border-white/25 text-white" : "bg-white/5 border-white/10 text-white/60 hover:text-white"}`}
+                                        >
+                                            Discussion
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setComposerType("poll")}
+                                            className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${composerType === "poll" ? "bg-white/15 border-white/25 text-white" : "bg-white/5 border-white/10 text-white/60 hover:text-white"}`}
+                                        >
+                                            Poll
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setComposerType("announcement")}
+                                            className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${composerType === "announcement" ? "bg-white/15 border-white/25 text-white" : "bg-white/5 border-white/10 text-white/60 hover:text-white"}`}
+                                        >
+                                            Announcement
+                                        </button>
+                                    </div>
+                                )}
+
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-full border border-white/10 shadow-inner shrink-0 bg-white/5 flex items-center justify-center text-white font-bold overflow-hidden">
                                         {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : userInitial}
                                     </div>
                                     <div className="flex-1">
-                                        {discussionTitle.length > 0 && (
+                                        {(composerType !== "discussion" || discussionTitle.length > 0) && (
                                             <input
                                                 type="text"
-                                                placeholder="Title (optional)"
+                                                placeholder={composerType === "announcement" ? "Announcement title" : composerType === "poll" ? "Poll title" : "Title (optional)"}
                                                 value={discussionTitle}
                                                 onChange={(e) => setDiscussionTitle(e.target.value)}
                                                 className="w-full bg-transparent border-none px-6 pt-3 pb-1 text-[17px] font-medium outline-none placeholder:text-white/20 text-white focus:ring-0"
@@ -581,10 +770,45 @@ export default function TenantCommunityHubPage() {
                                         <textarea
                                             value={discussionBody}
                                             onChange={(event) => setDiscussionBody(event.target.value)}
-                                            placeholder="What's on your mind, neighbor?..."
+                                            placeholder={composerType === "announcement" ? "Share an important property update..." : composerType === "poll" ? "Ask a poll question..." : "What's on your mind, neighbor?..."}
                                             className={`w-full bg-white/5 border border-white/5 rounded-3xl px-6 py-3 text-[15px] outline-none placeholder:text-white/20 text-white min-h-[48px] focus:bg-white/10 focus:border-white/10 transition-all resize-none overflow-hidden h-auto block ${discussionTitle.length > 0 ? 'mt-2' : ''}`}
                                             required
                                         />
+
+                                        {composerType === "poll" && (
+                                            <div className="mt-3 space-y-2">
+                                                {pollOptions.map((option, index) => (
+                                                    <input
+                                                        key={index}
+                                                        type="text"
+                                                        value={option}
+                                                        onChange={(event) => {
+                                                            const next = [...pollOptions]
+                                                            next[index] = event.target.value
+                                                            setPollOptions(next)
+                                                        }}
+                                                        placeholder={`Option ${index + 1}`}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/30"
+                                                    />
+                                                ))}
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPollOptions((current) => (current.length < 5 ? [...current, ""] : current))}
+                                                        className="px-3 py-1.5 rounded-lg border border-white/15 text-xs text-white/75 hover:text-white"
+                                                    >
+                                                        Add Option
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPollOptions((current) => (current.length > 2 ? current.slice(0, -1) : current))}
+                                                        className="px-3 py-1.5 rounded-lg border border-white/15 text-xs text-white/60 hover:text-white"
+                                                    >
+                                                        Remove Option
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -596,8 +820,8 @@ export default function TenantCommunityHubPage() {
                                         <span className="text-xs font-medium">Photo</span>
                                     </button>
                                 </div>
-                                <button type="submit" disabled={isSubmittingDiscussion || !discussionBody.trim()} className="bg-primary text-white hover:brightness-110 px-8 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg shadow-primary/10 disabled:opacity-30 disabled:cursor-not-allowed">
-                                    {isSubmittingDiscussion ? "Posting..." : "Post"}
+                                <button type="submit" disabled={isSubmittingDiscussion || (!discussionBody.trim() && !discussionTitle.trim())} className="bg-primary text-white hover:brightness-110 px-8 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg shadow-primary/10 disabled:opacity-30 disabled:cursor-not-allowed">
+                                    {isSubmittingDiscussion ? "Posting..." : composerType === "announcement" ? "Publish" : composerType === "poll" ? "Create Poll" : "Post"}
                                 </button>
                             </div>
                         </form>
@@ -616,7 +840,7 @@ export default function TenantCommunityHubPage() {
 
                     {/* Posts List */}
                     <div className="space-y-6">
-                        {activeTab === "mine" && (
+                        {activeTab === "mine" && !isManagementUser && (
                             <section className="relative overflow-hidden rounded-3xl border border-amber-300/20 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
                                 <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_45%)]" />
                                 <div className="relative p-6 md:p-8">
@@ -659,6 +883,78 @@ export default function TenantCommunityHubPage() {
                                                     <div className="mt-3 flex items-center justify-between text-xs text-white/45">
                                                         <span className="capitalize">{pendingPost.type.replace("_", " ")}</span>
                                                         <span>{formatRelative(pendingPost.created_at)}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+
+                        {activeTab === "approvals" && isManagementUser && (
+                            <section className="relative overflow-hidden rounded-3xl border border-amber-300/20 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+                                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_45%)]" />
+                                <div className="relative p-6 md:p-8">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                                        <div>
+                                            <p className="text-[11px] uppercase tracking-[0.22em] text-amber-200/90 font-bold">Moderation Queue</p>
+                                            <h3 className="text-xl md:text-2xl font-display text-white mt-1">Resident Posts Awaiting Review</h3>
+                                        </div>
+                                        <div className="px-3 py-1.5 rounded-full border border-amber-200/25 bg-amber-300/10 text-amber-100 text-xs font-semibold">
+                                            {moderationPosts.length} {moderationPosts.length === 1 ? "post" : "posts"} waiting
+                                        </div>
+                                    </div>
+
+                                    {loadingModerationPosts ? (
+                                        <div className="grid gap-3 md:grid-cols-2 animate-pulse">
+                                            {[1, 2].map((item) => (
+                                                <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-2">
+                                                    <div className="h-4 w-1/2 rounded bg-white/10" />
+                                                    <div className="h-3 w-full rounded bg-white/10" />
+                                                    <div className="h-3 w-3/4 rounded bg-white/10" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : moderationPosts.length === 0 ? (
+                                        <div className="rounded-2xl border border-dashed border-emerald-300/20 bg-emerald-400/5 p-6 text-center">
+                                            <p className="text-emerald-100 font-medium">No pending posts right now.</p>
+                                            <p className="text-emerald-200/60 text-sm mt-1">Resident submissions will appear here for approval.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            {moderationPosts.map((pendingPost) => (
+                                                <div key={pendingPost.id} className="rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.06] transition-colors p-4">
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <p className="text-white/90 font-semibold truncate">{pendingPost.title || "Untitled post"}</p>
+                                                        <span className="shrink-0 rounded-full border border-amber-200/25 bg-amber-300/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-100">Pending</span>
+                                                    </div>
+                                                    {pendingPost.content && (
+                                                        <p className="text-sm text-white/60 line-clamp-2">{pendingPost.content}</p>
+                                                    )}
+                                                    <div className="mt-3 flex items-center justify-between text-xs text-white/45">
+                                                        <span className="capitalize">{pendingPost.type.replace("_", " ")}</span>
+                                                        <span>{formatRelative(pendingPost.created_at)}</span>
+                                                    </div>
+                                                    <div className="mt-3 flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleModerationDecision(pendingPost.id, true)}
+                                                            disabled={isMutatingPost}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-300/30 text-emerald-100 text-xs font-semibold hover:bg-emerald-500/30 disabled:opacity-50"
+                                                        >
+                                                            <Check className="w-3.5 h-3.5" />
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleModerationDecision(pendingPost.id, false)}
+                                                            disabled={isMutatingPost}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-300/30 text-red-100 text-xs font-semibold hover:bg-red-500/30 disabled:opacity-50"
+                                                        >
+                                                            <XCircle className="w-3.5 h-3.5" />
+                                                            Reject
+                                                        </button>
                                                     </div>
                                                 </div>
                                             ))}

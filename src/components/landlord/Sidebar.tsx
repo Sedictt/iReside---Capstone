@@ -6,27 +6,24 @@ import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
     Building2,
-    FileText,
     Users,
     CreditCard,
     Wrench,
     MessageSquare,
-    Settings,
-    Bell,
     LogOut,
-    ChevronDown,
     ClipboardList,
     Map,
     ArrowUpRight,
     Megaphone
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 
 
 interface NavItem {
     label: string;
     href: string;
-    icon: any;
+    icon: LucideIcon;
     badge?: number;
 }
 
@@ -57,6 +54,7 @@ const NAV_ITEMS: NavSection[] = [
         items: [
             { label: "Invoices", href: "/landlord/invoices", icon: CreditCard },
             { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: 3 },
+            { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
             { label: "Messaging", href: "/landlord/messages", icon: MessageSquare },
         ]
     },

@@ -1,14 +1,17 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getTenantPropertyId } from './queries'
+import { getCommunityPropertyId } from './queries'
 import { revalidatePath } from 'next/cache'
 import type {
     CommunityPost,
     CommunityPostStatus,
+    CommunityPostType,
     CommunityReactionType,
     CommunityReportReason
 } from './types'
+
+type CommunityRole = 'tenant' | 'landlord' | 'admin'
 
 type PostRowWithRelations = {
     id: string
@@ -90,18 +93,116 @@ async function getAuthenticatedUserId(): Promise<string> {
     return user.id
 }
 
+async function getAuthenticatedCommunityContext(): Promise<{ userId: string; role: CommunityRole }> {
+    const supabase = await createClient()
+    const {
+        data: { user }
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+        throw new Error('You must be signed in to access the community hub.')
+    }
+
+    const metadataRole = user.user_metadata?.role
+    let resolvedRole: string | null = typeof metadataRole === 'string' ? metadataRole : null
+
+    // Fallback to profiles.role for accounts where auth metadata hasn't been backfilled yet.
+    if (!resolvedRole) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle()
+
+        resolvedRole = typeof profile?.role === 'string' ? profile.role : null
+    }
+
+    const role: CommunityRole = resolvedRole === 'admin' ? 'admin' : resolvedRole === 'landlord' ? 'landlord' : 'tenant'
+
+    return { userId: user.id, role }
+}
+
+function isManagementRole(role: CommunityRole): boolean {
+    return role === 'landlord' || role === 'admin'
+}
+
+function toAuthorRole(role: CommunityRole): 'tenant' | 'landlord' {
+    return role === 'tenant' ? 'tenant' : 'landlord'
+}
+
+function canCreatePostType(role: CommunityRole, postType: CommunityPostType): boolean {
+    if (role === 'tenant') {
+        return postType === 'discussion'
+    }
+
+    return true
+}
+
+async function resolvePropertyIdForPostCreation(userId: string, role: CommunityRole, propertyId?: string): Promise<string | null> {
+    const supabase = await createClient()
+
+    if (propertyId) {
+        if (role === 'tenant') {
+            return getCommunityPropertyId(userId, role)
+        }
+
+        if (role === 'admin') {
+            return propertyId
+        }
+
+        const { data: ownedProperty, error } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('id', propertyId)
+            .eq('landlord_id', userId)
+            .maybeSingle()
+
+        if (error || !ownedProperty) {
+            return null
+        }
+
+        return ownedProperty.id
+    }
+
+    return getCommunityPropertyId(userId, role)
+}
+
 export async function getPosts(
     userId: string,
     limit = 20,
-    cursor?: string
+    cursor?: string,
+    role: CommunityRole = 'tenant',
+    targetPropertyId?: string
 ): Promise<{
     posts: CommunityPost[]
     nextCursor: string | null
 }> {
     const supabase = await createClient()
 
-    const propertyId = await getTenantPropertyId(userId)
-    if (!propertyId) {
+    let managedPropertyIds: string[] | null = null
+    if (role === 'landlord') {
+        const { data: landlordProperties, error: landlordPropertiesError } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('landlord_id', userId)
+
+        if (landlordPropertiesError) {
+            console.error('getPosts landlord properties error:', landlordPropertiesError)
+            return { posts: [], nextCursor: null }
+        }
+
+        managedPropertyIds = (landlordProperties || []).map(property => property.id)
+        if (managedPropertyIds.length === 0) {
+            return { posts: [], nextCursor: null }
+        }
+
+        if (targetPropertyId && !managedPropertyIds.includes(targetPropertyId)) {
+            return { posts: [], nextCursor: null }
+        }
+    }
+
+    const propertyId = role === 'tenant' ? await getCommunityPropertyId(userId, role) : (targetPropertyId || null)
+    if (role === 'tenant' && !propertyId) {
         return { posts: [], nextCursor: null }
     }
 
@@ -115,12 +216,21 @@ export async function getPosts(
             community_poll_votes ( option_index, user_id ),
             community_albums ( id, cover_photo_url, photo_count )
         `)
-        .eq('property_id', propertyId)
         .eq('is_approved', true)
         .eq('status', 'published')
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(limit + 1)
+
+    if (role === 'tenant') {
+        query = query.eq('property_id', propertyId)
+    } else if (role === 'landlord') {
+        if (targetPropertyId) {
+            query = query.eq('property_id', targetPropertyId)
+        } else if (managedPropertyIds) {
+            query = query.in('property_id', managedPropertyIds)
+        }
+    }
 
     if (cursor) {
         query = query.lt('created_at', cursor)
@@ -143,20 +253,28 @@ export async function getPosts(
     return { posts, nextCursor }
 }
 
-export async function getCurrentTenantPosts(limit = 20, cursor?: string) {
-    const userId = await getAuthenticatedUserId()
-    return getPosts(userId, limit, cursor)
+export async function getCurrentTenantPosts(limit = 20, cursor?: string, propertyId?: string) {
+    return getCurrentCommunityPosts(limit, cursor, propertyId)
+}
+
+export async function getCurrentCommunityPosts(limit = 20, cursor?: string, propertyId?: string) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    return getPosts(userId, limit, cursor, role, propertyId)
 }
 
 export async function getCurrentTenantPendingPosts(limit = 20): Promise<CommunityPost[]> {
-    const userId = await getAuthenticatedUserId()
-    const propertyId = await getTenantPropertyId(userId)
+    return getCurrentCommunityPendingPosts(limit)
+}
+
+export async function getCurrentCommunityPendingPosts(limit = 20): Promise<CommunityPost[]> {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    const propertyId = await getCommunityPropertyId(userId, role)
     if (!propertyId) {
         return []
     }
 
     const supabase = await createClient()
-    const { data, error } = await supabase
+    let query = supabase
         .from('community_posts')
         .select(`
             *,
@@ -168,24 +286,89 @@ export async function getCurrentTenantPendingPosts(limit = 20): Promise<Communit
         `)
         .eq('property_id', propertyId)
         .eq('author_id', userId)
-        .eq('is_approved', false)
         .neq('status', 'archived')
         .order('created_at', { ascending: false })
         .limit(limit)
 
+    if (role === 'tenant') {
+        query = query.eq('is_approved', false)
+    }
+
+    const { data, error } = await query
+
     if (error || !data) {
-        console.error('getCurrentTenantPendingPosts error:', error)
+        console.error('getCurrentCommunityPendingPosts error:', error)
         return []
     }
 
     return (data as PostRowWithRelations[]).map(post => mapPost(post, userId))
 }
 
-export async function createDiscussionPost(input: { title: string; content: string }) {
-    const userId = await getAuthenticatedUserId()
-    const propertyId = await getTenantPropertyId(userId)
+export async function getPendingResidentPostsForModeration(limit = 20, targetPropertyId?: string): Promise<CommunityPost[]> {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    if (!isManagementRole(role)) {
+        return []
+    }
+
+    const supabase = await createClient()
+    let landlordPropertyIds: string[] | null = null
+    if (role === 'landlord') {
+        const { data: landlordProperties, error: propertiesError } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('landlord_id', userId)
+
+        if (propertiesError) {
+            console.error('getPendingResidentPostsForModeration properties error:', propertiesError)
+            return []
+        }
+
+        landlordPropertyIds = (landlordProperties || []).map(property => property.id)
+        if (landlordPropertyIds.length === 0) {
+            return []
+        }
+        if (targetPropertyId && !landlordPropertyIds.includes(targetPropertyId)) {
+            return []
+        }
+    }
+
+    let query = supabase
+        .from('community_posts')
+        .select(`
+            *,
+            profiles!author_id ( full_name, avatar_url ),
+            community_reactions ( reaction_type, user_id ),
+            community_comments ( id ),
+            community_poll_votes ( option_index, user_id ),
+            community_albums ( id, cover_photo_url, photo_count )
+        `)
+        .eq('author_role', 'tenant')
+        .eq('is_approved', false)
+        .neq('status', 'archived')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+    if (targetPropertyId) {
+        query = query.eq('property_id', targetPropertyId)
+    } else if (landlordPropertyIds) {
+        query = query.in('property_id', landlordPropertyIds)
+    }
+
+    const { data, error } = await query
+
+    if (error || !data) {
+        console.error('getPendingResidentPostsForModeration error:', error)
+        return []
+    }
+
+    return (data as PostRowWithRelations[]).map(post => mapPost(post, userId))
+}
+
+export async function createDiscussionPost(input: { title: string; content: string; propertyId?: string }) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
-        throw new Error('You need an active lease before posting in the community hub.')
+        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
     }
 
     const title = input.title.trim()
@@ -203,12 +386,12 @@ export async function createDiscussionPost(input: { title: string; content: stri
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
-        author_role: 'tenant',
+        author_role: toAuthorRole(role),
         type: 'discussion',
         title,
         content,
-        is_moderated: true,
-        is_approved: false,
+        is_moderated: !isManagementRole(role),
+        is_approved: isManagementRole(role),
         status: 'published'
     })
 
@@ -218,14 +401,19 @@ export async function createDiscussionPost(input: { title: string; content: stri
     }
 
     revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
     revalidatePath('/')
 }
 
-export async function createPollPost(input: { title: string; content: string; options: string[] }) {
-    const userId = await getAuthenticatedUserId()
-    const propertyId = await getTenantPropertyId(userId)
+export async function createPollPost(input: { title: string; content: string; options: string[]; propertyId?: string }) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    if (!canCreatePostType(role, 'poll')) {
+        throw new Error('Tenants can only create discussion posts.')
+    }
+
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
-        throw new Error('You need an active lease before posting in the community hub.')
+        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
     }
 
     const title = input.title.trim()
@@ -248,13 +436,13 @@ export async function createPollPost(input: { title: string; content: string; op
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
-        author_role: 'tenant',
+        author_role: toAuthorRole(role),
         type: 'poll',
         title: title || 'Resident Poll',
         content,
         metadata: { options: validOptions },
-        is_moderated: true,
-        is_approved: false,
+        is_moderated: !isManagementRole(role),
+        is_approved: isManagementRole(role),
         status: 'published'
     })
 
@@ -264,7 +452,187 @@ export async function createPollPost(input: { title: string; content: string; op
     }
 
     revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
     revalidatePath('/')
+}
+
+export async function createAnnouncementPost(input: { title: string; content: string; propertyId?: string }) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    if (!canCreatePostType(role, 'announcement')) {
+        throw new Error('Tenants can only create discussion posts.')
+    }
+
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    if (!propertyId) {
+        throw new Error('You need at least one property before posting in the community hub.')
+    }
+
+    const title = input.title.trim()
+    const content = input.content.trim()
+
+    if (!title) {
+        throw new Error('Announcement title is required.')
+    }
+
+    if (!content) {
+        throw new Error('Announcement content is required.')
+    }
+
+    const supabase = await createClient()
+    const { error } = await supabase.from('community_posts').insert({
+        property_id: propertyId,
+        author_id: userId,
+        author_role: toAuthorRole(role),
+        type: 'announcement',
+        title,
+        content,
+        is_moderated: false,
+        is_approved: true,
+        status: 'published',
+        is_pinned: true
+    })
+
+    if (error) {
+        console.error('createAnnouncementPost error:', error)
+        throw new Error('Unable to publish announcement right now.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+    revalidatePath('/')
+}
+
+export async function updateOwnPost(postId: string, input: { title?: string; content?: string }) {
+    const userId = await getAuthenticatedUserId()
+    const updates: Record<string, unknown> = {}
+
+    if (typeof input.title === 'string') {
+        const title = input.title.trim()
+        if (!title) {
+            throw new Error('Post title is required.')
+        }
+        updates.title = title
+    }
+
+    if (typeof input.content === 'string') {
+        updates.content = input.content.trim()
+    }
+
+    if (Object.keys(updates).length === 0) {
+        return
+    }
+
+    updates.updated_at = new Date().toISOString()
+
+    const supabase = await createClient()
+    const { error } = await supabase
+        .from('community_posts')
+        .update(updates)
+        .eq('id', postId)
+        .eq('author_id', userId)
+
+    if (error) {
+        console.error('updateOwnPost error:', error)
+        throw new Error('Unable to update this post right now.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+}
+
+export async function deleteOwnPost(postId: string) {
+    const userId = await getAuthenticatedUserId()
+    const supabase = await createClient()
+
+    const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', postId)
+        .eq('author_id', userId)
+
+    if (error) {
+        console.error('deleteOwnPost error:', error)
+        throw new Error('Unable to delete this post right now.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+}
+
+export async function getManagementProperties(): Promise<Array<{ id: string; name: string }>> {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    if (!isManagementRole(role)) {
+        return []
+    }
+
+    const supabase = await createClient()
+    let query = supabase.from('properties').select('id, name')
+
+    if (role === 'landlord') {
+        query = query.eq('landlord_id', userId)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
+
+    if (error || !data) {
+        console.error('getManagementProperties error:', error)
+        return []
+    }
+
+    return data
+}
+
+export async function approveResidentPost(postId: string, approved = true) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    if (!isManagementRole(role)) {
+        throw new Error('Only landlords and admins can approve resident posts.')
+    }
+
+    const supabase = await createClient()
+    const { data: post, error: postError } = await supabase
+        .from('community_posts')
+        .select('id, property_id, author_role')
+        .eq('id', postId)
+        .maybeSingle()
+
+    if (postError || !post) {
+        console.error('approveResidentPost fetch error:', postError)
+        throw new Error('Unable to load this post for approval.')
+    }
+
+    if (post.author_role !== 'tenant') {
+        throw new Error('Only resident posts can be approved from this action.')
+    }
+
+    if (role === 'landlord') {
+        const { data: property, error: propertyError } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('id', post.property_id)
+            .eq('landlord_id', userId)
+            .maybeSingle()
+
+        if (propertyError || !property) {
+            throw new Error('You can only approve posts for your own properties.')
+        }
+    }
+
+    const { error: updateError } = await supabase
+        .from('community_posts')
+        .update({
+            is_approved: approved,
+            is_moderated: true,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', postId)
+
+    if (updateError) {
+        console.error('approveResidentPost update error:', updateError)
+        throw new Error('Unable to update moderation status right now.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
 }
 
 export async function toggleReaction(postId: string, reactionType: CommunityReactionType) {
@@ -329,6 +697,7 @@ export async function toggleReaction(postId: string, reactionType: CommunityReac
         .map(reaction => ({ reaction_type: reaction.reaction_type }))
 
     revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
 
     return { reactions, userReactions }
 }
@@ -421,6 +790,7 @@ export async function votePoll(pollId: string, optionIndex: number) {
         }
     })
     revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
 
     return {
         pollVotes: votes,
@@ -460,6 +830,7 @@ export async function addComment(postId: string, content: string, parentCommentI
     }
 
     revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
 
     return { commentCount: count || 0 }
 }
@@ -532,4 +903,5 @@ export async function reportPost(postId: string, reason: CommunityReportReason) 
     }
 
     revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
 }
