@@ -71,4 +71,5 @@ docs/work-breakdown-structure-dictionary.md
 docs/references.md
 docs/scope & delims paper.md
 docs/technical-background.md
-/docs
+/docs/
+src/lib/community/node_modules/

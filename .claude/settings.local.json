@@ -5,7 +5,22 @@
       "Bash(npm test:*)",
       "Bash(xargs grep:*)",
       "Bash(grep -h \"CREATE TABLE\" supabase/migrations/*.sql)",
-      "Bash(grep -rh \"CREATE TABLE public\" supabase/migrations/*.sql)"
+      "Bash(grep -rh \"CREATE TABLE public\" supabase/migrations/*.sql)",
+      "Bash(claude mcp:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__filesystem__read_text_file",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__read_file",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:)",
+      "mcp__filesystem__search_files",
+      "mcp__filesystem__get_file_info",
+      "mcp__filesystem__create_directory",
+      "mcp__filesystem__list_directory_with_sizes",
+      "Bash(npx tsc:*)",
+      "mcp__filesystem__write_file",
+      "Bash(npx vitest:*)"
     ]
   }
 }

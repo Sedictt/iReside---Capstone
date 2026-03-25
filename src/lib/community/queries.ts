@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { Database } from '@/types/database'
 
 export async function getTenantPropertyId(userId: string): Promise<string | null> {
     const supabase = await createClient()

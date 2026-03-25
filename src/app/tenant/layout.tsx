@@ -25,7 +25,7 @@ export default function TenantLayout({
                 </div>
                 {!isChatPage && <TenantSidebar />}
                 <main className={cn(
-                    "w-full h-full flex-1 flex flex-col",
+                    "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden",
                     !isChatPage && "md:ml-72"
                 )}>
                     <AnimatePresence mode="wait">

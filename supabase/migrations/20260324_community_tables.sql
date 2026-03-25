@@ -99,31 +99,61 @@ create table community_photos (
 create index idx_community_photos_album on community_photos(album_id, display_order asc);
 
 -- post_views
+-- post_views
 create table post_views (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references community_posts(id) on delete cascade,
   user_id uuid references profiles(id),
   session_id text,
-  viewed_at timestamptz default now()
+  viewed_at timestamptz not null default now(),
+  view_day date not null default ((now() at time zone 'UTC')::date),
+  check (user_id is not null or session_id is not null)
 );
 
 create index idx_post_views_post on post_views(post_id);
 create index idx_post_views_user_session on post_views(post_id, user_id, session_id);
 
--- Partial unique index for daily deduplication: one view per user/session per day per post
-CREATE UNIQUE INDEX idx_post_views_daily_unique ON post_views (post_id, COALESCE(user_id::text, session_id), DATE(viewed_at))
-WHERE viewed_at >= NOW() - INTERVAL '24 hours';
+-- one view per post per actor per UTC day
+create unique index idx_post_views_daily_unique
+on post_views (
+  post_id,
+  coalesce(user_id::text, session_id),
+  view_day
+);
 
--- Function to increment view count atomically
-create or replace function increment_post_view(p_post_id uuid, p_user_id uuid, p_session_id text)
-returns void as $$
+create or replace function increment_post_view(
+  p_post_id uuid,
+  p_user_id uuid,
+  p_session_id text
+)
+returns void
+language plpgsql
+as $$
+declare
+  v_inserted integer;
 begin
-  insert into post_views (post_id, user_id, session_id, viewed_at)
-  values (p_post_id, p_user_id, p_session_id, now())
+  insert into post_views (
+    post_id,
+    user_id,
+    session_id,
+    viewed_at,
+    view_day
+  )
+  values (
+    p_post_id,
+    p_user_id,
+    p_session_id,
+    now(),
+    (now() at time zone 'UTC')::date
+  )
   on conflict do nothing;
 
-  update community_posts
-  set view_count = view_count + 1
-  where id = p_post_id;
+  get diagnostics v_inserted = row_count;
+
+  if v_inserted > 0 then
+    update community_posts
+    set view_count = view_count + 1
+    where id = p_post_id;
+  end if;
 end;
-$$ language plpgsql;
+$$;

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/feature-commit-hook.sh",
+            "timeout": 120,
+            "statusMessage": "Analyzing changes for feature commit..."
+          }
+        ]
+      }
+    ]
+  }
+}

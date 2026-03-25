@@ -23,7 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
-    { label: "Home", href: "/", icon: Home },
+    { label: "Home", href: "/tenant/community", icon: Home },
     { label: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
     { label: "Applications", href: "/tenant/applications", icon: Building2 },
     { label: "Leases", href: "/tenant/lease", icon: FileText },
