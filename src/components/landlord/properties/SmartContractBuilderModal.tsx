@@ -149,7 +149,7 @@ export function SmartContractBuilderModal({ isOpen, onClose, onSave, initialTemp
     };
 
     const toggleMultiAnswer = (option: string) => {
-        const current = answers[q.id] || [];
+        const current = Array.isArray(answers[q.id]) ? answers[q.id] as string[] : [];
         if (current.includes(option)) {
             updateAnswer(current.filter((item: string) => item !== option));
         } else {
@@ -399,7 +399,7 @@ export function SmartContractBuilderModal({ isOpen, onClose, onSave, initialTemp
                                                         </p>
 
                                                         <p>
-                                                            <strong className="text-black">3. UTILITIES:</strong> The landlord is responsible for paying the following utilities: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{(answers['utilities'] || []).length > 0 ? (answers['utilities'] || []).join(', ') : 'None Included'}</span>. All other utilities are the responsibility of the tenant.
+                                                            <strong className="text-black">3. UTILITIES:</strong> The landlord is responsible for paying the following utilities: <span className="bg-primary/20 text-black px-1.5 py-0.5 rounded font-bold uppercase">{Array.isArray(answers['utilities']) && answers['utilities'].length > 0 ? answers['utilities'].join(', ') : 'None Included'}</span>. All other utilities are the responsibility of the tenant.
                                                         </p>
 
                                                         <p>

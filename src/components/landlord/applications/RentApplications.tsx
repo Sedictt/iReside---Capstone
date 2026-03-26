@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     FileText,
@@ -187,6 +188,7 @@ function getCreditScoreLabel(score: number | null) {
 // ─── Component ────────────────────────────────────────────────────────
 export function RentApplications() {
     const [mounted, setMounted] = useState(false);
+    const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<ApplicationStatus | "all">("all");
     const [selectedApp, setSelectedApp] = useState<RentApplication | null>(null);
@@ -217,7 +219,10 @@ export function RentApplications() {
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        if (searchParams?.get("action") === "walk-in") {
+            setShowWalkInModal(true);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const controller = new AbortController();

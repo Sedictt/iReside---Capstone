@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, Home, Users, Wrench, ClipboardList, Map } from "lucide-react";
+import { Search, Bell, Home, Users, Wrench, ClipboardList, Map, UserPlus } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 
@@ -248,6 +248,10 @@ export function DashboardBanner({
 
                     {/* Quick Access Links */}
                     <div className="flex flex-wrap items-center gap-3 mt-2">
+                        <Link href="/landlord/applications?action=walk-in" className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-black rounded-xl backdrop-blur-sm border border-primary transition-all group shadow-[0_0_20px_rgba(var(--primary),0.4)] hover:scale-105 active:scale-95 cursor-pointer">
+                            <UserPlus className="w-4 h-4 font-black" />
+                            <span className="text-sm font-bold">New Walk-in</span>
+                        </Link>
                         <Link href="/landlord/properties" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
                             <Home className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
                             <span className="text-sm font-medium text-white">Properties</span>

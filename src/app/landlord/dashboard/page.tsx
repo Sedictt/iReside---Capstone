@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
-import { QuickActions } from "@/components/landlord/dashboard/QuickActions";
 import {
     CreditCard,
     AlertTriangle,
@@ -229,7 +228,6 @@ export default function LandlordDashboard() {
                     category={openPaymentModal}
                     paymentsByCategory={paymentsByCategory}
                 />
-                <QuickActions />
 
                 <div className="pt-2 w-full">
                     <RecentInquiries />
