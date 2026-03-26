@@ -7,6 +7,7 @@ import {
     approveResidentPost,
     createAnnouncementPost,
     createDiscussionPost,
+    createPhotoAlbumPost,
     createPollPost,
     getPendingResidentPostsForModeration,
     getCurrentTenantPendingPosts,
@@ -165,6 +166,10 @@ export default function TenantCommunityHubPage() {
     const [reportModalPostId, setReportModalPostId] = useState<string | null>(null)
     const [reportReason, setReportReason] = useState("")
 
+    const [selectedPhotos, setSelectedPhotos] = useState<File[]>([])
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uploadingPhotos, setUploadingPhotos] = useState(false)
+
     const [isSubmittingDiscussion, startSubmitDiscussion] = useTransition()
     const [isMutatingPost, startPostMutation] = useTransition()
     const voteRequestSeqRef = useRef<Record<string, number>>({})
@@ -260,12 +265,31 @@ export default function TenantCommunityHubPage() {
 
     const handleDiscussionSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-        if (!discussionBody.trim() && !discussionTitle.trim()) return
+        if (!discussionBody.trim() && !discussionTitle.trim() && selectedPhotos.length === 0) return
 
         startSubmitDiscussion(async () => {
             try {
                 const propId = selectedPropertyId || undefined
-                if (composerType === "announcement") {
+                
+                if (selectedPhotos.length > 0) {
+                    setUploadingPhotos(true)
+                    const formData = new FormData()
+                    selectedPhotos.forEach(file => formData.append("files", file))
+                    
+                    const uploadRes = await fetch("/api/community/media", {
+                        method: "POST",
+                        body: formData
+                    })
+
+                    if (!uploadRes.ok) {
+                        const errorData = await uploadRes.json()
+                        throw new Error(errorData.error || "Failed to upload photos.")
+                    }
+
+                    const { imageUrls } = await uploadRes.json()
+
+                    await createPhotoAlbumPost({ title: discussionTitle || "Photo Share", content: discussionBody, propertyId: propId, imageUrls })
+                } else if (composerType === "announcement") {
                     await createAnnouncementPost({ title: discussionTitle || "Community Announcement", content: discussionBody, propertyId: propId })
                 } else if (composerType === "poll") {
                     await createPollPost({
@@ -281,6 +305,7 @@ export default function TenantCommunityHubPage() {
                 setDiscussionTitle("")
                 setDiscussionBody("")
                 setPollOptions(["", ""])
+                setSelectedPhotos([])
                 await loadPosts("replace")
                 if (isManagementUser) {
                     await loadModerationPosts()
@@ -289,9 +314,23 @@ export default function TenantCommunityHubPage() {
                 }
             } catch (submitError) {
                 setError(submitError instanceof Error ? submitError.message : "Failed to submit post.")
+            } finally {
+                setUploadingPhotos(false)
             }
         })
     }
+
+    const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files)
+            setSelectedPhotos(prev => [...prev, ...newFiles].slice(0, 4)) // Max 4
+        }
+    }
+    
+    const removePhoto = (index: number) => {
+        setSelectedPhotos(prev => prev.filter((_, i) => i !== index))
+    }
+
 
     const handleModerationDecision = (postId: string, approved: boolean) => {
         startPostMutation(async () => {
@@ -812,17 +851,43 @@ export default function TenantCommunityHubPage() {
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div className="border-t border-white/5 p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-2 md:gap-4 px-2">
-                                    <button type="button" className="flex items-center gap-2 px-3 py-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all group/btn">
-                                        <ImageIcon className="w-4 h-5 group-hover/btn:text-purple-400 transition-colors" />
-                                        <span className="text-xs font-medium">Photo</span>
+                            <div className="border-t border-white/5 p-4 flex flex-col gap-4">
+                                {selectedPhotos.length > 0 && (
+                                    <div className="flex gap-2 overflow-x-auto px-2 pb-2">
+                                        {selectedPhotos.map((photo, index) => (
+                                            <div key={index} className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden border border-white/10 group">
+                                                <img src={URL.createObjectURL(photo)} alt={`Selected ${index + 1}`} className="w-full h-full object-cover" />
+                                                <button type="button" onClick={() => removePhoto(index)} className="absolute top-1 right-1 bg-black/60 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 md:gap-4 px-2">
+                                        <input 
+                                            type="file" 
+                                            ref={fileInputRef} 
+                                            className="hidden" 
+                                            accept="image/*" 
+                                            multiple 
+                                            onChange={handlePhotoSelect} 
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={selectedPhotos.length >= 4}
+                                            className="flex items-center gap-2 px-3 py-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all group/btn disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <ImageIcon className="w-4 h-5 group-hover/btn:text-purple-400 transition-colors" />
+                                            <span className="text-xs font-medium">Photo</span>
+                                        </button>
+                                    </div>
+                                    <button type="submit" disabled={isSubmittingDiscussion || uploadingPhotos || (!discussionBody.trim() && !discussionTitle.trim() && selectedPhotos.length === 0)} className="bg-primary text-white hover:brightness-110 px-8 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg shadow-primary/10 disabled:opacity-30 disabled:cursor-not-allowed">
+                                        {uploadingPhotos ? "Uploading..." : isSubmittingDiscussion ? "Posting..." : composerType === "announcement" ? "Publish" : composerType === "poll" ? "Create Poll" : "Post"}
                                     </button>
                                 </div>
-                                <button type="submit" disabled={isSubmittingDiscussion || (!discussionBody.trim() && !discussionTitle.trim())} className="bg-primary text-white hover:brightness-110 px-8 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg shadow-primary/10 disabled:opacity-30 disabled:cursor-not-allowed">
-                                    {isSubmittingDiscussion ? "Posting..." : composerType === "announcement" ? "Publish" : composerType === "poll" ? "Create Poll" : "Post"}
-                                </button>
                             </div>
                         </form>
                     </section>
@@ -994,12 +1059,65 @@ export default function TenantCommunityHubPage() {
                                         </div>
                                     </header>
 
-                                    {post.album && (
-                                        <div className="relative w-full rounded-2xl overflow-hidden mt-2 mb-1 bg-[#1a1a1a] aspect-[4/3] sm:aspect-[16/9] border border-white/10 group cursor-pointer shadow-lg">
-                                            <img src={post.album.cover_photo_url || undefined} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    {post.type === 'photo_album' && post.album && post.album.photos && post.album.photos.length > 0 ? (
+                                        <div className="mt-3 mb-2">
+                                            {post.album.photos.length === 1 && (
+                                                <div className="relative w-full rounded-2xl overflow-hidden bg-[#1a1a1a] aspect-[4/3] sm:aspect-[16/9] border border-white/10 group cursor-pointer shadow-xl">
+                                                    <img src={post.album.photos[0].url} alt={post.title || 'Photo'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                </div>
+                                            )}
+
+                                            {post.album.photos.length === 2 && (
+                                                <div className="grid grid-cols-2 gap-1 rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black/30">
+                                                    {post.album.photos.map(photo => (
+                                                        <div key={photo.id} className="relative aspect-[4/5] sm:aspect-square group cursor-pointer overflow-hidden bg-[#1a1a1a]">
+                                                            <img src={photo.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" alt="Album photo" />
+                                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {post.album.photos.length === 3 && (
+                                                <div className="grid grid-cols-2 grid-rows-2 gap-1 rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black/30 h-[300px] sm:h-[400px]">
+                                                    <div className="relative row-span-2 group cursor-pointer overflow-hidden bg-[#1a1a1a]">
+                                                        <img src={post.album.photos[0].url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" alt="Album photo 1" />
+                                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
+                                                    </div>
+                                                    <div className="relative group cursor-pointer overflow-hidden bg-[#1a1a1a]">
+                                                        <img src={post.album.photos[1].url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" alt="Album photo 2" />
+                                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
+                                                    </div>
+                                                    <div className="relative group cursor-pointer overflow-hidden bg-[#1a1a1a]">
+                                                        <img src={post.album.photos[2].url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" alt="Album photo 3" />
+                                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {post.album.photos.length >= 4 && (
+                                                <div className="grid grid-cols-2 grid-rows-2 gap-1 rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black/30 aspect-square sm:aspect-[4/3]">
+                                                    {post.album.photos.slice(0, 4).map((photo, i) => (
+                                                        <div key={photo.id} className="relative group cursor-pointer overflow-hidden bg-[#1a1a1a]">
+                                                            <img src={photo.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" alt={`Album photo ${i + 1}`} />
+                                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-500" />
+                                                            {post.album!.photos.length > 4 && i === 3 && (
+                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm group-hover:bg-black/50 transition-colors duration-500">
+                                                                    <span className="text-white text-3xl font-light tracking-wider shadow-sm">+{post.album!.photos.length - 4}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                    ) : post.album ? (
+                                        <div className="relative w-full rounded-2xl overflow-hidden mt-3 mb-2 bg-[#1a1a1a] aspect-[4/3] sm:aspect-[16/9] border border-white/10 group cursor-pointer shadow-xl">
+                                            <img src={post.album.cover_photo_url || undefined} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        </div>
+                                    ) : null}
 
                                     <div className="space-y-2 mt-2">
                                         {post.title && <h3 className="font-display font-medium text-[17px] text-white/90 leading-tight">{post.title}</h3>}

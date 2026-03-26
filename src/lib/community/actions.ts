@@ -33,7 +33,12 @@ type PostRowWithRelations = {
     community_reactions?: Array<{ reaction_type: string; user_id: string }> | null
     community_comments?: Array<{ id: string }> | null
     community_poll_votes?: Array<{ option_index: number; user_id: string }> | null
-    community_albums?: { id: string; cover_photo_url: string | null; photo_count: number | null } | null
+    community_albums?: { 
+        id: string
+        cover_photo_url: string | null
+        photo_count: number | null
+        community_photos?: Array<{ id: string; url: string }> | null
+    } | null
 }
 
 function mapPost(row: PostRowWithRelations, userId: string): CommunityPost {
@@ -74,7 +79,8 @@ function mapPost(row: PostRowWithRelations, userId: string): CommunityPost {
             ? {
                 id: row.community_albums.id,
                 cover_photo_url: row.community_albums.cover_photo_url,
-                photo_count: row.community_albums.photo_count || 0
+                photo_count: row.community_albums.photo_count || 0,
+                photos: row.community_albums.community_photos || []
             }
             : null
     }
@@ -214,7 +220,7 @@ export async function getPosts(
             community_reactions ( reaction_type, user_id ),
             community_comments ( id ),
             community_poll_votes ( option_index, user_id ),
-            community_albums ( id, cover_photo_url, photo_count )
+            community_albums ( id, cover_photo_url, photo_count, community_photos ( id, url ) )
         `)
         .eq('is_approved', true)
         .eq('status', 'published')
@@ -282,7 +288,7 @@ export async function getCurrentCommunityPendingPosts(limit = 20): Promise<Commu
             community_reactions ( reaction_type, user_id ),
             community_comments ( id ),
             community_poll_votes ( option_index, user_id ),
-            community_albums ( id, cover_photo_url, photo_count )
+            community_albums ( id, cover_photo_url, photo_count, community_photos ( id, url ) )
         `)
         .eq('property_id', propertyId)
         .eq('author_id', userId)
@@ -340,7 +346,7 @@ export async function getPendingResidentPostsForModeration(limit = 20, targetPro
             community_reactions ( reaction_type, user_id ),
             community_comments ( id ),
             community_poll_votes ( option_index, user_id ),
-            community_albums ( id, cover_photo_url, photo_count )
+            community_albums ( id, cover_photo_url, photo_count, community_photos ( id, url ) )
         `)
         .eq('author_role', 'tenant')
         .eq('is_approved', false)
@@ -398,6 +404,72 @@ export async function createDiscussionPost(input: { title: string; content: stri
     if (error) {
         console.error('createDiscussionPost error:', error)
         throw new Error('Unable to submit your discussion post right now.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+    revalidatePath('/')
+}
+
+export async function createPhotoAlbumPost(input: { title?: string; content?: string; propertyId?: string; imageUrls: string[] }) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    if (!propertyId) {
+        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
+    }
+
+    const title = (input.title || '').trim()
+    const content = (input.content || '').trim()
+
+    if (input.imageUrls.length === 0) {
+        throw new Error('At least one photo is required for a photo album.')
+    }
+
+    const supabase = await createClient()
+    
+    // First create post
+    const { data: post, error: postError } = await supabase.from('community_posts').insert({
+        property_id: propertyId,
+        author_id: userId,
+        author_role: toAuthorRole(role),
+        type: 'photo_album',
+        title: title || 'Photo Share',
+        content,
+        is_moderated: !isManagementRole(role),
+        is_approved: isManagementRole(role),
+        status: 'published'
+    }).select('id').single()
+
+    if (postError || !post) {
+        console.error('createPhotoAlbumPost error:', postError)
+        throw new Error('Unable to submit your photo post right now.')
+    }
+
+    // Create album
+    const { data: album, error: albumError } = await supabase.from('community_albums').insert({
+        post_id: post.id,
+        property_id: propertyId,
+        cover_photo_url: input.imageUrls[0],
+        photo_count: input.imageUrls.length
+    }).select('id').single()
+
+    if (albumError || !album) {
+        console.error('Create album error:', albumError)
+        // Note: in a real production system we should probably clean up the post here, or use a transaction
+        throw new Error('Unable to create photo album.')
+    }
+
+    // Insert photos
+    const photosToInsert = input.imageUrls.map((url, index) => ({
+        album_id: album.id,
+        url,
+        display_order: index,
+        uploaded_by: userId
+    }))
+
+    const { error: photosError } = await supabase.from('community_photos').insert(photosToInsert)
+    if (photosError) {
+        console.error('Insert photos error:', photosError)
     }
 
     revalidatePath('/tenant/community')

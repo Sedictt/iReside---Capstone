@@ -30,5 +30,6 @@ export interface CommunityPost {
         id: string
         cover_photo_url: string | null
         photo_count: number
+        photos: Array<{ id: string; url: string }>
     } | null
 }
