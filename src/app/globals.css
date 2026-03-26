@@ -41,6 +41,7 @@
   --foreground: #fafafa;
   /* Neutral 50 */
   --primary: #6d9838;
+  --primary-rgb: 109, 152, 56;
   /* Sage Green */
   --card: #171717;
   /* Neutral 900 */
@@ -114,4 +115,37 @@ input[type="number"] {
 
 .animate-blink {
   animation: blink 1s step-end infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.custom-scrollbar-premium {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.05) transparent;
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar-premium::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.1);
 }

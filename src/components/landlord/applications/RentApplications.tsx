@@ -374,10 +374,11 @@ export function RentApplications() {
                 </div>
                 <button
                     onClick={() => setShowWalkInModal(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-primary to-emerald-400 text-black px-6 py-3 rounded-2xl font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all active:scale-95 border border-primary/20"
+                    className="flex items-center gap-2.5 bg-primary text-neutral-950 px-6 py-3 rounded-2xl font-black text-sm tracking-tight transition-all group shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.5)] hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden"
                 >
-                    <Plus className="h-5 w-5" />
-                    New Walk-in
+                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <Plus className="h-5 w-5 relative z-10" />
+                    <span className="relative z-10">New Walk-in</span>
                 </button>
             </div>
 

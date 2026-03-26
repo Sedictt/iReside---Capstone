@@ -59,6 +59,7 @@ interface DashboardBannerProps {
     image?: string;
     className?: string;
     simplifiedMode?: boolean;
+    onNewWalkIn?: () => void;
 }
 
 export function DashboardBanner({
@@ -66,7 +67,8 @@ export function DashboardBanner({
     subtitle = "Here's what's happening with your properties today.",
     image = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop", // City Night Architecture
     className,
-    simplifiedMode = false
+    simplifiedMode = false,
+    onNewWalkIn
 }: DashboardBannerProps) {
     const [time, setTime] = useState<Date | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -248,25 +250,25 @@ export function DashboardBanner({
 
                     {/* Quick Access Links */}
                     <div className="flex flex-wrap items-center gap-3 mt-2">
-                        <Link href="/landlord/applications?action=walk-in" className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-black rounded-xl backdrop-blur-sm border border-primary transition-all group shadow-[0_0_20px_rgba(var(--primary),0.4)] hover:scale-105 active:scale-95 cursor-pointer">
-                            <UserPlus className="w-4 h-4 font-black" />
-                            <span className="text-sm font-bold">New Walk-in</span>
-                        </Link>
-                        <Link href="/landlord/properties" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
-                            <Home className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium text-white">Properties</span>
-                        </Link>
-                        <Link href="/landlord/tenants" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
-                            <Users className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium text-white">Tenants</span>
-                        </Link>
+                        {onNewWalkIn ? (
+                            <button 
+                                onClick={onNewWalkIn}
+                                className="flex items-center gap-2.5 px-6 py-3 bg-primary text-neutral-950 rounded-2xl transition-all group shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.5)] hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
+                                <span className="text-sm font-black tracking-tight relative z-10">New Walk-in</span>
+                            </button>
+                        ) : (
+                            <Link href="/landlord/applications?action=walk-in" className="flex items-center gap-2.5 px-6 py-3 bg-primary text-neutral-950 rounded-2xl transition-all group shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.5)] hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden">
+                                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
+                                <span className="text-sm font-black tracking-tight relative z-10">New Walk-in</span>
+                            </Link>
+                        )}
                         <Link href="/landlord/maintenance" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
                             <Wrench className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
                             <span className="text-sm font-medium text-white">Maintenance</span>
-                        </Link>
-                        <Link href="/landlord/applications" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
-                            <ClipboardList className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium text-white">Applications</span>
                         </Link>
                         <Link href="/landlord/unit-map" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">
                             <Map className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
