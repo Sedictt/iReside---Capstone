@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
     CheckCircle, XCircle, Eye, Clock, RefreshCw,
     ClipboardList, FileText, ExternalLink, AlertCircle,
@@ -220,7 +221,7 @@ export default function AdminRegistrationsPage() {
             </div>
 
             {/* Review Modal */}
-            {selected && (
+            {selected && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
                     onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setNotes(""); } }}>
@@ -320,7 +321,7 @@ export default function AdminRegistrationsPage() {
                         </div>
                     </div>
                 </div>
-            )}
+            , document.body)}
         </div>
     );
 }

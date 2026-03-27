@@ -459,7 +459,7 @@ export interface Database {
                 Row: {
                     id: string
                     unit_id: string
-                    applicant_id: string
+                    applicant_id: string | null
                     landlord_id: string
                     status: ApplicationStatus
                     message: string | null
@@ -475,11 +475,18 @@ export interface Database {
                     reviewed_at: string | null
                     created_at: string
                     updated_at: string
+                    // Walk-in application fields
+                    created_by: string | null
+                    applicant_name: string | null
+                    applicant_email: string | null
+                    applicant_phone: string | null
+                    employment_info: Json | null
+                    requirements_checklist: Json | null
                 }
                 Insert: {
                     id?: string
                     unit_id: string
-                    applicant_id: string
+                    applicant_id?: string | null
                     landlord_id: string
                     status?: ApplicationStatus
                     message?: string | null
@@ -495,10 +502,17 @@ export interface Database {
                     reviewed_at?: string | null
                     created_at?: string
                     updated_at?: string
+                    // Walk-in application fields
+                    created_by?: string | null
+                    applicant_name?: string | null
+                    applicant_email?: string | null
+                    applicant_phone?: string | null
+                    employment_info?: Json | null
+                    requirements_checklist?: Json | null
                 }
                 Update: {
                     unit_id?: string
-                    applicant_id?: string
+                    applicant_id?: string | null
                     landlord_id?: string
                     status?: ApplicationStatus
                     message?: string | null
@@ -513,6 +527,13 @@ export interface Database {
                     compliance_checklist?: Json | null
                     reviewed_at?: string | null
                     updated_at?: string
+                    // Walk-in application fields
+                    created_by?: string | null
+                    applicant_name?: string | null
+                    applicant_email?: string | null
+                    applicant_phone?: string | null
+                    employment_info?: Json | null
+                    requirements_checklist?: Json | null
                 }
                 Relationships: any[]
             }

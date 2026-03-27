@@ -37,13 +37,13 @@ DROP POLICY IF EXISTS "Units are viewable by everyone" ON units;
 CREATE POLICY "Properties visible to owner and tenants"
     ON properties FOR SELECT
     USING (
-        owner_id = auth.uid()
+        landlord_id = auth.uid()
         OR EXISTS (
             SELECT 1 FROM leases l
             JOIN units u ON u.id = l.unit_id
             WHERE u.property_id = properties.id
             AND l.tenant_id = auth.uid()
-            AND l.status IN ('active', 'pending')
+            AND l.status IN ('active', 'pending_signature')
         )
     );
 
@@ -54,13 +54,13 @@ CREATE POLICY "Units visible to owner and tenants"
         EXISTS (
             SELECT 1 FROM properties p
             WHERE p.id = units.property_id
-            AND p.owner_id = auth.uid()
+            AND p.landlord_id = auth.uid()
         )
         OR EXISTS (
             SELECT 1 FROM leases l
             WHERE l.unit_id = units.id
             AND l.tenant_id = auth.uid()
-            AND l.status IN ('active', 'pending')
+            AND l.status IN ('active', 'pending_signature')
         )
     );
 
@@ -73,6 +73,6 @@ CREATE POLICY "Landlords can create walk-in applications"
             SELECT 1 FROM units u
             JOIN properties p ON p.id = u.property_id
             WHERE u.id = applications.unit_id
-            AND p.owner_id = auth.uid()
+            AND p.landlord_id = auth.uid()
         )
     );

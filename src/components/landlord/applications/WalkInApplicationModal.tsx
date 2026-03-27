@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, type ChangeEvent, type ElementType, type InputHTMLAttributes, type ReactNode } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
@@ -11,7 +11,6 @@ import {
     Briefcase,
     Building2,
     CheckCircle2,
-    Circle,
     ArrowRight,
     ArrowLeft,
     AlertCircle,
@@ -25,9 +24,8 @@ import {
     Check,
     MapPin,
     Wallet,
-    Info,
-    CheckSquare,
-    Square
+    Calendar,
+    HeartPulse,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -110,6 +108,104 @@ const DEFAULT_EMPLOYMENT: EmploymentInfo = {
     monthly_income: "",
 };
 
+type FormErrorKey =
+    | "unit"
+    | "applicant_name"
+    | "applicant_phone"
+    | "applicant_email"
+    | "occupation"
+    | "employer"
+    | "monthly_income"
+    | "message";
+
+const STEP_FIELD_KEYS: Record<number, FormErrorKey[]> = {
+    0: ["unit", "applicant_name", "applicant_email", "applicant_phone"],
+    1: ["occupation", "employer", "monthly_income", "message"],
+    2: [],
+    3: [],
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_ALLOWED_REGEX = /^[+()\-\s\d]+$/;
+
+function getPhoneDigits(value: string) {
+    return value.replace(/\D/g, "");
+}
+
+function validateFormStep(
+    currentStep: number,
+    selectedUnit: string,
+    formData: WalkInFormData,
+    existingApplication?: WalkInApplicationModalProps["existingApplication"]
+): Partial<Record<FormErrorKey, string>> {
+    const errors: Partial<Record<FormErrorKey, string>> = {};
+
+    if (currentStep === 0) {
+        const name = formData.applicant_name.trim();
+        const email = formData.applicant_email.trim();
+        const phone = formData.applicant_phone.trim();
+
+        if (!existingApplication && !selectedUnit) {
+            errors.unit = "Please select a unit.";
+        }
+
+        if (!name) {
+            errors.applicant_name = "Applicant name is required.";
+        } else if (name.length < 2 || name.length > 100) {
+            errors.applicant_name = "Name must be between 2 and 100 characters.";
+        }
+
+        if (!email) {
+            errors.applicant_email = "Email is required.";
+        } else if (!EMAIL_REGEX.test(email)) {
+            errors.applicant_email = "Enter a valid email address.";
+        }
+
+        if (phone) {
+            const digits = getPhoneDigits(phone);
+            if (!PHONE_ALLOWED_REGEX.test(phone)) {
+                errors.applicant_phone = "Phone contains invalid characters.";
+            } else if (digits.length < 10 || digits.length > 15) {
+                errors.applicant_phone = "Phone number must have 10 to 15 digits.";
+            }
+        }
+    }
+
+    if (currentStep === 1) {
+        const occupation = formData.employment_info.occupation.trim();
+        const employer = formData.employment_info.employer.trim();
+        const incomeRaw = String(formData.employment_info.monthly_income).trim();
+        const incomeNumber = Number(incomeRaw);
+        const messageLength = formData.message.trim().length;
+
+        if (!occupation) {
+            errors.occupation = "Occupation is required.";
+        } else if (occupation.length < 2 || occupation.length > 100) {
+            errors.occupation = "Occupation must be 2 to 100 characters.";
+        }
+
+        if (!employer) {
+            errors.employer = "Employer is required.";
+        } else if (employer.length < 2 || employer.length > 100) {
+            errors.employer = "Employer must be 2 to 100 characters.";
+        }
+
+        if (!incomeRaw) {
+            errors.monthly_income = "Monthly income is required.";
+        } else if (!Number.isFinite(incomeNumber) || incomeNumber <= 0) {
+            errors.monthly_income = "Monthly income must be a positive number.";
+        } else if (incomeNumber > 10_000_000) {
+            errors.monthly_income = "Monthly income looks too high.";
+        }
+
+        if (messageLength > 1000) {
+            errors.message = "Notes must not exceed 1000 characters.";
+        }
+    }
+
+    return errors;
+}
+
 // ─── Sub-Components ──────────────────────────────────────────────────
 
 const Noise = () => (
@@ -141,22 +237,34 @@ const BackgroundGlow = () => (
     </div>
 );
 
-const GlassInput = ({ icon: Icon, label, error, ...props }: any) => (
+interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
+    icon: ElementType;
+    label?: string;
+    error?: string;
+    id: string;
+}
+
+const GlassInput = ({ icon: Icon, label, error, id, ...props }: GlassInputProps) => (
     <div className="space-y-2.5 group">
         {label && (
-            <label className="text-[10px] font-black uppercase tracking-[0.25em] text-neutral-500 group-focus-within:text-primary transition-all duration-300 ml-1">
+            <label 
+                htmlFor={id} 
+                className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 group-focus-within:text-primary transition-all duration-300 ml-1 cursor-pointer"
+            >
                 {label}
             </label>
         )}
         <div className="relative isolate">
-            <div className="absolute inset-0 bg-white/[0.02] border border-white/[0.08] rounded-2xl group-hover:bg-white/[0.04] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/5 group-focus-within:border-primary/40 group-focus-within:bg-white/[0.06]" />
+            <div className="absolute inset-0 bg-white/[0.02] border border-white/[0.08] rounded-2xl group-hover:bg-white/[0.04] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/10 group-focus-within:border-primary/40 group-focus-within:bg-white/[0.06]" />
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-all duration-500 transform group-focus-within:scale-110 group-focus-within:rotate-[5deg]">
                 <Icon size={18} strokeWidth={1.5} />
             </div>
             <input
                 {...props}
+                id={id}
                 className={cn(
-                    "w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-700 font-medium tracking-tight"
+                    "w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-700 font-medium tracking-tight",
+                    "focus-visible:ring-0" // Relying on the container's focus-within state
                 )}
             />
         </div>
@@ -164,7 +272,13 @@ const GlassInput = ({ icon: Icon, label, error, ...props }: any) => (
     </div>
 );
 
-const CardFrame = ({ children, className, glow = true }: any) => (
+interface CardFrameProps {
+    children: ReactNode;
+    className?: string;
+    glow?: boolean;
+}
+
+const CardFrame = ({ children, className, glow = true }: CardFrameProps) => (
     <div className={cn(
         "relative rounded-[2.5rem] border border-white/[0.08] overflow-hidden bg-[#0a0a0a]/60 backdrop-blur-2xl transition-all",
         glow && "hover:border-white/20 hover:shadow-[0_0_50px_rgba(255,255,255,0.03)]",
@@ -185,6 +299,22 @@ export function WalkInApplicationModal({
     existingApplication,
     onSuccess,
 }: WalkInApplicationModalProps) {
+    const resetCreateWizard = useCallback(() => {
+        setStep(0);
+        setSelectedUnit(selectedUnitId || "");
+        setFormData({
+            applicant_name: "",
+            applicant_phone: "",
+            applicant_email: "",
+            employment_info: { ...DEFAULT_EMPLOYMENT },
+            requirements_checklist: { ...DEFAULT_CHECKLIST },
+            message: "",
+        });
+        setFormErrors({});
+        setTouchedFields({});
+        setError(null);
+    }, [selectedUnitId]);
+
     const [step, setStep] = useState(0);
     const [selectedUnit, setSelectedUnit] = useState(selectedUnitId || "");
     const [submitting, setSubmitting] = useState(false);
@@ -198,9 +328,11 @@ export function WalkInApplicationModal({
         message: "",
     });
 
-    const [formErrors, setFormErrors] = useState<Partial<Record<keyof WalkInFormData | "unit", string>>>({});
+    const [formErrors, setFormErrors] = useState<Partial<Record<FormErrorKey, string>>>({});
+    const [, setTouchedFields] = useState<Partial<Record<FormErrorKey, boolean>>>({});
 
-    // Reset on open or pre-fill
+    // For create mode, preserve in-progress draft across close/reopen.
+    // For edit mode, always rehydrate from the existing application payload.
     useEffect(() => {
         if (isOpen) {
             if (existingApplication) {
@@ -212,29 +344,59 @@ export function WalkInApplicationModal({
                     requirements_checklist: { ...DEFAULT_CHECKLIST, ...(existingApplication.requirements_checklist || {}) },
                     message: existingApplication.message || "",
                 });
+                setStep(0);
                 setSelectedUnit("");
             } else {
-                setStep(0);
-                setSelectedUnit(selectedUnitId || "");
-                setFormData({
-                    applicant_name: "",
-                    applicant_phone: "",
-                    applicant_email: "",
-                    employment_info: { ...DEFAULT_EMPLOYMENT },
-                    requirements_checklist: { ...DEFAULT_CHECKLIST },
-                    message: "",
-                });
+                if (!selectedUnit && selectedUnitId) {
+                    setSelectedUnit(selectedUnitId);
+                }
             }
             setError(null);
             setFormErrors({});
+            setTouchedFields({});
         }
-    }, [isOpen, existingApplication, selectedUnitId]);
+    }, [isOpen, existingApplication, selectedUnitId, selectedUnit]);
 
-    const updateField = useCallback((field: keyof WalkInFormData, value: any) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-        // Clear error when typing
-        setFormErrors(prev => ({ ...prev, [field]: undefined }));
-    }, []);
+    useEffect(() => {
+        if (existingApplication) return;
+        if (!selectedUnit) return;
+
+        const hasSelectedUnit = units.some((unit) => unit.id === selectedUnit);
+        if (!hasSelectedUnit) {
+            setSelectedUnit("");
+            setFormErrors((prev) => ({ ...prev, unit: "Please select a valid unit." }));
+            setTouchedFields((prev) => ({ ...prev, unit: true }));
+        }
+    }, [existingApplication, selectedUnit, units]);
+
+    const updateField = useCallback((
+        field: keyof WalkInFormData,
+        value: WalkInFormData[keyof WalkInFormData],
+        validateKeys: FormErrorKey[] = []
+    ) => {
+        const nextFormData = { ...formData, [field]: value };
+        setFormData(nextFormData);
+
+        if (validateKeys.length > 0) {
+            const liveErrors = validateFormStep(step, selectedUnit, nextFormData, existingApplication);
+
+            setTouchedFields((prev) => {
+                const next = { ...prev };
+                validateKeys.forEach((key) => {
+                    next[key] = true;
+                });
+                return next;
+            });
+
+            setFormErrors((prev) => {
+                const next = { ...prev };
+                validateKeys.forEach((key) => {
+                    next[key] = liveErrors[key];
+                });
+                return next;
+            });
+        }
+    }, [existingApplication, formData, selectedUnit, step]);
 
     const toggleRequirement = useCallback((key: string) => {
         setFormData((prev) => ({
@@ -250,30 +412,79 @@ export function WalkInApplicationModal({
         Object.values(formData.requirements_checklist).every(Boolean), 
     [formData.requirements_checklist]);
 
-    const validateStep = () => {
-        const errors: any = {};
-        if (step === 0) {
-            if (!selectedUnit) errors.unit = "Required";
-            if (!formData.applicant_name.trim()) errors.applicant_name = "Required";
-            if (!formData.applicant_email.trim()) errors.applicant_email = "Required";
-            else if (!/^\S+@\S+$/.test(formData.applicant_email)) errors.applicant_email = "Invalid";
-        }
-        setFormErrors(errors);
+    const validateStep = (currentStep: number) => {
+        const errors = validateFormStep(currentStep, selectedUnit, formData, existingApplication);
+        const stepKeys = STEP_FIELD_KEYS[currentStep] || [];
+
+        setTouchedFields((prev) => {
+            const next = { ...prev };
+            stepKeys.forEach((key) => {
+                next[key] = true;
+            });
+            return next;
+        });
+
+        setFormErrors((prev) => {
+            const next = { ...prev };
+            stepKeys.forEach((key) => {
+                next[key] = errors[key];
+            });
+            return next;
+        });
+
         return Object.keys(errors).length === 0;
     };
 
     const handleContinue = () => {
-        if (validateStep()) {
+        if (validateStep(step)) {
             setStep(s => s + 1);
         }
     };
 
     const handleSubmit = async (asPending = false) => {
+        if (!existingApplication) {
+            const hasSelectedUnit = units.some((unit) => unit.id === selectedUnit);
+            if (!hasSelectedUnit) {
+                setFormErrors((prev) => ({ ...prev, unit: "Please select a valid unit." }));
+                setTouchedFields((prev) => ({ ...prev, unit: true }));
+                setStep(0);
+                setError("Selected unit is no longer valid. Please re-select a unit.");
+                return;
+            }
+        }
+
+        const stepZeroErrors = validateFormStep(0, selectedUnit, formData, existingApplication);
+        const stepOneErrors = validateFormStep(1, selectedUnit, formData, existingApplication);
+        const allErrors = { ...stepZeroErrors, ...stepOneErrors };
+
+        if (Object.keys(allErrors).length > 0) {
+            setFormErrors(allErrors);
+            setTouchedFields((prev) => ({
+                ...prev,
+                ...Object.fromEntries(Object.keys(allErrors).map((key) => [key, true])),
+            }));
+            if (Object.keys(stepZeroErrors).length > 0) {
+                setStep(0);
+            } else if (Object.keys(stepOneErrors).length > 0) {
+                setStep(1);
+            }
+            return;
+        }
+
         setSubmitting(true);
         setError(null);
         try {
             const endpoint = "/api/landlord/applications/walk-in";
             const method = existingApplication ? "PATCH" : "POST";
+            const shouldWarnIncomplete =
+                !existingApplication && !asPending && step === 3 && !allRequirementsMet;
+
+            if (shouldWarnIncomplete) {
+                const ok = window.confirm(
+                    "Some requirements are still missing. Finish anyway and mark this application as Approved?"
+                );
+                if (!ok) return;
+            }
             const payload = existingApplication ? {
                 application_id: existingApplication.id,
                 requirements_checklist: formData.requirements_checklist,
@@ -287,6 +498,7 @@ export function WalkInApplicationModal({
                 employment_info: { ...formData.employment_info, monthly_income: Number(formData.employment_info.monthly_income) || 0 },
                 requirements_checklist: formData.requirements_checklist,
                 message: formData.message,
+                status: asPending ? "pending" : "approved",
             };
 
             const res = await fetch(endpoint, {
@@ -297,9 +509,13 @@ export function WalkInApplicationModal({
 
             if (!res.ok) throw new Error((await res.json()).error || "Failed to save.");
             onSuccess?.();
+            if (!existingApplication) {
+                resetCreateWizard();
+            }
             onClose();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Failed to save.";
+            setError(message);
         } finally {
             setSubmitting(false);
         }
@@ -401,13 +617,23 @@ export function WalkInApplicationModal({
 
                 {/* Primary Content Container */}
                 <div className="flex-1 flex flex-col relative overflow-hidden">
-                    {/* Header Mobile / Title */}
-                    <div className="sm:hidden p-6 border-b border-white/10 flex items-center justify-between bg-black/40 backdrop-blur-md">
-                        <div>
-                             <h2 className="text-xl font-black text-white uppercase tracking-tighter">{STEPS[step].label}</h2>
-                             <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 4</p>
+                     <div className="sm:hidden border-b border-white/10 bg-black/40 backdrop-blur-md relative">
+                        <div className="p-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-black text-white uppercase tracking-tighter">{STEPS[step].label}</h2>
+                                <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 4</p>
+                            </div>
+                            <button onClick={onClose} className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><X size={20}/></button>
                         </div>
-                        <button onClick={onClose} className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><X size={20}/></button>
+                        {/* Mobile Progress Bar */}
+                        <div className="absolute bottom-0 left-0 h-0.5 bg-white/10 w-full overflow-hidden">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+                                transition={{ duration: 0.5 }}
+                                className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"
+                            />
+                        </div>
                     </div>
 
                     {/* Desktop Status Bar */}
@@ -418,7 +644,10 @@ export function WalkInApplicationModal({
                              </h1>
                              <p className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.4em] ml-1 mt-1">Walk-in Application Wizard</p>
                          </div>
-                         <button onClick={onClose} className="pointer-events-auto h-12 w-12 bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 flex items-center justify-center rounded-2xl transition-all hover:scale-110 active:scale-90">
+                          <button 
+                             onClick={onClose} 
+                             className="pointer-events-auto h-12 w-12 bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 flex items-center justify-center rounded-2xl transition-all hover:scale-110 active:scale-90 focus-visible:ring-2 focus-visible:ring-red-500/50 outline-none"
+                         >
                              <X size={20} />
                          </button>
                     </div>
@@ -444,23 +673,31 @@ export function WalkInApplicationModal({
                                     <div className="space-y-10 max-w-3xl">
                                         <div className="space-y-8">
                                             <section className="space-y-6">
-                                                 <div className="flex items-center gap-4 text-primary">
+                                                  <div className="flex items-center gap-4 text-primary">
                                                      <MapPin size={18} strokeWidth={2.5} />
-                                                     <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Select Unit</h3>
+                                                     <label htmlFor="unit-select" className="text-[11px] font-black uppercase tracking-[0.3em] text-neutral-400 cursor-pointer">Select Unit</label>
                                                  </div>
                                                 
                                                 <CardFrame className="!p-0" glow={false}>
                                                     <div className="relative group">
                                                         <Building className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-all duration-300 pointer-events-none" size={20} />
-                                                        <select
-                                                            value={selectedUnit}
-                                                            onChange={(e) => setSelectedUnit(e.target.value)}
-                                                            disabled={!!existingApplication}
-                                                            className={cn(
-                                                                "w-full h-20 bg-transparent pl-16 pr-12 text-white text-lg font-black outline-none transition-all appearance-none cursor-pointer tracking-tighter disabled:opacity-50",
-                                                                formErrors.unit && "text-red-400"
-                                                            )}
-                                                        >
+                                                         <select
+                                                             id="unit-select"
+                                                             value={selectedUnit}
+                                                             onChange={(e) => {
+                                                                                     const nextUnit = e.target.value;
+                                                                                     setSelectedUnit(nextUnit);
+                                                                                     setTouchedFields((prev) => ({ ...prev, unit: true }));
+                                                                                     const liveErrors = validateFormStep(step, nextUnit, formData, existingApplication);
+                                                                                     setFormErrors((prev) => ({ ...prev, unit: liveErrors.unit }));
+                                                             }}
+                                                             disabled={!!existingApplication}
+                                                             className={cn(
+                                                                 "w-full h-20 bg-transparent pl-16 pr-12 text-white text-lg font-black outline-none transition-all appearance-none cursor-pointer tracking-tighter disabled:opacity-50",
+                                                                 "focus-visible:ring-4 focus-visible:ring-primary/10",
+                                                                 formErrors.unit && "text-red-400"
+                                                             )}
+                                                         >
                                                             <option value="" className="bg-[#0f0f0f] text-sm">Select Target Unit...</option>
                                                             {units.map((u) => (
                                                                 <option key={u.id} value={u.id} className="bg-[#0f0f0f] text-sm py-4">
@@ -471,6 +708,7 @@ export function WalkInApplicationModal({
                                                         <ArrowRight size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-neutral-700 rotate-90 pointer-events-none" />
                                                     </div>
                                                 </CardFrame>
+                                                {formErrors.unit && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
                                                 {currentUnit && (
                                                     <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
                                                          <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
@@ -484,32 +722,36 @@ export function WalkInApplicationModal({
                                                      <User size={18} strokeWidth={2.5} />
                                                      <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Applicant Information</h3>
                                                  </div>
-                                                <GlassInput 
-                                                    icon={Contact} 
-                                                    label="Full Legal Name" 
-                                                    placeholder="Maria Mercedes"
-                                                    value={formData.applicant_name}
-                                                    error={formErrors.applicant_name}
-                                                    onChange={(e: any) => updateField("applicant_name", e.target.value)}
-                                                />
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                                     <GlassInput 
-                                                         icon={Mail} 
-                                                         label="Email Address" 
-                                                        type="email"
-                                                        placeholder="maria@digital.ph"
-                                                        value={formData.applicant_email}
-                                                        error={formErrors.applicant_email}
-                                                        onChange={(e: any) => updateField("applicant_email", e.target.value)}
-                                                    />
-                                                     <GlassInput 
-                                                         icon={Phone} 
-                                                         label="Phone Number" 
-                                                        placeholder="+63 9xx xxx xxxx"
-                                                        value={formData.applicant_phone}
-                                                        onChange={(e: any) => updateField("applicant_phone", e.target.value)}
-                                                    />
-                                                </div>
+                                                 <GlassInput 
+                                                     id="applicant-name"
+                                                     icon={Contact} 
+                                                     label="Full Legal Name" 
+                                                     placeholder="Maria Mercedes"
+                                                     value={formData.applicant_name}
+                                                     error={formErrors.applicant_name}
+                                                     onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_name", e.target.value, ["applicant_name"])}
+                                                 />
+                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                      <GlassInput 
+                                                          id="applicant-email"
+                                                          icon={Mail} 
+                                                          label="Email Address" 
+                                                         type="email"
+                                                         placeholder="maria@digital.ph"
+                                                         value={formData.applicant_email}
+                                                         error={formErrors.applicant_email}
+                                                         onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_email", e.target.value, ["applicant_email"])}
+                                                     />
+                                                      <GlassInput 
+                                                          id="applicant-phone"
+                                                          icon={Phone} 
+                                                          label="Phone Number" 
+                                                         placeholder="+63 9xx xxx xxxx"
+                                                         value={formData.applicant_phone}
+                                                         error={formErrors.applicant_phone}
+                                                         onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_phone", e.target.value, ["applicant_phone"])}
+                                                     />
+                                                 </div>
                                             </section>
                                         </div>
                                     </div>
@@ -524,51 +766,60 @@ export function WalkInApplicationModal({
                                              </div>
                                             
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                                <GlassInput 
-                                                    icon={Briefcase} 
-                                                    label="Current Occupation" 
-                                                    placeholder="Software Engineer"
-                                                    value={formData.employment_info.occupation}
-                                                    onChange={(e: any) => updateField("employment_info", { ...formData.employment_info, occupation: e.target.value })}
-                                                />
                                                  <GlassInput 
-                                                     icon={Building2} 
-                                                     label="Company Name" 
-                                                    placeholder="Stark Industries"
-                                                    value={formData.employment_info.employer}
-                                                    onChange={(e: any) => updateField("employment_info", { ...formData.employment_info, employer: e.target.value })}
-                                                />
-                                            </div>
+                                                     id="occupation"
+                                                     icon={Briefcase} 
+                                                     label="Current Occupation" 
+                                                     placeholder="Software Engineer"
+                                                     value={formData.employment_info.occupation}
+                                                     error={formErrors.occupation}
+                                                     onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, occupation: e.target.value }, ["occupation"])}
+                                                 />
+                                                  <GlassInput 
+                                                      id="employer"
+                                                      icon={Building2} 
+                                                      label="Company Name" 
+                                                     placeholder="Stark Industries"
+                                                     value={formData.employment_info.employer}
+                                                     error={formErrors.employer}
+                                                     onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, employer: e.target.value }, ["employer"])}
+                                                 />
+                                             </div>
 
                                             <div className="relative isolate group">
                                                  <div className="absolute inset-x-0 -inset-y-4 bg-primary/5 rounded-[2.5rem] -z-10 border border-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                                  <GlassInput 
-                                                    icon={() => <span className="font-black text-primary/80">₱</span>} 
-                                                    label="Monthly Net Income" 
-                                                    type="number"
-                                                    placeholder="0.00"
-                                                    value={formData.employment_info.monthly_income}
-                                                    onChange={(e: any) => updateField("employment_info", { ...formData.employment_info, monthly_income: e.target.value })}
-                                                />
+                                                     id="income"
+                                                     icon={() => <span className="font-black text-primary/80">₱</span>} 
+                                                     label="Monthly Net Income" 
+                                                     type="number"
+                                                     placeholder="0.00"
+                                                     value={formData.employment_info.monthly_income}
+                                                     error={formErrors.monthly_income}
+                                                     onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, monthly_income: e.target.value }, ["monthly_income"])}
+                                                 />
                                             </div>
                                         </section>
 
                                         <section className="space-y-6">
-                                             <div className="flex items-center gap-4 text-neutral-400">
+                                              <div className="flex items-center gap-4 text-neutral-400">
                                                  <FileCheck size={18} strokeWidth={2.5} />
-                                                 <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Additional Notes</h3>
+                                                 <label htmlFor="additional-notes" className="text-[11px] font-black uppercase tracking-[0.3em] text-neutral-400 cursor-pointer">Additional Notes</label>
                                              </div>
                                             <div className="relative isolate">
                                                 <div className="absolute inset-0 bg-white/[0.02] border border-white/[0.08] rounded-[2rem] -z-10 hover:bg-white/[0.04] transition-all duration-300" />
                                                 <textarea
-                                                    placeholder="Add internal notes about the applicant's character, urgent requests, or specific unit adjustments here..."
-                                                    className={cn(
-                                                        "w-full bg-transparent p-7 text-white text-sm outline-none transition-all min-h-[180px] resize-none leading-relaxed font-medium placeholder:text-neutral-700"
-                                                    )}
-                                                    value={formData.message}
-                                                    onChange={(e) => updateField("message", e.target.value)}
-                                                />
+                                                     id="additional-notes"
+                                                     placeholder="Add internal notes about the applicant's character, urgent requests, or specific unit adjustments here..."
+                                                     className={cn(
+                                                         "w-full bg-transparent p-7 text-white text-sm outline-none transition-all min-h-[180px] resize-none leading-relaxed font-medium placeholder:text-neutral-700",
+                                                         "focus-visible:ring-4 focus-visible:ring-primary/10"
+                                                     )}
+                                                     value={formData.message}
+                                                     onChange={(e) => updateField("message", e.target.value, ["message"])}
+                                                 />
                                             </div>
+                                            {formErrors.message && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.message}</p>}
                                         </section>
                                     </div>
                                 )}

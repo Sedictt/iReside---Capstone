@@ -62,13 +62,18 @@ export async function GET() {
     const { data: applicationRows, error: applicationsError } = await supabase
         .from("applications")
         .select(
-            "id, status, message, monthly_income, employment_status, move_in_date, documents, created_at, applicant_id, unit_id, emergency_contact_name, emergency_contact_phone, reference_name, reference_phone, compliance_checklist"
+            "id, status, message, monthly_income, employment_status, move_in_date, documents, created_at, applicant_id, unit_id, emergency_contact_name, emergency_contact_phone, reference_name, reference_phone, compliance_checklist, applicant_name, applicant_email, applicant_phone"
         )
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
 
     if (applicationsError) {
-        return NextResponse.json({ error: "Failed to load applications." }, { status: 500 });
+        console.error("[applications GET] Supabase error:", applicationsError);
+        console.error("[applications GET] Error details:", JSON.stringify(applicationsError, null, 2));
+        return NextResponse.json({
+            error: "Failed to load applications.",
+            details: applicationsError.message
+        }, { status: 500 });
     }
 
     if (!applicationRows || applicationRows.length === 0) {
@@ -124,7 +129,7 @@ export async function GET() {
     const propertyMap = new Map((propertyRows ?? []).map((row) => [row.id, row]));
 
     const applications: ApplicationResponse[] = applicationRows.map((row) => {
-        const applicant = applicantMap.get(row.applicant_id);
+        const applicant = row.applicant_id ? applicantMap.get(row.applicant_id) : undefined;
         const unit = unitMap.get(row.unit_id);
         const property = unit ? propertyMap.get(unit.property_id) : null;
         const propertyImages = property?.images;
@@ -133,12 +138,17 @@ export async function GET() {
                 ? propertyImages[0]
                 : FALLBACK_PROPERTY_IMAGE;
 
+        // For walk-in applications, prefer the walk-in-specific fields over the profile lookup.
+        const walkInName = isNonEmptyString(row.applicant_name) ? row.applicant_name : null;
+        const walkInEmail = isNonEmptyString(row.applicant_email) ? row.applicant_email : null;
+        const walkInPhone = isNonEmptyString(row.applicant_phone) ? row.applicant_phone : null;
+
         return {
             id: row.id,
             applicant: {
-                name: applicant?.full_name ?? "Unknown applicant",
-                email: applicant?.email ?? "Not provided",
-                phone: applicant?.phone ?? "Not provided",
+                name: walkInName ?? applicant?.full_name ?? "Unknown applicant",
+                email: walkInEmail ?? applicant?.email ?? "Not provided",
+                phone: walkInPhone ?? applicant?.phone ?? "Not provided",
                 occupation: row.employment_status ?? "Not provided",
                 monthlyIncome: row.monthly_income ?? null,
                 creditScore: null,

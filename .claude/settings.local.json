@@ -20,7 +20,13 @@
       "mcp__filesystem__list_directory_with_sizes",
       "Bash(npx tsc:*)",
       "mcp__filesystem__write_file",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(grep:*)",
+      "Bash(ls -la .env*)",
+      "Bash(export PATH=\"$PATH:/usr/local/bin\")",
+      "Bash(docker ps:*)",
+      "Bash(supabase status:*)",
+      "Bash(node:*)"
     ]
   }
 }

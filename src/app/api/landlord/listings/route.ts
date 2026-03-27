@@ -30,6 +30,7 @@ export async function GET() {
         .order("created_at", { ascending: false });
 
     if (propertiesError) {
+        console.error("[listings GET] Properties query error:", propertiesError);
         return NextResponse.json({ error: "Failed to load properties." }, { status: 500 });
     }
 
@@ -44,6 +45,7 @@ export async function GET() {
         : { data: [], error: null };
 
     if (unitsError) {
+        console.error("[listings GET] Units query error:", unitsError);
         return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
     }
 
@@ -54,6 +56,7 @@ export async function GET() {
         .order("created_at", { ascending: false });
 
     if (listingsError) {
+        console.error("[listings GET] Listings query error:", listingsError);
         return NextResponse.json({ error: "Failed to load listings." }, { status: 500 });
     }
 

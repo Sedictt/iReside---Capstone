@@ -262,38 +262,43 @@ export function RentApplications() {
         };
     }, [reloadKey]);
 
-    // Load available units for walk-in modal
+    // Load actual units (not property IDs) so walk-in submissions use a valid unit_id.
     useEffect(() => {
         const loadUnits = async () => {
             try {
-                const res = await fetch("/api/landlord/properties/overview");
+                const res = await fetch("/api/landlord/listings");
                 if (!res.ok) return;
-                const data = await res.json();
-                // Flatten properties into units
-                const props = data.properties || [];
-                const unitsList: typeof availableUnits = [];
-                for (const prop of props) {
-                    try {
-                        const unitRes = await fetch(`/api/landlord/properties/${prop.id}`);
-                        if (!unitRes.ok) continue;
-                        const unitData = await unitRes.json();
-                        // We'll construct simple unit entries from property data
-                        unitsList.push({
-                            id: prop.id,
-                            name: prop.name,
-                            rent_amount: 0,
-                            property_id: prop.id,
-                            property_name: prop.name,
-                        });
-                    } catch {
-                        // skip
-                    }
-                }
+
+                const data = (await res.json()) as {
+                    options?: Array<{
+                        id: string;
+                        name: string;
+                        units?: Array<{
+                            id: string;
+                            name: string;
+                            rentAmount?: number;
+                        }>;
+                    }>;
+                };
+
+                const options = Array.isArray(data.options) ? data.options : [];
+                const unitsList: typeof availableUnits = options.flatMap((property) => {
+                    const units = Array.isArray(property.units) ? property.units : [];
+                    return units.map((unit) => ({
+                        id: unit.id,
+                        name: unit.name,
+                        rent_amount: Number(unit.rentAmount ?? 0),
+                        property_id: property.id,
+                        property_name: property.name,
+                    }));
+                });
+
                 setAvailableUnits(unitsList);
             } catch {
                 // Silently fail
             }
         };
+
         void loadUnits();
     }, []);
 
@@ -626,7 +631,7 @@ export function RentApplications() {
                                 setSelectedApp(null);
                                 setActionError(null);
                             }}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 transition-opacity"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[110] transition-opacity"
                         />
 
                         <motion.div
@@ -634,7 +639,7 @@ export function RentApplications() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: "100%", opacity: 0 }}
                             transition={{ type: "spring", damping: 30, stiffness: 350 }}
-                            className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-neutral-950 border-l border-white/10 z-50 overflow-y-auto custom-scrollbar shadow-2xl flex flex-col"
+                            className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-neutral-950 border-l border-white/10 z-[120] overflow-y-auto custom-scrollbar shadow-2xl flex flex-col"
                         >
                             {/* Panel Header */}
                             <div className="sticky top-0 z-20 bg-neutral-950/80 backdrop-blur-3xl border-b border-white/5 px-6 py-4 flex items-center justify-between shadow-sm">

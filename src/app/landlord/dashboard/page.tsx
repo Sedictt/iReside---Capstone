@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
 import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
+import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -50,6 +51,14 @@ export default function LandlordDashboard() {
     const [paymentsLoading, setPaymentsLoading] = useState(true);
     const [paymentsError, setPaymentsError] = useState<string | null>(null);
     const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
+    const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+    const [availableUnits, setAvailableUnits] = useState<{
+        id: string;
+        name: string;
+        rent_amount: number;
+        property_id: string;
+        property_name: string;
+    }[]>([]);
 
     useEffect(() => {
         setMounted(true);
@@ -126,10 +135,46 @@ export default function LandlordDashboard() {
         };
 
         void loadSystemAdvisory();
-
+ 
         return () => {
             controller.abort();
         };
+    }, []);
+ 
+    useEffect(() => {
+        const loadUnits = async () => {
+            try {
+                const res = await fetch("/api/landlord/listings");
+                if (!res.ok) return;
+
+                const data = (await res.json()) as {
+                    options?: Array<{
+                        id: string;
+                        name: string;
+                        units?: Array<{
+                            id: string;
+                            name: string;
+                            rentAmount?: number;
+                        }>;
+                    }>;
+                };
+
+                const options = Array.isArray(data.options) ? data.options : [];
+                const unitsList: typeof availableUnits = options.flatMap((property) => {
+                    const units = Array.isArray(property.units) ? property.units : [];
+                    return units.map((unit) => ({
+                        id: unit.id,
+                        name: unit.name,
+                        rent_amount: Number(unit.rentAmount ?? 0),
+                        property_id: property.id,
+                        property_name: property.name,
+                    }));
+                });
+
+                setAvailableUnits(unitsList);
+            } catch { /* fail silently */ }
+        };
+        void loadUnits();
     }, []);
 
     if (!mounted) return null;
@@ -137,7 +182,7 @@ export default function LandlordDashboard() {
     return (
         <>
             <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
-                <DashboardBanner />
+                <DashboardBanner onNewWalkIn={() => setIsWalkInModalOpen(true)} />
 
             {/* Payment Overview */}
             <div className="p-6 rounded-3xl bg-neutral-900 border border-white/5 space-y-4 pt-6">
@@ -233,6 +278,15 @@ export default function LandlordDashboard() {
                     <RecentInquiries />
                 </div>
             </div>
+
+            <WalkInApplicationModal 
+                isOpen={isWalkInModalOpen}
+                onClose={() => setIsWalkInModalOpen(false)}
+                units={availableUnits}
+                onSuccess={() => {
+                    // Could trigger a toast or refresh here if needed
+                }}
+            />
         </>
     );
 }
