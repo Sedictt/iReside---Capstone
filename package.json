@@ -24,6 +24,7 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "@types/leaflet": "^1.9.21",
+    "@types/nodemailer": "^7.0.11",
     "@types/uuid": "^10.0.0",
     "chart.js": "^4.5.1",
     "chartjs-plugin-datalabels": "^2.2.0",
@@ -37,6 +38,7 @@
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "lucide-react": "^0.564.0",
     "next": "16.1.6",
+    "nodemailer": "^8.0.4",
     "openai": "^6.27.0",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",
@@ -50,6 +52,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

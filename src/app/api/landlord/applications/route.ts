@@ -62,7 +62,7 @@ export async function GET() {
     const { data: applicationRows, error: applicationsError } = await supabase
         .from("applications")
         .select(
-            "id, status, message, monthly_income, employment_status, move_in_date, documents, created_at, applicant_id, unit_id, emergency_contact_name, emergency_contact_phone, reference_name, reference_phone, compliance_checklist, applicant_name, applicant_email, applicant_phone"
+            "id, status, message, monthly_income, employment_status, move_in_date, documents, created_at, applicant_id, unit_id, emergency_contact_name, emergency_contact_phone, reference_name, reference_phone, compliance_checklist, requirements_checklist, applicant_name, applicant_email, applicant_phone"
         )
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
@@ -173,7 +173,10 @@ export async function GET() {
                 name: row.reference_name ?? null,
                 contact: row.reference_phone ?? null,
             },
-            complianceChecklist: row.compliance_checklist as any,
+            complianceChecklist: {
+                ...(row.compliance_checklist as Record<string, boolean> | null ?? {}),
+                ...(row.requirements_checklist as Record<string, boolean> | null ?? {}),
+            },
         };
     });
 

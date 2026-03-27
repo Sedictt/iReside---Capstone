@@ -71,6 +71,9 @@ export async function POST(request: Request) {
         applicant_name,
         applicant_phone,
         applicant_email,
+        move_in_date,
+        emergency_contact_name,
+        emergency_contact_phone,
         employment_info,
         requirements_checklist,
         message,
@@ -183,6 +186,9 @@ export async function POST(request: Request) {
         applicant_name: normalizedApplicantName,
         applicant_phone: normalizedApplicantPhone || null,
         applicant_email: normalizedApplicantEmail,
+        move_in_date: move_in_date ? normalizeString(move_in_date) : null,
+        emergency_contact_name: emergency_contact_name ? normalizeString(emergency_contact_name) : null,
+        emergency_contact_phone: emergency_contact_phone ? normalizeString(emergency_contact_phone) : null,
         employment_info: {
             occupation,
             employer,
@@ -252,7 +258,19 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { application_id, requirements_checklist, employment_info, status } = body;
+    const {
+        application_id,
+        requirements_checklist,
+        employment_info,
+        status,
+        applicant_name,
+        applicant_email,
+        applicant_phone,
+        emergency_contact_name,
+        emergency_contact_phone,
+        move_in_date,
+        message,
+    } = body;
 
     const allowedStatuses = new Set(["pending", "reviewing", "approved", "rejected", "withdrawn"]);
 
@@ -266,6 +284,28 @@ export async function PATCH(request: Request) {
 
     if (requirements_checklist && !validateRequirementsChecklist(requirements_checklist)) {
         return NextResponse.json({ error: "requirements_checklist must only contain boolean values." }, { status: 400 });
+    }
+
+    // Validate applicant fields if provided
+    if (applicant_name !== undefined) {
+        const n = normalizeString(applicant_name);
+        if (n.length < 2 || n.length > 100) {
+            return NextResponse.json({ error: "applicant_name must be 2–100 characters." }, { status: 400 });
+        }
+    }
+    if (applicant_email !== undefined) {
+        const e = normalizeString(applicant_email);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+            return NextResponse.json({ error: "applicant_email is invalid." }, { status: 400 });
+        }
+    }
+    if (applicant_phone !== undefined && applicant_phone !== null && applicant_phone !== "") {
+        if (!hasValidPhoneFormat(normalizeString(applicant_phone))) {
+            return NextResponse.json({ error: "applicant_phone format is invalid." }, { status: 400 });
+        }
+    }
+    if (message !== undefined && normalizeString(message).length > 1000) {
+        return NextResponse.json({ error: "message must not exceed 1000 characters." }, { status: 400 });
     }
 
     // Verify the landlord owns this application
@@ -310,6 +350,16 @@ export async function PATCH(request: Request) {
     }
 
     const updates: Record<string, unknown> = {};
+
+    // Applicant identity fields
+    if (applicant_name !== undefined) updates.applicant_name = normalizeString(applicant_name);
+    if (applicant_email !== undefined) updates.applicant_email = normalizeString(applicant_email);
+    if (applicant_phone !== undefined) updates.applicant_phone = applicant_phone ? normalizeString(applicant_phone) : null;
+    if (emergency_contact_name !== undefined) updates.emergency_contact_name = emergency_contact_name ? normalizeString(emergency_contact_name) : null;
+    if (emergency_contact_phone !== undefined) updates.emergency_contact_phone = emergency_contact_phone ? normalizeString(emergency_contact_phone) : null;
+    if (move_in_date !== undefined) updates.move_in_date = move_in_date || null;
+    if (message !== undefined) updates.message = message ? normalizeString(message) : null;
+
     if (requirements_checklist) updates.requirements_checklist = requirements_checklist;
     if (employment_info) {
         const normalizedOccupation = normalizeString(employment_info.occupation);

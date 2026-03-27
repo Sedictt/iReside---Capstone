@@ -89,3 +89,11 @@ test-query.js
 supabase/migrations/20260323_landlord_centric_refactor.sql
 supabase/migrations/20260327120000_fix_missing_rls_policies.sql
 .claude/settings.local.json
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

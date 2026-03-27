@@ -24,8 +24,6 @@ import {
     Check,
     MapPin,
     Wallet,
-    Calendar,
-    HeartPulse,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -56,6 +54,9 @@ interface WalkInFormData {
     applicant_name: string;
     applicant_phone: string;
     applicant_email: string;
+    move_in_date: string;
+    emergency_contact_name: string;
+    emergency_contact_phone: string;
     employment_info: EmploymentInfo;
     requirements_checklist: RequirementsChecklist;
     message: string;
@@ -71,6 +72,9 @@ interface WalkInApplicationModalProps {
         applicant_name: string;
         applicant_phone: string;
         applicant_email: string;
+        move_in_date?: string;
+        emergency_contact_name?: string;
+        emergency_contact_phone?: string;
         employment_info: EmploymentInfo;
         requirements_checklist: RequirementsChecklist;
         message?: string;
@@ -113,13 +117,16 @@ type FormErrorKey =
     | "applicant_name"
     | "applicant_phone"
     | "applicant_email"
+    | "move_in_date"
+    | "emergency_contact_name"
+    | "emergency_contact_phone"
     | "occupation"
     | "employer"
     | "monthly_income"
     | "message";
 
 const STEP_FIELD_KEYS: Record<number, FormErrorKey[]> = {
-    0: ["unit", "applicant_name", "applicant_email", "applicant_phone"],
+    0: ["unit", "applicant_name", "applicant_email", "applicant_phone", "move_in_date", "emergency_contact_name", "emergency_contact_phone"],
     1: ["occupation", "employer", "monthly_income", "message"],
     2: [],
     3: [],
@@ -167,6 +174,29 @@ function validateFormStep(
                 errors.applicant_phone = "Phone contains invalid characters.";
             } else if (digits.length < 10 || digits.length > 15) {
                 errors.applicant_phone = "Phone number must have 10 to 15 digits.";
+            }
+        }
+
+        if (!formData.move_in_date) {
+            errors.move_in_date = "Move-in date is required.";
+        }
+
+        const ecName = formData.emergency_contact_name.trim();
+        if (!ecName) {
+            errors.emergency_contact_name = "Emergency contact name is required.";
+        } else if (ecName.length < 2 || ecName.length > 100) {
+            errors.emergency_contact_name = "Name must be between 2 and 100 characters.";
+        }
+
+        const ecPhone = formData.emergency_contact_phone.trim();
+        if (!ecPhone) {
+            errors.emergency_contact_phone = "Emergency contact number is required.";
+        } else {
+            const ecDigits = getPhoneDigits(ecPhone);
+            if (!PHONE_ALLOWED_REGEX.test(ecPhone)) {
+                errors.emergency_contact_phone = "Phone contains invalid characters.";
+            } else if (ecDigits.length < 10 || ecDigits.length > 15) {
+                errors.emergency_contact_phone = "Phone number must have 10 to 15 digits.";
             }
         }
     }
@@ -223,7 +253,7 @@ const BackgroundGlow = () => (
                 scale: [1, 1.2, 0.8, 1],
             }}
             transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#6d9838]/10 blur-[120px] rounded-full" 
+            className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#6d9838]/20 blur-[100px] rounded-full" 
         />
         <motion.div 
             animate={{ 
@@ -232,7 +262,7 @@ const BackgroundGlow = () => (
                 scale: [1, 0.9, 1.1, 1],
             }}
             transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full" 
+            className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/15 blur-[100px] rounded-full" 
         />
     </div>
 );
@@ -242,35 +272,47 @@ interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
     id: string;
+    nextFieldId?: string;
 }
 
-const GlassInput = ({ icon: Icon, label, error, id, ...props }: GlassInputProps) => (
-    <div className="space-y-2.5 group">
-        {label && (
-            <label 
-                htmlFor={id} 
-                className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 group-focus-within:text-primary transition-all duration-300 ml-1 cursor-pointer"
-            >
-                {label}
-            </label>
-        )}
-        <div className="relative isolate">
-            <div className="absolute inset-0 bg-white/[0.02] border border-white/[0.08] rounded-2xl group-hover:bg-white/[0.04] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/10 group-focus-within:border-primary/40 group-focus-within:bg-white/[0.06]" />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-all duration-500 transform group-focus-within:scale-110 group-focus-within:rotate-[5deg]">
-                <Icon size={18} strokeWidth={1.5} />
+const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...props }: GlassInputProps) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && nextFieldId) {
+            e.preventDefault();
+            document.getElementById(nextFieldId)?.focus();
+        }
+        onKeyDown?.(e);
+    };
+
+    return (
+        <div className="space-y-2.5 group">
+            {label && (
+                <label 
+                    htmlFor={id} 
+                    className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 group-focus-within:text-primary transition-all duration-300 ml-1 cursor-pointer"
+                >
+                    {label}
+                </label>
+            )}
+            <div className="relative isolate">
+                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl group-hover:bg-white/[0.09] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/20 group-focus-within:border-primary/50 group-focus-within:bg-white/[0.1]" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-all duration-500 transform group-focus-within:scale-110 group-focus-within:rotate-[5deg]">
+                    <Icon size={18} strokeWidth={1.5} />
+                </div>
+                <input
+                    {...props}
+                    id={id}
+                    onKeyDown={handleKeyDown}
+                    className={cn(
+                        "w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-500 font-medium tracking-tight",
+                        "focus-visible:ring-0"
+                    )}
+                />
             </div>
-            <input
-                {...props}
-                id={id}
-                className={cn(
-                    "w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-700 font-medium tracking-tight",
-                    "focus-visible:ring-0" // Relying on the container's focus-within state
-                )}
-            />
+            {error && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{error}</p>}
         </div>
-        {error && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{error}</p>}
-    </div>
-);
+    );
+};
 
 interface CardFrameProps {
     children: ReactNode;
@@ -280,8 +322,8 @@ interface CardFrameProps {
 
 const CardFrame = ({ children, className, glow = true }: CardFrameProps) => (
     <div className={cn(
-        "relative rounded-[2.5rem] border border-white/[0.08] overflow-hidden bg-[#0a0a0a]/60 backdrop-blur-2xl transition-all",
-        glow && "hover:border-white/20 hover:shadow-[0_0_50px_rgba(255,255,255,0.03)]",
+        "relative rounded-[2.5rem] border border-white/[0.12] overflow-hidden bg-white/[0.05] backdrop-blur-2xl transition-all",
+        glow && "hover:border-white/25 hover:shadow-[0_0_50px_rgba(255,255,255,0.04)]",
         className
     )}>
         <Noise />
@@ -306,6 +348,9 @@ export function WalkInApplicationModal({
             applicant_name: "",
             applicant_phone: "",
             applicant_email: "",
+            move_in_date: "",
+            emergency_contact_name: "",
+            emergency_contact_phone: "",
             employment_info: { ...DEFAULT_EMPLOYMENT },
             requirements_checklist: { ...DEFAULT_CHECKLIST },
             message: "",
@@ -323,6 +368,9 @@ export function WalkInApplicationModal({
         applicant_name: "",
         applicant_phone: "",
         applicant_email: "",
+        move_in_date: "",
+        emergency_contact_name: "",
+        emergency_contact_phone: "",
         employment_info: { ...DEFAULT_EMPLOYMENT },
         requirements_checklist: { ...DEFAULT_CHECKLIST },
         message: "",
@@ -340,6 +388,9 @@ export function WalkInApplicationModal({
                     applicant_name: existingApplication.applicant_name || "",
                     applicant_phone: existingApplication.applicant_phone || "",
                     applicant_email: existingApplication.applicant_email || "",
+                    move_in_date: existingApplication.move_in_date || "",
+                    emergency_contact_name: existingApplication.emergency_contact_name || "",
+                    emergency_contact_phone: existingApplication.emergency_contact_phone || "",
                     employment_info: existingApplication.employment_info || { ...DEFAULT_EMPLOYMENT },
                     requirements_checklist: { ...DEFAULT_CHECKLIST, ...(existingApplication.requirements_checklist || {}) },
                     message: existingApplication.message || "",
@@ -495,6 +546,9 @@ export function WalkInApplicationModal({
                 applicant_name: formData.applicant_name,
                 applicant_phone: formData.applicant_phone,
                 applicant_email: formData.applicant_email,
+                move_in_date: formData.move_in_date || null,
+                emergency_contact_name: formData.emergency_contact_name || null,
+                emergency_contact_phone: formData.emergency_contact_phone || null,
                 employment_info: { ...formData.employment_info, monthly_income: Number(formData.employment_info.monthly_income) || 0 },
                 requirements_checklist: formData.requirements_checklist,
                 message: formData.message,
@@ -533,7 +587,7 @@ export function WalkInApplicationModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-[#020202]/95 backdrop-blur-3xl"
+                className="absolute inset-0 bg-black/80 backdrop-blur-xl"
             />
             
             <motion.div
@@ -543,15 +597,15 @@ export function WalkInApplicationModal({
                 transition={{ type: "spring", damping: 25, stiffness: 150 }}
                 className={cn(
                     "relative w-full max-w-5xl h-[85vh] flex flex-col sm:flex-row z-10",
-                    "bg-[#080808]/40 border border-white/[0.08] rounded-[2.5rem] shadow-[0_0_120px_rgba(0,0,0,0.9)] overflow-hidden",
-                    "backdrop-blur-[100px]"
+                    "bg-[#141414] border border-white/[0.12] rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.7)] overflow-hidden",
+                    "backdrop-blur-[60px]"
                 )}
             >
                 <BackgroundGlow />
                 <Noise />
 
                 {/* Left Rails / Navigation */}
-                <aside className="w-full sm:w-80 p-10 border-b sm:border-b-0 sm:border-r border-white/10 bg-white/[0.02] relative hidden sm:flex flex-col z-20 overflow-hidden shrink-0">
+                <aside className="w-full sm:w-80 p-10 border-b sm:border-b-0 sm:border-r border-white/[0.1] bg-white/[0.04] relative hidden sm:flex flex-col z-20 overflow-hidden shrink-0">
                     <div className="mb-14 flex items-center gap-4">
                         <div className="h-10 w-10 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.1)]">
                             <Building2 className="text-primary w-5 h-5" />
@@ -617,7 +671,7 @@ export function WalkInApplicationModal({
 
                 {/* Primary Content Container */}
                 <div className="flex-1 flex flex-col relative overflow-hidden">
-                     <div className="sm:hidden border-b border-white/10 bg-black/40 backdrop-blur-md relative">
+                     <div className="sm:hidden border-b border-white/[0.1] bg-[#1a1a1a] backdrop-blur-md relative">
                         <div className="p-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-black text-white uppercase tracking-tighter">{STEPS[step].label}</h2>
@@ -698,9 +752,9 @@ export function WalkInApplicationModal({
                                                                  formErrors.unit && "text-red-400"
                                                              )}
                                                          >
-                                                            <option value="" className="bg-[#0f0f0f] text-sm">Select Target Unit...</option>
+                                                            <option value="" className="bg-[#1a1a1a] text-sm">Select Target Unit...</option>
                                                             {units.map((u) => (
-                                                                <option key={u.id} value={u.id} className="bg-[#0f0f0f] text-sm py-4">
+                                                                <option key={u.id} value={u.id} className="bg-[#1a1a1a] text-sm py-4">
                                                                     {u.name} — {u.property_name}
                                                                 </option>
                                                             ))}
@@ -729,6 +783,7 @@ export function WalkInApplicationModal({
                                                      placeholder="Maria Mercedes"
                                                      value={formData.applicant_name}
                                                      error={formErrors.applicant_name}
+                                                     nextFieldId="applicant-email"
                                                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_name", e.target.value, ["applicant_name"])}
                                                  />
                                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -740,6 +795,7 @@ export function WalkInApplicationModal({
                                                          placeholder="maria@digital.ph"
                                                          value={formData.applicant_email}
                                                          error={formErrors.applicant_email}
+                                                         nextFieldId="applicant-phone"
                                                          onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_email", e.target.value, ["applicant_email"])}
                                                      />
                                                       <GlassInput 
@@ -749,7 +805,58 @@ export function WalkInApplicationModal({
                                                          placeholder="+63 9xx xxx xxxx"
                                                          value={formData.applicant_phone}
                                                          error={formErrors.applicant_phone}
+                                                         nextFieldId="move-in-date"
                                                          onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("applicant_phone", e.target.value, ["applicant_phone"])}
+                                                     />
+                                                 </div>
+
+                                                 {/* Move-in Date */}
+                                                 <div className="space-y-2.5 group">
+                                                     <label htmlFor="move-in-date" className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 group-focus-within:text-primary transition-all duration-300 ml-1 cursor-pointer">
+                                                         Move-in Date
+                                                     </label>
+                                                     <div className="relative isolate">
+                                                         <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl group-hover:bg-white/[0.09] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/20 group-focus-within:border-primary/50 group-focus-within:bg-white/[0.1]" />
+                                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-all duration-500">
+                                                             <MapPin size={18} strokeWidth={1.5} />
+                                                         </div>
+                                                         <input
+                                                             id="move-in-date"
+                                                             type="date"
+                                                             value={formData.move_in_date}
+                                                             onChange={(e) => updateField("move_in_date", e.target.value, ["move_in_date"])}
+                                                             className="w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-500 font-medium tracking-tight focus-visible:ring-0 [color-scheme:dark]"
+                                                         />
+                                                     </div>
+                                                     {formErrors.move_in_date && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
+                                                 </div>
+                                            </section>
+
+                                            {/* Emergency Contact */}
+                                            <section className="space-y-6">
+                                                 <div className="flex items-center gap-4 text-red-400">
+                                                     <Phone size={18} strokeWidth={2.5} />
+                                                     <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Emergency Contact</h3>
+                                                 </div>
+                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                     <GlassInput
+                                                         id="emergency-contact-name"
+                                                         icon={Contact}
+                                                         label="Contact Name"
+                                                         placeholder="Juan dela Cruz"
+                                                         value={formData.emergency_contact_name}
+                                                         error={formErrors.emergency_contact_name}
+                                                         nextFieldId="emergency-contact-phone"
+                                                         onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("emergency_contact_name", e.target.value, ["emergency_contact_name"])}
+                                                     />
+                                                     <GlassInput
+                                                         id="emergency-contact-phone"
+                                                         icon={Phone}
+                                                         label="Contact Number"
+                                                         placeholder="+63 9xx xxx xxxx"
+                                                         value={formData.emergency_contact_phone}
+                                                         error={formErrors.emergency_contact_phone}
+                                                         onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("emergency_contact_phone", e.target.value, ["emergency_contact_phone"])}
                                                      />
                                                  </div>
                                             </section>
@@ -773,6 +880,7 @@ export function WalkInApplicationModal({
                                                      placeholder="Software Engineer"
                                                      value={formData.employment_info.occupation}
                                                      error={formErrors.occupation}
+                                                     nextFieldId="employer"
                                                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, occupation: e.target.value }, ["occupation"])}
                                                  />
                                                   <GlassInput 
@@ -782,6 +890,7 @@ export function WalkInApplicationModal({
                                                      placeholder="Stark Industries"
                                                      value={formData.employment_info.employer}
                                                      error={formErrors.employer}
+                                                     nextFieldId="income"
                                                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, employer: e.target.value }, ["employer"])}
                                                  />
                                              </div>
@@ -796,6 +905,7 @@ export function WalkInApplicationModal({
                                                      placeholder="0.00"
                                                      value={formData.employment_info.monthly_income}
                                                      error={formErrors.monthly_income}
+                                                     nextFieldId="additional-notes"
                                                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, monthly_income: e.target.value }, ["monthly_income"])}
                                                  />
                                             </div>
@@ -807,13 +917,13 @@ export function WalkInApplicationModal({
                                                  <label htmlFor="additional-notes" className="text-[11px] font-black uppercase tracking-[0.3em] text-neutral-400 cursor-pointer">Additional Notes</label>
                                              </div>
                                             <div className="relative isolate">
-                                                <div className="absolute inset-0 bg-white/[0.02] border border-white/[0.08] rounded-[2rem] -z-10 hover:bg-white/[0.04] transition-all duration-300" />
+                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-[2rem] -z-10 hover:bg-white/[0.08] transition-all duration-300" />
                                                 <textarea
                                                      id="additional-notes"
                                                      placeholder="Add internal notes about the applicant's character, urgent requests, or specific unit adjustments here..."
                                                      className={cn(
-                                                         "w-full bg-transparent p-7 text-white text-sm outline-none transition-all min-h-[180px] resize-none leading-relaxed font-medium placeholder:text-neutral-700",
-                                                         "focus-visible:ring-4 focus-visible:ring-primary/10"
+                                                         "w-full bg-transparent p-7 text-white text-sm outline-none transition-all min-h-[180px] resize-none leading-relaxed font-medium placeholder:text-neutral-500",
+                                                         "focus-visible:ring-4 focus-visible:ring-primary/20"
                                                      )}
                                                      value={formData.message}
                                                      onChange={(e) => updateField("message", e.target.value, ["message"])}
@@ -848,13 +958,13 @@ export function WalkInApplicationModal({
                                                         "w-full h-24 rounded-[2rem] border transition-all duration-500 flex items-center justify-between px-8 group relative overflow-hidden text-left",
                                                         value 
                                                             ? "bg-emerald-500/5 border-emerald-500/30 shadow-[0_10px_30px_rgba(16,185,129,0.1)]" 
-                                                            : "bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05] hover:border-white/20"
+                                                            : "bg-white/[0.05] border-white/[0.12] hover:bg-white/[0.08] hover:border-white/25"
                                                     )}
                                                 >
                                                     <div className="relative z-10 flex items-center gap-6">
                                                         <div className={cn(
                                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            value ? "bg-emerald-500 text-black shadow-lg" : "bg-white/[0.05] text-neutral-500"
+                                                            value ? "bg-emerald-500 text-black shadow-lg" : "bg-white/[0.1] text-neutral-400"
                                                         )}>
                                                             {value ? <Check size={20} strokeWidth={3} /> : <FileCheck size={20} />}
                                                         </div>
@@ -931,26 +1041,26 @@ export function WalkInApplicationModal({
                                         </CardFrame>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.03] border border-white/[0.08] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Unit Name</p>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Unit Name</p>
                                                  <p className="text-2xl font-black text-white tracking-tighter">{currentUnit?.name || "N/A"}</p>
                                                  <div className="pt-2">
                                                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">{currentUnit?.property_name}</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.03] border border-white/[0.08] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Applicant Name</p>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Applicant Name</p>
                                                  <p className="text-2xl font-black text-white tracking-tighter">{formData.applicant_name || "Guest"}</p>
                                                  <div className="pt-2">
                                                      <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] break-all">{formData.applicant_email}</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.03] border border-white/[0.08] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Monthly Income</p>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Monthly Income</p>
                                                  <p className="text-2xl font-black text-white tracking-tighter uppercase italic">₱{Number(formData.employment_info.monthly_income).toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                     <p className="text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em]">Verified Monthly</p>
+                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">Verified Monthly</p>
                                                  </div>
                                              </div>
                                              <div className="p-7 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-4 shadow-lg shadow-primary/5">
@@ -961,6 +1071,21 @@ export function WalkInApplicationModal({
                                                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Locked Rate</p>
                                                  </div>
                                              </div>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Move-in Date</p>
+                                                 <p className="text-2xl font-black text-white tracking-tighter">{formData.move_in_date || "—"}</p>
+                                                 <div className="pt-2 flex items-center gap-2">
+                                                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">Scheduled</p>
+                                                 </div>
+                                             </div>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Emergency Contact</p>
+                                                 <p className="text-xl font-black text-white tracking-tighter">{formData.emergency_contact_name || "—"}</p>
+                                                 <div className="pt-2">
+                                                     <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.3em]">{formData.emergency_contact_phone || "—"}</p>
+                                                 </div>
+                                             </div>
                                         </div>
                                     </div>
                                 )}
@@ -969,7 +1094,7 @@ export function WalkInApplicationModal({
                     </div>
 
                     {/* Footer / Unified Action Bridge */}
-                    <div className="p-8 sm:px-12 bg-[#050505]/60 border-t border-white/[0.08] flex items-center justify-between gap-6 backdrop-blur-3xl relative z-30">
+                    <div className="p-8 sm:px-12 bg-[#1a1a1a] border-t border-white/[0.1] flex items-center justify-between gap-6 backdrop-blur-3xl relative z-30">
                         <div className="flex gap-4 w-full sm:w-auto">
                             {step > 0 && (
                                 <button

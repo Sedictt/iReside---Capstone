@@ -29,7 +29,9 @@ import {
     TrendingUp,
     Users,
     Plus,
-    ClipboardList
+    ClipboardList,
+    Loader2,
+    Pencil,
 } from "lucide-react";
 import { WalkInApplicationModal } from "./WalkInApplicationModal";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
@@ -302,6 +304,160 @@ export function RentApplications() {
         void loadUnits();
     }, []);
 
+    const [tenantCredentials, setTenantCredentials] = useState<{
+        email: string;
+        tempPassword: string | null;
+        inviteUrl?: string | null;
+        accountExisted?: boolean;
+    } | null>(null);
+    const [sendingCredentials, setSendingCredentials] = useState(false);
+
+    // ── Dossier edit state ────────────────────────────────────────────
+    const [isEditing, setIsEditing] = useState(false);
+    const [editDraft, setEditDraft] = useState<{
+        applicant_name: string;
+        applicant_email: string;
+        applicant_phone: string;
+        emergency_contact_name: string;
+        emergency_contact_phone: string;
+        move_in_date: string;
+        occupation: string;
+        employer: string;
+        monthly_income: string;
+        message: string;
+    } | null>(null);
+    const [savingEdit, setSavingEdit] = useState(false);
+    const [editError, setEditError] = useState<string | null>(null);
+
+    const openEdit = (app: RentApplication) => {
+        setEditDraft({
+            applicant_name: app.applicant.name === "Unknown applicant" ? "" : app.applicant.name,
+            applicant_email: app.applicant.email === "Not provided" ? "" : app.applicant.email,
+            applicant_phone: app.applicant.phone === "Not provided" ? "" : app.applicant.phone,
+            emergency_contact_name: app.emergencyContact?.name ?? "",
+            emergency_contact_phone: app.emergencyContact?.phone ?? "",
+            move_in_date: app.requestedMoveIn ?? "",
+            occupation: app.applicant.occupation === "Not provided" ? "" : app.applicant.occupation,
+            employer: "",
+            monthly_income: app.applicant.monthlyIncome != null ? String(app.applicant.monthlyIncome) : "",
+            message: app.notes ?? "",
+        });
+        setEditError(null);
+        setIsEditing(true);
+    };
+
+    const cancelEdit = () => {
+        setIsEditing(false);
+        setEditDraft(null);
+        setEditError(null);
+    };
+
+    const saveEdit = async () => {
+        if (!selectedApp || !editDraft) return;
+        setSavingEdit(true);
+        setEditError(null);
+        try {
+            const res = await fetch("/api/landlord/applications/walk-in", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    application_id: selectedApp.id,
+                    applicant_name: editDraft.applicant_name,
+                    applicant_email: editDraft.applicant_email,
+                    applicant_phone: editDraft.applicant_phone || null,
+                    emergency_contact_name: editDraft.emergency_contact_name || null,
+                    emergency_contact_phone: editDraft.emergency_contact_phone || null,
+                    move_in_date: editDraft.move_in_date || null,
+                    message: editDraft.message || null,
+                    ...(editDraft.occupation && editDraft.employer && editDraft.monthly_income ? {
+                        employment_info: {
+                            occupation: editDraft.occupation,
+                            employer: editDraft.employer,
+                            monthly_income: Number(editDraft.monthly_income),
+                        },
+                    } : {}),
+                }),
+            });
+            const data = await res.json() as { error?: string };
+            if (!res.ok) {
+                setEditError(data.error ?? "Failed to save changes.");
+                return;
+            }
+            // Optimistically update local state
+            setApplications((prev) => prev.map((a) => a.id === selectedApp.id ? {
+                ...a,
+                applicant: {
+                    ...a.applicant,
+                    name: editDraft.applicant_name || a.applicant.name,
+                    email: editDraft.applicant_email || a.applicant.email,
+                    phone: editDraft.applicant_phone || a.applicant.phone,
+                    occupation: editDraft.occupation || a.applicant.occupation,
+                    monthlyIncome: editDraft.monthly_income ? Number(editDraft.monthly_income) : a.applicant.monthlyIncome,
+                },
+                emergencyContact: {
+                    name: editDraft.emergency_contact_name || null,
+                    phone: editDraft.emergency_contact_phone || null,
+                },
+                requestedMoveIn: editDraft.move_in_date || a.requestedMoveIn,
+                notes: editDraft.message || a.notes,
+            } : a));
+            setSelectedApp((prev) => prev ? {
+                ...prev,
+                applicant: {
+                    ...prev.applicant,
+                    name: editDraft.applicant_name || prev.applicant.name,
+                    email: editDraft.applicant_email || prev.applicant.email,
+                    phone: editDraft.applicant_phone || prev.applicant.phone,
+                    occupation: editDraft.occupation || prev.applicant.occupation,
+                    monthlyIncome: editDraft.monthly_income ? Number(editDraft.monthly_income) : prev.applicant.monthlyIncome,
+                },
+                emergencyContact: {
+                    name: editDraft.emergency_contact_name || null,
+                    phone: editDraft.emergency_contact_phone || null,
+                },
+                requestedMoveIn: editDraft.move_in_date || prev.requestedMoveIn,
+                notes: editDraft.message || prev.notes,
+            } : prev);
+            setIsEditing(false);
+            setEditDraft(null);
+        } catch {
+            setEditError("Failed to save changes.");
+        } finally {
+            setSavingEdit(false);
+        }
+    };
+
+    const handleSendCredentials = async (appId: string) => {
+        setSendingCredentials(true);
+        try {
+            const res = await fetch(`/api/landlord/applications/${appId}/resend-credentials`, {
+                method: "POST",
+            });
+            const data = await res.json() as {
+                success?: boolean;
+                email?: string;
+                tempPassword?: string | null;
+                inviteUrl?: string | null;
+                accountExisted?: boolean;
+                error?: string;
+            };
+            if (!res.ok) {
+                setActionError(data.error ?? "Failed to send credentials.");
+                return;
+            }
+            setTenantCredentials({
+                email: data.email ?? "",
+                tempPassword: data.tempPassword ?? null,
+                inviteUrl: data.inviteUrl ?? null,
+                accountExisted: data.accountExisted,
+            });
+        } catch {
+            setActionError("Failed to send credentials.");
+        } finally {
+            setSendingCredentials(false);
+        }
+    };
+
     const updateApplicationStatus = async (
         applicationId: string,
         status: "approved" | "rejected" | "reviewing"
@@ -320,10 +476,21 @@ export function RentApplications() {
                 throw new Error("Failed to update status");
             }
 
+            const result = await response.json() as {
+                success: boolean;
+                status: string;
+                tenantAccount?: { email: string; tempPassword: string; inviteUrl?: string };
+            };
+
             setApplications((prev) =>
                 prev.map((app) => (app.id === applicationId ? { ...app, status } : app))
             );
             setSelectedApp((prev) => (prev?.id === applicationId ? { ...prev, status } : prev));
+
+            // Show credentials to landlord if a new tenant account was provisioned
+            if (result.tenantAccount?.tempPassword) {
+                setTenantCredentials(result.tenantAccount);
+            }
         } catch {
             setActionError("Unable to update the application status.");
         } finally {
@@ -426,7 +593,7 @@ export function RentApplications() {
             <div className="rounded-3xl bg-neutral-900 border border-white/5 flex flex-col pt-2 shadow-2xl">
 
                 {/* Advanced Command Toolbar */}
-                <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-neutral-900/50 backdrop-blur-xl sticky top-0 z-10 rounded-t-3xl">
+                <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-neutral-900/50 backdrop-blur-xl sticky top-0 z-30 rounded-t-3xl">
                     <div className="flex bg-neutral-950 p-1.5 rounded-xl border border-white/5 overflow-x-auto w-full sm:w-auto no-scrollbar">
                         {filterTabs.map((tab) => (
                             <button
@@ -586,12 +753,12 @@ export function RentApplications() {
                                                     <div className="flex-1 min-h-[8px]" />
 
                                                     {/* Footer Actions */}
-                                                    <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 font-mono tracking-wider">
-                                                            {app.id}
+                                                    <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto gap-3">
+                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 font-mono tracking-wider min-w-0">
+                                                            <span className="truncate">{app.id}</span>
                                                         </div>
 
-                                                        <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-white/10 hover:text-primary border border-white/10 px-3 py-1.5 rounded-lg transition-all shadow-sm">
+                                                        <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-white/10 hover:text-primary border border-white/10 px-3 py-1.5 rounded-lg transition-all shadow-sm shrink-0">
                                                             Review
                                                             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                                         </button>
@@ -630,8 +797,9 @@ export function RentApplications() {
                             onClick={() => {
                                 setSelectedApp(null);
                                 setActionError(null);
+                                cancelEdit();
                             }}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[110] transition-opacity"
+                            className="fixed inset-0 h-screen w-screen bg-black/60 backdrop-blur-md z-[110]"
                         />
 
                         <motion.div
@@ -639,7 +807,7 @@ export function RentApplications() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: "100%", opacity: 0 }}
                             transition={{ type: "spring", damping: 30, stiffness: 350 }}
-                            className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-neutral-950 border-l border-white/10 z-[120] overflow-y-auto custom-scrollbar shadow-2xl flex flex-col"
+                            className="fixed right-0 top-0 h-screen w-full max-w-xl bg-neutral-950 border-l border-white/10 z-[120] overflow-y-auto custom-scrollbar shadow-2xl flex flex-col"
                         >
                             {/* Panel Header */}
                             <div className="sticky top-0 z-20 bg-neutral-950/80 backdrop-blur-3xl border-b border-white/5 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -647,15 +815,41 @@ export function RentApplications() {
                                     <span className="font-mono text-xs font-bold text-neutral-500 bg-white/5 px-2 py-1 rounded-md border border-white/5">{selectedApp.id}</span>
                                     <h2 className="text-lg font-black text-white tracking-tight">Application Dossier</h2>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        setSelectedApp(null);
-                                        setActionError(null);
-                                    }}
-                                    className="p-2 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 transition-colors"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {!isEditing ? (
+                                        <button
+                                            onClick={() => openEdit(selectedApp)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-primary/10 hover:text-primary border border-white/10 hover:border-primary/30 text-neutral-400 text-xs font-black transition-all"
+                                        >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                            Edit
+                                        </button>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={cancelEdit}
+                                                disabled={savingEdit}
+                                                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-400 text-xs font-black transition-all"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={saveEdit}
+                                                disabled={savingEdit}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-black text-xs font-black transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-60"
+                                            >
+                                                {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                                                {savingEdit ? "Saving..." : "Save"}
+                                            </button>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={() => { setSelectedApp(null); setActionError(null); cancelEdit(); }}
+                                        className="p-2 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 transition-colors"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Dossier Body */}
@@ -688,7 +882,7 @@ export function RentApplications() {
                                     </div>
                                 </div>
 
-                                {/* Deep Intelligence Profiling */}
+                                {/* Deep Applicant Profiling */}
                                 <div className="space-y-4">
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-500 pl-2">Applicant Profile</h4>
                                     <div className="rounded-3xl bg-neutral-900 border border-white/5 p-6 flex flex-col gap-6">
@@ -698,37 +892,141 @@ export function RentApplications() {
                                                     {selectedApp.applicant.name.split(" ").map((n) => n[0]).join("")}
                                                 </span>
                                             </div>
-                                            <div>
-                                                <h3 className="text-xl font-bold text-white">{selectedApp.applicant.name}</h3>
-                                                <p className="text-sm text-neutral-400 font-medium">{selectedApp.applicant.occupation}</p>
+                                            <div className="flex-1 min-w-0">
+                                                {isEditing && editDraft ? (
+                                                    <input
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-xl px-3 py-2 text-white text-base font-bold outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 mb-1"
+                                                        value={editDraft.applicant_name}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, applicant_name: e.target.value })}
+                                                        placeholder="Full name"
+                                                    />
+                                                ) : (
+                                                    <h3 className="text-xl font-bold text-white">{selectedApp.applicant.name}</h3>
+                                                )}
+                                                {isEditing && editDraft ? (
+                                                    <input
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-xl px-3 py-2 text-neutral-400 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
+                                                        value={editDraft.occupation}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, occupation: e.target.value })}
+                                                        placeholder="Occupation"
+                                                    />
+                                                ) : (
+                                                    <p className="text-sm text-neutral-400 font-medium">{selectedApp.applicant.occupation}</p>
+                                                )}
                                             </div>
                                         </div>
 
                                         <div className="h-px w-full bg-white/5" />
 
+                                        {editError && (
+                                            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs font-bold text-red-400">
+                                                {editError}
+                                            </div>
+                                        )}
+
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5 shrink-0">
                                                     <Mail className="h-4 w-4 text-neutral-400" />
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0 flex-1">
                                                     <span className="text-[9px] uppercase font-bold text-neutral-500 block">Email</span>
-                                                    <span className="text-sm font-bold text-neutral-300">{selectedApp.applicant.email}</span>
+                                                    {isEditing && editDraft ? (
+                                                        <input
+                                                            type="email"
+                                                            className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30"
+                                                            value={editDraft.applicant_email}
+                                                            onChange={(e) => setEditDraft({ ...editDraft, applicant_email: e.target.value })}
+                                                            placeholder="email@example.com"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm font-bold text-neutral-300 block truncate">{selectedApp.applicant.email}</span>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5 shrink-0">
                                                     <Phone className="h-4 w-4 text-neutral-400" />
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0 flex-1">
                                                     <span className="text-[9px] uppercase font-bold text-neutral-500 block">Phone</span>
-                                                    <span className="text-sm font-bold text-neutral-300">{selectedApp.applicant.phone}</span>
+                                                    {isEditing && editDraft ? (
+                                                        <input
+                                                            className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30"
+                                                            value={editDraft.applicant_phone}
+                                                            onChange={(e) => setEditDraft({ ...editDraft, applicant_phone: e.target.value })}
+                                                            placeholder="+63 9xx xxx xxxx"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm font-bold text-neutral-300 block truncate">{selectedApp.applicant.phone}</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* Move-in date edit */}
+                                        {isEditing && editDraft && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white/5 rounded-xl border border-white/5 shrink-0">
+                                                    <Calendar className="h-4 w-4 text-neutral-400" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <span className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Move-in Date</span>
+                                                    <input
+                                                        type="date"
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30 [color-scheme:dark]"
+                                                        value={editDraft.move_in_date}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, move_in_date: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Employment edit fields */}
+                                        {isEditing && editDraft && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div>
+                                                    <span className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Employer</span>
+                                                    <input
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30"
+                                                        value={editDraft.employer}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, employer: e.target.value })}
+                                                        placeholder="Company name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Monthly Income (₱)</span>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30"
+                                                        value={editDraft.monthly_income}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, monthly_income: e.target.value })}
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Emergency Contact */}
-                                        {selectedApp.emergencyContact?.name && (
+                                        {isEditing && editDraft ? (
+                                            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 space-y-3">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-500/60 block">Emergency Contact</span>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <input
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30"
+                                                        value={editDraft.emergency_contact_name}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, emergency_contact_name: e.target.value })}
+                                                        placeholder="Contact name"
+                                                    />
+                                                    <input
+                                                        className="w-full bg-white/[0.06] border border-white/[0.12] rounded-lg px-2 py-1 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary/30"
+                                                        value={editDraft.emergency_contact_phone}
+                                                        onChange={(e) => setEditDraft({ ...editDraft, emergency_contact_phone: e.target.value })}
+                                                        placeholder="+63 9xx xxx xxxx"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : selectedApp.emergencyContact?.name && (
                                             <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-sm animate-pulse-slow">
                                                     <AlertCircle className="h-5 w-5 text-amber-500" />
@@ -740,6 +1038,19 @@ export function RentApplications() {
                                                         <span className="text-[11px] font-bold text-neutral-400 tracking-tight">{selectedApp.emergencyContact.phone}</span>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        )}
+
+                                        {/* Notes edit */}
+                                        {isEditing && editDraft && (
+                                            <div>
+                                                <span className="text-[9px] uppercase font-bold text-neutral-500 block mb-1">Internal Notes</span>
+                                                <textarea
+                                                    className="w-full bg-white/[0.06] border border-white/[0.12] rounded-xl px-3 py-2 text-sm font-medium text-white outline-none focus:ring-2 focus:ring-primary/30 resize-none min-h-[80px] placeholder:text-neutral-600"
+                                                    value={editDraft.message}
+                                                    onChange={(e) => setEditDraft({ ...editDraft, message: e.target.value })}
+                                                    placeholder="Internal notes..."
+                                                />
                                             </div>
                                         )}
 
@@ -771,14 +1082,13 @@ export function RentApplications() {
                                     <div className="grid grid-cols-1 gap-2">
                                         {[
                                             { key: 'valid_id', label: '1. Valid Identification', desc: 'Any govt-issued ID (Name match is mandatory)' },
-                                            { key: 'income_verified', label: '2. Source of Income', desc: 'COE, Payslip, or Contract Verification' },
-                                            { key: 'application_completed', label: '3. Completed App Form', desc: 'Employment & Emergency Contact Details' },
-                                            { key: 'background_checked', label: '4. Background / Reference Check', desc: 'Mandatory verification — references will be reached' },
-                                            { key: 'payment_received', label: '5. Move-in Payments', desc: '1mo Advance + 2mo Deposit (No Installments)' },
-                                            { key: 'lease_signed', label: '6. Lease Contract Signing', desc: 'No signature, no key policy' },
-                                            { key: 'inspection_done', label: '7. Inspection & Turnover', desc: 'Photo/video documentation & signed checklist' },
+                                            { key: 'proof_of_income', label: '2. Source of Income', desc: 'COE, Payslip, or Contract Verification' },
+                                            { key: 'application_form', label: '3. Completed App Form', desc: 'Employment & Emergency Contact Details' },
+                                            { key: 'background_reference', label: '4. Background / Reference Check', desc: 'Mandatory verification — references will be reached' },
+                                            { key: 'move_in_payment', label: '5. Move-in Payments', desc: '1mo Advance + 2mo Deposit (No Installments)' },
                                         ].map((req) => {
-                                            const isDone = (selectedApp.complianceChecklist as any)?.[req.key] || false;
+                                            const checklist = selectedApp.complianceChecklist as Record<string, boolean> | null | undefined;
+                                            const isDone = checklist?.[req.key] === true;
                                             return (
                                                 <div key={req.key} className={cn(
                                                     "flex items-center gap-4 p-3 rounded-2xl border transition-all duration-300 group",
@@ -897,23 +1207,43 @@ export function RentApplications() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="w-full flex items-center justify-center p-4 rounded-2xl border border-white/5 bg-white/[0.02]">
-                                        <span className={cn(
-                                            "text-sm font-black flex items-center gap-2",
-                                            selectedApp.status === "approved"
-                                                ? "text-emerald-500"
-                                                : selectedApp.status === "withdrawn"
-                                                ? "text-neutral-300"
-                                                : "text-red-500"
-                                        )}>
-                                            {selectedApp.status === "approved" ? (
-                                                <><CheckCircle2 className="w-5 h-5" /> Application Finalized: Approved</>
-                                            ) : selectedApp.status === "withdrawn" ? (
-                                                <><AlertCircle className="w-5 h-5" /> Application Finalized: Withdrawn</>
-                                            ) : (
-                                                <><XCircle className="w-5 h-5" /> Application Finalized: Rejected</>
-                                            )}
-                                        </span>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="w-full flex items-center justify-center p-4 rounded-2xl border border-white/5 bg-white/[0.02]">
+                                            <span className={cn(
+                                                "text-sm font-black flex items-center gap-2",
+                                                selectedApp.status === "approved"
+                                                    ? "text-emerald-500"
+                                                    : selectedApp.status === "withdrawn"
+                                                    ? "text-neutral-300"
+                                                    : "text-red-500"
+                                            )}>
+                                                {selectedApp.status === "approved" ? (
+                                                    <><CheckCircle2 className="w-5 h-5" /> Application Finalized: Approved</>
+                                                ) : selectedApp.status === "withdrawn" ? (
+                                                    <><AlertCircle className="w-5 h-5" /> Application Finalized: Withdrawn</>
+                                                ) : (
+                                                    <><XCircle className="w-5 h-5" /> Application Finalized: Rejected</>
+                                                )}
+                                            </span>
+                                        </div>
+                                        {selectedApp.status === "approved" && (
+                                            <button
+                                                disabled={sendingCredentials}
+                                                onClick={() => handleSendCredentials(selectedApp.id)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-center gap-2 py-3 rounded-2xl border font-black text-sm transition-all active:scale-95",
+                                                    "bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40",
+                                                    sendingCredentials && "opacity-60 cursor-not-allowed"
+                                                )}
+                                            >
+                                                {sendingCredentials ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Mail className="h-4 w-4" />
+                                                )}
+                                                {sendingCredentials ? "Sending..." : "Send User Credentials"}
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -940,6 +1270,94 @@ export function RentApplications() {
                 contractData={contractData}
                 onSuccess={() => setReloadKey((k) => k + 1)}
             />
+
+            {/* Tenant Credentials Modal */}
+            <AnimatePresence>
+                {tenantCredentials && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setTenantCredentials(null)}
+                            className="fixed inset-0 h-screen w-screen bg-black/70 backdrop-blur-md z-[130]"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            className="fixed inset-0 z-[140] flex items-center justify-center p-4"
+                        >
+                            <div className="w-full max-w-md bg-neutral-950 border border-emerald-500/30 rounded-3xl shadow-[0_0_60px_rgba(16,185,129,0.15)] overflow-hidden">
+                                <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-black text-white">
+                                                {tenantCredentials.accountExisted ? "Credentials Resent" : "Tenant Account Created"}
+                                            </h3>
+                                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Credentials for landlord records</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setTenantCredentials(null)}
+                                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <p className="text-xs text-neutral-400 font-medium leading-relaxed">
+                                        {tenantCredentials.accountExisted
+                                            ? "This tenant already has an account. A fresh password reset link has been generated and an invite email sent."
+                                            : "A tenant account has been provisioned and an invite email sent to the applicant. Keep these credentials as a backup in case the tenant did not receive their email."}
+                                    </p>
+                                    <div className="space-y-3">
+                                        <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 block mb-1">Email</span>
+                                            <span className="text-sm font-bold text-white font-mono">{tenantCredentials.email}</span>
+                                        </div>
+                                        {tenantCredentials.tempPassword && (
+                                            <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 block mb-1">Temporary Password</span>
+                                                <span className="text-sm font-bold text-emerald-400 font-mono tracking-widest">{tenantCredentials.tempPassword}</span>
+                                            </div>
+                                        )}
+                                        {tenantCredentials.inviteUrl && (
+                                            <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 block mb-1">Password Reset Link</span>
+                                                <a
+                                                    href={tenantCredentials.inviteUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs font-bold text-blue-400 hover:text-blue-300 break-all transition-colors"
+                                                >
+                                                    {tenantCredentials.inviteUrl}
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 flex items-start gap-2">
+                                        <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                                        <p className="text-[11px] text-amber-400/80 font-bold leading-relaxed">
+                                            The tenant has been sent an invite email to set their own password. Share these credentials only if they did not receive it.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setTenantCredentials(null)}
+                                        className="w-full py-3 rounded-2xl bg-emerald-500 text-black font-black text-sm hover:bg-emerald-400 transition-colors active:scale-95"
+                                    >
+                                        Got it
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
