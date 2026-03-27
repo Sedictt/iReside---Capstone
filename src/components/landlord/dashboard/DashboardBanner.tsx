@@ -257,13 +257,13 @@ export function DashboardBanner({
                             >
                                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
-                                <span className="text-sm font-black tracking-tight relative z-10">New Walk-in</span>
+                                <span className="text-sm font-black tracking-tight relative z-10">New Application</span>
                             </button>
                         ) : (
-                            <Link href="/landlord/applications?action=walk-in" className="flex items-center gap-2.5 px-6 py-3 bg-primary text-neutral-950 rounded-2xl transition-all group shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.5)] hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden">
+                            <Link href="/landlord/applications?action=tenant-application" className="flex items-center gap-2.5 px-6 py-3 bg-primary text-neutral-950 rounded-2xl transition-all group shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.5)] hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden">
                                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                 <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
-                                <span className="text-sm font-black tracking-tight relative z-10">New Walk-in</span>
+                                <span className="text-sm font-black tracking-tight relative z-10">New Application</span>
                             </Link>
                         )}
                         <Link href="/landlord/maintenance" className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl backdrop-blur-sm border border-white/10 transition-colors group">

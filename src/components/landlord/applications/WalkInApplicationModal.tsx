@@ -525,7 +525,7 @@ export function WalkInApplicationModal({
         setSubmitting(true);
         setError(null);
         try {
-            const endpoint = "/api/landlord/applications/walk-in";
+            const endpoint = "/api/landlord/applications/tenant-application";
             const method = existingApplication ? "PATCH" : "POST";
             const shouldWarnIncomplete =
                 !existingApplication && !asPending && step === 3 && !allRequirementsMet;
@@ -696,7 +696,7 @@ export function WalkInApplicationModal({
                              <h1 className="text-3xl font-black text-white tracking-tighter italic">
                                  {STEPS[step].label.toUpperCase()} <span className="text-primary">STEP</span>
                              </h1>
-                             <p className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.4em] ml-1 mt-1">Walk-in Application Wizard</p>
+                             <p className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.4em] ml-1 mt-1">Tenant Application Wizard</p>
                          </div>
                           <button 
                              onClick={onClose} 

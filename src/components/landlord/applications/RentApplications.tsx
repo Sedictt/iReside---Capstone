@@ -199,7 +199,8 @@ export function RentApplications() {
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
-    const [showWalkInModal, setShowWalkInModal] = useState(false);
+    const [showTenantApplicationModal, setShowTenantApplicationModal] = useState(false);
+    const [showKpiCards, setShowKpiCards] = useState(false);
     const [showContractModal, setShowContractModal] = useState(false);
     const [contractData, setContractData] = useState<{
         application_id: string;
@@ -221,8 +222,8 @@ export function RentApplications() {
 
     useEffect(() => {
         setMounted(true);
-        if (searchParams?.get("action") === "walk-in") {
-            setShowWalkInModal(true);
+        if (searchParams?.get("action") === "tenant-application") {
+            setShowTenantApplicationModal(true);
         }
     }, [searchParams]);
 
@@ -357,7 +358,7 @@ export function RentApplications() {
         setSavingEdit(true);
         setEditError(null);
         try {
-            const res = await fetch("/api/landlord/applications/walk-in", {
+            const res = await fetch("/api/landlord/applications/tenant-application", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -538,23 +539,34 @@ export function RentApplications() {
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-white mb-2 flex items-center gap-3">
                         <ClipboardList className="h-8 w-8 text-primary/80" />
-                        Walk-in Applications
+                        Tenant Applications
                     </h1>
                     <p className="text-neutral-400 font-medium tracking-wide text-sm">
-                        Create, manage, and track walk-in tenant inquiries and applications.
+                        Create, manage, and track tenant inquiries and applications.
                     </p>
                 </div>
                 <button
-                    onClick={() => setShowWalkInModal(true)}
+                    onClick={() => setShowTenantApplicationModal(true)}
                     className="flex items-center gap-2.5 bg-primary text-neutral-950 px-6 py-3 rounded-2xl font-black text-sm tracking-tight transition-all group shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.5)] hover:scale-105 active:scale-95 cursor-pointer relative overflow-hidden"
                 >
                     <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <Plus className="h-5 w-5 relative z-10" />
-                    <span className="relative z-10">New Walk-in</span>
+                    <span className="relative z-10">New Application</span>
+                </button>
+            </div>
+
+            {/* KPI Stats Toggle */}
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => setShowKpiCards(!showKpiCards)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 border border-white/10 text-sm font-medium text-neutral-300 hover:text-white hover:bg-neutral-700 transition-all"
+                >
+                    {showKpiCards ? "Hide" : "Show"} Stats
                 </button>
             </div>
 
             {/* Glowing KPI Dashboard */}
+            {showKpiCards && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                     { label: "Action Required", subtitle: "Pending forms", value: stats.pending, icon: Clock, glow: "rgba(245,158,11,0.15)", border: "border-amber-500/20", color: "text-amber-500" },
@@ -588,6 +600,7 @@ export function RentApplications() {
                     </div>
                 ))}
             </div>
+            )}
 
             {/* Main Application Container */}
             <div className="rounded-3xl bg-neutral-900 border border-white/5 flex flex-col pt-2 shadow-2xl">
@@ -646,7 +659,7 @@ export function RentApplications() {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="space-y-3">
                                 <AnimatePresence mode="popLayout">
                                     {filteredApplications.map((app, index) => {
                                         const statusConfig = STATUS_CONFIG[app.status];
@@ -657,34 +670,95 @@ export function RentApplications() {
                                             <motion.div
                                                 key={app.id}
                                                 layout
-                                                initial={{ opacity: 0, y: 15 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.95 }}
-                                                transition={{ delay: index * 0.05, duration: 0.3 }}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                transition={{ delay: index * 0.03, duration: 0.3 }}
                                                 onClick={() => {
                                                     setSelectedApp(app);
                                                     setActionError(null);
                                                 }}
-                                                className="group relative flex flex-col bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl"
+                                                className="group relative flex items-center bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 hover:bg-neutral-900/50 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl"
                                             >
                                                 {/* Status Glow Bar */}
                                                 {isPending && (
-                                                    <div className="absolute top-0 inset-x-0 h-1 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-10 animate-pulse" />
+                                                    <div className="absolute left-0 inset-y-0 w-1 bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.8)] z-10 animate-pulse" />
                                                 )}
 
-                                                {/* Top Card Section: Property Image bg */}
-                                                <div className="relative h-28 w-full bg-neutral-900 overflow-hidden shrink-0">
+                                                {/* Property Image Thumbnail */}
+                                                <div className="relative h-24 w-32 bg-neutral-900 overflow-hidden shrink-0">
                                                     <img
                                                         src={resolveImage(app.propertyImage)}
                                                         alt={app.propertyName}
-                                                        className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay transition-transform duration-700 group-hover:scale-110"
+                                                        className="absolute inset-0 w-full h-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-110 group-hover:opacity-90"
                                                     />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/80 to-neutral-950/20" />
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-neutral-950/80" />
+                                                </div>
 
-                                                    {/* Top Status */}
-                                                    <div className="absolute top-3 left-3 z-10">
+                                                {/* Main Content */}
+                                                <div className="flex-1 flex items-center gap-6 p-4 min-w-0">
+                                                    
+                                                    {/* Applicant Info */}
+                                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                        {/* Avatar */}
+                                                        <div className="h-12 w-12 rounded-full bg-neutral-900 border-2 border-white/10 ring-2 ring-primary/20 flex items-center justify-center overflow-hidden shadow-lg shrink-0 group-hover:ring-primary/50 transition-colors">
+                                                            {app.applicant.avatar ? (
+                                                                <img
+                                                                    src={app.applicant.avatar}
+                                                                    alt={app.applicant.name}
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-sm font-black text-primary">
+                                                                    {app.applicant.name.split(" ").map((n) => n[0]).join("")}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Name & Occupation */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="text-base font-bold text-white mb-1 group-hover:text-primary transition-colors truncate">
+                                                                {app.applicant.name}
+                                                            </h3>
+                                                            <p className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium truncate">
+                                                                <Briefcase className="w-3 h-3 shrink-0" />
+                                                                {app.applicant.occupation || "Not provided"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Property Details */}
+                                                    <div className="hidden md:flex flex-col min-w-[180px]">
+                                                        <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1">Property</span>
+                                                        <span className="text-sm font-bold text-white truncate">{app.propertyName}</span>
+                                                        <span className="text-xs font-bold text-primary mt-0.5">{app.unitNumber}</span>
+                                                    </div>
+
+                                                    {/* Rent & Date */}
+                                                    <div className="hidden lg:flex flex-col min-w-[140px]">
+                                                        <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1">Monthly Rent</span>
+                                                        <span className="text-sm font-bold text-white">{formatCurrency(app.monthlyRent)}</span>
+                                                        <span className="text-xs font-medium text-neutral-400 flex items-center gap-1 mt-0.5">
+                                                            <Calendar className="w-3 h-3" />
+                                                            {formatDate(app.requestedMoveIn)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Credit Score */}
+                                                    <div className="hidden xl:flex flex-col items-center min-w-[100px] px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5">
+                                                        <span className="text-[9px] uppercase tracking-widest font-bold text-neutral-500 mb-1">Credit</span>
+                                                        <span className={cn("text-xl font-black leading-none", getCreditScoreColor(app.applicant.creditScore))}>
+                                                            {app.applicant.creditScore ?? "N/A"}
+                                                        </span>
+                                                        <span className="text-[9px] font-bold text-neutral-500 mt-1">
+                                                            {getCreditScoreLabel(app.applicant.creditScore)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Status Badge */}
+                                                    <div className="flex items-center gap-3 min-w-[140px]">
                                                         <span className={cn(
-                                                            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-lg",
+                                                            "px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-sm",
                                                             statusConfig.bgColor,
                                                             statusConfig.borderColor,
                                                             statusConfig.color,
@@ -697,72 +771,16 @@ export function RentApplications() {
                                                         </span>
                                                     </div>
 
-                                                    {/* Score Metric Top Right */}
-                                                    <div className="absolute top-3 right-3 z-10 flex flex-col items-end">
-                                                        <span className="text-[9px] uppercase tracking-widest font-bold text-neutral-400">Credit</span>
-                                                        <span className={cn("text-lg font-black leading-none drop-shadow-md", getCreditScoreColor(app.applicant.creditScore))}>
-                                                            {app.applicant.creditScore ?? "N/A"}
-                                                        </span>
-                                                    </div>
+                                                    {/* Action Button */}
+                                                    <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-primary/20 hover:text-primary border border-white/10 hover:border-primary/30 px-4 py-2 rounded-lg transition-all shadow-sm shrink-0">
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        <span className="hidden sm:inline">Review</span>
+                                                    </button>
                                                 </div>
 
-                                                {/* Main Content Body */}
-                                                <div className="p-5 flex flex-col flex-1 bg-gradient-to-b from-neutral-950 to-neutral-900 border-t border-white/5 relative">
-
-                                                    {/* Floating Avatar */}
-                                                    <div className="absolute -top-10 left-4 h-14 w-14 rounded-full bg-neutral-900 border-4 border-neutral-950 ring-1 ring-white/10 flex items-center justify-center overflow-hidden shadow-2xl z-20 group-hover:ring-primary/50 transition-colors">
-                                                        {app.applicant.avatar ? (
-                                                            <img
-                                                                src={app.applicant.avatar}
-                                                                alt={app.applicant.name}
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <span className="text-lg font-black text-primary">
-                                                                {app.applicant.name.split(" ").map((n) => n[0]).join("")}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Applicant Core Details */}
-                                                    <div className="mt-4 mb-4">
-                                                        <h3 className="text-base font-bold text-white mb-0.5 group-hover:text-primary transition-colors">{app.applicant.name}</h3>
-                                                        <p className="text-xs text-neutral-400 flex items-center gap-1.5 font-medium">
-                                                            <Briefcase className="w-3 h-3" />
-                                                            {app.applicant.occupation || "Not provided"}
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Critical Property Info */}
-                                                    <div className="grid grid-cols-2 gap-3 mb-4 bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                                        <div>
-                                                            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Property</span>
-                                                            <span className="text-xs font-bold text-white truncate block">{app.propertyName}</span>
-                                                            <span className="text-[10px] font-bold text-primary mt-0.5 block">{app.unitNumber}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 mb-1 block">Rental Rate</span>
-                                                            <span className="text-xs font-bold text-white block">{formatCurrency(app.monthlyRent)}</span>
-                                                            <span className="text-[10px] font-bold text-neutral-400 flex items-center gap-1 mt-0.5">
-                                                                <Calendar className="w-3 h-3" />
-                                                                {formatDate(app.requestedMoveIn)}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex-1 min-h-[8px]" />
-
-                                                    {/* Footer Actions */}
-                                                    <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto gap-3">
-                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-500 font-mono tracking-wider min-w-0">
-                                                            <span className="truncate">{app.id}</span>
-                                                        </div>
-
-                                                        <button className="flex items-center gap-1.5 text-xs font-black text-white bg-white/5 hover:bg-white/10 hover:text-primary border border-white/10 px-3 py-1.5 rounded-lg transition-all shadow-sm shrink-0">
-                                                            Review
-                                                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                        </button>
-                                                    </div>
+                                                {/* Hover Indicator */}
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                    <ArrowRight className="w-5 h-5 text-primary animate-pulse" />
                                                 </div>
                                             </motion.div>
                                         );
@@ -1252,10 +1270,10 @@ export function RentApplications() {
                 )}
             </AnimatePresence>
 
-            {/* Walk-in Application Modal */}
+            {/* Tenant Application Modal */}
             <WalkInApplicationModal
-                isOpen={showWalkInModal}
-                onClose={() => setShowWalkInModal(false)}
+                isOpen={showTenantApplicationModal}
+                onClose={() => setShowTenantApplicationModal(false)}
                 units={availableUnits}
                 onSuccess={() => setReloadKey((k) => k + 1)}
             />

@@ -222,7 +222,7 @@ export function UnitShowcaseModal({
                             className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-black font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(var(--primary),0.3)]"
                         >
                             <ClipboardList className="h-5 w-5" />
-                            Start Walk-in Application
+                            Start Tenant Application
                         </button>
                     )}
                 </div>
