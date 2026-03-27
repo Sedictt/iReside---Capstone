@@ -5,6 +5,9 @@ import { ChevronDown, Download, FileText, History, X } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
+import { KpiCardSkeleton } from "@/components/landlord/dashboard/KpiCardSkeleton";
+import { ChartSkeleton } from "@/components/landlord/dashboard/ChartSkeleton";
+import { FeaturedPropertySkeleton } from "@/components/landlord/dashboard/FeaturedPropertySkeleton";
 import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
 import { FeaturedPropertyCard } from "@/components/landlord/dashboard/FeaturedPropertyCard";
 
@@ -647,23 +650,26 @@ export default function StatisticsPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {primaryKpis.map((kpi) => (
-                    <KpiCard
-                        key={kpi.title}
-                        title={kpi.title}
-                        simplifiedTitle={kpi.simplifiedTitle}
-                        value={kpi.value}
-                        change={kpi.change}
-                        simplifiedChange={kpi.simplifiedChange}
-                        changeType={kpi.changeType}
-                        iconColor={kpi.iconColor}
-                        trendlineProperties={kpi.trendlineProperties}
-                        data={kpi.trendData}
-                        simplifiedMode={simplifiedMode}
-                        aiInsight={kpiInsights[kpi.title]}
-                    />
-                ))}
-
+                {statsLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
+                ) : (
+                    primaryKpis.map((kpi) => (
+                        <KpiCard
+                            key={kpi.title}
+                            title={kpi.title}
+                            simplifiedTitle={kpi.simplifiedTitle}
+                            value={kpi.value}
+                            change={kpi.change}
+                            simplifiedChange={kpi.simplifiedChange}
+                            changeType={kpi.changeType}
+                            iconColor={kpi.iconColor}
+                            trendlineProperties={kpi.trendlineProperties}
+                            data={kpi.trendData}
+                            simplifiedMode={simplifiedMode}
+                            aiInsight={kpiInsights[kpi.title]}
+                        />
+                    ))
+                )}
             </div>
 
             {/* Expandable Stats Grid */}
@@ -678,22 +684,26 @@ export default function StatisticsPage() {
                         "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-transform duration-500",
                         showMoreKpis ? "translate-y-0" : "-translate-y-4"
                     )}>
-                        {extendedKpis.map((kpi) => (
-                            <KpiCard
-                                key={kpi.title}
-                                title={kpi.title}
-                                simplifiedTitle={kpi.simplifiedTitle}
-                                value={kpi.value}
-                                change={kpi.change}
-                                simplifiedChange={kpi.simplifiedChange}
-                                changeType={kpi.changeType}
-                                iconColor={kpi.iconColor}
-                                trendlineProperties={kpi.trendlineProperties}
-                                data={kpi.trendData}
-                                simplifiedMode={simplifiedMode}
-                                aiInsight={kpiInsights[kpi.title]}
-                            />
-                        ))}
+                        {statsLoading ? (
+                            Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
+                        ) : (
+                            extendedKpis.map((kpi) => (
+                                <KpiCard
+                                    key={kpi.title}
+                                    title={kpi.title}
+                                    simplifiedTitle={kpi.simplifiedTitle}
+                                    value={kpi.value}
+                                    change={kpi.change}
+                                    simplifiedChange={kpi.simplifiedChange}
+                                    changeType={kpi.changeType}
+                                    iconColor={kpi.iconColor}
+                                    trendlineProperties={kpi.trendlineProperties}
+                                    data={kpi.trendData}
+                                    simplifiedMode={simplifiedMode}
+                                    aiInsight={kpiInsights[kpi.title]}
+                                />
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -712,21 +722,29 @@ export default function StatisticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full pb-8">
                 {/* Chart Section */}
                 <div className="lg:col-span-2 h-[400px]">
-                    <FinancialPerformanceChart simplifiedMode={simplifiedMode} dataByWindow={financialChart} />
+                    {statsLoading ? (
+                        <ChartSkeleton />
+                    ) : (
+                        <FinancialPerformanceChart simplifiedMode={simplifiedMode} dataByWindow={financialChart} />
+                    )}
                 </div>
 
                 {/* Featured Property Card */}
                 <div className="lg:col-span-1 h-[400px]">
-                    <FeaturedPropertyCard
-                        propertyName={featuredProperty.propertyName}
-                        totalSales={featuredProperty.totalSales}
-                        totalViews={featuredProperty.totalViews}
-                        image={featuredProperty.image}
-                        momGrowth={featuredProperty.momGrowth}
-                        occupancyRate={featuredProperty.occupancyRate}
-                        className="h-full shadow-2xl"
-                        simplifiedMode={simplifiedMode}
-                    />
+                    {statsLoading ? (
+                        <FeaturedPropertySkeleton />
+                    ) : (
+                        <FeaturedPropertyCard
+                            propertyName={featuredProperty.propertyName}
+                            totalSales={featuredProperty.totalSales}
+                            totalViews={featuredProperty.totalViews}
+                            image={featuredProperty.image}
+                            momGrowth={featuredProperty.momGrowth}
+                            occupancyRate={featuredProperty.occupancyRate}
+                            className="h-full shadow-2xl"
+                            simplifiedMode={simplifiedMode}
+                        />
+                    )}
                 </div>
             </div>
 
