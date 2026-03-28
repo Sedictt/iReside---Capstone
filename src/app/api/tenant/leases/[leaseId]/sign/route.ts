@@ -208,12 +208,10 @@ export async function POST(
       .select(`
         landlord_id,
         tenant_id,
-        profiles!leases_tenant_id_fkey (
-          full_name
-        ),
-        units!leases_unit_id_fkey (
-          properties!units_property_id_fkey (
-            profiles!properties_landlord_id_fkey (
+        units (
+          properties (
+            landlord_id,
+            profiles (
               email,
               full_name
             )
@@ -223,10 +221,18 @@ export async function POST(
       .eq("id", leaseId)
       .single();
 
-    if (leaseDetails) {
-      const landlordEmail = leaseDetails.units?.properties?.profiles?.email;
-      const landlordName = leaseDetails.units?.properties?.profiles?.full_name || "Landlord";
-      const tenantName = leaseDetails.profiles?.full_name || "Tenant";
+    if (leaseDetails && !('error' in leaseDetails)) {
+      const landlordEmail = (leaseDetails as any).units?.properties?.profiles?.email;
+      const landlordName = (leaseDetails as any).units?.properties?.profiles?.full_name || "Landlord";
+      
+      // Fetch tenant profile separately
+      const { data: tenantProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", leaseDetails.tenant_id)
+        .single();
+      
+      const tenantName = tenantProfile?.full_name || "Tenant";
 
       if (landlordEmail) {
         await sendTenantSignedNotification({

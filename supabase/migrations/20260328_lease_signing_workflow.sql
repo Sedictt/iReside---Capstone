@@ -19,6 +19,15 @@ ALTER TABLE leases
     ADD COLUMN IF NOT EXISTS signing_link_token_hash TEXT,
     ADD COLUMN IF NOT EXISTS signature_lock_version INTEGER NOT NULL DEFAULT 0;
 
+-- ======================== APPLICATIONS TABLE UPDATES ============================
+
+-- Add lease_id to applications to link them directly to created leases
+ALTER TABLE applications
+    ADD COLUMN IF NOT EXISTS lease_id UUID REFERENCES leases(id) ON DELETE SET NULL;
+
+-- Add index for lease lookup
+CREATE INDEX IF NOT EXISTS idx_applications_lease_id ON applications(lease_id);
+
 -- Add index for signing link token lookup (for JWT validation)
 CREATE INDEX IF NOT EXISTS idx_leases_signing_link_token_hash 
     ON leases(signing_link_token_hash) 
@@ -66,6 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_lease_signing_audit_event_type
 ALTER TABLE lease_signing_audit ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for audit trail
+DROP POLICY IF EXISTS "Landlords can view audit for their leases" ON lease_signing_audit;
 CREATE POLICY "Landlords can view audit for their leases"
     ON lease_signing_audit FOR SELECT
     USING (
@@ -76,6 +86,7 @@ CREATE POLICY "Landlords can view audit for their leases"
         )
     );
 
+DROP POLICY IF EXISTS "System can insert audit events" ON lease_signing_audit;
 CREATE POLICY "System can insert audit events"
     ON lease_signing_audit FOR INSERT
     WITH CHECK (true);  -- Any authenticated user can create audit events (validated in API layer)

@@ -475,6 +475,7 @@ export interface Database {
                     id: string
                     unit_id: string
                     applicant_id: string | null
+                    lease_id: string | null
                     landlord_id: string
                     status: ApplicationStatus
                     message: string | null
@@ -502,6 +503,7 @@ export interface Database {
                     id?: string
                     unit_id: string
                     applicant_id?: string | null
+                    lease_id?: string | null
                     landlord_id: string
                     status?: ApplicationStatus
                     message?: string | null
@@ -528,6 +530,7 @@ export interface Database {
                 Update: {
                     unit_id?: string
                     applicant_id?: string | null
+                    lease_id?: string | null
                     landlord_id?: string
                     status?: ApplicationStatus
                     message?: string | null

@@ -220,13 +220,9 @@ export async function POST(
       .select(`
         start_date,
         tenant_id,
-        profiles!leases_tenant_id_fkey (
-          email,
-          full_name
-        ),
-        units!leases_unit_id_fkey (
+        units (
           name,
-          properties!units_property_id_fkey (
+          properties (
             name
           )
         )
@@ -234,11 +230,18 @@ export async function POST(
       .eq("id", leaseId)
       .single();
 
-    if (leaseDetails) {
-      const tenantEmail = leaseDetails.profiles?.email;
-      const tenantName = leaseDetails.profiles?.full_name || "Tenant";
-      const propertyName = leaseDetails.units?.properties?.name || "Property";
-      const unitName = leaseDetails.units?.name || "Unit";
+    if (leaseDetails && !('error' in leaseDetails)) {
+      // Fetch tenant profile separately
+      const { data: tenantProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", leaseDetails.tenant_id)
+        .single();
+
+      const tenantEmail = tenantProfile?.email;
+      const tenantName = tenantProfile?.full_name || "Tenant";
+      const propertyName = (leaseDetails as any).units?.properties?.name || "Property";
+      const unitName = (leaseDetails as any).units?.name || "Unit";
       const moveInDate = leaseDetails.start_date;
 
       if (tenantEmail) {

@@ -31,38 +31,14 @@ export async function POST(
     );
   }
 
-  // Fetch application with lease and tenant details
+  // Fetch application details first
   const { data: application, error: appError } = await supabase
     .from("applications")
     .select(`
       id,
       status,
-      tenant_id,
-      lease_id,
-      profiles!applications_tenant_id_fkey (
-        email,
-        full_name
-      ),
-      leases!applications_lease_id_fkey (
-        id,
-        status,
-        landlord_id,
-        signing_link_token_hash,
-        start_date,
-        monthly_rent,
-        security_deposit,
-        units!leases_unit_id_fkey (
-          name,
-          properties!units_property_id_fkey (
-            name,
-            landlord_id,
-            profiles!properties_landlord_id_fkey (
-              email,
-              full_name
-            )
-          )
-        )
-      )
+      applicant_id,
+      lease_id
     `)
     .eq("id", applicationId)
     .maybeSingle();
@@ -82,8 +58,41 @@ export async function POST(
     );
   }
 
+  // Fetch applicant profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", application.applicant_id || "")
+    .maybeSingle();
+
+  // Fetch lease with unit and property details
+  let lease: any = null;
+  if (application.lease_id) {
+    const { data: leaseData } = await supabase
+      .from("leases")
+      .select(`
+        id,
+        status,
+        landlord_id,
+        signing_link_token_hash,
+        start_date,
+        monthly_rent,
+        security_deposit,
+        units (
+          name,
+          properties (
+            name,
+            landlord_id
+          )
+        )
+      `)
+      .eq("id", application.lease_id)
+      .maybeSingle();
+    lease = leaseData;
+  }
+
   // Verify landlord owns this application
-  if (application.leases?.landlord_id !== user.id) {
+  if (!lease || lease.landlord_id !== user.id) {
     return NextResponse.json(
       { error: "Unauthorized: You are not the landlord for this application" },
       { status: 403 }
@@ -98,7 +107,7 @@ export async function POST(
     );
   }
 
-  if (!application.lease_id || !application.leases) {
+  if (!application.lease_id || !lease) {
     return NextResponse.json(
       { error: "Application does not have an associated lease" },
       { status: 409 }
@@ -106,15 +115,15 @@ export async function POST(
   }
 
   // Verify lease is in correct status
-  if (application.leases.status !== "pending_signature") {
+  if (lease.status !== "pending_signature") {
     return NextResponse.json(
-      { error: `Lease is not ready for signing. Current status: ${application.leases.status}` },
+      { error: `Lease is not ready for signing. Current status: ${lease.status}` },
       { status: 409 }
     );
   }
 
   // Generate JWT signing token
-  const tenantEmail = application.profiles?.email;
+  const tenantEmail = profile?.email;
   if (!tenantEmail) {
     return NextResponse.json(
       { error: "Tenant email not found" },
@@ -122,13 +131,7 @@ export async function POST(
     );
   }
 
-  const tokenPayload = {
-    leaseId: application.lease_id,
-    tenantId: application.tenant_id,
-    tenantEmail,
-  };
-
-  const token = generateSigningToken(tokenPayload);
+  const token = generateSigningToken(application.lease_id, application.applicant_id || "");
   const tokenHash = hashToken(token);
 
   // Update lease with token hash, signing mode, and status
@@ -155,13 +158,26 @@ export async function POST(
   const signingUrl = `${baseUrl}/tenant/sign-lease/${application.lease_id}?token=${token}`;
 
   // Send signing link email to tenant
-  const propertyName = application.leases?.units?.properties?.name || "Property";
-  const unitName = application.leases?.units?.name || "Unit";
-  const rentAmount = application.leases?.monthly_rent || 0;
-  const depositAmount = application.leases?.security_deposit || 0;
-  const landlordName = application.leases?.units?.properties?.profiles?.full_name || "Landlord";
-  const landlordEmail = application.leases?.units?.properties?.profiles?.email || "";
-  const tenantName = application.profiles?.full_name || "Tenant";
+  const propertyName = lease?.units?.properties?.name || "Property";
+  const unitName = lease?.units?.name || "Unit";
+  const rentAmount = lease?.monthly_rent || 0;
+  const depositAmount = lease?.security_deposit || 0;
+  const tenantName = profile?.full_name || "Tenant";
+  
+  // Fetch landlord profile separately
+  let landlordName = "Landlord";
+  let landlordEmail = "";
+  if (lease?.landlord_id) {
+    const { data: landlordProfile } = await supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", lease.landlord_id)
+      .maybeSingle();
+    if (landlordProfile && !('error' in landlordProfile)) {
+      landlordName = landlordProfile.full_name || "Landlord";
+      landlordEmail = landlordProfile.email || "";
+    }
+  }
   
   // Token expires in 30 days
   const expiresAt = new Date();

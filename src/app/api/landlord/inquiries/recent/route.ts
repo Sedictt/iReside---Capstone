@@ -149,7 +149,7 @@ export async function GET() {
         .filter((row) => typeof row.message === "string" && row.message.trim().length > 0)
         .map((row) => {
             const action = actionMap.get(row.id);
-            const applicant = applicantMap.get(row.applicant_id);
+            const applicant = row.applicant_id ? applicantMap.get(row.applicant_id) : undefined;
             const unit = unitMap.get(row.unit_id);
             const property = unit ? propertyMap.get(unit.property_id) : null;
             const propertyImages = property?.images;

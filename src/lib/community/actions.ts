@@ -34,9 +34,9 @@ type PostRowWithRelations = {
     community_comments?: Array<{ id: string }> | null
     community_poll_votes?: Array<{ option_index: number; user_id: string }> | null
     community_albums?: { 
-        id: string
-        cover_photo_url: string | null
-        photo_count: number | null
+        id: string; 
+        cover_photo_url: string | null; 
+        photo_count: number | null;
         community_photos?: Array<{ id: string; url: string }> | null
     } | null
 }
@@ -87,7 +87,7 @@ function mapPost(row: PostRowWithRelations, userId: string): CommunityPost {
 }
 
 async function getAuthenticatedUserId(): Promise<string> {
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const {
         data: { user }
     } = await supabase.auth.getUser()
@@ -100,7 +100,7 @@ async function getAuthenticatedUserId(): Promise<string> {
 }
 
 async function getAuthenticatedCommunityContext(): Promise<{ userId: string; role: CommunityRole }> {
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const {
         data: { user }
     } = await supabase.auth.getUser()
@@ -145,7 +145,7 @@ function canCreatePostType(role: CommunityRole, postType: CommunityPostType): bo
 }
 
 async function resolvePropertyIdForPostCreation(userId: string, role: CommunityRole, propertyId?: string): Promise<string | null> {
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     if (propertyId) {
         if (role === 'tenant') {
@@ -183,7 +183,7 @@ export async function getPosts(
     posts: CommunityPost[]
     nextCursor: string | null
 }> {
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     let managedPropertyIds: string[] | null = null
     if (role === 'landlord') {
@@ -197,8 +197,8 @@ export async function getPosts(
             return { posts: [], nextCursor: null }
         }
 
-        managedPropertyIds = (landlordProperties || []).map(property => property.id)
-        if (managedPropertyIds.length === 0) {
+        managedPropertyIds = (landlordProperties || []).map((property: { id: string }) => property.id)
+        if (!managedPropertyIds || managedPropertyIds.length === 0) {
             return { posts: [], nextCursor: null }
         }
 
@@ -279,7 +279,7 @@ export async function getCurrentCommunityPendingPosts(limit = 20): Promise<Commu
         return []
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     let query = supabase
         .from('community_posts')
         .select(`
@@ -316,7 +316,7 @@ export async function getPendingResidentPostsForModeration(limit = 20, targetPro
         return []
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     let landlordPropertyIds: string[] | null = null
     if (role === 'landlord') {
         const { data: landlordProperties, error: propertiesError } = await supabase
@@ -329,8 +329,8 @@ export async function getPendingResidentPostsForModeration(limit = 20, targetPro
             return []
         }
 
-        landlordPropertyIds = (landlordProperties || []).map(property => property.id)
-        if (landlordPropertyIds.length === 0) {
+        landlordPropertyIds = (landlordProperties || []).map((property: { id: string }) => property.id)
+        if (!landlordPropertyIds || landlordPropertyIds.length === 0) {
             return []
         }
         if (targetPropertyId && !landlordPropertyIds.includes(targetPropertyId)) {
@@ -388,7 +388,7 @@ export async function createDiscussionPost(input: { title: string; content: stri
         throw new Error('Discussion content is required.')
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
@@ -404,72 +404,6 @@ export async function createDiscussionPost(input: { title: string; content: stri
     if (error) {
         console.error('createDiscussionPost error:', error)
         throw new Error('Unable to submit your discussion post right now.')
-    }
-
-    revalidatePath('/tenant/community')
-    revalidatePath('/landlord/community')
-    revalidatePath('/')
-}
-
-export async function createPhotoAlbumPost(input: { title?: string; content?: string; propertyId?: string; imageUrls: string[] }) {
-    const { userId, role } = await getAuthenticatedCommunityContext()
-    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
-    if (!propertyId) {
-        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
-    }
-
-    const title = (input.title || '').trim()
-    const content = (input.content || '').trim()
-
-    if (input.imageUrls.length === 0) {
-        throw new Error('At least one photo is required for a photo album.')
-    }
-
-    const supabase = await createClient()
-    
-    // First create post
-    const { data: post, error: postError } = await supabase.from('community_posts').insert({
-        property_id: propertyId,
-        author_id: userId,
-        author_role: toAuthorRole(role),
-        type: 'photo_album',
-        title: title || 'Photo Share',
-        content,
-        is_moderated: !isManagementRole(role),
-        is_approved: isManagementRole(role),
-        status: 'published'
-    }).select('id').single()
-
-    if (postError || !post) {
-        console.error('createPhotoAlbumPost error:', postError)
-        throw new Error('Unable to submit your photo post right now.')
-    }
-
-    // Create album
-    const { data: album, error: albumError } = await supabase.from('community_albums').insert({
-        post_id: post.id,
-        property_id: propertyId,
-        cover_photo_url: input.imageUrls[0],
-        photo_count: input.imageUrls.length
-    }).select('id').single()
-
-    if (albumError || !album) {
-        console.error('Create album error:', albumError)
-        // Note: in a real production system we should probably clean up the post here, or use a transaction
-        throw new Error('Unable to create photo album.')
-    }
-
-    // Insert photos
-    const photosToInsert = input.imageUrls.map((url, index) => ({
-        album_id: album.id,
-        url,
-        display_order: index,
-        uploaded_by: userId
-    }))
-
-    const { error: photosError } = await supabase.from('community_photos').insert(photosToInsert)
-    if (photosError) {
-        console.error('Insert photos error:', photosError)
     }
 
     revalidatePath('/tenant/community')
@@ -504,7 +438,7 @@ export async function createPollPost(input: { title: string; content: string; op
         throw new Error('A poll can have at most 5 options.')
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
@@ -521,6 +455,71 @@ export async function createPollPost(input: { title: string; content: string; op
     if (error) {
         console.error('createPollPost error:', error)
         throw new Error('Unable to submit your poll right now.')
+    }
+
+    revalidatePath('/tenant/community')
+    revalidatePath('/landlord/community')
+    revalidatePath('/')
+}
+
+export async function createPhotoAlbumPost(input: { title: string; content: string; propertyId?: string; imageUrls: string[] }) {
+    const { userId, role } = await getAuthenticatedCommunityContext()
+    const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
+    if (!propertyId) {
+        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
+    }
+
+    if (!input.imageUrls || input.imageUrls.length === 0) {
+        throw new Error('At least one photo is required for a photo album.')
+    }
+
+    const title = input.title.trim()
+    const content = input.content.trim()
+
+    const supabase = (await createClient()) as any
+    
+    // 1. Create the Post
+    const { data: post, error: postError } = await supabase.from('community_posts').insert({
+        property_id: propertyId,
+        author_id: userId,
+        author_role: toAuthorRole(role),
+        type: 'photo_album',
+        title: title || 'Photo Album',
+        content,
+        is_moderated: !isManagementRole(role),
+        is_approved: isManagementRole(role),
+        status: 'published'
+    }).select('id').single()
+
+    if (postError) {
+        console.error('createPhotoAlbumPost error (post):', postError)
+        throw new Error('Unable to create your photo album right now.')
+    }
+
+    // 2. Create the Album
+    const { data: album, error: albumError } = await supabase.from('community_albums').insert({
+        post_id: post.id,
+        property_id: propertyId,
+        cover_photo_url: input.imageUrls[0],
+        photo_count: input.imageUrls.length
+    }).select('id').single()
+
+    if (albumError) {
+        console.error('createPhotoAlbumPost error (album):', albumError)
+        throw new Error('Post created, but album record failed.')
+    }
+
+    // 3. Create the Photos
+    const photoInserts = input.imageUrls.map(url => ({
+        album_id: album.id,
+        url,
+        uploaded_by: userId
+    }))
+
+    const { error: photoError } = await supabase.from('community_photos').insert(photoInserts)
+
+    if (photoError) {
+        console.error('createPhotoAlbumPost error (photos):', photoError)
     }
 
     revalidatePath('/tenant/community')
@@ -550,7 +549,7 @@ export async function createAnnouncementPost(input: { title: string; content: st
         throw new Error('Announcement content is required.')
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
@@ -596,7 +595,7 @@ export async function updateOwnPost(postId: string, input: { title?: string; con
 
     updates.updated_at = new Date().toISOString()
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const { error } = await supabase
         .from('community_posts')
         .update(updates)
@@ -614,7 +613,7 @@ export async function updateOwnPost(postId: string, input: { title?: string; con
 
 export async function deleteOwnPost(postId: string) {
     const userId = await getAuthenticatedUserId()
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     const { error } = await supabase
         .from('community_posts')
@@ -637,7 +636,7 @@ export async function getManagementProperties(): Promise<Array<{ id: string; nam
         return []
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     let query = supabase.from('properties').select('id, name')
 
     if (role === 'landlord') {
@@ -660,7 +659,7 @@ export async function approveResidentPost(postId: string, approved = true) {
         throw new Error('Only landlords and admins can approve resident posts.')
     }
 
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
     const { data: post, error: postError } = await supabase
         .from('community_posts')
         .select('id, property_id, author_role')
@@ -709,7 +708,7 @@ export async function approveResidentPost(postId: string, approved = true) {
 
 export async function toggleReaction(postId: string, reactionType: CommunityReactionType) {
     const userId = await getAuthenticatedUserId()
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     const { data: existing, error: existingError } = await supabase
         .from('community_reactions')
@@ -759,14 +758,14 @@ export async function toggleReaction(postId: string, reactionType: CommunityReac
         throw new Error('Reaction saved, but counts failed to refresh.')
     }
 
-    const reactions = (countsData || []).reduce<Record<string, number>>((acc, reaction) => {
+    const reactions = (countsData || []).reduce((acc: Record<string, number>, reaction: { reaction_type: string }) => {
         acc[reaction.reaction_type] = (acc[reaction.reaction_type] || 0) + 1
         return acc
     }, {})
 
     const userReactions = (countsData || [])
-        .filter(reaction => reaction.user_id === userId)
-        .map(reaction => ({ reaction_type: reaction.reaction_type }))
+        .filter((reaction: { user_id: string }) => reaction.user_id === userId)
+        .map((reaction: { reaction_type: string }) => ({ reaction_type: reaction.reaction_type }))
 
     revalidatePath('/tenant/community')
     revalidatePath('/landlord/community')
@@ -776,7 +775,7 @@ export async function toggleReaction(postId: string, reactionType: CommunityReac
 
 export async function votePoll(pollId: string, optionIndex: number) {
     const userId = await getAuthenticatedUserId()
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     if (!Number.isInteger(optionIndex) || optionIndex < 0) {
         throw new Error('Invalid poll option selected.')
@@ -802,13 +801,13 @@ export async function votePoll(pollId: string, optionIndex: number) {
             primaryMessage.toLowerCase().includes('on conflict')
 
         if (shouldTryLegacyColumn) {
-            const { error: fallbackWriteError } = await (supabase.from('community_poll_votes') as never)
+            const { error: fallbackWriteError } = await supabase.from('community_poll_votes')
                 .upsert(
                     {
                         post_id: pollId,
                         user_id: userId,
                         option_index: optionIndex
-                    } as never,
+                    },
                     { onConflict: 'post_id,user_id' }
                 )
 
@@ -836,7 +835,7 @@ export async function votePoll(pollId: string, optionIndex: number) {
             primaryMessage.toLowerCase().includes('column')
 
         if (shouldTryLegacyColumn) {
-            const { data: fallbackVotes, error: fallbackVotesError } = await (supabase.from('community_poll_votes') as never)
+            const { data: fallbackVotes, error: fallbackVotesError } = await supabase.from('community_poll_votes')
                 .select('option_index, user_id')
                 .eq('post_id', pollId)
 
@@ -872,7 +871,7 @@ export async function votePoll(pollId: string, optionIndex: number) {
 
 export async function addComment(postId: string, content: string, parentCommentId?: string) {
     const userId = await getAuthenticatedUserId()
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     const trimmedContent = content.trim()
     if (!trimmedContent) {
@@ -909,7 +908,7 @@ export async function addComment(postId: string, content: string, parentCommentI
 
 export async function getPostComments(postId: string) {
     await getAuthenticatedUserId()
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     const { data, error } = await supabase
         .from('community_comments')
@@ -930,7 +929,7 @@ export async function getPostComments(postId: string) {
         throw new Error('Unable to load comments right now.')
     }
 
-    return (data || []).map((row) => {
+    return (data || []).map((row: any) => {
         const comment = row as {
             id: string
             post_id: string
@@ -956,7 +955,7 @@ export async function getPostComments(postId: string) {
 
 export async function reportPost(postId: string, reason: CommunityReportReason) {
     const userId = await getAuthenticatedUserId()
-    const supabase = await createClient()
+    const supabase = (await createClient()) as any
 
     const trimmedReason = reason.trim()
     if (!trimmedReason) {

@@ -149,7 +149,8 @@ export function SmartContractBuilderModal({ isOpen, onClose, onSave, initialTemp
     };
 
     const toggleMultiAnswer = (option: string) => {
-        const current = Array.isArray(answers[q.id]) ? answers[q.id] as string[] : [];
+        const existingAnswer = answers[q.id] as unknown;
+        const current = Array.isArray(existingAnswer) ? (existingAnswer as string[]) : [];
         if (current.includes(option)) {
             updateAnswer(current.filter((item: string) => item !== option));
         } else {
@@ -281,7 +282,8 @@ export function SmartContractBuilderModal({ isOpen, onClose, onSave, initialTemp
                                         {q.type === 'multi-choice' && (
                                             <div className="space-y-3">
                                                 {q.options?.map((opt) => {
-                                                    const isSelected = (currentAnswer || []).includes(opt);
+                                                    const selectedAnswers = Array.isArray(currentAnswer) ? currentAnswer : [];
+                                                    const isSelected = selectedAnswers.includes(opt);
                                                     return (
                                                         <button
                                                             key={opt}

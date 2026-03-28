@@ -71,7 +71,7 @@ export function SigningModeSelector({
               icon: "text-blue-500",
               iconBg: "bg-blue-500/10",
             },
-          }[mode.color];
+          }[mode.color]!;
 
           return (
             <motion.button

@@ -211,7 +211,7 @@ export async function GET() {
     if (!applicationRowsRaw || applicationRowsRaw.length === 0) {
         return NextResponse.json({ applications: [] satisfies ApplicationResponse[] });
     }
-    const applicationRows = applicationRowsRaw as Array<(typeof applicationRowsRaw)[number] & { lease_id?: string | null }>;
+    const applicationRows = applicationRowsRaw as any[];
 
     const applicantIds = Array.from(
         new Set(applicationRows.map((row) => row.applicant_id).filter((value): value is string => Boolean(value)))
@@ -286,7 +286,7 @@ export async function GET() {
                 .in("id", leaseIdsFromApplications);
 
             if (!error) {
-                leasesRows = (data ?? []) as LeaseRow[];
+                leasesRows = (data as unknown) as LeaseRow[];
                 break;
             }
 
@@ -339,7 +339,7 @@ export async function GET() {
         auditByLeaseId.set(row.lease_id, current);
     });
 
-    const applications: ApplicationResponse[] = applicationRows.map((row) => {
+    const applications: ApplicationResponse[] = (applicationRows.map((row) => {
         const applicant = row.applicant_id ? applicantMap.get(row.applicant_id) : undefined;
         const unit = unitMap.get(row.unit_id);
         const property = unit ? propertyMap.get(unit.property_id) : null;
@@ -380,7 +380,7 @@ export async function GET() {
             submittedDate: row.created_at,
             notes: row.message ?? null,
             documents: Array.isArray(row.documents)
-                ? row.documents.filter((doc): doc is string => isNonEmptyString(doc))
+                ? row.documents.filter((doc: string): doc is string => isNonEmptyString(doc))
                 : [],
             emergencyContact: {
                 name: row.emergency_contact_name ?? null,
@@ -409,7 +409,7 @@ export async function GET() {
                 : null,
             leaseAuditEvents: lease ? auditByLeaseId.get(lease.id) ?? [] : [],
         };
-    });
+    }) as any[]);
 
     return NextResponse.json({ applications });
 }

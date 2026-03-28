@@ -5,8 +5,8 @@ export interface AuditEvent {
   eventType: "signing_link_generated" | "signing_link_accessed" | "signing_link_expired" | "signing_link_regenerated" | "tenant_signed" | "landlord_signed" | "lease_activated" | "signing_failed";
   actorId?: string;
   metadata?: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }
 
 /**
@@ -22,7 +22,7 @@ export async function logAuditEvent(event: AuditEvent): Promise<void> {
     actor_id: event.actorId || null,
     ip_address: event.ipAddress || null,
     user_agent: event.userAgent || null,
-    metadata: event.metadata || {},
+    metadata: event.metadata || null as any,
   });
 
   if (error) {

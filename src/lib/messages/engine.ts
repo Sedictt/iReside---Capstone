@@ -115,8 +115,8 @@ const resolvePartnerRelationshipData = async (
     ]);
 
     const applicationPartnerIds = new Set<string>([
-        ...(tenantApplications ?? []).map((row) => row.landlord_id),
-        ...(landlordApplications ?? []).map((row) => row.applicant_id),
+        ...(tenantApplications ?? []).map((row) => row.landlord_id).filter((id): id is string => id !== null),
+        ...(landlordApplications ?? []).map((row) => row.applicant_id).filter((id): id is string => id !== null),
     ]);
 
     const paymentPartnerIds = new Set<string>([

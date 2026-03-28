@@ -6,7 +6,7 @@ import crypto from 'crypto';
  * Provides secure token generation and verification for tenant lease signing
  */
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 if (!JWT_SECRET) {
