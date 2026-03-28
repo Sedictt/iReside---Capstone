@@ -771,18 +771,6 @@ export function WalkInApplicationModal({
                             );
                         })}
                     </nav>
-
-                    <div className="mt-auto">
-                        <div className="p-6 rounded-3xl bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.08] space-y-4">
-                           <div className="flex items-center gap-3">
-                               <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                               <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">WIZARD ACTIVE</span>
-                           </div>
-                           <p className="text-[11px] text-neutral-400 font-bold leading-relaxed tracking-tight">
-                               Completing this form manually adds a tenant to your system immediately.
-                           </p>
-                        </div>
-                    </div>
                 </aside>
 
                 {/* Primary Content Container */}

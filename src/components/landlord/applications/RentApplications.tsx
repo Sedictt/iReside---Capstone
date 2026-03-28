@@ -259,10 +259,23 @@ export function RentApplications() {
     const [mounted, setMounted] = useState(false);
     const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeFilter, setActiveFilter] = useState<ApplicationStatus | "all">("all");
+    const [activeFilter, setActiveFilterState] = useState<ApplicationStatus | "all">("all");
+    const [filterLoading, setFilterLoading] = useState(false);
+
+    const setActiveFilter = (filter: ApplicationStatus | "all") => {
+        if (filter !== activeFilter) {
+            setFilterLoading(true);
+            // Delay the actual filter update to let skeleton render first
+            setTimeout(() => {
+                setActiveFilterState(filter);
+                setTimeout(() => setFilterLoading(false), 150);
+            }, 50);
+        }
+    };
     const [selectedApp, setSelectedApp] = useState<RentApplication | null>(null);
     const [applications, setApplications] = useState<RentApplication[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dataFetched, setDataFetched] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
@@ -311,6 +324,7 @@ export function RentApplications() {
 
     useEffect(() => {
         setMounted(true);
+        setLoading(true);
         if (searchParams?.get("action") === "tenant-application") {
             setShowTenantApplicationModal(true);
         }
@@ -318,6 +332,7 @@ export function RentApplications() {
 
     useEffect(() => {
         const controller = new AbortController();
+        const startTime = Date.now();
 
         const loadApplications = async () => {
             setLoading(true);
@@ -335,6 +350,7 @@ export function RentApplications() {
 
                 const payload = (await response.json()) as { applications?: RentApplication[] };
                 setApplications(Array.isArray(payload.applications) ? payload.applications : []);
+                setDataFetched(true);
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {
                     return;
@@ -343,7 +359,14 @@ export function RentApplications() {
                 setError("Unable to load applications right now.");
                 setApplications([]);
             } finally {
-                setLoading(false);
+                // Ensure skeleton shows for minimum 400ms for smooth UX
+                const elapsed = Date.now() - startTime;
+                const minLoadingTime = 400;
+                if (elapsed < minLoadingTime) {
+                    setTimeout(() => setLoading(false), minLoadingTime - elapsed);
+                } else {
+                    setLoading(false);
+                }
             }
         };
 
@@ -837,7 +860,7 @@ export function RentApplications() {
 
                 {/* Grid Format Interface */}
                 <div className="p-6">
-                    {loading ? (
+                    {!dataFetched || loading || filterLoading ? (
                         <ApplicationsSkeletonList />
                     ) : error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
@@ -974,7 +997,7 @@ export function RentApplications() {
                                 </AnimatePresence>
                             </div>
 
-                            {filteredApplications.length === 0 && (
+                            {dataFetched && filteredApplications.length === 0 && (
                                 <div className="py-24 flex flex-col items-center justify-center text-center">
                                     <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mb-5 ring-1 ring-white/10 shadow-xl">
                                         <Users className="w-8 h-8 text-neutral-600" />
