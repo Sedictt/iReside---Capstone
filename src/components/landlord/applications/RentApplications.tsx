@@ -35,6 +35,10 @@ import {
 } from "lucide-react";
 import { WalkInApplicationModal } from "./WalkInApplicationModal";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
+import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
+import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
+import type { LeaseStatus } from "@/types/database";
+import { SignaturePad } from "./SignaturePad";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus = "pending" | "reviewing" | "approved" | "rejected" | "withdrawn";
@@ -78,6 +82,69 @@ interface RentApplication {
         lease_signed: boolean;
         inspection_done: boolean;
     };
+    lease?: {
+        id: string;
+        status: LeaseStatus;
+        signing_mode: "in_person" | "remote" | null;
+        tenant_signature: string | null;
+        landlord_signature: string | null;
+        tenant_signed_at: string | null;
+        landlord_signed_at: string | null;
+        signing_link_token_hash: string | null;
+        signing_link_expires_at: string | null;
+    } | null;
+    leaseAuditEvents?: LeaseAuditEvent[];
+}
+
+function ApplicationsSkeletonList() {
+    return (
+        <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                    key={`skeleton-row-${index}`}
+                    className="relative flex items-center bg-neutral-950 border border-white/5 rounded-2xl overflow-hidden shadow-lg animate-pulse"
+                >
+                    <div className="absolute left-0 inset-y-0 w-1 bg-white/10" />
+
+                    <div className="h-24 w-32 bg-white/[0.04] shrink-0" />
+
+                    <div className="flex-1 flex items-center gap-6 p-4 min-w-0">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="h-12 w-12 rounded-full bg-white/[0.06] shrink-0" />
+                            <div className="flex-1 min-w-0 space-y-2">
+                                <div className="h-3.5 w-40 max-w-full bg-white/[0.08] rounded" />
+                                <div className="h-3 w-28 bg-white/[0.06] rounded" />
+                            </div>
+                        </div>
+
+                        <div className="hidden md:flex flex-col min-w-[180px] space-y-2">
+                            <div className="h-2.5 w-16 bg-white/[0.06] rounded" />
+                            <div className="h-3.5 w-28 bg-white/[0.08] rounded" />
+                            <div className="h-3 w-20 bg-white/[0.06] rounded" />
+                        </div>
+
+                        <div className="hidden lg:flex flex-col min-w-[140px] space-y-2">
+                            <div className="h-2.5 w-20 bg-white/[0.06] rounded" />
+                            <div className="h-3.5 w-24 bg-white/[0.08] rounded" />
+                            <div className="h-3 w-18 bg-white/[0.06] rounded" />
+                        </div>
+
+                        <div className="hidden xl:flex flex-col items-center min-w-[100px] px-4 py-2 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+                            <div className="h-2.5 w-10 bg-white/[0.06] rounded" />
+                            <div className="h-5 w-8 bg-white/[0.08] rounded" />
+                            <div className="h-2.5 w-14 bg-white/[0.06] rounded" />
+                        </div>
+
+                        <div className="min-w-[140px]">
+                            <div className="h-7 w-32 bg-white/[0.08] rounded-lg" />
+                        </div>
+
+                        <div className="h-8 w-24 bg-white/[0.08] rounded-lg shrink-0" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────
@@ -219,6 +286,28 @@ export function RentApplications() {
         property_name: string;
     }[]>([]);
     const [reloadKey, setReloadKey] = useState(0);
+    const [signingLinkState, setSigningLinkState] = useState<{
+        loading: boolean;
+        message: string | null;
+        error: string | null;
+        signingUrl: string | null;
+    }>({
+        loading: false,
+        message: null,
+        error: null,
+        signingUrl: null,
+    });
+    const [countersignState, setCountersignState] = useState<{
+        loading: boolean;
+        error: string | null;
+        message: string | null;
+    }>({
+        loading: false,
+        error: null,
+        message: null,
+    });
+    const [showCountersignModal, setShowCountersignModal] = useState(false);
+    const [pendingCountersignature, setPendingCountersignature] = useState<string | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -499,6 +588,105 @@ export function RentApplications() {
         }
     };
 
+    const refreshApplications = () => setReloadKey((k) => k + 1);
+
+    const handleGenerateSigningLink = async (applicationId: string) => {
+        setSigningLinkState({ loading: true, message: null, error: null, signingUrl: null });
+        try {
+            const response = await fetch(`/api/landlord/applications/${applicationId}/signing-link`, {
+                method: "POST",
+            });
+            const data = (await response.json()) as {
+                success?: boolean;
+                signing_url?: string;
+                error?: string;
+            };
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to generate signing link.");
+            }
+
+            setSigningLinkState({
+                loading: false,
+                message: "Signing link generated and email has been attempted.",
+                error: null,
+                signingUrl: data.signing_url ?? null,
+            });
+            refreshApplications();
+        } catch (err) {
+            setSigningLinkState({
+                loading: false,
+                message: null,
+                error: err instanceof Error ? err.message : "Failed to generate signing link.",
+                signingUrl: null,
+            });
+        }
+    };
+
+    const handleRegenerateSigningLink = async (applicationId: string) => {
+        setSigningLinkState({ loading: true, message: null, error: null, signingUrl: null });
+        try {
+            const response = await fetch(`/api/landlord/applications/${applicationId}/signing-link/regenerate`, {
+                method: "POST",
+            });
+            const data = (await response.json()) as {
+                success?: boolean;
+                signing_url?: string;
+                error?: string;
+            };
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to regenerate signing link.");
+            }
+
+            setSigningLinkState({
+                loading: false,
+                message: "Signing link regenerated successfully.",
+                error: null,
+                signingUrl: data.signing_url ?? null,
+            });
+            refreshApplications();
+        } catch (err) {
+            setSigningLinkState({
+                loading: false,
+                message: null,
+                error: err instanceof Error ? err.message : "Failed to regenerate signing link.",
+                signingUrl: null,
+            });
+        }
+    };
+
+    const handleCountersignLease = async (leaseId: string, landlordSignature: string) => {
+        setCountersignState({ loading: true, error: null, message: null });
+        try {
+            const response = await fetch(`/api/landlord/leases/${leaseId}/sign`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    landlord_signature: landlordSignature,
+                }),
+            });
+            const data = (await response.json()) as { error?: string };
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to countersign lease.");
+            }
+            setCountersignState({
+                loading: false,
+                error: null,
+                message: "Lease countersigned successfully.",
+            });
+            setShowCountersignModal(false);
+            setPendingCountersignature(null);
+            refreshApplications();
+        } catch (err) {
+            setCountersignState({
+                loading: false,
+                error: err instanceof Error ? err.message : "Failed to countersign lease.",
+                message: null,
+            });
+        }
+    };
+
     if (!mounted) return null;
 
     // Derived data
@@ -650,9 +838,7 @@ export function RentApplications() {
                 {/* Grid Format Interface */}
                 <div className="p-6">
                     {loading ? (
-                        <div className="rounded-2xl border border-white/10 bg-black/30 p-6 text-sm text-neutral-400">
-                            Loading applications...
-                        </div>
+                        <ApplicationsSkeletonList />
                     ) : error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
                             {error}
@@ -1199,6 +1385,35 @@ export function RentApplications() {
                                         {actionError}
                                     </div>
                                 )}
+                                {signingLinkState.error && (
+                                    <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-300">
+                                        {signingLinkState.error}
+                                    </div>
+                                )}
+                                {signingLinkState.message && (
+                                    <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-semibold text-emerald-300 space-y-2">
+                                        <p>{signingLinkState.message}</p>
+                                        {signingLinkState.signingUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)}
+                                                className="text-[11px] underline underline-offset-2 text-emerald-200 hover:text-white"
+                                            >
+                                                Copy Signing Link
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                                {countersignState.error && (
+                                    <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-semibold text-red-300">
+                                        {countersignState.error}
+                                    </div>
+                                )}
+                                {countersignState.message && (
+                                    <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-xs font-semibold text-emerald-300">
+                                        {countersignState.message}
+                                    </div>
+                                )}
                                 {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
                                     <div className="flex items-center gap-4">
                                         <button
@@ -1245,22 +1460,94 @@ export function RentApplications() {
                                             </span>
                                         </div>
                                         {selectedApp.status === "approved" && (
-                                            <button
-                                                disabled={sendingCredentials}
-                                                onClick={() => handleSendCredentials(selectedApp.id)}
-                                                className={cn(
-                                                    "w-full flex items-center justify-center gap-2 py-3 rounded-2xl border font-black text-sm transition-all active:scale-95",
-                                                    "bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40",
-                                                    sendingCredentials && "opacity-60 cursor-not-allowed"
+                                            <div className="space-y-3">
+                                                <button
+                                                    disabled={sendingCredentials}
+                                                    onClick={() => handleSendCredentials(selectedApp.id)}
+                                                    className={cn(
+                                                        "w-full flex items-center justify-center gap-2 py-3 rounded-2xl border font-black text-sm transition-all active:scale-95",
+                                                        "bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40",
+                                                        sendingCredentials && "opacity-60 cursor-not-allowed"
+                                                    )}
+                                                >
+                                                    {sendingCredentials ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Mail className="h-4 w-4" />
+                                                    )}
+                                                    {sendingCredentials ? "Sending..." : "Send User Credentials"}
+                                                </button>
+
+                                                {selectedApp.lease && (
+                                                    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Lease Signing Status</p>
+                                                            <LeaseStatusBadge status={selectedApp.lease.status} />
+                                                        </div>
+
+                                                        {selectedApp.lease.signing_mode === "remote" && (
+                                                            <div className="space-y-2">
+                                                                {selectedApp.lease.status === "pending_signature" && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleGenerateSigningLink(selectedApp.id)}
+                                                                        disabled={signingLinkState.loading}
+                                                                        className="w-full py-2.5 rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-black uppercase tracking-wider hover:bg-purple-500/20 disabled:opacity-60"
+                                                                    >
+                                                                        {signingLinkState.loading ? "Generating..." : "Send Signing Link"}
+                                                                    </button>
+                                                                )}
+
+                                                                {(selectedApp.lease.status === "pending_tenant_signature" || selectedApp.lease.status === "pending_signature") && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleRegenerateSigningLink(selectedApp.id)}
+                                                                        disabled={signingLinkState.loading}
+                                                                        className="w-full py-2.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-xs font-black uppercase tracking-wider hover:bg-blue-500/20 disabled:opacity-60"
+                                                                    >
+                                                                        {signingLinkState.loading ? "Regenerating..." : "Resend Signing Link"}
+                                                                    </button>
+                                                                )}
+
+                                                                {selectedApp.lease.signing_link_expires_at && (
+                                                                    <p className="text-[11px] text-neutral-400">
+                                                                        Link expires on {formatDate(selectedApp.lease.signing_link_expires_at)}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {selectedApp.lease.tenant_signature && (
+                                                            <div className="space-y-2">
+                                                                <p className="text-[11px] text-neutral-400">Tenant signature captured</p>
+                                                                <img
+                                                                    src={selectedApp.lease.tenant_signature}
+                                                                    alt="Tenant signature"
+                                                                    className="w-full max-h-24 object-contain rounded-lg bg-black/30 border border-white/10"
+                                                                />
+                                                                {selectedApp.lease.tenant_signed_at && (
+                                                                    <p className="text-[11px] text-neutral-500">
+                                                                        Signed at {formatDate(selectedApp.lease.tenant_signed_at)}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {selectedApp.lease.status === "pending_landlord_signature" && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowCountersignModal(true)}
+                                                                disabled={countersignState.loading}
+                                                                className="w-full py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-black uppercase tracking-wider hover:bg-emerald-500/20 disabled:opacity-60"
+                                                            >
+                                                                {countersignState.loading ? "Countersigning..." : "Countersign Lease"}
+                                                            </button>
+                                                        )}
+
+                                                        <LeaseAuditTrail events={selectedApp.leaseAuditEvents ?? []} />
+                                                    </div>
                                                 )}
-                                            >
-                                                {sendingCredentials ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Mail className="h-4 w-4" />
-                                                )}
-                                                {sendingCredentials ? "Sending..." : "Send User Credentials"}
-                                            </button>
+                                            </div>
                                         )}
                                     </div>
                                 )}
@@ -1371,6 +1658,82 @@ export function RentApplications() {
                                         Got it
                                     </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showCountersignModal && selectedApp?.lease && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150]"
+                            onClick={() => {
+                                if (countersignState.loading) return;
+                                setShowCountersignModal(false);
+                                setPendingCountersignature(null);
+                            }}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96, y: 16 }}
+                            className="fixed inset-0 z-[160] flex items-center justify-center p-4"
+                        >
+                            <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-neutral-950 p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-black text-white">Countersign Lease</h3>
+                                    <button
+                                        type="button"
+                                        className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400"
+                                        onClick={() => {
+                                            if (countersignState.loading) return;
+                                            setShowCountersignModal(false);
+                                            setPendingCountersignature(null);
+                                        }}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+
+                                {selectedApp.lease.tenant_signature && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Tenant Signature</p>
+                                        <img
+                                            src={selectedApp.lease.tenant_signature}
+                                            alt="Tenant signature"
+                                            className="w-full max-h-24 object-contain rounded-lg bg-black/30 border border-white/10"
+                                        />
+                                        {selectedApp.lease.tenant_signed_at && (
+                                            <p className="text-[11px] text-neutral-500">
+                                                Signed at {formatDate(selectedApp.lease.tenant_signed_at)}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Landlord Signature</p>
+                                    <SignaturePad
+                                        onSave={(dataUrl) => setPendingCountersignature(dataUrl)}
+                                        onClear={() => setPendingCountersignature(null)}
+                                        width={800}
+                                        height={180}
+                                    />
+                                </div>
+
+                                <button
+                                    type="button"
+                                    disabled={countersignState.loading || !pendingCountersignature}
+                                    onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)}
+                                    className="w-full py-3 rounded-xl bg-emerald-500 text-black font-black text-sm uppercase tracking-wider hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {countersignState.loading ? "Submitting..." : "Confirm Countersignature"}
+                                </button>
                             </div>
                         </motion.div>
                     </>

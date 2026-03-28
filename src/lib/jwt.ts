@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 /**
  * JWT utilities for lease signing links
@@ -105,4 +106,46 @@ export function verifySigningToken(token: string): VerifyTokenResult {
 export function generateSigningLink(leaseId: string, tenantId: string): string {
   const token = generateSigningToken(leaseId, tenantId);
   return `${APP_URL}/tenant/sign-lease/${leaseId}?token=${token}`;
+}
+
+/**
+ * Generate SHA-256 hash of a JWT token for secure storage
+ * Tokens are hashed before storing in database to prevent token exposure if DB is compromised
+ * @param token - The JWT token to hash
+ * @returns SHA-256 hash of the token (hex string)
+ */
+export function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Verify if a given token matches a stored hash
+ * @param token - The JWT token to check
+ * @param storedHash - The hash stored in database
+ * @returns True if token matches the hash
+ */
+export function verifyTokenHash(token: string, storedHash: string): boolean {
+  const tokenHash = hashToken(token);
+  return tokenHash === storedHash;
+}
+
+/**
+ * Generate token and its hash for storage
+ * Convenience function that returns both token and hash in one call
+ * @param leaseId - The ID of the lease
+ * @param tenantId - The ID of the tenant
+ * @returns Object containing token and hash
+ */
+export function generateTokenWithHash(
+  leaseId: string,
+  tenantId: string
+): { token: string; hash: string; expiresAt: Date } {
+  const token = generateSigningToken(leaseId, tenantId);
+  const hash = hashToken(token);
+  
+  // Calculate expiration date (30 days from now)
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+  
+  return { token, hash, expiresAt };
 }

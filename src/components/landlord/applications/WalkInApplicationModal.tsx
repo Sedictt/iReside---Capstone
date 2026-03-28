@@ -28,7 +28,9 @@ import {
     DollarSign,
 } from "lucide-react";
 import { SignaturePad } from "./SignaturePad";
+import { SigningModeSelector } from "./SigningModeSelector";
 import { PaymentRecordForm } from "./PaymentRecordForm";
+import { ToolAccessBar } from "./ToolAccessBar";
 import type { PaymentMethod } from "@/types/database";
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -60,7 +62,9 @@ interface LeaseData {
     end_date: string;
     monthly_rent: number;
     security_deposit: number;
-    terms: Record<string, any>;
+    terms: Record<string, unknown>;
+    signing_mode: "in_person" | "remote" | null;
+    tenant_signature: string | null;
     landlord_signature: string | null;
 }
 
@@ -412,6 +416,8 @@ export function WalkInApplicationModal({
         monthly_rent: 0,
         security_deposit: 0,
         terms: {},
+        signing_mode: null,
+        tenant_signature: null,
         landlord_signature: null,
     });
 
@@ -647,6 +653,7 @@ export function WalkInApplicationModal({
                     security_deposit: leaseData.security_deposit,
                     terms: leaseData.terms,
                     landlord_signature: leaseData.landlord_signature,
+                    signing_mode: leaseData.signing_mode,
                 },
                 advance_payment: {
                     method: paymentData.advance_payment.method,
@@ -668,7 +675,9 @@ export function WalkInApplicationModal({
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) throw new Error((await res.json()).error || "Failed to save.");
+            const responseData = await res.json();
+            if (!res.ok) throw new Error(responseData.error || "Failed to save.");
+
             onSuccess?.();
             if (!existingApplication) {
                 resetCreateWizard();
@@ -686,7 +695,7 @@ export function WalkInApplicationModal({
 
     return (
         <LayoutGroup>
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -694,7 +703,9 @@ export function WalkInApplicationModal({
                 onClick={onClose}
                 className="absolute inset-0 bg-black/80 backdrop-blur-xl"
             />
-            
+
+            <ToolAccessBar propertyId={currentUnit?.property_id ?? null} />
+             
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1112,110 +1123,205 @@ export function WalkInApplicationModal({
                                                 <PenTool className="text-purple-500" size={28} />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[11px] uppercase tracking-widest font-black text-purple-500/80">Lease Agreement</p>
-                                                <p className="opacity-80">Review the lease terms and provide your signature to proceed. The tenant will receive a signing link via email.</p>
+                                                <p className="text-[11px] uppercase tracking-widest font-black text-purple-500/80">Lease Agreement & Signing</p>
+                                                <p className="opacity-80">
+                                                    {leaseData.signing_mode === "remote" 
+                                                        ? "Review lease terms and tenant will receive a signing link via email."
+                                                        : leaseData.signing_mode === "in_person"
+                                                        ? "Review lease terms. Tenant signs first, then landlord countersigns."
+                                                        : "Select signing mode and review lease terms before proceeding."
+                                                    }
+                                                </p>
                                             </div>
                                         </div>
 
-                                        {/* Lease Terms Display */}
-                                        <section className="space-y-6">
-                                            <div className="flex items-center gap-4 text-purple-400">
-                                                <FileCheck size={18} strokeWidth={2.5} />
-                                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Lease Terms</h3>
-                                            </div>
+                                        {/* Signing Mode Selection */}
+                                        <SigningModeSelector
+                                            value={leaseData.signing_mode}
+                                            onChange={(mode) => setLeaseData({ ...leaseData, signing_mode: mode })}
+                                            disabled={!!(leaseData.tenant_signature || leaseData.landlord_signature)}
+                                        />
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                                <div className="space-y-2.5 group">
-                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
-                                                        Start Date
-                                                    </label>
-                                                    <div className="relative isolate">
-                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
-                                                        <input
-                                                            type="date"
-                                                            value={leaseData.start_date}
-                                                            onChange={(e) => setLeaseData({ ...leaseData, start_date: e.target.value })}
-                                                            className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
-                                                        />
+                                        {/* Show lease terms and signatures only after mode is selected */}
+                                        {leaseData.signing_mode && (
+                                            <>
+                                                {/* Lease Terms Display */}
+                                                <section className="space-y-6">
+                                                    <div className="flex items-center gap-4 text-purple-400">
+                                                        <FileCheck size={18} strokeWidth={2.5} />
+                                                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Lease Terms</h3>
                                                     </div>
-                                                </div>
 
-                                                <div className="space-y-2.5 group">
-                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
-                                                        End Date
-                                                    </label>
-                                                    <div className="relative isolate">
-                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
-                                                        <input
-                                                            type="date"
-                                                            value={leaseData.end_date}
-                                                            onChange={(e) => setLeaseData({ ...leaseData, end_date: e.target.value })}
-                                                            className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
-                                                        />
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                        <div className="space-y-2.5 group">
+                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                                Start Date
+                                                            </label>
+                                                            <div className="relative isolate">
+                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                                <input
+                                                                    type="date"
+                                                                    value={leaseData.start_date}
+                                                                    onChange={(e) => setLeaseData({ ...leaseData, start_date: e.target.value })}
+                                                                    className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2.5 group">
+                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                                End Date
+                                                            </label>
+                                                            <div className="relative isolate">
+                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                                <input
+                                                                    type="date"
+                                                                    value={leaseData.end_date}
+                                                                    onChange={(e) => setLeaseData({ ...leaseData, end_date: e.target.value })}
+                                                                    className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2.5 group">
+                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                                Monthly Rent
+                                                            </label>
+                                                            <div className="relative isolate">
+                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
+                                                                <input
+                                                                    type="number"
+                                                                    value={leaseData.monthly_rent}
+                                                                    onChange={(e) => setLeaseData({ ...leaseData, monthly_rent: parseFloat(e.target.value) || 0 })}
+                                                                    className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-2.5 group">
+                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                                Security Deposit
+                                                            </label>
+                                                            <div className="relative isolate">
+                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
+                                                                <input
+                                                                    type="number"
+                                                                    value={leaseData.security_deposit}
+                                                                    onChange={(e) => setLeaseData({ ...leaseData, security_deposit: parseFloat(e.target.value) || 0 })}
+                                                                    className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                </section>
 
-                                                <div className="space-y-2.5 group">
-                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
-                                                        Monthly Rent
-                                                    </label>
-                                                    <div className="relative isolate">
-                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
-                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
-                                                        <input
-                                                            type="number"
-                                                            value={leaseData.monthly_rent}
-                                                            onChange={(e) => setLeaseData({ ...leaseData, monthly_rent: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
-                                                        />
-                                                    </div>
-                                                </div>
+                                                {/* In-Person Dual Signing */}
+                                                {leaseData.signing_mode === "in_person" && (
+                                                    <>
+                                                        {/* Tenant Signature */}
+                                                        <section className="space-y-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex items-center gap-3 text-blue-400">
+                                                                    <User size={18} strokeWidth={2.5} />
+                                                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Tenant Signature</h3>
+                                                                </div>
+                                                                {leaseData.tenant_signature && (
+                                                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                                                                        <CheckCircle2 size={14} className="text-emerald-500" />
+                                                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Signed</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
 
-                                                <div className="space-y-2.5 group">
-                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
-                                                        Security Deposit
-                                                    </label>
-                                                    <div className="relative isolate">
-                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
-                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
-                                                        <input
-                                                            type="number"
-                                                            value={leaseData.security_deposit}
-                                                            onChange={(e) => setLeaseData({ ...leaseData, security_deposit: parseFloat(e.target.value) || 0 })}
-                                                            className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </section>
+                                                            {!leaseData.tenant_signature ? (
+                                                                <div className="space-y-3">
+                                                                    <p className="text-xs text-neutral-400 px-1">Tenant must sign first before landlord can countersign</p>
+                                                                    <SignaturePad
+                                                                        onSave={(dataUrl) => setLeaseData({ ...leaseData, tenant_signature: dataUrl })}
+                                                                        onClear={() => setLeaseData({ ...leaseData, tenant_signature: null })}
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-4">
+                                                                    <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                                                                        <img src={leaseData.tenant_signature} alt="Tenant Signature" className="max-h-40 mx-auto" />
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setLeaseData({ ...leaseData, tenant_signature: null, landlord_signature: null })}
+                                                                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all"
+                                                                    >
+                                                                        Clear & Re-sign
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </section>
 
-                                        {/* Landlord Signature */}
-                                        <section className="space-y-6">
-                                            <div className="flex items-center gap-4 text-purple-400">
-                                                <PenTool size={18} strokeWidth={2.5} />
-                                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Landlord Signature</h3>
-                                            </div>
+                                                        {/* Landlord Signature */}
+                                                        <section className="space-y-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex items-center gap-3 text-purple-400">
+                                                                    <PenTool size={18} strokeWidth={2.5} />
+                                                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Landlord Signature</h3>
+                                                                </div>
+                                                                {leaseData.landlord_signature && (
+                                                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                                                                        <CheckCircle2 size={14} className="text-emerald-500" />
+                                                                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Signed</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
 
-                                            {!leaseData.landlord_signature ? (
-                                                <SignaturePad
-                                                    onSave={(dataUrl) => setLeaseData({ ...leaseData, landlord_signature: dataUrl })}
-                                                    onClear={() => setLeaseData({ ...leaseData, landlord_signature: null })}
-                                                />
-                                            ) : (
-                                                <div className="space-y-4">
-                                                    <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
-                                                        <img src={leaseData.landlord_signature} alt="Landlord Signature" className="max-h-40 mx-auto" />
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setLeaseData({ ...leaseData, landlord_signature: null })}
-                                                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all"
-                                                    >
-                                                        Clear & Re-sign
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </section>
+                                                            {!leaseData.tenant_signature ? (
+                                                                <div className="p-6 rounded-2xl border border-neutral-500/30 bg-neutral-500/5">
+                                                                    <p className="text-sm text-neutral-400 text-center">Waiting for tenant signature first...</p>
+                                                                </div>
+                                                            ) : !leaseData.landlord_signature ? (
+                                                                <SignaturePad
+                                                                    onSave={(dataUrl) => setLeaseData({ ...leaseData, landlord_signature: dataUrl })}
+                                                                    onClear={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                                />
+                                                            ) : (
+                                                                <div className="space-y-4">
+                                                                    <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                                                                        <img src={leaseData.landlord_signature} alt="Landlord Signature" className="max-h-40 mx-auto" />
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all"
+                                                                    >
+                                                                        Clear & Re-sign
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </section>
+                                                    </>
+                                                )}
+
+                                                {/* Remote Signing - Landlord Only */}
+                                                {leaseData.signing_mode === "remote" && (
+                                                    <section className="space-y-6">
+                                                        <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/20">
+                                                            <div className="flex items-start gap-4">
+                                                                <Mail className="text-blue-400 shrink-0 mt-1" size={20} />
+                                                                <div className="space-y-2">
+                                                                    <p className="text-sm font-medium text-blue-200">Remote Signing Selected</p>
+                                                                    <p className="text-xs text-neutral-400 leading-relaxed">
+                                                                        A signing link will be emailed to the tenant. The landlord signature will be added after the tenant signs remotely.
+                                                                    </p>
+                                                                    <p className="text-xs text-neutral-500 leading-relaxed">
+                                                                        This option is available only after the application is approved.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </section>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                 )}
 

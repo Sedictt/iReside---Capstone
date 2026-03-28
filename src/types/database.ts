@@ -9,7 +9,7 @@ export type Json =
 export type UserRole = 'tenant' | 'landlord' | 'admin'
 export type PropertyType = 'apartment' | 'condo' | 'house' | 'townhouse' | 'studio'
 export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
-export type LeaseStatus = 'draft' | 'pending_signature' | 'active' | 'expired' | 'terminated'
+export type LeaseStatus = 'draft' | 'pending_signature' | 'pending_tenant_signature' | 'pending_landlord_signature' | 'active' | 'expired' | 'terminated'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
 export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'withdrawn'
@@ -313,6 +313,11 @@ export interface Database {
                     tenant_signature: string | null
                     landlord_signature: string | null
                     signed_at: string | null
+                    signing_mode: 'in_person' | 'remote' | null
+                    tenant_signed_at: string | null
+                    landlord_signed_at: string | null
+                    signing_link_token_hash: string | null
+                    signature_lock_version: number
                     created_at: string
                     updated_at: string
                 }
@@ -330,6 +335,11 @@ export interface Database {
                     tenant_signature?: string | null
                     landlord_signature?: string | null
                     signed_at?: string | null
+                    signing_mode?: 'in_person' | 'remote' | null
+                    tenant_signed_at?: string | null
+                    landlord_signed_at?: string | null
+                    signing_link_token_hash?: string | null
+                    signature_lock_version?: number
                     created_at?: string
                     updated_at?: string
                 }
@@ -346,6 +356,11 @@ export interface Database {
                     tenant_signature?: string | null
                     landlord_signature?: string | null
                     signed_at?: string | null
+                    signing_mode?: 'in_person' | 'remote' | null
+                    tenant_signed_at?: string | null
+                    landlord_signed_at?: string | null
+                    signing_link_token_hash?: string | null
+                    signature_lock_version?: number
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -829,6 +844,37 @@ export interface Database {
                 Update: {
                     user_id?: string
                     property_id?: string
+                }
+                Relationships: any[]
+            }
+            lease_signing_audit: {
+                Row: {
+                    id: string
+                    lease_id: string
+                    event_type: 'signing_link_generated' | 'signing_link_accessed' | 'signing_link_expired' | 'signing_link_regenerated' | 'tenant_signed' | 'landlord_signed' | 'lease_activated' | 'signing_failed'
+                    actor_id: string | null
+                    ip_address: string | null
+                    user_agent: string | null
+                    metadata: Json | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    lease_id: string
+                    event_type: 'signing_link_generated' | 'signing_link_accessed' | 'signing_link_expired' | 'signing_link_regenerated' | 'tenant_signed' | 'landlord_signed' | 'lease_activated' | 'signing_failed'
+                    actor_id?: string | null
+                    ip_address?: string | null
+                    user_agent?: string | null
+                    metadata?: Json | null
+                    created_at?: string
+                }
+                Update: {
+                    lease_id?: string
+                    event_type?: 'signing_link_generated' | 'signing_link_accessed' | 'signing_link_expired' | 'signing_link_regenerated' | 'tenant_signed' | 'landlord_signed' | 'lease_activated' | 'signing_failed'
+                    actor_id?: string | null
+                    ip_address?: string | null
+                    user_agent?: string | null
+                    metadata?: Json | null
                 }
                 Relationships: any[]
             }

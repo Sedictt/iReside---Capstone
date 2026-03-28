@@ -1,28 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { verifySigningToken } from "@/lib/jwt";
-import {
-  validateSignature,
-  sanitizeSignatureDataURL,
-  retryWithBackoff,
-} from "@/lib/signature-validation";
+import { validateSignature, sanitizeSignatureDataURL, retryWithBackoff } from "@/lib/signature-validation";
 import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-logging";
-import { sendTenantSignedNotification } from "@/lib/email";
+import { sendLeaseActivatedNotification } from "@/lib/email";
 import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/lease-status-transitions";
 
 type SignLeaseBody = {
-  tenant_signature: string;
-  signing_token: string;
+  landlord_signature: string;
 };
 
 /**
- * POST /api/tenant/leases/[leaseId]/sign
+ * POST /api/landlord/leases/[leaseId]/sign
  * 
- * Allows tenant to sign a lease agreement via a secure signing link.
- * Validates the signing token, verifies lease status, and updates the lease
- * with the tenant's signature.
+ * Allows landlord to countersign a lease agreement after tenant has signed.
+ * Validates signature format, verifies lease status, and updates the lease
+ * with the landlord's signature using optimistic locking.
  * 
- * Requirements: 2.6, 2.7
+ * Requirements: 5.7, 5.8
  */
 export async function POST(
   request: Request,
@@ -30,6 +24,16 @@ export async function POST(
 ) {
   const { leaseId } = await context.params;
   const supabase = await createClient();
+
+  // Get authenticated user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
 
   // Parse request body
   let body: SignLeaseBody;
@@ -43,42 +47,22 @@ export async function POST(
   }
 
   // Validate required fields
-  if (!body.tenant_signature || !body.signing_token) {
+  if (!body.landlord_signature) {
     return NextResponse.json(
-      { error: "Missing required fields: tenant_signature and signing_token" },
+      { error: "Missing required field: landlord_signature" },
       { status: 400 }
-    );
-  }
-
-  // Verify signing token
-  const tokenResult = verifySigningToken(body.signing_token);
-  
-  if (!tokenResult.valid || !tokenResult.payload) {
-    return NextResponse.json(
-      { error: tokenResult.error || "Invalid signing token" },
-      { status: 401 }
-    );
-  }
-
-  const { leaseId: tokenLeaseId, tenantId: tokenTenantId } = tokenResult.payload;
-
-  // Verify lease ID from token matches URL parameter
-  if (tokenLeaseId !== leaseId) {
-    return NextResponse.json(
-      { error: "Lease ID mismatch" },
-      { status: 403 }
     );
   }
 
   // Fetch lease record
   const { data: lease, error: leaseError } = await supabase
     .from("leases")
-    .select("id, status, tenant_id, landlord_signature")
+    .select("id, status, landlord_id, tenant_signature, tenant_signed_at")
     .eq("id", leaseId)
     .maybeSingle();
 
   if (leaseError) {
-    console.error("[sign-lease] Database error:", leaseError);
+    console.error("[landlord-sign-lease] Database error:", leaseError);
     return NextResponse.json(
       { error: "Failed to fetch lease" },
       { status: 500 }
@@ -92,24 +76,24 @@ export async function POST(
     );
   }
 
-  // Verify tenant ID from token matches lease tenant
-  if (lease.tenant_id !== tokenTenantId) {
+  // Verify landlord ID matches authenticated user
+  if (lease.landlord_id !== user.id) {
     return NextResponse.json(
-      { error: "Unauthorized: Tenant ID mismatch" },
+      { error: "Unauthorized: You are not the landlord for this lease" },
       { status: 403 }
     );
   }
 
-  // Validate lease status
-  if (lease.status !== "pending_signature") {
+  // Validate lease status - must be pending landlord signature
+  if (lease.status !== "pending_landlord_signature") {
     return NextResponse.json(
-      { error: `Cannot sign lease with status: ${lease.status}` },
+      { error: `Cannot sign lease with status: ${lease.status}. Lease must be in 'pending_landlord_signature' status.` },
       { status: 409 }
     );
   }
 
   // Validate status transition
-  const newStatus = "pending_landlord_signature";
+  const newStatus = "active";
   if (!isValidLeaseStatusTransition(lease.status, newStatus)) {
     return NextResponse.json(
       { error: getTransitionErrorMessage(lease.status, newStatus) },
@@ -117,8 +101,16 @@ export async function POST(
     );
   }
 
+  // Verify tenant has already signed
+  if (!lease.tenant_signature || !lease.tenant_signed_at) {
+    return NextResponse.json(
+      { error: "Tenant has not signed this lease yet" },
+      { status: 409 }
+    );
+  }
+
   // Validate signature format and content
-  const validation = await validateSignature(body.tenant_signature);
+  const validation = await validateSignature(body.landlord_signature);
   if (!validation.valid) {
     return NextResponse.json(
       { error: validation.error },
@@ -129,7 +121,7 @@ export async function POST(
   // Sanitize signature data URL
   let sanitizedSignature: string;
   try {
-    sanitizedSignature = sanitizeSignatureDataURL(body.tenant_signature);
+    sanitizedSignature = sanitizeSignatureDataURL(body.landlord_signature);
   } catch (error) {
     return NextResponse.json(
       { error: "Invalid signature data URL format" },
@@ -137,7 +129,7 @@ export async function POST(
     );
   }
 
-  // Update lease with tenant signature using optimistic locking
+  // Update lease with landlord signature using optimistic locking
   const signedAt = new Date().toISOString();
   
   const updateLeaseWithRetry = async () => {
@@ -158,9 +150,10 @@ export async function POST(
     const { error: updateError } = await supabase
       .from("leases")
       .update({
-        tenant_signature: sanitizedSignature,
+        landlord_signature: sanitizedSignature,
         status: newStatus,
-        tenant_signed_at: signedAt,
+        landlord_signed_at: signedAt,
+        signed_at: signedAt,
         updated_at: signedAt,
         signature_lock_version: currentLockVersion + 1,
       })
@@ -175,7 +168,7 @@ export async function POST(
   try {
     await retryWithBackoff(updateLeaseWithRetry, 3, 1000);
   } catch (error) {
-    console.error("[sign-lease] Update error:", error);
+    console.error("[landlord-sign-lease] Update error:", error);
     return NextResponse.json(
       { error: "Failed to update lease. Please try again." },
       { status: 500 }
@@ -186,37 +179,55 @@ export async function POST(
   try {
     await logAuditEvent({
       leaseId,
-      eventType: "tenant_signed",
-      actorId: tokenTenantId,
+      eventType: "landlord_signed",
+      actorId: user.id,
       ipAddress: extractIpAddress(request),
       userAgent: extractUserAgent(request),
       metadata: {
         signing_mode: "remote",
+        tenant_signed_at: lease.tenant_signed_at,
         status_transition: `${lease.status} -> ${newStatus}`,
       },
     });
   } catch (auditError) {
-    console.error("[sign-lease] Audit logging error:", auditError);
+    console.error("[landlord-sign-lease] Audit logging error:", auditError);
     // Non-blocking error, continue with response
   }
 
-  // Send notification email to landlord
+  // Log lease activation event
   try {
-    // Fetch landlord and tenant details for email
+    await logAuditEvent({
+      leaseId,
+      eventType: "lease_activated",
+      actorId: user.id,
+      ipAddress: extractIpAddress(request),
+      userAgent: extractUserAgent(request),
+      metadata: {
+        signed_at: signedAt,
+        status_transition: `${lease.status} -> ${newStatus}`,
+      },
+    });
+  } catch (auditError) {
+    console.error("[landlord-sign-lease] Lease activation audit error:", auditError);
+    // Non-blocking error, continue with response
+  }
+
+  // Send confirmation email to tenant
+  try {
+    // Fetch lease and tenant details for email
     const { data: leaseDetails } = await supabase
       .from("leases")
       .select(`
-        landlord_id,
+        start_date,
         tenant_id,
         profiles!leases_tenant_id_fkey (
+          email,
           full_name
         ),
         units!leases_unit_id_fkey (
+          name,
           properties!units_property_id_fkey (
-            profiles!properties_landlord_id_fkey (
-              email,
-              full_name
-            )
+            name
           )
         )
       `)
@@ -224,27 +235,30 @@ export async function POST(
       .single();
 
     if (leaseDetails) {
-      const landlordEmail = leaseDetails.units?.properties?.profiles?.email;
-      const landlordName = leaseDetails.units?.properties?.profiles?.full_name || "Landlord";
+      const tenantEmail = leaseDetails.profiles?.email;
       const tenantName = leaseDetails.profiles?.full_name || "Tenant";
+      const propertyName = leaseDetails.units?.properties?.name || "Property";
+      const unitName = leaseDetails.units?.name || "Unit";
+      const moveInDate = leaseDetails.start_date;
 
-      if (landlordEmail) {
-        await sendTenantSignedNotification({
-          to: landlordEmail,
-          landlordName,
+      if (tenantEmail) {
+        await sendLeaseActivatedNotification({
+          to: tenantEmail,
           tenantName,
-          leaseId,
+          propertyName,
+          unitName,
+          moveInDate,
         });
       }
     }
   } catch (emailError) {
-    console.error("[sign-lease] Email notification error:", emailError);
+    console.error("[landlord-sign-lease] Email notification error:", emailError);
     // Non-blocking error, continue with response
   }
 
   return NextResponse.json({
     success: true,
-    lease_status: "pending_landlord_signature",
+    lease_status: "active",
     signed_at: signedAt,
   });
 }

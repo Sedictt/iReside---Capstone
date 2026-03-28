@@ -97,3 +97,14 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/.agent
+/.augment
+/.claude
+/.codebuddy
+/.cursor
+/.gemini
+/.github
+/.opencode
+/.vscode
+/.windsurf
+/openspec
