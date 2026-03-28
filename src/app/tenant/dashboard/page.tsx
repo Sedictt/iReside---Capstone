@@ -42,6 +42,9 @@ type DashboardData = {
         propertyName: string | null;
         propertyAddress: string | null;
         propertyCity: string | null;
+        landlordName: string | null;
+        landlordEmail: string | null;
+        landlordPhone: string | null;
     } | null;
     nextPayment: {
         id: string;
@@ -73,6 +76,15 @@ type DashboardData = {
         message: string;
         createdAt: string;
         read: boolean;
+    }>;
+    paymentHistory: Array<{
+        id: string;
+        amount: number;
+        dueDate: string;
+        paidAt: string | null;
+        status: string;
+        description: string | null;
+        category: string | null;
     }>;
 };
 
@@ -188,6 +200,7 @@ export default function TenantDashboard() {
     const announcement = dashboardData?.announcement ?? null;
     const recentActivity = dashboardData?.recentActivity ?? [];
     const lease = dashboardData?.lease ?? null;
+    const paymentHistory = dashboardData?.paymentHistory ?? [];
 
     const isInitialLoading = dashboardLoading && !dashboardData;
     const nextPaymentAmount = nextPayment?.amount ?? 0;
@@ -625,6 +638,132 @@ export default function TenantDashboard() {
                                 </div>
                             </div>
                         )}
+                        
+                        {/* Lease Details Section */}
+                        {lease ? (
+                            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold">Lease Details</h3>
+                                    <span className={cn(
+                                        "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide",
+                                        lease.status === "active" ? "bg-green-500/10 text-green-500" :
+                                        lease.status === "pending_signature" ? "bg-yellow-500/10 text-yellow-500" :
+                                        "bg-muted text-muted-foreground"
+                                    )}>
+                                        {lease.status.replace('_', ' ')}
+                                    </span>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Property</p>
+                                            <p className="font-semibold">{lease.propertyName ?? "N/A"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Unit</p>
+                                            <p className="font-semibold">{lease.unitName ?? "N/A"}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Lease Period</p>
+                                            <p className="font-semibold">
+                                                {new Date(lease.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                {' - '}
+                                                {new Date(lease.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Monthly Rent</p>
+                                            <p className="font-semibold text-lg">₱{formatCurrency(lease.monthlyRent, 2)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Security Deposit</p>
+                                            <p className="font-semibold text-lg">₱{formatCurrency(lease.securityDeposit, 2)}</p>
+                                        </div>
+                                        {lease.landlordName && (
+                                            <div>
+                                                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Landlord Contact</p>
+                                                <p className="font-semibold">{lease.landlordName}</p>
+                                                {lease.landlordEmail && (
+                                                    <p className="text-sm text-muted-foreground">{lease.landlordEmail}</p>
+                                                )}
+                                                {lease.landlordPhone && (
+                                                    <p className="text-sm text-muted-foreground">{lease.landlordPhone}</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+                                <p className="text-muted-foreground">No active lease found</p>
+                            </div>
+                        )}
+
+                        {/* Payment History Section */}
+                        {paymentHistory.length > 0 && (
+                            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold">Payment History</h3>
+                                    <Link href="/tenant/payments" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide">
+                                        View All
+                                    </Link>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    {paymentHistory.slice(0, 5).map((payment) => {
+                                        const isAdvanceRent = payment.description?.toLowerCase().includes('advance rent');
+                                        const isSecurityDeposit = payment.category?.toLowerCase() === 'security_deposit' || 
+                                                                 payment.description?.toLowerCase().includes('security deposit');
+                                        
+                                        const statusColors = {
+                                            completed: "bg-green-500/10 text-green-500",
+                                            pending: "bg-yellow-500/10 text-yellow-500",
+                                            processing: "bg-blue-500/10 text-blue-500",
+                                            failed: "bg-red-500/10 text-red-500",
+                                            refunded: "bg-purple-500/10 text-purple-500",
+                                        };
+                                        
+                                        return (
+                                            <div key={payment.id} className="flex items-center justify-between p-4 rounded-xl border border-border hover:bg-muted/30 transition-colors">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p className="font-semibold text-sm">
+                                                            {payment.description ?? "Payment"}
+                                                        </p>
+                                                        {(isAdvanceRent || isSecurityDeposit) && (
+                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary">
+                                                                {isAdvanceRent ? "Advance" : "Deposit"}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                        <span>Due: {new Date(payment.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                        {payment.paidAt && (
+                                                            <span>Paid: {new Date(payment.paidAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="font-bold">₱{formatCurrency(payment.amount, 2)}</span>
+                                                    <span className={cn(
+                                                        "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide",
+                                                        statusColors[payment.status as keyof typeof statusColors] ?? "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        {payment.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                        
                         {/* Concierge Teaser */}
                         <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 rounded-2xl p-6 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 blur-3xl rounded-full pointer-events-none group-hover:bg-primary/20 transition-colors" />

@@ -24,7 +24,12 @@ import {
     Check,
     MapPin,
     Wallet,
+    PenTool,
+    DollarSign,
 } from "lucide-react";
+import { SignaturePad } from "./SignaturePad";
+import { PaymentRecordForm } from "./PaymentRecordForm";
+import type { PaymentMethod } from "@/types/database";
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface WalkInUnit {
@@ -48,6 +53,23 @@ interface EmploymentInfo {
     occupation: string;
     employer: string;
     monthly_income: number | string;
+}
+
+interface LeaseData {
+    start_date: string;
+    end_date: string;
+    monthly_rent: number;
+    security_deposit: number;
+    terms: Record<string, any>;
+    landlord_signature: string | null;
+}
+
+interface PaymentData {
+    amount: number;
+    method: PaymentMethod | null;
+    reference_number: string;
+    paid_at: string | null;
+    status: "pending" | "completed";
 }
 
 interface WalkInFormData {
@@ -87,7 +109,9 @@ const STEPS = [
     { label: "Identity", sub: "Applicant Info", icon: User, color: "text-blue-400" },
     { label: "Profile", sub: "Work Details", icon: Briefcase, color: "text-primary" },
     { label: "Verify", sub: "Checklist", icon: ShieldCheck, color: "text-amber-400" },
-    { label: "Finalize", sub: "Summary", icon: FileCheck, color: "text-emerald-400" },
+    { label: "Lease", sub: "Sign Agreement", icon: FileCheck, color: "text-purple-400" },
+    { label: "Payment", sub: "Collect Fees", icon: Wallet, color: "text-green-400" },
+    { label: "Finalize", sub: "Summary", icon: CheckCircle2, color: "text-emerald-400" },
 ];
 
 const DEFAULT_CHECKLIST: RequirementsChecklist = {
@@ -129,7 +153,9 @@ const STEP_FIELD_KEYS: Record<number, FormErrorKey[]> = {
     0: ["unit", "applicant_name", "applicant_email", "applicant_phone", "move_in_date", "emergency_contact_name", "emergency_contact_phone"],
     1: ["occupation", "employer", "monthly_income", "message"],
     2: [],
-    3: [],
+    3: [], // Lease signing step - no form errors
+    4: [], // Payment collection step - no form errors
+    5: [], // Finalize step - no form errors
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -379,6 +405,39 @@ export function WalkInApplicationModal({
     const [formErrors, setFormErrors] = useState<Partial<Record<FormErrorKey, string>>>({});
     const [, setTouchedFields] = useState<Partial<Record<FormErrorKey, boolean>>>({});
 
+    // Lease and payment state
+    const [leaseData, setLeaseData] = useState<LeaseData>({
+        start_date: "",
+        end_date: "",
+        monthly_rent: 0,
+        security_deposit: 0,
+        terms: {},
+        landlord_signature: null,
+    });
+
+    const [paymentData, setPaymentData] = useState<{
+        advance_payment: PaymentData;
+        security_deposit_payment: PaymentData;
+    }>({
+        advance_payment: {
+            amount: 0,
+            method: null,
+            reference_number: "",
+            paid_at: null,
+            status: "pending",
+        },
+        security_deposit_payment: {
+            amount: 0,
+            method: null,
+            reference_number: "",
+            paid_at: null,
+            status: "pending",
+        },
+    });
+
+    // Derive currentUnit from selectedUnit
+    const currentUnit = units.find((u) => u.id === selectedUnit);
+
     // For create mode, preserve in-progress draft across close/reopen.
     // For edit mode, always rehydrate from the existing application payload.
     useEffect(() => {
@@ -419,6 +478,34 @@ export function WalkInApplicationModal({
             setTouchedFields((prev) => ({ ...prev, unit: true }));
         }
     }, [existingApplication, selectedUnit, units]);
+
+    // Initialize lease and payment data when unit or move-in date changes
+    useEffect(() => {
+        if (!currentUnit || !formData.move_in_date) return;
+
+        const startDate = new Date(formData.move_in_date);
+        const endDate = new Date(startDate);
+        endDate.setFullYear(endDate.getFullYear() + 1);
+
+        setLeaseData((prev) => ({
+            ...prev,
+            start_date: formData.move_in_date,
+            end_date: endDate.toISOString().split("T")[0],
+            monthly_rent: currentUnit.rent_amount,
+            security_deposit: currentUnit.rent_amount, // Default to one month's rent
+        }));
+
+        setPaymentData((prev) => ({
+            advance_payment: {
+                ...prev.advance_payment,
+                amount: currentUnit.rent_amount,
+            },
+            security_deposit_payment: {
+                ...prev.security_deposit_payment,
+                amount: currentUnit.rent_amount,
+            },
+        }));
+    }, [currentUnit, formData.move_in_date]);
 
     const updateField = useCallback((
         field: keyof WalkInFormData,
@@ -528,7 +615,7 @@ export function WalkInApplicationModal({
             const endpoint = "/api/landlord/applications/tenant-application";
             const method = existingApplication ? "PATCH" : "POST";
             const shouldWarnIncomplete =
-                !existingApplication && !asPending && step === 3 && !allRequirementsMet;
+                !existingApplication && !asPending && step === 5 && !allRequirementsMet;
 
             if (shouldWarnIncomplete) {
                 const ok = window.confirm(
@@ -553,6 +640,26 @@ export function WalkInApplicationModal({
                 requirements_checklist: formData.requirements_checklist,
                 message: formData.message,
                 status: asPending ? "pending" : "approved",
+                lease_data: {
+                    start_date: leaseData.start_date,
+                    end_date: leaseData.end_date,
+                    monthly_rent: leaseData.monthly_rent,
+                    security_deposit: leaseData.security_deposit,
+                    terms: leaseData.terms,
+                    landlord_signature: leaseData.landlord_signature,
+                },
+                advance_payment: {
+                    method: paymentData.advance_payment.method,
+                    reference_number: paymentData.advance_payment.reference_number,
+                    paid_at: paymentData.advance_payment.paid_at,
+                    status: paymentData.advance_payment.status,
+                },
+                security_deposit_payment: {
+                    method: paymentData.security_deposit_payment.method,
+                    reference_number: paymentData.security_deposit_payment.reference_number,
+                    paid_at: paymentData.security_deposit_payment.paid_at,
+                    status: paymentData.security_deposit_payment.status,
+                },
             };
 
             const res = await fetch(endpoint, {
@@ -576,8 +683,6 @@ export function WalkInApplicationModal({
     };
 
     if (!isOpen) return null;
-
-    const currentUnit = units.find((u) => u.id === selectedUnit);
 
     return (
         <LayoutGroup>
@@ -675,7 +780,7 @@ export function WalkInApplicationModal({
                         <div className="p-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-black text-white uppercase tracking-tighter">{STEPS[step].label}</h2>
-                                <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 4</p>
+                                <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 6</p>
                             </div>
                             <button onClick={onClose} className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><X size={20}/></button>
                         </div>
@@ -1001,6 +1106,212 @@ export function WalkInApplicationModal({
                                 )}
 
                                 {step === 3 && (
+                                    <div className="space-y-10 max-w-4xl">
+                                        <div className="p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/10 text-purple-200 text-xs font-bold leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(168,85,247,0.05)] backdrop-blur-sm">
+                                            <div className="shrink-0 w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20">
+                                                <PenTool className="text-purple-500" size={28} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[11px] uppercase tracking-widest font-black text-purple-500/80">Lease Agreement</p>
+                                                <p className="opacity-80">Review the lease terms and provide your signature to proceed. The tenant will receive a signing link via email.</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Lease Terms Display */}
+                                        <section className="space-y-6">
+                                            <div className="flex items-center gap-4 text-purple-400">
+                                                <FileCheck size={18} strokeWidth={2.5} />
+                                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Lease Terms</h3>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div className="space-y-2.5 group">
+                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                        Start Date
+                                                    </label>
+                                                    <div className="relative isolate">
+                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                        <input
+                                                            type="date"
+                                                            value={leaseData.start_date}
+                                                            onChange={(e) => setLeaseData({ ...leaseData, start_date: e.target.value })}
+                                                            className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2.5 group">
+                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                        End Date
+                                                    </label>
+                                                    <div className="relative isolate">
+                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                        <input
+                                                            type="date"
+                                                            value={leaseData.end_date}
+                                                            onChange={(e) => setLeaseData({ ...leaseData, end_date: e.target.value })}
+                                                            className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2.5 group">
+                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                        Monthly Rent
+                                                    </label>
+                                                    <div className="relative isolate">
+                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
+                                                        <input
+                                                            type="number"
+                                                            value={leaseData.monthly_rent}
+                                                            onChange={(e) => setLeaseData({ ...leaseData, monthly_rent: parseFloat(e.target.value) || 0 })}
+                                                            className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2.5 group">
+                                                    <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                        Security Deposit
+                                                    </label>
+                                                    <div className="relative isolate">
+                                                        <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
+                                                        <input
+                                                            type="number"
+                                                            value={leaseData.security_deposit}
+                                                            onChange={(e) => setLeaseData({ ...leaseData, security_deposit: parseFloat(e.target.value) || 0 })}
+                                                            className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        {/* Landlord Signature */}
+                                        <section className="space-y-6">
+                                            <div className="flex items-center gap-4 text-purple-400">
+                                                <PenTool size={18} strokeWidth={2.5} />
+                                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Landlord Signature</h3>
+                                            </div>
+
+                                            {!leaseData.landlord_signature ? (
+                                                <SignaturePad
+                                                    onSave={(dataUrl) => setLeaseData({ ...leaseData, landlord_signature: dataUrl })}
+                                                    onClear={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                />
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                                                        <img src={leaseData.landlord_signature} alt="Landlord Signature" className="max-h-40 mx-auto" />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all"
+                                                    >
+                                                        Clear & Re-sign
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </section>
+                                    </div>
+                                )}
+
+                                {step === 4 && (
+                                    <div className="space-y-10 max-w-4xl">
+                                        <div className="p-8 rounded-[2.5rem] bg-green-500/5 border border-green-500/10 text-green-200 text-xs font-bold leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(34,197,94,0.05)] backdrop-blur-sm">
+                                            <div className="shrink-0 w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center border border-green-500/20">
+                                                <DollarSign className="text-green-500" size={28} />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[11px] uppercase tracking-widest font-black text-green-500/80">Payment Collection</p>
+                                                <p className="opacity-80">Record advance rent and security deposit payments. You can mark them as pending if not yet received.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                            {/* Advance Payment */}
+                                            <PaymentRecordForm
+                                                label="Advance Rent Payment"
+                                                amount={paymentData.advance_payment.amount}
+                                                allowAmountEdit={false}
+                                                paymentMethod={paymentData.advance_payment.method}
+                                                onMethodChange={(method) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        advance_payment: { ...paymentData.advance_payment, method },
+                                                    })
+                                                }
+                                                referenceNumber={paymentData.advance_payment.reference_number}
+                                                onReferenceChange={(ref) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        advance_payment: { ...paymentData.advance_payment, reference_number: ref },
+                                                    })
+                                                }
+                                                paidAt={paymentData.advance_payment.paid_at}
+                                                onPaidAtChange={(date) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        advance_payment: { ...paymentData.advance_payment, paid_at: date },
+                                                    })
+                                                }
+                                                status={paymentData.advance_payment.status}
+                                                onStatusChange={(status) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        advance_payment: { ...paymentData.advance_payment, status },
+                                                    })
+                                                }
+                                            />
+
+                                            {/* Security Deposit */}
+                                            <PaymentRecordForm
+                                                label="Security Deposit Payment"
+                                                amount={paymentData.security_deposit_payment.amount}
+                                                onAmountChange={(amount) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, amount },
+                                                    })
+                                                }
+                                                allowAmountEdit={true}
+                                                paymentMethod={paymentData.security_deposit_payment.method}
+                                                onMethodChange={(method) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, method },
+                                                    })
+                                                }
+                                                referenceNumber={paymentData.security_deposit_payment.reference_number}
+                                                onReferenceChange={(ref) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, reference_number: ref },
+                                                    })
+                                                }
+                                                paidAt={paymentData.security_deposit_payment.paid_at}
+                                                onPaidAtChange={(date) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, paid_at: date },
+                                                    })
+                                                }
+                                                status={paymentData.security_deposit_payment.status}
+                                                onStatusChange={(status) =>
+                                                    setPaymentData({
+                                                        ...paymentData,
+                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, status },
+                                                    })
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {step === 5 && (
                                     <div className="space-y-10 pb-12">
                                         <CardFrame className={cn(
                                             "!p-0 !min-h-[220px] transition-all duration-1000",
@@ -1065,18 +1376,34 @@ export function WalkInApplicationModal({
                                              </div>
                                              <div className="p-7 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-4 shadow-lg shadow-primary/5">
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">Monthly Rent</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter italic">₱{currentUnit?.rent_amount.toLocaleString()}</p>
+                                                 <p className="text-2xl font-black text-white tracking-tighter italic">₱{leaseData.monthly_rent.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                                                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Locked Rate</p>
                                                  </div>
                                              </div>
                                              <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Move-in Date</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter">{formData.move_in_date || "—"}</p>
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Lease Period</p>
+                                                 <p className="text-lg font-black text-white tracking-tighter">{leaseData.start_date} to {leaseData.end_date}</p>
                                                  <div className="pt-2 flex items-center gap-2">
-                                                     <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">Scheduled</p>
+                                                     <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">12 Months</p>
+                                                 </div>
+                                             </div>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Security Deposit</p>
+                                                 <p className="text-2xl font-black text-white tracking-tighter">₱{leaseData.security_deposit.toLocaleString()}</p>
+                                                 <div className="pt-2 flex items-center gap-2">
+                                                     <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">{paymentData.security_deposit_payment.status === "completed" ? "Paid" : "Pending"}</p>
+                                                 </div>
+                                             </div>
+                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Advance Payment</p>
+                                                 <p className="text-2xl font-black text-white tracking-tighter">₱{paymentData.advance_payment.amount.toLocaleString()}</p>
+                                                 <div className="pt-2 flex items-center gap-2">
+                                                     <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">{paymentData.advance_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>
                                              <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
@@ -1087,6 +1414,17 @@ export function WalkInApplicationModal({
                                                  </div>
                                              </div>
                                         </div>
+
+                                        {/* Lease Signature Status */}
+                                        {leaseData.landlord_signature && (
+                                            <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-4">
+                                                <Check className="text-purple-500" size={24} />
+                                                <div>
+                                                    <p className="text-sm font-black text-white">Landlord Signature Captured</p>
+                                                    <p className="text-xs text-neutral-400">Tenant will receive signing link via email</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </motion.div>
@@ -1109,7 +1447,7 @@ export function WalkInApplicationModal({
                         </div>
 
                         <div className="flex-1 max-w-2xl flex gap-4">
-                            {step < 3 ? (
+                            {step < 5 ? (
                                 <button
                                     onClick={handleContinue}
                                     className="group flex-1 h-16 rounded-[1.25rem] bg-primary text-black font-black transition-all flex items-center justify-center gap-4 shadow-[0_15px_45px_rgba(var(--primary-rgb),0.25)] hover:shadow-primary/40 active:scale-[0.98] relative overflow-hidden"

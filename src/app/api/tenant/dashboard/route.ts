@@ -13,6 +13,9 @@ type LeaseSummary = {
     propertyName: string | null;
     propertyAddress: string | null;
     propertyCity: string | null;
+    landlordName: string | null;
+    landlordEmail: string | null;
+    landlordPhone: string | null;
 };
 
 type NextPayment = {
@@ -49,6 +52,16 @@ type ActivityItem = {
     message: string;
     createdAt: string;
     read: boolean;
+};
+
+type PaymentHistoryItem = {
+    id: string;
+    amount: number;
+    dueDate: string;
+    paidAt: string | null;
+    status: PaymentStatus;
+    description: string | null;
+    category: string | null;
 };
 
 const normalizeCategory = (value: string | null | undefined) => (value ?? "").trim().toLowerCase();
@@ -119,13 +132,15 @@ export async function GET() {
         { data: overdueRows, error: overdueError },
         { data: utilityRows, error: utilityError },
         { data: announcementRows, error: announcementError },
-        { data: activityRows, error: activityError }
+        { data: activityRows, error: activityError },
+        { data: paymentHistoryRows, error: paymentHistoryError }
     ] = await Promise.all([
         supabase
             .from("leases")
             .select(`
                 id, status, start_date, end_date, monthly_rent, security_deposit,
-                unit:units(id, name, property:properties(id, name, address, city))
+                unit:units(id, name, property:properties(id, name, address, city)),
+                landlord:profiles!leases_landlord_id_fkey(full_name, email, phone)
             `)
             .eq("tenant_id", user.id)
             .order("end_date", { ascending: false })
@@ -163,10 +178,19 @@ export async function GET() {
             .select("id, type, title, message, read, created_at")
             .eq("user_id", user.id)
             .order("created_at", { ascending: false })
-            .limit(6)
+            .limit(6),
+        supabase
+            .from("payments")
+            .select(`
+                id, amount, due_date, paid_at, status, description,
+                items:payment_items(category)
+            `)
+            .eq("tenant_id", user.id)
+            .order("due_date", { ascending: false })
+            .limit(20)
     ]);
 
-    if (leaseError || nextPaymentError || overdueError) {
+    if (leaseError || nextPaymentError || overdueError || paymentHistoryError) {
         return NextResponse.json({ error: "Failed to load dashboard data." }, { status: 500 });
     }
 
@@ -180,6 +204,7 @@ export async function GET() {
         // Safe access as relationship might return an array or object
         const unit = Array.isArray(activeLease.unit) ? activeLease.unit[0] : activeLease.unit;
         const property = unit?.property ? (Array.isArray(unit.property) ? unit.property[0] : unit.property) : null;
+        const landlord = activeLease.landlord ? (Array.isArray(activeLease.landlord) ? activeLease.landlord[0] : activeLease.landlord) : null;
 
         leaseSummary = {
             id: activeLease.id,
@@ -192,6 +217,9 @@ export async function GET() {
             propertyName: property?.name ?? null,
             propertyAddress: property?.address ?? null,
             propertyCity: property?.city ?? null,
+            landlordName: landlord?.full_name ?? null,
+            landlordEmail: landlord?.email ?? null,
+            landlordPhone: landlord?.phone ?? null,
         };
     }
 
@@ -245,6 +273,24 @@ export async function GET() {
             read: Boolean(row.read),
         }));
 
+    // Process payment history
+    const paymentHistory: PaymentHistoryItem[] = (paymentHistoryRows ?? []).map((row) => {
+        // Determine category from payment items
+        const items = row.items ?? [];
+        const firstItem = Array.isArray(items) && items.length > 0 ? items[0] : null;
+        const category = firstItem?.category ?? null;
+
+        return {
+            id: row.id,
+            amount: Number(row.amount ?? 0),
+            dueDate: row.due_date,
+            paidAt: row.paid_at ?? null,
+            status: row.status as PaymentStatus,
+            description: row.description ?? null,
+            category,
+        };
+    });
+
     return NextResponse.json({
         lease: leaseSummary,
         nextPayment,
@@ -252,5 +298,6 @@ export async function GET() {
         utilities,
         announcement,
         recentActivity,
+        paymentHistory,
     });
 }

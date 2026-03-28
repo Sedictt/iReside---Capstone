@@ -17,11 +17,20 @@ export async function sendTenantCredentials({
     tenantName,
     tempPassword,
     inviteUrl,
+    leaseDetails,
+    signingLink,
 }: {
     to: string;
     tenantName: string;
     tempPassword: string;
     inviteUrl?: string | null;
+    leaseDetails?: {
+        property_name: string;
+        unit_name: string;
+        move_in_date: string;
+        monthly_rent: number;
+    };
+    signingLink?: string;
 }) {
     const subject = "Welcome to iReside — Your Account is Ready";
 
@@ -41,6 +50,40 @@ export async function sendTenantCredentials({
         Your application has been approved. Your iReside tenant account is ready — use the credentials below to sign in.
       </p>
 
+      ${leaseDetails ? `
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 16px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6d9838;">Your Lease Details</p>
+        <div style="margin-bottom:12px;">
+          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Property</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${leaseDetails.property_name}</p>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Unit</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${leaseDetails.unit_name}</p>
+        </div>
+        <div style="margin-bottom:12px;">
+          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Move-in Date</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+        <div>
+          <p style="margin:0 0 4px;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1px;">Monthly Rent</p>
+          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;">₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+      </div>
+      ` : ""}
+
+      ${signingLink ? `
+      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Sign Your Lease Agreement</p>
+        <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
+          Your lease is ready for your signature. Please review and sign the agreement to complete your onboarding.
+        </p>
+        <a href="${signingLink}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+          Sign Lease Agreement →
+        </a>
+      </div>
+      ` : ""}
+
       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
         <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Email</p>
         <p style="margin:0 0 16px;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${to}</p>
@@ -50,7 +93,7 @@ export async function sendTenantCredentials({
 
       ${inviteUrl ? `
       <div style="margin-bottom:24px;">
-        <a href="${inviteUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+        <a href="${inviteUrl}" style="display:inline-block;background:#2a2a2a;color:#fff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;border:1px solid #3a3a3a;">
           Set Your Password →
         </a>
       </div>
@@ -68,7 +111,7 @@ export async function sendTenantCredentials({
 </body>
 </html>`;
 
-    const text = `Hi ${tenantName},\n\nYour iReside tenant account is ready.\n\nEmail: ${to}\nTemporary Password: ${tempPassword}\n${inviteUrl ? `\nSet your password: ${inviteUrl}\n` : ""}\nPlease change your password after first login.\n\n— iReside`;
+    const text = `Hi ${tenantName},\n\nYour iReside tenant account is ready.\n\n${leaseDetails ? `LEASE DETAILS:\nProperty: ${leaseDetails.property_name}\nUnit: ${leaseDetails.unit_name}\nMove-in Date: ${new Date(leaseDetails.move_in_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\nMonthly Rent: ₱${leaseDetails.monthly_rent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\n` : ""}${signingLink ? `SIGN YOUR LEASE:\n${signingLink}\n\n` : ""}LOGIN CREDENTIALS:\nEmail: ${to}\nTemporary Password: ${tempPassword}\n${inviteUrl ? `\nSet your password: ${inviteUrl}\n` : ""}\nPlease change your password after first login.\n\n— iReside`;
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }

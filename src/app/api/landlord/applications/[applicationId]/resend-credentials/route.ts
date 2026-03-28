@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
+import { generateSigningLink } from "@/lib/jwt";
 
 function generateTempPassword(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
@@ -24,7 +25,22 @@ export async function POST(
     // Verify landlord owns this application
     const { data: application, error: appError } = await supabase
         .from("applications")
-        .select("id, status, applicant_name, applicant_email")
+        .select(`
+            id, 
+            status, 
+            applicant_name, 
+            applicant_email,
+            unit_id,
+            unit:units (
+                id,
+                name,
+                rent_amount,
+                property:properties (
+                    id,
+                    name
+                )
+            )
+        `)
         .eq("id", applicationId)
         .eq("landlord_id", user.id)
         .maybeSingle();
@@ -126,6 +142,36 @@ export async function POST(
         .eq("id", user.id)
         .maybeSingle();
 
+    // Fetch lease details if they exist
+    let leaseDetails: { property_name: string; unit_name: string; move_in_date: string; monthly_rent: number } | undefined;
+    let signingLink: string | undefined;
+
+    if (existingProfile?.id) {
+        const { data: lease } = await adminClient
+            .from("leases")
+            .select("id, start_date, monthly_rent, status")
+            .eq("tenant_id", existingProfile.id)
+            .eq("unit_id", application.unit_id)
+            .maybeSingle();
+
+        if (lease) {
+            const unit = application.unit as any;
+            const property = unit?.property as any;
+
+            leaseDetails = {
+                property_name: property?.name || 'Property',
+                unit_name: unit?.name || 'Unit',
+                move_in_date: lease.start_date,
+                monthly_rent: lease.monthly_rent,
+            };
+
+            // Generate signing link if lease is still pending signature
+            if (lease.status === 'pending_signature') {
+                signingLink = generateSigningLink(lease.id, existingProfile.id);
+            }
+        }
+    }
+
     // Send email to tenant via nodemailer
     try {
         await sendTenantCredentials({
@@ -133,6 +179,8 @@ export async function POST(
             tenantName,
             tempPassword: tempPassword!,
             inviteUrl,
+            leaseDetails,
+            signingLink,
         });
     } catch (e) {
         console.error("[resend-credentials] sendTenantCredentials error:", e);
