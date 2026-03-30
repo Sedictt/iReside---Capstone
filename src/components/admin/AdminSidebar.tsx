@@ -5,7 +5,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
-    ClipboardList,
     Users,
     ShieldCheck,
     LogOut,
@@ -15,7 +14,6 @@ import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, description: "Overview & stats" },
-    { label: "Registrations", href: "/admin/registrations", icon: ClipboardList, description: "Landlord applications" },
     { label: "Users", href: "/admin/users", icon: Users, description: "All platform users" },
 ];
 

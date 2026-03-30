@@ -537,8 +537,8 @@ export function TenantSettings() {
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Landlord Discovery</p>
-                                        <p className="text-sm text-muted-foreground">Allow landlords to find your profile when searching for tenants.</p>
+                                        <p className="text-sm font-medium text-foreground">Profile Visibility</p>
+                                        <p className="text-sm text-muted-foreground">Allow landlords to view your profile during application review.</p>
                                     </div>
                                     <ToggleSwitch enabled={privacyLandlordSearch} onToggle={() => setPrivacyLandlordSearch(!privacyLandlordSearch)} />
                                 </div>

@@ -96,14 +96,6 @@ export function TenantSidebar() {
                         <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Tenant Panel</p>
                         {renderNav()}
                     </div>
-
-                    <Link
-                        href="/become-a-landlord"
-                        className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-500 transition-colors hover:bg-emerald-500/20"
-                    >
-                        <Building2 className="h-4 w-4" />
-                        Register as Landlord
-                    </Link>
                 </div>
 
                 <div className="border-t border-border/70 p-4">

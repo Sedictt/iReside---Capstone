@@ -29,25 +29,17 @@ export async function GET() {
         { count: totalUsers, error: e1 },
         { count: totalLandlords, error: e2 },
         { count: totalTenants, error: e3 },
-        { count: totalRegistrations, error: e4 },
-        { count: pendingRegistrations, error: e5 },
-        { count: reviewingRegistrations, error: e6 },
-        { count: approvedRegistrations, error: e7 },
-        { count: activeLeases, error: e8 },
-        { count: totalProperties, error: e9 },
+        { count: activeLeases, error: e4 },
+        { count: totalProperties, error: e5 },
     ] = await Promise.all([
         adminClient.from("profiles").select("*", { count: "exact", head: true }),
         adminClient.from("profiles").select("*", { count: "exact", head: true }).eq("role", "landlord"),
         adminClient.from("profiles").select("*", { count: "exact", head: true }).eq("role", "tenant"),
-        adminClient.from("landlord_applications").select("*", { count: "exact", head: true }),
-        adminClient.from("landlord_applications").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        adminClient.from("landlord_applications").select("*", { count: "exact", head: true }).eq("status", "reviewing"),
-        adminClient.from("landlord_applications").select("*", { count: "exact", head: true }).eq("status", "approved"),
         adminClient.from("leases").select("*", { count: "exact", head: true }).eq("status", "active"),
         adminClient.from("properties").select("*", { count: "exact", head: true }),
     ]);
 
-    if (e1 || e2 || e3 || e4 || e5 || e6 || e7 || e8 || e9) {
+    if (e1 || e2 || e3 || e4 || e5) {
         return NextResponse.json({ error: "Failed to load stats." }, { status: 500 });
     }
 
@@ -55,10 +47,6 @@ export async function GET() {
         totalUsers: totalUsers ?? 0,
         totalLandlords: totalLandlords ?? 0,
         totalTenants: totalTenants ?? 0,
-        totalRegistrations: totalRegistrations ?? 0,
-        pendingRegistrations: pendingRegistrations ?? 0,
-        reviewingRegistrations: reviewingRegistrations ?? 0,
-        approvedRegistrations: approvedRegistrations ?? 0,
         activeLeases: activeLeases ?? 0,
         totalProperties: totalProperties ?? 0,
     });

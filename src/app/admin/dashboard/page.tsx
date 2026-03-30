@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-    ClipboardList, Users, Home, Building2,
-    TrendingUp, UserCheck, UserX, Clock,
+    Users, Home, Building2,
+    UserCheck, UserX,
     ArrowUpRight, ShieldCheck,
 } from "lucide-react";
 
@@ -11,10 +11,6 @@ interface AdminStats {
     totalUsers: number;
     totalLandlords: number;
     totalTenants: number;
-    totalRegistrations: number;
-    pendingRegistrations: number;
-    reviewingRegistrations: number;
-    approvedRegistrations: number;
     activeLeases: number;
     totalProperties: number;
 }
@@ -63,59 +59,6 @@ function StatCard({
                     </p>
                 )}
                 {sub && <p className="text-xs text-neutral-600 mt-1.5">{sub}</p>}
-            </div>
-        </div>
-    );
-}
-
-function RegistrationBreakdown({ stats, loading }: { stats: AdminStats | null; loading: boolean }) {
-    const items = [
-        { label: "Pending", value: stats?.pendingRegistrations ?? 0, color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
-        { label: "Reviewing", value: stats?.reviewingRegistrations ?? 0, color: "#3b82f6", bg: "rgba(59,130,246,0.1)" },
-        { label: "Approved", value: stats?.approvedRegistrations ?? 0, color: "#10b981", bg: "rgba(16,185,129,0.1)" },
-    ];
-    const total = stats?.totalRegistrations ?? 0;
-
-    return (
-        <div className="rounded-2xl p-5 flex flex-col gap-5"
-            style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-semibold text-white">Registration Pipeline</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Landlord application breakdown</p>
-                </div>
-                <div className="h-9 w-9 rounded-xl flex items-center justify-center"
-                    style={{ background: "rgba(225,29,72,0.12)", border: "1px solid rgba(225,29,72,0.2)" }}>
-                    <ClipboardList className="h-4 w-4 text-rose-400" />
-                </div>
-            </div>
-
-            {/* Progress bar */}
-            {!loading && total > 0 && (
-                <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
-                    {items.map((item) => (
-                        <div key={item.label}
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${(item.value / total) * 100}%`, background: item.color }} />
-                    ))}
-                </div>
-            )}
-            {(loading || total === 0) && (
-                <div className="h-2 rounded-full animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
-            )}
-
-            <div className="grid grid-cols-3 gap-3">
-                {items.map((item) => (
-                    <div key={item.label} className="rounded-xl p-3 text-center"
-                        style={{ background: item.bg, border: `1px solid ${item.color}20` }}>
-                        {loading ? (
-                            <div className="h-6 w-8 mx-auto rounded animate-pulse" style={{ background: "rgba(255,255,255,0.06)" }} />
-                        ) : (
-                            <p className="text-xl font-bold" style={{ color: item.color }}>{item.value}</p>
-                        )}
-                        <p className="text-[11px] text-neutral-500 mt-0.5 font-medium">{item.label}</p>
-                    </div>
-                ))}
             </div>
         </div>
     );
@@ -195,13 +138,6 @@ export default function AdminDashboardPage() {
             accent: "#a855f7",
             sub: "Currently active",
         },
-        {
-            label: "Pending Reviews",
-            value: stats?.pendingRegistrations,
-            icon: Clock,
-            accent: "#f59e0b",
-            sub: `${stats?.reviewingRegistrations ?? 0} currently reviewing`,
-        },
     ];
 
     return (
@@ -226,15 +162,14 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Primary stat cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 {primaryCards.map((card) => (
                     <StatCard key={card.label} loading={loading} {...card} />
                 ))}
             </div>
 
             {/* Secondary row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                <RegistrationBreakdown stats={stats} loading={loading} />
+            <div className="grid grid-cols-1 gap-4 mb-6">
                 <UserBreakdown stats={stats} loading={loading} />
             </div>
 
@@ -242,11 +177,10 @@ export default function AdminDashboardPage() {
             <div className="rounded-2xl p-5"
                 style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500 mb-4">Quick Actions</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
-                        { label: "Review Pending Applications", href: "/admin/registrations", icon: ClipboardList, color: "#f59e0b", count: stats?.pendingRegistrations },
                         { label: "Manage Users", href: "/admin/users", icon: Users, color: "#3b82f6", count: stats?.totalUsers },
-                        { label: "View All Registrations", href: "/admin/registrations", icon: TrendingUp, color: "#10b981", count: stats?.totalRegistrations },
+                        { label: "View Properties", href: "/landlord/properties", icon: Building2, color: "#6d9838", count: stats?.totalProperties },
                     ].map((action) => {
                         const Icon = action.icon;
                         return (
