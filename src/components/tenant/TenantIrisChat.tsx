@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowUp, Wifi, Copy, ShieldCheck } from "lucide-react";
+import { ArrowUp, Wifi, Copy, ShieldCheck, Search, Folder, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchIrisHistory, getCachedIrisHistory, setCachedIrisHistory, type IrisHistoryMessage } from "@/lib/iris/client";
@@ -228,11 +228,24 @@ export function TenantIrisChat() {
                     </div>
                     <div>
                         <h3 className="font-bold text-white text-base">iRis Assistant</h3>
-                        <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
+                        <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
                             <span className="text-[10px] text-neutral-400 font-medium">Always Available</span>
                         </div>
                     </div>
+                </div>
+
+                {/* Dummy Tools to match layout & guide tour step 5 */}
+                <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
+                    <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Search not available for iRis">
+                        <Search className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Files not available for iRis">
+                        <Folder className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Settings">
+                        <MoreVertical className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
