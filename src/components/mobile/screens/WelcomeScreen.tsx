@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useRef, TouchEvent } from "react";
-import { MapPin, FileSignature, CreditCard, ArrowRight, ChevronRight } from "lucide-react";
+import { Home, FileSignature, CreditCard, ArrowRight, ChevronRight } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./WelcomeScreen.module.css";
 
 // ─── Slide Data ────────────────────────────────────────────
 const SLIDES = [
     {
-        icon: MapPin,
+        icon: Home,
         color: "green" as const,
-        title: "Find Your Perfect Home",
+        title: "Manage Your Residence",
         description:
-            "Browse nearby rental properties on an interactive map. Filter by price, amenities, and location to find exactly what you need.",
+            "Connect directly with your landlord to track your lease, submit maintenance tickets, and interact with your community.",
     },
     {
         icon: FileSignature,
