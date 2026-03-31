@@ -47,7 +47,7 @@ export type ScreenName =
     | "irisChat";
 
 // ─── Tab Names ─────────────────────────────────────────────
-export type TenantTab = "home" | "search" | "activity" | "chat" | "profile";
+export type TenantTab = "home" | "activity" | "chat" | "profile";
 export type LandlordTab = "home" | "properties" | "activity" | "chat" | "profile";
 export type TabName = TenantTab | LandlordTab;
 
@@ -57,7 +57,6 @@ export type AppRole = "tenant" | "landlord" | null;
 // ─── Tab → Default Screen Mapping ─────────────────────────
 export const TENANT_TAB_SCREENS: Record<TenantTab, ScreenName> = {
     home: "tenantHome",
-    search: "propertySearch",
     activity: "applicationTracker",
     chat: "tenantChat",
     profile: "tenantProfile",

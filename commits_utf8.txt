@@ -1,0 +1,92 @@
+﻿26e0469 - fix: improve skeleton loading states for tenant applications
+71c3ee4 - fix: resolve TypeScript build errors and update signing workflow queries
+c6e298d - feat(ui): overhaul application wizard toolbar and contract preview
+d351dcb - feat(lease): implement digital signing workflow with dual modes and audit trail
+b8b827c - feat(lease): implement lease signing flow and walk-in application approval
+30f850f - feat(landlord): add skeleton loading states to statistics dashboard
+2994948 - feat(landlord): rename walk-in applications to tenant applications and redesign UI
+e76d014 - feat(landlord): implement walk-in applications and e2e testing
+98abfef - feat(landlord): fix RLS policies and enhance applications dashboard
+38df10d - feat(landlord): revamp walk-in application wizard with premium glassmorphic UI
+8b5c731 - feat(landlord): add walk-in shortcut to banner and remove quick action drawer
+c20c38a - feat(community): implement photo album uploads and mosaic gallery feed
+611c120 - feat(community): add landlord multi-property hub, moderation flow, and RLS matrix
+37b44e6 - feat: ship community hub updates and ignore docs
+4f923f6 - fix: getPosts to match spec - cursor pagination, userReactions shape
+263dadf - feat(community): add getTenantPropertyId utility with tests
+5c588bc - feat: add RLS policies for community hub
+ffa8099 - feat: add community hub tables
+fc4930f - feat: add community post enums
+a56cb51 - docs: add community hub design specification
+6929a88 - refactor tenant navigation to sidebar and realign layout
+4e94dea - chore: checkpoint current app updates
+6d31fce - chore: remove legacy property discovery pages and update functional requirements
+c254a1e - Add walk-in app & lease finalize APIs
+be4e85f - feat: refactor iReside to a private landlord-centric system
+1a07de9 - Add DFD, login tests, UI skeletons, sign-out
+98c6ccf - docs: align DFD with detailed HTML and fix SearchMapView SSR error
+214b09b - docs: correct platform architecture specification to PWA
+35ba948 - update: overhaul admin portal UI across all views
+799362b - Add admin pages, API routes and Supabase migration
+05b7201 - Add landlord application API & UI improvements
+521f3a8 - feat: localize AI moderator for Filipino profanity and Taglish
+88d8db8 - feat: enhance AI moderation with phishing detection
+f47e5db - feat: add dedicated view rules modal in chat
+a24d543 - fix: correctly throw parsed JSON error in client
+1ab757d - feat: user-friendly modal for AI-blocked messages
+25864e9 - feat: display AI moderation error details to users
+1ae8017 - feat: add AI chat moderation with Groq Llama 3 API
+cf64f7f - perf: heavily parallelize sequential supabase queries
+078d274 - chore: remove unused auto-pay widget from tenant payments dashboard
+7b0f858 - feat: real-time tenant payments financial dashboard
+40669b8 - feat: real-time live data for tenant lease hub
+c3a714b - feat: add real-time tenant application tracking portal
+64e30c2 - Add tenant dashboard API and client fetching
+3a0f087 - Add maintenance & payments APIs and UI integration
+31f8824 - update: synchronize feature documentation and resolve build issues
+8a5167d - Add landlord APIs; fetch invoices & tenants
+7b295b7 - Add landlord applications API and UI enhancements
+8ff12bc - Add listing metrics and client caching
+485d1e4 - Add listings APIs, location search, and DB schema
+5a166d0 - Support property contract templates and feed
+7b3980f - Add landlord APIs, media & profile uploads
+70f0bc9 - Add landlord dashboard APIs & UI improvements
+9adc179 - Add landlord reviews, profile UI & editable bio
+0764c21 - Add mini chat widgets & improve contacts sidebar
+49cd02b - feat(messaging): implement real-time sidebars and remove audit log
+f8722f2 - Add conversations caching to messages pages
+c599491 - feat(messaging): add deep linking and improved loading state
+da4e9e1 - feat(messaging): add chat persistence, quick actions, and user reporting
+60c579f - feat(messages): add draft file uploads and session message cache
+9cb6bcc - feat(chat): add loading skeletons to chat widget, sidebar, and message history
+3ac264c - docs: add DFD Level 0 context diagram
+00c42c1 - docs: add comprehensive system architecture and ER diagrams
+7465db3 - feat(messages): refine message mapping and optimistic UI updates
+9001151 - docs: overhaul readme and add comprehensive api documentation
+a9d66a5 - Add messaging API, client and realtime UI
+a92daac - Add AI KPI insights API and UI integration
+1e3a39d - Integrate iRis AI assistant (Groq Llama 3)
+52863ed - Remove Pro CTA; render modal via portal
+4349d76 - Add report export (CSV/PDF) and audit tracking
+ab28cee - Add edit mode & prepopulate property form
+38c7846 - Add Manage Hub modal to properties dashboard
+ccbb986 - Enhance RevenueChart visuals and chart height
+9d58674 - Add Unit Map action and in-app reply chat
+e4bc4f4 - Add quick-view modal to FeaturedPropertyCard
+f9685e0 - Add invoice modal, update charts & property stats
+37b9fae - Add landlord listings dashboard and page
+152879d - Add UnitListingWizard modal and integrate into VisualBuilder
+f89e17b - Support custom floor names and UI updates
+e035e99 - Reduce onboarding to 4 steps; add custom amenities
+72bef26 - Refactor landlord flow, UI, charts, and types
+c989f7c - Add landlord registration flow and migration
+f1635ca - Handle client auth redirects and UI tweaks
+de8d3fd - feat(feed): wire up property details modal and image carousel
+9685ab2 - feat(auth): role-based navbar, Google OAuth, and profile row setup
+392b76f - Add .agent workflow guides and workspace
+d92b7c4 - feat(ui): redesign landing page and refine navigation styling
+b1c612f - feat: Implement a new landing page with property search, list/map views, and filtering, alongside new landlord dashboard and statistics pages with supporting components.
+3e81434 - Use local hero images and switch chart to bar
+624b8e3 - Add signup & UI improvements; docs and assets
+79ad52d - Add Supabase clients, queries, types, and auth
+fc4e263 - Add MoveOutRequest and UI updates
