@@ -117,6 +117,39 @@ export const TENANT_LEASE_TOUR_STEPS = [
         title: "Your Property Manager",
         description: "Need help? You can instantly send a message or book a call with your dedicated property manager here.",
         anchorId: "tour-lease-manager",
+    },
+] as const;
+
+export const TENANT_MESSAGES_TOUR_STEPS = [
+    {
+        id: "messages-welcome",
+        title: "Welcome to Message Hub",
+        description: "Your central communication center. Connect securely with your landlord, property manager, or iRis assistant.",
+        anchorId: null,
+    },
+    {
+        id: "messages-sidebar",
+        title: "Your Contacts",
+        description: "Find all your active conversations here. You can also search for a specific contact right above.",
+        anchorId: "tour-messages-sidebar",
+    },
+    {
+        id: "messages-chat",
+        title: "Secure Chat",
+        description: "All messages are encrypted and monitored by the iRis system to ensure professional, phishing-free communication.",
+        anchorId: "tour-messages-chat",
+    },
+    {
+        id: "messages-input",
+        title: "Composer & Attachments",
+        description: "Type your messages here. You can click the paperclip or simply drag and drop files securely into this box.",
+        anchorId: "tour-messages-input",
+    },
+    {
+        id: "messages-tools",
+        title: "Info & Shared Files",
+        description: "Use these tools to quickly access the contact's details, recent payments, or view all media/documents shared in this chat.",
+        anchorId: "tour-messages-tools",
     }
 ] as const;
 

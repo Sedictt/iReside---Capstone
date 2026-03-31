@@ -34,6 +34,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
+import { MessagesTour } from "@/components/tenant/MessagesTour";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
@@ -1506,7 +1507,8 @@ export default function TenantMessagesPage() {
         (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
 
     return (
-        <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700">
+        <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative">
+            <MessagesTour />
             {shouldShowLoadingOverlay && (
                 <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 backdrop-blur-sm">
                     <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-neutral-900/80 px-8 py-6 text-center shadow-2xl">
@@ -1668,7 +1670,7 @@ export default function TenantMessagesPage() {
                 <TenantIrisChat />
             ) : (
                 <>
-                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/40 via-[#0a0a0a] to-[#0a0a0a] overflow-hidden shadow-2xl">
+                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/40 via-[#0a0a0a] to-[#0a0a0a] overflow-hidden shadow-2xl" data-tour-id="tour-messages-chat">
                         {/* Chat Header */}
                         <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/20 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
@@ -1681,7 +1683,7 @@ export default function TenantMessagesPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
 
                                 <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                                     <Search className="w-4 h-4" />
@@ -2010,7 +2012,7 @@ export default function TenantMessagesPage() {
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 md:p-6 bg-neutral-900/50 border-t border-white/5 shrink-0 flex justify-center w-full">
+                        <div className="p-4 md:p-6 bg-neutral-900/50 border-t border-white/5 shrink-0 flex justify-center w-full" data-tour-id="tour-messages-input">
                             <div className="w-full max-w-4xl flex flex-col gap-3">
                                 {/* Security Announcement Banner */}
                                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shrink-0 mb-1">
