@@ -21,6 +21,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
+import { LeaseTour } from "@/components/tenant/LeaseTour";
 
 type LeaseData = {
     id: string;
@@ -135,6 +136,7 @@ export default function LeasesPage() {
 
     return (
         <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <LeaseTour />
             {/* Header */}
             <div>
                 <h1 className="text-4xl md:text-5xl font-display text-white mb-3 mt-4">Smart Lease Hub</h1>
@@ -222,7 +224,7 @@ export default function LeasesPage() {
                     </div>
 
                     {/* Key Terms Highlights */}
-                    <div>
+                    <div data-tour-id="tour-lease-terms">
                         <h3 className="text-xl font-display text-white mb-4 flex items-center gap-2">
                             <ScrollText className="w-5 h-5 text-primary" /> Key Provisions
                         </h3>
@@ -258,7 +260,7 @@ export default function LeasesPage() {
                     </div>
 
                     {/* Document Vault */}
-                    <div>
+                    <div data-tour-id="tour-lease-vault">
                         <div className="flex justify-between items-end mb-4">
                             <h3 className="text-xl font-display text-white flex items-center gap-2">
                                 <FileText className="w-5 h-5 text-primary" /> Document Vault
@@ -321,7 +323,7 @@ export default function LeasesPage() {
                 <div className="space-y-6">
 
                     {/* Timeline & Renewal Card */}
-                    <div className="rounded-3xl border border-primary/20 bg-background/50 relative overflow-hidden backdrop-blur-xl shadow-[0_0_30px_rgba(var(--primary),0.05)] pt-6 pb-4 px-6">
+                    <div className="rounded-3xl border border-primary/20 bg-background/50 relative overflow-hidden backdrop-blur-xl shadow-[0_0_30px_rgba(var(--primary),0.05)] pt-6 pb-4 px-6" data-tour-id="tour-lease-timeline">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-primary/50 to-transparent" />
                         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
@@ -374,7 +376,7 @@ export default function LeasesPage() {
                     <MoveOutRequest />
 
                     {/* Support Card */}
-                    <div className="rounded-3xl border border-border/50 bg-card p-6 flex flex-col items-center text-center relative overflow-hidden group">
+                    <div className="rounded-3xl border border-border/50 bg-card p-6 flex flex-col items-center text-center relative overflow-hidden group" data-tour-id="tour-lease-manager">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
 
                         <div className="w-20 h-20 rounded-full bg-background border-2 border-border/50 flex items-center justify-center mb-4 overflow-hidden relative shadow-lg group-hover:border-primary/50 transition-colors">

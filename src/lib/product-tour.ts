@@ -81,6 +81,45 @@ export const TENANT_DASHBOARD_TOUR_STEPS = [
     }
 ] as const;
 
+export const TENANT_LEASE_TOUR_STEPS = [
+    {
+        id: "lease-welcome",
+        title: "Welcome to Smart Lease Hub",
+        description: "Your digital and cryptographic lease agreement vault. Let's take a quick look around.",
+        anchorId: null,
+    },
+    {
+        id: "lease-summary",
+        title: "Active Lease Details",
+        description: "Here are all the high-level details about your current lease, including monthly rent, security deposit, and payment cycle.",
+        anchorId: "tour-lease-summary",
+    },
+    {
+        id: "lease-timeline",
+        title: "Lease Timeline",
+        description: "Track exactly how many days are left on your lease. This progress bar updates in real-time.",
+        anchorId: "tour-lease-timeline",
+    },
+    {
+        id: "lease-terms",
+        title: "Key Provisions",
+        description: "We've summarized the most important rules, like maintenance duties and utility policies, right here for quick reference.",
+        anchorId: "tour-lease-terms",
+    },
+    {
+        id: "lease-vault",
+        title: "Document Vault",
+        description: "A centralized folder for all your signed agreements, addendums, and condition reports. You can download these at any time.",
+        anchorId: "tour-lease-vault",
+    },
+    {
+        id: "lease-manager",
+        title: "Your Property Manager",
+        description: "Need help? You can instantly send a message or book a call with your dedicated property manager here.",
+        anchorId: "tour-lease-manager",
+    }
+] as const;
+
 export const TENANT_COMMUNITY_TOUR_STEPS = [
     {
         id: "welcome",
