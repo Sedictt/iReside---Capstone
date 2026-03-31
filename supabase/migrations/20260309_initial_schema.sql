@@ -73,7 +73,7 @@ CREATE TABLE properties (
 
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 
--- Anyone can browse properties (public listings)
+-- Initial public property read policy
 CREATE POLICY "Properties are viewable by everyone"
     ON properties FOR SELECT
     USING (true);

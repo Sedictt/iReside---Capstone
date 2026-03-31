@@ -148,7 +148,10 @@ export default function LeasesPage() {
                 <div className="xl:col-span-2 space-y-8">
 
                     {/* Active Lease Hero Card */}
-                    <div className="relative rounded-3xl overflow-hidden shadow-2xl group border border-white/10 mt-2">
+                    <div
+                        className="relative rounded-3xl overflow-hidden shadow-2xl group border border-white/10 mt-2"
+                        data-tour-id="tour-lease-summary"
+                    >
                         {/* Background Image & Overlay */}
                         <div className="absolute inset-0 z-0">
                             <Image

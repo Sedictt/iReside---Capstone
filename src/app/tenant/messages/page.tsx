@@ -1534,7 +1534,10 @@ export default function TenantMessagesPage() {
             )}
 
             {/* Sidebar Contact List */}
-            <div className="w-80 lg:w-96 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col shrink-0 h-full overflow-hidden shadow-2xl">
+            <div
+                className="w-80 lg:w-96 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col shrink-0 h-full overflow-hidden shadow-2xl"
+                data-tour-id="tour-messages-sidebar"
+            >
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 shrink-0 flex flex-col gap-4">
                     <div className="flex items-center gap-3">

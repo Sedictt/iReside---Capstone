@@ -122,7 +122,10 @@ export default function PaymentsPage() {
                 <div className="lg:col-span-8 flex flex-col gap-8">
                     
                     {/* Current Balance Card */}
-                    <div className="rounded-[2.5rem] border border-primary/20 bg-[#0d0d0d] p-8 md:p-12 relative overflow-hidden shadow-2xl">
+                    <div
+                        className="rounded-[2.5rem] border border-primary/20 bg-[#0d0d0d] p-8 md:p-12 relative overflow-hidden shadow-2xl"
+                        data-tour-id="tour-payments-balance"
+                    >
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
                         <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-primary/20 blur-[100px] pointer-events-none" />
 

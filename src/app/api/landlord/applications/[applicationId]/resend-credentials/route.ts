@@ -1,31 +1,43 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
+import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
+import {
+    ensureOnboardingReadyForReminder,
+    ensureTenantOnboardingState,
+    registerReminderAttempt,
+} from "@/lib/onboarding";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 function generateTempPassword(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
     return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
-export async function POST(
-    _request: Request,
-    context: { params: Promise<{ applicationId: string }> }
-) {
+const reminderErrorStatus = (reason: "completed" | "cooldown" | "daily_limit") => {
+    if (reason === "completed") return 409;
+    return 429;
+};
+
+export async function POST(_request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify landlord owns this application
     const { data: application, error: appError } = await supabase
         .from("applications")
-        .select(`
+        .select(
+            `
             id, 
             status, 
             applicant_name, 
@@ -40,7 +52,8 @@ export async function POST(
                     name
                 )
             )
-        `)
+        `
+        )
         .eq("id", applicationId)
         .eq("landlord_id", user.id)
         .maybeSingle();
@@ -58,24 +71,22 @@ export async function POST(
 
     const tenantEmail = application.applicant_email?.trim();
     const tenantName = application.applicant_name?.trim() ?? "Tenant";
-
     if (!tenantEmail) {
         return NextResponse.json({ error: "No email address on file for this applicant." }, { status: 422 });
     }
 
-    // Check if auth user already exists
     const { data: existingProfile } = await adminClient
         .from("profiles")
         .select("id")
         .eq("email", tenantEmail)
         .maybeSingle();
 
-    const accountExisted = !!existingProfile;
+    const accountExisted = Boolean(existingProfile?.id);
+    let tenantId = existingProfile?.id ?? null;
     let tempPassword: string | null = null;
     let inviteUrl: string | null = null;
 
-    if (accountExisted) {
-        // Generate a password reset link
+    if (accountExisted && tenantId) {
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
             type: "recovery",
             email: tenantEmail,
@@ -85,16 +96,14 @@ export async function POST(
         } else {
             inviteUrl = linkData?.properties?.action_link ?? null;
         }
-        // For existing users, generate a new temp password so landlord has something to share
+
         tempPassword = generateTempPassword();
-        // Update their password
-        if (existingProfile?.id) {
-            await adminClient.auth.admin.updateUserById(existingProfile.id, {
+        await adminClient.auth.admin
+            .updateUserById(tenantId, {
                 password: tempPassword,
-            }).catch((e) => console.error("[resend-credentials] updateUserById error:", e));
-        }
+            })
+            .catch((error) => console.error("[resend-credentials] updateUserById error:", error));
     } else {
-        // Create new account
         tempPassword = generateTempPassword();
 
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
@@ -114,16 +123,23 @@ export async function POST(
             return NextResponse.json({ error: "Failed to create tenant account." }, { status: 500 });
         }
 
-        await adminClient.from("profiles").upsert({
-            id: newUser.user.id,
-            full_name: tenantName,
-            email: tenantEmail,
-            role: "tenant" as const,
-        }, { onConflict: "id" }).then(({ error }) => {
-            if (error) console.error("[resend-credentials] profile upsert error:", error);
-        });
+        tenantId = newUser.user.id;
 
-        // Generate a password reset link
+        await adminClient
+            .from("profiles")
+            .upsert(
+                {
+                    id: tenantId,
+                    full_name: tenantName,
+                    email: tenantEmail,
+                    role: "tenant" as const,
+                },
+                { onConflict: "id" }
+            )
+            .then(({ error }) => {
+                if (error) console.error("[resend-credentials] profile upsert error:", error);
+            });
+
         const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
             type: "recovery",
             email: tenantEmail,
@@ -135,59 +151,85 @@ export async function POST(
         }
     }
 
-    // Fetch landlord profile for the copy email
+    if (!tenantId) {
+        return NextResponse.json({ error: "Unable to resolve tenant account." }, { status: 500 });
+    }
+
+    const onboardingState = await ensureTenantOnboardingState(adminClient as any, tenantId);
+    const reminderEligibility = ensureOnboardingReadyForReminder(onboardingState);
+    if (!reminderEligibility.eligible) {
+        return NextResponse.json(
+            {
+                error:
+                    reminderEligibility.reason === "completed"
+                        ? "Tenant onboarding is already completed."
+                        : "Reminder limit reached. Try again later.",
+                code:
+                    reminderEligibility.reason === "completed"
+                        ? "ONBOARDING_ALREADY_COMPLETED"
+                        : "REMINDER_THROTTLED",
+                next_eligible_at: reminderEligibility.nextEligibleAt,
+            },
+            { status: reminderErrorStatus(reminderEligibility.reason) }
+        );
+    }
+
     const { data: landlordProfile } = await adminClient
         .from("profiles")
         .select("email, full_name")
         .eq("id", user.id)
         .maybeSingle();
 
-    // Fetch lease details if they exist
-    let leaseDetails: { property_name: string; unit_name: string; move_in_date: string; monthly_rent: number } | undefined;
     let signingLink: string | undefined;
+    const { data: lease } = await adminClient
+        .from("leases")
+        .select("id, start_date, monthly_rent, status")
+        .eq("tenant_id", tenantId)
+        .eq("unit_id", application.unit_id)
+        .maybeSingle();
 
-    if (existingProfile?.id) {
-        const { data: lease } = await adminClient
-            .from("leases")
-            .select("id, start_date, monthly_rent, status")
-            .eq("tenant_id", existingProfile.id)
-            .eq("unit_id", application.unit_id)
-            .maybeSingle();
-
-        if (lease) {
-            const unit = application.unit as any;
-            const property = unit?.property as any;
-
-            leaseDetails = {
-                property_name: property?.name || 'Property',
-                unit_name: unit?.name || 'Unit',
-                move_in_date: lease.start_date,
-                monthly_rent: lease.monthly_rent,
-            };
-
-            // Generate signing link if lease is still pending signature
-            if (lease.status === 'pending_signature') {
-                signingLink = generateSigningLink(lease.id, existingProfile.id);
-            }
-        }
+    if (lease && (lease.status === "pending_signature" || lease.status === "pending_tenant_signature")) {
+        signingLink = generateSigningLink(lease.id, tenantId);
     }
 
-    // Send email to tenant via nodemailer
+    const onboardingUrl = `${APP_URL}/tenant/onboarding`;
+
     try {
-        await sendTenantCredentials({
+        await sendTenantOnboardingReminder({
             to: tenantEmail,
             tenantName,
-            tempPassword: tempPassword!,
+            onboardingUrl,
+            tempPassword,
             inviteUrl,
-            leaseDetails,
-            signingLink,
         });
-    } catch (e) {
-        console.error("[resend-credentials] sendTenantCredentials error:", e);
+
+        await registerReminderAttempt(adminClient as any, {
+            tenantId,
+            actorId: user.id,
+            triggerSource: "manual",
+            success: true,
+            metadata: {
+                application_id: applicationId,
+                account_existed: accountExisted,
+                has_signing_link: Boolean(signingLink),
+            },
+        });
+    } catch (error) {
+        console.error("[resend-credentials] send reminder error:", error);
+        await registerReminderAttempt(adminClient as any, {
+            tenantId,
+            actorId: user.id,
+            triggerSource: "manual",
+            success: false,
+            metadata: {
+                application_id: applicationId,
+                account_existed: accountExisted,
+                error: error instanceof Error ? error.message : "unknown_send_error",
+            },
+        });
         return NextResponse.json({ error: "Failed to send email to tenant." }, { status: 500 });
     }
 
-    // Send copy to landlord
     if (landlordProfile?.email) {
         try {
             await sendLandlordCredentialsCopy({
@@ -195,11 +237,11 @@ export async function POST(
                 landlordName: landlordProfile.full_name ?? "Landlord",
                 tenantName,
                 tenantEmail,
-                tempPassword: tempPassword!,
+                tempPassword: tempPassword ?? "not-reset",
                 inviteUrl,
             });
-        } catch (e) {
-            console.error("[resend-credentials] sendLandlordCredentialsCopy error:", e);
+        } catch (error) {
+            console.error("[resend-credentials] send landlord copy error:", error);
             // Non-fatal
         }
     }
@@ -210,5 +252,6 @@ export async function POST(
         tempPassword,
         inviteUrl,
         accountExisted,
+        onboarding_status: onboardingState.status,
     });
 }

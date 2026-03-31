@@ -18,6 +18,12 @@ type TenantItem = {
     avatar: string;
     avatarUrl: string | null;
     paymentStatus: TenantPaymentStatus;
+    onboardingStatus: "pending" | "in_progress" | "completed" | "not_started";
+    lastOnboardingReminderAt: string | null;
+    productTourStatus: "not_started" | "in_progress" | "skipped" | "completed";
+    productTourStartedAt: string | null;
+    productTourCompletedAt: string | null;
+    productTourLastEventAt: string | null;
 };
 
 const resolveTenantStatus = (leaseStatus: LeaseStatus, hasMoveOut: boolean): TenantStatus => {
@@ -88,6 +94,30 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to load tenant profiles." }, { status: 500 });
     }
 
+    const { data: onboardingRows, error: onboardingError } =
+        tenantIds.length > 0
+            ? await (supabase as any)
+                  .from("tenant_onboarding_states")
+                  .select("tenant_id, status, last_reminder_sent_at")
+                  .in("tenant_id", tenantIds)
+            : { data: [], error: null };
+
+    if (onboardingError) {
+        return NextResponse.json({ error: "Failed to load tenant onboarding states." }, { status: 500 });
+    }
+
+    const { data: tourRows, error: tourError } =
+        tenantIds.length > 0
+            ? await (supabase as any)
+                  .from("tenant_product_tour_states")
+                  .select("tenant_id, status, started_at, completed_at, last_event_at")
+                  .in("tenant_id", tenantIds)
+            : { data: [], error: null };
+
+    if (tourError) {
+        return NextResponse.json({ error: "Failed to load tenant product tour states." }, { status: 500 });
+    }
+
     const { data: unitRows, error: unitsError } =
         unitIds.length > 0
             ? await supabase.from("units").select("id, name, property_id").in("id", unitIds)
@@ -133,6 +163,27 @@ export async function GET() {
     }
 
     const tenantMap = new Map((tenantRows ?? []).map((row) => [row.id, row]));
+    const onboardingMap = new Map(
+        (onboardingRows ?? []).map((row: any) => [
+            row.tenant_id,
+            {
+                status: row.status as "pending" | "in_progress" | "completed",
+                lastReminderSentAt: (row.last_reminder_sent_at as string | null) ?? null,
+            },
+        ])
+    );
+    const tourMap = new Map(
+        (tourRows ?? []).map((row: any) => [
+            row.tenant_id,
+            {
+                status:
+                    (row.status as "not_started" | "in_progress" | "skipped" | "completed" | null) ?? "not_started",
+                startedAt: (row.started_at as string | null) ?? null,
+                completedAt: (row.completed_at as string | null) ?? null,
+                lastEventAt: (row.last_event_at as string | null) ?? null,
+            },
+        ])
+    );
     const unitMap = new Map((unitRows ?? []).map((row) => [row.id, row]));
     const propertyMap = new Map((propertyRows ?? []).map((row) => [row.id, row]));
 
@@ -159,6 +210,8 @@ export async function GET() {
         const property = unit ? propertyMap.get(unit.property_id) : null;
         const hasMoveOut = movingOutLeaseIds.has(lease.id);
         const paymentStatus = resolvePaymentStatus(latestPaymentMap.get(lease.id) ?? null);
+        const onboarding = onboardingMap.get(lease.tenant_id);
+        const tour = tourMap.get(lease.tenant_id);
 
         const name = tenant?.full_name ?? "Unknown tenant";
         const initials = name
@@ -181,6 +234,12 @@ export async function GET() {
             avatar: initials || "NA",
             avatarUrl: tenant?.avatar_url ?? null,
             paymentStatus,
+            onboardingStatus: onboarding?.status ?? "not_started",
+            lastOnboardingReminderAt: onboarding?.lastReminderSentAt ?? null,
+            productTourStatus: tour?.status ?? "not_started",
+            productTourStartedAt: tour?.startedAt ?? null,
+            productTourCompletedAt: tour?.completedAt ?? null,
+            productTourLastEventAt: tour?.lastEventAt ?? null,
         };
     });
 

@@ -824,6 +824,7 @@ export function TenantContactsSidebar() {
         <>
             {/* Sidebar */}
             <div
+                data-tour-id="tour-messages-sidebar"
                 className={cn(
                     "hidden md:flex fixed top-0 right-0 h-screen bg-[#0a0a0a] border-l border-white/5 z-50 transition-all duration-500 ease-in-out flex-col shadow-2xl overflow-hidden",
                     isHovered ? "w-80" : "w-[88px]"

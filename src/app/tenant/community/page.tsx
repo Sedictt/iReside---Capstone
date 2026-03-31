@@ -41,6 +41,7 @@ import {
     ChevronDown,
     Building2
 } from "lucide-react"
+import { CommunityTour } from "@/components/tenant/CommunityTour";
 
 const REACTIONS: Array<{ key: CommunityReactionType; label: string; icon: ComponentType<{ className?: string }> }> = [
     { key: "like", label: "Like", icon: ThumbsUp },
@@ -534,6 +535,7 @@ export default function TenantCommunityHubPage() {
                         exit={{ opacity: 0, y: -50 }}
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
                         className="fixed inset-x-0 top-0 z-[90] px-3 pt-2 md:px-8 md:pt-3"
+                        data-tour-id="tour-community-announcements"
                     >
                         <div className="max-w-[1600px] mx-auto">
                             <div className={`${announcementConfig.cardBg} ${announcementConfig.cardBorder} rounded-2xl md:rounded-3xl border shadow-2xl backdrop-blur-xl overflow-hidden`}>
@@ -576,6 +578,7 @@ export default function TenantCommunityHubPage() {
             </AnimatePresence>
 
         <div className="w-full font-sans pb-12 px-4 md:px-8 max-w-[1600px] mx-auto min-h-screen" style={{ paddingTop: containerTopPadding }}>
+            <CommunityTour />
             {/* Top Navigation Header */}
             <header className="relative mb-12 rounded-3xl overflow-hidden border border-white/10 shadow-2xl group">
                 <div className="absolute inset-0">
@@ -669,6 +672,7 @@ export default function TenantCommunityHubPage() {
                                 onClick={() => setShowRules(!showRules)}
                                 className={`p-3 transition-all rounded-full border backdrop-blur-md ${showRules ? 'bg-primary text-white border-primary shadow-[0_0_15px_rgba(109,152,56,0.3)]' : 'text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border-transparent hover:border-white/10'}`} 
                                 title="View Community Rules"
+                                data-tour-id="tour-community-rules"
                             >
                                 <Flag className="w-5 h-5" />
                             </button>
@@ -685,7 +689,10 @@ export default function TenantCommunityHubPage() {
             </header>
 
             {/* HORIZONTAL NAVIGATION PILLS */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-2 scrollbar-hide px-1 relative z-10">
+            <div 
+                className="flex items-center gap-3 overflow-x-auto pb-4 mb-2 scrollbar-hide px-1 relative z-10"
+                data-tour-id="tour-community-tabs"
+            >
                 <button
                     onClick={() => setActiveTab("live")}
                     className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${activeTab === "live" ? "bg-white/10 text-white border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]" : "text-white/50 hover:bg-white/5 hover:text-white border border-transparent hover:shadow-lg"}`}
@@ -763,7 +770,10 @@ export default function TenantCommunityHubPage() {
                 {/* CENTER FEED */}
                 <main className="flex-1 min-w-0 w-full space-y-8">
                     {/* Create Post Input */}
-                    <section className="bg-[#151515] rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group mb-8">
+                    <section 
+                        className="bg-[#151515] rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group mb-8"
+                        data-tour-id="tour-community-create-post"
+                    >
                         <form onSubmit={handleDiscussionSubmit} className="relative z-10">
                             <div className="p-6">
                                 {isManagementUser && (

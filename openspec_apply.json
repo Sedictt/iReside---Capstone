@@ -1,0 +1,730 @@
+{
+  "changeName": "enhance-lease-signing-workflow",
+  "changeDir": "C:\\Users\\JV\\Documents\\GitHub\\iReside\\openspec\\changes\\enhance-lease-signing-workflow",
+  "schemaName": "spec-driven",
+  "contextFiles": {
+    "proposal": "C:\\Users\\JV\\Documents\\GitHub\\iReside\\openspec\\changes\\enhance-lease-signing-workflow\\proposal.md",
+    "specs": "C:\\Users\\JV\\Documents\\GitHub\\iReside\\openspec\\changes\\enhance-lease-signing-workflow\\specs\\**\\*.md",
+    "design": "C:\\Users\\JV\\Documents\\GitHub\\iReside\\openspec\\changes\\enhance-lease-signing-workflow\\design.md",
+    "tasks": "C:\\Users\\JV\\Documents\\GitHub\\iReside\\openspec\\changes\\enhance-lease-signing-workflow\\tasks.md"
+  },
+  "progress": {
+    "total": 142,
+    "complete": 91,
+    "remaining": 51
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "description": "1.1 Create migration to add new columns to leases table (signing_mode, tenant_signed_at, landlord_signed_at, signing_link_token_hash, signature_lock_version)",
+      "done": true
+    },
+    {
+      "id": "2",
+      "description": "1.2 Create lease_signing_audit table with foreign key to leases",
+      "done": true
+    },
+    {
+      "id": "3",
+      "description": "1.3 Add indexes on leases.signing_link_token_hash and lease_signing_audit.lease_id",
+      "done": true
+    },
+    {
+      "id": "4",
+      "description": "1.4 Add CHECK constraint on leases.signing_mode to enforce 'in_person' or 'remote' values",
+      "done": true
+    },
+    {
+      "id": "5",
+      "description": "1.5 Add CHECK constraint on leases.status to enforce valid status values",
+      "done": true
+    },
+    {
+      "id": "6",
+      "description": "1.6 Backfill existing leases with signing_mode = 'in_person' and appropriate status",
+      "done": true
+    },
+    {
+      "id": "7",
+      "description": "2.1 Create JWT utility functions for token generation with 30-day expiration",
+      "done": true
+    },
+    {
+      "id": "8",
+      "description": "2.2 Implement SHA-256 token hashing function for secure storage",
+      "done": true
+    },
+    {
+      "id": "9",
+      "description": "2.3 Create JWT verification utility with expiration checking",
+      "done": true
+    },
+    {
+      "id": "10",
+      "description": "2.4 Implement token invalidation function for regeneration workflow",
+      "done": true
+    },
+    {
+      "id": "11",
+      "description": "2.5 Add JWT secret to environment variables",
+      "done": true
+    },
+    {
+      "id": "12",
+      "description": "3.1 Create SigningModeSelector component with in-person and remote options",
+      "done": true
+    },
+    {
+      "id": "13",
+      "description": "3.2 Add signing mode state to wizard context/store",
+      "done": true
+    },
+    {
+      "id": "14",
+      "description": "3.3 Implement mode selection validation (required before proceeding)",
+      "done": true
+    },
+    {
+      "id": "15",
+      "description": "3.4 Add logic to lock mode selection after first signature",
+      "done": true
+    },
+    {
+      "id": "16",
+      "description": "3.5 Style signing mode selector with Radix UI and Tailwind",
+      "done": true
+    },
+    {
+      "id": "17",
+      "description": "3.6 Add visual indicators for selected mode",
+      "done": true
+    },
+    {
+      "id": "18",
+      "description": "4.1 Create TenantSignaturePad component with signature_pad.js integration",
+      "done": true
+    },
+    {
+      "id": "19",
+      "description": "4.2 Create LandlordSignaturePad component",
+      "done": true
+    },
+    {
+      "id": "20",
+      "description": "4.3 Implement sequential enabling (tenant first, then landlord)",
+      "done": true
+    },
+    {
+      "id": "21",
+      "description": "4.4 Add checkmark indicator after tenant signature capture",
+      "done": true
+    },
+    {
+      "id": "22",
+      "description": "4.5 Implement lease terms display above signature areas",
+      "done": true
+    },
+    {
+      "id": "23",
+      "description": "4.6 Add \"Clear\" and \"Save\" buttons for each signature pad",
+      "done": true
+    },
+    {
+      "id": "24",
+      "description": "4.7 Implement signature conversion to base64 PNG data URL",
+      "done": true
+    },
+    {
+      "id": "25",
+      "description": "4.8 Add validation to prevent empty signatures",
+      "done": true
+    },
+    {
+      "id": "26",
+      "description": "5.1 Implement base64 validation utility",
+      "done": true
+    },
+    {
+      "id": "27",
+      "description": "5.2 Add PNG format validation",
+      "done": true
+    },
+    {
+      "id": "28",
+      "description": "5.3 Implement file size validation (<500KB threshold)",
+      "done": true
+    },
+    {
+      "id": "29",
+      "description": "5.4 Add dimension validation (100x50 to 1000x500 pixels)",
+      "done": true
+    },
+    {
+      "id": "30",
+      "description": "5.5 Implement signature data URL sanitization",
+      "done": true
+    },
+    {
+      "id": "31",
+      "description": "5.6 Create API route for storing tenant signature with timestamp",
+      "done": true
+    },
+    {
+      "id": "32",
+      "description": "5.7 Create API route for storing landlord signature with timestamp",
+      "done": true
+    },
+    {
+      "id": "33",
+      "description": "5.8 Implement optimistic locking with signature_lock_version counter",
+      "done": true
+    },
+    {
+      "id": "34",
+      "description": "5.9 Add retry logic with exponential backoff for failed saves",
+      "done": true
+    },
+    {
+      "id": "35",
+      "description": "6.1 Create \"Send Signing Link\" button component",
+      "done": false
+    },
+    {
+      "id": "36",
+      "description": "6.2 Add conditional rendering based on application draft status",
+      "done": false
+    },
+    {
+      "id": "37",
+      "description": "6.3 Create API route for signing link generation",
+      "done": true
+    },
+    {
+      "id": "38",
+      "description": "6.4 Implement JWT token creation with application_id and tenant_email",
+      "done": true
+    },
+    {
+      "id": "39",
+      "description": "6.5 Create signing link URL with format `/tenant/sign-lease/[applicationId]?token=[jwt_token]`",
+      "done": true
+    },
+    {
+      "id": "40",
+      "description": "6.6 Store token hash in leases.signing_link_token_hash",
+      "done": true
+    },
+    {
+      "id": "41",
+      "description": "6.7 Add success/failure message display",
+      "done": false
+    },
+    {
+      "id": "42",
+      "description": "6.8 Show copyable link in UI if email fails",
+      "done": false
+    },
+    {
+      "id": "43",
+      "description": "7.1 Create Supabase Edge Function for email sending with Resend API",
+      "done": true
+    },
+    {
+      "id": "44",
+      "description": "7.2 Design signing link email template with React Email",
+      "done": true
+    },
+    {
+      "id": "45",
+      "description": "7.3 Include property details (name, unit, rent, deposit) in email",
+      "done": true
+    },
+    {
+      "id": "46",
+      "description": "7.4 Add prominent \"Review and Sign Lease\" button with signing URL",
+      "done": true
+    },
+    {
+      "id": "47",
+      "description": "7.5 Include landlord contact information in footer",
+      "done": true
+    },
+    {
+      "id": "48",
+      "description": "7.6 Add expiration notice (30 days) in email body",
+      "done": true
+    },
+    {
+      "id": "49",
+      "description": "7.7 Create landlord notification email template for tenant signature",
+      "done": true
+    },
+    {
+      "id": "50",
+      "description": "7.8 Add email failure logging and fallback handling",
+      "done": true
+    },
+    {
+      "id": "51",
+      "description": "8.1 Create /tenant/sign-lease/[applicationId] page route",
+      "done": true
+    },
+    {
+      "id": "52",
+      "description": "8.2 Implement JWT token verification on page load",
+      "done": true
+    },
+    {
+      "id": "53",
+      "description": "8.3 Add expired token error page with landlord contact info",
+      "done": true
+    },
+    {
+      "id": "54",
+      "description": "8.4 Display complete lease terms (rent, deposit, dates, rules, amenities)",
+      "done": true
+    },
+    {
+      "id": "55",
+      "description": "8.5 Create tenant signature capture interface",
+      "done": true
+    },
+    {
+      "id": "56",
+      "description": "8.6 Implement scroll-to-bottom requirement before enabling signature",
+      "done": false
+    },
+    {
+      "id": "57",
+      "description": "8.7 Add tenant signature save API route",
+      "done": true
+    },
+    {
+      "id": "58",
+      "description": "8.8 Update lease status to \"pending_landlord_signature\" after save",
+      "done": true
+    },
+    {
+      "id": "59",
+      "description": "8.9 Trigger landlord notification email after tenant signs",
+      "done": true
+    },
+    {
+      "id": "60",
+      "description": "8.10 Display confirmation message to tenant after successful signing",
+      "done": true
+    },
+    {
+      "id": "61",
+      "description": "9.1 Display tenant signature with timestamp in application view",
+      "done": false
+    },
+    {
+      "id": "62",
+      "description": "9.2 Create \"Countersign Lease\" button (conditional on tenant signature)",
+      "done": false
+    },
+    {
+      "id": "63",
+      "description": "9.3 Implement countersignature modal with signature pad",
+      "done": false
+    },
+    {
+      "id": "64",
+      "description": "9.4 Create landlord countersignature API route",
+      "done": true
+    },
+    {
+      "id": "65",
+      "description": "9.5 Update lease status to \"active\" after landlord signs",
+      "done": true
+    },
+    {
+      "id": "66",
+      "description": "9.6 Send confirmation email to tenant with executed lease",
+      "done": true
+    },
+    {
+      "id": "67",
+      "description": "9.7 Generate lease PDF with both signatures for email attachment",
+      "done": false
+    },
+    {
+      "id": "68",
+      "description": "10.1 Create ToolAccessBar component with three buttons",
+      "done": false
+    },
+    {
+      "id": "69",
+      "description": "10.2 Add \"Contract Templates\" button with link to /landlord/properties/[propertyId]/templates",
+      "done": false
+    },
+    {
+      "id": "70",
+      "description": "10.3 Add \"Property Policies\" button with link to /landlord/properties/[propertyId]/policies",
+      "done": false
+    },
+    {
+      "id": "71",
+      "description": "10.4 Add \"Amenities\" button with link to /landlord/properties/[propertyId]/amenities",
+      "done": false
+    },
+    {
+      "id": "72",
+      "description": "10.5 Position buttons outside wizard modal in top navigation",
+      "done": false
+    },
+    {
+      "id": "73",
+      "description": "10.6 Implement target=\"_blank\" for new tab opening",
+      "done": false
+    },
+    {
+      "id": "74",
+      "description": "10.7 Add icons to each button for visual clarity",
+      "done": false
+    },
+    {
+      "id": "75",
+      "description": "11.1 Create localStorage utility functions (save, load, clear)",
+      "done": true
+    },
+    {
+      "id": "76",
+      "description": "11.2 Implement wizard state serialization to localStorage",
+      "done": true
+    },
+    {
+      "id": "77",
+      "description": "11.3 Add 24-hour TTL timestamp to stored state",
+      "done": true
+    },
+    {
+      "id": "78",
+      "description": "11.4 Implement state restoration on wizard mount",
+      "done": true
+    },
+    {
+      "id": "79",
+      "description": "11.5 Add stale data detection and discard logic",
+      "done": true
+    },
+    {
+      "id": "80",
+      "description": "11.6 Clear localStorage on successful submission",
+      "done": true
+    },
+    {
+      "id": "81",
+      "description": "11.7 Handle localStorage quota exceeded errors",
+      "done": true
+    },
+    {
+      "id": "82",
+      "description": "11.8 Add warning banner for localStorage unavailable",
+      "done": true
+    },
+    {
+      "id": "83",
+      "description": "11.9 Implement state versioning to invalidate on schema changes",
+      "done": true
+    },
+    {
+      "id": "84",
+      "description": "12.1 Create lease status enum type (draft, pending_signature, pending_tenant_signature, pending_landlord_signature, active, expired, terminated)",
+      "done": true
+    },
+    {
+      "id": "85",
+      "description": "12.2 Implement status transition validation function",
+      "done": true
+    },
+    {
+      "id": "86",
+      "description": "12.3 Add server-side transition guards in API routes",
+      "done": true
+    },
+    {
+      "id": "87",
+      "description": "12.4 Create status badge component with color coding",
+      "done": false
+    },
+    {
+      "id": "88",
+      "description": "12.5 Add status display in lease details view",
+      "done": false
+    },
+    {
+      "id": "89",
+      "description": "12.6 Implement status filtering in lease list queries",
+      "done": false
+    },
+    {
+      "id": "90",
+      "description": "12.7 Add status change logging to audit trail",
+      "done": true
+    },
+    {
+      "id": "91",
+      "description": "13.1 Create expired link error page component",
+      "done": false
+    },
+    {
+      "id": "92",
+      "description": "13.2 Display expiration date and landlord contact on error",
+      "done": false
+    },
+    {
+      "id": "93",
+      "description": "13.3 Implement \"Request New Link\" button with email to landlord",
+      "done": false
+    },
+    {
+      "id": "94",
+      "description": "13.4 Create \"Resend Signing Link\" button in landlord application view",
+      "done": false
+    },
+    {
+      "id": "95",
+      "description": "13.5 Implement link regeneration API route",
+      "done": true
+    },
+    {
+      "id": "96",
+      "description": "13.6 Invalidate previous token when regenerating",
+      "done": true
+    },
+    {
+      "id": "97",
+      "description": "13.7 Display link expiration date in landlord UI",
+      "done": false
+    },
+    {
+      "id": "98",
+      "description": "13.8 Log link regeneration events to audit trail",
+      "done": true
+    },
+    {
+      "id": "99",
+      "description": "14.1 Create audit logging utility function",
+      "done": true
+    },
+    {
+      "id": "100",
+      "description": "14.2 Implement event logging for signing_link_generated",
+      "done": true
+    },
+    {
+      "id": "101",
+      "description": "14.3 Implement event logging for signing_link_accessed",
+      "done": true
+    },
+    {
+      "id": "102",
+      "description": "14.4 Implement event logging for tenant_signed",
+      "done": true
+    },
+    {
+      "id": "103",
+      "description": "14.5 Implement event logging for landlord_signed",
+      "done": true
+    },
+    {
+      "id": "104",
+      "description": "14.6 Implement event logging for signing_link_expired",
+      "done": true
+    },
+    {
+      "id": "105",
+      "description": "14.7 Capture IP address and user agent for each event",
+      "done": true
+    },
+    {
+      "id": "106",
+      "description": "14.8 Create audit trail display component",
+      "done": false
+    },
+    {
+      "id": "107",
+      "description": "14.9 Add audit trail section to lease details view",
+      "done": false
+    },
+    {
+      "id": "108",
+      "description": "14.10 Implement timestamp formatting (MMM DD, YYYY at HH:MM AM/PM)",
+      "done": false
+    },
+    {
+      "id": "109",
+      "description": "14.11 Add authorization check for audit trail visibility",
+      "done": false
+    },
+    {
+      "id": "110",
+      "description": "15.1 Implement window focus event listener in wizard",
+      "done": false
+    },
+    {
+      "id": "111",
+      "description": "15.2 Trigger contract templates refetch on window focus",
+      "done": false
+    },
+    {
+      "id": "112",
+      "description": "15.3 Trigger property policies refetch on window focus",
+      "done": false
+    },
+    {
+      "id": "113",
+      "description": "15.4 Trigger amenities refetch on window focus",
+      "done": false
+    },
+    {
+      "id": "114",
+      "description": "15.5 Add loading indicators during data refresh",
+      "done": false
+    },
+    {
+      "id": "115",
+      "description": "15.6 Cache refetched data in wizard state",
+      "done": false
+    },
+    {
+      "id": "116",
+      "description": "16.1 Add error boundary components for signing interfaces",
+      "done": false
+    },
+    {
+      "id": "117",
+      "description": "16.2 Implement global error handling for signature operations",
+      "done": false
+    },
+    {
+      "id": "118",
+      "description": "16.3 Add network error retry UI",
+      "done": false
+    },
+    {
+      "id": "119",
+      "description": "16.4 Implement concurrent signing conflict resolution",
+      "done": false
+    },
+    {
+      "id": "120",
+      "description": "16.5 Add validation error messages for all signature rules",
+      "done": false
+    },
+    {
+      "id": "121",
+      "description": "16.6 Log all signature validation failures",
+      "done": false
+    },
+    {
+      "id": "122",
+      "description": "16.7 Add Sentry error tracking for signing workflow",
+      "done": false
+    },
+    {
+      "id": "123",
+      "description": "17.1 Write unit tests for JWT utility functions",
+      "done": true
+    },
+    {
+      "id": "124",
+      "description": "17.2 Write unit tests for signature validation functions",
+      "done": true
+    },
+    {
+      "id": "125",
+      "description": "17.3 Write unit tests for localStorage utilities",
+      "done": true
+    },
+    {
+      "id": "126",
+      "description": "17.4 Write unit tests for lease status transitions",
+      "done": true
+    },
+    {
+      "id": "127",
+      "description": "17.5 Write integration tests for in-person signing flow",
+      "done": false
+    },
+    {
+      "id": "128",
+      "description": "17.6 Write integration tests for remote signing flow",
+      "done": false
+    },
+    {
+      "id": "129",
+      "description": "17.7 Write integration tests for signing link regeneration",
+      "done": false
+    },
+    {
+      "id": "130",
+      "description": "17.8 Write E2E tests for complete signing workflows",
+      "done": false
+    },
+    {
+      "id": "131",
+      "description": "18.1 Update API documentation with new signing endpoints",
+      "done": true
+    },
+    {
+      "id": "132",
+      "description": "18.2 Document lease status state machine",
+      "done": true
+    },
+    {
+      "id": "133",
+      "description": "18.3 Create user guide for remote signing flow",
+      "done": true
+    },
+    {
+      "id": "134",
+      "description": "18.4 Document email templates and customization",
+      "done": true
+    },
+    {
+      "id": "135",
+      "description": "18.5 Update deployment checklist",
+      "done": true
+    },
+    {
+      "id": "136",
+      "description": "18.6 Configure environment variables for production",
+      "done": true
+    },
+    {
+      "id": "137",
+      "description": "18.7 Test deployment in staging environment",
+      "done": false
+    },
+    {
+      "id": "138",
+      "description": "18.8 Deploy to production environment",
+      "done": false
+    },
+    {
+      "id": "139",
+      "description": "18.9 Perform UAT with landlord test accounts",
+      "done": false
+    },
+    {
+      "id": "140",
+      "description": "18.10 Enable feature flag for 10% canary deployment",
+      "done": false
+    },
+    {
+      "id": "141",
+      "description": "18.11 Monitor error rates and gradually increase rollout",
+      "done": false
+    },
+    {
+      "id": "142",
+      "description": "18.12 Complete 100% rollout after 90-day stability window",
+      "done": false
+    }
+  ],
+  "state": "ready",
+  "instruction": "Read context files, work through pending tasks, mark complete as you go.\nPause if you hit blockers or need clarification."
+}

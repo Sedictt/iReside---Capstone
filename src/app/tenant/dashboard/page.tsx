@@ -29,6 +29,7 @@ import { useEffect, useMemo, useState } from "react";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
+import { DashboardTour } from "@/components/tenant/DashboardTour";
 
 type DashboardData = {
     lease: {
@@ -287,10 +288,15 @@ export default function TenantDashboard() {
                 />
             </div>
 
+            <DashboardTour />
+
             <div className="space-y-6 relative z-10 text-foreground">
 
                 {/* Hero Banner */}
-                <div className="relative w-full h-[280px] rounded-3xl overflow-hidden group border border-border/50 shadow-2xl">
+                <div 
+                    className="relative w-full h-[280px] rounded-3xl overflow-hidden group border border-border/50 shadow-2xl"
+                    data-tour-id="tour-dashboard-overview"
+                >
                     <Image
                         src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688"
                         alt="Property"
@@ -398,7 +404,7 @@ export default function TenantDashboard() {
                     {/* Left Column: Payments & Quick Actions */}
                     <div className="lg:col-span-2 space-y-6">
 
-                        <div>
+                        <div data-tour-id="tour-quick-actions">
                             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 {[
@@ -568,7 +574,7 @@ export default function TenantDashboard() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour-id="tour-lease-details">
                                 {/* Lease Status Card */}
                                 <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors">
                                     <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">

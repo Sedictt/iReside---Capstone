@@ -373,3 +373,75 @@ export async function sendLeaseActivatedNotification({
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }
+
+export async function sendTenantOnboardingReminder({
+    to,
+    tenantName,
+    onboardingUrl,
+    tempPassword,
+    inviteUrl,
+}: {
+    to: string;
+    tenantName: string;
+    onboardingUrl: string;
+    tempPassword?: string | null;
+    inviteUrl?: string | null;
+}) {
+    const subject = "Continue your iReside onboarding";
+
+    const credentialBlock = tempPassword
+        ? `
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">Temporary Password</p>
+        <p style="margin:0;font-size:17px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:2px;">${tempPassword}</p>
+      </div>
+      `
+        : "";
+
+    const inviteBlock = inviteUrl
+        ? `
+      <p style="margin:12px 0 0;color:#9ca3af;font-size:12px;">
+        Set or reset your password:
+        <a href="${inviteUrl}" style="color:#6d9838;word-break:break-all;">${inviteUrl}</a>
+      </p>
+      `
+        : "";
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
+  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
+    <div style="background:#6d9838;padding:24px 32px;">
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:2px;">Onboarding Reminder</p>
+    </div>
+    <div style="padding:32px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${tenantName}</strong>,</p>
+      <p style="margin:0 0 20px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+        Your tenant account is ready, but onboarding is still incomplete. Please continue onboarding to unlock your full tenant portal access.
+      </p>
+
+      ${credentialBlock}
+
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;text-align:center;">
+        <a href="${onboardingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+          Continue Onboarding
+        </a>
+        ${inviteBlock}
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `Hi ${tenantName},
+
+Your tenant account is ready, but onboarding is still incomplete.
+Continue here: ${onboardingUrl}
+${tempPassword ? `Temporary password: ${tempPassword}\n` : ""}${inviteUrl ? `Password setup link: ${inviteUrl}\n` : ""}
+— iReside`;
+
+    await transporter.sendMail({ from: FROM, to, subject, html, text });
+}
