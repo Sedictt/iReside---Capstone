@@ -14,6 +14,7 @@ import {
     FileText,
     CreditCard,
     MessageSquare,
+    Map,
     Home,
     Sparkles,
     Menu,
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
     { label: "Product Tour", href: "/tenant/tour", icon: Sparkles },
     { label: "Applications", href: "/tenant/applications", icon: Building2 },
     { label: "Leases", href: "/tenant/lease", icon: FileText },
+    { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
     { label: "Payments", href: "/tenant/payments", icon: CreditCard },
     { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
 ];

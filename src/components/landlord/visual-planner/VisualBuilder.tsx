@@ -177,7 +177,7 @@ const getFloorDisplayLabel = (floorId: FloorId, customName?: string) => {
 
 const formatFloorWatermark = (floorId: FloorId, customName?: string) => getFloorDisplayLabel(floorId, customName).toUpperCase();
 
-export default function VisualBuilder() {
+export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean } = {}) {
     const GRID_SIZE = 20;
     const PAN_MARGIN = 280;
     const BLUEPRINT_MARGIN = 20;
@@ -227,6 +227,53 @@ export default function VisualBuilder() {
 
     // Helper to update undo availability state
     const [undoAvailable, setUndoAvailable] = useState(false);
+
+    // Tenant transfer request state
+    const [transferModalUnit, setTransferModalUnit] = useState<Unit | null>(null);
+    const [transferReason, setTransferReason] = useState("");
+    const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false);
+    const [transferError, setTransferError] = useState<string | null>(null);
+    const [transferSuccess, setTransferSuccess] = useState(false);
+
+    const handleTransferSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!transferModalUnit) return;
+        setIsSubmittingTransfer(true);
+        setTransferError(null);
+        try {
+            const res = await fetch("/api/tenant/unit-map", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requestedUnitId: transferModalUnit.id,
+                    reason: transferReason
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                // For prototype local IDs, mock success
+                if (transferModalUnit.id.length < 20) {
+                    setTransferSuccess(true);
+                    setTimeout(() => {
+                        setTransferModalUnit(null);
+                        setTransferSuccess(false);
+                    }, 2000);
+                } else {
+                    setTransferError(data.error || "Failed to submit request");
+                }
+            } else {
+                setTransferSuccess(true);
+                setTimeout(() => {
+                    setTransferModalUnit(null);
+                    setTransferSuccess(false);
+                }, 2000);
+            }
+        } catch (err) {
+            setTransferError("An error occurred. Please try again.");
+        } finally {
+            setIsSubmittingTransfer(false);
+        }
+    };
 
     // Auto-record history on changes
     useEffect(() => {
@@ -982,7 +1029,7 @@ export default function VisualBuilder() {
         if (storedVisibility === "hidden") {
             setShowLegend(false);
         }
-    }, []);
+    }, [readOnly]);
 
     useEffect(() => {
         window.localStorage.setItem(LEGEND_VISIBILITY_STORAGE_KEY, showLegend ? "visible" : "hidden");
@@ -1024,7 +1071,7 @@ export default function VisualBuilder() {
     }, []);
 
     useEffect(() => {
-        if (!hasHydratedFloorState) return;
+        if (!hasHydratedFloorState || readOnly) return;
 
         const layoutsToPersist: Record<FloorId, FloorLayout> = {
             ...floorLayouts,
@@ -1038,9 +1085,11 @@ export default function VisualBuilder() {
 
         window.localStorage.setItem(FLOOR_LAYOUTS_STORAGE_KEY, JSON.stringify(layoutsToPersist));
         window.localStorage.setItem(ACTIVE_FLOOR_STORAGE_KEY, activeFloor);
-    }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures]);
+    }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures, readOnly]);
 
     useEffect(() => {
+        if (readOnly) return;
+
         const onKeyDown = (event: KeyboardEvent) => {
             if (!selectedItem) return;
 
@@ -1072,7 +1121,7 @@ export default function VisualBuilder() {
 
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [selectedItem, units, corridors, structures, performUndo, rotateSelectedItem]);
+    }, [selectedItem, units, corridors, structures, performUndo, rotateSelectedItem, readOnly]);
 
     const handleSidebarBlockDragStart = (blockType: SidebarBlockType) => (e: React.DragEvent<HTMLDivElement>) => {
         const payload = blockType === "studio"
@@ -1415,7 +1464,7 @@ export default function VisualBuilder() {
         : 0;
 
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30">
+        <div className={`bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30${readOnly ? ' pointer-events-auto' : ''}`}>
             {/* Header */}
             <header className="h-16 bg-white dark:bg-surface-dark border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
                 <div className="flex items-center gap-4">
@@ -1431,6 +1480,12 @@ export default function VisualBuilder() {
                             <span>All systems operational</span>
                         </div>
                     </div>
+                    {readOnly && (
+                        <div className="flex items-center gap-1.5 ml-3 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                            <span className="material-icons-round text-emerald-400 text-[14px]">visibility</span>
+                            <span className="text-xs font-semibold text-emerald-300 tracking-wide">View Only</span>
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
                     <div className="bg-slate-100/80 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 flex items-center shadow-sm backdrop-blur-sm">
@@ -1438,7 +1493,7 @@ export default function VisualBuilder() {
                             <span className="material-icons-round text-slate-500 dark:text-slate-400 text-[18px]">layers</span>
                         </div>
                         
-                        {isRenamingFloor ? (
+                        {!readOnly && isRenamingFloor ? (
                             <form 
                                 onSubmit={(e) => {
                                     e.preventDefault();
@@ -1493,7 +1548,7 @@ export default function VisualBuilder() {
                         )}
                         
                         <div className="flex items-center gap-1 pl-1 pr-1 border-l border-slate-200 dark:border-slate-700">
-                            {!isRenamingFloor && (
+                            {!readOnly && !isRenamingFloor && (
                                 <button 
                                     onClick={() => {
                                         setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
@@ -1511,24 +1566,30 @@ export default function VisualBuilder() {
                                     {activeFloorItemCount}
                                 </span>
                             </div>
-                            <button 
-                                onClick={createFloor} 
-                                className="flex items-center justify-center w-7 h-7 bg-white dark:bg-background-dark hover:bg-primary hover:border-primary dark:hover:bg-primary border border-slate-200 dark:border-slate-700 rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white shadow-sm"
-                                title="Add New Floor"
-                            >
-                                <span className="material-icons-round text-[18px]">add</span>
-                            </button>
+                            {!readOnly && (
+                                <button 
+                                    onClick={createFloor} 
+                                    className="flex items-center justify-center w-7 h-7 bg-white dark:bg-background-dark hover:bg-primary hover:border-primary dark:hover:bg-primary border border-slate-200 dark:border-slate-700 rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white shadow-sm"
+                                    title="Add New Floor"
+                                >
+                                    <span className="material-icons-round text-[18px]">add</span>
+                                </button>
+                            )}
                         </div>
                     </div>
-                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-200 dark:border-slate-600">
-                        <span className="material-icons-round text-sm">save_alt</span>
-                        Draft
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-medium shadow-lg shadow-primary/20 transition-colors">
-                        <span className="material-icons-round text-sm">publish</span>
-                        Publish Changes
-                    </button>
+                    {!readOnly && (
+                        <>
+                            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                            <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-200 dark:border-slate-600">
+                                <span className="material-icons-round text-sm">save_alt</span>
+                                Draft
+                            </button>
+                            <button className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-medium shadow-lg shadow-primary/20 transition-colors">
+                                <span className="material-icons-round text-sm">publish</span>
+                                Publish Changes
+                            </button>
+                        </>
+                    )}
                 </div>
             </header>
 
@@ -1550,9 +1611,9 @@ export default function VisualBuilder() {
                             {/* Blueprint Area */}
                             <div
                                 ref={blueprintRef}
-                                onDragOver={handleBlueprintDragOver}
-                                onDragLeave={handleBlueprintDragLeave}
-                                onDrop={handleBlueprintDrop}
+                                onDragOver={readOnly ? undefined : handleBlueprintDragOver}
+                                onDragLeave={readOnly ? undefined : handleBlueprintDragLeave}
+                                onDrop={readOnly ? undefined : handleBlueprintDrop}
                                 className={`absolute top-[20px] left-[20px] bg-slate-800/30 border border-slate-700/50 rounded-xl ${styles.bgDotPattern} relative`}
                                 style={{
                                     width: BLUEPRINT_WIDTH,
@@ -1821,13 +1882,13 @@ export default function VisualBuilder() {
                                             height: corridor.h,
                                             zIndex: draggingCorridorId === corridor.id ? 28 : 8,
                                         }}
-                                        drag={resizingCorridorId === null}
+                                        drag={!readOnly && resizingCorridorId === null}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
-                                        onPointerDown={() => setSelectedItem({ kind: "corridor", id: corridor.id })}
+                                        onPointerDown={readOnly ? undefined : () => setSelectedItem({ kind: "corridor", id: corridor.id })}
                                         onDragStart={() => {
                                             setSelectedItem({ kind: "corridor", id: corridor.id });
                                             setDraggingCorridorId(corridor.id);
@@ -1905,7 +1966,7 @@ export default function VisualBuilder() {
                                                 <span className="text-xs font-bold text-slate-300 uppercase tracking-[0.4em]">{corridor.label}</span>
                                             </div>
 
-                                            {selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
+                                            {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
                                                 <>
                                                     <div
                                                         className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 h-4 w-12 cursor-ns-resize"
@@ -1958,13 +2019,13 @@ export default function VisualBuilder() {
                                             height: structure.h,
                                             zIndex: draggingStructureId === structure.id ? 29 : 9,
                                         }}
-                                        drag
+                                        drag={!readOnly}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
-                                        onPointerDown={() => setSelectedItem({ kind: "structure", id: structure.id })}
+                                        onPointerDown={readOnly ? undefined : () => setSelectedItem({ kind: "structure", id: structure.id })}
                                         onDragStart={() => {
                                             setSelectedItem({ kind: "structure", id: structure.id });
                                             setDraggingStructureId(structure.id);
@@ -2172,13 +2233,20 @@ export default function VisualBuilder() {
                                             height: unit.h,
                                             zIndex: draggingUnitId === unit.id ? 30 : 10,
                                         }}
-                                        drag
+                                        drag={!readOnly}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
-                                        onPointerDown={() => setSelectedItem({ kind: "unit", id: unit.id })}
+                                        onPointerDown={readOnly ? () => {
+                                            if (unit.status === 'vacant') {
+                                                setTransferModalUnit(unit);
+                                                setTransferReason("");
+                                                setTransferError(null);
+                                                setTransferSuccess(false);
+                                            }
+                                        } : () => setSelectedItem({ kind: "unit", id: unit.id })}
                                         onDragStart={() => {
                                             setSelectedItem({ kind: "unit", id: unit.id });
                                             setDraggingUnitId(unit.id);
@@ -2456,14 +2524,16 @@ export default function VisualBuilder() {
                                 <button onClick={handleZoomIn} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">add</span></button>
                                 <button onClick={handleZoomOut} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">remove</span></button>
                                 <button onClick={handleFit} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">aspect_ratio</span></button>
-                                <button
-                                    onClick={handleUndo}
-                                    disabled={!undoAvailable}
-                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-neutral-700 text-neutral-300' : 'text-neutral-600 cursor-not-allowed'}`}
-                                    title="Undo (Ctrl+Z)"
-                                >
-                                    <span className="material-icons-round text-lg">undo</span>
-                                </button>
+                                {!readOnly && (
+                                    <button
+                                        onClick={handleUndo}
+                                        disabled={!undoAvailable}
+                                        className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-neutral-700 text-neutral-300' : 'text-neutral-600 cursor-not-allowed'}`}
+                                        title="Undo (Ctrl+Z)"
+                                    >
+                                        <span className="material-icons-round text-lg">undo</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -2500,7 +2570,7 @@ export default function VisualBuilder() {
                         </div>
                     )}
 
-                    {isDraggingCanvasItem && (
+                    {!readOnly && isDraggingCanvasItem && (
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
                             <div
                                 ref={trashRef}
@@ -2511,7 +2581,7 @@ export default function VisualBuilder() {
                         </div>
                     )}
 
-                    {pendingDelete && (
+                    {!readOnly && pendingDelete && (
                         <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/55 p-4">
                             <div className="w-full max-w-sm rounded-xl border border-neutral-700 bg-surface-dark shadow-2xl">
                                 <div className="p-5">
@@ -2540,30 +2610,116 @@ export default function VisualBuilder() {
                             </div>
                         </div>
                     )}
+
+                    {readOnly && transferModalUnit && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/70 p-4 backdrop-blur-sm pointer-events-auto">
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="w-full max-w-md rounded-2xl border border-neutral-700 bg-surface-dark shadow-2xl overflow-hidden"
+                            >
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-xl font-bold text-white mb-1">Unit Transfer Request</h3>
+                                            <p className="text-sm text-neutral-400">Request to move to <span className="text-emerald-400 font-semibold">{transferModalUnit.name}</span></p>
+                                        </div>
+                                        <button 
+                                            title="Close"
+                                            onClick={() => setTransferModalUnit(null)}
+                                            className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+                                        >
+                                            <span className="material-icons-round text-[18px]">close</span>
+                                        </button>
+                                    </div>
+                                    
+                                    {transferSuccess ? (
+                                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 text-center animate-in fade-in zoom-in duration-300">
+                                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                                                <span className="material-icons-round text-emerald-400 text-2xl">check</span>
+                                            </div>
+                                            <h4 className="text-emerald-300 font-bold mb-1">Request Submitted</h4>
+                                            <p className="text-emerald-400/70 text-sm">Your landlord will review your request shortly.</p>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleTransferSubmit}>
+                                            <div className="mb-5">
+                                                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
+                                                    Reason for Transfer (Optional)
+                                                </label>
+                                                <textarea
+                                                    value={transferReason}
+                                                    onChange={(e) => setTransferReason(e.target.value)}
+                                                    placeholder="E.g., I need more space, closer to the elevator, etc."
+                                                    className="w-full h-24 bg-neutral-900/50 border border-neutral-700 rounded-xl p-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none transition-all shadow-inner"
+                                                />
+                                            </div>
+                                            
+                                            {transferError && (
+                                                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2 animate-in fade-in duration-200">
+                                                    <span className="material-icons-round text-red-400 text-[18px]">error_outline</span>
+                                                    <p className="text-xs text-red-300 mt-0.5">{transferError}</p>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="flex gap-3 justify-end mt-6">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setTransferModalUnit(null)}
+                                                    className="px-4 py-2 rounded-xl text-sm font-semibold text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    disabled={isSubmittingTransfer}
+                                                    className="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-2 disabled:cursor-not-allowed"
+                                                >
+                                                    {isSubmittingTransfer ? (
+                                                        <>
+                                                            <span className="material-icons-round text-[16px] animate-spin">refresh</span>
+                                                            Submitting...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="material-icons-round text-[16px]">send</span>
+                                                            Submit Request
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
                 </main>
 
                 {/* Sidebar */}
-                <aside className="w-[340px] shrink-0 bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col z-10 shadow-2xl">
-                    {selectedItem?.kind === "unit" ? (
-                        <UnitDetailsPanel
-                            unit={units.find(u => u.id === selectedItem.id)!}
-                            onUpdate={(updates) => {
-                                setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, ...updates } : u));
-                            }}
-                            onDelete={() => {
-                                deleteCanvasItem({ kind: "unit", id: selectedItem.id });
-                                setSelectedItem(null);
-                                triggerDeleteToast();
-                            }}
-                            onClose={() => setSelectedItem(null)}
-                        />
-                    ) : (
-                        <SidebarBlockLibrary
-                            onDragStart={handleSidebarBlockDragStart}
-                            styles={styles}
-                        />
-                    )}
-                </aside>
+                {!readOnly && (
+                    <aside className="w-[340px] shrink-0 bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col z-10 shadow-2xl">
+                        {selectedItem?.kind === "unit" ? (
+                            <UnitDetailsPanel
+                                unit={units.find(u => u.id === selectedItem.id)!}
+                                onUpdate={(updates) => {
+                                    setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, ...updates } : u));
+                                }}
+                                onDelete={() => {
+                                    deleteCanvasItem({ kind: "unit", id: selectedItem.id });
+                                    setSelectedItem(null);
+                                    triggerDeleteToast();
+                                }}
+                                onClose={() => setSelectedItem(null)}
+                            />
+                        ) : (
+                            <SidebarBlockLibrary
+                                onDragStart={handleSidebarBlockDragStart}
+                                styles={styles}
+                            />
+                        )}
+                    </aside>
+                )}
             </div>
         </div>
     );

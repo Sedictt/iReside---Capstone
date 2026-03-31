@@ -16,6 +16,7 @@ export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected
 export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
+export type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
 export type MessageType = 'text' | 'system' | 'image' | 'file'
 export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application'
 export type ListingScope = 'property' | 'unit'
@@ -669,6 +670,49 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            unit_transfer_requests: {
+                Row: {
+                    id: string
+                    lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    property_id: string
+                    current_unit_id: string
+                    requested_unit_id: string
+                    reason: string | null
+                    status: UnitTransferStatus
+                    landlord_note: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    property_id: string
+                    current_unit_id: string
+                    requested_unit_id: string
+                    reason?: string | null
+                    status?: UnitTransferStatus
+                    landlord_note?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    lease_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    property_id?: string
+                    current_unit_id?: string
+                    requested_unit_id?: string
+                    reason?: string | null
+                    status?: UnitTransferStatus
+                    landlord_note?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
             conversations: {
                 Row: {
                     id: string
@@ -899,6 +943,7 @@ export interface Database {
             maintenance_status: MaintenanceStatus
             maintenance_priority: MaintenancePriority
             move_out_status: MoveOutStatus
+            unit_transfer_status: UnitTransferStatus
             message_type: MessageType
             notification_type: NotificationType
         }
@@ -920,6 +965,7 @@ export type Application = Database['public']['Tables']['applications']['Row']
 export type LandlordInquiryAction = Database['public']['Tables']['landlord_inquiry_actions']['Row']
 export type MaintenanceRequest = Database['public']['Tables']['maintenance_requests']['Row']
 export type MoveOutRequest = Database['public']['Tables']['move_out_requests']['Row']
+export type UnitTransferRequest = Database['public']['Tables']['unit_transfer_requests']['Row']
 export type Conversation = Database['public']['Tables']['conversations']['Row']
 export type ConversationParticipant = Database['public']['Tables']['conversation_participants']['Row']
 export type Message = Database['public']['Tables']['messages']['Row']
