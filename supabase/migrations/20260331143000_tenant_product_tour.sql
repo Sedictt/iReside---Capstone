@@ -141,39 +141,45 @@ COMMENT ON TABLE tenant_product_tour_events IS 'Lifecycle telemetry for tenant p
 -- Backfill strategy:
 -- - Recent onboarding completions (<= 14 days): mark as not_started to be eligible for first-run tour.
 -- - Older onboarding completions: mark as skipped with long suppression to avoid surprising existing tenants.
-INSERT INTO tenant_product_tour_states (
-    tenant_id,
-    status,
-    current_step_index,
-    started_at,
-    completed_at,
-    skipped_at,
-    skip_suppressed_until,
-    replay_count,
-    metadata
-)
-SELECT
-    tos.tenant_id,
-    CASE
-        WHEN tos.completed_at IS NOT NULL AND tos.completed_at >= (now() - interval '14 days') THEN 'not_started'
-        ELSE 'skipped'
-    END AS status,
-    0,
-    NULL,
-    NULL,
-    CASE
-        WHEN tos.completed_at IS NOT NULL AND tos.completed_at >= (now() - interval '14 days') THEN NULL
-        ELSE now()
-    END AS skipped_at,
-    CASE
-        WHEN tos.completed_at IS NOT NULL AND tos.completed_at >= (now() - interval '14 days') THEN NULL
-        ELSE (now() + interval '180 days')
-    END AS skip_suppressed_until,
-    0,
-    jsonb_build_object(
-        'backfilled', true,
-        'source', 'tenant_onboarding_states'
-    )
-FROM tenant_onboarding_states tos
-WHERE tos.status = 'completed'
-ON CONFLICT (tenant_id) DO NOTHING;
+-- - If tenant_onboarding_states does not exist in this environment, skip safely.
+DO $$
+BEGIN
+    IF to_regclass('public.tenant_onboarding_states') IS NOT NULL THEN
+        INSERT INTO tenant_product_tour_states (
+            tenant_id,
+            status,
+            current_step_index,
+            started_at,
+            completed_at,
+            skipped_at,
+            skip_suppressed_until,
+            replay_count,
+            metadata
+        )
+        SELECT
+            tos.tenant_id,
+            CASE
+                WHEN tos.completed_at IS NOT NULL AND tos.completed_at >= (now() - interval '14 days') THEN 'not_started'
+                ELSE 'skipped'
+            END AS status,
+            0,
+            NULL,
+            NULL,
+            CASE
+                WHEN tos.completed_at IS NOT NULL AND tos.completed_at >= (now() - interval '14 days') THEN NULL
+                ELSE now()
+            END AS skipped_at,
+            CASE
+                WHEN tos.completed_at IS NOT NULL AND tos.completed_at >= (now() - interval '14 days') THEN NULL
+                ELSE (now() + interval '180 days')
+            END AS skip_suppressed_until,
+            0,
+            jsonb_build_object(
+                'backfilled', true,
+                'source', 'tenant_onboarding_states'
+            )
+        FROM tenant_onboarding_states tos
+        WHERE tos.status = 'completed'
+        ON CONFLICT (tenant_id) DO NOTHING;
+    END IF;
+END $$;
