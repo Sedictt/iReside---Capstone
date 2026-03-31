@@ -111,13 +111,34 @@ export function MessagesTour() {
                     "fixed z-[101] w-[320px] bg-card border border-border/60 rounded-2xl shadow-2xl p-5 pointer-events-auto transition-all duration-300 ease-in-out",
                     !hasHighlight && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 )}
-                style={hasHighlight ? {
-                    // Position dynamically based on the highlight
-                    top: anchorRect.bottom + 24 + 200 > window.innerHeight 
-                        ? Math.max(16, anchorRect.top - 200) // Position above if no space below
-                        : shrinkTopOffset(anchorRect.bottom + 24), // Position below
-                    left: Math.max(16, Math.min(window.innerWidth - 340, anchorRect.left)),
-                } : {}}
+                style={hasHighlight ? (() => {
+                    const TOOLTIP_HEIGHT = 220;
+                    const TOOLTIP_WIDTH = 340;
+                    const gap = 24;
+                    const spaceBelow = window.innerHeight - anchorRect.bottom;
+                    const spaceAbove = anchorRect.top;
+                    
+                    let leftPos = Math.max(16, Math.min(window.innerWidth - TOOLTIP_WIDTH, anchorRect.left));
+
+                    if (spaceBelow >= TOOLTIP_HEIGHT + gap) {
+                        return { top: anchorRect.bottom + gap, left: leftPos };
+                    } 
+                    if (spaceAbove >= TOOLTIP_HEIGHT + gap) {
+                        return { 
+                            top: anchorRect.top - gap, 
+                            left: leftPos, 
+                            transform: "translateY(-100%)" 
+                        };
+                    } 
+                    if (window.innerWidth - anchorRect.right >= TOOLTIP_WIDTH + gap) {
+                        return { top: Math.max(16, anchorRect.top), left: anchorRect.right + gap };
+                    } 
+                    if (anchorRect.left >= TOOLTIP_WIDTH + gap) {
+                        return { top: Math.max(16, anchorRect.top), left: anchorRect.left - TOOLTIP_WIDTH - gap };
+                    }
+                    
+                    return { top: 16, left: Math.max(16, (window.innerWidth - TOOLTIP_WIDTH) / 2) };
+                })() : {}}
             >
                 <div className="flex items-start justify-between mb-3">
                     <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">
@@ -170,13 +191,4 @@ export function MessagesTour() {
             </div>
         </div>
     );
-}
-
-// Adjust top if it exceeds limits
-function shrinkTopOffset(topOffset: number): number {
-    if (typeof window === "undefined") return topOffset;
-    if (topOffset + 300 > window.innerHeight) {
-        return window.innerHeight - 300;
-    }
-    return topOffset;
 }
