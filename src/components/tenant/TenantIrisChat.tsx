@@ -214,7 +214,7 @@ export function TenantIrisChat() {
     };
 
     return (
-        <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/40 via-[#0a0a0a] to-[#0a0a0a] overflow-hidden shadow-2xl relative">
+        <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/40 via-[#0a0a0a] to-[#0a0a0a] overflow-hidden shadow-2xl relative" data-tour-id="tour-messages-chat">
             {/* Header */}
             <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/20 backdrop-blur-md z-10">
                 <div className="flex items-center gap-4">
@@ -228,7 +228,7 @@ export function TenantIrisChat() {
                     </div>
                     <div>
                         <h3 className="font-bold text-white text-base">iRis Assistant</h3>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
                             <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
                             <span className="text-[10px] text-neutral-400 font-medium">Always Available</span>
                         </div>
@@ -351,7 +351,7 @@ export function TenantIrisChat() {
             </div>
 
             {/* Input Area */}
-            <div className="shrink-0 p-6 bg-neutral-900/50 backdrop-blur-xl border-t border-white/5 z-10 w-full flex justify-center">
+            <div className="shrink-0 p-6 bg-neutral-900/50 backdrop-blur-xl border-t border-white/5 z-10 w-full flex justify-center" data-tour-id="tour-messages-input">
                 <div className="max-w-4xl w-full flex flex-col gap-3 relative">
                     {/* Feature Suggester */}
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
