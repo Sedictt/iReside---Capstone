@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DFD 1 for Admins - Gane and Sarson</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .page {
+      max-width: 1500px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p {
+      margin: 0 0 18px;
+      color: #4b5563;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .legend span {
+      border: 1px solid #d1d5db;
+      background: #f9fafb;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #4b5563;
+    }
+    .diagram {
+      overflow: auto;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: #ffffff;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 1350px;
+      height: auto;
+    }
+    .section {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      fill: #6b7280;
+    }
+    .entity {
+      fill: #ffffff;
+      stroke: #111827;
+      stroke-width: 2;
+    }
+    .process {
+      fill: #ffffff;
+      stroke: #111827;
+      stroke-width: 2;
+    }
+    .store-line {
+      stroke: #111827;
+      stroke-width: 2;
+    }
+    .flow {
+      fill: none;
+      stroke: #111827;
+      stroke-width: 2;
+      marker-end: url(#arrow);
+    }
+    .label {
+      font-size: 12px;
+      fill: #111827;
+    }
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      fill: #111827;
+    }
+    .small {
+      font-size: 12px;
+      fill: #4b5563;
+    }
+    .num {
+      font-size: 12px;
+      font-weight: 700;
+      fill: #111827;
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>DFD 1 for Admins</h1>
+    <p>
+      Cleaned, textbook-style Level 1 DFD using a Gane and Sarson layout. The super administrator is the main external entity, admin processes are stacked vertically, and each one connects to its main governance data store.
+    </p>
+
+    <div class="legend">
+      <span>External Entity: Super Administrator</span>
+      <span>Processes are vertically stacked for readability</span>
+      <span>Each process maps to one main store</span>
+      <span>The layout now follows the sample more closely</span>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1400 900" role="img" aria-label="Admin level 1 data flow diagram">
+        <defs>
+          <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="4" orient="auto">
+            <path d="M0,0 L9,4 L0,8" fill="none" stroke="#111827" stroke-width="1.8"></path>
+          </marker>
+        </defs>
+
+        <text x="90" y="80" class="section">External Entity</text>
+        <text x="565" y="80" class="section">Processes</text>
+        <text x="1120" y="80" class="section">Data Stores</text>
+
+        <rect x="90" y="340" width="210" height="120" rx="10" class="entity"></rect>
+        <text x="195" y="392" text-anchor="middle" class="title">Administrator</text>
+        <text x="195" y="420" text-anchor="middle" class="small">Uses the admin portal</text>
+
+        <g transform="translate(500 110)">
+          <rect width="230" height="76" rx="10" class="process"></rect>
+          <line x1="0" y1="24" x2="230" y2="24" class="store-line"></line>
+          <text x="115" y="16" text-anchor="middle" dominant-baseline="central" class="num">1.0</text>
+          <text x="115" y="49" text-anchor="middle" class="title">Login</text>
+        </g>
+
+        <g transform="translate(500 250)">
+          <rect width="230" height="76" rx="10" class="process"></rect>
+          <line x1="0" y1="24" x2="230" y2="24" class="store-line"></line>
+          <text x="115" y="16" text-anchor="middle" dominant-baseline="central" class="num">2.0</text>
+          <text x="115" y="49" text-anchor="middle" class="title">Registration Review</text>
+        </g>
+
+        <g transform="translate(500 390)">
+          <rect width="230" height="76" rx="10" class="process"></rect>
+          <line x1="0" y1="24" x2="230" y2="24" class="store-line"></line>
+          <text x="115" y="16" text-anchor="middle" dominant-baseline="central" class="num">3.0</text>
+          <text x="115" y="49" text-anchor="middle" class="title">User Management</text>
+        </g>
+
+        <g transform="translate(500 530)">
+          <rect width="230" height="76" rx="10" class="process"></rect>
+          <line x1="0" y1="24" x2="230" y2="24" class="store-line"></line>
+          <text x="115" y="16" text-anchor="middle" dominant-baseline="central" class="num">4.0</text>
+          <text x="115" y="49" text-anchor="middle" class="title">Metrics</text>
+        </g>
+
+        <g transform="translate(500 670)">
+          <rect width="230" height="76" rx="10" class="process"></rect>
+          <line x1="0" y1="24" x2="230" y2="24" class="store-line"></line>
+          <text x="115" y="16" text-anchor="middle" dominant-baseline="central" class="num">5.0</text>
+          <text x="115" y="49" text-anchor="middle" class="title">Notes and Audit</text>
+        </g>
+
+        <g transform="translate(1080 110)">
+          <line x1="0" y1="0" x2="0" y2="76" class="store-line"></line>
+          <line x1="0" y1="0" x2="240" y2="0" class="store-line"></line>
+          <line x1="0" y1="76" x2="240" y2="76" class="store-line"></line>
+          <line x1="50" y1="0" x2="50" y2="76" class="store-line"></line>
+          <text x="25" y="40" text-anchor="middle" dominant-baseline="central" class="num">D1</text>
+          <text x="145" y="40" text-anchor="middle" dominant-baseline="central" class="title">profile</text>
+        </g>
+
+        <g transform="translate(1080 250)">
+          <line x1="0" y1="0" x2="0" y2="76" class="store-line"></line>
+          <line x1="0" y1="0" x2="240" y2="0" class="store-line"></line>
+          <line x1="0" y1="76" x2="240" y2="76" class="store-line"></line>
+          <line x1="50" y1="0" x2="50" y2="76" class="store-line"></line>
+          <text x="25" y="40" text-anchor="middle" dominant-baseline="central" class="num">D2</text>
+          <text x="145" y="40" text-anchor="middle" dominant-baseline="central" class="title">application</text>
+        </g>
+
+        <g transform="translate(1080 390)">
+          <line x1="0" y1="0" x2="0" y2="76" class="store-line"></line>
+          <line x1="0" y1="0" x2="240" y2="0" class="store-line"></line>
+          <line x1="0" y1="76" x2="240" y2="76" class="store-line"></line>
+          <line x1="50" y1="0" x2="50" y2="76" class="store-line"></line>
+          <text x="25" y="40" text-anchor="middle" dominant-baseline="central" class="num">D3</text>
+          <text x="145" y="40" text-anchor="middle" dominant-baseline="central" class="title">user</text>
+        </g>
+
+        <g transform="translate(1080 530)">
+          <line x1="0" y1="0" x2="0" y2="76" class="store-line"></line>
+          <line x1="0" y1="0" x2="240" y2="0" class="store-line"></line>
+          <line x1="0" y1="76" x2="240" y2="76" class="store-line"></line>
+          <line x1="50" y1="0" x2="50" y2="76" class="store-line"></line>
+          <text x="25" y="40" text-anchor="middle" dominant-baseline="central" class="num">D4</text>
+          <text x="145" y="40" text-anchor="middle" dominant-baseline="central" class="title">metrics</text>
+        </g>
+
+        <g transform="translate(1080 670)">
+          <line x1="0" y1="0" x2="0" y2="76" class="store-line"></line>
+          <line x1="0" y1="0" x2="240" y2="0" class="store-line"></line>
+          <line x1="0" y1="76" x2="240" y2="76" class="store-line"></line>
+          <line x1="50" y1="0" x2="50" y2="76" class="store-line"></line>
+          <text x="25" y="40" text-anchor="middle" dominant-baseline="central" class="num">D5</text>
+          <text x="145" y="40" text-anchor="middle" dominant-baseline="central" class="title">audit</text>
+        </g>
+
+        <path d="M300 390 H500 V148" class="flow"></path>
+        <text x="360" y="170" class="label">Admin Credentials</text>
+
+        <path d="M300 400 H500 V288" class="flow"></path>
+        <text x="350" y="310" class="label">Review Decision</text>
+
+        <path d="M300 410 H500 V428" class="flow"></path>
+        <text x="362" y="448" class="label">User Query</text>
+
+        <path d="M300 420 H500 V568" class="flow"></path>
+        <text x="360" y="588" class="label">KPI Request</text>
+
+        <path d="M300 430 H500 V708" class="flow"></path>
+        <text x="360" y="728" class="label">Admin Notes</text>
+
+        <path d="M730 148 H1080" class="flow"></path>
+        <text x="864" y="135" class="label">Profile Data</text>
+
+        <path d="M730 288 H1080" class="flow"></path>
+        <text x="854" y="275" class="label">Application Record</text>
+
+        <path d="M730 428 H1080" class="flow"></path>
+        <text x="862" y="415" class="label">User Record</text>
+
+        <path d="M730 568 H1080" class="flow"></path>
+        <text x="856" y="555" class="label">Metrics Data</text>
+
+        <path d="M730 708 H1080" class="flow"></path>
+        <text x="856" y="695" class="label">Audit Record</text>
+      </svg>
+    </div>
+
+    <div class="note">
+      This version now follows the same structured presentation style as your sample, so it should read much more like a formal capstone DFD plate.
+    </div>
+  </div>
+</body>
+</html>

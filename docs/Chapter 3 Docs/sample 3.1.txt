@@ -1,0 +1,65 @@
+CHAPTER 3
+
+DESIGN AND METHODOLOGY
+
+This chapter reviews the detailed design and methodology employed in developing CBDA. The
+chapter outlines the development model followed throughout the project lifecycle and provides an
+analysis of requirements based on the current manual processes in the locale. Specifically, it outlines the
+functional requirements that guide the system design and presents diagrams illustrating the system
+architecture, data flow, and user interactions of the system. The chapter also includes user interface design
+as well as a testing and evaluation plan to validate the system’s functionality and effectiveness in
+addressing user requirements.
+3.1 Development Model
+This section explains the chosen software development life cycle for the project, which is Agile
+Scrum Methodology.
+Agile Scrum Development Model
+
+Figure x Agile Scrum Software Development Model
+
+Agile Scrum is an iterative and incremental framework that optimizes predictability, managing
+risk, and continuous refinement. Agile Scrum engages with groups of skilled people who can successfully
+finish tasks, as well as share or acquire skills when needed. The development process for Agile Scrum is
+
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+divided into time-boxed iterations called sprints, which typically lasts 1 to 4 weeks; Each Sprint has a
+fixed length and is the period where team ideas get turned into value. After every end of each Sprint
+determines the work done from the Product Backlog to achieve the projected Product Goal set by the
+Product Owner.
+But for a Sprint to work in Agile Scrum, it must embody the three pillars of transparency,
+inspection, and adaptation. Transparency states that the process of work must be visible to those
+performing the work, as well as those receiving the work. With transparency established, only then the
+process of inspecting the work could be successfully initiated. Inspection states that progress must be
+examined frequently to timely detect potential risks or problems in the project. Inspecting the work with
+transparency leads to adaptation for each requirement in the project. Adaptation modifies the product
+specifications to the requirements of the stakeholder, ensuring that any aspect of the process that deviate
+outside desired stakeholder limits will be corrected and fixed; The Product Owner is responsible for
+defining the product backlog as representation of stakeholders, while the Scrum Master facilitates the
+process of Agile Scrum for the Development Team, making sure every member embodies the three pillars
+of transparency, inspection, and adaptation. (Schwaber and Sutherland, 2020)
+In line with the system, the development of CBDA begin with the Product Vision, wherein the
+Product Owner collect various information about the client, which is the CEIT Library; The Product
+Owner collaborates and lists all the challenges faced by the stakeholders, determining if a suitable system
+can be used as a solution intervention. The Product Owner then defines the Product Backlog, listing all
+the features of the system that will serve value to the stakeholders and starting the Spring Planning.
+The Sprint Planning begins as the Development Team meets and defines their roles, selecting
+major tasks from the Product Backlog to be completed in the upcoming Sprint. The Development Team
+breaks down the major tasks of CBDA into smaller units called User Stories. The selected User Stories
+will then be contained in the Sprint Backlog used in Sprints to iteratively and incrementally create CBDA.
+
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+The Scrum Master conducts daily stand-up meetings to facilitate communication and discuss
+progress, challenges, and upcoming tasks between each member during the Sprint. Aside from meetings,
+the team also regularly conducts testing to maintain the same level of quality as desired by the
+stakeholders. The team engages in Sprint Review after the end of each Sprint to present a small working
+product to the stakeholders, aiming to be evaluated for progress and feedback on the system. Following
+the Sprint Review leads the Sprint Retrospective for reflection and opinions on the completed Sprint.
+(Geeks for Geeks, 2023). This process repeats until the final testing and the deployment of the system in
+the CEIT Library.

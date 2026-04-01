@@ -1,107 +1,104 @@
-# iReside — Specific Objectives (Updated)
-
-The following specific objectives define the measurable, actionable goals of the iReside property and tenant management system. Each objective is mapped to the corresponding functional requirements and aligned with the post-refactor system philosophy — a **private, landlord-centric management ecosystem** with no public discovery, listing, or marketplace functionality.
-
----
-
-## 1. To develop a role-based authentication and access control module that provisions user accounts through approved onboarding workflows and restricts system access based on assigned roles.
-
-This objective ensures that only authorized users — Super Administrators, Landlords, and Tenants — can access the system, with each role routed to its appropriate portal upon authentication. Tenant accounts are provisioned exclusively through landlord-initiated or administrator-approved onboarding processes, not through self-registration. The system maintains secure sessions, enforces role-based permissions on all pages, records, and actions, and provides secure sign-out functionality.
-
-**Mapped Requirements:** REQ-1, REQ-2, REQ-3, REQ-4
-
----
-
-## 2. To develop a property and unit management module that enables landlords to create, configure, and maintain properties and their associated units as the foundation for applications, leases, and tenant occupancy.
-
-This objective provides landlords with the tools to define property records and manage individual units within each property, including attributes such as pricing, deposits, amenities, and availability status. Property and unit data persists across the system and serves as the structural foundation for walk-in applications, lease assignments, and tenant residency. The module includes a Modular Floor Planner (2D Spatial Canvas) with drag-and-drop layout design, grid-snapping alignment, and real-time state persistence to the backend, as well as support for media uploads and structural modifications.
-
-**Mapped Requirements:** REQ-5, REQ-6, REQ-7, REQ-8, REQ-33, REQ-34, REQ-35, REQ-36
-
----
-
-## 3. To develop a walk-in application and lease finalization module that allows landlords to record prospective tenant applications, manage their approval status, and finalize approved applications into active lease records with provisioned tenant accounts.
-
-This objective supports the landlord-driven onboarding workflow where landlords record applicant details through a walk-in application interface, attach required documents and checklist items, and manage application status from pending through approval. Upon approval, the system finalizes the application into a lease record and automatically provisions a tenant account with credentials for system access.
-
-**Mapped Requirements:** REQ-9, REQ-10, REQ-11, REQ-12
-
----
-
-## 4. To develop a digital lease management module that supports lease creation, digital signing with dual signing modes, document storage, and lifecycle tracking from draft through active status.
-
-This objective enables landlords and tenants to create, review, sign, and monitor lease agreements digitally. The module supports both in-person (dual) and remote (asynchronous) signing modes with tenant-first signing order enforcement, secure JWT-based signing links for remote tenant signing, and a comprehensive audit trail capturing timestamps, IP addresses, and user agents for all signing events. The system implements a lease status state machine with validated transitions (draft → pending_tenant_signature → pending_landlord_signature → active), preserves wizard state when navigating to external management tools, and provides a document vault for signed agreements, verified move-in condition reports, and lease amendments. Lease progress, start and end dates, remaining days, and renewal eligibility are displayed for both landlords and tenants.
-
-**Mapped Requirements:** REQ-13, REQ-14, REQ-15, REQ-16, REQ-50, REQ-51, REQ-52, REQ-53, REQ-54, REQ-55
-
----
-
-## 5. To develop a payments and billing module that displays rent and utility charges, tracks payment status, records transaction history, and provides landlords with a live financial ledger for monitoring billing activity.
-
-This objective enables tenants to view outstanding amounts, payment breakdowns (base rent, water, electricity), and completed transactions, while landlords can monitor overdue, pending, and completed invoices through a real-time financial ledger. The system records and displays payment history and chronological transaction logs, and provides invoice management capabilities for landlords.
-
-**Mapped Requirements:** REQ-17, REQ-18, REQ-19, REQ-20
-
----
-
-## 6. To develop a maintenance request management module that allows tenants to submit repair tickets with supporting details and images, and enables landlords to track, update, and resolve maintenance requests through a centralized dashboard.
-
-This objective provides tenants with the ability to submit maintenance requests for their unit or property with image attachments and descriptions. Landlords can monitor all repair tickets through a maintenance dashboard, update request status from pending to in-progress to completed, and review maintenance request history. The system validates submission requirements and notifies relevant parties of new and updated requests.
-
-**Mapped Requirements:** REQ-21, REQ-22, REQ-23, REQ-24
-
----
-
-## 7. To develop a real-time messaging module that facilitates communication between tenants, landlords, and administrators with message delivery tracking, media sharing, and content moderation.
-
-This objective enables authorized users to exchange messages in real time through a messaging portal with typing indicators, read receipts, presence indicators, and conversation history with timestamps. The system supports text, image, and file-based messages within conversation threads, and filters unsafe or spam content before delivery using AI-powered moderation to ensure a safe communication environment.
-
-**Mapped Requirements:** REQ-25, REQ-26, REQ-27, REQ-28
-
----
-
-## 8. To develop an AI-powered tenant assistant (iRis) that provides context-aware, natural-language support using Retrieval-Augmented Generation (RAG) for tenant inquiries about building rules, amenities, lease details, and property information.
-
-This objective allows tenants to submit free-form, natural-language questions and receive contextual AI-generated responses. The iRis assistant retrieves relevant system data — including tenant profile, property details, unit information, active lease details, recent maintenance requests, and recent payments — to generate context-aware responses. The system provides both a full-page chat interface and a floating chat widget, supports conversation history, and returns fallback responses when the AI service is unavailable.
-
-**Mapped Requirements:** REQ-29, REQ-30, REQ-31, REQ-32
-
----
-
-## 9. To develop an administration and governance module that provides system administrators with platform-wide metrics, registration pipeline management, user governance tools, and landlord registration review capabilities.
-
-This objective equips Super Administrators with a live metrics dashboard displaying real-time KPIs (total users, properties, leases, pending reviews), a registration pipeline for monitoring application flow, user management with role-specific filtering and search, and a detailed registration review interface for vetting landlord applications including document and photo inspection. The system stores administrative notes and decisions, restricts admin features to authorized users, and provides secure sign-out from the administrator portal.
-
-**Mapped Requirements:** REQ-37, REQ-38, REQ-39, REQ-40
-
----
-
-## 10. To implement security and data protection measures that enforce role-based access control, prevent unauthorized data access, and protect sensitive information across all system modules.
-
-This objective ensures that the system enforces role-based access control at both the application and database levels (via Supabase Auth and PostgreSQL Row-Level Security), prevents unauthorized data access across all modules, maintains secure sign-out functionality, and protects sensitive data including personal information, lease documents, and financial records. Each property operates as an isolated ecosystem, ensuring strict data isolation between properties and between user roles.
-
-**Mapped Requirements:** REQ-41, REQ-42, REQ-43, REQ-44
-
----
-
-## 11. To develop a landlord analytics, reporting, and auditing module that provides portfolio performance insights through real-time KPI dashboards, AI-driven recommendations, downloadable reports, and activity logging.
-
-This objective provides landlords with a comprehensive view of portfolio performance, including primary KPIs (earnings, active tenants, occupancy rate, pending issues) and extended KPIs (maintenance cost, lease renewals, portfolio value). The module supports simplified and detailed analytics modes, date range filtering with presets and custom ranges, AI-driven performance summaries and strategic recommendations, and featured property analytics. Landlords can generate branded PDF reports and CSV exports for auditing, and the system maintains an export history log. Fallback insights are provided when the AI service is unavailable, and all report generation activity is logged for audit purposes.
-
-**Mapped Requirements:** REQ-45, REQ-46, REQ-47, REQ-48, REQ-49
-
----
-
-## 12. To develop a community hub module that enables building-wide engagement through discussion posts, photo albums, resident polls, management notices, and utility alerts, with role-based moderation and approval workflows.
-
-This objective provides a shared community space for landlords and tenants within each property. Tenants can create discussion posts, share photo albums, and participate in polls, while landlords can publish management notices and utility alerts. The module supports multi-reaction engagement (like, heart, thumbs up, clap, celebration), threaded comments, post saving, and content reporting. Landlords and administrators have access to an approval queue and moderation dashboard for reviewing and managing resident-submitted content before publication.
-
-**Mapped Requirements:** Derived from system overview — Community Hub module
-
----
-
-## 13. To develop interactive product tours and onboarding flows that guide new tenants through key system features across the dashboard, messaging, lease management, and community modules.
-
-This objective ensures that new tenants receive a structured, interactive introduction to the platform through step-by-step product tours anchored to key UI elements. Tours cover the tenant dashboard, messaging portal, lease management interface, and community hub, reducing the learning curve and improving initial user engagement with the system.
-
-**Mapped Requirements:** Derived from system overview — Onboarding & Tours module
+1.2.2 Specific Objectives
+1. To develop and evaluate iReside: A Modern Property and Tenant Management Platform with the following features for different user roles:
+	a. Enable Super Administrators to manage:
+		i. View key live metrics (Total Users, Properties, Leases, Pending Reviews).
+		ii. Monitor Registration Pipeline progress (Pending, Reviewing, Approved).
+		iii. Access the role-branded header with ambient glow branding.
+		iv. Contextual navigation with item descriptions and chevrons.
+		v. Manage user accounts using role-specific filter pills (All, Tenant, Landlord, Admin).
+		vi. Display user avatars with initials-based fallback.
+		vii. Combined Search + Filter for fast user lookup by name or email.
+		viii. Access Registration Review dashboard with status filter tabs.
+		ix. Open detailed Review Modals for applicant evaluation.
+		x. Review applicant-uploaded documents and profile photos.
+		xi. Add internal administrative notes to applications.
+		xii. Update application status with icon-coded badges (Approved, Rejected, Reviewing).
+		xiii. Execute destructive sign-out from the secure administrator sidebar.
+	b. Enable Landlords to manage:
+		i. View Dashboard performance via AI-driven KPI Insights.
+		ii. Toggle between "Simplified Mode" and "Detailed Analytics" for dashboard reading.
+		iii. Monitor Primary KPIs (Earnings, Active Tenants, Occupancy, Pending Issues).
+		iv. Monitor Extended KPIs (Maintenance Cost, Lease Renewals, Portfolio Value).
+		v. Analyze Featured Property data (Total Sales, Views, MOM Growth, Occupancy Rate).
+		vi. Select preset report ranges (7D, 30D, 90D, 1Y).
+		vii. Define custom start and end dates for performance filters.
+		viii. View sync status and database connectivity indicators.
+		ix. Generate iReside Branded PDF Reports for portfolio performance.
+		x. Generate and download CSV Reports for data auditing.
+		xi. Review chronological history of exported reports and audit logs.
+		xii. Access the Modular Floor Planner drag-and-drop structural engine.
+		xiii. Align structural units using a precise 20px grid-snapping system.
+		xiv. Interactively manipulate and position corridors, units, and room spaces.
+		xv. Save structural changes in real-time to the persistent Supabase backend.
+		xvi. Specify advance rent requirements and security deposit amounts.
+		xvii. Manage unit media with slots for Bedroom, Bathroom, Kitchen, and Living areas.
+		xviii. Define custom room descriptions, amenities, and features.
+		xix. Centralized Maintenance Dashboard for tracking all repair tickets.
+		xx. Assign priority status to maintenance tasks (Pending, In-Progress, Completed).
+		xxi. View multi-image galleries and descriptions in maintenance tickets.
+		xxii. Monitor active lease progress via live dashboard tracking charts.
+		xxiii. Access the Smart Document Vault for master agreements and reports.
+		xxiv. Calculate and view renewal eligibility windows dynamically.
+		xxv. Contact assigned tenants via direct messaging or one-click calling.
+		xxvi. Monitor the Live Financial Ledger for overdue and pending invoices.
+		xxvii. View dynamic payment breakdowns (Base Rent, Water, Electricity).
+		xxviii. Create and track invoices for tenant billing.
+		xxix. Record walk-in applications for prospective tenants with required documents and checklists.
+		xxx. Save walk-in applications as pending or approved and update their status.
+		xxxi. Finalize approved applications into lease records and provision tenant accounts with credentials.
+		xxxii. Select lease signing mode (in-person dual signing or remote asynchronous signing).
+		xxxiii. Enforce tenant-first signing order during the lease signing workflow.
+		xxxiv. Generate secure JWT-based signing links with 30-day expiration for remote tenant signing.
+		xxxv. Access a comprehensive audit trail for all signing events with timestamps, IP addresses, and user agents.
+		xxxvi. Navigate to external management tools (Contract Templates, Property Policies, Amenities) with wizard state preserved.
+		xxxvii. Manage community board posts including approval queues and moderation dashboards.
+		xxxviii. Publish Management Notices and Utility Alerts for building-wide communication.
+		xxxix. Filter and manage community content by specific property.
+	c. Enable Tenants to:
+		i. View lease details, terms, status, and progress from the tenant dashboard.
+		ii. Access the read-only Unit Map for a visual representation of the building layout.
+		iii. Request unit transfers to vacant units directly from the unit map.
+		iv. Submit move-out requests digitally.
+		v. Sign digital leases through signature-ready agreements.
+		vi. Access the Document Vault for signed reports and amendments.
+		vii. Submit Maintenance Requests with image uploads and descriptions.
+		viii. View real-time status updates of repair tickets.
+		ix. Access the iRis AI Assistant for context-aware building support.
+		x. Ask natural language questions about amenities, rules, and lease details via RAG.
+		xi. View the Live Financial Ledger for monthly dues and balances.
+		xii. Access chronological payment history and transaction logs.
+		xiii. Use the Messaging Portal with typing indicators, read receipts, and presence indicators.
+		xiv. Send and receive files or media within conversation threads.
+		xv. Create Discussion Posts, Photo Albums, and participate in Resident Polls on the Community Hub.
+		xvi. React to community posts with multi-reactions (Like, Heart, Thumbs Up, Clap, Celebration).
+		xvii. Engage in threaded comments on community posts.
+		xviii. Bookmark and save important community discussions.
+		xix. Report community content for spam or harassment.
+		xx. Complete interactive Product Tours for Dashboard, Messages, Lease, and Community modules.
+		xxi. Follow step-by-step onboarding flows as a new tenant.
+	d. For all users, the system shall:
+		i. Ensure secure login/logout via Supabase Auth.
+		ii. Enforce database-level Row Level Security (RLS) for strict data isolation.
+		iii. Maintain property-level data isolation where each property operates as a private, independent ecosystem.
+		iv. Execute real-time message moderation and toxic content filtering via AI.
+		v. Maintain smooth UI transitions via Framer Motion animations.
+		vi. Provide skeleton loading states for data-heavy components.
+		vii. Use modern typography (Geist, Rethink Sans) for enhanced readability.
+		viii. Deliver mobile-responsive interfaces across all modules.
+2. To develop iReside using appropriate modern tools and programming technologies to ensure system efficiency and usability:
+	a. Framework: To program a web-based application using Next.js 16 (App Router) and TypeScript as the development environment.
+	b. Frontend: To implement the UI using React 19, Tailwind CSS 4, Radix UI, and Framer Motion for modern interactivity.
+	c. Backend: To utilize Supabase for backend operations, PostgreSQL database management, Real-time functionality, and Storage.
+	d. Intelligence: To integrate Groq Llama 3.1 8B via the OpenAI SDK for RAG-powered intelligence, AI chat moderation, and landlord analytics.
+	e. Interactivity: To implement drag-and-drop structural logic using @dnd-kit/core and @dnd-kit/utilities.
+	f. Security: To enforce authentication and data protection using Supabase Auth and Row-Level Security (RLS).
+3. To determine the level of conformity of iReside to the international standard ISO 25010:
+	a. Functional Suitability (Completeness, Correctness, Appropriateness)
+	b. Performance Efficiency (Time behavior, Resource utilization, Capacity)
+	c. Compatibility (Co-existence, Interoperability)
+	d. Interaction Capability (Appropriateness recognizability, Learnability, Operability, User engagement)
+	e. Reliability (Availability, Fault tolerance, Recoverability)
+	f. Security (Confidentiality, Integrity, Non-repudiation, Accountability, Authenticity)
+	g. Maintainability (Modularity, Reusability, Analyzability, Modifiability, Testability)
+	h. Flexibility (Adaptability, Scalability, Installability)
+	i. Safety (Operational constraints, Risk identification, Fail-safe measures, Hazard warnings)

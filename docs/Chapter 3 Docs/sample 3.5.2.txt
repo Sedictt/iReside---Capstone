@@ -1,0 +1,50 @@
+3.5.2 Proposed System Level 1 Diagram
+
+Figure 17. Data Flow Diagram Level 1 of Administrator
+
+The Administrator can login to the system, as well as create, manage, and delete user accounts for
+Chairperson, Researchers, Library Staff, and other Administrators. Furthermore, they can create, manage,
+
+
+and delete research manuscripts and manuscript files, as well as approve manuscript submissions by
+chairpersons in the system’s database. They are also able to view system logs and analytics, approve or
+reject access requests to manuscripts, receive notifications, and access the about module for system
+information. To view and examine the system from a researcher’s perspective, they can perform
+functionalities a researcher is able to accomplish without asking for permission from another
+administrator.
+
+
+
+Figure 18. Data Flow Diagram Level 1 of Chairperson
+
+The Chairperson can login to the system, as well as create, publish, unpublish, edit, and delete
+research manuscripts and manuscript files for their department in the system’s database. They are able to
+receive notifications and access the about module for system information. To view and examine the
+system from a researcher’s perspective, Chairpersons can perform functionalities a researcher is able to
+accomplish, albeit still requiring permission from library staff or administrators when requesting
+manuscripts from other departments.
+
+
+
+Figure 19. Data Flow Diagram Level 1 of Library Staff
+
+The Library Staff can login to the system, view activities of researcher accounts, send warning
+messages to researcher accounts, as well as enable and disable their accounts. Moreover, they are also in
+charge of accepting or rejecting access to research manuscripts in the system. They are also able to
+receive notifications and access the about module for system information.
+
+
+
+Figure 20. Data Flow Diagram Level 1 of Researcher
+
+
+
+The researcher can login to the system, as well as search and browse research articles in the
+system. They are also able to create and manage bookmarks and references from these articles, and export
+references in APA, MLA, or Chicago format. Furthermore, they can request for access to the full version
+of manuscripts and be able to view them once approved by Administrators or Library Staff. Researchers
+are also able to create and manage teams, as well as send, accept, and request team invitations. They also
+have access to creating and managing personal chatbot discourse conversations. Lastly, they are able to
+receive notifications about their requests in the requests, as well as team activities and warnings from
+library staff or administrators. They can also view information about the system through the about
+module.

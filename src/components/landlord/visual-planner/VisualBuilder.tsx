@@ -2612,113 +2612,95 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     )}
 
                     {readOnly && transferModalUnit && (
-                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md pointer-events-auto">
+                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 pointer-events-auto">
                             <motion.div 
-                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                className="w-full max-w-[480px] rounded-3xl border border-white/10 bg-[#1a1c23] shadow-2xl overflow-hidden relative"
+                                className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl overflow-hidden relative flex flex-col"
                             >
-                                {/* Decorative elements */}
-                                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/20 to-purple-600/20 blur-2xl -z-10"></div>
-                                <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/30 rounded-full blur-3xl -z-10"></div>
-                                
-                                {/* Hero Header */}
-                                <div className="relative h-32 w-full overflow-hidden shrink-0">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/40 to-purple-600/40 mix-blend-overlay z-0"></div>
-                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-40 z-0 grayscale-[0.3]"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c23] via-[#1a1c23]/60 to-transparent z-10"></div>
-                                    <div className="absolute inset-0 bg-black/10 z-10"></div>
-                                     
-                                     <button 
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                                    <div className="flex items-center gap-3 text-slate-800 dark:text-slate-100">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                            <span className="material-icons-round">move_down</span>
+                                        </div>
+                                        <h3 className="text-lg font-semibold">Unit Transfer Request</h3>
+                                    </div>
+                                    <button 
                                         title="Close"
                                         onClick={() => setTransferModalUnit(null)}
-                                        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/20 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white border border-white/10 transition-all"
-                                     >
-                                        <span className="material-icons-round text-[18px]">close</span>
-                                     </button>
-
-                                    <div className="absolute bottom-4 left-6 z-20 flex items-end gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-purple-600 p-[2px] shadow-lg shadow-primary/30">
-                                            <div className="w-full h-full bg-[#1a1c23] rounded-[14px] flex items-center justify-center">
-                                                <span className="material-icons-round text-primary text-2xl">move_down</span>
-                                            </div>
-                                        </div>
-                                        <div className="pb-1">
-                                            <h3 className="text-2xl font-bold text-white tracking-tight leading-none drop-shadow-lg">Unit Transfer</h3>
-                                        </div>
-                                    </div>
+                                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                                    >
+                                        <span className="material-icons-round text-xl">close</span>
+                                    </button>
                                 </div>
 
-                                <div className="px-6 pb-6 pt-3 relative z-20">
-                                    <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-                                        You are requesting to transfer your current lease to <span className="text-white font-bold bg-white/10 px-2 py-[2px] rounded-md border border-white/10 shadow-sm mx-1">{transferModalUnit.name}</span>.<br />This request is subject to landlord approval.
+                                <div className="px-6 py-6">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                                        You are requesting to transfer your current lease to <span className="font-semibold text-slate-900 dark:text-white px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">{transferModalUnit.name}</span>. This request is subject to landlord approval.
                                     </p>
                                     
                                     {transferSuccess ? (
-                                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8 text-center animate-in fade-in zoom-in duration-300 relative overflow-hidden group">
-                                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                            <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4 relative z-10">
-                                                <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping opacity-75"></div>
-                                                <span className="material-icons-round text-emerald-400 text-3xl">check_circle</span>
+                                        <div className="flex flex-col items-center justify-center py-6 px-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl text-center">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mb-4">
+                                                <span className="material-icons-round text-2xl">check_circle</span>
                                             </div>
-                                            <h4 className="text-emerald-400 font-bold text-lg mb-2 relative z-10">Request Submitted!</h4>
-                                            <p className="text-emerald-400/80 text-sm relative z-10">Your landlord has been notified and will review your transfer request shortly.</p>
+                                            <h4 className="text-emerald-800 dark:text-emerald-400 font-semibold mb-1">Request Submitted!</h4>
+                                            <p className="text-sm text-emerald-600 dark:text-emerald-400/80">Your landlord has been notified and will review your transfer request shortly.</p>
                                         </div>
                                     ) : (
                                         <form onSubmit={handleTransferSubmit} className="space-y-6">
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block pl-1">
-                                                    Transfer Justification <span className="text-slate-500 ml-1 font-normal lowercase">(Optional)</span>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                                                    Transfer Justification <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
                                                 </label>
-                                                <div className="relative group">
+                                                <div className="relative">
                                                     <textarea
                                                         value={transferReason}
                                                         onChange={(e) => setTransferReason(e.target.value)}
-                                                        placeholder="E.g., Needing more space for a home office, expecting a child, etc."
-                                                        className="w-full h-32 bg-[#23242f]/80 border border-slate-700/50 rounded-2xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-[#1a1c23] resize-none transition-all shadow-inner peer"
+                                                        placeholder="e.g., Needing more space for a home office..."
+                                                        className="w-full min-h-[100px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none shadow-sm"
                                                     />
-                                                    <div className="absolute bottom-3 right-3 text-[10px] text-slate-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="absolute bottom-3 right-3 text-[10px] text-slate-400">
                                                         {transferReason.length} chars
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             {transferError && (
-                                                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3 animate-in fade-in duration-200">
-                                                    <div className="bg-rose-500/20 rounded-full p-1 mt-0.5 shrink-0">
-                                                        <span className="material-icons-round text-rose-400 text-[16px]">error_outline</span>
-                                                    </div>
-                                                    <div>
-                                                        <h5 className="text-sm font-bold text-rose-400 mb-0.5">Submission Failed</h5>
-                                                        <p className="text-xs text-rose-300">{transferError}</p>
+                                                <div className="flex items-start gap-3 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-500/10 p-4">
+                                                    <span className="material-icons-round text-rose-500 text-lg">error_outline</span>
+                                                    <div className="flex-1">
+                                                        <h5 className="text-sm font-semibold text-rose-800 dark:text-rose-400 mb-0.5">Submission Failed</h5>
+                                                        <p className="text-xs text-rose-600 dark:text-rose-300">{transferError}</p>
                                                     </div>
                                                 </div>
                                             )}
                                             
-                                            <div className="flex gap-3 justify-end pt-2 border-t border-white/5">
+                                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                                                 <button
                                                     type="button"
                                                     onClick={() => setTransferModalUnit(null)}
-                                                    className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all active:scale-95"
+                                                    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     type="submit"
                                                     disabled={isSubmittingTransfer}
-                                                    className="px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-purple-600 text-white hover:shadow-lg hover:shadow-primary/30 hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 disabled:cursor-not-allowed group active:scale-95"
+                                                    className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-surface-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                                 >
                                                     {isSubmittingTransfer ? (
                                                         <>
-                                                            <span className="material-icons-round text-[18px] animate-spin">refresh</span>
-                                                            <span className="tracking-wide">Processing...</span>
+                                                            <span className="material-icons-round text-lg animate-spin cursor-not-allowed">refresh</span>
+                                                            Sending...
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <span className="tracking-wide">Submit Request</span>
-                                                            <span className="material-icons-round text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                                            Submit Request
+                                                            <span className="material-icons-round text-lg text-white/80">arrow_forward</span>
                                                         </>
                                                     )}
                                                 </button>
