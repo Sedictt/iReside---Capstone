@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iReside Package Diagram</title>
+  <style>
+    :root {
+      --page-bg: #f8f8f6;
+      --ink: #1f1f1f;
+      --line: #2d2d2d;
+      --paper: #ffffff;
+      --muted: #6b6b6b;
+      --tint: #f1f3f0;
+      --import: #4a4a4a;
+      --access: #2f2f2f;
+      --shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .page {
+      max-width: 1680px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 18px;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 1.85rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .page-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .diagram-scroll {
+      overflow: auto;
+      padding: 8px 0 18px;
+    }
+
+    .diagram-frame {
+      position: relative;
+      min-width: 1480px;
+      padding: 18px;
+      border: 1px solid #cfcfc8;
+      background: #fcfcfb;
+    }
+
+    /* UML package styling */
+    .uml-package {
+      position: relative;
+      border: 1.5px solid var(--line);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      border-radius: 0;
+    }
+
+    .uml-package > .tab {
+      position: absolute;
+      top: -1.5px;
+      left: -1.5px;
+      width: 62px;
+      height: 18px;
+      border: 1.5px solid var(--line);
+      border-bottom: none;
+      background: var(--paper);
+    }
+
+    .uml-package.nested {
+      background: #fdfdfd;
+    }
+
+    .package-label {
+      padding: 18px 10px 10px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .nested .package-label {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    /* Main system boundary */
+    .system-boundary {
+      padding: 28px 24px 24px;
+    }
+
+    .system-boundary > .tab {
+      width: 86px;
+      height: 22px;
+    }
+
+    .system-title {
+      margin: 0 0 18px;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .system-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    .top-row,
+    .bottom-row {
+      display: grid;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .top-row {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .bottom-row {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .package-block {
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .package-block .package-label {
+      width: 100%;
+    }
+
+    /* API layer and nested package layout */
+    .api-layer {
+      padding: 24px 20px 18px;
+    }
+
+    .api-layer > .tab {
+      width: 74px;
+      height: 20px;
+    }
+
+    .api-layer .package-label {
+      font-size: 1.02rem;
+      padding-bottom: 14px;
+    }
+
+    .nested-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px 22px;
+      padding: 4px 4px 8px;
+    }
+
+    .nested-grid .uml-package {
+      min-height: 78px;
+    }
+
+    /* Legend */
+    .legend {
+      display: grid;
+      grid-template-columns: 180px 180px 1fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid #cfcfc8;
+      background: #fbfbfa;
+    }
+
+    .legend-title {
+      grid-column: 1 / -1;
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 54px;
+      color: var(--ink);
+      font-size: 0.92rem;
+    }
+
+    .legend-item .uml-package {
+      width: 82px;
+      height: 44px;
+      flex: 0 0 auto;
+      box-shadow: none;
+    }
+
+    .legend-item .uml-package .tab {
+      width: 32px;
+      height: 12px;
+    }
+
+    .legend-item .uml-package .package-label {
+      padding-top: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .legend-line {
+      position: relative;
+      width: 150px;
+      height: 34px;
+      flex: 0 0 auto;
+    }
+
+    .legend-line::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 18px;
+      top: 17px;
+      border-top: 1.5px dashed var(--line);
+    }
+
+    .legend-line::after {
+      content: "";
+      position: absolute;
+      right: 7px;
+      top: 13px;
+      width: 10px;
+      height: 10px;
+      border-top: 1.5px solid var(--line);
+      border-right: 1.5px solid var(--line);
+      transform: rotate(45deg);
+      background: transparent;
+    }
+
+    .legend-stereo {
+      position: absolute;
+      top: 0;
+      left: 34px;
+      padding: 1px 5px;
+      background: #fcfcfb;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    /* Dependency overlay */
+    .dependency-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .dependency {
+      position: absolute;
+      inset: 0;
+    }
+
+    .dependency-line {
+      position: absolute;
+      height: 0;
+      border-top: 1.5px dashed var(--line);
+      transform-origin: 0 0;
+    }
+
+    .dependency.import .dependency-line {
+      border-top-color: var(--import);
+    }
+
+    .dependency.access .dependency-line {
+      border-top-color: var(--access);
+    }
+
+    .dependency-arrow {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      transform-origin: 50% 50%;
+    }
+
+    .dependency-arrow::before,
+    .dependency-arrow::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 12px;
+      border-top: 1.5px solid var(--line);
+      transform-origin: 0 0;
+    }
+
+    .dependency-arrow::before {
+      transform: rotate(30deg);
+    }
+
+    .dependency-arrow::after {
+      transform: rotate(-30deg);
+    }
+
+    .dependency-label {
+      position: absolute;
+      padding: 0 4px;
+      font-size: 0.78rem;
+      background: #fcfcfb;
+      color: var(--line);
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        padding: 16px;
+      }
+
+      .page-header h1 {
+        font-size: 1.55rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <!-- Page heading -->
+    <header class="page-header">
+      <h1>iReside Package Diagram</h1>
+      <p>Classic UML-style package view of the main functional modules and package dependencies.</p>
+    </header>
+
+    <section class="diagram-scroll" aria-label="Scrollable UML package diagram">
+      <div class="diagram-frame" id="diagram-frame">
+        <!-- Large top-level system boundary -->
+        <section class="uml-package system-boundary" id="ireside-system" aria-label="iReside system package">
+          <span class="tab" aria-hidden="true"></span>
+          <h2 class="system-title">iReside</h2>
+
+          <!-- Dependency lines are drawn over the package layout -->
+          <div class="dependency-layer" id="dependency-layer" aria-hidden="true"></div>
+
+          <!-- Main package layout -->
+          <div class="system-grid">
+            <div class="top-row">
+              <section class="uml-package package-block" id="public-web" data-anchor-offset="10">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Public Web</div>
+              </section>
+
+              <section class="uml-package package-block" id="tenant-portal">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Tenant Portal</div>
+              </section>
+
+              <section class="uml-package package-block" id="landlord-portal">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Landlord Portal</div>
+              </section>
+
+              <section class="uml-package package-block" id="admin-portal" data-anchor-offset="-10">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Admin Portal</div>
+              </section>
+            </div>
+
+            <!-- API layer with nested packages -->
+            <section class="uml-package api-layer" id="api-layer">
+              <span class="tab" aria-hidden="true"></span>
+              <div class="package-label">API Layer</div>
+              <div class="nested-grid">
+                <section class="uml-package nested" id="auth-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Auth API</div>
+                </section>
+
+                <section class="uml-package nested" id="tenant-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Tenant API</div>
+                </section>
+
+                <section class="uml-package nested" id="landlord-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Landlord API</div>
+                </section>
+
+                <section class="uml-package nested" id="admin-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Admin API</div>
+                </section>
+
+                <section class="uml-package nested" id="messaging-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Messaging API</div>
+                </section>
+
+                <section class="uml-package nested" id="community-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Community API</div>
+                </section>
+
+                <section class="uml-package nested" id="lease-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Lease API</div>
+                </section>
+
+                <section class="uml-package nested" id="payments-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">Payments API</div>
+                </section>
+
+                <section class="uml-package nested" id="iris-api">
+                  <span class="tab" aria-hidden="true"></span>
+                  <div class="package-label">iRis API</div>
+                </section>
+              </div>
+            </section>
+
+            <div class="bottom-row">
+              <section class="uml-package package-block" id="messaging">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Messaging</div>
+              </section>
+
+              <section class="uml-package package-block" id="community">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Community</div>
+              </section>
+
+              <section class="uml-package package-block" id="lease-management">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Lease Management</div>
+              </section>
+
+              <section class="uml-package package-block" id="payments">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">Payments</div>
+              </section>
+
+              <section class="uml-package package-block" id="iris-ai">
+                <span class="tab" aria-hidden="true"></span>
+                <div class="package-label">iRis AI</div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- Small explanatory legend -->
+        <aside class="legend" aria-label="UML diagram legend">
+          <h2 class="legend-title">Legend</h2>
+
+          <div class="legend-item">
+            <div class="uml-package">
+              <span class="tab" aria-hidden="true"></span>
+              <div class="package-label">Package</div>
+            </div>
+            <span>package</span>
+          </div>
+
+          <div class="legend-item">
+            <div class="uml-package nested">
+              <span class="tab" aria-hidden="true"></span>
+              <div class="package-label">Nested</div>
+            </div>
+            <span>nested package</span>
+          </div>
+
+          <div class="legend-item">
+            <div class="legend-line" aria-hidden="true">
+              <span class="legend-stereo">&lt;&lt;access&gt;&gt;</span>
+            </div>
+            <span>usage dependency</span>
+          </div>
+
+          <div class="legend-item">
+            <div class="legend-line" aria-hidden="true">
+              <span class="legend-stereo">&lt;&lt;import&gt;&gt;</span>
+            </div>
+            <span>package import relationship</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Dependency definitions and layout hints for the UML package connectors.
+    const dependencies = [
+      { from: "public-web", to: "api-layer", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -120, my: -24 },
+      { from: "tenant-portal", to: "api-layer", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -34, my: -18 },
+      { from: "tenant-portal", to: "messaging", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -120, my: 0 },
+      { from: "tenant-portal", to: "community", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -78, my: -4 },
+      { from: "tenant-portal", to: "lease-management", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -14, my: -4 },
+      { from: "tenant-portal", to: "payments", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 38, my: -2 },
+      { from: "tenant-portal", to: "iris-ai", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 104, my: 0 },
+      { from: "landlord-portal", to: "api-layer", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 34, my: -18 },
+      { from: "landlord-portal", to: "messaging", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -158, my: 8 },
+      { from: "landlord-portal", to: "community", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -96, my: 6 },
+      { from: "landlord-portal", to: "lease-management", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -38, my: 2 },
+      { from: "landlord-portal", to: "payments", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 24, my: 2 },
+      { from: "admin-portal", to: "api-layer", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 114, my: -24 },
+      { from: "admin-portal", to: "community", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -124, my: 4 },
+      { from: "messaging-api", to: "messaging", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: -16, my: -10 },
+      { from: "community-api", to: "community", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 12, my: -10 },
+      { from: "lease-api", to: "lease-management", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 10, my: -10 },
+      { from: "payments-api", to: "payments", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 10, my: -10 },
+      { from: "iris-api", to: "iris-ai", stereotype: "<<access>>", type: "access", fromSide: "bottom", toSide: "top", mx: 12, my: -10 },
+      { from: "auth-api", to: "public-web", stereotype: "<<import>>", type: "import", fromSide: "top", toSide: "bottom", mx: -28, my: 6 },
+      { from: "tenant-api", to: "tenant-portal", stereotype: "<<import>>", type: "import", fromSide: "top", toSide: "bottom", mx: 0, my: 6 },
+      { from: "landlord-api", to: "landlord-portal", stereotype: "<<import>>", type: "import", fromSide: "top", toSide: "bottom", mx: 0, my: 6 },
+      { from: "admin-api", to: "admin-portal", stereotype: "<<import>>", type: "import", fromSide: "top", toSide: "bottom", mx: 12, my: 4 }
+    ];
+
+    const system = document.getElementById("ireside-system");
+    const layer = document.getElementById("dependency-layer");
+
+    function anchorPoint(element, side) {
+      const systemRect = system.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      const offset = Number(element.dataset.anchorOffset || 0);
+      const cx = rect.left - systemRect.left + rect.width / 2 + offset;
+      const cy = rect.top - systemRect.top + rect.height / 2;
+
+      if (side === "top") {
+        return { x: cx, y: rect.top - systemRect.top };
+      }
+      if (side === "bottom") {
+        return { x: cx, y: rect.bottom - systemRect.top };
+      }
+      if (side === "left") {
+        return { x: rect.left - systemRect.left, y: cy };
+      }
+      return { x: rect.right - systemRect.left, y: cy };
+    }
+
+    function drawDependencies() {
+      layer.innerHTML = "";
+
+      dependencies.forEach((item) => {
+        const from = document.getElementById(item.from);
+        const to = document.getElementById(item.to);
+        if (!from || !to) {
+          return;
+        }
+
+        const start = anchorPoint(from, item.fromSide || "right");
+        const end = anchorPoint(to, item.toSide || "left");
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        const midX = start.x + dx / 2 + (item.mx || 0);
+        const midY = start.y + dy / 2 + (item.my || 0);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = `dependency ${item.type}`;
+
+        const line = document.createElement("div");
+        line.className = "dependency-line";
+        line.style.left = `${start.x}px`;
+        line.style.top = `${start.y}px`;
+        line.style.width = `${Math.max(length - 14, 0)}px`;
+        line.style.transform = `rotate(${angle}deg)`;
+
+        const arrow = document.createElement("div");
+        arrow.className = "dependency-arrow";
+        arrow.style.left = `${end.x - 7}px`;
+        arrow.style.top = `${end.y - 7}px`;
+        arrow.style.transform = `rotate(${angle}deg)`;
+
+        const label = document.createElement("div");
+        label.className = "dependency-label";
+        label.textContent = item.stereotype;
+        label.style.left = `${midX}px`;
+        label.style.top = `${midY}px`;
+
+        wrapper.appendChild(line);
+        wrapper.appendChild(arrow);
+        wrapper.appendChild(label);
+        layer.appendChild(wrapper);
+      });
+    }
+
+    window.addEventListener("load", drawDependencies);
+    window.addEventListener("resize", drawDependencies);
+  </script>
+</body>
+</html>

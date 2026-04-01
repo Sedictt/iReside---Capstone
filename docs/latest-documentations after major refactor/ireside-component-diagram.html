@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iReside System — Component Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal-900: #003d35;
+    --teal-700: #00695c;
+    --teal-500: #00897b;
+    --teal-300: #4db6ac;
+    --teal-100: #b2dfdb;
+    --teal-50:  #e0f2f1;
+    --amber:    #f59e0b;
+    --amber-light: #fef3c7;
+    --line:     #37474f;
+    --bg:       #0f1a18;
+    --surface:  #162420;
+    --card:     #1e302c;
+    --port:     #00897b;
+    --white:    #ffffff;
+    --text-dim: #8ab5ae;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: relative;
+    z-index: 1;
+    padding: 48px 60px 32px;
+    border-bottom: 1px solid rgba(0,137,123,0.2);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .header-left h1 span {
+    color: var(--teal-300);
+  }
+
+  .header-left p {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .header-badge {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .badge-teal {
+    background: rgba(0,137,123,0.15);
+    color: var(--teal-300);
+    border: 1px solid rgba(0,137,123,0.3);
+  }
+
+  .badge-amber {
+    background: rgba(245,158,11,0.12);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+
+  /* ─── DIAGRAM AREA ─── */
+  .diagram-wrap {
+    position: relative;
+    z-index: 1;
+    padding: 40px 40px 20px;
+    overflow-x: auto;
+  }
+
+  svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* ─── LEGEND ─── */
+  .legend {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    padding: 20px 40px 48px;
+    border-top: 1px solid rgba(0,137,123,0.12);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+  }
+
+  .legend-item svg { flex-shrink: 0; }
+
+  /* ─── TOOLTIP ─── */
+  .tooltip {
+    position: fixed;
+    background: var(--card);
+    border: 1px solid rgba(0,137,123,0.4);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--teal-300);
+    font-family: 'DM Mono', monospace;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+    max-width: 220px;
+    line-height: 1.6;
+  }
+
+  .tooltip.visible { opacity: 1; }
+
+  /* ─── SVG ANIMATION ─── */
+  @keyframes dashIn {
+    from { stroke-dashoffset: 800; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  .animated-line {
+    animation: dashIn 1.2s ease forwards;
+  }
+
+  .component-box {
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+
+  .component-box:hover .comp-rect {
+    filter: brightness(1.2);
+  }
+
+  @keyframes pulse {
+    0%, 100% { r: 13; }
+    50% { r: 15; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>i<span>Reside</span> System</h1>
+    <p>UML Component Diagram · Residential Management Platform</p>
+  </div>
+  <div class="header-badge">
+    <span class="badge badge-teal">6 Components</span>
+    <span class="badge badge-teal">2 Actors</span>
+    <span class="badge badge-amber">1 External System</span>
+  </div>
+</header>
+
+<div class="diagram-wrap">
+<svg id="main-svg" width="1280" height="740" viewBox="0 0 1280 740" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <filter id="glow">
+    <feGaussianBlur stdDeviation="3" result="blur"/>
+    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+  </filter>
+  <filter id="glow-amber">
+    <feGaussianBlur stdDeviation="4" result="blur"/>
+    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+  </filter>
+  <linearGradient id="comp-grad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#26524a"/>
+    <stop offset="100%" stop-color="#1a3e38"/>
+  </linearGradient>
+  <linearGradient id="comp-grad-ext" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#3d2e10"/>
+    <stop offset="100%" stop-color="#2d2008"/>
+  </linearGradient>
+  <linearGradient id="bg-grad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#1a2f2a"/>
+    <stop offset="100%" stop-color="#152421"/>
+  </linearGradient>
+  <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+    <polygon points="0 0, 6 2.5, 0 5" fill="rgba(0,137,123,0.5)"/>
+  </marker>
+</defs>
+
+<!-- ═══════════════════════════════ BACKGROUND ═══════════════════════════════ -->
+<rect width="1280" height="740" fill="url(#bg-grad)"/>
+
+<!-- Grid dots -->
+<g opacity="0.06">
+  <pattern id="dots" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+    <circle cx="15" cy="15" r="1" fill="#00897b"/>
+  </pattern>
+  <rect width="1280" height="740" fill="url(#dots)"/>
+</g>
+
+<!-- ═══════════════════════════════ SUBSYSTEM BOUNDARY ═══════════════════════════════ -->
+<rect x="108" y="30" width="1060" height="695" rx="10"
+  fill="rgba(0,137,123,0.04)" stroke="#00897b" stroke-width="1.5" stroke-dasharray="12,6" opacity="0.8"/>
+
+<!-- Subsystem corner accent -->
+<rect x="108" y="30" width="50" height="4" rx="2" fill="#00897b" opacity="0.6"/>
+<rect x="108" y="30" width="4" height="50" rx="2" fill="#00897b" opacity="0.6"/>
+<rect x="1118" y="30" width="50" height="4" rx="2" fill="#00897b" opacity="0.6"/>
+<rect x="1164" y="30" width="4" height="50" rx="2" fill="#00897b" opacity="0.6"/>
+
+<!-- Subsystem label -->
+<text x="138" y="56" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.08em">«SUBSYSTEM»</text>
+<text x="138" y="74" font-family="'Playfair Display', serif" font-size="18" fill="#4db6ac" font-weight="700">iReside</text>
+
+<!-- Subsystem component icon (top-right) -->
+<rect x="1136" y="40" width="22" height="14" rx="2" fill="none" stroke="#00897b" stroke-width="1.5" opacity="0.7"/>
+<rect x="1128" y="44" width="16" height="9" rx="1" fill="#1a3e38" stroke="#00897b" stroke-width="1.5" opacity="0.7"/>
+
+<!-- ═══════════════════════════════ CONNECTION LINES (DRAWN FIRST) ═══════════════════════════════ -->
+
+<!-- 1. Resident → ResidentPortal -->
+<line x1="83" y1="232" x2="152" y2="232" stroke="#4db6ac" stroke-width="1.5" opacity="0.6"/>
+
+<!-- 2. Admin → AdminDashboard -->
+<line x1="83" y1="532" x2="152" y2="520" stroke="#4db6ac" stroke-width="1.5" opacity="0.6"/>
+
+<!-- 3. RP ↔ AuthService (UserAuth) - right-top port of RP to left of AS -->
+<polyline points="362,218 448,218 448,170 538,170"
+  fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.55" stroke-dasharray="none"/>
+
+<!-- 4. RP ↔ MaintenanceModule (MaintenanceRequest) -->
+<polyline points="258,278 258,382 533,382"
+  fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.55"/>
+
+<!-- 5. AdminDashboard ↔ MaintenanceModule (AdminAccess) -->
+<polyline points="362,528 478,528 478,408 533,408"
+  fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.55"/>
+
+<!-- 6. RP ↔ BillingService (BillingAccess) -->
+<polyline points="362,248 436,248 436,608 533,608"
+  fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.55"/>
+
+<!-- 7. AuthService ↔ PropertyDatabase (UserData) -->
+<polyline points="737,170 818,170 818,272 893,272"
+  fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.55"/>
+
+<!-- 8. MaintenanceModule ↔ PropertyDatabase (PropertyData) -->
+<polyline points="747,390 818,390 818,322 893,322"
+  fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.55"/>
+
+<!-- 9. BillingService → PaymentProvider (external, dashed) -->
+<line x1="732" y1="608" x2="1178" y2="608"
+  stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.6"/>
+
+<!-- ═══════════════════════════════ PORT SQUARES ═══════════════════════════════ -->
+
+<!-- ResidentPortal ports -->
+<rect x="146" y="226" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="356" y="212" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="356" y="242" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="252" y="272" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+
+<!-- AdminDashboard ports -->
+<rect x="146" y="514" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="356" y="522" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+
+<!-- AuthService ports -->
+<rect x="532" y="164" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="731" y="164" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+
+<!-- MaintenanceModule ports -->
+<rect x="527" y="376" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="527" y="402" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="741" y="384" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+
+<!-- BillingService ports -->
+<rect x="527" y="602" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="726" y="602" width="12" height="12" rx="1" fill="#162420" stroke="#f59e0b" stroke-width="1.5"/>
+
+<!-- PropertyDatabase ports -->
+<rect x="887" y="266" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+<rect x="887" y="316" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+
+<!-- PaymentProvider port -->
+<rect x="1172" y="602" width="12" height="12" rx="1" fill="#2d2008" stroke="#f59e0b" stroke-width="1.5"/>
+
+<!-- ═══════════════════════════════ INTERFACE CIRCLES ═══════════════════════════════ -->
+
+<!-- UserAuth — on RP→AS line at (492, 170) -->
+<circle cx="492" cy="170" r="14" fill="#162420" stroke="#00897b" stroke-width="2"/>
+<circle cx="492" cy="170" r="6" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+<text x="492" y="152" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#4db6ac" letter-spacing="0.04em">UserAuth</text>
+
+<!-- MaintenanceRequest — on RP→MM line at (394, 382) -->
+<circle cx="394" cy="382" r="14" fill="#162420" stroke="#00897b" stroke-width="2"/>
+<circle cx="394" cy="382" r="6" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+<text x="394" y="362" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8.5" fill="#4db6ac">Maint.</text>
+<text x="394" y="372" text-anchor="middle" font-family="'DM Mono', monospace" font-size="8.5" fill="#4db6ac">Request</text>
+
+<!-- AdminAccess — on AD→MM line at (505, 408) -->
+<circle cx="505" cy="408" r="14" fill="#162420" stroke="#00897b" stroke-width="2"/>
+<circle cx="505" cy="408" r="6" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+<text x="505" y="390" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#4db6ac">AdminAccess</text>
+
+<!-- BillingAccess — on RP→BS line at (483, 608) -->
+<circle cx="483" cy="608" r="14" fill="#162420" stroke="#00897b" stroke-width="2"/>
+<circle cx="483" cy="608" r="6" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+<text x="483" y="630" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#4db6ac">BillingAccess</text>
+
+<!-- UserData — on AS→PD line at (854, 272) -->
+<circle cx="854" cy="272" r="14" fill="#162420" stroke="#00897b" stroke-width="2"/>
+<circle cx="854" cy="272" r="6" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+<text x="854" y="253" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#4db6ac">UserData</text>
+
+<!-- PropertyData — on MM→PD line at (854, 322) -->
+<circle cx="854" cy="322" r="14" fill="#162420" stroke="#00897b" stroke-width="2"/>
+<circle cx="854" cy="322" r="6" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+<text x="854" y="343" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#4db6ac">PropertyData</text>
+
+<!-- PaymentGateway — on BS→PP line at (955, 608) -->
+<circle cx="955" cy="608" r="14" fill="#2d2008" stroke="#f59e0b" stroke-width="2"/>
+<circle cx="955" cy="608" r="6" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.7"/>
+<text x="955" y="629" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#f59e0b">PaymentGateway</text>
+
+<!-- ═══════════════════════════════ ACTORS ═══════════════════════════════ -->
+
+<!-- RESIDENT ACTOR (center at 55, 220) -->
+<g id="actor-resident" data-tip="Resident: End user who interacts with the iReside platform to pay bills, submit maintenance requests, and manage their tenancy.">
+  <!-- glow ring -->
+  <circle cx="55" cy="207" r="22" fill="rgba(0,137,123,0.08)"/>
+  <!-- head -->
+  <circle cx="55" cy="207" r="16" fill="none" stroke="#4db6ac" stroke-width="2"/>
+  <!-- body -->
+  <line x1="55" y1="223" x2="55" y2="258" stroke="#4db6ac" stroke-width="2"/>
+  <!-- arms -->
+  <line x1="30" y1="238" x2="80" y2="238" stroke="#4db6ac" stroke-width="2"/>
+  <!-- legs -->
+  <line x1="55" y1="258" x2="32" y2="285" stroke="#4db6ac" stroke-width="2"/>
+  <line x1="55" y1="258" x2="78" y2="285" stroke="#4db6ac" stroke-width="2"/>
+  <text x="55" y="305" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="13" font-weight="600" fill="#4db6ac">Resident</text>
+</g>
+
+<!-- ADMIN ACTOR (center at 55, 512) -->
+<g id="actor-admin" data-tip="Admin / Property Manager: Manages maintenance tasks, oversees tenant records, and administers the property portfolio.">
+  <circle cx="55" cy="506" r="22" fill="rgba(0,137,123,0.08)"/>
+  <circle cx="55" cy="506" r="16" fill="none" stroke="#4db6ac" stroke-width="2"/>
+  <line x1="55" y1="522" x2="55" y2="557" stroke="#4db6ac" stroke-width="2"/>
+  <line x1="30" y1="537" x2="80" y2="537" stroke="#4db6ac" stroke-width="2"/>
+  <line x1="55" y1="557" x2="32" y2="584" stroke="#4db6ac" stroke-width="2"/>
+  <line x1="55" y1="557" x2="78" y2="584" stroke="#4db6ac" stroke-width="2"/>
+  <text x="55" y="604" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="13" font-weight="600" fill="#4db6ac">Admin</text>
+</g>
+
+<!-- ═══════════════════════════════ COMPONENT BOXES ═══════════════════════════════ -->
+
+<!-- ── ResidentPortal (155, 185, 207, 90) ── -->
+<g class="component-box" id="comp-rp"
+   data-tip="ResidentPortal: Web &amp; mobile frontend used by residents. Provides UI for rent payment, maintenance requests, and lease management.">
+  <!-- shadow -->
+  <rect x="158" y="188" width="207" height="90" rx="6" fill="rgba(0,0,0,0.4)"/>
+  <!-- main box -->
+  <rect class="comp-rect" x="155" y="185" width="207" height="90" rx="6"
+    fill="url(#comp-grad)" stroke="#00897b" stroke-width="1.5"/>
+  <!-- top accent stripe -->
+  <rect x="155" y="185" width="207" height="3" rx="3" fill="#00897b" opacity="0.6"/>
+  <!-- component icon top-right -->
+  <rect x="333" y="193" width="20" height="13" rx="2" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <rect x="325" y="197" width="15" height="8" rx="1" fill="#1a3e38" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <!-- text -->
+  <text x="258" y="215" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.06em">«component»</text>
+  <text x="258" y="240" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="15" font-weight="600" fill="#e0f2f1">ResidentPortal</text>
+  <text x="258" y="258" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="10" fill="#4db6ac" opacity="0.6">Frontend Interface</text>
+</g>
+
+<!-- ── AdminDashboard (155, 480, 207, 90) ── -->
+<g class="component-box" id="comp-ad"
+   data-tip="AdminDashboard: Management console for property admins. Handles maintenance oversight, tenant management, and reporting.">
+  <rect x="158" y="483" width="207" height="90" rx="6" fill="rgba(0,0,0,0.4)"/>
+  <rect class="comp-rect" x="155" y="480" width="207" height="90" rx="6"
+    fill="url(#comp-grad)" stroke="#00897b" stroke-width="1.5"/>
+  <rect x="155" y="480" width="207" height="3" rx="3" fill="#00897b" opacity="0.6"/>
+  <rect x="333" y="488" width="20" height="13" rx="2" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <rect x="325" y="492" width="15" height="8" rx="1" fill="#1a3e38" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <text x="258" y="510" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.06em">«component»</text>
+  <text x="258" y="535" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="15" font-weight="600" fill="#e0f2f1">AdminDashboard</text>
+  <text x="258" y="553" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="10" fill="#4db6ac" opacity="0.6">Management Console</text>
+</g>
+
+<!-- ── AuthService (538, 130, 200, 85) ── -->
+<g class="component-box" id="comp-as"
+   data-tip="AuthService: Handles authentication &amp; authorization for all users. Issues tokens and validates sessions against PropertyDatabase.">
+  <rect x="541" y="133" width="200" height="85" rx="6" fill="rgba(0,0,0,0.4)"/>
+  <rect class="comp-rect" x="538" y="130" width="200" height="85" rx="6"
+    fill="url(#comp-grad)" stroke="#00897b" stroke-width="1.5"/>
+  <rect x="538" y="130" width="200" height="3" rx="3" fill="#00897b" opacity="0.6"/>
+  <rect x="710" y="138" width="20" height="13" rx="2" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <rect x="702" y="142" width="15" height="8" rx="1" fill="#1a3e38" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <text x="638" y="158" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.06em">«component»</text>
+  <text x="638" y="183" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="15" font-weight="600" fill="#e0f2f1">AuthService</text>
+  <text x="638" y="201" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="10" fill="#4db6ac" opacity="0.6">Authentication &amp; Authorization</text>
+</g>
+
+<!-- ── MaintenanceModule (533, 345, 217, 88) ── -->
+<g class="component-box" id="comp-mm"
+   data-tip="MaintenanceModule: Receives and tracks maintenance requests from residents. Assigns tasks to technicians and updates status via PropertyDatabase.">
+  <rect x="536" y="348" width="217" height="88" rx="6" fill="rgba(0,0,0,0.4)"/>
+  <rect class="comp-rect" x="533" y="345" width="217" height="88" rx="6"
+    fill="url(#comp-grad)" stroke="#00897b" stroke-width="1.5"/>
+  <rect x="533" y="345" width="217" height="3" rx="3" fill="#00897b" opacity="0.6"/>
+  <rect x="722" y="353" width="20" height="13" rx="2" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <rect x="714" y="357" width="15" height="8" rx="1" fill="#1a3e38" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <text x="641" y="373" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.06em">«component»</text>
+  <text x="641" y="396" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="14" font-weight="600" fill="#e0f2f1">MaintenanceModule</text>
+  <text x="641" y="414" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="10" fill="#4db6ac" opacity="0.6">Request Tracking</text>
+</g>
+
+<!-- ── BillingService (533, 565, 200, 85) ── -->
+<g class="component-box" id="comp-bs"
+   data-tip="BillingService: Processes rent payments and invoices. Integrates with external Payment Provider for secure transaction handling.">
+  <rect x="536" y="568" width="200" height="85" rx="6" fill="rgba(0,0,0,0.4)"/>
+  <rect class="comp-rect" x="533" y="565" width="200" height="85" rx="6"
+    fill="url(#comp-grad)" stroke="#00897b" stroke-width="1.5"/>
+  <rect x="533" y="565" width="200" height="3" rx="3" fill="#00897b" opacity="0.6"/>
+  <rect x="705" y="573" width="20" height="13" rx="2" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <rect x="697" y="577" width="15" height="8" rx="1" fill="#1a3e38" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <text x="633" y="593" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.06em">«component»</text>
+  <text x="633" y="617" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="15" font-weight="600" fill="#e0f2f1">BillingService</text>
+  <text x="633" y="635" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="10" fill="#4db6ac" opacity="0.6">Payment Processing</text>
+</g>
+
+<!-- ── PropertyDatabase (890, 248, 220, 88) ── -->
+<g class="component-box" id="comp-pd"
+   data-tip="PropertyDatabase: Central data store for all property, tenant, and lease records. Provides data access interfaces to AuthService and MaintenanceModule.">
+  <rect x="893" y="251" width="220" height="88" rx="6" fill="rgba(0,0,0,0.4)"/>
+  <rect class="comp-rect" x="890" y="248" width="220" height="88" rx="6"
+    fill="url(#comp-grad)" stroke="#00897b" stroke-width="1.5"/>
+  <rect x="890" y="248" width="220" height="3" rx="3" fill="#00897b" opacity="0.6"/>
+  <rect x="1082" y="256" width="20" height="13" rx="2" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <rect x="1074" y="260" width="15" height="8" rx="1" fill="#1a3e38" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+  <text x="1000" y="276" text-anchor="middle" font-family="'DM Mono', monospace" font-size="10" fill="#4db6ac" opacity="0.7" letter-spacing="0.06em">«component»</text>
+  <text x="1000" y="300" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="15" font-weight="600" fill="#e0f2f1">PropertyDatabase</text>
+  <text x="1000" y="318" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="10" fill="#4db6ac" opacity="0.6">Central Data Store</text>
+</g>
+
+<!-- ── EXTERNAL: PaymentProvider (1185, 565, 85, 85) ── -->
+<g class="component-box" id="comp-pp"
+   data-tip="PaymentProvider: External third-party payment gateway (e.g., Stripe/PayMaya). Receives payment instructions from BillingService.">
+  <!-- EXTERNAL label tag -->
+  <rect x="1185" y="545" width="82" height="16" rx="3" fill="#f59e0b" opacity="0.15"/>
+  <text x="1226" y="556" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#f59e0b" letter-spacing="0.06em">«EXTERNAL»</text>
+  <!-- box shadow -->
+  <rect x="1188" y="568" width="85" height="85" rx="6" fill="rgba(0,0,0,0.5)"/>
+  <!-- main box -->
+  <rect class="comp-rect" x="1185" y="565" width="85" height="85" rx="6"
+    fill="url(#comp-grad-ext)" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="1185" y="565" width="85" height="3" rx="3" fill="#f59e0b" opacity="0.5"/>
+  <!-- component icon -->
+  <rect x="1243" y="573" width="18" height="11" rx="2" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.7"/>
+  <rect x="1236" y="577" width="14" height="7" rx="1" fill="#2d2008" stroke="#f59e0b" stroke-width="1.5" opacity="0.7"/>
+  <text x="1227" y="600" text-anchor="middle" font-family="'DM Mono', monospace" font-size="9" fill="#f59e0b" opacity="0.7" letter-spacing="0.04em">«component»</text>
+  <text x="1227" y="619" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="12" font-weight="600" fill="#fef3c7">Payment</text>
+  <text x="1227" y="633" text-anchor="middle" font-family="'DM Sans', sans-serif" font-size="12" font-weight="600" fill="#fef3c7">Provider</text>
+</g>
+
+<!-- ═══════════════════════════════ DIAGRAM TITLE (bottom-right watermark) ═══════════════════════════════ -->
+<text x="1268" y="722" text-anchor="end" font-family="'DM Mono', monospace" font-size="10" fill="rgba(77,182,172,0.3)" letter-spacing="0.05em">UML Component Diagram · iReside v1.0</text>
+
+</svg>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item">
+    <svg width="36" height="22">
+      <rect x="2" y="2" width="32" height="18" rx="3" fill="#26524a" stroke="#00897b" stroke-width="1.5"/>
+      <rect x="2" y="2" width="32" height="3" rx="2" fill="#00897b" opacity="0.6"/>
+    </svg>
+    Internal Component
+  </div>
+  <div class="legend-item">
+    <svg width="36" height="22">
+      <rect x="2" y="2" width="32" height="18" rx="3" fill="#3d2e10" stroke="#f59e0b" stroke-width="1.5"/>
+      <rect x="2" y="2" width="32" height="3" rx="2" fill="#f59e0b" opacity="0.5"/>
+    </svg>
+    External Component
+  </div>
+  <div class="legend-item">
+    <svg width="26" height="22">
+      <circle cx="13" cy="11" r="9" fill="#162420" stroke="#00897b" stroke-width="2"/>
+      <circle cx="13" cy="11" r="4" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+    </svg>
+    Interface
+  </div>
+  <div class="legend-item">
+    <svg width="20" height="22">
+      <rect x="4" y="5" width="12" height="12" rx="1" fill="#162420" stroke="#00897b" stroke-width="1.5"/>
+    </svg>
+    Port
+  </div>
+  <div class="legend-item">
+    <svg width="40" height="22">
+      <line x1="4" y1="11" x2="36" y2="11" stroke="#4db6ac" stroke-width="1.5" opacity="0.7"/>
+    </svg>
+    Internal Connection
+  </div>
+  <div class="legend-item">
+    <svg width="40" height="22">
+      <line x1="4" y1="11" x2="36" y2="11" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7"/>
+    </svg>
+    External Connection
+  </div>
+  <div class="legend-item">
+    <svg width="30" height="22">
+      <circle cx="15" cy="11" r="9" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.5"/>
+      <line x1="6" y1="11" x2="24" y2="11" stroke="#4db6ac" stroke-width="1.5" opacity="0.3" stroke-dasharray="4,2"/>
+    </svg>
+    Subsystem Boundary
+  </div>
+  <div class="legend-item">
+    <svg width="26" height="22">
+      <circle cx="13" cy="11" r="9" fill="none" stroke="#4db6ac" stroke-width="1.5" opacity="0.5"/>
+      <line x1="13" y1="5" x2="13" y2="17" stroke="#4db6ac" stroke-width="1.5" opacity="0.5"/>
+      <line x1="7" y1="11" x2="19" y2="11" stroke="#4db6ac" stroke-width="1.5" opacity="0.5"/>
+    </svg>
+    Hover for details
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+  const tooltip = document.getElementById('tooltip');
+  const tipped = document.querySelectorAll('[data-tip]');
+
+  tipped.forEach(el => {
+    el.addEventListener('mouseenter', (e) => {
+      tooltip.textContent = el.getAttribute('data-tip');
+      tooltip.classList.add('visible');
+    });
+    el.addEventListener('mousemove', (e) => {
+      const x = e.clientX + 14;
+      const y = e.clientY + 14;
+      const tw = tooltip.offsetWidth;
+      const th = tooltip.offsetHeight;
+      const wx = window.innerWidth;
+      const wy = window.innerHeight;
+      tooltip.style.left = (x + tw > wx ? x - tw - 28 : x) + 'px';
+      tooltip.style.top  = (y + th > wy ? y - th - 28 : y) + 'px';
+    });
+    el.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
+
+  // Animate lines on load
+  const lines = document.querySelectorAll('line, polyline');
+  lines.forEach((l, i) => {
+    const len = l.getTotalLength ? l.getTotalLength() : 400;
+    l.style.strokeDasharray = len;
+    l.style.strokeDashoffset = len;
+    l.style.transition = `stroke-dashoffset 0.9s ease ${0.1 + i * 0.07}s`;
+    requestAnimationFrame(() => {
+      l.style.strokeDashoffset = 0;
+    });
+  });
+</script>
+</body>
+</html>

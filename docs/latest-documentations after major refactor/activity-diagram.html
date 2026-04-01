@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iReside UML Activity Diagram</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #0f2548;
+        --muted: #4b6288;
+        --paper: #f4f8ff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        color: var(--ink);
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(65rem 45rem at -8% -8%, #dce9ff 0%, transparent 62%),
+          radial-gradient(50rem 30rem at 110% 0%, #d6f0ff 0%, transparent 60%),
+          linear-gradient(160deg, #f5f9ff 0%, #eaf2ff 100%);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 24px 16px 32px;
+      }
+
+      /* ── Header card ── */
+      .head {
+        background: rgba(255,255,255,0.92);
+        border: 1px solid #d0dff5;
+        border-radius: 18px;
+        padding: 20px 22px 16px;
+        box-shadow: 0 12px 32px rgba(18,43,88,0.10);
+        backdrop-filter: blur(8px);
+      }
+
+      h1 {
+        font-family: "Space Grotesk", "Manrope", sans-serif;
+        font-size: clamp(1.25rem, 2.6vw, 1.9rem);
+        line-height: 1.2;
+        letter-spacing: .01em;
+      }
+      h1 span { color: #1d4ed8; }
+
+      .sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: .92rem;
+        max-width: 960px;
+        line-height: 1.5;
+      }
+
+      .toolbar {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .btn {
+        border: 1px solid #bdd0f0;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #ffffff, #eef4ff);
+        color: #1a3764;
+        font-weight: 700;
+        font-size: .82rem;
+        padding: 7px 14px;
+        cursor: pointer;
+        transition: transform .13s, box-shadow .13s;
+        font-family: inherit;
+      }
+      .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(36,70,131,.18); }
+      .btn-primary {
+        background: linear-gradient(160deg, #2563eb, #1d4ed8);
+        border: 1px solid #1e40af;
+        color: #fff;
+      }
+      .btn-primary:hover { box-shadow: 0 4px 14px rgba(37,99,235,0.3); }
+      .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+      .btn .btn-icon { margin-right: 4px; }
+
+      .scale-badge {
+        font-size: .8rem;
+        color: var(--muted);
+        font-weight: 600;
+        margin-left: 4px;
+      }
+
+      /* ── Diagram board ── */
+      .board {
+        margin-top: 16px;
+        border: 1px solid #ccdaf4;
+        border-radius: 18px;
+        background: #fff;
+        overflow: hidden;
+        box-shadow: 0 16px 36px rgba(14,36,78,.13);
+      }
+
+      .canvas {
+        position: relative;
+        height: 78vh;
+        overflow: auto;
+        background: var(--paper);
+        cursor: grab;
+      }
+      .canvas:active { cursor: grabbing; }
+
+      /* subtle grid */
+      .canvas::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(to right, rgba(60,100,180,.055) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(60,100,180,.055) 1px, transparent 1px);
+        background-size: 28px 28px;
+      }
+
+      #viewport {
+        position: relative;
+        z-index: 1;
+        min-width: 2320px;
+        min-height: 2440px;
+        padding: 30px;
+      }
+
+      #diagram {
+        width: 2200px;
+        height: 2260px;
+        transform-origin: top left;
+        transition: transform .18s ease;
+        filter: drop-shadow(0 14px 26px rgba(12,32,72,.14));
+      }
+
+      /* ── Legend ── */
+      .legend {
+        border-top: 1px solid #e0ecf8;
+        padding: 13px 16px 15px;
+        background: #fafcff;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 8px;
+      }
+
+      .chip {
+        border: 1px solid #d4e3f5;
+        border-radius: 10px;
+        background: #fff;
+        padding: 9px 12px;
+      }
+      .chip strong { display: block; font-size: .78rem; color: #1e3d6e; }
+      .chip span   { display: block; margin-top: 3px; color: #4f6a90; font-size: .72rem; line-height: 1.45; }
+
+      @media (max-width: 900px) {
+        .wrap { padding: 12px 8px 20px; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="wrap">
+
+      <!-- ── Header ── -->
+      <section class="head">
+        <h1>iReside <span>Activity Diagram</span> — UML Swimlane</h1>
+        <p class="sub">
+          Private intake-to-lease workflow for iReside: login, landlord-led application intake,
+          approvals, signing, and payment verification using correct UML activity symbols.
+        </p>
+        <div class="toolbar">
+          <button class="btn" id="zoomIn">＋ Zoom In</button>
+          <button class="btn" id="zoomOut">－ Zoom Out</button>
+          <button class="btn" id="fit">⊡ Fit</button>
+          <button class="btn" id="reset">↺ Reset</button>
+          <button class="btn" id="download">↓ Download SVG</button>
+          <button class="btn btn-primary" id="exportPng">
+             <span class="btn-icon">↓</span> 
+             <span class="btn-text">Export PNG Image</span>
+          </button>
+          <span class="scale-badge" id="scaleLbl">100%</span>
+        </div>
+      </section>
+
+      <!-- ── Board ── -->
+      <section class="board">
+        <div class="canvas" id="canvasEl">
+          <div id="viewport">
+
+            <!-- ════════════════════════════════════════════════════════
+                 UML ACTIVITY DIAGRAM  —  viewBox 2200 × 2260
+                 Lane centres:  Tenant=305  System=865  Landlord=1435  Admin=1945
+            ════════════════════════════════════════════════════════ -->
+            <svg id="diagram" viewBox="0 0 2200 2260" xmlns="http://www.w3.org/2000/svg">
+
+              <defs>
+                <!-- Arrow marker (right-pointing; orient=auto rotates it) -->
+                <marker id="arr" viewBox="0 0 12 12" refX="10" refY="6"
+                        markerWidth="7" markerHeight="7" orient="auto">
+                  <path d="M 0 1 L 11 6 L 0 11 Z" fill="#2a5299"/>
+                </marker>
+
+                <!-- Styles embedded inside SVG for download fidelity -->
+                <style>
+                  .lt  { font: 700 22px 'Space Grotesk',sans-serif; fill: #16305a; }
+                  .nl  { font: 600 16px 'Manrope',sans-serif; fill: #0f2040; }
+                  .sm  { font: 500 13px 'Manrope',sans-serif; fill: #2a4878; }
+                  .dec { font: 700 15px 'Manrope',sans-serif; fill: #3d2200; }
+                  .fl  { stroke: #2a5299; stroke-width: 2.4; fill: none; marker-end: url(#arr); }
+                  .bar { fill: #0d1526; }
+                  .act { fill: #ffffff; stroke: #2a5299; stroke-width: 2; }
+                  .rej { fill: #fff1f3; stroke: #c03060; stroke-width: 2; }
+                  .obj { fill: #f0fff8; stroke: #1a806e; stroke-width: 2; }
+                </style>
+              </defs>
+
+              <!-- ══ Outer frame ══ -->
+              <rect x="20" y="20" width="2160" height="2220" rx="18"
+                    fill="#ffffff" stroke="#d8e8f6" stroke-width="1.5"/>
+
+              <!-- ══ Lane background fills  (y=130 → 2240) ══ -->
+              <rect x="30"   y="130" width="550"  height="2110" fill="#dbeafe" opacity="0.30"/>
+              <rect x="580"  y="130" width="570"  height="2110" fill="#dcfce7" opacity="0.30"/>
+              <rect x="1150" y="130" width="570"  height="2110" fill="#fef3c7" opacity="0.35"/>
+              <rect x="1720" y="130" width="460"  height="2110" fill="#ffe4e6" opacity="0.30"/>
+
+              <!-- ══ Lane header fills  (y=48 → 126) ══ -->
+              <rect x="30"   y="48" width="550"  height="78" rx="8" fill="#93c5fd" opacity="0.68"/>
+              <rect x="580"  y="48" width="570"  height="78" rx="8" fill="#86efac" opacity="0.68"/>
+              <rect x="1150" y="48" width="570"  height="78" rx="8" fill="#fcd34d" opacity="0.72"/>
+              <rect x="1720" y="48" width="460"  height="78" rx="8" fill="#fda4af" opacity="0.68"/>
+
+              <!-- ══ Lane vertical separators ══ -->
+              <line x1="580"  y1="48" x2="580"  y2="2240" stroke="#9ab8d8" stroke-width="1.5" stroke-dasharray="7 4"/>
+              <line x1="1150" y1="48" x2="1150" y2="2240" stroke="#9ab8d8" stroke-width="1.5" stroke-dasharray="7 4"/>
+              <line x1="1720" y1="48" x2="1720" y2="2240" stroke="#9ab8d8" stroke-width="1.5" stroke-dasharray="7 4"/>
+
+              <!-- ══ Lane titles ══ -->
+              <text x="305"  y="97" text-anchor="middle" class="lt">Tenant</text>
+              <text x="865"  y="97" text-anchor="middle" class="lt">iReside System</text>
+              <text x="1435" y="97" text-anchor="middle" class="lt">Landlord</text>
+              <text x="1945" y="97" text-anchor="middle" class="lt">Admin</text>
+
+              <!-- ══════════════════════════════════════════════════
+                   N O D E S
+              ══════════════════════════════════════════════════ -->
+
+              <!-- ① Initial state — solid black circle (Admin) -->
+              <circle cx="1945" cy="162" r="13" class="bar"/>
+
+              <!-- ①a Create landlord account (Admin) -->
+              <rect x="1815" y="196" width="260" height="54" rx="16" class="act"/>
+              <text x="1945" y="228" text-anchor="middle" class="nl">Create landlord account</text>
+
+              <!-- ② Landlord logs in -->
+              <rect x="1315" y="196" width="240" height="54" rx="16" class="act"/>
+              <text x="1435" y="228" text-anchor="middle" class="nl">Landlord logs in</text>
+
+              <!-- ③ Create tenant application -->
+              <rect x="1305" y="292" width="260" height="54" rx="16" class="act"/>
+              <text x="1435" y="324" text-anchor="middle" class="nl">Create tenant application</text>
+
+              <!-- ④ Application Record  (Object Node — document shape) -->
+              <path d="M 1307,384 H 1541 L 1563,406 V 474 H 1307 Z" class="obj"/>
+              <line x1="1541" y1="384" x2="1563" y2="406" stroke="#1a806e" stroke-width="2"/>
+              <text x="1435" y="424" text-anchor="middle" class="nl">Application Record</text>
+              <text x="1435" y="448" text-anchor="middle" class="sm">(Object Node)</text>
+
+              <!-- ⑤ Validate intake & documents (System) -->
+              <rect x="694" y="512" width="342" height="54" rx="16" class="act"/>
+              <text x="865" y="544" text-anchor="middle" class="nl">Validate intake &amp; documents</text>
+
+              <!-- ⑥ Decision: Requirements complete? (System) -->
+              <!--    cy=670  half-diag=80  →  top(865,590)  right(950,670)  bot(865,750)  left(780,670) -->
+              <polygon points="865,590 950,670 865,750 780,670"
+                       fill="#fffbf0" stroke="#b07800" stroke-width="2.5"/>
+              <text x="865" y="662" text-anchor="middle" class="dec">Requirements</text>
+              <text x="865" y="680" text-anchor="middle" class="dec">complete?</text>
+
+              <!-- ⑦ Update intake details (Landlord — NO path) -->
+              <rect x="1315" y="772" width="240" height="54" rx="16" class="rej"/>
+              <text x="1435" y="804" text-anchor="middle" class="nl">Update intake details</text>
+
+              <!-- ══ FORK 1 bar — spans System → Landlord ══ -->
+              <rect x="730" y="882" width="780" height="14" rx="5" class="bar"/>
+              <text x="726" y="877" text-anchor="end" class="sm" font-style="italic">fork</text>
+
+              <!-- ⑧ Prepare lease + payments (System) -->
+              <rect x="706" y="932" width="318" height="54" rx="16" class="act"/>
+              <text x="865" y="964" text-anchor="middle" class="nl">Prepare lease + payments</text>
+
+              <!-- ⑨ Review + approve (Landlord) -->
+              <rect x="1306" y="932" width="258" height="54" rx="16" class="act"/>
+              <text x="1435" y="964" text-anchor="middle" class="nl">Review + approve</text>
+
+              <!-- ⑩ Lease record (Object Node, System) -->
+              <path d="M 708,1022 H 990 L 1012,1044 V 1114 H 708 Z" class="obj"/>
+              <line x1="990" y1="1022" x2="1012" y2="1044" stroke="#1a806e" stroke-width="2"/>
+              <text x="860" y="1062" text-anchor="middle" class="nl">Lease record</text>
+              <text x="860" y="1086" text-anchor="middle" class="sm">(Object Node)</text>
+
+              <!-- ⑪ Decision: Approved? (Landlord) -->
+              <!--    cy=1076  half=80  →  top(1435,996)  right(1515,1076)  bot(1435,1156)  left(1355,1076) -->
+              <polygon points="1435,996 1520,1076 1435,1156 1350,1076"
+                       fill="#fffbf0" stroke="#b07800" stroke-width="2.5"/>
+              <text x="1435" y="1083" text-anchor="middle" class="dec">Approved?</text>
+
+              <!-- ⑫ System notifies rejection (System — NO path) -->
+              <rect x="706" y="1186" width="318" height="54" rx="16" class="rej"/>
+              <text x="865" y="1218" text-anchor="middle" class="nl">Notify rejection</text>
+
+              <!-- Exit Point ⊗ (System lane) -->
+              <circle cx="865" cy="1282" r="18" fill="#fff0f2" stroke="#1a1a2e" stroke-width="2.5"/>
+              <line x1="852" y1="1269" x2="878" y2="1295" stroke="#1a1a2e" stroke-width="2.5"/>
+              <line x1="878" y1="1269" x2="852" y2="1295" stroke="#1a1a2e" stroke-width="2.5"/>
+              <text x="865" y="1322" text-anchor="middle" class="sm">Exit (Rejected)</text>
+
+              <!-- ⑬ Landlord signs lease (Landlord — YES path) -->
+              <rect x="1306" y="1200" width="258" height="54" rx="16" class="act"/>
+              <text x="1435" y="1232" text-anchor="middle" class="nl">Landlord signs lease</text>
+
+              <!-- ══ JOIN 1 bar — spans System → Landlord ══ -->
+              <rect x="730" y="1312" width="780" height="14" rx="5" class="bar"/>
+              <text x="726" y="1308" text-anchor="end" class="sm" font-style="italic">join</text>
+
+              <!-- ⑭ Send signing link + credentials (System) -->
+              <rect x="682" y="1362" width="366" height="60" rx="16" class="act"/>
+              <text x="865" y="1385" text-anchor="middle" class="nl">Send signing link</text>
+              <text x="865" y="1406" text-anchor="middle" class="nl">+ tenant credentials</text>
+
+              <!-- ⑮a Tenant receives credentials + logs in (Tenant) -->
+              <rect x="176" y="1460" width="258" height="54" rx="16" class="act"/>
+              <text x="305" y="1492" text-anchor="middle" class="nl">Receive credentials + login</text>
+
+              <!-- ⑮b Review + sign lease (Tenant) -->
+              <rect x="176" y="1522" width="258" height="54" rx="16" class="act"/>
+              <text x="305" y="1554" text-anchor="middle" class="nl">Review + sign lease</text>
+
+              <!-- ══ FORK 2 bar — full width ══ -->
+              <rect x="40" y="1584" width="2120" height="14" rx="5" class="bar"/>
+              <text x="58" y="1579" class="sm" font-style="italic">fork</text>
+
+              <!-- ⑯a Pay advance + deposit (Tenant) -->
+              <rect x="162" y="1638" width="286" height="60" rx="16" class="act"/>
+              <text x="305" y="1661" text-anchor="middle" class="nl">Pay advance</text>
+              <text x="305" y="1681" text-anchor="middle" class="nl">+ deposit</text>
+
+              <!-- ⑯d Await confirmation + access community hub (Tenant) -->
+              <rect x="155" y="1764" width="300" height="60" rx="16" class="act"/>
+              <text x="305" y="1788" text-anchor="middle" class="nl">Await payment confirmation</text>
+              <text x="305" y="1810" text-anchor="middle" class="nl">Access dashboard + community hub</text>
+
+              <!-- ⑯b Verify payment + provision portal access (System) -->
+              <rect x="704" y="1638" width="322" height="60" rx="16" class="act"/>
+              <text x="865" y="1661" text-anchor="middle" class="nl">Verify payment</text>
+              <text x="865" y="1681" text-anchor="middle" class="nl">Provision portal access</text>
+
+              <!-- ⑯c Review system reports (Admin) -->
+              <rect x="1818" y="1638" width="254" height="60" rx="16" class="act"/>
+              <text x="1945" y="1675" text-anchor="middle" class="nl">Review system reports</text>
+
+              <!-- ⑰ Decision: Issues found? (Admin) -->
+              <!--    cy=1802  half=80  →  top(1945,1722)  right(2025,1802)  bot(1945,1882)  left(1865,1802) -->
+              <polygon points="1945,1722 2030,1802 1945,1882 1860,1802"
+                       fill="#fffbf0" stroke="#b07800" stroke-width="2.5"/>
+              <text x="1945" y="1796" text-anchor="middle" class="dec">Issues</text>
+              <text x="1945" y="1814" text-anchor="middle" class="dec">found?</text>
+
+              <!-- ⑱ Moderate content/users (Admin — YES path) -->
+              <rect x="1818" y="1924" width="254" height="54" rx="16" class="act"/>
+              <text x="1945" y="1956" text-anchor="middle" class="nl">Moderate content/users</text>
+
+              <!-- ══ JOIN 2 bar — full width ══ -->
+              <rect x="40" y="2034" width="2120" height="14" rx="5" class="bar"/>
+              <text x="58" y="2030" class="sm" font-style="italic">join</text>
+
+              <!-- ⑲ Finalize lease (System) -->
+              <rect x="615" y="2088" width="500" height="66" rx="16" class="act"/>
+              <text x="865" y="2112" text-anchor="middle" class="nl">Finalize lease, update occupancy,</text>
+              <text x="865" y="2135" text-anchor="middle" class="nl">onboard tenant</text>
+
+              <!-- ⑳ Final state — bullseye (System) -->
+              <circle cx="865" cy="2208" r="18" fill="#ffffff" stroke="#0d1526" stroke-width="3"/>
+              <circle cx="865" cy="2208" r="10" fill="#0d1526"/>
+
+
+              <!-- ══════════════════════════════════════════════════
+                   F L O W   A R R O W S
+              ══════════════════════════════════════════════════ -->
+
+              <!-- Initial → Create landlord account -->
+              <path class="fl" d="M 1945 175 L 1945 196"/>
+
+              <!-- Create landlord account → Landlord logs in (cross to Landlord lane) -->
+              <path class="fl" d="M 1815 223 L 1555 223"/>
+
+              <!-- Landlord logs in → Create tenant application -->
+              <path class="fl" d="M 1435 250 L 1435 292"/>
+
+              <!-- Create tenant application → Application Record -->
+              <path class="fl" d="M 1435 346 L 1435 384"/>
+
+              <!-- Application Record → Validate (cross to System lane) -->
+              <path class="fl" d="M 1435 474 L 1435 494 L 865 494 L 865 512"/>
+
+              <!-- Validate → Requirements? diamond -->
+              <path class="fl" d="M 865 566 L 865 590"/>
+
+              <!-- Requirements? → No → Update intake (horizontal right, then down) -->
+              <path class="fl" d="M 950 670 L 1435 670 L 1435 772"/>
+              <text x="1190" y="660" text-anchor="middle" class="sm">No</text>
+
+              <!-- Update intake → Application Record (loop: right-margin, up, back in) -->
+              <path class="fl" d="M 1315 799 L 1660 799 L 1660 429 L 1307 429"/>
+              <text x="1685" y="614" class="sm" transform="rotate(-90,1685,614)">Update and recheck</text>
+
+              <!-- Requirements? → Yes → FORK 1 -->
+              <path class="fl" d="M 865 750 L 865 882"/>
+              <text x="883" y="820" class="sm">Yes</text>
+
+              <!-- FORK 1 → Prepare lease + payments (System) -->
+              <path class="fl" d="M 865 896 L 865 932"/>
+
+              <!-- FORK 1 → Review + approve (Landlord) -->
+              <path class="fl" d="M 1435 896 L 1435 932"/>
+
+              <!-- Prepare lease → Lease record -->
+              <path class="fl" d="M 865 986 L 865 1022"/>
+
+              <!-- Review → Approved? diamond -->
+              <path class="fl" d="M 1435 986 L 1435 996"/>
+
+              <!-- Approved? → No → Notify rejection (System lane) -->
+              <path class="fl" d="M 1350 1076 L 1024 1213"/>
+              <text x="1185" y="1148" text-anchor="middle" class="sm">No</text>
+
+              <!-- Reject → Exit point -->
+              <path class="fl" d="M 865 1240 L 865 1264"/>
+
+              <!-- Approved? → Yes → Landlord signs lease -->
+              <path class="fl" d="M 1435 1156 L 1435 1200"/>
+              <text x="1455" y="1182" class="sm">Yes</text>
+
+              <!-- Lease record → JOIN 1 -->
+              <path class="fl" d="M 865 1114 L 865 1312"/>
+
+              <!-- Landlord signs lease → JOIN 1 -->
+              <path class="fl" d="M 1435 1254 L 1435 1312"/>
+
+              <!-- JOIN 1 → Send signing link -->
+              <path class="fl" d="M 865 1326 L 865 1362"/>
+
+              <!-- Send signing link → Tenant logs in (cross to Tenant lane) -->
+              <path class="fl" d="M 865 1422 L 865 1452 L 305 1452 L 305 1460"/>
+
+              <!-- Tenant logs in → Review + sign lease -->
+              <path class="fl" d="M 305 1514 L 305 1522"/>
+
+              <!-- Review + sign lease → FORK 2 -->
+              <path class="fl" d="M 305 1576 L 305 1584"/>
+
+              <!-- FORK 2 → Pay advance (Tenant) -->
+              <path class="fl" d="M 305 1598 L 305 1638"/>
+
+              <!-- FORK 2 → Verify payment + provision portal access (System) -->
+              <path class="fl" d="M 865 1598 L 865 1638"/>
+
+              <!-- FORK 2 → Review system reports (Admin) -->
+              <path class="fl" d="M 1945 1598 L 1945 1638"/>
+
+              <!-- Review reports → Issues found? diamond -->
+              <path class="fl" d="M 1945 1698 L 1945 1722"/>
+
+              <!-- Issues found? → Yes → Moderate content/users -->
+              <path class="fl" d="M 1945 1882 L 1945 1924"/>
+              <text x="1965" y="1904" class="sm">Issues</text>
+
+              <!-- Issues found? → No → Continue monitoring -->
+              <path class="fl" d="M 1860 1802 L 1860 2034"/>
+              <text x="1885" y="1990" text-anchor="middle" class="sm">No issues</text>
+
+              <!-- Pay advance → Await confirmation -->
+              <path class="fl" d="M 305 1698 L 305 1764"/>
+
+              <!-- Await confirmation → JOIN 2 -->
+              <path class="fl" d="M 305 1824 L 305 2034"/>
+
+              <!-- Provision portal → JOIN 2 -->
+              <path class="fl" d="M 865 1698 L 865 2034"/>
+
+              <!-- Moderation → JOIN 2 -->
+              <path class="fl" d="M 1945 1978 L 1945 2034"/>
+
+              <!-- JOIN 2 → Finalize -->
+              <path class="fl" d="M 865 2048 L 865 2088"/>
+
+              <!-- Finalize → Final state -->
+              <path class="fl" d="M 865 2154 L 865 2190"/>
+
+            </svg>
+
+          </div>
+        </div><!-- /.canvas -->
+
+        <!-- ── Legend ── -->
+        <div class="legend">
+          <div class="chip">
+            <strong>⬤ Initial / ◎ Final State</strong>
+            <span>Solid circle starts the flow; bullseye marks activity completion.</span>
+          </div>
+          <div class="chip">
+            <strong>⬜ Action State</strong>
+            <span>Rounded rectangles represent individual activities or steps.</span>
+          </div>
+          <div class="chip">
+            <strong>◇ Decision / Merge</strong>
+            <span>Diamonds branch flow on a condition; Yes / No labels show paths.</span>
+          </div>
+          <div class="chip">
+            <strong>━━ Fork / Join Bar</strong>
+            <span>Thick black bars split flow into concurrent branches (fork) or merge them back (join).</span>
+          </div>
+          <div class="chip">
+            <strong>📄 Object Node</strong>
+            <span>Document-shape nodes represent key artifacts in the process.</span>
+          </div>
+          <div class="chip">
+            <strong>⊗ Exit Point</strong>
+            <span>Marks a rejection path that terminates before the normal end state.</span>
+          </div>
+        </div>
+
+      </section><!-- /.board -->
+    </main><!-- /.wrap -->
+
+    <script>
+      /* ── Zoom / Pan ── */
+      const diagram   = document.getElementById('diagram');
+      const scaleLbl  = document.getElementById('scaleLbl');
+      const canvasEl  = document.getElementById('canvasEl');
+
+      let scale = 1;
+      const MIN = 0.25, MAX = 2.5, STEP = 0.14;
+      const clamp = v => Math.max(MIN, Math.min(MAX, v));
+
+      function applyScale() {
+        diagram.style.transform = `scale(${scale})`;
+        scaleLbl.textContent = Math.round(scale * 100) + '%';
+      }
+
+      function fitView() {
+        const r = canvasEl.getBoundingClientRect();
+        scale = clamp(Math.min((r.width - 60) / 2200, (r.height - 60) / 2260));
+        applyScale();
+        canvasEl.scrollTo(0, 0);
+      }
+
+      document.getElementById('zoomIn') .addEventListener('click', () => { scale = clamp(scale + STEP); applyScale(); });
+      document.getElementById('zoomOut').addEventListener('click', () => { scale = clamp(scale - STEP); applyScale(); });
+      document.getElementById('fit')    .addEventListener('click', fitView);
+      document.getElementById('reset')  .addEventListener('click', () => { scale = 1; applyScale(); });
+
+      document.getElementById('download').addEventListener('click', () => {
+        const src  = new XMLSerializer().serializeToString(diagram);
+        const blob = new Blob([src], { type: 'image/svg+xml;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = Object.assign(document.createElement('a'), { href: url, download: 'ireside-uml-activity.svg' });
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      const exportBtn = document.getElementById('exportPng');
+      const exportTxt = exportBtn.querySelector('.btn-text');
+
+      exportBtn.addEventListener('click', () => {
+        // Change state
+        exportBtn.disabled = true;
+        const originalText = exportTxt.textContent;
+        exportTxt.textContent = 'Generating...';
+
+        // Wait for fonts to be ready for better fidelity
+        document.fonts.ready.then(() => {
+          // High-res export: 2x scale
+          const scaleFac = 2;
+          const w = 2200;
+          const h = 2260;
+          
+          const canvas = document.createElement('canvas');
+          canvas.width  = w * scaleFac;
+          canvas.height = h * scaleFac;
+          const ctx = canvas.getContext('2d');
+          
+          // Background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // To ensure external fonts in SVG work via drawImage, 
+          // we sometimes need to embed the font or use a library,
+          // but for basic usage, we'll try the direct approach.
+          const svgData = new XMLSerializer().serializeToString(diagram);
+          const img = new Image();
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+          
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, w * scaleFac, h * scaleFac);
+            
+            try {
+              const pngUrl = canvas.toDataURL('image/png');
+              const a = Object.assign(document.createElement('a'), { 
+                href: pngUrl, 
+                download: `ireside-activity-diagram-${new Date().getTime()}.png` 
+              });
+              document.body.appendChild(a); 
+              a.click(); 
+              a.remove();
+            } catch (e) {
+              console.error("Export failed:", e);
+            } finally {
+              URL.revokeObjectURL(url);
+              exportBtn.disabled = false;
+              exportTxt.textContent = originalText;
+            }
+          };
+          
+          img.onerror = () => {
+            console.error("Image loading failed");
+            exportBtn.disabled = false;
+            exportTxt.textContent = originalText;
+            URL.revokeObjectURL(url);
+          };
+
+          img.src = url;
+        });
+      });
+
+      /* Mouse-wheel zoom */
+      canvasEl.addEventListener('wheel', e => {
+        e.preventDefault();
+        scale = clamp(scale - e.deltaY * 0.001);
+        applyScale();
+      }, { passive: false });
+
+      /* Click-drag pan */
+      let drag = false, sx = 0, sy = 0, sl = 0, st = 0;
+      canvasEl.addEventListener('mousedown', e => {
+        drag = true; sx = e.clientX; sy = e.clientY;
+        sl = canvasEl.scrollLeft; st = canvasEl.scrollTop;
+      });
+      window.addEventListener('mousemove', e => {
+        if (!drag) return;
+        canvasEl.scrollLeft = sl - (e.clientX - sx);
+        canvasEl.scrollTop  = st - (e.clientY - sy);
+      });
+      window.addEventListener('mouseup', () => { drag = false; });
+
+      requestAnimationFrame(fitView);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+nstead of a public facing app (like a an airbnb for apartments and such), it will now be an exclusive system for landlords (think of it like discord, a landlord can have multiple properties [discord servers], each property has their own set of tenants [server members], each properties are isolated and private.).

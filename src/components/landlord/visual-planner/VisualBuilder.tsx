@@ -2612,78 +2612,113 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     )}
 
                     {readOnly && transferModalUnit && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/70 p-4 backdrop-blur-sm pointer-events-auto">
+                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md pointer-events-auto">
                             <motion.div 
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="w-full max-w-md rounded-2xl border border-neutral-700 bg-surface-dark shadow-2xl overflow-hidden"
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                className="w-full max-w-[480px] rounded-3xl border border-white/10 bg-[#1a1c23] shadow-2xl overflow-hidden relative"
                             >
-                                <div className="p-6">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-white mb-1">Unit Transfer Request</h3>
-                                            <p className="text-sm text-neutral-400">Request to move to <span className="text-emerald-400 font-semibold">{transferModalUnit.name}</span></p>
+                                {/* Decorative elements */}
+                                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/20 to-purple-600/20 blur-2xl -z-10"></div>
+                                <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/30 rounded-full blur-3xl -z-10"></div>
+                                
+                                {/* Hero Header */}
+                                <div className="relative h-32 w-full overflow-hidden shrink-0">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/40 to-purple-600/40 mix-blend-overlay z-0"></div>
+                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-40 z-0 grayscale-[0.3]"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c23] via-[#1a1c23]/60 to-transparent z-10"></div>
+                                    <div className="absolute inset-0 bg-black/10 z-10"></div>
+                                     
+                                     <button 
+                                        title="Close"
+                                        onClick={() => setTransferModalUnit(null)}
+                                        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/20 hover:bg-black/50 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white border border-white/10 transition-all"
+                                     >
+                                        <span className="material-icons-round text-[18px]">close</span>
+                                     </button>
+
+                                    <div className="absolute bottom-4 left-6 z-20 flex items-end gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-purple-600 p-[2px] shadow-lg shadow-primary/30">
+                                            <div className="w-full h-full bg-[#1a1c23] rounded-[14px] flex items-center justify-center">
+                                                <span className="material-icons-round text-primary text-2xl">move_down</span>
+                                            </div>
                                         </div>
-                                        <button 
-                                            title="Close"
-                                            onClick={() => setTransferModalUnit(null)}
-                                            className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-                                        >
-                                            <span className="material-icons-round text-[18px]">close</span>
-                                        </button>
+                                        <div className="pb-1">
+                                            <h3 className="text-2xl font-bold text-white tracking-tight leading-none drop-shadow-lg">Unit Transfer</h3>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <div className="px-6 pb-6 pt-3 relative z-20">
+                                    <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+                                        You are requesting to transfer your current lease to <span className="text-white font-bold bg-white/10 px-2 py-[2px] rounded-md border border-white/10 shadow-sm mx-1">{transferModalUnit.name}</span>.<br />This request is subject to landlord approval.
+                                    </p>
                                     
                                     {transferSuccess ? (
-                                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 text-center animate-in fade-in zoom-in duration-300">
-                                            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
-                                                <span className="material-icons-round text-emerald-400 text-2xl">check</span>
+                                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8 text-center animate-in fade-in zoom-in duration-300 relative overflow-hidden group">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                            <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4 relative z-10">
+                                                <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping opacity-75"></div>
+                                                <span className="material-icons-round text-emerald-400 text-3xl">check_circle</span>
                                             </div>
-                                            <h4 className="text-emerald-300 font-bold mb-1">Request Submitted</h4>
-                                            <p className="text-emerald-400/70 text-sm">Your landlord will review your request shortly.</p>
+                                            <h4 className="text-emerald-400 font-bold text-lg mb-2 relative z-10">Request Submitted!</h4>
+                                            <p className="text-emerald-400/80 text-sm relative z-10">Your landlord has been notified and will review your transfer request shortly.</p>
                                         </div>
                                     ) : (
-                                        <form onSubmit={handleTransferSubmit}>
-                                            <div className="mb-5">
-                                                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                                                    Reason for Transfer (Optional)
+                                        <form onSubmit={handleTransferSubmit} className="space-y-6">
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-bold text-primary uppercase tracking-widest block pl-1">
+                                                    Transfer Justification <span className="text-slate-500 ml-1 font-normal lowercase">(Optional)</span>
                                                 </label>
-                                                <textarea
-                                                    value={transferReason}
-                                                    onChange={(e) => setTransferReason(e.target.value)}
-                                                    placeholder="E.g., I need more space, closer to the elevator, etc."
-                                                    className="w-full h-24 bg-neutral-900/50 border border-neutral-700 rounded-xl p-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none transition-all shadow-inner"
-                                                />
+                                                <div className="relative group">
+                                                    <textarea
+                                                        value={transferReason}
+                                                        onChange={(e) => setTransferReason(e.target.value)}
+                                                        placeholder="E.g., Needing more space for a home office, expecting a child, etc."
+                                                        className="w-full h-32 bg-[#23242f]/80 border border-slate-700/50 rounded-2xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary focus:bg-[#1a1c23] resize-none transition-all shadow-inner peer"
+                                                    />
+                                                    <div className="absolute bottom-3 right-3 text-[10px] text-slate-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {transferReason.length} chars
+                                                    </div>
+                                                </div>
                                             </div>
                                             
                                             {transferError && (
-                                                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-2 animate-in fade-in duration-200">
-                                                    <span className="material-icons-round text-red-400 text-[18px]">error_outline</span>
-                                                    <p className="text-xs text-red-300 mt-0.5">{transferError}</p>
+                                                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3 animate-in fade-in duration-200">
+                                                    <div className="bg-rose-500/20 rounded-full p-1 mt-0.5 shrink-0">
+                                                        <span className="material-icons-round text-rose-400 text-[16px]">error_outline</span>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="text-sm font-bold text-rose-400 mb-0.5">Submission Failed</h5>
+                                                        <p className="text-xs text-rose-300">{transferError}</p>
+                                                    </div>
                                                 </div>
                                             )}
                                             
-                                            <div className="flex gap-3 justify-end mt-6">
+                                            <div className="flex gap-3 justify-end pt-2 border-t border-white/5">
                                                 <button
                                                     type="button"
                                                     onClick={() => setTransferModalUnit(null)}
-                                                    className="px-4 py-2 rounded-xl text-sm font-semibold text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
+                                                    className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all active:scale-95"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     type="submit"
                                                     disabled={isSubmittingTransfer}
-                                                    className="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-2 disabled:cursor-not-allowed"
+                                                    className="px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-purple-600 text-white hover:shadow-lg hover:shadow-primary/30 hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 disabled:cursor-not-allowed group active:scale-95"
                                                 >
                                                     {isSubmittingTransfer ? (
                                                         <>
-                                                            <span className="material-icons-round text-[16px] animate-spin">refresh</span>
-                                                            Submitting...
+                                                            <span className="material-icons-round text-[18px] animate-spin">refresh</span>
+                                                            <span className="tracking-wide">Processing...</span>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <span className="material-icons-round text-[16px]">send</span>
-                                                            Submit Request
+                                                            <span className="tracking-wide">Submit Request</span>
+                                                            <span className="material-icons-round text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
                                                         </>
                                                     )}
                                                 </button>

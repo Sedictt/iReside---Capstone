@@ -10,13 +10,11 @@ import {
     Settings,
     LogOut,
     LayoutDashboard,
-    Building2,
     FileText,
     CreditCard,
     MessageSquare,
     Map,
     Home,
-    Sparkles,
     Menu,
     X,
 } from "lucide-react";
@@ -27,8 +25,6 @@ import { signOut } from "@/lib/supabase/client-auth";
 const NAV_ITEMS = [
     { label: "Home", href: "/tenant/community", icon: Home },
     { label: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
-    { label: "Product Tour", href: "/tenant/tour", icon: Sparkles },
-    { label: "Applications", href: "/tenant/applications", icon: Building2 },
     { label: "Leases", href: "/tenant/lease", icon: FileText },
     { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
     { label: "Payments", href: "/tenant/payments", icon: CreditCard },

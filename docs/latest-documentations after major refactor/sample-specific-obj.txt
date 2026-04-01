@@ -1,0 +1,88 @@
+1.2.2 Specific Objectives
+1. To develop and evaluate iReside: A Modern Property and Tenant Services Platform with the following features for different user roles:
+a. Enable Super Administrators to manage:
+i. View key live metrics (Total Users, Properties, Leases, Pending Reviews).
+ii. Monitor Registration Pipeline progress (Pending, Reviewing, Approved).
+iii. Access the role-branded header with ambient glow branding.
+iv. Contextual navigation with item descriptions and chevrons.
+v. Manage user accounts using role-specific filter pills (All, Tenant, Landlord, Admin).
+vi. Display user avatars with initials-based fallback.
+vii. Combined Search + Filter for fast user lookup by name or email.
+viii. Access Registration Review dashboard with status filter tabs.
+ix. Open detailed Review Modals for applicant evaluation.
+x. Review applicant-uploaded documents and profile photos.
+xi. Add internal administrative notes to applications.
+xii. Update application status with icon-coded badges (Approved, Rejected, Reviewing).
+xiii. Execute destructive sign-out from the secure administrator sidebar.
+
+b. Enable Landlords to manage:
+i. View Dashboard performance via AI-driven KPI Insights.
+ii. Toggle between "Simplified Mode" and "Detailed Analytics" for dashboard reading.
+iii. Monitor Primary KPIs (Earnings, Active Tenants, Occupancy, Pending Issues).
+iv. Monitor Extended KPIs (Maintenance Cost, Lease Renewals, Portfolio Value).
+v. Analyze Featured Property data (Total Sales, Views, MOM Growth, Occupancy Rate).
+vi. Select preset report ranges (7D, 30D, 90D, 1Y).
+vii. Define custom start and end dates for performance filters.
+viii. View sync status and database connectivity indicators.
+ix. Generate iReside Branded PDF Reports for portfolio performance.
+x. Generate and download CSV Reports for data auditing.
+xi. Review chronological history of exported reports and audit logs.
+xii. Access the Modular Floor Planner drag-and-drop structural engine.
+xiii. Align structural units using a precise 20px grid-snapping system.
+xiv. Interactively manipulate and position corridors, units, and room spaces.
+xv. Save structural changes in real-time to the persistent Supabase backend.
+xvi. Launch the multi-step Unit Listing Wizard for public marketplace publishing.
+xvii. Specify advance rent requirements and security deposit amounts.
+xviii. Manage unit media with slots for Bedroom, Bathroom, Kitchen, and Living areas.
+xix. Define custom room descriptions, amenities, and features.
+xx. Centralized Maintenance Dashboard for tracking all repair tickets.
+xxi. Assign priority status to maintenance tasks (Pending, In-Progress, Completed).
+xxii. View multi-image galleries and descriptions in maintenance tickets.
+xxiii. Monitor active lease progress via live dashboard tracking charts.
+xxiv. Access the Smart Document Vault for master agreements and reports.
+xxv. Calculate and view renewal eligibility windows dynamically.
+xxvi. Contact assigned tenants via direct messaging or one-click calling.
+xxvii. Monitor the Live Financial Ledger for overdue and pending invoices.
+xxviii. View dynamic payment breakdowns (Base Rent, Water, Electricity).
+c. Enable Tenants to:
+i. Search properties using map-integrated Discovery Portal (Leaflet).
+ii. Perform proximity searches within specific map radii.
+iii. Use dynamic location suggestions (City, Barangay, Street).
+iv. Filter listings by price range and property type.
+v. Search for units based on available amenities.
+vi. Submit digital rental applications.
+vii. Track application status via live progress indicators.
+viii. View a chronological timeline of application events and UX prompts.
+ix. Signature-ready digital leases and agreements.
+x. Access the Document Vault for signed reports and amendments.
+xi. Submit Maintenance Requests with image uploads.
+xii. View real-time status of repair tickets.
+xiii. Access the iRis AI Assistant for context-aware building support.
+xiv. Ask natural language questions about amenities and rules via RAG.
+xv. View the Live Financial Ledger for monthly dues.
+xvi. Access chronological payment history and transaction logs.
+xvii. Use the Messaging Portal with typing indicators and status tracking.
+xviii. Send and receive files or media within conversation threads.
+d. For all users, the system shall:
+i. Ensure secure login/logout via Supabase Auth.
+ii. Enforce database-level Row Level Security (RLS) for strict data isolation.
+iii. Execute real-time message moderation and toxic content filtering via AI.
+iv. Maintain smooth UI transitions via Framer Motion animations.
+v. Provide skeleton loading states for data-heavy components.
+vi. Use modern typography (Geist, Rethink Sans) for enhanced readability.
+2. To develop iReside using appropriate modern tools and programming technologies to ensure system efficiency and usability:
+a. Framework: To program a web-based application using Next.js 16 (App Router) and TypeScript as the development environment.
+b. Frontend: To implement the UI using React 19, Tailwind CSS 4, and Radix UI for modern interactivity.
+c. Backend: To utilize Supabase for backend operations, PostgreSQL database management, and Real-time functionality.
+d. Intelligence: To integrate Groq Llama 3.1 via the OpenAI SDK for RAG-powered intelligence and AI chat moderation.
+e. Interactivity: To implement drag-and-drop structural logic using @dnd-kit/core and @dnd-kit/utilities.
+3. To determine the level of conformity of iReside to the international standard ISO 25010:
+a. Functional Suitability (Completeness, Correctness, Appropriateness)
+b. Performance Efficiency (Time behavior, Resource utilization, Capacity)
+c. Compatibility (Co-existence, Interoperability)
+d. Interaction Capability (Appropriateness recognizability, Learnability, Operability, User engagement)
+e. Reliability (Availability, Fault tolerance, Recoverability)
+f. Security (Confidentiality, Integrity, Non-repudiation, Accountability, Authenticity)
+g. Maintainability (Modularity, Reusability, Analyzability, Modifiability, Testability)
+h. Flexibility (Adaptability, Scalability, Installability)
+i. Safety (Operational constraints, Risk identification, Fail-safe measures, Hazard warnings)
