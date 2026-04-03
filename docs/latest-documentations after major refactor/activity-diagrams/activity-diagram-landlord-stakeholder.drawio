@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" modified="2026-04-02T00:00:00.000Z" agent="OpenCode" version="29.6.6">
+  <diagram id="landlord-activity" name="Activity - Landlord Stakeholder">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="10" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef4ff;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="280" height="1080" as="geometry"/></mxCell>
+        <mxCell id="11" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#edf8ec;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="340" y="40" width="840" height="1080" as="geometry"/></mxCell>
+        <mxCell id="12" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3d6;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="1200" y="40" width="260" height="1080" as="geometry"/></mxCell>
+        <mxCell id="13" value="Landlord" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dce9ff;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="280" height="50" as="geometry"/></mxCell>
+        <mxCell id="14" value="iReside System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d8f0d3;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="340" y="40" width="840" height="50" as="geometry"/></mxCell>
+        <mxCell id="15" value="Tenant" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe9b3;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="1200" y="40" width="260" height="50" as="geometry"/></mxCell>
+
+        <mxCell id="20" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="165" y="120" width="30" height="30" as="geometry"/></mxCell>
+        <mxCell id="21" value="Enter credentials" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="90" y="190" width="180" height="56" as="geometry"/></mxCell>
+        <mxCell id="22" value="Authenticate and load portal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="620" y="190" width="260" height="56" as="geometry"/></mxCell>
+        <mxCell id="23" value="Choose workflow" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="690" y="290" width="130" height="90" as="geometry"/></mxCell>
+
+        <mxCell id="24" value="Manage property and units" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="380" y="430" width="250" height="56" as="geometry"/></mxCell>
+        <mxCell id="25" value="Process walk-in application" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="670" y="430" width="250" height="56" as="geometry"/></mxCell>
+        <mxCell id="26" value="Create invoice or review ledger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="960" y="430" width="250" height="56" as="geometry"/></mxCell>
+
+        <mxCell id="27" value="Application complete?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="730" y="520" width="130" height="90" as="geometry"/></mxCell>
+        <mxCell id="28" value="Prompt missing requirements" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="950" y="540" width="260" height="56" as="geometry"/></mxCell>
+        <mxCell id="29" value="Generate lease draft" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="670" y="640" width="250" height="56" as="geometry"/></mxCell>
+        <mxCell id="30" value="Select signing mode" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="730" y="730" width="130" height="90" as="geometry"/></mxCell>
+
+        <mxCell id="31" value="Sign in-person" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="480" y="860" width="190" height="56" as="geometry"/></mxCell>
+        <mxCell id="32" value="Send remote signing link" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="760" y="860" width="210" height="56" as="geometry"/></mxCell>
+        <mxCell id="33" value="Review and sign lease" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="1230" y="860" width="190" height="56" as="geometry"/></mxCell>
+        <mxCell id="34" value="Update lease status and audit log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="670" y="950" width="300" height="56" as="geometry"/></mxCell>
+
+        <mxCell id="35" value="More workflows?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="690" y="1030" width="130" height="80" as="geometry"/></mxCell>
+        <mxCell id="36" value="Logout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="95" y="1038" width="170" height="52" as="geometry"/></mxCell>
+        <mxCell id="37" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1"><mxGeometry x="164" y="1098" width="32" height="32" as="geometry"/></mxCell>
+        <mxCell id="38" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="172" y="1106" width="16" height="16" as="geometry"/></mxCell>
+
+        <mxCell id="100" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="20" target="21"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="101" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="21" target="22"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="102" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="22" target="23"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="103" value="Property" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="23" target="24"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="104" value="Application" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="23" target="25"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="105" value="Billing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="23" target="26"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="106" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="24" target="35"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="107" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="26" target="35"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="108" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="25" target="27"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="109" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="27" target="28"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="110" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="28" target="25"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="111" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="27" target="29"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="112" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="29" target="30"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="113" value="In-person" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="30" target="31"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="114" value="Remote" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="30" target="32"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="115" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="32" target="33"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="116" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="31" target="34"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="117" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="33" target="34"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="118" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="34" target="35"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="119" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="35" target="23"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="120" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="35" target="36"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="121" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="36" target="37"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

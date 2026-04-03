@@ -24,3 +24,27 @@ A system that automatically checks for compliance with Philippine rental laws (e
 - **Feature:** Warning landlords if annual rent increases exceed the allowed percentage.
 - **Feature:** Automated generation of legally-sound eviction notices (notices to vacate) based on delinquency duration.
 - **Constraint:** Requires legal consultation and constant monitoring of legislative updates.
+
+---
+
+## 3. Public Website With Vetted Landlord Application
+
+### Problem/Opportunity
+The platform currently has strong private-access boundaries, but the public-facing entry experience is still loosely defined. Without a clear decision, the website could drift toward an open-registration model that conflicts with the system's trust, governance, and admin-vetting philosophy.
+
+### Concept
+Expose a public informational website that explains iReside while keeping platform access controlled through landlord application review.
+- **Public site role:** Present the product, explain how the system works, surface FAQs and documentation, and guide qualified users toward the correct next step.
+- **Primary CTA:** `Apply as Landlord` for prospective landlords who want access to the platform.
+- **Secondary CTA:** `Sign In` for users with existing approved accounts.
+- **Registration model:** Open application, closed activation. Visitors may submit a landlord registration request, but landlord access is only granted after admin review and approval.
+- **Public visibility:** Visitors may view marketing pages, onboarding explanations, and product documentation, but they cannot browse private property data, self-register as tenants, or enter operational portals without authorization.
+
+### Why it fits
+- Preserves the system's private-ecosystem model.
+- Gives the Super Admin a clear governance responsibility through landlord vetting.
+- Improves product clarity by separating public information from private operations.
+- Supports trust-building without turning iReside into a public listings marketplace.
+
+### Constraint
+The public website must remain an informational and application-entry layer only. It should not evolve into open tenant registration, public property discovery, or immediate landlord activation without vetting, as those directions would conflict with the project's current scope and access model.

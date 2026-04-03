@@ -1,0 +1,86 @@
+<mxfile host="app.diagrams.net" modified="2026-04-02T00:00:00.000Z" agent="OpenCode" version="24.7.17">
+  <diagram id="tenant-l1" name="Tenant DFD L1">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="10" value="Tenant" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="11" value="Landlord" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="12" value="Groq AI Service" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="20" value="1.0 Authenticate Tenant Session" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="80" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="21" value="2.0 View Lease and Documents" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="180" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="22" value="3.0 Manage Billing and Payments" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="280" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="23" value="4.0 Submit Maintenance Request" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="380" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="24" value="5.0 Real-Time Messaging" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="480" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="25" value="6.0 Query iRis AI Assistant" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="700" width="260" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="30" value="D1 Profiles and Roles" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="80" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="31" value="D2 Lease Records and Document Vault" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="180" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="32" value="D3 Billing Ledger and Transactions" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="280" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="33" value="D4 Maintenance Requests" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="380" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="34" value="D5 Conversation Threads and Files" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="480" width="260" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="35" value="D6 Tenant Context (Unit, Lease, Payments)" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="700" width="260" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="100" value="Credentials" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="20"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="101" value="Session and Role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="20" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="102" value="Read/Write User Session" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="20" target="30"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="103" value="Lease Query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="21"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="104" value="Lease and Files" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="21" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="105" value="Read Lease Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="21" target="31"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="106" value="Billing Request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="22"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="107" value="Balance and History" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="22" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="108" value="Read Payment Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="22" target="32"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="109" value="Ticket Details + Images" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="23"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="110" value="Status Updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="23" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="111" value="Create/Update Request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="23" target="33"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="112" value="Work Log Updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="11" target="23"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="113" value="Message + Attachments" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="24"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="114" value="Thread Updates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="24" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="115" value="Landlord Replies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="11" target="24"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="116" value="Store Conversation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="24" target="34"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="117" value="Question" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="25"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="118" value="Context Fetch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="25" target="35"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="119" value="Prompt + Context" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="25" target="12"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="120" value="AI Response" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="12" target="25"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="121" value="Answer + Metadata" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="25" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

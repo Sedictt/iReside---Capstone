@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net" modified="2026-04-02T00:00:00.000Z" agent="OpenCode" version="24.7.17">
+  <diagram id="admin-l1" name="Admin DFD L1">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="10" value="Admin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="11" value="Landlord" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="420" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="12" value="Tenant" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="170" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="20" value="1.0 Authenticate Admin Session" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="80" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="21" value="2.0 View Platform Metrics Dashboard" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="180" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="22" value="3.0 Review Landlord Registrations" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="280" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="23" value="4.0 Apply Governance Decisions" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="380" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="24" value="5.0 Moderate Community and Messages" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="500" width="300" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="25" value="6.0 Enforce Security and Audit Controls" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="700" width="300" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="30" value="D1 Profiles and Roles" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="80" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="31" value="D2 Platform Metrics and KPI Snapshots" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="180" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="32" value="D3 Landlord Registration Queue" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="280" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="33" value="D4 Admin Notes and Decisions" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="380" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="34" value="D5 Community Content and Moderation Flags" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="500" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="35" value="D6 Conversations and Message Logs" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="580" width="320" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="36" value="D7 Security Audit Trail" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="700" width="320" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="100" value="Credentials" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="20"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="101" value="Session + Admin Access" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="20" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="102" value="Read/Write Admin Role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="20" target="30"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="103" value="Metrics Query" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="21"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="104" value="Read KPIs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="21" target="31"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="105" value="Dashboard View" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="21" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="106" value="Review Request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="22"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="107" value="Registration Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="22" target="32"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="108" value="Approval/Rejection Result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="22" target="11"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="109" value="Decision and Notes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="23"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="110" value="Persist Governance Log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="23" target="33"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="111" value="Reported Content" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="11" target="24"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="112" value="Reported Content" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="12" target="24"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="113" value="Moderation Actions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="24" target="34"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="114" value="Message Thread Review" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="24" target="35"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="115" value="Policy Enforcement" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="10" target="25"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="116" value="Record Access and Actions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="25" target="36"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="117" value="Security Alerts / Decisions" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="25" target="10"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

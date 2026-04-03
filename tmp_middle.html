@@ -1,0 +1,201 @@
+    // Then entities before data stores
+    if (a.t === 'E' && b.t === 'D') return -1;
+    if (a.t === 'D' && b.t === 'E') return 1;
+    
+    return 0;
+  });
+  
+  // Group by type
+  const processes = sortedNodes.filter(n => n.t === 'P');
+  const entities = sortedNodes.filter(n => n.t === 'E');
+  const dataStores = sortedNodes.filter(n => n.t === 'D');
+  
+  let html = ';
+  
+  // Processes section
+  html += `<div class="belt-section">
+    <div class="belt-section-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="4" width="16" height="16" rx="2"/>
+        <rect x="4" y="4" width="16" height="6" rx="1" fill="${doms.auth.hdr}"/>
+      </svg>
+      Processes (${processes.length})
+    </div>`;
+  processes.forEach(n => {
+    const placed = nodesOnCanvas.has(n.id);
+    const highlighted = highlightedNodes.has(n.id);
+    const dom = doms[NDOM[n.id]];
+    const relCount = getRelatedNodes(n.id).size;
+    html += buildBeltNodeHTML(n, dom, placed, highlighted, relCount, 'Process');
+  });
+  html += '</div>';
+  
+  // Entities section
+  html += `<div class="belt-section">
+    <div class="belt-section-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="8" width="16" height="8" rx="1"/>
+      </svg>
+      Entities (${entities.length})
+    </div>`;
+  entities.forEach(n => {
+    const placed = nodesOnCanvas.has(n.id);
+    const highlighted = highlightedNodes.has(n.id);
+    const dom = doms[NDOM[n.id]];
+    html += buildBeltNodeHTML(n, dom, placed, highlighted, 0, 'Entity');
+  });
+  html += '</div>';
+  
+  // Data Stores section
+  html += `<div class="belt-section">
+    <div class="belt-section-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="4" y1="6" x2="4" y2="18"/>
+        <line x1="4" y1="6" x2="20" y2="6"/>
+        <line x1="4" y1="18" x2="20" y2="18"/>
+      </svg>
+      Data Stores (${dataStores.length})
+    </div>`;
+  dataStores.forEach(n => {
+    const placed = nodesOnCanvas.has(n.id);
+    const highlighted = highlightedNodes.has(n.id);
+    const dom = doms[NDOM[n.id]];
+    html += buildBeltNodeHTML(n, dom, placed, highlighted, 0, 'Data Store');
+  });
+  html += '</div>';
+  
+  container.innerHTML = html;
+  container.style.background = ui.bg;
+  container.style.color = ui.tx;
+  
+  // Apply theme to sections
+  container.querySelectorAll('.belt-section-title').forEach(el => {
+    el.style.color = ui.txs;
+  });
+  
+  // Setup drag handlers for belt nodes
+  setupBeltDragHandlers();
+}
+
+function buildBeltNodeHTML(node, dom, placed, highlighted, relCount, typeLabel) {
+  const iconText = node.t === 'P' ? node.num : node.t === 'D' ? node.num : 'E';
+  const badge = highlighted && !placed ? `<span class="highlight-badge">!</span>` : ';
+  
+  return `<div class="belt-node ${placed ? 'placed' : '} ${highlighted ? 'highlighted' : '}" 
+               data-node-id="${node.id}" 
+               style="border-color:${highlighted ? '#f59e0b' : dom.stroke}">
+    <div class="node-icon" style="background:${dom.stroke}">${iconText}</div>
+    <div class="node-info">
+      <div class="node-name">${node.lbl.replace('\n', ' ')}</div>
+      <div class="node-type">${typeLabel}${relCount > 0 ? ' • ' + relCount + ' connections' : '}</div>
+    </div>
+    ${badge}
+  </div>`;
+}
+
+function setupBeltDragHandlers() {
+  const beltNodes = document.querySelectorAll('.belt-node:not(.placed)');
+  
+  beltNodes.forEach(el => {
+    const nodeId = el.getAttribute('data-node-id');
+    const node = NM[nodeId];
+    const isHighlighted = highlightedNodes.has(nodeId);
+    
+    // Only allow dragging if not placed and (for non-processes) if highlighted
+    if (nodesOnCanvas.has(nodeId)) return;
+    if (node.t !== 'P' && !isHighlighted) {
+      el.style.opacity = '0.5';
+      el.style.cursor = 'not-allowed';
+      return;
+    }
+    
+    el.style.cursor = 'grab';
+    
+    let dragClone = null;
+    let startX, startY;
+    
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      
+      // Create a clone for visual feedback
+      dragClone = el.cloneNode(true);
+      dragClone.style.position = 'fixed';
+      dragClone.style.pointerEvents = 'none';
+      dragClone.style.zIndex = '10000';
+      dragClone.style.opacity = '0.9';
+      dragClone.style.width = el.offsetWidth + 'px';
+      dragClone.style.transform = 'scale(1.05)';
+      document.body.appendChild(dragClone);
+      
+      startX = e.clientX;
+      startY = e.clientY;
+      updateClonePosition(e.clientX, e.clientY);
+      
+      const onMouseMove = (e) => {
+        updateClonePosition(e.clientX, e.clientY);
+      };
+      
+      const onMouseUp = (e) => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        
+        if (dragClone) {
+          dragClone.remove();
+          dragClone = null;
+        }
+        
+        // Check if dropped on canvas
+        const gsRect = document.getElementById('gs').getBoundingClientRect();
+        if (e.clientX >= gsRect.left && e.clientX <= gsRect.right &&
+            e.clientY >= gsRect.top && e.clientY <= gsRect.bottom) {
+          // Convert screen coordinates to SVG coordinates
+          const transform = d3.zoomTransform(svg.node());
+          const svgX = (e.clientX - gsRect.left - transform.x) / transform.k;
+          const svgY = (e.clientY - gsRect.top - transform.y) / transform.k;
+          
+          placeNodeOnCanvas(nodeId, svgX, svgY);
+        }
+      };
+      
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+    
+    function updateClonePosition(x, y) {
+      if (dragClone) {
+        dragClone.style.left = (x - 50) + 'px';
+        dragClone.style.top = (y - 20) + 'px';
+      }
+    }
+  });
+}
+
+function placeNodeOnCanvas(nodeId, x, y) {
+  const node = NM[nodeId];
+  if (!node || nodesOnCanvas.has(nodeId)) return;
+  const prevNodesOnCanvas = new Set(nodesOnCanvas);
+  
+  // Snap to grid (20px)
+  const snappedX = Math.round(x / 20) * 20;
+  const snappedY = Math.round(y / 20) * 20;
+  
+  // Update node position
+  node.x = snappedX;
+  node.y = snappedY;
+  
+  // Mark as placed
+  nodesOnCanvas.add(nodeId);
+  
+  // If it's a process, highlight related nodes
+  if (node.t === 'P') {
+    const related = getRelatedNodes(nodeId);
+    related.forEach(relId => {
+      if (!nodesOnCanvas.has(relId)) {
+        highlightedNodes.add(relId);
+      }
+    });
+  }
+  
+  // Save existing port and label positions before rebuilding
+  const savedPS = PS.map(p => p ? { ...p } : null);
+  const savedLabelPositions = { ...labelPositions };
