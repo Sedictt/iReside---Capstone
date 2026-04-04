@@ -138,26 +138,26 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
     return (
         <>
-            <div className="w-full rounded-3xl bg-gradient-to-br from-[#171717] to-[#0a0a0a] border border-white/5 shadow-xl">
+            <div className="w-full rounded-3xl border border-border bg-gradient-to-br from-white to-slate-100 shadow-xl dark:border-white/5 dark:from-[#171717] dark:to-[#0a0a0a]">
                 {/* Header */}
-                <div className="p-6 border-b border-white/5">
+                <div className="border-b border-border p-6 dark:border-white/5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                                 <MessageSquare className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">
+                                <h2 className="text-xl font-bold text-foreground dark:text-white">
                                     {simplifiedMode ? "Messages from People" : "Recent Inquiries"}
                                 </h2>
-                                <p className="text-sm text-neutral-400">
+                                <p className="text-sm text-muted-foreground">
                                     {simplifiedMode ? "Talk to people interested in your house" : "Respond quickly to convert more prospects"}
                                 </p>
                             </div>
                         </div>
                         <a
                             href="/landlord/messages"
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium text-neutral-300 hover:text-white transition-all group"
+                            className="group flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:text-white"
                         >
                             <span>{simplifiedMode ? "See All Messages" : "View All"}</span>
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -170,17 +170,17 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="group relative rounded-2xl bg-neutral-900 border border-white/5 animate-pulse overflow-hidden">
-                                    <div className="relative h-32 bg-white/5">
-                                        <div className="absolute bottom-3 left-4 h-14 w-14 rounded-full bg-white/10 ring-2 ring-neutral-900" />
+                                <div key={i} className="group relative overflow-hidden rounded-2xl border border-border bg-card animate-pulse dark:border-white/5 dark:bg-neutral-900">
+                                    <div className="relative h-32 bg-muted/50 dark:bg-white/5">
+                                        <div className="absolute bottom-3 left-4 h-14 w-14 rounded-full bg-muted ring-2 ring-card dark:bg-white/10 dark:ring-neutral-900" />
                                     </div>
                                     <div className="p-4 pt-4">
                                         <div className="space-y-3">
                                             <div>
-                                                <div className="h-5 w-32 bg-white/10 rounded mb-2" />
-                                                <div className="h-3 w-24 bg-white/5 rounded" />
+                                                <div className="mb-2 h-5 w-32 rounded bg-muted" />
+                                                <div className="h-3 w-24 rounded bg-muted/80" />
                                             </div>
-                                            <div className="h-10 w-full bg-white/5 rounded-lg" />
+                                            <div className="h-10 w-full rounded-lg bg-muted/80" />
                                         </div>
                                     </div>
                                 </div>
@@ -188,7 +188,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         </div>
                     ) : error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
-                            <p className="text-sm text-red-300">{error}</p>
+                            <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
                         </div>
                     ) : inquiries.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -198,7 +198,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1, duration: 0.3 }}
-                                className="group relative rounded-2xl bg-neutral-900 border border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:shadow-lime-900/20"
+                                className="group relative rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 dark:border-white/10 dark:bg-neutral-900 dark:hover:border-white/20 dark:hover:shadow-lime-900/20"
                             >
                                 {/* Header Section with Property Image Background */}
                                 <div className="relative h-32 overflow-hidden rounded-t-2xl">
@@ -219,7 +219,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     ) : (
                                         // Neutral dark overlay for read
                                         <>
-                                            <div className="absolute inset-0 bg-neutral-900/50" />
+                                            <div className="absolute inset-0 bg-slate-900/55 dark:bg-neutral-900/50" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/60 to-transparent" />
                                         </>
                                     )}
@@ -268,23 +268,23 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <div className="p-4 space-y-3">
                                     {/* Name and Property */}
                                     <div>
-                                        <h3 className="text-base font-bold text-white mb-1 truncate">
+                                        <h3 className="mb-1 truncate text-base font-bold text-foreground dark:text-white">
                                             {inquiry.prospectName}
                                         </h3>
-                                        <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground dark:text-neutral-400">
                                             <Home className="h-3.5 w-3.5 flex-shrink-0" />
                                             <p className="truncate font-medium">{inquiry.propertyName}</p>
                                         </div>
                                     </div>
 
                                     {/* Message Preview */}
-                                    <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+                                    <p className="min-h-[2.5rem] line-clamp-2 text-sm leading-relaxed text-muted-foreground dark:text-neutral-400">
                                         {inquiry.messagePreview}
                                     </p>
 
                                     {/* Footer with Time and Action */}
-                                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                                        <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                                    <div className="flex items-center justify-between border-t border-border pt-2 dark:border-white/5">
+                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <Clock className="h-3.5 w-3.5" />
                                             <span>{inquiry.timestamp}</span>
                                         </div>
@@ -293,7 +293,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     {/* Action Button */}
                                     <button 
                                         onClick={() => setActiveChat(inquiry)}
-                                        className="w-full py-2.5 rounded-xl bg-white hover:bg-neutral-100 text-neutral-900 text-sm font-bold transition-all shadow-lg hover:shadow-xl"
+                                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground shadow-lg transition-all hover:brightness-110 hover:shadow-xl"
                                     >
                                         {simplifiedMode ? "Answer Now" : "Reply now"}
                                     </button>
@@ -302,12 +302,12 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                             ))}
                         </div>
                     ) : (
-                        <div className="p-6 text-center rounded-2xl border border-dashed border-white/10 bg-black/20">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-800/50 mb-4">
-                                <MessageSquare className="h-8 w-8 text-neutral-600" />
+                        <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center dark:border-white/10 dark:bg-black/20">
+                            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted dark:bg-neutral-800/50">
+                                <MessageSquare className="h-8 w-8 text-muted-foreground dark:text-neutral-600" />
                             </div>
-                            <h3 className="text-lg font-semibold text-white mb-2">No Recent Inquiries</h3>
-                            <p className="text-sm text-neutral-400 max-w-sm mx-auto">
+                            <h3 className="mb-2 text-lg font-semibold text-foreground dark:text-white">No Recent Inquiries</h3>
+                            <p className="mx-auto max-w-sm text-sm text-muted-foreground dark:text-neutral-400">
                                 When potential tenants message you through applications, they will appear here.
                             </p>
                         </div>
@@ -323,7 +323,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                     initial={{ opacity: 0, y: -8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.15 }}
-                    className="fixed w-48 rounded-xl bg-neutral-900 border border-white/10 shadow-2xl backdrop-blur-xl z-[9999]"
+                    className="fixed z-[9999] w-48 rounded-xl border border-border bg-card shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-neutral-900"
                     style={{ top: menuPos.top, left: menuPos.left }}
                 >
                     <div className="py-1">
@@ -337,10 +337,10 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                                 void applyInquiryAction(inquiry.id, inquiry.isUnread ? "read" : "unread");
                             }}
-                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left group/item"
+                            className="group/item flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/80 dark:hover:bg-white/5"
                         >
-                            <CheckCircle className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
-                            <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
+                            <CheckCircle className="h-4 w-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
+                            <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
                                 {simplifiedMode ? "Got it" : (inquiries.find(i => i.id === openMenuId)?.isUnread ? 'Mark as Read' : 'Mark as Unread')}
                             </span>
                         </button>
@@ -350,10 +350,10 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 console.log('View property');
                                 setOpenMenuId(null);
                             }}
-                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left group/item"
+                            className="group/item flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/80 dark:hover:bg-white/5"
                         >
-                            <Eye className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
-                            <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
+                            <Eye className="h-4 w-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
+                            <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
                                 {simplifiedMode ? "See House" : "View Property"}
                             </span>
                         </button>
@@ -367,15 +367,15 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
 
                                 void applyInquiryAction(openMenuId, "archive");
                             }}
-                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/5 transition-colors text-left group/item"
+                            className="group/item flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/80 dark:hover:bg-white/5"
                         >
-                            <Archive className="h-4 w-4 text-neutral-400 group-hover/item:text-white transition-colors" />
-                            <span className="text-sm text-neutral-300 group-hover/item:text-white transition-colors">
+                            <Archive className="h-4 w-4 text-muted-foreground transition-colors group-hover/item:text-foreground dark:group-hover/item:text-white" />
+                            <span className="text-sm text-muted-foreground transition-colors group-hover/item:text-foreground dark:text-neutral-300 dark:group-hover/item:text-white">
                                 {simplifiedMode ? "Save" : "Archive"}
                             </span>
                         </button>
 
-                        <div className="border-t border-white/5 my-1" />
+                        <div className="my-1 border-t border-border dark:border-white/5" />
                         <button
                             onClick={() => {
                                 if (!openMenuId) {
@@ -405,11 +405,11 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed bottom-6 right-6 w-full max-w-[360px] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl flex flex-col z-[9999] overflow-hidden"
+                        className="fixed bottom-6 right-6 z-[9999] flex w-full max-w-[360px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl dark:border-white/10 dark:bg-neutral-900"
                         style={{ height: "450px" }}
                     >
                         {/* Chat Header */}
-                        <div className="p-4 border-b border-white/10 bg-neutral-800/80 backdrop-blur-md flex items-center justify-between">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/70 p-4 backdrop-blur-md dark:border-white/10 dark:bg-neutral-800/80">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-lime-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm">
                                     {activeChat.prospectAvatar ? (
@@ -423,8 +423,8 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     )}
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-white font-bold text-sm">{activeChat.prospectName}</span>
-                                    <span className="text-neutral-400 text-xs truncate max-w-[150px]">{activeChat.propertyName}</span>
+                                    <span className="text-sm font-bold text-foreground dark:text-white">{activeChat.prospectName}</span>
+                                    <span className="max-w-[150px] truncate text-xs text-muted-foreground dark:text-neutral-400">{activeChat.propertyName}</span>
                                 </div>
                             </div>
                             <button
@@ -432,17 +432,17 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     setActiveChat(null);
                                     setMessageInput("");
                                 }}
-                                className="p-2 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                                className="rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         {/* Chat Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#0a0a0a]">
+                        <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto bg-background p-4">
                             <div className="flex flex-col gap-1 items-start">
-                                <span className="text-[10px] text-neutral-500 ml-1">{activeChat.timestamp}</span>
-                                <div className="bg-neutral-800 border border-white/5 text-neutral-200 text-sm p-3 rounded-2xl rounded-tl-sm max-w-[85%]">
+                                <span className="ml-1 text-[10px] text-muted-foreground">{activeChat.timestamp}</span>
+                                <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-border bg-muted p-3 text-sm text-foreground dark:border-white/5 dark:bg-neutral-800 dark:text-neutral-200">
                                     {activeChat.messagePreview}
                                 </div>
                             </div>
@@ -457,7 +457,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                         </div>
 
                         {/* Chat Input */}
-                        <div className="p-3 border-t border-white/10 bg-neutral-900">
+                        <div className="border-t border-border bg-card p-3 dark:border-white/10 dark:bg-neutral-900">
                             <form 
                                 onSubmit={(e) => {
                                     e.preventDefault();
@@ -475,7 +475,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     value={messageInput}
                                     onChange={(e) => setMessageInput(e.target.value)}
                                     placeholder="Type a message..."
-                                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-lime-500/50 placeholder:text-neutral-500"
+                                    className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-lime-500/50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-neutral-500"
                                 />
                                 <button
                                     type="submit"

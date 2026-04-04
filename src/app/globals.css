@@ -1,20 +1,39 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #f3f5f9;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --input: #ffffff;
+  --border: #d9e2ec;
+  --muted: #e8edf5;
+  --muted-foreground: #64748b;
+  --secondary: #dfe7f1;
+  --secondary-foreground: #0f172a;
+  --primary: #6d9838;
+  --primary-foreground: #f8fafc;
+  --primary-rgb: 109, 152, 56;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  --color-primary: #6d9838;
   /* Sage Green */
   --color-primary-dark: #5a7e2f;
   /* Darker Sage */
@@ -35,7 +54,8 @@
   --font-display: "Manrope", sans-serif;
 }
 
-:root {
+.dark {
+  color-scheme: dark;
   --background: #0a0a0a;
   /* Neutral 950 */
   --foreground: #fafafa;
@@ -44,16 +64,27 @@
   --primary-rgb: 109, 152, 56;
   /* Sage Green */
   --card: #171717;
+  --card-foreground: #fafafa;
   /* Neutral 900 */
   --input: #262626;
   /* Neutral 800 */
   --border: #262626;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --primary-foreground: #0a0a0a;
+}
+
+.light {
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Hide number input spinners */

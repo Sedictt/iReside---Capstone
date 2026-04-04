@@ -81,7 +81,7 @@ export function ProfileWidget() {
             onMouseLeave={handleMouseLeave}
         >
             {/* Profile Avatar Button */}
-            <button className="relative h-10 w-10 overflow-visible rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 ring-2 ring-white/10 hover:ring-primary/50 transition-all group flex items-center justify-center shadow-lg">
+            <button className="group relative flex h-10 w-10 items-center justify-center overflow-visible rounded-full bg-gradient-to-br from-slate-200 to-slate-300 shadow-lg ring-2 ring-white/60 transition-all hover:ring-primary/50 dark:from-neutral-700 dark:to-neutral-800 dark:ring-white/10">
                 {shouldShowAvatar ? (
                     <img
                         src={displayAvatar as string}
@@ -90,7 +90,7 @@ export function ProfileWidget() {
                         onError={() => setAvatarFailed(true)}
                     />
                 ) : (
-                    <span className="font-bold text-white relative z-10 text-sm">{initials}</span>
+                    <span className="relative z-10 text-sm font-bold text-slate-900 dark:text-white">{initials}</span>
                 )}
             </button>
 
@@ -107,13 +107,13 @@ export function ProfileWidget() {
                             damping: 25,
                             mass: 0.5
                         }}
-                        className="absolute right-0 top-12 z-50 w-64 rounded-xl bg-neutral-900/95 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden origin-top"
+                        className="absolute right-0 top-12 z-50 w-64 origin-top overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-neutral-900/95"
                         style={{ transformStyle: "preserve-3d" }}
                     >
                         {/* User Info Header */}
-                        <div className="p-4 border-b border-white/10 bg-gradient-to-br from-neutral-800/50 to-neutral-900/50">
+                        <div className="border-b border-border bg-gradient-to-br from-slate-100 to-slate-200 p-4 dark:border-white/10 dark:from-neutral-800/50 dark:to-neutral-900/50">
                             <div className="flex items-center gap-3">
-                                <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 ring-2 ring-white/10 flex items-center justify-center shadow-lg relative">
+                                <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-200 to-slate-300 shadow-lg ring-2 ring-white/60 dark:from-neutral-700 dark:to-neutral-800 dark:ring-white/10">
                                     {shouldShowAvatar ? (
                                         <img
                                             src={displayAvatar as string}
@@ -122,14 +122,14 @@ export function ProfileWidget() {
                                             onError={() => setAvatarFailed(true)}
                                         />
                                     ) : (
-                                        <span className="font-bold text-white text-base">{initials}</span>
+                                        <span className="text-base font-bold text-slate-900 dark:text-white">{initials}</span>
                                     )}
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <p className="truncate text-sm font-bold text-white">
+                                    <p className="truncate text-sm font-bold text-foreground dark:text-white">
                                         {displayName}
                                     </p>
-                                    <p className="truncate text-xs text-neutral-400">{displayRole}</p>
+                                    <p className="truncate text-xs text-muted-foreground">{displayRole}</p>
                                 </div>
                             </div>
                         </div>
@@ -138,27 +138,27 @@ export function ProfileWidget() {
                         <div className="p-2">
                             <Link
                                 href="/landlord/profile"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition-colors group"
+                                className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
                                 <User className="h-4 w-4 group-hover:text-primary transition-colors" />
                                 <span>My Profile</span>
                             </Link>
                             <Link
                                 href="/landlord/settings"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition-colors group"
+                                className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
                                 <Settings className="h-4 w-4 group-hover:text-primary transition-colors" />
                                 <span>Settings</span>
                             </Link>
                             <Link
                                 href="/landlord/billing"
-                                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition-colors group"
+                                className="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
                             >
                                 <CreditCard className="h-4 w-4 group-hover:text-primary transition-colors" />
                                 <span>Billing & Plans</span>
                             </Link>
 
-                            <div className="my-1.5 h-px bg-white/10"></div>
+                            <div className="my-1.5 h-px bg-border dark:bg-white/10"></div>
 
                             <button
                                 onClick={signOut}

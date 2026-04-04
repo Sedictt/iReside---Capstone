@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File } from "lucide-react";
+import { Users, MoreHorizontal, MessageSquare, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -788,7 +788,7 @@ export function ContactsSidebar() {
                     <>
                         <Clock3 className="h-3 w-3" />
                         <span>Sending</span>
-                        <span className="text-neutral-600">• {timestamp}</span>
+                        <span className="text-muted-foreground">• {timestamp}</span>
                     </>
                 );
             case "delivered":
@@ -796,7 +796,7 @@ export function ContactsSidebar() {
                     <>
                         <CheckCheck className="h-3 w-3" />
                         <span>Delivered</span>
-                        <span className="text-neutral-600">• {timestamp}</span>
+                        <span className="text-muted-foreground">• {timestamp}</span>
                     </>
                 );
             case "seen":
@@ -804,7 +804,7 @@ export function ContactsSidebar() {
                     <>
                         <CheckCheck className="h-3 w-3 text-emerald-400" />
                         <span className="text-emerald-400">Seen</span>
-                        <span className="text-neutral-600">• {timestamp}</span>
+                        <span className="text-muted-foreground">• {timestamp}</span>
                     </>
                 );
             default:
@@ -812,7 +812,7 @@ export function ContactsSidebar() {
                     <>
                         <Check className="h-3 w-3" />
                         <span>Sent</span>
-                        <span className="text-neutral-600">• {timestamp}</span>
+                        <span className="text-muted-foreground">• {timestamp}</span>
                     </>
                 );
         }
@@ -823,32 +823,32 @@ export function ContactsSidebar() {
             {/* Sidebar */}
             <div
                 className={cn(
-                    "fixed top-0 right-0 h-full bg-neutral-900 border-l border-white/5 z-50 transition-all duration-500 ease-in-out flex flex-col shadow-2xl overflow-hidden",
+                    "fixed top-0 right-0 z-50 flex h-full flex-col overflow-hidden border-l border-border bg-card text-foreground shadow-2xl transition-all duration-500 ease-in-out dark:border-white/5 dark:bg-neutral-900",
                     isHovered ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
                 {/* Header Toggle */}
-                <div className="p-6 border-b border-white/5 flex flex-col shrink-0 min-h-[88px] justify-center">
+                <div className="flex min-h-[88px] shrink-0 flex-col justify-center border-b border-border p-6 dark:border-white/5">
                     {!isHovered && (
                         <div className="flex flex-col items-center gap-4">
-                            <div className="relative p-2.5 bg-white/5 rounded-xl cursor-default">
+                            <div className="relative cursor-default rounded-xl bg-muted p-2.5 dark:bg-white/5">
                                 <MessageSquare className="h-5 w-5 text-primary" />
                                 {hasUnreadConversations && (
-                                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-neutral-900 animate-pulse"></span>
+                                    <span className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-red-500 ring-2 ring-card dark:ring-neutral-900"></span>
                                 )}
                             </div>
                         </div>
                     )}
 
                     {isHovered && (
-                        <div className="flex w-full bg-black/40 rounded-xl p-1 relative animate-in fade-in duration-500">
+                        <div className="relative flex w-full rounded-xl bg-muted p-1 animate-in fade-in duration-500 dark:bg-black/40">
                             <button
                                 onClick={() => setActiveTab("messages")}
                                 className={cn(
                                     "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all relative z-10",
-                                    activeTab === "messages" ? "text-white" : "text-neutral-500 hover:text-neutral-300"
+                                    activeTab === "messages" ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground dark:hover:text-neutral-300"
                                 )}
                             >
                                 <MessageSquare className="w-4 h-4" />
@@ -858,7 +858,7 @@ export function ContactsSidebar() {
                                 onClick={() => setActiveTab("contacts")}
                                 className={cn(
                                     "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all relative z-10",
-                                    activeTab === "contacts" ? "text-white" : "text-neutral-500 hover:text-neutral-300"
+                                    activeTab === "contacts" ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground dark:hover:text-neutral-300"
                                 )}
                             >
                                 <Users className="w-4 h-4" />
@@ -867,7 +867,7 @@ export function ContactsSidebar() {
 
                             {/* Sliding Active Background */}
                             <div
-                                className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-neutral-800 rounded-lg transition-transform duration-300 ease-out z-0"
+                                className="absolute top-1 bottom-1 z-0 w-[calc(50%-4px)] rounded-lg bg-card shadow-sm transition-transform duration-300 ease-out dark:bg-neutral-800"
                                 style={{ transform: activeTab === "contacts" ? "translateX(100%)" : "translateX(0)" }}
                             />
                         </div>
@@ -892,28 +892,28 @@ export function ContactsSidebar() {
                                         onClick={() => openChat(msg)}
                                         className={cn(
                                             "flex items-center gap-3 transition-colors text-left group rounded-2xl",
-                                            isHovered ? "p-3 hover:bg-white/[0.04]" : "p-1 justify-center hover:scale-110"
+                                            isHovered ? "p-3 hover:bg-muted/80 dark:hover:bg-white/[0.04]" : "p-1 justify-center hover:scale-110"
                                         )}
                                     >
                                         <div className="relative shrink-0">
                                             <img
                                                 src={msg.avatar}
                                                 alt={msg.name}
-                                                className="w-10 h-10 rounded-full object-cover border-2 border-[#0a0a0a]"
+                                                className="h-10 w-10 rounded-full border-2 border-background object-cover"
                                             />
                                             {msg.unread && (
-                                                <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-neutral-900" />
+                                                <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-card bg-red-500 dark:border-neutral-900" />
                                             )}
                                         </div>
                                         {isHovered && (
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between mb-0.5">
-                                                    <h4 className={cn("text-sm truncate pr-2 transition-colors group-hover:text-primary", msg.unread ? "font-bold text-white" : "font-medium text-neutral-200")}>
+                                                    <h4 className={cn("pr-2 text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-foreground/80 dark:text-neutral-200")}>
                                                         {msg.name}
                                                     </h4>
-                                                    <span className="text-[10px] text-neutral-500 shrink-0">{msg.time}</span>
+                                                    <span className="shrink-0 text-[10px] text-muted-foreground">{msg.time}</span>
                                                 </div>
-                                                <p className={cn("text-xs truncate", msg.unread ? "text-neutral-300 font-medium" : "text-neutral-500")}>
+                                                <p className={cn("truncate text-xs", msg.unread ? "font-medium text-foreground/80 dark:text-neutral-300" : "text-muted-foreground")}>
                                                     {msg.lastMessage}
                                                 </p>
                                             </div>
@@ -922,11 +922,11 @@ export function ContactsSidebar() {
                                 ))}
 
                                 {!isLoadingConversations && conversations.length === 0 && (
-                                    <div className={cn("text-xs text-neutral-500", isHovered ? "px-2 pt-2" : "text-center")}>No conversations yet</div>
+                                    <div className={cn("text-xs text-muted-foreground", isHovered ? "px-2 pt-2" : "text-center")}>No conversations yet</div>
                                 )}
 
                                 {!isLoadingConversations && conversationsError && (
-                                    <div className={cn("text-xs text-red-400", isHovered ? "px-2 pt-2" : "text-center")}>{conversationsError}</div>
+                                    <div className={cn("text-xs text-red-500 dark:text-red-400", isHovered ? "px-2 pt-2" : "text-center")}>{conversationsError}</div>
                                 )}
                             </motion.div>
                         )}
@@ -952,7 +952,7 @@ export function ContactsSidebar() {
                                 ))}
 
                                 {!isLoadingConversations && conversations.length === 0 && (
-                                    <div className={cn("text-xs text-neutral-500", isHovered ? "px-2 pt-2" : "text-center")}>No contacts yet</div>
+                                    <div className={cn("text-xs text-muted-foreground", isHovered ? "px-2 pt-2" : "text-center")}>No contacts yet</div>
                                 )}
                             </motion.div>
                         )}
@@ -961,8 +961,8 @@ export function ContactsSidebar() {
 
                 {/* Footer View All */}
                 {isHovered && (
-                    <div className="p-4 border-t border-white/5 shrink-0 bg-neutral-900 animate-in fade-in duration-500">
-                        <Link href="/landlord/tenants" className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-bold text-white transition-colors border border-white/10 flex items-center justify-center">
+                    <div className="shrink-0 border-t border-border bg-card p-4 animate-in fade-in duration-500 dark:border-white/5 dark:bg-neutral-900">
+                        <Link href="/landlord/tenants" className="flex w-full items-center justify-center rounded-xl border border-border bg-muted py-3 text-sm font-bold text-foreground transition-colors hover:bg-muted/80 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
                             {activeTab === "messages" ? "View All Messages" : "View All Tenants"}
                         </Link>
                     </div>
@@ -992,10 +992,10 @@ export function ContactsSidebar() {
                                 }
                             }}
                             className={cn(
-                                "w-[320px] h-[400px] border border-b-0 rounded-t-2xl shadow-[0_-18px_40px_rgba(0,0,0,0.32)] flex flex-col pointer-events-auto transition-all",
+                                "pointer-events-auto flex h-[400px] w-[320px] flex-col rounded-t-2xl border border-b-0 shadow-[0_-18px_40px_rgba(0,0,0,0.18)] transition-all",
                                 chat.isActive
-                                    ? "bg-neutral-900 border-white/10"
-                                    : "bg-neutral-900/90 border-white/20 opacity-90"
+                                    ? "border-border bg-card dark:border-white/10 dark:bg-neutral-900"
+                                    : "border-border/80 bg-card/95 opacity-90 dark:border-white/20 dark:bg-neutral-900/90"
                             )}
                         >
                             {/* Chatbox Header */}
@@ -1003,24 +1003,24 @@ export function ContactsSidebar() {
                                 className={cn(
                                     "flex items-center justify-between p-3 border-b rounded-t-2xl cursor-pointer transition-colors",
                                     chat.isActive
-                                        ? "border-emerald-400/25 bg-emerald-500/12 hover:bg-emerald-500/20"
-                                        : "border-amber-400/20 bg-amber-500/10 hover:bg-amber-500/15"
+                                        ? "border-emerald-400/25 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/12 dark:hover:bg-emerald-500/20"
+                                        : "border-amber-400/20 bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
                                 )}
                             >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
-                                        <img src={chat.avatar} alt={chat.name} className="w-8 h-8 rounded-full object-cover border border-white/10" />
-                                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-neutral-900 rounded-full" />
+                                        <img src={chat.avatar} alt={chat.name} className="h-8 w-8 rounded-full border border-border object-cover dark:border-white/10" />
+                                        <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500 dark:border-neutral-900" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <h4 className="text-sm font-bold text-white truncate hover:underline">{chat.name}</h4>
+                                        <h4 className="truncate text-sm font-bold text-foreground hover:underline dark:text-white">{chat.name}</h4>
                                         {chat.isActive && (
                                             <p className="text-[10px] text-emerald-400">Active</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-0.5 shrink-0 text-neutral-400 relative">
-                                    <Link href="/landlord/messages" className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
+                                    <div className="relative flex shrink-0 items-center gap-0.5 text-muted-foreground">
+                                    <Link href="/landlord/messages" className="rounded-lg p-1.5 transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white">
                                         <Maximize2 className="w-3.5 h-3.5" />
                                     </Link>
                                     <div className="relative">
@@ -1029,7 +1029,7 @@ export function ContactsSidebar() {
                                                 e.stopPropagation();
                                                 setOpenMenuId(openMenuId === chat.id ? null : chat.id);
                                             }}
-                                            className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors"
+                                            className="rounded-lg p-1.5 transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                                         >
                                             <MoreVertical className="w-4 h-4" />
                                         </button>
@@ -1044,11 +1044,11 @@ export function ContactsSidebar() {
                                                         setOpenMenuId(null);
                                                     }} 
                                                 />
-                                                <div className="absolute right-0 top-full mt-1 w-40 bg-neutral-800 border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-200">
+                                                <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-xl animate-in fade-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-neutral-800">
                                                     <Link 
                                                         href={chat.participantUserId ? `/visitor/${chat.participantUserId}` : "/landlord/messages"}
                                                         onClick={() => setOpenMenuId(null)}
-                                                        className="w-full text-left px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/5 transition-colors block"
+                                                        className="block w-full px-4 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
                                                     >
                                                         View Profile
                                                     </Link>
@@ -1058,7 +1058,7 @@ export function ContactsSidebar() {
                                                             setSharedFilesChatId(chat.id);
                                                             setOpenMenuId(null);
                                                         }}
-                                                        className="w-full text-left px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/5 transition-colors block"
+                                                        className="block w-full px-4 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
                                                     >
                                                         View Shared Files
                                                     </button>
@@ -1068,7 +1068,7 @@ export function ContactsSidebar() {
                                                             void submitMenuAction(chat, "archive");
                                                         }}
                                                         disabled={menuActionId !== null}
-                                                        className="w-full text-left px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="w-full px-4 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
                                                     >
                                                         {menuActionId === `${chat.id}:archive` ? "Archiving..." : "Archive Chat"}
                                                     </button>
@@ -1078,7 +1078,7 @@ export function ContactsSidebar() {
                                                             void submitMenuReport(chat);
                                                         }}
                                                         disabled={menuActionId !== null}
-                                                        className="w-full text-left px-4 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors border-t border-white/5 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="mt-1 w-full border-t border-border px-4 py-2 text-left text-xs text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/5 dark:text-red-400 dark:hover:text-red-300"
                                                     >
                                                         {menuActionId === `${chat.id}:report` ? "Reporting..." : "Report User"}
                                                     </button>
@@ -1088,7 +1088,7 @@ export function ContactsSidebar() {
                                                             void submitMenuAction(chat, "block");
                                                         }}
                                                         disabled={menuActionId !== null}
-                                                        className="w-full text-left px-4 py-2 text-xs text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="w-full px-4 py-2 text-left text-xs text-orange-500 transition-colors hover:bg-orange-500/10 hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-50 dark:text-orange-400 dark:hover:text-orange-300"
                                                     >
                                                         {menuActionId === `${chat.id}:block` ? "Blocking..." : "Block Contact"}
                                                     </button>
@@ -1096,7 +1096,7 @@ export function ContactsSidebar() {
                                             </>
                                         )}
                                     </div>
-                                    <button onClick={() => closeChat(chat.id)} className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
+                                    <button onClick={() => closeChat(chat.id)} className="rounded-lg p-1.5 transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white">
                                         <X className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -1107,13 +1107,13 @@ export function ContactsSidebar() {
                                 ref={(node) => {
                                     chatScrollRef.current[chat.id] = node;
                                 }}
-                                className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-[#0a0a0a]/50"
+                                className="custom-scrollbar flex flex-1 flex-col gap-3 overflow-y-auto bg-background/80 p-4 dark:bg-[#0a0a0a]/50"
                             >
                                 {chatState.isLoading && (
-                                    <p className="text-xs text-neutral-500 text-center">Loading conversation...</p>
+                                    <p className="text-center text-xs text-muted-foreground">Loading conversation...</p>
                                 )}
                                 {!chatState.isLoading && chatState.messages.length === 0 && (
-                                    <p className="text-xs text-neutral-500 text-center">No messages yet</p>
+                                    <p className="text-center text-xs text-muted-foreground">No messages yet</p>
                                 )}
                                 {chatState.messages.map((message) => {
                                     const hasImage = Boolean(message.fileUrl && (message.fileMimeType?.startsWith("image/") || message.content.match(/\.(jpeg|jpg|gif|png|webp)/i)));
@@ -1124,13 +1124,13 @@ export function ContactsSidebar() {
                                         <div className={cn(
                                             "text-sm px-4 py-2.5 rounded-2xl max-w-[85%] border break-words [overflow-wrap:anywhere]",
                                             message.isOwn
-                                                ? "bg-primary text-black border-primary/30 rounded-br-sm font-medium shadow-sm transition-all"
-                                                : "bg-neutral-800 text-neutral-200 border-white/5 rounded-bl-sm",
-                                            hasFile && "px-0 py-0 bg-transparent border-none shadow-none text-white mr-0",
-                                            hasImage && "p-1 bg-black/40 border-white/10"
+                                                ? "bg-primary text-primary-foreground border-primary/30 rounded-br-sm font-medium shadow-sm transition-all"
+                                                : "rounded-bl-sm border-border bg-muted text-foreground dark:border-white/5 dark:bg-neutral-800 dark:text-neutral-200",
+                                            hasFile && "mr-0 border-none bg-transparent px-0 py-0 text-foreground shadow-none dark:text-white",
+                                            hasImage && "border-border bg-white/70 p-1 dark:border-white/10 dark:bg-black/40"
                                         )}>
                                             {hasImage && message.fileUrl && (
-                                                <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden w-full bg-black/40">
+                                                <a href={message.fileUrl} target="_blank" rel="noreferrer" className="block w-full overflow-hidden rounded-xl bg-white/70 dark:bg-black/40">
                                                     <img src={message.fileUrl} alt="Shared image" className="w-full max-h-48 object-contain" />
                                                 </a>
                                             )}
@@ -1140,13 +1140,13 @@ export function ContactsSidebar() {
                                                     href={message.fileUrl}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="flex items-center gap-3 rounded-2xl border p-3 border-white/10 bg-neutral-900/80"
+                                                    className="flex items-center gap-3 rounded-2xl border border-border bg-card/90 p-3 dark:border-white/10 dark:bg-neutral-900/80"
                                                 >
-                                                    <div className="p-2 rounded-lg bg-white/10 shrink-0">
-                                                        <File className="w-4 h-4 text-neutral-100" />
+                                                    <div className="shrink-0 rounded-lg bg-muted p-2 dark:bg-white/10">
+                                                        <File className="h-4 w-4 text-foreground dark:text-neutral-100" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-bold truncate text-neutral-100">{message.content || "Attachment"}</p>
+                                                        <p className="truncate text-xs font-bold text-foreground dark:text-neutral-100">{message.content || "Attachment"}</p>
                                                     </div>
                                                 </a>
                                             )}
@@ -1155,7 +1155,7 @@ export function ContactsSidebar() {
                                                 <span className="leading-relaxed whitespace-pre-wrap">{message.content}</span>
                                             )}
                                         </div>
-                                        <div className={cn("text-[10px] flex items-center gap-1", message.isOwn ? "text-neutral-500" : "text-neutral-600 px-1")}>
+                                        <div className={cn("flex items-center gap-1 text-[10px]", message.isOwn ? "text-muted-foreground" : "px-1 text-muted-foreground")}>
                                             {message.isOwn
                                                 ? renderOutgoingStatus(message.status, formatMiniTimestamp(message.createdAt))
                                                 : <span>{formatMiniTimestamp(message.createdAt)}</span>
@@ -1165,7 +1165,7 @@ export function ContactsSidebar() {
                                 )})}
                                 {chatState.isOtherUserTyping && (
                                     <div className="flex items-end gap-2 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
-                                        <div className="px-3 py-2 bg-neutral-800 text-white rounded-2xl rounded-bl-sm border border-white/5 shadow-sm">
+                                        <div className="rounded-2xl rounded-bl-sm border border-border bg-muted px-3 py-2 text-foreground shadow-sm dark:border-white/5 dark:bg-neutral-800 dark:text-white">
                                             <div className="flex items-center gap-1">
                                                 <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
                                                 <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
@@ -1175,14 +1175,14 @@ export function ContactsSidebar() {
                                     </div>
                                 )}
                                 {chatState.error && (
-                                    <p className="text-xs text-red-400 text-center">{chatState.error}</p>
+                                    <p className="text-center text-xs text-red-500 dark:text-red-400">{chatState.error}</p>
                                 )}
                             </div>
 
                             {/* Chatbox Input */}
-                            <div className="p-3 border-t border-white/10 bg-neutral-900 flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 border-t border-border bg-card p-3 dark:border-white/10 dark:bg-neutral-900">
                                 <div className="flex items-center gap-2">
-                                    <label className={cn("p-1.5 transition-colors", chat.isActive ? "text-neutral-400 hover:text-white cursor-pointer" : "text-neutral-600 cursor-not-allowed")}>
+                                    <label className={cn("p-1.5 transition-colors", chat.isActive ? "cursor-pointer text-muted-foreground hover:text-foreground dark:hover:text-white" : "cursor-not-allowed text-muted-foreground/60")}>
                                         <MoreHorizontal className="w-4 h-4" />
                                         <input
                                             type="file"
@@ -1197,7 +1197,7 @@ export function ContactsSidebar() {
                                             }}
                                         />
                                     </label>
-                                    <div className="flex-1 bg-white/5 border border-white/10 rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                                    <div className="flex flex-1 items-center rounded-full border border-border bg-background px-3 py-1.5 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary dark:border-white/10 dark:bg-white/5">
                                         <input
                                             type="text"
                                             placeholder={chat.isActive ? "Aa" : "Click header to activate"}
@@ -1210,7 +1210,7 @@ export function ContactsSidebar() {
                                                     void sendMiniMessage(chat.id);
                                                 }
                                             }}
-                                            className="w-full bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-neutral-500"
+                                            className="w-full border-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none dark:text-white dark:placeholder:text-neutral-500"
                                         />
                                     </div>
                                     <button
@@ -1218,13 +1218,13 @@ export function ContactsSidebar() {
                                         onClick={() => void sendMiniMessage(chat.id)}
                                         className={cn(
                                             "p-1.5 transition-colors",
-                                            chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "text-neutral-600 cursor-not-allowed"
+                                            chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "cursor-not-allowed text-muted-foreground/60"
                                         )}
                                     >
                                         <Send className="w-4 h-4" />
                                     </button>
                                 </div>
-                                {chatState.isUploading && <p className="text-[10px] text-neutral-400">Uploading attachment...</p>}
+                                {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment...</p>}
                             </div>
                         </motion.div>
                             );
@@ -1248,25 +1248,25 @@ export function ContactsSidebar() {
                             initial={{ opacity: 0, y: 24, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 16, scale: 0.98 }}
-                            className="fixed z-[80] right-6 bottom-6 w-[360px] max-h-[70vh] bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                            className="fixed bottom-6 right-6 z-[80] max-h-[70vh] w-[360px] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl dark:border-white/10 dark:bg-neutral-900"
                         >
-                            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-neutral-900/90">
+                            <div className="flex items-center justify-between border-b border-border bg-card/90 px-4 py-3 dark:border-white/10 dark:bg-neutral-900/90">
                                 <div className="min-w-0">
-                                    <p className="text-sm font-bold text-white truncate">Shared Files</p>
-                                    <p className="text-[11px] text-neutral-400 truncate">
+                                    <p className="truncate text-sm font-bold text-foreground dark:text-white">Shared Files</p>
+                                    <p className="truncate text-[11px] text-muted-foreground">
                                         {openChats.find((chat) => chat.id === sharedFilesChatId)?.name ?? "Conversation"}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setSharedFilesChatId(null)}
-                                    className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
                             <div className="max-h-[calc(70vh-62px)] overflow-y-auto custom-scrollbar p-3 space-y-2">
                                 {sharedFiles.length === 0 && (
-                                    <p className="text-xs text-neutral-500 text-center py-5">No shared files in this chat yet.</p>
+                                    <p className="py-5 text-center text-xs text-muted-foreground">No shared files in this chat yet.</p>
                                 )}
                                 {sharedFiles.map((message) => {
                                     const isImage = Boolean(message.fileMimeType?.startsWith("image/"));
@@ -1276,21 +1276,21 @@ export function ContactsSidebar() {
                                             href={message.fileUrl ?? "#"}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="block rounded-xl border border-white/10 bg-black/30 hover:bg-black/50 transition-colors p-2"
+                                            className="block rounded-xl border border-border bg-muted/40 p-2 transition-colors hover:bg-muted dark:border-white/10 dark:bg-black/30 dark:hover:bg-black/50"
                                         >
                                             {isImage && message.fileUrl ? (
                                                 <img
                                                     src={message.fileUrl}
                                                     alt="Shared file"
-                                                    className="w-full max-h-36 object-contain rounded-lg bg-black/60"
+                                                    className="w-full max-h-36 rounded-lg bg-white/80 object-contain dark:bg-black/60"
                                                 />
                                             ) : (
-                                                <div className="flex items-center gap-2 text-neutral-100">
-                                                    <span className="p-2 rounded-lg bg-white/10"><File className="w-4 h-4" /></span>
+                                                <div className="flex items-center gap-2 text-foreground dark:text-neutral-100">
+                                                    <span className="rounded-lg bg-card p-2 dark:bg-white/10"><File className="h-4 w-4" /></span>
                                                     <span className="text-xs font-medium truncate">{message.content || "Attachment"}</span>
                                                 </div>
                                             )}
-                                            <p className="mt-2 text-[10px] text-neutral-500">{formatMiniTimestamp(message.createdAt)}</p>
+                                            <p className="mt-2 text-[10px] text-muted-foreground">{formatMiniTimestamp(message.createdAt)}</p>
                                         </a>
                                     );
                                 })}
@@ -1303,22 +1303,30 @@ export function ContactsSidebar() {
     );
 }
 
-function ContactCard({ name, unit, phone, avatar, status, isExpanded }: any) {
+type ContactCardProps = {
+    name: string;
+    unit: string;
+    avatar: string;
+    status: string;
+    isExpanded: boolean;
+};
+
+function ContactCard({ name, unit, avatar, status, isExpanded }: ContactCardProps) {
     const isIssue = status === "Late Payment" || status === "Notice Given";
 
     return (
         <div className={cn(
-            "flex items-center gap-4 rounded-2xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 transition-all cursor-pointer group shrink-0",
+            "group flex shrink-0 cursor-pointer items-center gap-4 rounded-2xl border border-transparent transition-all hover:border-border hover:bg-muted/70 dark:hover:border-white/5 dark:hover:bg-white/[0.04]",
             isExpanded ? "p-3" : "p-1 justify-center hover:scale-110"
         )}>
             <div className="relative shrink-0">
                 <img
                     src={avatar}
                     alt={name}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-[#0a0a0a] shadow-sm group-hover:scale-105 transition-transform duration-300"
+                    className="h-10 w-10 rounded-full border-2 border-background object-cover shadow-sm transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className={cn(
-                    "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0a0a0a]",
+                    "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
                     isIssue ? "bg-red-500" : status === "Moving In" ? "bg-amber-500" : "bg-emerald-500"
                 )} />
             </div>
@@ -1326,12 +1334,12 @@ function ContactCard({ name, unit, phone, avatar, status, isExpanded }: any) {
             {isExpanded && (
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="font-bold text-white text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
+                        <h4 className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
                     </div>
                     <div className="flex items-center justify-between">
-                        <p className="text-xs text-neutral-400 font-medium truncate pr-2">{unit}</p>
-                        <div className="flex items-center gap-1.5 text-neutral-500 group-hover:text-white transition-colors shrink-0">
-                            <span className="text-[10px] text-neutral-500">{status}</span>
+                        <p className="truncate pr-2 text-xs font-medium text-muted-foreground">{unit}</p>
+                        <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground transition-colors group-hover:text-foreground dark:group-hover:text-white">
+                            <span className="text-[10px] text-muted-foreground">{status}</span>
                         </div>
                     </div>
                 </div>

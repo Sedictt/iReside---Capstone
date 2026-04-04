@@ -19,7 +19,7 @@ export default function LandlordLayout({
 
     return (
         <AuthProvider>
-            <div className="flex h-screen bg-[#0a0a0a]">
+            <div className="flex h-screen bg-background text-foreground">
                 {!isMessages && <Sidebar />}
                 <main className={cn("flex-1 overflow-y-auto", !isMessages ? "ml-64" : "", showContactsSidebar ? "md:pr-24" : "")}>
                     {children}
@@ -30,4 +30,3 @@ export default function LandlordLayout({
         </AuthProvider>
     );
 }
-

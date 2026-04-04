@@ -181,15 +181,15 @@ export default function LandlordDashboard() {
 
     return (
         <>
-            <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar">
+            <div className="custom-scrollbar flex h-full w-full flex-col space-y-8 overflow-y-auto bg-background p-6 text-foreground animate-in fade-in duration-700 md:p-8">
                 <DashboardBanner onNewWalkIn={() => setIsWalkInModalOpen(true)} />
 
             {/* Payment Overview */}
-            <div className="p-6 rounded-3xl bg-neutral-900 border border-white/5 space-y-4 pt-6">
+            <div className="space-y-4 rounded-3xl border border-border bg-card p-6 pt-6 shadow-sm">
                 <div className="flex items-center justify-between pointer-events-none">
                     <div className="flex items-center gap-3">
                         <CreditCard className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-bold text-white">Payment Overview</h2>
+                        <h2 className="text-lg font-bold text-foreground">Payment Overview</h2>
                     </div>
                 </div>
 
@@ -203,31 +203,31 @@ export default function LandlordDashboard() {
                                 <div className="flex items-center justify-between mb-2 px-1">
                                     <div className="flex items-center gap-2">
                                         <div className={cn("h-2 w-2 rounded-full", dotClass)} />
-                                        <h3 className="text-sm font-bold text-neutral-400 uppercase tracking-wider">{key}</h3>
+                                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{key}</h3>
                                     </div>
-                                    <button onClick={() => setOpenPaymentModal(key)} className="text-xs font-bold text-neutral-500 hover:text-white transition-colors">See All</button>
+                                    <button onClick={() => setOpenPaymentModal(key)} className="text-xs font-bold text-muted-foreground transition-colors hover:text-foreground">See All</button>
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     {paymentsLoading ? (
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 relative overflow-hidden animate-pulse">
+                                        <div className="relative flex items-center justify-between overflow-hidden rounded-2xl border border-border bg-muted/40 p-4 animate-pulse">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-white/10" />
+                                                <div className="h-12 w-12 rounded-full bg-muted" />
                                                 <div className="space-y-2">
-                                                    <div className="h-4 w-24 bg-white/10 rounded" />
-                                                    <div className="h-3 w-16 bg-white/10 rounded" />
+                                                    <div className="h-4 w-24 rounded bg-muted" />
+                                                    <div className="h-3 w-16 rounded bg-muted" />
                                                 </div>
                                             </div>
                                             <div className="flex flex-col items-end justify-center gap-2">
-                                                <div className="h-4 w-16 bg-white/10 rounded" />
+                                                <div className="h-4 w-16 rounded bg-muted" />
                                                 <div className="flex gap-1.5 mt-1">
-                                                    <div className="h-4 w-12 bg-white/10 rounded-full" />
-                                                    <div className="h-4 w-10 bg-white/10 rounded" />
+                                                    <div className="h-4 w-12 rounded-full bg-muted" />
+                                                    <div className="h-4 w-10 rounded bg-muted" />
                                                 </div>
                                             </div>
                                         </div>
                                     ) : paymentsError ? (
                                         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
-                                            <p className="text-xs text-red-300">{paymentsError}</p>
+                                            <p className="text-xs text-red-600 dark:text-red-300">{paymentsError}</p>
                                         </div>
                                     ) : topItem ? (
                                         <PaymentCard
@@ -235,9 +235,9 @@ export default function LandlordDashboard() {
                                             fallbackAvatar={FALLBACK_AVATAR}
                                         />
                                     ) : (
-                                        <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4">
-                                            <p className="text-sm text-neutral-300">No {key.toLowerCase()} payments.</p>
-                                            <p className="text-xs text-neutral-500 mt-1">New records will appear here once available.</p>
+                                        <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4">
+                                            <p className="text-sm text-foreground">No {key.toLowerCase()} payments.</p>
+                                            <p className="mt-1 text-xs text-muted-foreground">New records will appear here once available.</p>
                                         </div>
                                     )}
                                 </div>
@@ -248,17 +248,17 @@ export default function LandlordDashboard() {
             </div>
 
             {systemAdvisory && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-8 rounded-3xl bg-amber-500/10 border border-amber-500/20 relative overflow-hidden group gap-6 min-h-[140px]">
+                <div className="group relative flex min-h-[140px] flex-col justify-between gap-6 overflow-hidden rounded-3xl border border-amber-500/20 bg-amber-50 p-6 sm:flex-row sm:items-center sm:p-8 dark:bg-amber-500/10">
                     <div className="relative z-10 flex items-center gap-5">
-                        <div className="p-4 bg-amber-500/20 rounded-2xl">
+                        <div className="rounded-2xl bg-amber-500/20 p-4">
                             <AlertTriangle className="h-8 w-8 text-amber-500" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-white text-lg sm:text-xl">{systemAdvisory.title}</h3>
-                            <p className="text-sm sm:text-base text-neutral-300 font-medium mt-1">{systemAdvisory.message}</p>
+                            <h3 className="text-lg font-bold text-amber-950 sm:text-xl dark:text-white">{systemAdvisory.title}</h3>
+                            <p className="mt-1 text-sm font-medium text-amber-900/80 sm:text-base dark:text-neutral-300">{systemAdvisory.message}</p>
                         </div>
                     </div>
-                    <div className="relative z-10 px-6 py-3 rounded-xl bg-amber-500 text-neutral-950 font-bold text-sm sm:text-base w-full sm:w-auto text-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                    <div className="relative z-10 w-full shrink-0 rounded-xl bg-amber-500 px-6 py-3 text-center text-sm font-bold text-neutral-950 shadow-[0_0_15px_rgba(245,158,11,0.2)] sm:w-auto sm:text-base">
                         Advisory Active
                     </div>
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none transition-transform duration-500 group-hover:scale-110">
@@ -307,23 +307,23 @@ function PaymentCard({ payment, fallbackAvatar }: { payment: PaymentListItem; fa
     };
 
     return (
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 hover:bg-white/[0.04] transition-all cursor-pointer group relative overflow-hidden">
+        <div className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-2xl border border-transparent bg-muted/20 p-4 transition-all hover:border-border hover:bg-muted/50 dark:bg-white/[0.02] dark:hover:border-white/5 dark:hover:bg-white/[0.04]">
             <div className="flex items-center gap-4 relative z-10">
                 <div className="relative">
-                    <img src={avatar || fallbackAvatar} alt={tenant} className="w-12 h-12 rounded-full object-cover border-2 border-[#0a0a0a] group-hover:scale-105 transition-transform duration-300" />
+                    <img src={avatar || fallbackAvatar} alt={tenant} className="h-12 w-12 rounded-full border-2 border-background object-cover transition-transform duration-300 group-hover:scale-105" />
                     <div className={cn(
-                        "absolute -bottom-0 -right-0 w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a]",
+                        "absolute -bottom-0 -right-0 h-3.5 w-3.5 rounded-full border-2 border-background",
                         isConfirmed || isPaid ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : isNearDue ? "bg-amber-500" : "bg-red-500"
                     )} />
                 </div>
                 <div>
-                    <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{tenant}</h4>
-                    <p className="text-xs text-neutral-400 font-medium">{unit}</p>
+                    <h4 className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">{tenant}</h4>
+                    <p className="text-xs font-medium text-muted-foreground">{unit}</p>
                 </div>
             </div>
 
             <div className="text-right relative z-10 flex flex-col items-end">
-                <h4 className="text-sm font-bold text-white mb-0.5 group-hover:opacity-0 transition-opacity">₱{amount.toLocaleString()}</h4>
+                <h4 className="mb-0.5 text-sm font-bold text-foreground transition-opacity group-hover:opacity-0">₱{amount.toLocaleString()}</h4>
                 <div className="flex items-center justify-end gap-1.5 mt-1 group-hover:opacity-0 transition-opacity">
                     <span className={cn(
                         "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border",
@@ -333,14 +333,14 @@ function PaymentCard({ payment, fallbackAvatar }: { payment: PaymentListItem; fa
                     )}>
                         {isConfirmed ? "Paid" : status}
                     </span>
-                    <span className="text-[10px] text-neutral-500 font-medium">{date}</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">{date}</span>
                 </div>
 
                 {/* Hover Confirm Button */}
                 {!isPaid && !isConfirmed && (
                     <button
                         onClick={handleConfirm}
-                        className="absolute inset-y-0 right-0 opacity-0 group-hover:opacity-100 flex items-center gap-2 bg-primary text-black px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all translate-x-4 group-hover:translate-x-0 active:scale-95 whitespace-nowrap"
+                        className="absolute inset-y-0 right-0 flex translate-x-4 items-center gap-2 rounded-xl bg-primary px-4 py-1.5 text-[10px] font-black uppercase tracking-tighter text-primary-foreground opacity-0 transition-all whitespace-nowrap group-hover:translate-x-0 group-hover:opacity-100 active:scale-95"
                     >
                         <CreditCard className="w-3.5 h-3.5" />
                         Confirm Payment

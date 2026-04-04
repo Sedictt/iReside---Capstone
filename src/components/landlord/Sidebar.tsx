@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 
 interface NavItem {
@@ -65,20 +66,23 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-white/5 bg-[#0a0a0a] flex flex-col">
+        <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border/70 bg-card/95 text-foreground backdrop-blur-sm">
             {/* Brand */}
-            <div className="flex items-center gap-3 px-6 h-20 border-b border-white/5">
-                <div className="h-8 w-8 rounded bg-primary flex items-center justify-center text-white font-bold">
-                    <Building2 className="h-5 w-5" />
+            <div className="flex h-20 items-center justify-between border-b border-border/70 px-6">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
+                        <Building2 className="h-5 w-5" />
+                    </div>
+                    <span className="text-xl font-bold tracking-tight text-foreground">iReside</span>
                 </div>
-                <span className="text-xl font-bold text-white tracking-tight">iReside</span>
+                <ThemeToggle variant="sidebar" />
             </div>
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-8">
                 {NAV_ITEMS.map((section) => (
                     <div key={section.category}>
-                        <h3 className="mb-4 px-2 text-xs font-bold uppercase tracking-wider text-neutral-500">
+                        <h3 className="mb-4 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                             {section.category}
                         </h3>
                         <div className="space-y-1">
@@ -89,14 +93,14 @@ export function Sidebar() {
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            "group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-slate-800/50",
+                                            "group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-all hover:bg-muted/80",
                                             isActive
-                                                ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                                : "text-neutral-400 hover:text-neutral-200"
+                                                ? "bg-primary/10 text-foreground hover:bg-primary/15"
+                                                : "text-muted-foreground hover:text-foreground"
                                         )}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-neutral-500 group-hover:text-neutral-300")} />
+                                            <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                                             <span>{item.label}</span>
                                         </div>
                                         {item.badge && (
@@ -113,10 +117,10 @@ export function Sidebar() {
             </nav>
 
             {/* Profile / Logout */}
-            <div className="border-t border-white/5 p-4">
+            <div className="border-t border-border/70 p-4">
                 <button
                     onClick={signOut}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-400 transition-all hover:bg-red-500/10 hover:text-red-500 text-left"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Log Out</span>
