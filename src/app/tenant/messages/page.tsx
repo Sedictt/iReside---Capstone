@@ -1507,7 +1507,7 @@ export default function TenantMessagesPage() {
         (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
 
     return (
-        <div className="flex h-full w-full overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative bg-[radial-gradient(circle_at_top_left,_rgba(173,200,125,0.16),_transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,242,0.96))] text-foreground">
+        <div className="flex h-full w-full overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative bg-[radial-gradient(circle_at_top_left,_rgba(173,200,125,0.16),_transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,242,0.96))] text-foreground dark:bg-[radial-gradient(circle_at_top_left,_rgba(109,152,56,0.14),_transparent_28%),linear-gradient(180deg,rgba(10,10,10,0.98),rgba(23,23,23,0.96))]">
             <MessagesTour />
             {shouldShowLoadingOverlay && (
                 <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/70 backdrop-blur-sm">
@@ -1658,7 +1658,7 @@ export default function TenantMessagesPage() {
                                             <h4 className={cn("font-bold text-sm truncate pr-2", contact.isAI ? "text-primary" : "text-foreground")}>{contact.name}</h4>
                                             <span className={cn("text-[10px] shrink-0", contact.isAI ? "text-primary uppercase tracking-widest font-bold" : "text-muted-foreground")}>{contact.lastContact}</span>
                                         </div>
-                                        <p className={cn("text-xs font-medium truncate", contact.isAI ? "text-slate-600" : "text-muted-foreground")}>{contact.unit}</p>
+                                        <p className={cn("text-xs font-medium truncate", contact.isAI ? "text-slate-600 dark:text-primary/70" : "text-muted-foreground")}>{contact.unit}</p>
                                     </div>
                                 </button>
                             ))}
@@ -1672,7 +1672,7 @@ export default function TenantMessagesPage() {
                 <TenantIrisChat />
             ) : (
                 <>
-                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-border bg-[radial-gradient(circle_at_top,_rgba(173,200,125,0.14),_transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,243,0.96))] overflow-hidden shadow-[0_30px_80px_-35px_rgba(15,23,42,0.3)]" data-tour-id="tour-messages-chat">
+                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-border bg-[radial-gradient(circle_at_top,_rgba(173,200,125,0.14),_transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,243,0.96))] overflow-hidden shadow-[0_30px_80px_-35px_rgba(15,23,42,0.3)] dark:border-white/5 dark:bg-[radial-gradient(circle_at_top,_rgba(109,152,56,0.12),_transparent_26%),linear-gradient(180deg,rgba(23,23,23,0.98),rgba(10,10,10,0.96))] dark:shadow-[0_30px_80px_-35px_rgba(0,0,0,0.65)]" data-tour-id="tour-messages-chat">
                         {/* Chat Header */}
                         <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/90 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
@@ -1956,7 +1956,7 @@ export default function TenantMessagesPage() {
                                                 </div>
                                             </div>
 
-                                            <div className={cn("px-2 text-[10px] flex items-center gap-1", isMe ? "text-muted-foreground" : "text-slate-500")}>
+                                            <div className={cn("px-2 text-[10px] flex items-center gap-1", isMe ? "text-muted-foreground" : "text-slate-500 dark:text-neutral-400")}>
                                                 {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
                                             </div>
 
@@ -1966,7 +1966,7 @@ export default function TenantMessagesPage() {
                                                         "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
                                                         msg.isPhishing 
                                                             ? "text-red-300 bg-red-900/40 border-red-500/40 shadow-red-500/10" 
-                                                            : "text-slate-700 bg-amber-50 border-amber-200 shadow-amber-500/5"
+                                                            : "text-amber-950 bg-amber-50 border-amber-200 shadow-amber-500/5 dark:text-amber-100 dark:bg-amber-500/10 dark:border-amber-500/30 dark:shadow-amber-500/10"
                                                     )}>
                                                         <div className="flex items-center justify-center gap-1.5 mb-2">
                                                             <AlertTriangle className={cn("w-4 h-4", msg.isPhishing ? "text-red-500" : "text-amber-500")} />
@@ -2020,11 +2020,11 @@ export default function TenantMessagesPage() {
                                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shrink-0 mb-1">
                                     <div className="flex items-center gap-3">
                                         <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                                        <span className="text-xs font-medium text-amber-700 hidden sm:inline">
+                                        <span className="text-xs font-medium text-amber-700 dark:text-amber-200 hidden sm:inline">
                                             <strong className="text-amber-500 mr-1">Security Warning:</strong>
                                             Never share sensitive credentials or passwords. Admins will NEVER ask for this.
                                         </span>
-                                        <span className="text-xs font-medium text-amber-700 sm:hidden">
+                                        <span className="text-xs font-medium text-amber-700 dark:text-amber-200 sm:hidden">
                                             Keep credentials private.
                                         </span>
                                     </div>
@@ -2329,7 +2329,7 @@ export default function TenantMessagesPage() {
                                                             className="group relative rounded-2xl overflow-hidden border border-border aspect-square cursor-pointer bg-muted/50"
                                                         >
                                                             <img src={item.url} alt={item.name} className="w-full h-full object-contain bg-background/80 opacity-90 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 dark:from-black/90 dark:via-black/45">
                                                                 <div className="w-full flex justify-between items-center">
                                                                     <span className="text-[9px] text-foreground font-semibold truncate max-w-[70%]">{item.name}</span>
                                                                     <div className="bg-card/90 hover:bg-card p-1.5 rounded-lg border border-border backdrop-blur-md transition-colors">
@@ -2390,7 +2390,7 @@ export default function TenantMessagesPage() {
                                 {sharedFiles.length === 0 && fileFilter === "all" && (
                                     <div className="rounded-2xl border border-border bg-background/70 p-4 text-center">
                                         <p className="text-xs text-muted-foreground">No shared files yet.</p>
-                                        <p className="text-[10px] text-slate-500 mt-1">Use the paperclip button in chat to upload files.</p>
+                                        <p className="mt-1 text-[10px] text-slate-500 dark:text-neutral-400">Use the paperclip button in chat to upload files.</p>
                                     </div>
                                 )}
                             </div>

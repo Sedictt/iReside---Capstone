@@ -111,7 +111,7 @@ export default function RevenueChart() {
                 usePointStyle: true,
                 boxPadding: 6,
                 callbacks: {
-                    label: (context: { raw: number }) => ` ₱${context.raw.toLocaleString()}`
+                    label: (context: any) => ` ₱${context.raw.toLocaleString()}`
                 }
             },
         },

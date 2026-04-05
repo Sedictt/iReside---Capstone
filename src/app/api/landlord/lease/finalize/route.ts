@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureTenantOnboardingState } from "@/lib/onboarding";
 
 function generateTempPassword(length = 12): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
@@ -234,14 +233,6 @@ async function finalizeLease(params: FinalizeLeaseParams) {
         .from("units")
         .update({ status: "occupied" })
         .eq("id", params.unitId);
-
-    // 6. Ensure onboarding state exists for both newly created and reused tenant accounts
-    try {
-        await ensureTenantOnboardingState(adminClient as any, params.tenantId);
-    } catch (onboardingError) {
-        console.error("Ensure onboarding state error:", onboardingError);
-        // Non-fatal for lease finalization
-    }
 
     return NextResponse.json({
         success: true,

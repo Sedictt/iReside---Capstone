@@ -9,11 +9,13 @@ import {
     ShieldCheck,
     LogOut,
     ChevronRight,
+    FileCheck,
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, description: "Overview & stats" },
+    { label: "Registrations", href: "/admin/registrations", icon: FileCheck, description: "Review landlord access" },
     { label: "Users", href: "/admin/users", icon: Users, description: "All platform users" },
 ];
 

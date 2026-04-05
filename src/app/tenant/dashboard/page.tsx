@@ -340,15 +340,15 @@ export default function TenantDashboard() {
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-white/80 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] dark:text-white/80">
                                         {isInitialLoading ? "Loading..." : nextPayment ? "Next Payment" : "No Upcoming Payments"}
                                     </span>
                                 </div>
-                                <h2 className={cn("text-4xl md:text-5xl font-bold tracking-tight text-slate-950 mb-2 shadow-sm", isInitialLoading && "animate-pulse")}>
+                                <h2 className={cn("mb-2 text-4xl font-bold tracking-tight text-white drop-shadow-[0_8px_28px_rgba(0,0,0,0.65)] md:text-5xl", isInitialLoading && "animate-pulse")}>
                                     {"\u20B1"}{displayPaymentParts.whole}
-                                    <span className="text-2xl text-slate-500">.{displayPaymentParts.decimal}</span>
+                                    <span className="text-2xl text-white/70">.{displayPaymentParts.decimal}</span>
                                 </h2>
-                                <p className={cn("text-slate-700 font-medium flex items-center gap-2", isInitialLoading && "animate-pulse")}>
+                                <p className={cn("flex items-center gap-2 font-medium text-white/80 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]", isInitialLoading && "animate-pulse")}>
                                     <Calendar className="w-4 h-4" />
                                     {isInitialLoading ? "Loading payment..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
                                 </p>
@@ -366,24 +366,24 @@ export default function TenantDashboard() {
                                 )}
                                 <Link
                                     href="/tenant/payments"
-                                    className="bg-white/80 hover:bg-white text-slate-700 border border-white/70 px-6 py-3 rounded-xl font-medium text-sm transition-colors backdrop-blur-md"
+                                    className="rounded-xl border border-white/15 bg-black/35 px-6 py-3 text-sm font-medium text-white/90 backdrop-blur-md transition-colors hover:bg-black/45 dark:border-white/15 dark:bg-black/35 dark:text-white/90"
                                 >
                                     View Details
                                 </Link>
                             </div>
                         </div>
 
-                        <div className={cn("bg-white/80 backdrop-blur-md border border-white/70 rounded-xl p-6 flex flex-col items-center justify-center min-w-[200px] shadow-lg shadow-slate-900/5", isInitialLoading && "animate-pulse")}>
-                            <p className="text-sm font-medium text-slate-600 mb-2">Time Remaining</p>
-                            <div className="flex items-start gap-4 text-slate-900">
+                        <div className={cn("flex min-w-[200px] flex-col items-center justify-center rounded-xl border border-white/15 bg-black/35 p-6 shadow-lg shadow-black/30 backdrop-blur-md", isInitialLoading && "animate-pulse")}>
+                            <p className="mb-2 text-sm font-medium text-white/75">Time Remaining</p>
+                            <div className="flex items-start gap-4 text-white">
                                 <div className="text-center">
                                     <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.days).padStart(2, "0")}</span>
-                                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Days</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">Days</span>
                                 </div>
-                                <span className="text-2xl text-slate-300 font-light animate-blink mt-1">:</span>
+                                <span className="mt-1 animate-blink text-2xl font-light text-white/35">:</span>
                                 <div className="text-center">
                                     <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.hours).padStart(2, "0")}</span>
-                                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Hrs</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">Hrs</span>
                                 </div>
                             </div>
                         </div>
@@ -828,21 +828,22 @@ export default function TenantDashboard() {
                             <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-3xl" />
 
                             <div className="relative z-10 space-y-4 flex-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                            <Sparkles className="h-3.5 w-3.5" />
-                                            Tenant support
+                                <div className="space-y-4" data-tour-id="tour-landlord-support">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                                <Sparkles className="h-3.5 w-3.5" />
+                                                Tenant support
+                                            </div>
+                                            <h3 className="text-xl font-display text-foreground">Landlord / Support</h3>
                                         </div>
-                                        <h3 className="text-xl font-display text-foreground">Landlord / Support</h3>
+                                        <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            Online
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 border border-emerald-500/15">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        Online
-                                    </div>
-                                </div>
 
-                                {dashboardLoading ? (
+                                    {dashboardLoading ? (
                                     <div className="space-y-3">
                                         {[0, 1, 2].map((row) => (
                                             <div key={row} className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-background/60 animate-pulse">
@@ -855,8 +856,7 @@ export default function TenantDashboard() {
                                         ))}
                                     </div>
                                 ) : lease ? (
-                                    <>
-                                        <div className="rounded-[1.75rem] border border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,249,245,0.96))] p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]">
+                                        <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(23,23,23,0.96),rgba(10,10,10,0.98))] p-5 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.6)]">
                                             <div className="flex items-start gap-4">
                                                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-sm ring-1 ring-primary/10">
                                                     <span className="text-lg font-black uppercase">
@@ -878,7 +878,7 @@ export default function TenantDashboard() {
 
                                             <div className="mt-5 grid gap-3">
                                                 {lease.landlordEmail && (
-                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 px-3.5 py-3">
+                                                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3">
                                                         <div className="mt-0.5 rounded-xl bg-blue-500/10 p-2 text-blue-600">
                                                             <Mail className="h-4 w-4" />
                                                         </div>
@@ -889,7 +889,7 @@ export default function TenantDashboard() {
                                                     </div>
                                                 )}
                                                 {lease.landlordPhone && (
-                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 px-3.5 py-3">
+                                                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3">
                                                         <div className="mt-0.5 rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
                                                             <Phone className="h-4 w-4" />
                                                         </div>
@@ -911,61 +911,6 @@ export default function TenantDashboard() {
                                                 </Link>
                                             </div>
                                         </div>
-
-                                        <div className="space-y-3">
-                                            {supportActions.map((item, index) => {
-                                                const Icon = item.icon;
-                                                const content = (
-                                                    <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/75 p-4 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background">
-                                                        <div className="absolute inset-y-0 left-0 w-1 rounded-full bg-gradient-to-b from-primary/70 to-primary/20 opacity-70" />
-                                                        <div className="flex items-start gap-4 pl-2">
-                                                            <div className={cn(
-                                                                "h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm ring-1 ring-black/5",
-                                                                item.iconBg,
-                                                                item.iconClass
-                                                            )}>
-                                                                <Icon className="w-5 h-5" />
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="mb-1 flex items-start justify-between gap-3">
-                                                                    <div>
-                                                                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-                                                                            {index === 0 ? "Recommended next step" : "Support option"}
-                                                                        </p>
-                                                                        <h4 className="mt-1 text-sm font-semibold text-foreground">{item.title}</h4>
-                                                                    </div>
-                                                                    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-primary">
-                                                                        {item.cta}
-                                                                        <ChevronRight className="h-3 w-3" />
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-
-                                                if (item.action) {
-                                                    return (
-                                                        <button
-                                                            key={item.id}
-                                                            type="button"
-                                                            onClick={item.action}
-                                                            className="w-full text-left"
-                                                        >
-                                                            {content}
-                                                        </button>
-                                                    );
-                                                }
-
-                                                return (
-                                                    <Link key={item.id} href={item.href ?? "/tenant/dashboard"} className="block">
-                                                        {content}
-                                                    </Link>
-                                                );
-                                            })}
-                                        </div>
-                                    </>
                                 ) : supportActions.length === 0 ? (
                                     <p className="text-xs text-muted-foreground">No support actions available yet.</p>
                                 ) : (
@@ -981,6 +926,63 @@ export default function TenantDashboard() {
                                             <MessageSquare className="h-4 w-4" />
                                             Open messages
                                         </Link>
+                                    </div>
+                                )}
+                                </div>
+
+                                {lease && (
+                                    <div className="space-y-3">
+                                        {supportActions.map((item, index) => {
+                                            const Icon = item.icon;
+                                            const content = (
+                                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/75 p-4 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background">
+                                                    <div className="absolute inset-y-0 left-0 w-1 rounded-full bg-gradient-to-b from-primary/70 to-primary/20 opacity-70" />
+                                                    <div className="flex items-start gap-4 pl-2">
+                                                        <div className={cn(
+                                                            "h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm ring-1 ring-black/5",
+                                                            item.iconBg,
+                                                            item.iconClass
+                                                        )}>
+                                                            <Icon className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="mb-1 flex items-start justify-between gap-3">
+                                                                <div>
+                                                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                                                                        {index === 0 ? "Recommended next step" : "Support option"}
+                                                                    </p>
+                                                                    <h4 className="mt-1 text-sm font-semibold text-foreground">{item.title}</h4>
+                                                                </div>
+                                                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-primary">
+                                                                    {item.cta}
+                                                                    <ChevronRight className="h-3 w-3" />
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+
+                                            if (item.action) {
+                                                return (
+                                                    <button
+                                                        key={item.id}
+                                                        type="button"
+                                                        onClick={item.action}
+                                                        className="w-full text-left"
+                                                    >
+                                                        {content}
+                                                    </button>
+                                                );
+                                            }
+
+                                            return (
+                                                <Link key={item.id} href={item.href ?? "/tenant/dashboard"} className="block">
+                                                    {content}
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

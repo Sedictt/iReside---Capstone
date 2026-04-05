@@ -20,6 +20,23 @@ export function MessagesTour() {
         }
     }, []);
 
+    useEffect(() => {
+        if (!isVisible) {
+            return;
+        }
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [isVisible]);
+
     const activeStep = TOUR_STEPS[stepIndex];
     const isLastStep = stepIndex === TOUR_STEPS.length - 1;
 
@@ -89,18 +106,21 @@ export function MessagesTour() {
     const hasHighlight = activeStep.anchorId && anchorRect;
 
     return (
-        <div className="fixed inset-0 z-[100] pointer-events-none">
+        <div className="fixed inset-0 z-[100] pointer-events-auto">
             {/* The Dimmed Background layer with Highlight Hole */}
             {hasHighlight ? (
-                <div 
-                    className="absolute rounded-xl border-2 border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] transition-all duration-300 pointer-events-none bg-transparent"
-                    style={{
-                        top: anchorRect.top - 8,
-                        left: anchorRect.left - 8,
-                        width: anchorRect.width + 16,
-                        height: anchorRect.height + 16,
-                    }}
-                />
+                <>
+                    <div className="absolute inset-0 pointer-events-auto bg-transparent" />
+                    <div 
+                        className="absolute rounded-xl border-2 border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] transition-all duration-300 pointer-events-none bg-transparent"
+                        style={{
+                            top: anchorRect.top - 8,
+                            left: anchorRect.left - 8,
+                            width: anchorRect.width + 16,
+                            height: anchorRect.height + 16,
+                        }}
+                    />
+                </>
             ) : (
                 <div className="absolute inset-0 bg-black/65 transition-opacity duration-300 pointer-events-auto" />
             )}

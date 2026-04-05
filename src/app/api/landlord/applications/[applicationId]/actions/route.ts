@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { ApplicationStatus, PaymentMethod, Json } from "@/types/database";
 import { sendTenantCredentials, sendLandlordCredentialsCopy } from "@/lib/email";
 import { generateSigningLink } from "@/lib/jwt";
-import { ensureTenantOnboardingState } from "@/lib/onboarding";
 
 type ActionBody = {
     status?: ApplicationStatus;
@@ -453,7 +452,7 @@ export async function POST(
                     role: "tenant",
                 }, { onConflict: "id" });
 
-                await ensureTenantOnboardingState(adminClient as any, tenantId);
+                // Onboarding state initialization removed.
 
                 // Step 2: Create lease record
                 const unit = application.unit as any;

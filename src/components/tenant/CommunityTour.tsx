@@ -20,6 +20,23 @@ export function CommunityTour() {
         }
     }, []);
 
+    useEffect(() => {
+        if (!isVisible) {
+            return;
+        }
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [isVisible]);
+
     const activeStep = TOUR_STEPS[stepIndex];
     const isLastStep = stepIndex === TOUR_STEPS.length - 1;
 
@@ -87,17 +104,20 @@ export function CommunityTour() {
     const hasHighlight = activeStep.anchorId && anchorRect;
 
     return (
-        <div className="fixed inset-0 z-[100] pointer-events-none">
+        <div className="fixed inset-0 z-[100] pointer-events-auto">
             {hasHighlight ? (
-                <div 
-                    className="absolute rounded-2xl border-2 border-primary bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] transition-all duration-300 pointer-events-none dark:shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]"
-                    style={{
-                        top: anchorRect.top - 8,
-                        left: anchorRect.left - 8,
-                        width: anchorRect.width + 16,
-                        height: anchorRect.height + 16,
-                    }}
-                />
+                <>
+                    <div className="absolute inset-0 pointer-events-auto bg-transparent" />
+                    <div 
+                        className="absolute rounded-2xl border-2 border-primary bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] transition-all duration-300 pointer-events-none dark:shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]"
+                        style={{
+                            top: anchorRect.top - 8,
+                            left: anchorRect.left - 8,
+                            width: anchorRect.width + 16,
+                            height: anchorRect.height + 16,
+                        }}
+                    />
+                </>
             ) : (
                 <div className="absolute inset-0 bg-slate-950/50 transition-opacity duration-300 pointer-events-auto dark:bg-black/70" />
             )}

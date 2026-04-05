@@ -106,7 +106,7 @@ export function TenantSidebar() {
                 </div>
             </header>
 
-            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card/95 backdrop-blur-sm flex-col text-foreground">
+            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card/95 backdrop-blur-sm flex-col text-foreground" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
@@ -114,7 +114,7 @@ export function TenantSidebar() {
                         </div>
                         <span className="font-bold text-xl tracking-tight">iReside</span>
                     </div>
-                    <ThemeToggle variant="sidebar" />
+                    <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" />
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 py-8">

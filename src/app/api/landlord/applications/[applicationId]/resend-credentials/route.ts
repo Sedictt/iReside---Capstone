@@ -2,12 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendLandlordCredentialsCopy, sendTenantOnboardingReminder } from "@/lib/email";
-import { generateSigningLink } from "@/lib/jwt";
-import {
-    ensureOnboardingReadyForReminder,
-    ensureTenantOnboardingState,
-    registerReminderAttempt,
-} from "@/lib/onboarding";
+import { TENANT_PRODUCT_TOUR_ROUTE } from "@/lib/product-tour";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -15,11 +10,6 @@ function generateTempPassword(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
     return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
-
-const reminderErrorStatus = (reason: "completed" | "cooldown" | "daily_limit") => {
-    if (reason === "completed") return 409;
-    return 429;
-};
 
 export async function POST(_request: Request, context: { params: Promise<{ applicationId: string }> }) {
     const { applicationId } = await context.params;
@@ -155,24 +145,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
         return NextResponse.json({ error: "Unable to resolve tenant account." }, { status: 500 });
     }
 
-    const onboardingState = await ensureTenantOnboardingState(adminClient as any, tenantId);
-    const reminderEligibility = ensureOnboardingReadyForReminder(onboardingState);
-    if (!reminderEligibility.eligible) {
-        return NextResponse.json(
-            {
-                error:
-                    reminderEligibility.reason === "completed"
-                        ? "Tenant onboarding is already completed."
-                        : "Reminder limit reached. Try again later.",
-                code:
-                    reminderEligibility.reason === "completed"
-                        ? "ONBOARDING_ALREADY_COMPLETED"
-                        : "REMINDER_THROTTLED",
-                next_eligible_at: reminderEligibility.nextEligibleAt,
-            },
-            { status: reminderErrorStatus(reminderEligibility.reason) }
-        );
-    }
+    // We no longer rely on onboarding state to gate sending reminders. We just let the landlord resend.
 
     const { data: landlordProfile } = await adminClient
         .from("profiles")
@@ -180,19 +153,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
         .eq("id", user.id)
         .maybeSingle();
 
-    let signingLink: string | undefined;
-    const { data: lease } = await adminClient
-        .from("leases")
-        .select("id, start_date, monthly_rent, status")
-        .eq("tenant_id", tenantId)
-        .eq("unit_id", application.unit_id)
-        .maybeSingle();
-
-    if (lease && (lease.status === "pending_signature" || lease.status === "pending_tenant_signature")) {
-        signingLink = generateSigningLink(lease.id, tenantId);
-    }
-
-    const onboardingUrl = `${APP_URL}/tenant/onboarding`;
+    const onboardingUrl = `${APP_URL}${TENANT_PRODUCT_TOUR_ROUTE}`;
 
     try {
         await sendTenantOnboardingReminder({
@@ -203,30 +164,8 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
             inviteUrl,
         });
 
-        await registerReminderAttempt(adminClient as any, {
-            tenantId,
-            actorId: user.id,
-            triggerSource: "manual",
-            success: true,
-            metadata: {
-                application_id: applicationId,
-                account_existed: accountExisted,
-                has_signing_link: Boolean(signingLink),
-            },
-        });
     } catch (error) {
         console.error("[resend-credentials] send reminder error:", error);
-        await registerReminderAttempt(adminClient as any, {
-            tenantId,
-            actorId: user.id,
-            triggerSource: "manual",
-            success: false,
-            metadata: {
-                application_id: applicationId,
-                account_existed: accountExisted,
-                error: error instanceof Error ? error.message : "unknown_send_error",
-            },
-        });
         return NextResponse.json({ error: "Failed to send email to tenant." }, { status: 500 });
     }
 
@@ -252,6 +191,5 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
         tempPassword,
         inviteUrl,
         accountExisted,
-        onboarding_status: onboardingState.status,
     });
 }

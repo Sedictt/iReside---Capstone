@@ -31,15 +31,19 @@ export async function GET() {
         { count: totalTenants, error: e3 },
         { count: activeLeases, error: e4 },
         { count: totalProperties, error: e5 },
+        { count: pendingLandlordApplications, error: e6 },
+        { count: reviewingLandlordApplications, error: e7 },
     ] = await Promise.all([
         adminClient.from("profiles").select("*", { count: "exact", head: true }),
         adminClient.from("profiles").select("*", { count: "exact", head: true }).eq("role", "landlord"),
         adminClient.from("profiles").select("*", { count: "exact", head: true }).eq("role", "tenant"),
         adminClient.from("leases").select("*", { count: "exact", head: true }).eq("status", "active"),
         adminClient.from("properties").select("*", { count: "exact", head: true }),
+        adminClient.from("landlord_applications").select("*", { count: "exact", head: true }).eq("status", "pending"),
+        adminClient.from("landlord_applications").select("*", { count: "exact", head: true }).eq("status", "reviewing"),
     ]);
 
-    if (e1 || e2 || e3 || e4 || e5) {
+    if (e1 || e2 || e3 || e4 || e5 || e6 || e7) {
         return NextResponse.json({ error: "Failed to load stats." }, { status: 500 });
     }
 
@@ -49,5 +53,7 @@ export async function GET() {
         totalTenants: totalTenants ?? 0,
         activeLeases: activeLeases ?? 0,
         totalProperties: totalProperties ?? 0,
+        pendingLandlordApplications: pendingLandlordApplications ?? 0,
+        reviewingLandlordApplications: reviewingLandlordApplications ?? 0,
     });
 }

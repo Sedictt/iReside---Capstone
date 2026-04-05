@@ -1,17 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isGuidedTenantOnboardingEnabled } from "@/lib/onboarding";
 import {
     TENANT_PRODUCT_TOUR_ROUTE,
     isGuidedTenantProductTourEnabled,
     resolveTenantProductTourEligibility,
 } from "@/lib/product-tour";
 
-export const TENANT_ONBOARDING_ROUTE_PREFIX = "/tenant/onboarding";
 export const TENANT_PRODUCT_TOUR_ROUTE_PREFIX = TENANT_PRODUCT_TOUR_ROUTE;
-const TENANT_ROUTE_ALLOWLIST_DURING_ONBOARDING = ["/tenant/onboarding", "/tenant/sign-lease", "/tenant/support"];
-const TENANT_API_WRITE_ALLOWLIST_DURING_ONBOARDING = ["/api/tenant/onboarding"];
-export const TENANT_LEASE_SIGN_API_PATTERN = /^\/api\/tenant\/leases\/[^/]+\/sign$/;
 const TOUR_AUTO_START_ROUTE_PREFIXES = [
     "/tenant/community",
     "/tenant/dashboard",
@@ -19,19 +14,6 @@ const TOUR_AUTO_START_ROUTE_PREFIXES = [
     "/tenant/payments",
     "/tenant/messages",
 ];
-
-export const isTenantApiWriteRequest = (request: NextRequest) => {
-    if (!request.nextUrl.pathname.startsWith("/api/tenant/")) return false;
-    const method = request.method.toUpperCase();
-    return !["GET", "HEAD", "OPTIONS"].includes(method);
-};
-
-export const isAllowlistedTenantWritePath = (pathname: string) =>
-    TENANT_API_WRITE_ALLOWLIST_DURING_ONBOARDING.some((prefix) => pathname.startsWith(prefix)) ||
-    TENANT_LEASE_SIGN_API_PATTERN.test(pathname);
-
-export const isAllowlistedTenantRoute = (pathname: string) =>
-    TENANT_ROUTE_ALLOWLIST_DURING_ONBOARDING.some((prefix) => pathname.startsWith(prefix));
 
 const resolveRole = async (supabase: any, user: any): Promise<string> => {
     const metadataRole = user?.user_metadata?.role;
@@ -42,46 +24,6 @@ const resolveRole = async (supabase: any, user: any): Promise<string> => {
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
     return profile?.role ?? "tenant";
 };
-
-const resolveTenantNeedsOnboarding = async (supabase: any, user: any, role: string) => {
-    if (!isGuidedTenantOnboardingEnabled()) return false;
-    if (!user || role !== "tenant") return false;
-
-    const { data, error } = await (supabase as any)
-        .from("tenant_onboarding_states")
-        .select("status")
-        .eq("tenant_id", user.id)
-        .maybeSingle();
-
-    if (error) {
-        // Fail open for middleware route access. API-level checks still protect writes.
-        console.warn("[middleware] onboarding state lookup failed:", error.message);
-        return false;
-    }
-
-    return !data || data.status !== "completed";
-};
-
-const buildOnboardingRedirect = (request: NextRequest) => {
-    const url = request.nextUrl.clone();
-    const destination = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-    url.pathname = TENANT_ONBOARDING_ROUTE_PREFIX;
-    url.search = "";
-    url.searchParams.set("next", destination);
-    return url;
-};
-
-const resolveOnboardingExitDestination = (request: NextRequest) => {
-    const requestedNext = request.nextUrl.searchParams.get("next");
-    if (requestedNext && requestedNext.startsWith("/tenant/") && !requestedNext.startsWith("/tenant/onboarding")) {
-        return requestedNext;
-    }
-    return "/tenant/community";
-};
-
-const isOnboardingPreviewRequest = (request: NextRequest) =>
-    request.nextUrl.pathname.startsWith(TENANT_ONBOARDING_ROUTE_PREFIX) &&
-    ["1", "true", "yes"].includes((request.nextUrl.searchParams.get("preview") ?? "").toLowerCase());
 
 const isTourAutoStartRoute = (pathname: string) =>
     TOUR_AUTO_START_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -127,23 +69,8 @@ export async function updateSession(request: NextRequest) {
         role = await resolveRole(supabase as any, user);
     }
 
-    const tenantNeedsOnboarding = await resolveTenantNeedsOnboarding(supabase as any, user, role ?? "");
-
-    // Let API route handlers return structured JSON auth errors (401/403),
-    // but enforce tenant onboarding write gate for non-allowlisted writes.
+    // Let API route handlers return structured JSON auth errors (401/403).
     if (request.nextUrl.pathname.startsWith("/api")) {
-        if (user && role === "tenant" && tenantNeedsOnboarding && isTenantApiWriteRequest(request)) {
-            const pathname = request.nextUrl.pathname;
-            if (!isAllowlistedTenantWritePath(pathname)) {
-                return NextResponse.json(
-                    {
-                        error: "Complete onboarding before performing this action.",
-                        code: "ONBOARDING_REQUIRED",
-                    },
-                    { status: 403 }
-                );
-            }
-        }
         return supabaseResponse;
     }
 
@@ -166,7 +93,6 @@ export async function updateSession(request: NextRequest) {
         const url = request.nextUrl.clone();
         if (role === "admin") url.pathname = "/admin/dashboard";
         else if (role === "landlord") url.pathname = "/landlord/dashboard";
-        else if (tenantNeedsOnboarding) url.pathname = TENANT_ONBOARDING_ROUTE_PREFIX;
         else url.pathname = "/tenant/community";
         return NextResponse.redirect(url);
     }
@@ -183,33 +109,9 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    // Tenant onboarding route gating.
-    if (user && role === "tenant" && tenantNeedsOnboarding) {
-        const pathname = request.nextUrl.pathname;
-        const isTenantRoute = pathname.startsWith("/tenant/");
-        if (isTenantRoute && !isAllowlistedTenantRoute(pathname)) {
-            return NextResponse.redirect(buildOnboardingRedirect(request));
-        }
-    }
-
-    // Prevent completed tenants from revisiting onboarding route.
     if (
         user &&
         role === "tenant" &&
-        !tenantNeedsOnboarding &&
-        request.nextUrl.pathname.startsWith(TENANT_ONBOARDING_ROUTE_PREFIX) &&
-        !isOnboardingPreviewRequest(request)
-    ) {
-        const url = request.nextUrl.clone();
-        url.pathname = resolveOnboardingExitDestination(request);
-        url.search = "";
-        return NextResponse.redirect(url);
-    }
-
-    if (
-        user &&
-        role === "tenant" &&
-        !tenantNeedsOnboarding &&
         isGuidedTenantProductTourEnabled() &&
         request.nextUrl.pathname.startsWith("/tenant/") &&
         !request.nextUrl.pathname.startsWith(TENANT_PRODUCT_TOUR_ROUTE_PREFIX) &&

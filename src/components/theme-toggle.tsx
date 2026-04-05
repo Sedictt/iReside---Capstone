@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 type ThemeToggleProps = {
     variant?: "floating" | "sidebar";
     className?: string;
+    dataTourId?: string;
 };
 
-export function ThemeToggle({ variant = "floating", className }: ThemeToggleProps) {
+export function ThemeToggle({ variant = "floating", className, dataTourId }: ThemeToggleProps) {
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
 
@@ -28,6 +29,7 @@ export function ThemeToggle({ variant = "floating", className }: ThemeToggleProp
         <button
             type="button"
             onClick={() => setTheme(isDark ? "light" : "dark")}
+            data-tour-id={dataTourId}
             className={cn(
                 variant === "floating"
                     ? "fixed bottom-4 right-4 z-[120] inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur transition-all hover:-translate-y-0.5"

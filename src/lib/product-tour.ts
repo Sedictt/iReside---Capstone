@@ -52,31 +52,43 @@ export const TENANT_DASHBOARD_TOUR_STEPS = [
     {
         id: "welcome",
         title: "Welcome to your Dashboard",
-        description: "Let's take a quick tour to help you get familiarized with the system and find what you need.",
+        description: "Your setup is complete! Let's take a quick tour to help you get familiarized with the system and find what you need.",
         anchorId: null,
     },
     {
         id: "dashboard-hero",
         title: "Payment Overview",
-        description: "Here you can see your next upcoming payment, the time remaining, and pay directly with a single click.",
+        description: "Here you can see your next upcoming payment, the time remaining, and pay directly with a single click. Keep an eye here for your first invoice.",
         anchorId: "tour-dashboard-overview",
     },
     {
         id: "quick-actions",
         title: "Quick Actions",
-        description: "Need a repair? Have a question? Use these fast links to get things done quickly.",
+        description: "Need a repair? Have a question? Use these fast links to get things done quickly, such as setting up payment methods.",
         anchorId: "tour-quick-actions",
+    },
+    {
+        id: "tenant-navigation",
+        title: "Navigation",
+        description: "This sidebar is your main way around the tenant portal. Use it anytime to jump between Dashboard, Lease, Payments, Messages, and other tools, and use the toggle here to switch your theme whenever you like.",
+        anchorId: "tour-tenant-navigation",
     },
     {
         id: "lease-details",
         title: "Lease & Utilities",
-        description: "Keep track of your active lease timeline exactly, along with your recent utility bills.",
+        description: "Keep track of your active lease timeline safely secured in our vault, exactly along with your recent utility bills.",
         anchorId: "tour-lease-details",
+    },
+    {
+        id: "landlord-support",
+        title: "Landlord Support",
+        description: "This panel gives you quick access to your landlord or support team so you can reach the right contact when you need help.",
+        anchorId: "tour-landlord-support",
     },
     {
         id: "message-sidebar",
         title: "Message Sidebar",
-        description: "Access your conversations, contacts, and chat with iRis Assistant directly from your dashboard.",
+        description: "Access your conversations, contacts, and chat with iRis Assistant directly from your dashboard if you ever need help.",
         anchorId: "tour-messages-sidebar",
     }
 ] as const;
