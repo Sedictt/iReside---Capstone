@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { flushSync } from "react-dom";
+import { useTheme } from "next-themes";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
 import { UnitListingWizard } from "./UnitListingWizard";
@@ -182,6 +183,9 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const PAN_MARGIN = 280;
     const BLUEPRINT_MARGIN = 20;
     const SIDEBAR_BLOCK_DRAG_TYPE = "ireside/block";
+    const { resolvedTheme } = useTheme();
+    const [hasMounted, setHasMounted] = useState(false);
+    const isDark = hasMounted && resolvedTheme === "dark";
 
     const [scale, setScale] = useState(1);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -218,6 +222,10 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(DEFAULT_FLOOR_LAYOUTS);
     const [hasHydratedFloorState, setHasHydratedFloorState] = useState(false);
     const [isRenamingFloor, setIsRenamingFloor] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
     const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
     const trashRef = useRef<HTMLDivElement>(null);
@@ -1464,18 +1472,18 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         : 0;
 
     return (
-        <div className={`bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30${readOnly ? ' pointer-events-auto' : ''}`}>
+        <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30${readOnly ? ' pointer-events-auto' : ''}`}>
             {/* Header */}
-            <header className="h-16 bg-white dark:bg-surface-dark border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+            <header className={`h-16 flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-slate-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
                         <span className="material-icons-round">apartment</span>
                         iReside
                     </div>
-                    <div className="h-6 w-px bg-slate-300 dark:bg-slate-600 mx-2"></div>
+                    <div className={`mx-2 h-6 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                     <div>
-                        <h1 className="text-sm font-semibold text-slate-900 dark:text-white">Sunset Heights Complex</h1>
-                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                        <h1 className={`text-sm font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Sunset Heights Complex</h1>
+                        <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                             <span>All systems operational</span>
                         </div>
@@ -1483,14 +1491,14 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     {readOnly && (
                         <div className="flex items-center gap-1.5 ml-3 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                             <span className="material-icons-round text-emerald-400 text-[14px]">visibility</span>
-                            <span className="text-xs font-semibold text-emerald-300 tracking-wide">View Only</span>
+                                <span className={`text-xs font-semibold tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>View Only</span>
                         </div>
                     )}
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className="bg-slate-100/80 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 flex items-center shadow-sm backdrop-blur-sm">
-                        <div className="flex items-center pl-2 pr-1 border-r border-slate-200 dark:border-slate-700 hidden sm:flex" title="Current Level">
-                            <span className="material-icons-round text-slate-500 dark:text-slate-400 text-[18px]">layers</span>
+                        <div className={`${isDark ? 'bg-background-dark/90 border-slate-700 shadow-none' : 'bg-background/90 border-border shadow-sm'} p-1 rounded-xl border flex items-center backdrop-blur-sm`}>
+                            <div className={`flex items-center pl-2 pr-1 border-r hidden sm:flex ${isDark ? 'border-slate-700' : 'border-border'}`} title="Current Level">
+                                <span className={`material-icons-round text-[18px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>layers</span>
                         </div>
                         
                         {!readOnly && isRenamingFloor ? (
@@ -1523,17 +1531,17 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         }));
                                         setIsRenamingFloor(false);
                                     }}
-                                    className="bg-white dark:bg-slate-900 border border-primary text-sm font-bold text-slate-800 dark:text-slate-100 px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none"
+                                    className={`border border-primary text-sm font-bold px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none ${isDark ? 'bg-background-dark text-slate-100' : 'bg-card text-slate-800'}`}
                                     placeholder="Floor Name"
                                 />
                             </form>
                         ) : (
-                            <div className="relative flex items-center mx-1 group cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-colors rounded-lg">
+                            <div className={`relative flex items-center mx-1 group cursor-pointer transition-colors rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-white'}`}>
                                 <select
                                     id="floor-selector"
                                     value={activeFloor}
                                     onChange={(event) => switchFloor(event.target.value)}
-                                    className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-bold text-slate-800 dark:text-slate-100 w-[140px] md:w-[180px] cursor-pointer focus:outline-none z-10"
+                                    className={`appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-bold w-[140px] md:w-[180px] cursor-pointer focus:outline-none z-10 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}
                                 >
                                     {floorTabs.map((floorTab) => (
                                         <option key={floorTab.id} value={floorTab.id}>
@@ -1541,35 +1549,35 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         </option>
                                     ))}
                                 </select>
-                                <div className="absolute right-2 pointer-events-none text-slate-400 group-hover:text-primary transition-colors flex items-center">
+                                <div className={`absolute right-2 pointer-events-none transition-colors flex items-center group-hover:text-primary ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                                     <span className="material-icons-round text-[18px]">unfold_more</span>
                                 </div>
                             </div>
                         )}
                         
-                        <div className="flex items-center gap-1 pl-1 pr-1 border-l border-slate-200 dark:border-slate-700">
+                        <div className={`flex items-center gap-1 pl-1 pr-1 border-l ${isDark ? 'border-slate-700' : 'border-border'}`}>
                             {!readOnly && !isRenamingFloor && (
                                 <button 
                                     onClick={() => {
                                         setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
                                         setIsRenamingFloor(true);
                                     }}
-                                    className="flex items-center justify-center w-7 h-7 bg-white dark:bg-background-dark hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-md transition-all text-slate-500 hover:text-primary shadow-sm"
+                                    className={`flex items-center justify-center w-7 h-7 border rounded-md transition-all hover:text-primary ${isDark ? 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-400' : 'bg-white hover:bg-slate-200 border-border text-slate-500 shadow-sm'}`}
                                     title="Rename Floor"
                                 >
                                     <span className="material-icons-round text-[16px]">edit</span>
                                 </button>
                             )}
-                            <div className="flex items-center bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 shadow-sm h-7" title={`${activeFloorItemCount} items on this floor`}>
+                            <div className={`flex items-center border rounded-md px-2 py-1 h-7 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-border shadow-sm'}`} title={`${activeFloorItemCount} items on this floor`}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-primary/80 mr-2"></span>
-                                <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                                <span className={`text-xs font-mono font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                                     {activeFloorItemCount}
                                 </span>
                             </div>
                             {!readOnly && (
                                 <button 
                                     onClick={createFloor} 
-                                    className="flex items-center justify-center w-7 h-7 bg-white dark:bg-background-dark hover:bg-primary hover:border-primary dark:hover:bg-primary border border-slate-200 dark:border-slate-700 rounded-md transition-all text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white shadow-sm"
+                                    className={`flex items-center justify-center w-7 h-7 border rounded-md transition-all hover:bg-primary hover:border-primary hover:text-white ${isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-border text-slate-600 shadow-sm'}`}
                                     title="Add New Floor"
                                 >
                                     <span className="material-icons-round text-[18px]">add</span>
@@ -1579,8 +1587,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     </div>
                     {!readOnly && (
                         <>
-                            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                            <button className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium transition-colors border border-slate-200 dark:border-slate-600">
+                            <div className={`h-6 w-px mx-1 ${isDark ? 'bg-slate-700' : 'bg-border'}`}></div>
+                            <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-border'}`}>
                                 <span className="material-icons-round text-sm">save_alt</span>
                                 Draft
                             </button>
@@ -1594,8 +1602,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
             </header>
 
             <div className="flex-1 flex overflow-hidden">
-                <main className="flex-1 relative bg-background-dark overflow-hidden flex flex-col">
-                    <div className={`flex-1 overflow-hidden relative ${isPanning ? 'cursor-grabbing' : 'cursor-grab'} bg-background-dark ${styles.bgGridPattern}`} ref={containerRef}>
+                <main className={`flex-1 relative overflow-hidden flex flex-col ${isDark ? 'bg-background-dark' : 'bg-background'}`}>
+                    <div className={`flex-1 overflow-hidden relative ${isPanning ? 'cursor-grabbing' : 'cursor-grab'} ${isDark ? 'bg-[#0b0d11]' : 'bg-[radial-gradient(circle_at_top_left,rgba(173,200,125,0.08),transparent_28%),linear-gradient(180deg,#f8faf6,#f1f5ef)]'} ${styles.bgGridPattern}`} ref={containerRef}>
                         <motion.div
                             className="absolute inset-0 w-full h-full origin-top-left"
                             style={{
@@ -1614,14 +1622,14 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                 onDragOver={readOnly ? undefined : handleBlueprintDragOver}
                                 onDragLeave={readOnly ? undefined : handleBlueprintDragLeave}
                                 onDrop={readOnly ? undefined : handleBlueprintDrop}
-                                className={`absolute top-[20px] left-[20px] bg-slate-800/30 border border-slate-700/50 rounded-xl ${styles.bgDotPattern} relative`}
+                                className={`absolute top-[20px] left-[20px] rounded-xl ${styles.bgDotPattern} relative ${isDark ? 'bg-[#171a1f] border border-slate-700/70 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)]' : 'bg-white/75 border border-slate-300/70 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.18)]'}`}
                                 style={{
                                     width: BLUEPRINT_WIDTH,
                                     height: BLUEPRINT_HEIGHT,
                                 }}
                             >
                                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center select-none">
-                                    <span className="text-[72px] md:text-[110px] font-black tracking-[0.18em] text-slate-500/10">
+                                    <span className={`text-[72px] md:text-[110px] font-black tracking-[0.18em] ${isDark ? 'text-white/5' : 'text-slate-400/20'}`}>
                                         {floorWatermarkLabel}
                                     </span>
                                 </div>
@@ -1638,68 +1646,68 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         }}
                                     >
                                         {isLivingUnitBlock(sidebarBlockGhost.blockType) ? (
-                                            <div className={`w-full h-full bg-slate-800/70 relative shadow-sm overflow-hidden select-none rounded-[1px] border ${sidebarBlockGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
-                                                <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                <div className="absolute inset-[4px] border border-slate-600"></div>
-                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-800 z-10 border-x-2 border-slate-500"></div>
-                                                <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-800 z-10 flex items-center justify-center border-x border-slate-500">
-                                                    <div className="w-full h-px bg-slate-600"></div>
+                                            <div className={`w-full h-full bg-white/85 relative shadow-sm overflow-hidden select-none rounded-[1px] border ${sidebarBlockGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
+                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                <div className="absolute inset-[4px] border border-slate-300"></div>
+                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-100 z-10 border-x-2 border-slate-400"></div>
+                                                <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-100 z-10 flex items-center justify-center border-x border-slate-400">
+                                                    <div className="w-full h-px bg-slate-300"></div>
                                                 </div>
                                                 <div className={`absolute inset-0 opacity-20 ${sidebarBlockGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
                                                     <div className={`w-2 h-2 rounded-full mb-2 ${sidebarBlockGhost.isValid ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`}></div>
-                                                    <h4 className="font-bold text-xs text-slate-200 drop-shadow-md">{sidebarBlockGhost.label}</h4>
-                                                    <span className={`text-[9px] font-bold uppercase mt-1 tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                    <h4 className="font-bold text-xs text-slate-700 drop-shadow-md">{sidebarBlockGhost.label}</h4>
+                                                    <span className={`text-[9px] font-bold uppercase mt-1 tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
                                                 </div>
                                             </div>
                                         ) : sidebarBlockGhost.blockType === "corridor" ? (
                                             <div className={`w-full h-full border-y flex items-center justify-center rounded-[1px] ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/15 border-red-400/80'}`}>
-                                                <div className="absolute inset-0 opacity-15 pointer-events-none bg-slate-900"></div>
+                                                <div className="absolute inset-0 opacity-15 pointer-events-none bg-slate-200/50"></div>
                                                 <div className="relative z-10 flex flex-col items-center justify-center">
-                                                    <span className={`text-xs font-bold uppercase tracking-[0.5em] ${sidebarBlockGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>{sidebarBlockGhost.label}</span>
-                                                    <span className={`mt-1 text-[9px] font-bold uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                    <span className={`text-xs font-bold uppercase tracking-[0.5em] ${sidebarBlockGhost.isValid ? 'text-emerald-700' : 'text-red-700'}`}>{sidebarBlockGhost.label}</span>
+                                                    <span className={`mt-1 text-[9px] font-bold uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
                                                 </div>
                                             </div>
                                         ) : sidebarBlockGhost.blockType === "elevator" ? (
                                             <div className={`w-full h-full border rounded-sm flex items-center justify-center ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
-                                                <div className="border-2 border-slate-500 w-full h-full m-2 flex items-center justify-center relative">
-                                                    <span className={`material-icons-round ${sidebarBlockGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>elevator</span>
+                                                <div className="border-2 border-slate-400 w-full h-full m-2 flex items-center justify-center relative">
+                                                    <span className={`material-icons-round ${sidebarBlockGhost.isValid ? 'text-emerald-700' : 'text-red-700'}`}>elevator</span>
                                                 </div>
-                                                <span className={`absolute bottom-1 text-[9px] font-bold uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
+                                                <span className={`absolute bottom-1 text-[9px] font-bold uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
                                             </div>
                                         ) : (
                                             <div className={`w-full h-full border rounded-sm relative overflow-hidden ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
                                                 {sidebarBlockGhost.stairVariant === "straight" ? (
                                                     <>
-                                                        <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                        <div className="absolute inset-[4px] border border-slate-600"></div>
+                                                        <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                        <div className="absolute inset-[4px] border border-slate-300"></div>
                                                         <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
                                                             {[...Array(12)].map((_, i) => (
-                                                                <div key={`ghost-straight-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                <div key={`ghost-straight-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                             ))}
                                                         </div>
                                                         <div className="absolute inset-0 flex items-center justify-center">
-                                                            <div className="h-[60%] w-px bg-slate-300 relative">
+                                                            <div className="h-[60%] w-px bg-slate-400 relative">
                                                                 <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-r border-slate-300 rotate-[-45deg]"></div>
                                                             </div>
                                                         </div>
                                                     </>
                                                 ) : sidebarBlockGhost.stairVariant === "l-shape" ? (
                                                     <>
-                                                        <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                        <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-500"></div>
-                                                        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-500 flex flex-col justify-between py-1">
+                                                        <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                        <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-400"></div>
+                                                        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 flex flex-col justify-between py-1">
                                                             {[...Array(5)].map((_, i) => (
-                                                                <div key={`ghost-l-v-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                <div key={`ghost-l-v-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                             ))}
                                                         </div>
-                                                        <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-500 flex flex-row justify-between px-1">
+                                                        <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 flex flex-row justify-between px-1">
                                                             {[...Array(5)].map((_, i) => (
-                                                                <div key={`ghost-l-h-${i}`} className="h-full w-px bg-slate-400/50"></div>
+                                                                <div key={`ghost-l-h-${i}`} className="h-full w-px bg-slate-400/80"></div>
                                                             ))}
                                                         </div>
                                                         <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
-                                                            <svg className="w-full h-full text-slate-300" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                 <path d="M 85 90 L 85 25 L 10 25" />
                                                                 <path d="M 15 20 L 10 25 L 15 30" />
                                                             </svg>
@@ -1707,21 +1715,21 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                     </>
                                                 ) : sidebarBlockGhost.stairVariant === "u-shape" ? (
                                                     <>
-                                                        <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                        <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-500 bg-slate-700/30"></div>
+                                                        <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                        <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 bg-slate-200/60"></div>
                                                         <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 bg-slate-500"></div>
-                                                        <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-500/50">
+                                                        <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-400">
                                                             {[...Array(7)].map((_, i) => (
-                                                                <div key={`ghost-u-l-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                <div key={`ghost-u-l-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                             ))}
                                                         </div>
-                                                        <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-500/50">
+                                                        <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-400">
                                                             {[...Array(7)].map((_, i) => (
-                                                                <div key={`ghost-u-r-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                <div key={`ghost-u-r-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                             ))}
                                                         </div>
                                                         <div className="absolute inset-0 pointer-events-none p-2">
-                                                            <svg className="w-full h-full text-slate-300" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                 <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
                                                                 <path d="M 20 85 L 25 90 L 30 85" />
                                                             </svg>
@@ -1729,20 +1737,20 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                     </>
                                                 ) : sidebarBlockGhost.stairVariant === "spiral" ? (
                                                     <>
-                                                        <div className="absolute inset-0 rounded-full border-[2px] border-slate-500"></div>
-                                                        <div className="absolute inset-[35%] border border-slate-500 rounded-full bg-slate-900 z-10"></div>
+                                                        <div className="absolute inset-0 rounded-full border-[2px] border-slate-400"></div>
+                                                        <div className="absolute inset-[35%] border border-slate-400 rounded-full bg-slate-100 z-10"></div>
                                                         {[...Array(12)].map((_, i) => (
                                                             <div
                                                                 key={`ghost-spiral-${i}`}
-                                                                className="absolute inset-0 border-t border-slate-500/50 origin-center"
+                                                                className="absolute inset-0 border-t border-slate-400 origin-center"
                                                                 style={{ transform: `rotate(${i * 30}deg)` }}
                                                             ></div>
                                                         ))}
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                        <div className="absolute inset-[4px] border border-slate-600"></div>
+                                                        <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                        <div className="absolute inset-[4px] border border-slate-300"></div>
                                                     </>
                                                 )}
                                                 <div className={`absolute inset-0 opacity-20 ${sidebarBlockGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
@@ -1764,12 +1772,12 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         }}
                                     >
                                         {dragGhost.kind === "unit" ? (
-                                            <div className={`w-full h-full bg-slate-800/70 relative shadow-sm overflow-hidden select-none rounded-[1px] border ${dragGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
-                                                <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                <div className="absolute inset-[4px] border border-slate-600"></div>
-                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-800 z-10 border-x-2 border-slate-500"></div>
-                                                <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-800 z-10 flex items-center justify-center border-x border-slate-500">
-                                                    <div className="w-full h-px bg-slate-600"></div>
+                                            <div className={`w-full h-full bg-white/85 relative shadow-sm overflow-hidden select-none rounded-[1px] border ${dragGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
+                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                <div className="absolute inset-[4px] border border-slate-300"></div>
+                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-100 z-10 border-x-2 border-slate-400"></div>
+                                                <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-100 z-10 flex items-center justify-center border-x border-slate-400">
+                                                    <div className="w-full h-px bg-slate-300"></div>
                                                 </div>
                                                 <div className={`absolute inset-0 opacity-20 ${dragGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                             </div>
@@ -1779,8 +1787,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             </div>
                                         ) : dragGhost.structureType === "elevator" ? (
                                             <div className={`w-full h-full border rounded-sm flex items-center justify-center ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
-                                                <div className="border-2 border-slate-500 w-full h-full m-2 flex items-center justify-center relative">
-                                                    <span className={`material-icons-round ${dragGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>elevator</span>
+                                                <div className="border-2 border-slate-400 w-full h-full m-2 flex items-center justify-center relative">
+                                                    <span className={`material-icons-round ${dragGhost.isValid ? 'text-emerald-700' : 'text-red-700'}`}>elevator</span>
                                                 </div>
                                             </div>
                                         ) : (
@@ -1788,35 +1796,35 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 <div style={getRotatedArtworkStyle(dragGhost.w, dragGhost.h, dragGhost.stairRotation ?? 0)}>
                                                     {dragGhost.stairVariant === "straight" ? (
                                                         <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                            <div className="absolute inset-[4px] border border-slate-600"></div>
+                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                            <div className="absolute inset-[4px] border border-slate-300"></div>
                                                             <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
                                                                 {[...Array(12)].map((_, i) => (
-                                                                    <div key={`drag-straight-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={`drag-straight-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                                 ))}
                                                             </div>
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <div className="h-[60%] w-px bg-slate-300 relative">
+                                                                <div className="h-[60%] w-px bg-slate-400 relative">
                                                                     <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-r border-slate-300 rotate-[-45deg]"></div>
                                                                 </div>
                                                             </div>
                                                         </>
                                                     ) : dragGhost.stairVariant === "l-shape" ? (
                                                         <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                            <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-500"></div>
-                                                            <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-500 flex flex-col justify-between py-1">
+                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                            <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-400"></div>
+                                                            <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 flex flex-col justify-between py-1">
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={`drag-l-v-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={`drag-l-v-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                                 ))}
                                                             </div>
-                                                            <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-500 flex flex-row justify-between px-1">
+                                                            <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 flex flex-row justify-between px-1">
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={`drag-l-h-${i}`} className="h-full w-px bg-slate-400/50"></div>
+                                                                    <div key={`drag-l-h-${i}`} className="h-full w-px bg-slate-400/80"></div>
                                                                 ))}
                                                             </div>
                                                             <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
-                                                                <svg className="w-full h-full text-slate-300" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 85 90 L 85 25 L 10 25" />
                                                                     <path d="M 15 20 L 10 25 L 15 30" />
                                                                 </svg>
@@ -1824,21 +1832,21 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                         </>
                                                     ) : dragGhost.stairVariant === "u-shape" ? (
                                                         <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                            <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-500 bg-slate-700/30"></div>
+                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                            <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 bg-slate-200/60"></div>
                                                             <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 bg-slate-500"></div>
-                                                            <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-500/50">
+                                                            <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-400">
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={`drag-u-l-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={`drag-u-l-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                                 ))}
                                                             </div>
-                                                            <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-500/50">
+                                                            <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-400">
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={`drag-u-r-${i}`} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={`drag-u-r-${i}`} className="w-full h-px bg-slate-400/80"></div>
                                                                 ))}
                                                             </div>
                                                             <div className="absolute inset-0 pointer-events-none p-2">
-                                                                <svg className="w-full h-full text-slate-300" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
                                                                     <path d="M 20 85 L 25 90 L 30 85" />
                                                                 </svg>
@@ -1846,20 +1854,20 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                         </>
                                                     ) : dragGhost.stairVariant === "spiral" ? (
                                                         <>
-                                                            <div className="absolute inset-0 rounded-full border-[2px] border-slate-500"></div>
-                                                            <div className="absolute inset-[35%] border border-slate-500 rounded-full bg-slate-900 z-10"></div>
+                                                            <div className="absolute inset-0 rounded-full border-[2px] border-slate-400"></div>
+                                                            <div className="absolute inset-[35%] border border-slate-400 rounded-full bg-slate-100 z-10"></div>
                                                             {[...Array(12)].map((_, i) => (
                                                                 <div
                                                                     key={`drag-spiral-${i}`}
-                                                                    className="absolute inset-0 border-t border-slate-500/50 origin-center"
+                                                                    className="absolute inset-0 border-t border-slate-400 origin-center"
                                                                     style={{ transform: `rotate(${i * 30}deg)` }}
                                                                 ></div>
                                                             ))}
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                            <div className="absolute inset-[4px] border border-slate-600"></div>
+                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                            <div className="absolute inset-[4px] border border-slate-300"></div>
                                                         </>
                                                     )}
                                                 </div>
@@ -1874,7 +1882,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                     <motion.div
                                         key={corridor.id}
                                         data-corridor-card="true"
-                                        className={`absolute group cursor-pointer ${selectedItem?.kind === "corridor" && selectedItem.id === corridor.id ? 'ring-2 ring-primary ring-offset-1 ring-offset-slate-900' : ''}`}
+                                        className={`absolute group cursor-pointer ${selectedItem?.kind === "corridor" && selectedItem.id === corridor.id ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}`}
                                         style={{
                                             left: corridor.x,
                                             top: corridor.y,
@@ -1953,17 +1961,17 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             setIsTrashHot(false);
                                         }}
                                     >
-                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                            <div className="absolute inset-[4px] border border-slate-600"></div>
-                                            <div className="absolute inset-[10px] border border-slate-700/80 border-dashed"></div>
-                                            <div className="absolute left-[10px] right-[10px] top-1/2 -translate-y-1/2 h-px bg-slate-500/80"></div>
+                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                            <div className={`absolute inset-[10px] border border-dashed ${isDark ? 'border-neutral-500/80' : 'border-slate-700/80'}`}></div>
+                                            <div className={`absolute left-[10px] right-[10px] top-1/2 -translate-y-1/2 h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-500/80'}`}></div>
                                             <div className="absolute inset-[8px] opacity-10"
-                                                style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '10px 10px' }}
+                                                style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '10px 10px' }}
                                             ></div>
                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                             <div className="absolute inset-0 flex items-center justify-center z-20">
-                                                <span className="text-xs font-bold text-slate-300 uppercase tracking-[0.4em]">{corridor.label}</span>
+                                                <span className={`text-xs font-bold uppercase tracking-[0.4em] ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>{corridor.label}</span>
                                             </div>
 
                                             {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
@@ -2011,7 +2019,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                     <motion.div
                                         key={structure.id}
                                         data-structure-card="true"
-                                        className={`absolute group cursor-pointer ${selectedItem?.kind === "structure" && selectedItem.id === structure.id ? 'ring-2 ring-primary ring-offset-1 ring-offset-slate-900' : ''}`}
+                                        className={`absolute group cursor-pointer ${selectedItem?.kind === "structure" && selectedItem.id === structure.id ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}`}
                                         style={{
                                             left: structure.x,
                                             top: structure.y,
@@ -2097,17 +2105,17 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         }}
                                     >
                                         {structure.type === "elevator" ? (
-                                            <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                                <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                <div className="absolute inset-[4px] border border-slate-600"></div>
-                                                <div className="absolute inset-[10px] border border-slate-700 rounded-[1px]"></div>
-                                                <div className="absolute inset-x-[18%] top-[14%] bottom-[18%] border border-slate-600 flex bg-slate-800/80">
-                                                    <div className="w-1/2 border-r border-slate-600"></div>
+                                            <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                <div className={`absolute inset-[10px] border rounded-[1px] ${isDark ? 'border-neutral-500' : 'border-slate-700'}`}></div>
+                                                <div className={`absolute inset-x-[18%] top-[14%] bottom-[18%] flex border ${isDark ? 'border-neutral-600 bg-neutral-700/80' : 'border-slate-300 bg-slate-100'}`}>
+                                                    <div className={`w-1/2 ${isDark ? 'border-r border-neutral-600' : 'border-r border-slate-300'}`}></div>
                                                     <div className="w-1/2"></div>
                                                 </div>
-                                                <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-slate-500"></div>
+                                                <div className={`absolute top-[8%] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full ${isDark ? 'bg-neutral-400' : 'bg-slate-500'}`}></div>
                                                 <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
-                                                <div className="absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-semibold text-slate-300 uppercase tracking-wider">
+                                                <div className={`absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
                                                     <span className="material-icons-round text-[12px]">elevator</span>
                                                     <span>Elevator</span>
                                                 </div>
@@ -2117,44 +2125,44 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 <div style={getRotatedArtworkStyle(structure.w, structure.h, structure.rotation ?? 0)}>
                                                     {structure.variant === "straight" ? (
                                                         /* Straight Flight */
-                                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                            <div className="absolute inset-[4px] border border-slate-600"></div>
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
                                                             {/* Steps */}
                                                             <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
                                                                 {[...Array(12)].map((_, i) => (
-                                                                    <div key={i} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Arrow */}
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <div className="h-[60%] w-px bg-slate-300 relative">
-                                                                    <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-r border-slate-300 rotate-[-45deg]"></div>
+                                                                <div className={`h-[60%] w-px relative ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}>
+                                                                    <div className={`absolute -top-1 -left-1 w-2 h-2 border-t border-r rotate-[-45deg] ${isDark ? 'border-neutral-500' : 'border-slate-300'}`}></div>
                                                                 </div>
                                                             </div>
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                         </div>
                                                     ) : structure.variant === "l-shape" ? (
                                                         /* L-Shape */
-                                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
                                                             {/* Landing - Top Right */}
-                                                            <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-500"></div>
+                                                            <div className={`absolute top-0 right-0 w-1/2 h-1/2 border-b border-l ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
                                                             {/* Flight 1 - Bottom Right (Vertical) */}
-                                                            <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-500 flex flex-col justify-between py-1">
+                                                            <div className={`absolute bottom-0 right-0 w-1/2 h-1/2 border-l flex flex-col justify-between py-1 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={i} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Flight 2 - Top Left (Horizontal) */}
-                                                            <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-500 flex flex-row justify-between px-1">
+                                                            <div className={`absolute top-0 left-0 w-1/2 h-1/2 border-b flex flex-row justify-between px-1 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={i} className="h-full w-px bg-slate-400/50"></div>
+                                                                    <div key={i} className={`h-full w-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Direction Line */}
                                                             <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
-                                                                <svg className="w-full h-full text-slate-300" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-slate-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 85 90 L 85 25 L 10 25" />
                                                                     <path d="M 15 20 L 10 25 L 15 30" />
                                                                 </svg>
@@ -2163,27 +2171,27 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                         </div>
                                                     ) : structure.variant === "u-shape" ? (
                                                         /* U-Shape */
-                                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
                                                             {/* Landing - Top */}
-                                                            <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-500 bg-slate-700/30"></div>
+                                                            <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-500 bg-neutral-700/50' : 'border-slate-400 bg-slate-200/60'}`}></div>
                                                             {/* Divider Wall */}
-                                                            <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 bg-slate-500"></div>
+                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 ${isDark ? 'bg-neutral-400' : 'bg-slate-500'}`}></div>
                                                             {/* Left Flight */}
-                                                            <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-500/50">
+                                                            <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={i} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Right Flight */}
-                                                            <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-500/50">
+                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={i} className="w-full h-px bg-slate-400/50"></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Direction Line */}
                                                             <div className="absolute inset-0 pointer-events-none p-2">
-                                                                <svg className="w-full h-full text-slate-300" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-slate-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
                                                                     <path d="M 20 85 L 25 90 L 30 85" />
                                                                 </svg>
@@ -2192,13 +2200,13 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                         </div>
                                                     ) : structure.variant === "spiral" ? (
                                                         /* Spiral */
-                                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-full border-[2px] border-slate-500">
-                                                            <div className="absolute inset-[35%] border border-slate-500 rounded-full bg-slate-900 z-10"></div>
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-full border-[2px] ${isDark ? 'bg-neutral-800 border-neutral-500' : 'bg-white border-slate-400'}`}>
+                                                            <div className={`absolute inset-[35%] border rounded-full z-10 ${isDark ? 'border-neutral-500 bg-neutral-700/80' : 'border-slate-400 bg-slate-100'}`}></div>
                                                             {/* Radial Steps */}
                                                             {[...Array(12)].map((_, i) => (
                                                                 <div
                                                                     key={i}
-                                                                    className="absolute inset-0 border-t border-slate-500/50 origin-center"
+                                                                    className={`absolute inset-0 border-t origin-center ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}
                                                                     style={{ transform: `rotate(${i * 30}deg)` }}
                                                                 ></div>
                                                             ))}
@@ -2206,9 +2214,9 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                         </div>
                                                     ) : (
                                                         /* Default / Fallback */
-                                                        <div className="w-full h-full bg-slate-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                                            <div className="absolute inset-0 border-[2px] border-slate-500"></div>
-                                                            <div className="absolute inset-[4px] border border-slate-600"></div>
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                            <div className="absolute inset-[4px] border border-slate-300"></div>
                                                             <div className="absolute inset-0 flex items-center justify-center">
                                                                 <span className="text-[10px] text-slate-400 uppercase">Stairwell</span>
                                                             </div>
@@ -2225,7 +2233,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                     <motion.div
                                         key={unit.id}
                                         data-unit-card="true"
-                                        className={`absolute group cursor-pointer ${selectedItem?.kind === "unit" && selectedItem.id === unit.id ? 'ring-2 ring-primary ring-offset-1 ring-offset-slate-900' : ''}`}
+                                        className={`absolute group cursor-pointer ${selectedItem?.kind === "unit" && selectedItem.id === unit.id ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}`}
                                         style={{
                                             left: unit.x,
                                             top: unit.y,
@@ -2327,71 +2335,61 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             setIsTrashHot(false);
                                         }}
                                     >
-                                        {/* Blueprint Architectural Rendering - Dark Mode */}
-                                        <div className="w-full h-full bg-neutral-800 relative shadow-sm overflow-hidden select-none rounded-[1px]">
-                                            {/* Outer Walls - Lighter for dark mode */}
-                                            <div className="absolute inset-0 border-[2px] border-neutral-500"></div>
-                                            <div className="absolute inset-[4px] border border-neutral-600"></div>
+                                        <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none ${isDark ? 'bg-neutral-800 shadow-sm' : 'bg-white shadow-sm'}`}>
+                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
 
-                                            {/* Door - Bottom Center */}
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-neutral-800 z-10 border-x-2 border-neutral-500"></div>
+                                            <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}></div>
 
-                                            {/* Windows - Top Center */}
-                                            <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-neutral-800 z-10 flex items-center justify-center border-x border-neutral-500">
-                                                <div className="w-full h-px bg-neutral-600"></div>
+                                            <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
+                                                <div className={`h-px w-full ${isDark ? 'bg-neutral-600' : 'bg-slate-300'}`}></div>
                                             </div>
 
-                                            {/* Windows - Sides */}
-                                            <div className="absolute top-1/4 bottom-1/4 left-0 w-[6px] bg-neutral-800 z-10 flex flex-col justify-center border-y border-neutral-500">
-                                                <div className="h-full w-px bg-neutral-500 mx-auto"></div>
+                                            <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
+                                                <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
                                             </div>
-                                            <div className="absolute top-1/4 bottom-1/4 right-0 w-[6px] bg-neutral-800 z-10 flex flex-col justify-center border-y border-neutral-500">
-                                                <div className="h-full w-px bg-neutral-500 mx-auto"></div>
-                                            </div>
-
-                                            {/* Interior Elements (Columns/Corners) */}
-                                            <div className="absolute top-[8px] right-[8px] w-5 h-5 border border-neutral-600"></div>
-                                            <div className="absolute bottom-[8px] left-[8px] w-4 h-4 border border-neutral-600 flex flex-col gap-0.5 p-0.5">
-                                                <div className="w-full h-full border border-neutral-700"></div>
-                                            </div>
-                                            <div className="absolute bottom-[8px] right-[8px] w-4 h-4 border border-neutral-600 flex flex-col gap-0.5 p-0.5">
-                                                <div className="w-full h-full border border-neutral-700"></div>
+                                            <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
+                                                <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
                                             </div>
 
-                                            {/* Grid floor pattern inside unit */}
-                                            <div className="absolute inset-[8px] opacity-10"
-                                                style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '10px 10px' }}
+                                            <div className={`absolute right-[8px] top-[8px] h-5 w-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}></div>
+                                            <div className={`absolute bottom-[8px] left-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
+                                                <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
+                                            </div>
+                                            <div className={`absolute bottom-[8px] right-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
+                                                <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
+                                            </div>
+
+                                            <div
+                                                className="absolute inset-[8px] opacity-[0.16]"
+                                                style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(rgba(148,163,184,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.45) 1px, transparent 1px)', backgroundSize: '10px 10px' }}
                                             ></div>
 
-                                            {/* Status Highlight Overlay - Always visible */}
-                                            <div className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity ${unit.status === 'occupied' ? 'bg-status-occupied' :
+                                            <div className={`absolute inset-0 opacity-[0.18] group-hover:opacity-[0.3] transition-opacity ${unit.status === 'occupied' ? 'bg-status-occupied' :
                                                 unit.status === 'vacant' ? 'bg-status-vacant' :
                                                     unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
                                                 }`}></div>
 
-                                            {/* Info Content Overlay */}
                                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
-                                                {/* Mini Status Indicator */}
-                                                <div className={`w-2 h-2 rounded-full mb-2 shadow-[0_0_8px_rgba(0,0,0,0.5)] ${unit.status === 'occupied' ? 'bg-status-occupied' :
+                                                <div className={`w-2.5 h-2.5 rounded-full mb-2 shadow-[0_0_10px_rgba(255,255,255,0.9)] ${unit.status === 'occupied' ? 'bg-status-occupied' :
                                                     unit.status === 'vacant' ? 'bg-status-vacant' :
                                                         unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
                                                     }`}></div>
 
-                                                <h4 className="font-bold text-xs text-neutral-200 drop-shadow-md">{unit.name}</h4>
+                                                <h4 className={`text-xs font-bold drop-shadow-sm ${isDark ? 'text-neutral-200' : 'text-slate-700'}`}>{unit.name}</h4>
 
                                                 {unit.status !== 'vacant' && unit.tenant && (
-                                                    <p className="text-[10px] text-neutral-400 font-mono mt-1">{unit.tenant}</p>
+                                                    <p className={`mt-1 font-mono text-[10px] ${isDark ? 'text-neutral-400' : 'text-slate-500'}`}>{unit.tenant}</p>
                                                 )}
                                                 {unit.status === 'vacant' && (
-                                                    <span className="text-[9px] text-blue-400 font-bold uppercase mt-1 tracking-wider border border-blue-500/30 px-1 rounded bg-blue-500/10">Vacant</span>
+                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-bold uppercase tracking-wider ${isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800'}`}>Vacant</span>
                                                 )}
                                                 {unit.status === 'maintenance' && (
-                                                    <span className="text-[9px] text-red-400 font-bold uppercase mt-1 tracking-wider border border-red-500/30 px-1 rounded bg-red-500/10">Maint</span>
+                                                    <span className={`mt-1 rounded border px-1.5 text-[9px] font-bold uppercase tracking-wider ${isDark ? 'border-red-500/30 bg-red-500/10 text-red-400' : 'border-red-400/60 bg-red-100/90 text-red-800'}`}>Maint</span>
                                                 )}
                                             </div>
 
-                                            {/* Resize Handle */}
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize border-b-2 border-r-2 border-neutral-500 rounded-br-sm opacity-0 group-hover:opacity-100"></div>
+                                            <div className={`absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
                                         </div>
                                     </motion.div>
                                 ))}
@@ -2404,13 +2402,13 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     {/* Legend */}
                     <div className="absolute bottom-6 right-6 flex flex-col gap-4 z-20 pointer-events-none">
                         {showLegend ? (
-                            <div className="bg-surface-dark border border-neutral-700 p-3 rounded-lg shadow-xl backdrop-blur-sm bg-opacity-90 pointer-events-auto">
+                            <div className={`pointer-events-auto rounded-lg p-3 shadow-xl backdrop-blur-sm ${isDark ? 'border border-slate-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
                                 <div className="flex items-center justify-between mb-2 gap-2">
-                                    <h4 className="text-[10px] uppercase font-bold text-neutral-400">Legend</h4>
+                                    <h4 className={`text-[10px] uppercase font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Legend</h4>
                                     <button
                                         type="button"
                                         onClick={() => setShowLegend(false)}
-                                        className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400 hover:text-neutral-200 border border-neutral-600 hover:border-neutral-500 rounded px-1.5 py-0.5 transition-colors"
+                                        className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide transition-colors ${isDark ? 'border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-200' : 'border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700'}`}
                                     >
                                         Hide
                                     </button>
@@ -2418,19 +2416,19 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                 <div className="space-y-1.5">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-vacant"></div>
-                                        <span className="text-xs text-neutral-300">Vacant</span>
+                                        <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Vacant</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-occupied"></div>
-                                        <span className="text-xs text-neutral-300">Occupied</span>
+                                        <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Occupied</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-due"></div>
-                                        <span className="text-xs text-neutral-300">Near-due</span>
+                                        <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Near-due</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-sm bg-status-maintenance"></div>
-                                        <span className="text-xs text-neutral-300">Maintenance</span>
+                                        <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Maintenance</span>
                                     </div>
                                 </div>
                             </div>
@@ -2438,7 +2436,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                             <button
                                 type="button"
                                 onClick={() => setShowLegend(true)}
-                                className="self-end bg-surface-dark border border-neutral-700 px-2.5 py-1.5 rounded-lg shadow-xl backdrop-blur-sm bg-opacity-90 pointer-events-auto text-[10px] font-semibold uppercase tracking-wide text-neutral-300 hover:text-neutral-100 hover:border-neutral-500 transition-colors"
+                                className={`pointer-events-auto self-end rounded-lg px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wide shadow-xl backdrop-blur-sm transition-colors ${isDark ? 'border border-slate-800 bg-surface-dark text-slate-300 hover:border-slate-600 hover:text-slate-100' : 'border border-border bg-card/95 text-slate-600 hover:border-slate-400 hover:text-slate-800'}`}
                             >
                                 Show Legend
                             </button>
@@ -2447,15 +2445,15 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         {/* Controls */}
                         <div className="flex gap-4 items-end pointer-events-auto">
                             {/* Minimap */}
-                            <div className="w-48 h-32 bg-surface-dark border border-neutral-700 rounded-lg shadow-xl overflow-hidden relative group hidden md:block">
+                            <div className={`relative hidden h-32 w-48 overflow-hidden rounded-lg shadow-xl md:block ${isDark ? 'border border-slate-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
                                 <div className="absolute inset-0 p-2">
                                     <div
                                         ref={minimapRef}
                                         onPointerDown={handleMinimapPointerDown}
-                                        className="w-full h-full bg-neutral-800 rounded opacity-50 relative overflow-hidden cursor-pointer"
+                                        className={`relative h-full w-full cursor-pointer overflow-hidden rounded border ${isDark ? 'border-slate-700 bg-[#15181d]' : 'border-slate-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
                                     >
                                         <div
-                                            className="absolute border border-neutral-600/60"
+                                            className={`absolute border ${isDark ? 'border-slate-600/70 bg-white/[0.03]' : 'border-slate-400/70 bg-white/25'}`}
                                             style={{
                                                 top: `${(BLUEPRINT_MARGIN / WORLD_HEIGHT) * 100}%`,
                                                 left: `${(BLUEPRINT_MARGIN / WORLD_WIDTH) * 100}%`,
@@ -2467,9 +2465,9 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         {units.map((unit) => (
                                             <div
                                                 key={`minimap-${unit.id}`}
-                                                className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/70' :
-                                                    unit.status === 'vacant' ? 'bg-status-vacant/70' :
-                                                        unit.status === 'maintenance' ? 'bg-status-maintenance/70' : 'bg-status-due/70'
+                                                className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/85' :
+                                                    unit.status === 'vacant' ? 'bg-status-vacant/85' :
+                                                        unit.status === 'maintenance' ? 'bg-status-maintenance/85' : 'bg-status-due/85'
                                                     }`}
                                                 style={{
                                                     left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
@@ -2483,7 +2481,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         {corridors.map((corridor) => (
                                             <div
                                                 key={`minimap-corridor-${corridor.id}`}
-                                                className="absolute bg-neutral-500/70 rounded-[1px]"
+                                                className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-500/70' : 'bg-slate-400/70'}`}
                                                 style={{
                                                     left: `${((BLUEPRINT_MARGIN + corridor.x) / WORLD_WIDTH) * 100}%`,
                                                     top: `${((BLUEPRINT_MARGIN + corridor.y) / WORLD_HEIGHT) * 100}%`,
@@ -2496,7 +2494,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         {structures.map((structure) => (
                                             <div
                                                 key={`minimap-structure-${structure.id}`}
-                                                className="absolute bg-neutral-300/70 rounded-[1px]"
+                                                className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-300/70' : 'bg-slate-500/70'}`}
                                                 style={{
                                                     left: `${((BLUEPRINT_MARGIN + structure.x) / WORLD_WIDTH) * 100}%`,
                                                     top: `${((BLUEPRINT_MARGIN + structure.y) / WORLD_HEIGHT) * 100}%`,
@@ -2508,7 +2506,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
                                         <div
                                             onPointerDown={handleMinimapViewportPointerDown}
-                                            className="absolute border-2 border-primary bg-primary/20 cursor-move"
+                                            className={`absolute cursor-move border-2 ${isDark ? 'border-primary bg-primary/20 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]' : 'border-primary/80 bg-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.7)]'}`}
                                             style={{
                                                 left: minimapViewport.left,
                                                 top: minimapViewport.top,
@@ -2520,15 +2518,15 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                 </div>
                             </div>
 
-                            <div className="flex flex-col bg-surface-dark border border-neutral-700 rounded-lg shadow-xl overflow-hidden">
-                                <button onClick={handleZoomIn} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">add</span></button>
-                                <button onClick={handleZoomOut} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">remove</span></button>
-                                <button onClick={handleFit} className="p-2 hover:bg-neutral-700 text-neutral-300 transition-colors border-b border-neutral-700"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                            <div className="flex flex-col bg-card/95 border border-border rounded-lg shadow-xl overflow-hidden backdrop-blur">
+                                <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border"><span className="material-icons-round text-lg">add</span></button>
+                                <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border"><span className="material-icons-round text-lg">remove</span></button>
+                                <button onClick={handleFit} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border"><span className="material-icons-round text-lg">aspect_ratio</span></button>
                                 {!readOnly && (
                                     <button
                                         onClick={handleUndo}
                                         disabled={!undoAvailable}
-                                        className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-neutral-700 text-neutral-300' : 'text-neutral-600 cursor-not-allowed'}`}
+                                        className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-muted text-slate-600' : 'text-slate-300 cursor-not-allowed'}`}
                                         title="Undo (Ctrl+Z)"
                                     >
                                         <span className="material-icons-round text-lg">undo</span>
@@ -2539,33 +2537,33 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     </div>
 
                     {/* Status Bar */}
-                    <div className="absolute bottom-6 left-6 bg-surface-dark/90 backdrop-blur border border-neutral-700 py-2 px-4 rounded-lg shadow-lg z-20 pointer-events-auto">
+                    <div className="absolute bottom-6 left-6 bg-card/95 backdrop-blur border border-border py-2 px-4 rounded-lg shadow-lg z-20 pointer-events-auto">
                         <div className="flex items-center gap-4 text-xs">
                             <div className="flex flex-col">
-                                <span className="text-neutral-400">Total Units</span>
-                                <span className="font-mono text-white">{units.length}</span>
+                                <span className="text-slate-500">Total Units</span>
+                                <span className="font-mono text-slate-900">{units.length}</span>
                             </div>
-                            <div className="h-6 w-px bg-neutral-700"></div>
+                            <div className="h-6 w-px bg-border"></div>
                             <div className="flex flex-col">
-                                <span className="text-neutral-400">Total Area</span>
-                                <span className="font-mono text-white">{totalArea.toLocaleString()} sqft</span>
+                                <span className="text-slate-500">Total Area</span>
+                                <span className="font-mono text-slate-900">{totalArea.toLocaleString()} sqft</span>
                             </div>
-                            <div className="h-6 w-px bg-neutral-700"></div>
+                            <div className="h-6 w-px bg-border"></div>
                             <div className="flex flex-col">
-                                <span className="text-neutral-400">Cursor</span>
+                                <span className="text-slate-500">Cursor</span>
                                 <span className="font-mono text-primary">X: {Math.round(position.x)} Y: {Math.round(position.y)}</span>
                             </div>
                         </div>
                     </div>
 
                     {showOverlapToast && (
-                        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-red-500/50 bg-red-500/15 text-red-200 text-sm font-medium shadow-lg pointer-events-none">
+                        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-red-500/20 bg-red-50 text-red-700 text-sm font-medium shadow-lg pointer-events-none">
                             Units overlap
                         </div>
                     )}
 
                     {showDeleteToast && (
-                        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-200 text-sm font-medium shadow-lg pointer-events-none">
+                        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-emerald-500/20 bg-emerald-50 text-emerald-700 text-sm font-medium shadow-lg pointer-events-none">
                             Item deleted
                         </div>
                     )}
@@ -2574,35 +2572,35 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
                             <div
                                 ref={trashRef}
-                                className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-xl transition-all ${isTrashHot ? 'border-red-400 bg-red-500/25 scale-110' : 'border-neutral-500 bg-neutral-800/80'}`}
+                                className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-xl transition-all ${isTrashHot ? 'border-red-400 bg-red-100 scale-110' : 'border-slate-300 bg-card/95'}`}
                             >
-                                <span className={`material-icons-round text-2xl ${isTrashHot ? 'text-red-300' : 'text-neutral-300'}`}>delete</span>
+                                <span className={`material-icons-round text-2xl ${isTrashHot ? 'text-red-500' : 'text-slate-500'}`}>delete</span>
                             </div>
                         </div>
                     )}
 
                     {!readOnly && pendingDelete && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral-950/55 p-4">
-                            <div className="w-full max-w-sm rounded-xl border border-neutral-700 bg-surface-dark shadow-2xl">
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/55 backdrop-blur-sm p-4">
+                            <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl">
                                 <div className="p-5">
-                                    <h3 className="text-sm font-semibold text-white">Confirm deletion</h3>
-                                    <p className="mt-2 text-xs text-neutral-300">
+                                    <h3 className="text-sm font-semibold text-slate-900">Confirm deletion</h3>
+                                    <p className="mt-2 text-xs text-slate-600">
                                         Delete {getCanvasItemLabel(pendingDelete.item)}?
                                     </p>
-                                    <p className="mt-1 text-[11px] text-neutral-400">
+                                    <p className="mt-1 text-[11px] text-slate-500">
                                         {pendingDelete.source === "trash" ? "You dropped this item near the trash." : "You used keyboard delete."}
                                     </p>
                                 </div>
-                                <div className="flex items-center justify-end gap-2 border-t border-neutral-700 p-3">
+                                <div className="flex items-center justify-end gap-2 border-t border-border p-3">
                                     <button
                                         onClick={cancelDeleteItem}
-                                        className="rounded-md border border-neutral-600 bg-neutral-700/50 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-700"
+                                        className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={confirmDeleteItem}
-                                        className="rounded-md border border-red-500/60 bg-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-500/30"
+                                        className="rounded-md border border-red-500/30 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
                                     >
                                         Delete
                                     </button>
@@ -2612,17 +2610,17 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     )}
 
                     {readOnly && transferModalUnit && (
-                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 pointer-events-auto">
+                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-white/55 backdrop-blur-sm p-4 pointer-events-auto">
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark shadow-xl overflow-hidden relative flex flex-col"
+                                className="w-full max-w-md rounded-2xl border border-border bg-card shadow-xl overflow-hidden relative flex flex-col"
                             >
                                 {/* Header */}
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                                    <div className="flex items-center gap-3 text-slate-800 dark:text-slate-100">
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-slate-50/70">
+                                    <div className="flex items-center gap-3 text-slate-800">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                             <span className="material-icons-round">move_down</span>
                                         </div>
@@ -2631,29 +2629,29 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                     <button 
                                         title="Close"
                                         onClick={() => setTransferModalUnit(null)}
-                                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
                                     >
                                         <span className="material-icons-round text-xl">close</span>
                                     </button>
                                 </div>
 
                                 <div className="px-6 py-6">
-                                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
-                                        You are requesting to transfer your current lease to <span className="font-semibold text-slate-900 dark:text-white px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">{transferModalUnit.name}</span>. This request is subject to landlord approval.
+                                    <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                                        You are requesting to transfer your current lease to <span className="font-semibold text-slate-900 px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 shadow-sm">{transferModalUnit.name}</span>. This request is subject to landlord approval.
                                     </p>
                                     
                                     {transferSuccess ? (
-                                        <div className="flex flex-col items-center justify-center py-6 px-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-xl text-center">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mb-4">
+                                        <div className="flex flex-col items-center justify-center py-6 px-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4">
                                                 <span className="material-icons-round text-2xl">check_circle</span>
                                             </div>
-                                            <h4 className="text-emerald-800 dark:text-emerald-400 font-semibold mb-1">Request Submitted!</h4>
-                                            <p className="text-sm text-emerald-600 dark:text-emerald-400/80">Your landlord has been notified and will review your transfer request shortly.</p>
+                                            <h4 className="text-emerald-800 font-semibold mb-1">Request Submitted!</h4>
+                                            <p className="text-sm text-emerald-600">Your landlord has been notified and will review your transfer request shortly.</p>
                                         </div>
                                     ) : (
                                         <form onSubmit={handleTransferSubmit} className="space-y-6">
                                             <div className="space-y-2">
-                                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
+                                                <label className="text-sm font-medium text-slate-700 block">
                                                     Transfer Justification <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
                                                 </label>
                                                 <div className="relative">
@@ -2661,7 +2659,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                         value={transferReason}
                                                         onChange={(e) => setTransferReason(e.target.value)}
                                                         placeholder="e.g., Needing more space for a home office..."
-                                                        className="w-full min-h-[100px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none shadow-sm"
+                                                        className="w-full min-h-[100px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none shadow-sm"
                                                     />
                                                     <div className="absolute bottom-3 right-3 text-[10px] text-slate-400">
                                                         {transferReason.length} chars
@@ -2670,27 +2668,27 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             </div>
                                             
                                             {transferError && (
-                                                <div className="flex items-start gap-3 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-500/10 p-4">
+                                                <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4">
                                                     <span className="material-icons-round text-rose-500 text-lg">error_outline</span>
                                                     <div className="flex-1">
-                                                        <h5 className="text-sm font-semibold text-rose-800 dark:text-rose-400 mb-0.5">Submission Failed</h5>
-                                                        <p className="text-xs text-rose-600 dark:text-rose-300">{transferError}</p>
+                                                        <h5 className="text-sm font-semibold text-rose-800 mb-0.5">Submission Failed</h5>
+                                                        <p className="text-xs text-rose-600">{transferError}</p>
                                                     </div>
                                                 </div>
                                             )}
                                             
-                                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                                                 <button
                                                     type="button"
                                                     onClick={() => setTransferModalUnit(null)}
-                                                    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     type="submit"
                                                     disabled={isSubmittingTransfer}
-                                                    className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-surface-dark disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                    className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                                 >
                                                     {isSubmittingTransfer ? (
                                                         <>
@@ -2715,7 +2713,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
                 {/* Sidebar */}
                 {!readOnly && (
-                    <aside className="w-[340px] shrink-0 bg-white dark:bg-surface-dark border-l border-slate-200 dark:border-slate-700 flex flex-col z-10 shadow-2xl">
+                    <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-slate-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
                         {selectedItem?.kind === "unit" ? (
                             <UnitDetailsPanel
                                 unit={units.find(u => u.id === selectedItem.id)!}
@@ -2733,6 +2731,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                             <SidebarBlockLibrary
                                 onDragStart={handleSidebarBlockDragStart}
                                 styles={styles}
+                                isDark={isDark}
                             />
                         )}
                     </aside>
@@ -2766,10 +2765,10 @@ const UnitDetailsPanel = ({
 
     // Status configuration for consistent styling
     const statusConfig = {
-        occupied: { color: 'text-blue-400', label: 'Occupied', icon: 'check_circle' },
-        vacant: { color: 'text-emerald-400', label: 'Available Now', icon: 'vpn_key' },
-        maintenance: { color: 'text-rose-400', label: 'Maintenance', icon: 'build' },
-        neardue: { color: 'text-amber-400', label: 'Near Due', icon: 'warning' }
+        occupied: { color: 'text-blue-600', label: 'Occupied', icon: 'check_circle' },
+        vacant: { color: 'text-emerald-600', label: 'Available Now', icon: 'vpn_key' },
+        maintenance: { color: 'text-rose-600', label: 'Maintenance', icon: 'build' },
+        neardue: { color: 'text-amber-600', label: 'Near Due', icon: 'warning' }
     };
 
     const currentStatus = statusConfig[unit.status] || statusConfig.vacant;
@@ -2794,62 +2793,62 @@ const UnitDetailsPanel = ({
                 : 'Studio • 1 Bath';
 
     return (
-        <div className="flex flex-col h-full bg-[#1a1c23] border-l border-slate-800 shadow-2xl overflow-hidden relative font-sans">
+        <div className="flex flex-col h-full bg-card border-l border-border shadow-2xl overflow-hidden relative font-sans text-slate-800">
 
             {/* Hero Header Section */}
             <div className="relative h-64 w-full shrink-0 group overflow-hidden">
                 {/* Background Image / Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 mix-blend-overlay opacity-20 z-0"></div>
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-80 z-0 grayscale-[0.2] transition-transform duration-700 group-hover:scale-105"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-sky-500/10 z-0"></div>
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-70 z-0 grayscale-[0.05] transition-transform duration-700 group-hover:scale-105"></div>
 
                 {/* Overlay Gradients */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1c23] via-transparent to-transparent z-10"></div>
-                <div className="absolute inset-0 bg-black/20 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-white/10 z-10"></div>
 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 z-20 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center text-white/70 hover:text-white border border-white/10 transition-all"
+                    className="absolute top-6 right-6 z-20 w-8 h-8 rounded-full bg-white/70 hover:bg-white backdrop-blur-md flex items-center justify-center text-slate-600 hover:text-slate-900 border border-white/60 transition-all"
                 >
                     <span className="material-icons-round text-lg">close</span>
                 </button>
 
                 {/* Bottom Content */}
                 <div className="absolute bottom-6 left-6 right-6 z-20">
-                    <h1 className="text-[2.6rem] leading-none font-bold text-white tracking-tight drop-shadow-lg mb-4">{unit.name}</h1>
+                    <h1 className="text-[2.6rem] leading-none font-bold text-slate-900 tracking-tight drop-shadow-sm mb-4">{unit.name}</h1>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
                             <span className="material-icons-round text-[14px] text-primary-300">king_bed</span>
-                            <span className="text-xs font-semibold text-white tracking-wide">{unitLayoutLabel}</span>
+                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{unitLayoutLabel}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
                             <span className={`material-icons-round text-[14px] drop-shadow-md ${currentStatus.color}`}>event_available</span>
-                            <span className="text-xs font-semibold text-white tracking-wide">{currentStatus.label}</span>
+                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{currentStatus.label}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
                             <span className="material-icons-round text-[14px] text-cyan-300 drop-shadow-md">aspect_ratio</span>
-                            <span className="text-xs font-semibold text-white tracking-wide">{unitAreaSqm} m²</span>
+                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{unitAreaSqm} m²</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-0 mb-24 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-700/50 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-600/80">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-0 mb-24 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
 
                 {!isEditing ? (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
 
                         {/* Public Listing Action */}
-                        <div className="bg-gradient-to-br from-primary/10 to-[#23242f] border border-white/5 rounded-2xl p-5 relative overflow-hidden group hover:border-primary/20 transition-colors">
+                        <div className="bg-gradient-to-br from-primary/10 to-white border border-border rounded-2xl p-5 relative overflow-hidden group hover:border-primary/20 transition-colors shadow-sm">
                             <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
                             <div className="flex items-center justify-between relative z-10 gap-2">
                                 <div>
                                     <div className="flex items-center gap-1.5 mb-1">
                                         <span className="material-icons-round text-[16px] text-primary">storefront</span>
-                                        <h3 className="text-white font-bold text-sm">Unit Listing</h3>
+                                        <h3 className="text-slate-900 font-bold text-sm">Unit Listing</h3>
                                     </div>
-                                    <p className="text-slate-400 text-[10px] leading-relaxed mt-1">
+                                        <p className="text-slate-500 text-[10px] leading-relaxed mt-1">
                                         Open listing wizard to publish this unit.
                                     </p>
                                 </div>
@@ -2878,8 +2877,8 @@ const UnitDetailsPanel = ({
                             <div className="flex items-center justify-between group px-1">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-full p-0.5 border-2 border-sky-500 relative">
-                                            <div className="w-full h-full rounded-full bg-slate-700 overflow-hidden">
+                                            <div className="w-12 h-12 rounded-full p-0.5 border-2 border-sky-500 relative">
+                                            <div className="w-full h-full rounded-full bg-slate-100 overflow-hidden">
                                                 <img
                                                     src="https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"
                                                     alt="Tenant"
@@ -2887,11 +2886,11 @@ const UnitDetailsPanel = ({
                                                 />
                                             </div>
                                             {/* Status Dot */}
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#1a1c23] rounded-full translate-x-1 translate-y-1"></div>
+                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full translate-x-1 translate-y-1"></div>
                                         </div>
                                     </div>
                                     <div>
-                                        <p className="text-lg font-bold text-white tracking-wide">{unit.tenant || "No Tenant"}</p>
+                                        <p className="text-lg font-bold text-slate-900 tracking-wide">{unit.tenant || "No Tenant"}</p>
                                         <p className="text-xs text-slate-500 font-medium italic">"Unit Lease Holder"</p>
                                     </div>
                                 </div>
@@ -2905,7 +2904,7 @@ const UnitDetailsPanel = ({
 
                         {/* Lease Status */}
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                            <div className="bg-[#23242f] border border-white/5 rounded-2xl p-6 relative overflow-hidden flex flex-col items-center">
+                            <div className="bg-white border border-border rounded-2xl p-6 relative overflow-hidden flex flex-col items-center shadow-sm">
                                 <h3 className="text-primary-400 text-[10px] font-bold tracking-widest uppercase mb-6 self-start w-full">
                                     Lease Timeline
                                 </h3>
@@ -2982,11 +2981,11 @@ const UnitDetailsPanel = ({
                                             type="text"
                                             value={unit.name}
                                             onChange={(e) => onUpdate({ name: e.target.value })}
-                                            className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                            className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
                                             placeholder="Unit Name"
                                             id="unitName"
                                         />
-                                        <label htmlFor="unitName" className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                        <label htmlFor="unitName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
                                             Name
                                         </label>
                                     </div>
@@ -2996,14 +2995,14 @@ const UnitDetailsPanel = ({
                                             <select
                                                 value={unit.type}
                                                 onChange={(e) => onUpdate({ type: e.target.value as Unit["type"] })}
-                                                className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
+                                                className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
                                             >
                                                 <option value="Studio">Studio</option>
                                                 <option value="1BR">1 Bedroom</option>
                                                 <option value="2BR">2 Bedroom</option>
                                                 <option value="3BR">3 Bedroom</option>
                                             </select>
-                                            <label className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary">
+                                            <label className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary">
                                                 Type
                                             </label>
                                         </div>
@@ -3012,19 +3011,19 @@ const UnitDetailsPanel = ({
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-3 pl-1">Unit Status</label>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {[
-                                                    { id: 'vacant', label: 'Vacant', icon: 'vpn_key', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' },
-                                                    { id: 'occupied', label: 'Occupied', icon: 'check_circle', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/30' },
-                                                    { id: 'neardue', label: 'Near Due', icon: 'warning', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/30' },
-                                                    { id: 'maintenance', label: 'Maint.', icon: 'build', color: 'text-rose-400', bg: 'bg-rose-400/10 border-rose-400/30' }
+                                                    { id: 'vacant', label: 'Vacant', icon: 'vpn_key', color: 'text-emerald-700', bg: 'bg-emerald-200/70 border-emerald-500/45' },
+                                                    { id: 'occupied', label: 'Occupied', icon: 'check_circle', color: 'text-blue-700', bg: 'bg-blue-200/70 border-blue-500/45' },
+                                                    { id: 'neardue', label: 'Near Due', icon: 'warning', color: 'text-amber-700', bg: 'bg-amber-200/75 border-amber-500/45' },
+                                                    { id: 'maintenance', label: 'Maint.', icon: 'build', color: 'text-rose-700', bg: 'bg-rose-200/70 border-rose-500/45' }
                                                 ].map((s) => (
                                                     <button
                                                         key={s.id}
                                                         type="button"
                                                         onClick={(e) => { e.preventDefault(); onUpdate({ status: s.id as Unit["status"] }); }}
-                                                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${unit.status === s.id ? s.bg + ' ring-1 ring-white/20 shadow-lg scale-[1.02]' : 'border-slate-700/50 bg-[#23242f] hover:bg-slate-800'}`}
+                                                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${unit.status === s.id ? s.bg + ' ring-1 ring-primary/20 shadow-lg scale-[1.02]' : 'border-slate-300 bg-slate-100 hover:bg-slate-200'}`}
                                                     >
                                                         <span className={`material-icons-round text-xl ${unit.status === s.id ? s.color : 'text-slate-500'}`}>{s.icon}</span>
-                                                        <span className={`text-xs font-bold ${unit.status === s.id ? 'text-white' : 'text-slate-400'}`}>{s.label}</span>
+                                                        <span className={`text-xs font-bold ${unit.status === s.id ? 'text-slate-900' : 'text-slate-500'}`}>{s.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -3037,11 +3036,11 @@ const UnitDetailsPanel = ({
                                                 type="text"
                                                 value={unit.tenant || ''}
                                                 onChange={(e) => onUpdate({ tenant: e.target.value })}
-                                                className="block w-full px-4 py-3 bg-[#23242f] border border-slate-700/50 rounded-xl text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                                className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
                                                 placeholder="Tenant Name"
                                                 id="tenantName"
                                             />
-                                            <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-[#1a1c23] px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                            <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
                                                 Tenant Name
                                             </label>
                                         </div>
@@ -3055,7 +3054,7 @@ const UnitDetailsPanel = ({
 
             {/* Footer */}
             {isEditing ? (
-                <div className="p-6 border-t border-slate-800 bg-[#1a1c23]/90 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
+                <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
                     <button
                         onClick={onDelete}
                         className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all"
@@ -3070,7 +3069,7 @@ const UnitDetailsPanel = ({
                     </button>
                 </div>
             ) : (
-                <div className="p-6 border-t border-slate-800 bg-[#1a1c23]/90 backdrop-blur-xl absolute bottom-0 w-full z-20">
+                <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20">
                     <button
                         onClick={() => setIsEditing(true)}
                         className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-primary/20"
@@ -3088,10 +3087,12 @@ const UnitDetailsPanel = ({
 /* Extracted Sidebar Library Component for cleaner main render */
 const SidebarBlockLibrary = ({
     onDragStart,
-    styles
+    styles,
+    isDark
 }: {
     onDragStart: (type: SidebarBlockType) => (e: React.DragEvent<HTMLDivElement>) => void;
     styles: { readonly [key: string]: string; }
+    isDark: boolean;
 }) => {
     const handleSidebarBlockDragEnd = () => {
         // Optional cleanup if needed inside component, but parent tracks ghost
@@ -3099,173 +3100,173 @@ const SidebarBlockLibrary = ({
 
     return (
         <div className="flex flex-col h-full">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Building Blocks</h2>
+            <div className={`p-4 border-b ${isDark ? 'border-slate-800' : 'border-border'}`}>
+                <h2 className={`mb-4 text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Building Blocks</h2>
                 <div className="relative">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                         <span className="material-icons-round text-slate-400 text-lg">search</span>
                     </span>
-                    <input className="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Search components..." type="text" />
+                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-slate-700 bg-background-dark text-slate-200' : 'border-border bg-slate-50 text-slate-700'}`} placeholder="Search components..." type="text" />
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
                 <div>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                         <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
                         Living Units
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("studio")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-10 h-8 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 group-hover:bg-primary/10 group-hover:border-primary/50 transition-colors"></div>
+                            <div className={`h-8 w-10 rounded transition-colors group-hover:border-primary/50 group-hover:bg-primary/10 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}></div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Studio</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Studio</p>
                                 <p className="text-[10px] text-slate-500">400 sqft</p>
                             </div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("1br")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 flex"><div className="w-1/2 border-r border-slate-400 dark:border-slate-600"></div></div>
+                            <div className={`flex h-8 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}><div className={`w-1/2 ${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div></div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">1 BR Std</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>1 BR Std</p>
                                 <p className="text-[10px] text-slate-500">650 sqft</p>
                             </div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("2br")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-12 h-10 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 relative"><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className="border-r border-slate-400 dark:border-slate-600"></div></div></div>
+                            <div className={`relative h-10 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div></div></div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">2 BR Corner</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>2 BR Corner</p>
                                 <p className="text-[10px] text-slate-500">950 sqft</p>
                             </div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("3br")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-14 h-10 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-500 relative"><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className="border-r border-slate-400 dark:border-slate-600"></div><div className="border-r border-slate-400 dark:border-slate-600"></div></div></div>
+                            <div className={`relative h-10 w-14 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div></div></div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">3 BR Suite</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>3 BR Suite</p>
                                 <p className="text-[10px] text-slate-500">1200 sqft</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                         <span className="material-icons-round text-primary text-sm">architecture</span>
                         Structural
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("corridor")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-14 h-8 bg-slate-900/80 border-y border-slate-700 rounded-[1px]" />
-                            <div className="text-center"><p className="text-xs font-medium text-slate-700 dark:text-slate-200">Corridor</p></div>
+                            <div className={`h-8 w-14 rounded-[1px] border-y ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-slate-500 bg-slate-100'}`} />
+                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Corridor</p></div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("elevator")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded flex items-center justify-center">
-                                <span className="material-icons-round text-slate-500 dark:text-slate-400 text-sm">elevator</span>
+                            <div className={`flex h-8 w-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-slate-200'}`}>
+                                <span className={`material-icons-round text-sm ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>elevator</span>
                             </div>
-                            <div className="text-center"><p className="text-xs font-medium text-slate-700 dark:text-slate-200">Elevator</p></div>
+                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Elevator</p></div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                         <span className="material-icons-round text-primary text-sm">stairs</span>
                         Stairwells
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-straight")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-6 h-10 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 flex flex-col justify-evenly px-0.5">
-                                {[...Array(6)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                            <div className={`flex h-10 w-6 flex-col justify-evenly rounded px-0.5 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
+                                {[...Array(6)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Straight</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Straight</p>
                             </div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-l")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 relative">
-                                <div className="absolute top-0 right-0 w-1/2 h-1/2 border-l border-b border-slate-400 dark:border-slate-400/50"></div>
-                                <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 dark:border-slate-400/50 flex flex-col justify-evenly">
-                                    {[...Array(3)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
+                                <div className={`absolute top-0 right-0 h-1/2 w-1/2 border-l border-b ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}></div>
+                                <div className={`absolute bottom-0 right-0 flex h-1/2 w-1/2 flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
+                                    {[...Array(3)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
                                 </div>
-                                <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 dark:border-slate-400/50 flex flex-row justify-evenly">
-                                    {[...Array(3)].map((_, i) => <div key={i} className="h-full w-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                                <div className={`absolute top-0 left-0 flex h-1/2 w-1/2 flex-row justify-evenly border-b ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
+                                    {[...Array(3)].map((_, i) => <div key={i} className={`h-full w-px ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">L-Shape</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>L-Shape</p>
                             </div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-u")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded border border-slate-400 dark:border-slate-500 relative">
-                                <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 dark:border-slate-400/50"></div>
-                                <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-slate-400 dark:bg-slate-400/50"></div>
-                                <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r border-slate-400 dark:border-slate-400/50">
-                                    {[...Array(4)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
+                                <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}></div>
+                                <div className={`absolute top-[30%] bottom-0 left-1/2 w-0.5 -translate-x-1/2 ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>
+                                <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
+                                    {[...Array(4)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
                                 </div>
-                                <div className="absolute top-[30%] bottom-0 right-0 left-1/2 flex flex-col justify-evenly border-l border-slate-400 dark:border-slate-400/50">
-                                    {[...Array(4)].map((_, i) => <div key={i} className="w-full h-px bg-slate-400 dark:bg-slate-400/50"></div>)}
+                                <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
+                                    {[...Array(4)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">U-Shape</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>U-Shape</p>
                             </div>
                         </div>
                         <div
-                            className="group cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-600 hover:border-primary dark:hover:border-primary rounded-lg p-3 flex flex-col items-center gap-2 transition-all hover:shadow-md"
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-spiral")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded-full border border-slate-400 dark:border-slate-500 relative flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full border border-slate-400 dark:border-slate-400/50"></div>
+                            <div className={`relative flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
+                                <div className={`h-2 w-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-slate-400'}`}></div>
                                 {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
-                                    <div key={deg} className="absolute inset-0 border-t border-slate-400/50 dark:border-slate-400/30" style={{ transform: `rotate(${deg}deg)` }}></div>
+                                    <div key={deg} className={`absolute inset-0 border-t ${isDark ? 'border-neutral-400/50' : 'border-slate-400/50'}`} style={{ transform: `rotate(${deg}deg)` }}></div>
                                 ))}
                             </div>
                             <div className="text-center">
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-200">Spiral</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Spiral</p>
                             </div>
                         </div>
                     </div>
