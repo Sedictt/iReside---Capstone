@@ -79,7 +79,10 @@ export function AdminSidebar() {
             {/* Bottom section */}
             <div className="shrink-0 border-t border-border/70 px-3 py-4">
                 <button
-                    onClick={signOut}
+                    type="button"
+                    onClick={() => {
+                        void signOut()
+                    }}
                     className="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-red-500/[0.08] hover:text-red-400"
                 >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 transition-all duration-200 group-hover:bg-red-500/10">

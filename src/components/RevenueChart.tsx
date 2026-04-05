@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -13,6 +13,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { useTheme } from "next-themes";
 
 ChartJS.register(
     CategoryScale,
@@ -23,90 +24,6 @@ ChartJS.register(
     Legend,
     ChartDataLabels
 );
-
-const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: {
-            display: true,
-            position: 'top' as const,
-            align: 'end' as const,
-            labels: {
-                color: "#e2e8f0",
-                usePointStyle: true,
-                pointStyle: 'circle',
-                boxWidth: 8,
-                padding: 20,
-                font: {
-                    family: "inherit",
-                    size: 13,
-                    weight: "bold" as const,
-                }
-            }
-        },
-        datalabels: {
-            color: '#f8fafc',
-            align: 'end' as const,
-            anchor: 'end' as const,
-            font: { family: "inherit", weight: 'bold' as const, size: 11 },
-            formatter: (value: any) => `₱${value >= 1000 ? (value / 1000) + 'k' : value}`,
-            offset: 4,
-        },
-        tooltip: {
-            backgroundColor: "rgba(17, 17, 17, 0.95)",
-            titleColor: "#f8fafc",
-            bodyColor: "#cbd5e1",
-            borderColor: "rgba(255,255,255,0.1)",
-            borderWidth: 1,
-            padding: 16,
-            cornerRadius: 12,
-            displayColors: true,
-            usePointStyle: true,
-            boxPadding: 6,
-            callbacks: {
-                label: (context: any) => ` ₱${context.raw.toLocaleString()}`
-            }
-        },
-    },
-    layout: {
-        padding: {
-            top: 24
-        }
-    },
-    scales: {
-        x: {
-            grid: {
-                display: false,
-            },
-            border: { display: false },
-            ticks: {
-                color: "#94a3b8",
-                font: { family: "inherit", size: 12, weight: "normal" as const },
-                padding: 10,
-            },
-        },
-        y: {
-            border: { display: false },
-            grid: {
-                color: "rgba(255, 255, 255, 0.05)",
-                drawTicks: false,
-            },
-            ticks: {
-                color: "#94a3b8",
-                font: { family: "inherit", size: 12, weight: "normal" as const },
-                maxTicksLimit: 6,
-                padding: 16,
-                callback: (value: any) => `₱${value >= 1000 ? (value / 1000) + 'k' : value}`,
-            },
-            beginAtZero: true,
-        },
-    },
-    interaction: {
-        mode: "index" as const,
-        intersect: false,
-    },
-};
 
 const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
 
@@ -150,15 +67,107 @@ const data = {
 
 export default function RevenueChart() {
     const [mounted, setMounted] = useState(false);
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme !== "light";
+
+    const options = useMemo(() => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top' as const,
+                align: 'end' as const,
+                labels: {
+                    color: isDark ? "#e2e8f0" : "#475569",
+                    usePointStyle: true,
+                    pointStyle: 'circle' as const,
+                    boxWidth: 8,
+                    padding: 20,
+                    font: {
+                        family: "inherit",
+                        size: 13,
+                        weight: "bold" as const,
+                    }
+                }
+            },
+            datalabels: {
+                color: isDark ? '#f8fafc' : '#334155',
+                align: 'end' as const,
+                anchor: 'end' as const,
+                font: { family: "inherit", weight: 'bold' as const, size: 11 },
+                formatter: (value: number) => `₱${value >= 1000 ? (value / 1000) + 'k' : value}`,
+                offset: 4,
+            },
+            tooltip: {
+                backgroundColor: isDark ? "rgba(17, 17, 17, 0.95)" : "rgba(255, 255, 255, 0.96)",
+                titleColor: isDark ? "#f8fafc" : "#0f172a",
+                bodyColor: isDark ? "#cbd5e1" : "#475569",
+                borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(148,163,184,0.25)",
+                borderWidth: 1,
+                padding: 16,
+                cornerRadius: 12,
+                displayColors: true,
+                usePointStyle: true,
+                boxPadding: 6,
+                callbacks: {
+                    label: (context: { raw: number }) => ` ₱${context.raw.toLocaleString()}`
+                }
+            },
+        },
+        layout: {
+            padding: {
+                top: 24
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false,
+                },
+                border: { display: false },
+                ticks: {
+                    color: isDark ? "#94a3b8" : "#64748b",
+                    font: { family: "inherit", size: 12, weight: "normal" as const },
+                    padding: 10,
+                },
+            },
+            y: {
+                border: { display: false },
+                grid: {
+                    color: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(148, 163, 184, 0.18)",
+                    drawTicks: false,
+                },
+                ticks: {
+                    color: isDark ? "#94a3b8" : "#64748b",
+                    font: { family: "inherit", size: 12, weight: "normal" as const },
+                    maxTicksLimit: 6,
+                    padding: 16,
+                    callback: (value: number | string) => `₱${Number(value) >= 1000 ? (Number(value) / 1000) + 'k' : value}`,
+                },
+                beginAtZero: true,
+            },
+        },
+        interaction: {
+            mode: "index" as const,
+            intersect: false,
+        },
+    }), [isDark]);
 
     useEffect(() => {
-        setMounted(true);
+        const frame = window.requestAnimationFrame(() => {
+            setMounted(true);
+        });
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+        };
     }, []);
 
     if (!mounted) {
         return (
-            <div className="flex included-skeleton h-full w-full animate-pulse items-center justify-center rounded-lg bg-slate-800/50">
-                <span className="text-slate-500">Loading chart...</span>
+            <div className="flex included-skeleton h-full w-full animate-pulse items-center justify-center rounded-lg bg-muted/50">
+                <span className="text-muted-foreground">Loading chart...</span>
             </div>
         );
     }

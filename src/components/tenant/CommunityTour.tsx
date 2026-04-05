@@ -25,8 +25,8 @@ export function CommunityTour() {
 
     useEffect(() => {
         if (!isVisible || !activeStep || !activeStep.anchorId) {
-            setAnchorRect(null);
-            return;
+            const resetFrame = window.requestAnimationFrame(() => setAnchorRect(null));
+            return () => window.cancelAnimationFrame(resetFrame);
         }
 
         const selector = `[data-tour-id="${activeStep.anchorId}"]`;
@@ -90,7 +90,7 @@ export function CommunityTour() {
         <div className="fixed inset-0 z-[100] pointer-events-none">
             {hasHighlight ? (
                 <div 
-                    className="absolute rounded-2xl border-2 border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.7)] transition-all duration-300 pointer-events-none bg-transparent"
+                    className="absolute rounded-2xl border-2 border-primary bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.45)] transition-all duration-300 pointer-events-none dark:shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]"
                     style={{
                         top: anchorRect.top - 8,
                         left: anchorRect.left - 8,
@@ -99,12 +99,12 @@ export function CommunityTour() {
                     }}
                 />
             ) : (
-                <div className="absolute inset-0 bg-black/70 transition-opacity duration-300 pointer-events-auto" />
+                <div className="absolute inset-0 bg-slate-950/50 transition-opacity duration-300 pointer-events-auto dark:bg-black/70" />
             )}
 
             <div 
                 className={cn(
-                    "fixed z-[101] w-[340px] bg-[#121212] border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] p-6 pointer-events-auto transition-all duration-300 ease-in-out backdrop-blur-xl",
+                    "fixed z-[101] w-[340px] rounded-3xl border border-border bg-card p-6 shadow-[0_20px_50px_rgba(15,23,42,0.18)] pointer-events-auto transition-all duration-300 ease-in-out backdrop-blur-xl dark:border-white/10 dark:bg-[#121212] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]",
                     !hasHighlight && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 )}
                 style={hasHighlight ? {
@@ -120,24 +120,24 @@ export function CommunityTour() {
                     </p>
                     <button 
                         onClick={completeTour}
-                        className="text-white/40 hover:text-white transition-colors"
+                        className="text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
                 
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="mb-2 text-xl font-bold text-foreground dark:text-white">
                     {activeStep.title}
                 </h3>
                 
-                <p className="text-sm text-white/60 mb-8 leading-relaxed">
+                <p className="mb-8 text-sm leading-relaxed text-muted-foreground dark:text-white/60">
                     {activeStep.description}
                 </p>
 
                 <div className="flex items-center justify-between mt-auto">
                     <button
                         onClick={completeTour}
-                        className="text-xs font-semibold text-white/40 hover:text-white transition-colors flex items-center gap-1.5"
+                        className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
                     >
                         <SkipForward className="w-3.5 h-3.5" />
                         Skip tour
@@ -147,14 +147,14 @@ export function CommunityTour() {
                         {stepIndex > 0 && (
                             <button
                                 onClick={prevStep}
-                                className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/10 text-white/60 hover:bg-white/5 hover:text-white transition-colors"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                         )}
                         <button
                             onClick={nextStep}
-                            className="h-10 px-5 flex items-center justify-center gap-2 rounded-xl bg-primary text-black font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-primary/20"
+                            className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110"
                         >
                             {isLastStep ? "Finish" : "Next"}
                             {isLastStep ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}

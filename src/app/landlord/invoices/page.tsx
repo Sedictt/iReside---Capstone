@@ -113,10 +113,10 @@ export default function InvoicesPage() {
 
     const getStatusStyle = (status: InvoiceStatus) => {
         switch (status) {
-            case "paid": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-            case "overdue": return "bg-red-500/10 text-red-400 border-red-500/20";
-            case "pending": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-            default: return "bg-white/5 text-neutral-400 border-white/10";
+            case "paid": return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+            case "overdue": return "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300";
+            case "pending": return "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+            default: return "border-border bg-muted text-muted-foreground";
         }
     };
 
@@ -130,153 +130,161 @@ export default function InvoicesPage() {
     };
 
     return (
-        <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-black text-white tracking-tight mb-2">Invoices</h1>
-                    <p className="text-neutral-400">Manage billing, track payments, and send reminders.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="h-11 px-4 rounded-xl bg-white/5 border border-white/10 text-white font-medium flex items-center gap-2 hover:bg-white/10 transition-colors">
-                        <Download className="w-4 h-4" /> Export Report
-                    </button>
-                    <button className="h-11 px-6 rounded-xl bg-primary text-black font-bold flex items-center gap-2 hover:bg-primary/90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)]">
-                        <Plus className="w-5 h-5" /> Create Invoice
-                    </button>
+        <div className="mx-auto min-h-screen max-w-7xl space-y-8 px-6 py-8 text-foreground animate-in fade-in duration-500 sm:px-8">
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-muted/35 p-8 shadow-sm">
+                <div className="absolute right-0 top-0 h-[420px] w-[420px] -translate-y-1/2 translate-x-1/3 rounded-full bg-primary/16 blur-[120px] opacity-45 dark:bg-primary/20 dark:opacity-50" />
+                <div className="absolute bottom-0 left-0 h-[260px] w-[260px] translate-y-1/2 -translate-x-1/3 rounded-full bg-emerald-500/12 blur-[100px] opacity-35 dark:bg-emerald-500/20 dark:opacity-30" />
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+                <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md">
+                            <FileText className="h-3.5 w-3.5 text-primary" />
+                            <span>Billing Operations</span>
+                        </div>
+                        <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground md:text-5xl">Invoices</h1>
+                        <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
+                            Manage billing, track payment standing, and follow up on overdue balances across your active leases.
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background/75 px-4 font-medium text-foreground transition-all hover:bg-muted/70">
+                            <Download className="h-4 w-4" /> Export Report
+                        </button>
+                        <button className="flex h-11 items-center gap-2 rounded-xl bg-primary px-6 font-bold text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
+                            <Plus className="h-5 w-5" /> Create Invoice
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 {[
                     {
                         label: "Total Outstanding",
                         value: loading ? "—" : formatCurrency(metrics.totalOutstanding),
                         icon: Clock,
-                        color: "text-amber-400",
+                        color: "text-amber-700 dark:text-amber-300",
                         bg: "bg-amber-500/10",
                     },
                     {
                         label: "Overdue Amount",
                         value: loading ? "—" : formatCurrency(metrics.overdueAmount),
                         icon: AlertCircle,
-                        color: "text-red-400",
+                        color: "text-red-700 dark:text-red-300",
                         bg: "bg-red-500/10",
                     },
                     {
                         label: "Collected (30 Days)",
                         value: loading ? "—" : formatCurrency(metrics.collectedLast30Days),
                         icon: CheckCircle2,
-                        color: "text-emerald-400",
+                        color: "text-emerald-700 dark:text-emerald-300",
                         bg: "bg-emerald-500/10",
                     },
                     {
                         label: "Total Invoices",
                         value: loading ? "—" : metrics.totalInvoices.toLocaleString(),
                         icon: FileText,
-                        color: "text-blue-400",
+                        color: "text-blue-700 dark:text-blue-300",
                         bg: "bg-blue-500/10",
                     },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-[#111] border border-white/5 rounded-2xl p-6 relative overflow-hidden group hover:border-white/10 transition-all">
-                        <div className={cn("absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl transition-all opacity-50 group-hover:opacity-100", stat.bg)} />
+                    <div key={i} className="group relative overflow-hidden rounded-2xl border border-border bg-card/95 p-6 shadow-sm transition-all hover:border-primary/15">
+                        <div className={cn("absolute -right-4 -top-4 h-24 w-24 rounded-full blur-2xl opacity-50 transition-all group-hover:opacity-100", stat.bg)} />
                         <div className="relative z-10 flex items-start justify-between">
                             <div>
-                                <p className="text-sm font-bold text-neutral-500 uppercase tracking-wider mb-2">{stat.label}</p>
-                                <p className="text-3xl font-black text-white">{stat.value}</p>
+                                <p className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                                <p className="text-3xl font-black text-foreground">{stat.value}</p>
                             </div>
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", stat.bg, stat.color)}>
-                                <stat.icon className="w-5 h-5" />
+                            <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", stat.bg, stat.color)}>
+                                <stat.icon className="h-5 w-5" />
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card/95 p-2 shadow-sm sm:flex-row">
                 <div className="relative flex-1 w-full">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search invoices by tenant or ID..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-transparent border-none pl-11 pr-4 py-3 text-sm text-white focus:outline-none placeholder:text-neutral-600 font-medium"
+                        className="w-full rounded-xl border border-transparent bg-transparent py-3 pl-11 pr-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:bg-background focus:outline-none"
                     />
                 </div>
-                <div className="w-px h-8 bg-white/10 hidden sm:block" />
+                <div className="hidden h-8 w-px bg-border sm:block" />
                 <div className="flex items-center w-full sm:w-auto overflow-x-auto hide-scrollbar gap-2 px-2 pb-2 sm:pb-0">
-                    {(['All', 'Pending', 'Overdue', 'Paid'] as const).map(status => (
+                    {(["All", "Pending", "Overdue", "Paid"] as const).map(status => (
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status)}
                             className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all",
+                                "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all",
                                 statusFilter === status
-                                    ? "bg-white/10 text-white"
-                                    : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
                             {status}
                         </button>
                     ))}
-                    <button className="px-3 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2">
-                        <Filter className="w-4 h-4" /> <span className="text-sm font-medium">Filters</span>
+                    <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground">
+                        <Filter className="h-4 w-4" /> <span className="text-sm font-medium">Filters</span>
                     </button>
                 </div>
             </div>
 
-            {/* Invoices List */}
-            <div className="bg-[#111] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-6 py-5 text-xs font-bold text-neutral-500 uppercase tracking-widest">Invoice Details</th>
-                                <th className="px-6 py-5 text-xs font-bold text-neutral-500 uppercase tracking-widest hidden md:table-cell">Tenant & Property</th>
-                                <th className="px-6 py-5 text-xs font-bold text-neutral-500 uppercase tracking-widest">Amount</th>
-                                <th className="px-6 py-5 text-xs font-bold text-neutral-500 uppercase tracking-widest hidden lg:table-cell">Dates</th>
-                                <th className="px-6 py-5 text-xs font-bold text-neutral-500 uppercase tracking-widest text-right">Actions</th>
+                            <tr className="border-b border-border bg-muted/35">
+                                <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Invoice Details</th>
+                                <th className="hidden px-6 py-5 text-xs font-bold uppercase tracking-widest text-muted-foreground md:table-cell">Tenant & Property</th>
+                                <th className="px-6 py-5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Amount</th>
+                                <th className="hidden px-6 py-5 text-xs font-bold uppercase tracking-widest text-muted-foreground lg:table-cell">Dates</th>
+                                <th className="px-6 py-5 text-right text-xs font-bold uppercase tracking-widest text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-border">
                             {loading ? (
                                 <>
                                     {[1, 2, 3, 4, 5].map((i) => (
                                         <tr key={i} className="animate-pulse">
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-white/5 shrink-0" />
+                                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-muted" />
                                                     <div className="space-y-2">
-                                                        <div className="h-4 w-24 bg-white/10 rounded" />
+                                                        <div className="h-4 w-24 rounded bg-muted" />
                                                         <div className="flex gap-2">
-                                                            <div className="h-4 w-16 bg-white/5 rounded" />
-                                                            <div className="h-4 w-12 bg-white/5 rounded" />
+                                                            <div className="h-4 w-16 rounded bg-muted/70" />
+                                                            <div className="h-4 w-12 rounded bg-muted/70" />
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 hidden md:table-cell">
                                                 <div className="space-y-2">
-                                                    <div className="h-4 w-32 bg-white/10 rounded" />
-                                                    <div className="h-3 w-24 bg-white/5 rounded" />
+                                                    <div className="h-4 w-32 rounded bg-muted" />
+                                                    <div className="h-3 w-24 rounded bg-muted/70" />
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
-                                                <div className="h-5 w-20 bg-white/10 rounded" />
+                                                <div className="h-5 w-20 rounded bg-muted" />
                                             </td>
                                             <td className="px-6 py-5 hidden lg:table-cell">
                                                 <div className="space-y-2">
-                                                    <div className="h-4 w-20 bg-white/10 rounded" />
-                                                    <div className="h-3 w-16 bg-white/5 rounded" />
+                                                    <div className="h-4 w-20 rounded bg-muted" />
+                                                    <div className="h-3 w-16 rounded bg-muted/70" />
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex justify-end gap-2">
-                                                    <div className="h-8 w-8 bg-white/5 rounded-lg" />
-                                                    <div className="h-8 w-8 bg-white/5 rounded-lg" />
+                                                    <div className="h-8 w-8 rounded-lg bg-muted/70" />
+                                                    <div className="h-8 w-8 rounded-lg bg-muted/70" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -284,27 +292,27 @@ export default function InvoicesPage() {
                                 </>
                             ) : error ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-16 text-center text-sm text-red-300">
+                                    <td colSpan={5} className="px-6 py-16 text-center text-sm text-red-700 dark:text-red-300">
                                         {error}
                                     </td>
                                 </tr>
                             ) : (
                                 <>
                                     {filteredInvoices.map((invoice, idx) => (
-                                <tr key={invoice.id} className="group hover:bg-white/[0.02] transition-colors cursor-pointer animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 50}ms` }}>
+                                <tr key={invoice.id} className="group cursor-pointer transition-colors hover:bg-muted/30 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 50}ms` }}>
 
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-neutral-400 group-hover:text-primary transition-colors shrink-0">
-                                                <FileText className="w-5 h-5" />
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background/75 text-muted-foreground transition-colors group-hover:border-primary/20 group-hover:text-primary">
+                                                <FileText className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <p className="font-bold text-white text-sm mb-1">{invoice.id}</p>
+                                                <p className="mb-1 text-sm font-bold text-foreground">{invoice.id}</p>
                                                 <div className="flex items-center gap-2">
-                                                            <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider flex items-center gap-1", getStatusStyle(invoice.status))}>
+                                                            <span className={cn("flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", getStatusStyle(invoice.status))}>
                                                                 {getStatusIcon(invoice.status)} {invoice.status}
                                                             </span>
-                                                    <span className="text-xs text-neutral-500 bg-white/5 px-2 py-0.5 rounded-md">{invoice.type}</span>
+                                                    <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">{invoice.type}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -312,27 +320,27 @@ export default function InvoicesPage() {
 
                                     <td className="px-6 py-5 hidden md:table-cell">
                                         <div>
-                                            <p className="font-bold text-white text-sm mb-1">{invoice.tenant}</p>
-                                            <p className="text-xs text-neutral-500 truncate max-w-[200px]">{invoice.property} • {invoice.unit}</p>
+                                            <p className="mb-1 text-sm font-bold text-foreground">{invoice.tenant}</p>
+                                            <p className="max-w-[200px] truncate text-xs text-muted-foreground">{invoice.property} • {invoice.unit}</p>
                                         </div>
                                     </td>
 
                                     <td className="px-6 py-5">
                                         <div className="flex flex-col">
-                                            <p className="font-black text-white text-base">{formatCurrency(invoice.amount)}</p>
-                                            <p className="text-xs text-neutral-500 mt-0.5">PHP</p>
+                                            <p className="text-base font-black text-foreground">{formatCurrency(invoice.amount)}</p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">PHP</p>
                                         </div>
                                     </td>
 
                                     <td className="px-6 py-5 hidden lg:table-cell">
                                         <div className="flex flex-col gap-1.5">
                                             <div className="flex items-center gap-2 text-xs">
-                                                <span className="text-neutral-500 w-12">Issued:</span>
-                                                <span className="text-neutral-300 font-medium">{formatDate(invoice.issuedDate)}</span>
+                                                <span className="w-12 text-muted-foreground">Issued:</span>
+                                                <span className="font-medium text-foreground">{formatDate(invoice.issuedDate)}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-xs">
-                                                <span className={cn("w-12", invoice.status === 'overdue' ? 'text-red-400 font-bold' : 'text-neutral-500')}>Due:</span>
-                                                <span className={cn("font-bold", invoice.status === 'overdue' ? 'text-red-400' : 'text-white')}>
+                                                <span className={cn("w-12", invoice.status === "overdue" ? "font-bold text-red-700 dark:text-red-300" : "text-muted-foreground")}>Due:</span>
+                                                <span className={cn("font-bold", invoice.status === "overdue" ? "text-red-700 dark:text-red-300" : "text-foreground")}>
                                                     {formatDate(invoice.dueDate)}
                                                 </span>
                                             </div>
@@ -340,24 +348,24 @@ export default function InvoicesPage() {
                                     </td>
 
                                     <td className="px-6 py-5">
-                                        <div className="flex items-center justify-end gap-2 text-neutral-400">
-                                            {invoice.status === 'overdue' && (
-                                                <button className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 flex items-center justify-center transition-all" title="Send Reminder">
-                                                    <Send className="w-4 h-4" />
+                                        <div className="flex items-center justify-end gap-2 text-muted-foreground">
+                                            {invoice.status === "overdue" && (
+                                                <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/10 text-red-700 transition-all hover:bg-red-500/20 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200" title="Send Reminder">
+                                                    <Send className="h-4 w-4" />
                                                 </button>
                                             )}
                                             <button 
                                                 onClick={() => setSelectedInvoice(invoice)}
-                                                className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" 
+                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background/75 transition-colors hover:border-primary/20 hover:bg-muted hover:text-foreground" 
                                                 title="View Invoice"
                                             >
-                                                <Eye className="w-4 h-4" />
+                                                <Eye className="h-4 w-4" />
                                             </button>
-                                            <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" title="Download PDF">
-                                                <Download className="w-4 h-4" />
+                                            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background/75 transition-colors hover:border-primary/20 hover:bg-muted hover:text-foreground" title="Download PDF">
+                                                <Download className="h-4 w-4" />
                                             </button>
-                                            <button className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors">
-                                                <MoreVertical className="w-4 h-4" />
+                                            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background/75 transition-colors hover:border-primary/20 hover:bg-muted hover:text-foreground">
+                                                <MoreVertical className="h-4 w-4" />
                                             </button>
                                         </div>
                                     </td>
@@ -368,11 +376,11 @@ export default function InvoicesPage() {
                                     {filteredInvoices.length === 0 && (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-16 text-center">
-                                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-neutral-500 mx-auto mb-4">
-                                                    <Search className="w-6 h-6" />
+                                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                                    <Search className="h-6 w-6" />
                                                 </div>
-                                                <p className="text-white font-bold mb-1">No invoices found</p>
-                                                <p className="text-sm text-neutral-500">Try adjusting your search criteria or filters.</p>
+                                                <p className="mb-1 font-bold text-foreground">No invoices found</p>
+                                                <p className="text-sm text-muted-foreground">Try adjusting your search criteria or filters.</p>
                                             </td>
                                         </tr>
                                     )}

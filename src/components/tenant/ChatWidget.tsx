@@ -236,13 +236,13 @@ export function ChatWidget({
                     exit={{ opacity: 0, scale: 0.98, filter: "blur(10px)" }}
                     style={embedded ? undefined : { bottom: "max(0px, env(safe-area-inset-bottom))" }}
                     className={cn(
-                        "w-[380px] h-[580px] bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xl rounded-t-2xl border border-b-0 border-white/20 dark:border-white/5 flex flex-col pointer-events-auto overflow-hidden",
+                        "w-[380px] h-[580px] bg-card/95 backdrop-blur-xl rounded-t-2xl border border-b-0 border-border flex flex-col pointer-events-auto overflow-hidden",
                         "shadow-[0_-18px_40px_rgba(0,0,0,0.28)]",
                         embedded ? "" : "fixed bottom-0 left-6 z-[60]"
                     )}
                 >
                     {/* Header */}
-                    <header className="bg-primary/95 dark:bg-primary/90 p-5 text-white flex items-center justify-between backdrop-blur-md">
+                    <header className="bg-primary/95 p-5 text-white flex items-center justify-between backdrop-blur-md">
                         <div className="flex items-center gap-3">
                             <div className="relative group">
                                 <div className="absolute -inset-1 bg-white/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -284,7 +284,7 @@ export function ChatWidget({
                     </header>
 
                     {/* Chat Area */}
-                    <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar bg-gray-50/30 dark:bg-black/20">
+                    <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar bg-background/60">
                         {isChatInitializing ? (
                             <div className="space-y-4" aria-live="polite" aria-busy="true">
                                 {Array.from({ length: INITIAL_CHAT_SKELETON_COUNT }).map((_, index) => {
@@ -296,14 +296,14 @@ export function ChatWidget({
                                             className={cn("flex gap-3 max-w-[88%]", isRight ? "ml-auto flex-row-reverse" : "")}
                                         >
                                             {!isRight && (
-                                                <div className="h-7 w-7 rounded-full bg-gray-200/80 dark:bg-gray-700/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
+                                                <div className="h-7 w-7 rounded-full bg-slate-300/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
                                             )}
                                             <div
                                                 className={cn(
                                                     "rounded-[1.25rem] animate-pulse",
                                                     isRight
                                                         ? "bg-primary/25 rounded-br-none h-16 w-40"
-                                                        : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-bl-none h-20 w-52"
+                                                        : "bg-card border border-border rounded-bl-none h-20 w-52"
                                                 )}
                                             />
                                         </div>
@@ -336,8 +336,8 @@ export function ChatWidget({
                                         <div className={cn(
                                             "px-4 py-3 rounded-[1.25rem] text-sm leading-relaxed shadow-sm",
                                             msg.role === "user"
-                                                ? "bg-primary text-white rounded-br-none shadow-primary/20"
-                                                : "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none border border-gray-100 dark:border-gray-700"
+                                                ? "bg-primary text-primary-foreground rounded-br-none shadow-primary/20"
+                                                : "bg-card text-foreground rounded-bl-none border border-border"
                                         )}>
                                             <p>{msg.content}</p>
                                             <span className={cn(
@@ -361,7 +361,7 @@ export function ChatWidget({
                                 <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20 flex-shrink-0 mt-auto">
                                     <Image src="/iris-avatar.png" alt="iRis" width={28} height={28} />
                                 </div>
-                                <div className="bg-white dark:bg-gray-800 px-4 py-3 rounded-[1.25rem] rounded-bl-none border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-1">
+                                <div className="bg-card px-4 py-3 rounded-[1.25rem] rounded-bl-none border border-border shadow-sm flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                                     <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
                                     <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></span>
@@ -372,11 +372,11 @@ export function ChatWidget({
                     </div>
 
                     {/* Quick Features */}
-                    <div className="px-5 py-3 flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
+                    <div className="px-5 py-3 flex gap-2 overflow-x-auto no-scrollbar border-t border-border bg-card/80 backdrop-blur-sm">
                         {["WiFi Password", "Maintenance", "Rent Status", "Amenity Hours"].map((feature) => (
                             <button
                                 key={feature}
-                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-bold bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-primary hover:text-primary transition-all active:scale-95"
+                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-bold bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary transition-all active:scale-95"
                                 onClick={() => {
                                     setInput(feature);
                                     // Optionally auto-send
@@ -388,7 +388,7 @@ export function ChatWidget({
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-5 bg-white dark:bg-[#111827] border-t border-gray-100 dark:border-gray-800">
+                    <div className="p-5 bg-card border-t border-border">
                         <div className="relative flex items-center gap-3">
                             <div className="flex-1 relative group">
                                 <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/50 to-blue-500/50 rounded-full blur opacity-0 group-focus-within:opacity-30 transition-opacity"></div>
@@ -399,13 +399,13 @@ export function ChatWidget({
                                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                                     placeholder="Type a message..."
                                     disabled={isChatInitializing}
-                                    className="relative w-full bg-gray-100/80 dark:bg-gray-800/80 border border-transparent focus:border-primary/20 rounded-full px-5 py-3 text-sm focus:ring-0 outline-none placeholder-gray-400 dark:text-white transition-all backdrop-blur-sm"
+                                    className="relative w-full bg-background/80 border border-transparent focus:border-primary/20 rounded-full px-5 py-3 text-sm text-foreground focus:ring-0 outline-none placeholder:text-muted-foreground transition-all backdrop-blur-sm"
                                 />
                             </div>
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isChatInitializing}
-                                className="h-11 w-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-white shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
+                                className="h-11 w-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
                             >
                                 <ArrowUp className="w-5 h-5" />
                             </button>

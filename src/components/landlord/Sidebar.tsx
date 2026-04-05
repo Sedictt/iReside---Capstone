@@ -55,7 +55,7 @@ const NAV_ITEMS: NavSection[] = [
         items: [
             { label: "Invoices", href: "/landlord/invoices", icon: CreditCard },
             { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: 3 },
-            { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
+    { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
             { label: "Messaging", href: "/landlord/messages", icon: MessageSquare },
         ]
     },
@@ -119,7 +119,10 @@ export function Sidebar() {
             {/* Profile / Logout */}
             <div className="border-t border-border/70 p-4">
                 <button
-                    onClick={signOut}
+                    type="button"
+                    onClick={() => {
+                        void signOut()
+                    }}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500"
                 >
                     <LogOut className="h-5 w-5" />

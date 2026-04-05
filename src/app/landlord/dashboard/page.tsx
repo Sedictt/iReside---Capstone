@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
-import { RecentInquiries } from "@/components/landlord/dashboard/RecentInquiries";
+import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
@@ -275,7 +275,7 @@ export default function LandlordDashboard() {
                 />
 
                 <div className="pt-2 w-full">
-                    <RecentInquiries />
+                    <ActionRequired />
                 </div>
             </div>
 

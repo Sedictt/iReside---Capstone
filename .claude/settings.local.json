@@ -26,7 +26,8 @@
       "Bash(export PATH=\"$PATH:/usr/local/bin\")",
       "Bash(docker ps:*)",
       "Bash(supabase status:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(pip install:*)"
     ]
   }
 }

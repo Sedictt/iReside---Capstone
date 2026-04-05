@@ -4,8 +4,6 @@ import {
     Calendar,
     CreditCard,
     FileText,
-    Bell,
-    CheckCircle,
     ArrowUpRight,
     Megaphone,
     Clock,
@@ -20,7 +18,8 @@ import {
     Droplets,
     Sparkles,
     AlertCircle,
-    ArrowRight
+    ArrowRight,
+    Phone
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -122,20 +121,6 @@ const formatDueDate = (value?: string | null) => {
     return `${month} ${day}${suffix}, ${date.getFullYear()}`;
 };
 
-const formatRelativeTime = (value: string) => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Just now";
-    const diffMs = Date.now() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / 60000);
-    if (diffMinutes < 1) return "Just now";
-    if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`;
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} hr${diffHours === 1 ? "" : "s"} ago`;
-    if (diffHours < 48) return "Yesterday";
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
-};
-
 const buildInvoiceLabel = (payment: DashboardData["overduePayments"][number]) => {
     if (payment.reference) {
         return `#${payment.reference}`;
@@ -199,7 +184,6 @@ export default function TenantDashboard() {
     const nextPayment = dashboardData?.nextPayment ?? null;
     const overduePayments = dashboardData?.overduePayments ?? [];
     const announcement = dashboardData?.announcement ?? null;
-    const recentActivity = dashboardData?.recentActivity ?? [];
     const lease = dashboardData?.lease ?? null;
     const paymentHistory = dashboardData?.paymentHistory ?? [];
 
@@ -266,14 +250,59 @@ export default function TenantDashboard() {
     const electricityAmount = utilitiesByLabel.get("electricity") ?? null;
     const waterAmount = utilitiesByLabel.get("water") ?? null;
 
-    const activityStyles = {
-        payment: { icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-        lease: { icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
-        maintenance: { icon: Wrench, color: "text-orange-500", bg: "bg-orange-500/10" },
-        message: { icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10" },
-        announcement: { icon: Megaphone, color: "text-primary", bg: "bg-primary/10" },
-        application: { icon: FileText, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-    } as const;
+    const supportActions = useMemo(() => {
+        const items = [];
+
+        if (overduePayments.length > 0) {
+            items.push({
+                id: "overdue-payments",
+                title: `Billing support needed`,
+                description: `You have ${overduePayments.length} overdue bill${overduePayments.length === 1 ? "" : "s"} totaling ₱${formatCurrency(overdueTotal, 2)}.`,
+                href: "/tenant/payments/checkout",
+                cta: "Review billing",
+                icon: AlertCircle,
+                iconClass: "text-red-600",
+                iconBg: "bg-red-500/10",
+            });
+        } else if (nextPayment) {
+            items.push({
+                id: "next-payment",
+                title: "Upcoming payment",
+                description: `${nextPayment.description ?? "Your next payment"} is due ${formatDueDate(nextPayment.dueDate)}.`,
+                href: "/tenant/payments/checkout",
+                cta: "View bill",
+                icon: CreditCard,
+                iconClass: "text-emerald-600",
+                iconBg: "bg-emerald-500/10",
+            });
+        }
+
+        if (lease) {
+            items.push({
+                id: "lease-review",
+                title: "Lease questions",
+                description: `${lease.propertyName ?? "Your lease"} ends ${leaseProgress.endLabel}. Review terms, dates, and deposit details.`,
+                cta: "Open lease",
+                action: () => setIsLeaseModalOpen(true),
+                icon: FileText,
+                iconClass: "text-blue-600",
+                iconBg: "bg-blue-500/10",
+            });
+        }
+
+        items.push({
+            id: "message-landlord",
+            title: "Message landlord or support",
+            description: "Open your inbox to contact your landlord or continue a conversation with iRis.",
+            href: "/tenant/messages",
+            cta: "Open inbox",
+            icon: MessageSquare,
+            iconClass: "text-purple-600",
+            iconBg: "bg-purple-500/10",
+        });
+
+        return items.slice(0, 3);
+    }, [lease, leaseProgress.endLabel, nextPayment, overduePayments.length, overdueTotal]);
 
     return (
         <div className="relative md:pr-[104px] lg:pr-[112px]">
@@ -311,15 +340,15 @@ export default function TenantDashboard() {
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                                    <span className="text-xs font-bold text-white/80 uppercase tracking-wider">
+                                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                                         {isInitialLoading ? "Loading..." : nextPayment ? "Next Payment" : "No Upcoming Payments"}
                                     </span>
                                 </div>
-                                <h2 className={cn("text-4xl md:text-5xl font-bold tracking-tight text-white mb-2 shadow-sm", isInitialLoading && "animate-pulse")}>
+                                <h2 className={cn("text-4xl md:text-5xl font-bold tracking-tight text-slate-950 mb-2 shadow-sm", isInitialLoading && "animate-pulse")}>
                                     {"\u20B1"}{displayPaymentParts.whole}
-                                    <span className="text-2xl text-white/60">.{displayPaymentParts.decimal}</span>
+                                    <span className="text-2xl text-slate-500">.{displayPaymentParts.decimal}</span>
                                 </h2>
-                                <p className={cn("text-white/80 font-medium flex items-center gap-2", isInitialLoading && "animate-pulse")}>
+                                <p className={cn("text-slate-700 font-medium flex items-center gap-2", isInitialLoading && "animate-pulse")}>
                                     <Calendar className="w-4 h-4" />
                                     {isInitialLoading ? "Loading payment..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
                                 </p>
@@ -329,7 +358,7 @@ export default function TenantDashboard() {
                                 {nextPayment && (
                                     <Link
                                         href="/tenant/payments/checkout"
-                                        className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:translate-y-[-1px]"
+                                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:translate-y-[-1px]"
                                     >
                                         <CreditCard className="w-4 h-4" />
                                         Pay Rent Now
@@ -337,24 +366,24 @@ export default function TenantDashboard() {
                                 )}
                                 <Link
                                     href="/tenant/payments"
-                                    className="bg-white/10 hover:bg-white/20 text-white border border-white/10 px-6 py-3 rounded-xl font-medium text-sm transition-colors backdrop-blur-md"
+                                    className="bg-white/80 hover:bg-white text-slate-700 border border-white/70 px-6 py-3 rounded-xl font-medium text-sm transition-colors backdrop-blur-md"
                                 >
                                     View Details
                                 </Link>
                             </div>
                         </div>
 
-                        <div className={cn("bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center min-w-[200px]", isInitialLoading && "animate-pulse")}>
-                            <p className="text-sm font-medium text-white/70 mb-2">Time Remaining</p>
-                            <div className="flex items-start gap-4 text-white">
+                        <div className={cn("bg-white/80 backdrop-blur-md border border-white/70 rounded-xl p-6 flex flex-col items-center justify-center min-w-[200px] shadow-lg shadow-slate-900/5", isInitialLoading && "animate-pulse")}>
+                            <p className="text-sm font-medium text-slate-600 mb-2">Time Remaining</p>
+                            <div className="flex items-start gap-4 text-slate-900">
                                 <div className="text-center">
                                     <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.days).padStart(2, "0")}</span>
-                                    <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Days</span>
+                                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Days</span>
                                 </div>
-                                <span className="text-2xl text-white/30 font-light animate-blink mt-1">:</span>
+                                <span className="text-2xl text-slate-300 font-light animate-blink mt-1">:</span>
                                 <div className="text-center">
                                     <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.hours).padStart(2, "0")}</span>
-                                    <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Hrs</span>
+                                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Hrs</span>
                                 </div>
                             </div>
                         </div>
@@ -406,12 +435,11 @@ export default function TenantDashboard() {
 
                         <div data-tour-id="tour-quick-actions">
                             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
                                     { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
                                     { icon: MessageSquare, label: "Messages", href: "/tenant/messages", color: "text-emerald-500", bg: "bg-emerald-500/10" },
                                     { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
-                                    { icon: FileText, label: "Applications", href: "/tenant/applications", color: "text-blue-500", bg: "bg-blue-500/10" },
                                 ].map((action, i) => {
                                     const isLease = action.label === "Your Lease";
                                     const isLeaseDisabled = isLease && !lease;
@@ -793,75 +821,172 @@ export default function TenantDashboard() {
 
                     </div>
 
-                    {/* Right Column: Recent Activity */}
+                    {/* Right Column: Landlord / Support */}
                     <div className="lg:col-span-1">
-                        <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 h-full flex flex-col">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-lg font-semibold">Recent Activity</h3>
-                                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-                                </div>
-                                <Link href="/tenant/activity" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wide">View All</Link>
-                            </div>
+                        <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/90 p-6 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.24)] backdrop-blur-xl h-full flex flex-col">
+                            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_right,rgba(173,200,125,0.2),transparent_55%)]" />
+                            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-3xl" />
 
-                            <div className="space-y-4 flex-1">
+                            <div className="relative z-10 space-y-4 flex-1">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                            <Sparkles className="h-3.5 w-3.5" />
+                                            Tenant support
+                                        </div>
+                                        <h3 className="text-xl font-display text-foreground">Landlord / Support</h3>
+                                    </div>
+                                    <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 border border-emerald-500/15">
+                                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        Online
+                                    </div>
+                                </div>
+
                                 {dashboardLoading ? (
                                     <div className="space-y-3">
                                         {[0, 1, 2].map((row) => (
-                                            <div key={row} className="flex items-center gap-4 p-3 rounded-xl border border-transparent animate-pulse">
-                                                <div className="h-10 w-10 rounded-full bg-muted/50" />
+                                            <div key={row} className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-background/60 animate-pulse">
+                                                <div className="h-12 w-12 rounded-2xl bg-muted/60" />
                                                 <div className="flex-1 space-y-2">
-                                                    <div className="h-3 w-32 bg-muted/50 rounded" />
+                                                    <div className="h-3 w-32 bg-muted/60 rounded" />
                                                     <div className="h-3 w-48 bg-muted/40 rounded" />
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                ) : recentActivity.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground">No recent activity yet.</p>
-                                ) : (
-                                    recentActivity.map((item) => {
-                                        const style = activityStyles[item.type] ?? {
-                                            icon: Bell,
-                                            color: "text-muted-foreground",
-                                            bg: "bg-muted/40",
-                                        };
-                                        const Icon = style.icon;
+                                ) : lease ? (
+                                    <>
+                                        <div className="rounded-[1.75rem] border border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,249,245,0.96))] p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]">
+                                            <div className="flex items-start gap-4">
+                                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-sm ring-1 ring-primary/10">
+                                                    <span className="text-lg font-black uppercase">
+                                                        {(lease.landlordName ?? "Support team")
+                                                            .split(" ")
+                                                            .map((part) => part[0])
+                                                            .join("")
+                                                            .slice(0, 2)}
+                                                    </span>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Primary contact</p>
+                                                    <h4 className="mt-1 text-xl font-semibold text-foreground">{lease.landlordName ?? "Support team"}</h4>
+                                                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                                                        Fast help for billing, lease questions, unit concerns, and anything that needs landlord attention.
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                onClick={() => {
-                                                    if (item.type === "lease" && lease) {
-                                                        setIsLeaseModalOpen(true);
-                                                    }
-                                                }}
-                                                className="group flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border/50 transition-all cursor-pointer"
-                                            >
-                                                <div className={cn(
-                                                    "h-10 w-10 rounded-full flex items-center justify-center border border-white/5 shadow-sm transition-transform group-hover:scale-105",
-                                                    style.bg, style.color
-                                                )}>
-                                                    <Icon className="w-5 h-5" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between mb-0.5">
-                                                        <h4 className="text-sm font-medium text-foreground truncate">{item.title}</h4>
-                                                        <span className="text-[10px] text-muted-foreground font-medium">{formatRelativeTime(item.createdAt)}</span>
+                                            <div className="mt-5 grid gap-3">
+                                                {lease.landlordEmail && (
+                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 px-3.5 py-3">
+                                                        <div className="mt-0.5 rounded-xl bg-blue-500/10 p-2 text-blue-600">
+                                                            <Mail className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">Email</p>
+                                                            <p className="truncate text-sm font-semibold text-foreground">{lease.landlordEmail}</p>
+                                                        </div>
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground group-hover:text-foreground/80 transition-colors">{item.message}</p>
-                                                </div>
-                                                {!item.read && (
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                                                )}
+                                                {lease.landlordPhone && (
+                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 px-3.5 py-3">
+                                                        <div className="mt-0.5 rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
+                                                            <Phone className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">Phone</p>
+                                                            <p className="text-sm font-semibold text-foreground">{lease.landlordPhone}</p>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
-                                        );
-                                    })
+
+                                            <div className="mt-5">
+                                                <Link
+                                                    href="/tenant/messages"
+                                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-primary-foreground shadow-[0_16px_30px_-18px_rgba(var(--primary-rgb),0.55)] transition-all hover:bg-primary/90"
+                                                >
+                                                    <MessageSquare className="h-4 w-4" />
+                                                    Message
+                                                </Link>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {supportActions.map((item, index) => {
+                                                const Icon = item.icon;
+                                                const content = (
+                                                    <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/75 p-4 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background">
+                                                        <div className="absolute inset-y-0 left-0 w-1 rounded-full bg-gradient-to-b from-primary/70 to-primary/20 opacity-70" />
+                                                        <div className="flex items-start gap-4 pl-2">
+                                                            <div className={cn(
+                                                                "h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm ring-1 ring-black/5",
+                                                                item.iconBg,
+                                                                item.iconClass
+                                                            )}>
+                                                                <Icon className="w-5 h-5" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="mb-1 flex items-start justify-between gap-3">
+                                                                    <div>
+                                                                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                                                                            {index === 0 ? "Recommended next step" : "Support option"}
+                                                                        </p>
+                                                                        <h4 className="mt-1 text-sm font-semibold text-foreground">{item.title}</h4>
+                                                                    </div>
+                                                                    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-primary">
+                                                                        {item.cta}
+                                                                        <ChevronRight className="h-3 w-3" />
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+
+                                                if (item.action) {
+                                                    return (
+                                                        <button
+                                                            key={item.id}
+                                                            type="button"
+                                                            onClick={item.action}
+                                                            className="w-full text-left"
+                                                        >
+                                                            {content}
+                                                        </button>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <Link key={item.id} href={item.href ?? "/tenant/dashboard"} className="block">
+                                                        {content}
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                ) : supportActions.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground">No support actions available yet.</p>
+                                ) : (
+                                    <div className="rounded-2xl border border-dashed border-border bg-background/60 p-5 text-center">
+                                        <h4 className="text-sm font-semibold text-foreground">Support becomes available with an active lease</h4>
+                                        <p className="mt-2 text-xs text-muted-foreground">
+                                            Once a landlord is assigned, this panel will show your direct contact details and support actions.
+                                        </p>
+                                        <Link
+                                            href="/tenant/messages"
+                                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+                                        >
+                                            <MessageSquare className="h-4 w-4" />
+                                            Open messages
+                                        </Link>
+                                    </div>
                                 )}
-                            </div>
                             </div>
                         </div>
                     </div>
+                </div>
             <LeaseModal
                 open={isLeaseModalOpen}
                 onOpenChange={setIsLeaseModalOpen}

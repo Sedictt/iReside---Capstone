@@ -27,13 +27,16 @@ type OverviewPayload = {
         month: FinancialWindow;
         year: FinancialWindow;
     };
-    featuredProperty: {
-        propertyName: string;
-        totalSales: string;
-        totalViews: string;
-        image: string;
-        momGrowth: string;
-        occupancyRate: string;
+    operationalSnapshot: {
+        status: "Performing" | "Stable" | "Attention Required";
+        headline: string;
+        summary: string;
+        metrics: Array<{
+            label: string;
+            value: string;
+            detail: string;
+            tone: "default" | "positive" | "warning" | "critical";
+        }>;
     };
 };
 
@@ -53,12 +56,6 @@ type UnitRow = {
     rent_amount: number;
 };
 
-type PropertyRow = {
-    id: string;
-    name: string;
-    images: string[] | null;
-};
-
 type PaymentRow = {
     amount: number;
     status: string;
@@ -74,10 +71,7 @@ type MaintenanceRow = {
     priority: string;
 };
 
-type ApplicationRow = {
-    unit_id: string;
-    created_at: string;
-};
+type InvoiceStatus = "paid" | "pending" | "overdue";
 
 const CURRENCY = new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -239,6 +233,17 @@ const maybeMaintenancePayment = (payment: PaymentRow) => {
     return text.includes("maintenance") || text.includes("repair") || text.includes("plumbing") || text.includes("electrical") || text.includes("fix");
 };
 
+const resolveInvoiceStatus = (status: string, dueDateValue: string): InvoiceStatus => {
+    if (status === "completed") return "paid";
+
+    const dueDate = new Date(dueDateValue);
+    if (!Number.isNaN(dueDate.getTime()) && dueDate < new Date()) {
+        return "overdue";
+    }
+
+    return "pending";
+};
+
 const buildFinancialWindows = (payments: PaymentRow[]) => {
     const now = new Date();
 
@@ -364,14 +369,14 @@ export async function GET(request: Request) {
     const previousEnd = addDays(rangeStart, -1);
     const previousStart = addDays(previousEnd, -(spanDays - 1));
 
-    const [leasesRes, propertiesRes, paymentsRes, maintenanceRes, applicationsRes] = await Promise.all([
+    const [leasesRes, propertiesRes, paymentsRes, maintenanceRes] = await Promise.all([
         supabase
             .from("leases")
             .select("id, unit_id, tenant_id, status, start_date, end_date, monthly_rent")
             .eq("landlord_id", user.id),
         supabase
             .from("properties")
-            .select("id, name, images")
+            .select("id")
             .eq("landlord_id", user.id),
         supabase
             .from("payments")
@@ -381,13 +386,9 @@ export async function GET(request: Request) {
             .from("maintenance_requests")
             .select("created_at, resolved_at, priority")
             .eq("landlord_id", user.id),
-        supabase
-            .from("applications")
-            .select("unit_id, created_at")
-            .eq("landlord_id", user.id),
     ]);
 
-    if (leasesRes.error || propertiesRes.error || paymentsRes.error || maintenanceRes.error || applicationsRes.error) {
+    if (leasesRes.error || propertiesRes.error || paymentsRes.error || maintenanceRes.error) {
         return NextResponse.json({ error: "Failed to load statistics overview." }, { status: 500 });
     }
 
@@ -404,10 +405,8 @@ export async function GET(request: Request) {
 
     const leases = (leasesRes.data ?? []) as LeaseRow[];
     const units = (unitsData ?? []) as UnitRow[];
-    const properties = (propertiesRes.data ?? []) as PropertyRow[];
     const payments = (paymentsRes.data ?? []) as PaymentRow[];
     const maintenance = (maintenanceRes.data ?? []) as MaintenanceRow[];
-    const applications = (applicationsRes.data ?? []) as ApplicationRow[];
 
     const currentActiveLeases = activeLeaseSnapshot(leases, rangeEnd);
     const previousActiveLeases = activeLeaseSnapshot(leases, previousEnd);
@@ -557,90 +556,78 @@ export async function GET(request: Request) {
 
     const financialChart = buildFinancialWindows(payments);
 
-    const leaseById = new Map(leases.map((lease) => [lease.id, lease]));
-    const unitById = new Map(units.map((unit) => [unit.id, unit]));
-    const propertyById = new Map(properties.map((property) => [property.id, property]));
+    const invoiceSummary = payments.reduce(
+        (summary, payment) => {
+            const invoiceStatus = resolveInvoiceStatus(payment.status, payment.due_date);
 
-    const propertyRevenueMap = new Map<string, number>();
-    const propertyPreviousRevenueMap = new Map<string, number>();
+            if (invoiceStatus === "pending" || invoiceStatus === "overdue") {
+                summary.outstandingCount += 1;
+                summary.outstandingAmount += toSafeNumber(payment.amount);
+            }
 
-    payments.forEach((payment) => {
-        if (payment.status !== "completed" || !payment.paid_at) return;
+            if (invoiceStatus === "overdue") {
+                summary.overdueCount += 1;
+                summary.overdueAmount += toSafeNumber(payment.amount);
+            }
 
-        const lease = leaseById.get(payment.lease_id);
-        const unit = lease ? unitById.get(lease.unit_id) : null;
-        if (!unit) return;
+            return summary;
+        },
+        { outstandingCount: 0, outstandingAmount: 0, overdueCount: 0, overdueAmount: 0 }
+    );
 
-        const paidAt = new Date(payment.paid_at);
-        if (Number.isNaN(paidAt.getTime())) return;
+    const portfolioStatus: OverviewPayload["operationalSnapshot"]["status"] =
+        criticalPendingNow > 0 || invoiceSummary.overdueCount > 0 || occupancyCurrent < 75
+            ? "Attention Required"
+            : occupancyCurrent >= 90 && currentPendingIssues.length <= 2
+              ? "Performing"
+              : "Stable";
 
-        const amount = toSafeNumber(payment.amount);
-        const propertyId = unit.property_id;
-
-        if (paidAt >= startOfDay(rangeStart) && paidAt <= endOfDay(rangeEnd)) {
-            propertyRevenueMap.set(propertyId, (propertyRevenueMap.get(propertyId) ?? 0) + amount);
-        }
-
-        if (paidAt >= startOfDay(previousStart) && paidAt <= endOfDay(previousEnd)) {
-            propertyPreviousRevenueMap.set(propertyId, (propertyPreviousRevenueMap.get(propertyId) ?? 0) + amount);
-        }
-    });
-
-    const topPropertyId =
-        [...propertyRevenueMap.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ??
-        properties[0]?.id ??
-        null;
-
-    const fallbackImage = "/hero-images/apartment-03.png";
-    let featuredProperty: OverviewPayload["featuredProperty"] = {
-        propertyName: "No Property Data Yet",
-        totalSales: CURRENCY_NO_CENTS.format(0),
-        totalViews: "0 inquiries",
-        image: fallbackImage,
-        momGrowth: "0.0%",
-        occupancyRate: "0%",
+    const operationalSnapshot: OverviewPayload["operationalSnapshot"] = {
+        status: portfolioStatus,
+        headline:
+            portfolioStatus === "Attention Required"
+                ? "Priority items need review"
+                : portfolioStatus === "Performing"
+                  ? "Operations are running smoothly"
+                  : "Portfolio is stable this period",
+        summary:
+            portfolioStatus === "Attention Required"
+                ? `${criticalPendingNow} urgent issue${criticalPendingNow === 1 ? "" : "s"} and ${invoiceSummary.overdueCount} overdue rent item${invoiceSummary.overdueCount === 1 ? "" : "s"} need attention.`
+                : portfolioStatus === "Performing"
+                  ? `${Math.round(occupancyCurrent)}% occupancy with low issue volume and controlled lease churn.`
+                  : `${Math.round(occupancyCurrent)}% occupancy with ${renewalsCurrent} lease renewal${renewalsCurrent === 1 ? "" : "s"} approaching in the next 30 days.`,
+        metrics: [
+            {
+                label: "Occupied Units",
+                value: `${currentOccupiedUnits}/${unitCount || 0}`,
+                detail: `${Math.round(occupancyCurrent)}% occupied`,
+                tone: occupancyCurrent >= 90 ? "positive" : occupancyCurrent < 75 ? "warning" : "default",
+            },
+            {
+                label: "Urgent Issues",
+                value: NUMBER_FORMAT.format(criticalPendingNow),
+                detail: `${currentPendingIssues.length} open total`,
+                tone: criticalPendingNow > 0 ? "critical" : currentPendingIssues.length > 0 ? "warning" : "positive",
+            },
+            {
+                label: "Renewals Soon",
+                value: NUMBER_FORMAT.format(renewalsCurrent),
+                detail: "Next 30 days",
+                tone: renewalsCurrent > 0 ? "warning" : "default",
+            },
+            {
+                label: "Outstanding Rent",
+                value: CURRENCY_NO_CENTS.format(invoiceSummary.outstandingAmount),
+                detail: `${invoiceSummary.overdueCount} overdue invoice${invoiceSummary.overdueCount === 1 ? "" : "s"}`,
+                tone: invoiceSummary.overdueCount > 0 ? "critical" : invoiceSummary.outstandingCount > 0 ? "warning" : "positive",
+            },
+        ],
     };
-
-    if (topPropertyId) {
-        const property = propertyById.get(topPropertyId);
-        const totalSales = propertyRevenueMap.get(topPropertyId) ?? 0;
-        const previousSales = propertyPreviousRevenueMap.get(topPropertyId) ?? 0;
-
-        const propertyUnitIds = units.filter((unit) => unit.property_id === topPropertyId).map((unit) => unit.id);
-        const propertyUnitSet = new Set(propertyUnitIds);
-
-        const propertyOccupiedUnits = new Set(
-            currentActiveLeases
-                .filter((lease) => propertyUnitSet.has(lease.unit_id))
-                .map((lease) => lease.unit_id)
-        ).size;
-
-        const occupancyRate = propertyUnitIds.length > 0 ? Math.round((propertyOccupiedUnits / propertyUnitIds.length) * 100) : 0;
-
-        const propertyInquiries = applications.filter((item) => {
-            const createdAt = new Date(item.created_at);
-            return (
-                propertyUnitSet.has(item.unit_id) &&
-                !Number.isNaN(createdAt.getTime()) &&
-                createdAt >= startOfDay(rangeStart) &&
-                createdAt <= endOfDay(rangeEnd)
-            );
-        }).length;
-
-        featuredProperty = {
-            propertyName: property?.name ?? "Top Property",
-            totalSales: CURRENCY_NO_CENTS.format(totalSales),
-            totalViews: `${NUMBER_FORMAT.format(propertyInquiries)} inquiries`,
-            image: property?.images?.[0] || fallbackImage,
-            momGrowth: formatPctDelta(totalSales, previousSales),
-            occupancyRate: `${occupancyRate}%`,
-        };
-    }
 
     return NextResponse.json({
         primaryKpis,
         extendedKpis,
         financialChart,
-        featuredProperty,
+        operationalSnapshot,
     } satisfies OverviewPayload);
 }

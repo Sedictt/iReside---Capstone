@@ -8,7 +8,6 @@ import {
     Clock,
     AlertCircle,
     MessageSquare,
-    Phone,
     Mail,
     ChevronRight,
     Building2,
@@ -106,101 +105,109 @@ export default function TenantsPage() {
 
     const getStatusColor = (status: TenantStatus) => {
         switch (status) {
-            case "Active": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-            case "Moving Out": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-            case "Evicted": return "bg-red-500/10 text-red-400 border-red-500/20";
-            default: return "bg-white/5 text-neutral-400 border-white/10";
+            case "Active": return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+            case "Moving Out": return "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+            case "Evicted": return "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300";
+            default: return "border-border bg-muted text-muted-foreground";
         }
     };
 
     const getPaymentStatusIcon = (status: TenantPaymentStatus) => {
         switch (status) {
-            case "paid": return <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> Paid</div>;
-            case "late": return <div className="flex items-center gap-1.5 text-xs font-medium text-red-400"><AlertCircle className="w-3.5 h-3.5" /> Overdue</div>;
-            case "pending": return <div className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Clock className="w-3.5 h-3.5" /> Pending</div>;
+            case "paid": return <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><CheckCircle2 className="w-3.5 h-3.5" /> Paid</div>;
+            case "late": return <div className="flex items-center gap-1.5 text-xs font-semibold text-red-700 dark:text-red-300"><AlertCircle className="w-3.5 h-3.5" /> Overdue</div>;
+            case "pending": return <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300"><Clock className="w-3.5 h-3.5" /> Pending</div>;
             default: return null;
         }
     };
 
     return (
-        <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-black text-white tracking-tight mb-2">Tenants Directory</h1>
-                    <p className="text-neutral-400">Manage and monitor your active leases across all properties.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button className="h-11 px-6 rounded-xl bg-primary text-black font-bold flex items-center gap-2 hover:bg-primary/90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)]">
-                        Add Tenant
-                    </button>
+        <div className="mx-auto min-h-screen max-w-7xl space-y-8 px-6 py-8 text-foreground animate-in fade-in duration-500 sm:px-8">
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-muted/35 p-8 shadow-sm">
+                <div className="absolute right-0 top-0 h-[420px] w-[420px] -translate-y-1/2 translate-x-1/3 rounded-full bg-primary/16 blur-[120px] opacity-45 dark:bg-primary/20 dark:opacity-50" />
+                <div className="absolute bottom-0 left-0 h-[260px] w-[260px] translate-y-1/2 -translate-x-1/3 rounded-full bg-sky-500/12 blur-[100px] opacity-35 dark:bg-blue-500/20 dark:opacity-30" />
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+                <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md">
+                            <Building2 className="h-3.5 w-3.5 text-primary" />
+                            <span>Lease Operations</span>
+                        </div>
+                        <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground md:text-5xl">Tenants Directory</h1>
+                        <p className="max-w-2xl text-base text-muted-foreground md:text-lg">
+                            Manage resident records, lease timelines, and payment standing across your active portfolio.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button className="flex h-11 items-center gap-2 rounded-xl bg-primary px-6 font-bold text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
+                            Add Tenant
+                        </button>
+                    </div>
                 </div>
             </div>
 
-
-            {/* Table Controls */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#111] p-2 rounded-2xl border border-white/5">
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card/95 p-2 shadow-sm sm:flex-row">
                 <div className="relative flex-1 w-full">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search by name, property, or unit..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-transparent border-none pl-11 pr-4 py-3 text-sm text-white focus:outline-none placeholder:text-neutral-600 font-medium"
+                        className="w-full rounded-xl border border-transparent bg-transparent py-3 pl-11 pr-4 text-sm font-medium text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:bg-background focus:outline-none"
                     />
                 </div>
-                <div className="w-px h-8 bg-white/10 hidden sm:block" />
+                <div className="hidden h-8 w-px bg-border sm:block" />
                 <div className="flex items-center w-full sm:w-auto overflow-x-auto hide-scrollbar gap-2 px-2 pb-2 sm:pb-0">
-                    {['All', 'Active', 'Moving Out', 'Evicted'].map(status => (
+                    {["All", "Active", "Moving Out", "Evicted"].map(status => (
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status as TenantStatus | "All")}
                             className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all",
+                                "whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold transition-all",
                                 statusFilter === status
-                                    ? "bg-white/10 text-white"
-                                    : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
                             {status}
                         </button>
                     ))}
-                    <button className="px-3 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2">
+                    <button className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground">
                         <Filter className="w-4 h-4" /> <span className="text-sm font-medium">Filters</span>
                     </button>
                 </div>
             </div>
 
-            {/* Tenant Cards Grid */}
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <div key={i} className="animate-pulse bg-[#111] border border-white/5 rounded-3xl p-6 flex flex-col justify-between min-h-[320px]">
+                        <div key={i} className="flex min-h-[320px] animate-pulse flex-col justify-between rounded-3xl border border-border bg-card/95 p-6 shadow-sm">
                             <div className="flex justify-between items-start mb-6">
-                                <div className="h-6 w-16 bg-white/5 rounded-md" />
-                                <div className="h-6 w-20 bg-white/5 rounded-full" />
+                                <div className="h-6 w-16 rounded-md bg-muted" />
+                                <div className="h-6 w-20 rounded-full bg-muted" />
                             </div>
                             <div className="flex flex-col items-center flex-1 mt-2">
-                                <div className="w-20 h-20 rounded-full bg-white/10 mb-4" />
-                                <div className="h-5 w-32 bg-white/10 rounded mb-2" />
-                                <div className="h-3 w-40 bg-white/5 rounded" />
+                                <div className="mb-4 h-20 w-20 rounded-full bg-muted" />
+                                <div className="mb-2 h-5 w-32 rounded bg-muted" />
+                                <div className="h-3 w-40 rounded bg-muted/70" />
                             </div>
-                            <div className="mt-6 pt-6 border-t border-white/5 flex justify-between items-end">
+                            <div className="mt-6 flex items-end justify-between border-t border-border pt-6">
                                 <div className="space-y-2">
-                                    <div className="h-3 w-16 bg-white/5 rounded" />
-                                    <div className="h-5 w-20 bg-white/10 rounded" />
+                                    <div className="h-3 w-16 rounded bg-muted/70" />
+                                    <div className="h-5 w-20 rounded bg-muted" />
                                 </div>
                                 <div className="flex gap-2">
-                                    <div className="h-8 w-8 bg-white/5 rounded-full" />
-                                    <div className="h-8 w-8 bg-white/5 rounded-full" />
+                                    <div className="h-8 w-8 rounded-full bg-muted/70" />
+                                    <div className="h-8 w-8 rounded-full bg-muted/70" />
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : error ? (
-                <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-300">
+                <div className="rounded-3xl border border-red-500/20 bg-red-500/8 p-6 text-sm text-red-700 dark:text-red-300">
                     {error}
                 </div>
             ) : (
@@ -209,77 +216,70 @@ export default function TenantsPage() {
                 {filteredTenants.map((tenant, idx) => (
                     <div
                         key={tenant.id}
-                        className="bg-[#111] border border-white/5 rounded-3xl p-6 hover:bg-white/[0.02] hover:border-white/10 transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-2 flex flex-col justify-between shadow-2xl"
+                        className="group flex cursor-pointer flex-col justify-between rounded-3xl border border-border bg-card/95 p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-card hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)] dark:hover:shadow-[0_20px_45px_-30px_rgba(0,0,0,0.55)] animate-in fade-in slide-in-from-bottom-2"
                         style={{ animationDelay: `${idx * 50}ms` }}
                     >
-                        {/* Status badges */}
                         <div className="flex items-center justify-between mb-6">
-                            <span className={cn("px-2.5 py-1 rounded-md text-xs font-bold border backdrop-blur-md", getStatusColor(tenant.status))}>
+                            <span className={cn("rounded-md border px-2.5 py-1 text-xs font-bold", getStatusColor(tenant.status))}>
                                 {tenant.status}
                             </span>
-                            <div className="bg-black/20 rounded-full px-2 py-1">
+                            <div className="rounded-full border border-border bg-background/70 px-2 py-1">
                                 {getPaymentStatusIcon(tenant.paymentStatus)}
                             </div>
                         </div>
 
-                        {/* Profile Info */}
                         <div className="flex flex-col items-center text-center mb-6">
-                            <div className="relative w-24 h-24 mb-4 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(var(--primary),0.1)] group-hover:shadow-[0_0_30px_rgba(var(--primary),0.2)] rounded-full">
+                            <div className="relative mb-4 h-24 w-24 rounded-full transition-transform group-hover:scale-[1.03]">
                                 {tenant.avatarUrl ? (
                                     <img
                                         src={tenant.avatarUrl}
                                         alt={tenant.name}
-                                        className="w-full h-full object-cover rounded-full border-2 border-primary/20"
+                                        className="h-full w-full rounded-full border-2 border-primary/20 object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full rounded-full bg-gradient-to-tr from-primary/20 to-primary/5 border-2 border-primary/20 flex items-center justify-center text-primary font-black text-2xl">
+                                    <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-primary/20 bg-gradient-to-tr from-primary/20 to-primary/5 text-2xl font-black text-primary">
                                         {tenant.avatar}
                                     </div>
                                 )}
                             </div>
-                            <h3 className="font-bold text-xl text-white mb-1 group-hover:text-primary transition-colors">{tenant.name}</h3>
-                            <p className="text-sm text-neutral-500 mb-4">{tenant.email}</p>
+                            <h3 className="mb-1 text-xl font-bold text-foreground transition-colors group-hover:text-primary">{tenant.name}</h3>
+                            <p className="mb-4 text-sm text-muted-foreground">{tenant.email}</p>
 
-                            <div className="flex items-center gap-2 text-xs font-medium bg-white/5 px-4 py-2 rounded-full border border-white/5 w-full justify-center">
-                                <Building2 className="w-4 h-4 text-neutral-400" />
-                                <span className="text-neutral-300 truncate">{tenant.property}</span>
-                                <span className="text-neutral-600 px-1">•</span>
-                                <span className="text-neutral-400 whitespace-nowrap">{tenant.unit}</span>
+                            <div className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-muted/45 px-4 py-2 text-xs font-medium">
+                                <Building2 className="h-4 w-4 text-muted-foreground" />
+                                <span className="truncate text-foreground">{tenant.property}</span>
+                                <span className="px-1 text-muted-foreground">•</span>
+                                <span className="whitespace-nowrap text-muted-foreground">{tenant.unit}</span>
                             </div>
                         </div>
 
-                        {/* Financials & Dates */}
-                        <div className="grid grid-cols-2 gap-4 mb-6 pt-5 border-t border-white/5">
-                            <div className="bg-white/[0.02] p-3 rounded-2xl border border-white/5">
-                                <p className="text-xs font-medium text-neutral-500 mb-1.5 flex items-center gap-1.5">
-                                    <Wallet className="w-3.5 h-3.5" /> Rent
+                        <div className="mb-6 flex flex-col gap-3 border-t border-border pt-5">
+                            <div className="flex items-center justify-between rounded-xl border border-border bg-background/75 px-4 py-3">
+                                <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                    <Wallet className="h-4 w-4" /> Rent
                                 </p>
-                                <p className="font-bold text-white text-[15px]">{formatCurrency(tenant.rentAmount)}</p>
+                                <p className="text-sm font-bold text-foreground">{formatCurrency(tenant.rentAmount)}</p>
                             </div>
-                            <div className="bg-white/[0.02] p-3 rounded-2xl border border-white/5">
-                                <p className="text-xs font-medium text-neutral-500 mb-1.5 flex items-center gap-1.5">
-                                    <Calendar className="w-3.5 h-3.5" /> Lease Ends
+                            <div className="flex items-center justify-between rounded-xl border border-border bg-background/75 px-4 py-3">
+                                <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                                    <Calendar className="h-4 w-4" /> Lease Ends
                                 </p>
-                                <p className="font-bold text-white text-[15px]">
+                                <p className="text-sm font-bold text-foreground">
                                     {formatLeaseEnd(tenant.leaseEnd)}
                                 </p>
                             </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center justify-between pt-5 border-t border-white/5 mt-auto">
+                        <div className="mt-auto flex items-center justify-between border-t border-border pt-5">
                             <div className="flex items-center gap-2">
-                                <button className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-neutral-400 hover:bg-primary/20 hover:text-primary transition-all hover:scale-105">
-                                    <Phone className="w-4 h-4" />
-                                </button>
-                                <button className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-neutral-400 hover:bg-primary/20 hover:text-primary transition-all hover:scale-105">
+                                <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background/75 text-muted-foreground transition-all hover:border-primary/20 hover:bg-primary/10 hover:text-primary">
                                     <MessageSquare className="w-4 h-4" />
                                 </button>
-                                <button className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-neutral-400 hover:bg-primary/20 hover:text-primary transition-all hover:scale-105">
+                                <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background/75 text-muted-foreground transition-all hover:border-primary/20 hover:bg-primary/10 hover:text-primary">
                                     <Mail className="w-4 h-4" />
                                 </button>
                             </div>
-                            <button className="flex items-center gap-1.5 text-sm font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 px-3 py-2 rounded-xl">
+                            <button className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary/15 hover:text-primary/80">
                                 Profile <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
@@ -288,12 +288,12 @@ export default function TenantsPage() {
             </div>
 
                     {filteredTenants.length === 0 && (
-                        <div className="col-span-full py-20 text-center bg-[#111] border border-white/5 rounded-3xl animate-in fade-in zoom-in duration-500">
-                            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-neutral-500 mx-auto mb-5">
+                        <div className="col-span-full rounded-3xl border border-border bg-card/95 py-20 text-center shadow-sm animate-in fade-in zoom-in duration-500">
+                            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-muted text-muted-foreground">
                                 <Search className="w-8 h-8" />
                             </div>
-                            <p className="text-xl text-white font-bold mb-2">No tenants found</p>
-                            <p className="text-neutral-500 max-w-sm mx-auto">We couldn't find any tenants matching your current filters and search query.</p>
+                            <p className="mb-2 text-xl font-bold text-foreground">No tenants found</p>
+                            <p className="mx-auto max-w-sm text-muted-foreground">We couldn&apos;t find any tenants matching your current filters and search query.</p>
                         </div>
                     )}
                 </>

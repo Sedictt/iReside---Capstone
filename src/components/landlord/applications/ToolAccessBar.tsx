@@ -146,10 +146,10 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md px-8 py-6 flex flex-col items-center gap-4 shadow-2xl"
+            className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card/95 px-8 py-6 shadow-sm backdrop-blur-md"
           >
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="text-sm font-black uppercase tracking-widest text-neutral-300">Loading property data...</span>
+            <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Loading property data...</span>
           </motion.div>
         </div>
       );
@@ -181,11 +181,11 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
       return (
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
           <div className="mb-10 text-center sm:text-left">
-            <h4 className="text-3xl font-black text-white tracking-tighter">Amenities</h4>
-            <p className="text-xs font-bold tracking-[0.2em] text-neutral-400 mt-2 uppercase">Configuration for {propertyData.name}</p>
+            <h4 className="text-3xl font-black tracking-tighter text-foreground">Amenities</h4>
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Configuration for {propertyData.name}</p>
           </div>
           {propertyData.amenities.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] p-12 text-center text-sm font-bold tracking-tight text-neutral-400">
+            <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
               No amenities configured for this property.
             </div>
           ) : (
@@ -196,12 +196,12 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   key={item} 
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 flex items-center gap-4 hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_4px_30px_rgba(var(--emerald-rgb),0.2)] hover:-translate-y-1"
+                  className="flex items-center gap-4 rounded-2xl border border-border bg-background/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:bg-card"
                 >
                   <div className="h-10 w-10 shrink-0 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
                     <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                   </div>
-                  <span className="font-bold text-white text-[15px] tracking-tight">{item}</span>
+                  <span className="text-[15px] font-bold tracking-tight text-foreground">{item}</span>
                 </motion.div>
               ))}
             </div>
@@ -214,11 +214,11 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
       return (
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
           <div className="mb-10 text-center sm:text-left">
-            <h4 className="text-3xl font-black text-white tracking-tighter">Property Policies</h4>
-            <p className="text-xs font-bold tracking-[0.2em] text-neutral-400 mt-2 uppercase">House Rules for {propertyData.name}</p>
+            <h4 className="text-3xl font-black tracking-tighter text-foreground">Property Policies</h4>
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">House Rules for {propertyData.name}</p>
           </div>
           {propertyData.house_rules.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] p-12 text-center text-sm font-bold tracking-tight text-neutral-400">
+            <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
               No property policies configured yet.
             </div>
           ) : (
@@ -229,12 +229,12 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   key={rule} 
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 flex items-start gap-5 hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_4px_30px_rgba(var(--blue-rgb),0.2)] hover:scale-[1.01]"
+                  className="flex items-start gap-5 rounded-2xl border border-border bg-background/70 p-6 shadow-sm transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:bg-card"
                 >
                   <div className="h-10 w-10 shrink-0 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                    <span className="text-blue-300 font-black text-sm">{index + 1}</span>
+                    <span className="text-sm font-black text-blue-700 dark:text-blue-300">{index + 1}</span>
                   </div>
-                  <p className="text-base font-semibold text-neutral-200 leading-relaxed mt-1.5">{rule}</p>
+                  <p className="mt-1.5 text-base font-semibold leading-relaxed text-foreground">{rule}</p>
                 </motion.div>
               ))}
             </div>
@@ -247,11 +247,11 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
     return (
       <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
         <div className="mb-10 text-center sm:text-left">
-          <h4 className="text-3xl font-black text-white tracking-tighter">Contract Template</h4>
-          <p className="text-xs font-bold tracking-[0.2em] text-neutral-400 mt-2 uppercase">Terms for {propertyData.name}</p>
+          <h4 className="text-3xl font-black tracking-tighter text-foreground">Contract Template</h4>
+          <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Terms for {propertyData.name}</p>
         </div>
         {!template ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.02] p-12 text-center text-sm font-bold tracking-tight text-neutral-400">
+          <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
             No contract template configured yet.
           </div>
         ) : (
@@ -339,7 +339,7 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
     <>
       <div
         className={cn(
-          "w-full max-w-5xl mx-auto mb-6 rounded-[1.5rem] border border-white/[0.08] bg-black/40 backdrop-blur-2xl p-2.5 shadow-[0_15px_45px_rgba(0,0,0,0.45)] relative overflow-hidden",
+          "relative mb-6 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-border bg-card/95 p-2.5 shadow-sm backdrop-blur-2xl",
           className
         )}
       >
@@ -359,8 +359,8 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
                 className={cn(
                   "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
                   disabled
-                    ? "border-white/5 bg-white/[0.02] text-neutral-600 cursor-not-allowed"
-                    : "border-white/10 bg-white/[0.04] text-neutral-300 hover:text-white hover:bg-white/[0.08] hover:border-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground"
+                    : "cursor-pointer border-border bg-background text-foreground hover:-translate-y-0.5 hover:border-primary/20 hover:bg-muted active:translate-y-0"
                 )}
                 title={disabled ? "Select a unit first to open tools" : `Open ${tool.label} modal`}
               >
@@ -382,7 +382,7 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
               transition={{ duration: 0.3 }}
               type="button"
               aria-label="Close tool modal backdrop"
-              className="absolute inset-0 bg-black/80 backdrop-blur-xl cursor-default"
+              className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-xl"
               onClick={() => setActiveTool(null)}
             />
 
@@ -391,12 +391,12 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 150 }}
-              className="relative z-10 w-full max-w-5xl h-[85vh] rounded-[2.5rem] border border-white/[0.12] bg-[#141414]/95 backdrop-blur-[60px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.7)] flex flex-col"
+              className="relative z-10 flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(15,23,42,0.16)] backdrop-blur-[60px]"
             >
               <BackgroundGlow color1={TOOL_GLOWS[activeTool.key].c1} color2={TOOL_GLOWS[activeTool.key].c2} />
               <Noise />
 
-              <div className="relative z-20 shrink-0 h-24 border-b border-white/[0.08] px-6 sm:px-10 flex items-center justify-between bg-white/[0.02] backdrop-blur-md">
+              <div className="relative z-20 flex h-24 shrink-0 items-center justify-between border-b border-border bg-card/92 px-6 backdrop-blur-md sm:px-10">
                 <div className="flex items-center gap-5 min-w-0">
                   <div className={cn("h-14 w-14 rounded-[1.2rem] flex items-center justify-center shrink-0 border shadow-inner", TOOL_ACCENTS[activeTool.key].iconBorder, TOOL_ACCENTS[activeTool.key].iconBg)}>
                     {activeTool.key === "templates" && <FileText className="h-6 w-6 text-violet-300" />}
@@ -405,20 +405,20 @@ export function ToolAccessBar({ propertyId, className }: ToolAccessBarProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
-                    <p className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">{activeTool.label}</p>
+                    <p className="truncate text-xl font-black tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black/40 border border-white/10 shadow-inner">
-                    <Building2 className="h-4.5 w-4.5 text-white/50" />
-                    <span className="text-xs font-bold text-white/80 max-w-[200px] truncate">{propertyData?.name ?? "Loading..."}</span>
+                  <div className="hidden items-center gap-3 rounded-xl border border-border bg-background px-4 py-2.5 shadow-inner md:flex">
+                    <Building2 className="h-4.5 w-4.5 text-muted-foreground" />
+                    <span className="max-w-[200px] truncate text-xs font-bold text-foreground">{propertyData?.name ?? "Loading..."}</span>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setActiveTool(null)}
-                    className="h-12 w-12 rounded-full bg-white/5 border border-white/10 text-neutral-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center hover:scale-110 active:scale-95 group shadow-lg"
+                    className="group flex h-12 w-12 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-lg transition-all hover:scale-110 hover:bg-muted hover:text-foreground active:scale-95"
                   >
                     <X className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
                   </button>

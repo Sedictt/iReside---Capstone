@@ -1,0 +1,276 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="ireside-use-case-v2" name="iReside Use Case Diagram v2">
+    <mxGraphModel dx="1376" dy="690" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== SYSTEM BOUNDARY ==================== -->
+        <mxCell id="sys-boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8FBFF;strokeColor=#6C8EBF;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="1270" width="1080" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sys-title" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCE9FF;strokeColor=#6C8EBF;strokeWidth=2;fontStyle=1;fontSize=22;align=left;spacingLeft=18;" value="iReside Property Management System" vertex="1">
+          <mxGeometry height="60" width="580" x="260" y="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTORS ==================== -->
+        <mxCell id="actor-admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="Super&#xa;Administrator" vertex="1">
+          <mxGeometry height="170" width="90" x="30" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-landlord" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="Landlord" vertex="1">
+          <mxGeometry height="170" width="90" x="30" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-tenant" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="Tenant" vertex="1">
+          <mxGeometry height="170" width="90" x="1450" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-ai" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="External AI&#xa;Service" vertex="1">
+          <mxGeometry height="170" width="100" x="1450" y="580" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== USE CASES: AUTH ==================== -->
+        <mxCell id="uc-auth" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=15;" value="Sign In &amp;&#xa;Access Role Portal" vertex="1">
+          <mxGeometry height="80" width="230" x="440" y="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== USE CASES: ADMIN ==================== -->
+        <mxCell id="uc-admin-metrics" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8F1D8;strokeColor=#D6B656;strokeWidth=2;fontSize=14;" value="Monitor&#xa;Platform Metrics" vertex="1">
+          <mxGeometry height="58" width="220" x="320" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-review" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8F1D8;strokeColor=#D6B656;strokeWidth=2;fontSize=14;" value="Review Landlord&#xa;Registrations" vertex="1">
+          <mxGeometry height="58" width="240" x="310" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-gov" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8F1D8;strokeColor=#D6B656;strokeWidth=2;fontSize=14;" value="Manage Users&#xa;&amp; Governance" vertex="1">
+          <mxGeometry height="58" width="240" x="310" y="410" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== USE CASES: LANDLORD ==================== -->
+        <mxCell id="uc-property" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Manage Properties&#xa;&amp; Units" vertex="1">
+          <mxGeometry height="58" width="250" x="600" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-upload-media" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Upload Unit&#xa;Media" vertex="1">
+          <mxGeometry height="58" width="210" x="580" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-walkin" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Record Walk-in&#xa;Applications" vertex="1">
+          <mxGeometry height="58" width="250" x="600" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-finalize" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Finalize Lease &amp;&#xa;Onboard Tenant" vertex="1">
+          <mxGeometry height="65" width="260" x="590" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-billing" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="View Financial&#xa;Ledger" vertex="1">
+          <mxGeometry height="58" width="220" x="580" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-analytics" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="View Analytics &amp;&#xa;Generate Reports" vertex="1">
+          <mxGeometry height="58" width="250" x="600" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-moderate" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Moderate Community&#xa;Content" vertex="1">
+          <mxGeometry height="58" width="250" x="600" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-approve-transfer" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Approve Transfer&#xa;/ Move-Out Requests" vertex="1">
+          <mxGeometry height="58" width="260" x="600" y="970" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== USE CASES: TENANT ==================== -->
+        <mxCell id="uc-lease-view" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="View Lease &amp;&#xa;Documents" vertex="1">
+          <mxGeometry height="58" width="220" x="930" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-lease-sign" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Complete Lease&#xa;Signing" vertex="1">
+          <mxGeometry height="58" width="220" x="930" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-lease-track" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Track Lease&#xa;Status Progress" vertex="1">
+          <mxGeometry height="58" width="230" x="930" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-payments" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="View Payments&#xa;&amp; History" vertex="1">
+          <mxGeometry height="58" width="220" x="930" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-maintenance" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Submit Maintenance&#xa;Requests" vertex="1">
+          <mxGeometry height="58" width="250" x="920" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-messages" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Exchange&#xa;Messages" vertex="1">
+          <mxGeometry height="58" width="210" x="920" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-community" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Participate in&#xa;Community Hub" vertex="1">
+          <mxGeometry height="58" width="250" x="920" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-transfer" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Request Unit&#xa;Transfer / Move-Out" vertex="1">
+          <mxGeometry height="58" width="250" x="920" y="900" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-doc-vault" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Access&#xa;Document Vault" vertex="1">
+          <mxGeometry height="58" width="210" x="920" y="1000" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== USE CASES: AI ==================== -->
+        <mxCell id="uc-iris" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#9673A6;strokeWidth=2;fontSize=14;" value="Ask iRis&#xa;AI Assistant" vertex="1">
+          <mxGeometry height="65" width="200" x="1220" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-fallback" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#9673A6;strokeWidth=2;fontSize=14;" value="Provide AI Fallback&#xa;Response" vertex="1">
+          <mxGeometry height="58" width="230" x="1210" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-ai-insights" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#9673A6;strokeWidth=2;fontSize=14;" value="Generate AI-Driven&#xa;Insights" vertex="1">
+          <mxGeometry height="58" width="230" x="1210" y="670" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTOR -> USE CASE CONNECTIONS ==================== -->
+
+        <!-- Super Administrator -->
+        <mxCell id="e1" edge="1" parent="1" source="actor-admin" target="uc-auth" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="actor-admin" target="uc-admin-metrics" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="actor-admin" target="uc-admin-review" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="actor-admin" target="uc-admin-gov" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="actor-admin" target="uc-moderate" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Landlord -->
+        <mxCell id="e6" edge="1" parent="1" source="actor-landlord" target="uc-auth" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="actor-landlord" target="uc-property" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="actor-landlord" target="uc-upload-media" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="actor-landlord" target="uc-walkin" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="actor-landlord" target="uc-finalize" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="actor-landlord" target="uc-billing" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="actor-landlord" target="uc-analytics" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="actor-landlord" target="uc-moderate" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="actor-landlord" target="uc-approve-transfer" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="actor-landlord" target="uc-lease-sign" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="actor-landlord" target="uc-maintenance" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="actor-landlord" target="uc-messages" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="actor-landlord" target="uc-community" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Tenant -->
+        <mxCell id="e19" edge="1" parent="1" source="actor-tenant" target="uc-auth" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="actor-tenant" target="uc-lease-view" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="actor-tenant" target="uc-lease-sign" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="actor-tenant" target="uc-lease-track" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="actor-tenant" target="uc-payments" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" source="actor-tenant" target="uc-maintenance" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" source="actor-tenant" target="uc-messages" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" edge="1" parent="1" source="actor-tenant" target="uc-community" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" edge="1" parent="1" source="actor-tenant" target="uc-transfer" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" edge="1" parent="1" source="actor-tenant" target="uc-doc-vault" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e29" edge="1" parent="1" source="actor-tenant" target="uc-iris" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- External AI Service -->
+        <mxCell id="e30" edge="1" parent="1" source="actor-ai" target="uc-iris" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e31" edge="1" parent="1" source="actor-ai" target="uc-fallback" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" edge="1" parent="1" source="actor-ai" target="uc-ai-insights" style="endArrow=none;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== INCLUDE / EXTEND RELATIONSHIPS ==================== -->
+
+        <!-- Finalize Lease ->> Lease Signing (include) -->
+        <mxCell id="rel-27" edge="1" parent="1" source="uc-finalize" target="uc-lease-sign" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#808080;" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="870" y="555" />
+              <mxPoint x="870" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Finalize Lease ->> Walk-in Apps (extend) -->
+        <mxCell id="rel-28" edge="1" parent="1" source="uc-finalize" target="uc-walkin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#808080;" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="565" y="555" />
+              <mxPoint x="565" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- iRis ->> Fallback (include) -->
+        <mxCell id="rel-29" edge="1" parent="1" source="uc-iris" target="uc-fallback" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#808080;" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="465" />
+              <mxPoint x="1440" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Analytics ->> AI Insights (include) -->
+        <mxCell id="rel-30" edge="1" parent="1" source="uc-analytics" target="uc-ai-insights" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#808080;" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1070" y="770" />
+              <mxPoint x="1070" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Messages ->> Content Filter (include) -->
+        <mxCell id="uc-filter-content" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F0F0F0;strokeColor=#999999;strokeWidth=2;fontSize=13;dashed=0;" value="Filter Unsafe&#xa;Content" vertex="1">
+          <mxGeometry height="58" width="190" x="1200" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-31" edge="1" parent="1" source="uc-messages" target="uc-filter-content" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#808080;" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1110" y="710" />
+              <mxPoint x="1110" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

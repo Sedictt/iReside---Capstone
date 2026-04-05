@@ -26,6 +26,40 @@ type TenantItem = {
     productTourLastEventAt: string | null;
 };
 
+type TenantOnboardingStateRow = {
+    tenant_id: string;
+    status: "pending" | "in_progress" | "completed";
+    last_reminder_sent_at: string | null;
+};
+
+type TenantProductTourStateRow = {
+    tenant_id: string;
+    status: "not_started" | "in_progress" | "skipped" | "completed" | null;
+    started_at: string | null;
+    completed_at: string | null;
+    last_event_at: string | null;
+};
+
+type OptionalTenantStateClient = {
+    from: (table: "tenant_onboarding_states") => {
+        select: (columns: string) => {
+            in: (
+                column: "tenant_id",
+                values: string[]
+            ) => Promise<{ data: TenantOnboardingStateRow[] | null; error: unknown }>;
+        };
+    };
+} & {
+    from: (table: "tenant_product_tour_states") => {
+        select: (columns: string) => {
+            in: (
+                column: "tenant_id",
+                values: string[]
+            ) => Promise<{ data: TenantProductTourStateRow[] | null; error: unknown }>;
+        };
+    };
+};
+
 const resolveTenantStatus = (leaseStatus: LeaseStatus, hasMoveOut: boolean): TenantStatus => {
     if (leaseStatus === "terminated") return "Evicted";
     if (hasMoveOut || leaseStatus === "expired") return "Moving Out";
@@ -49,8 +83,13 @@ const resolvePaymentStatus = (
 const isNonEmptyString = (value: unknown): value is string =>
     typeof value === "string" && value.trim().length > 0;
 
+const logOptionalQueryFailure = (scope: string, error: unknown) => {
+    console.warn(`[api/landlord/tenants] ${scope}`, error);
+};
+
 export async function GET() {
     const supabase = await createClient();
+    const optionalStateClient = supabase as unknown as OptionalTenantStateClient;
     const {
         data: { user },
         error: userError,
@@ -91,31 +130,31 @@ export async function GET() {
             : { data: [], error: null };
 
     if (tenantsError) {
-        return NextResponse.json({ error: "Failed to load tenant profiles." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load tenant profiles.", tenantsError);
     }
 
     const { data: onboardingRows, error: onboardingError } =
         tenantIds.length > 0
-            ? await (supabase as any)
+            ? await optionalStateClient
                   .from("tenant_onboarding_states")
                   .select("tenant_id, status, last_reminder_sent_at")
                   .in("tenant_id", tenantIds)
             : { data: [], error: null };
 
     if (onboardingError) {
-        return NextResponse.json({ error: "Failed to load tenant onboarding states." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load tenant onboarding states.", onboardingError);
     }
 
     const { data: tourRows, error: tourError } =
         tenantIds.length > 0
-            ? await (supabase as any)
+            ? await optionalStateClient
                   .from("tenant_product_tour_states")
                   .select("tenant_id, status, started_at, completed_at, last_event_at")
                   .in("tenant_id", tenantIds)
             : { data: [], error: null };
 
     if (tourError) {
-        return NextResponse.json({ error: "Failed to load tenant product tour states." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load tenant product tour states.", tourError);
     }
 
     const { data: unitRows, error: unitsError } =
@@ -124,7 +163,7 @@ export async function GET() {
             : { data: [], error: null };
 
     if (unitsError) {
-        return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load units.", unitsError);
     }
 
     const propertyIds = Array.from(
@@ -137,7 +176,7 @@ export async function GET() {
             : { data: [], error: null };
 
     if (propertiesError) {
-        return NextResponse.json({ error: "Failed to load properties." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load properties.", propertiesError);
     }
 
     const { data: moveOutRows, error: moveOutError } =
@@ -146,7 +185,7 @@ export async function GET() {
             : { data: [], error: null };
 
     if (moveOutError) {
-        return NextResponse.json({ error: "Failed to load move-out requests." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load move-out requests.", moveOutError);
     }
 
     const { data: paymentRows, error: paymentsError } =
@@ -159,28 +198,27 @@ export async function GET() {
             : { data: [], error: null };
 
     if (paymentsError) {
-        return NextResponse.json({ error: "Failed to load payments." }, { status: 500 });
+        logOptionalQueryFailure("Failed to load payments.", paymentsError);
     }
 
     const tenantMap = new Map((tenantRows ?? []).map((row) => [row.id, row]));
     const onboardingMap = new Map(
-        (onboardingRows ?? []).map((row: any) => [
+        (onboardingRows ?? []).map((row) => [
             row.tenant_id,
             {
-                status: row.status as "pending" | "in_progress" | "completed",
-                lastReminderSentAt: (row.last_reminder_sent_at as string | null) ?? null,
+                status: row.status,
+                lastReminderSentAt: row.last_reminder_sent_at ?? null,
             },
         ])
     );
     const tourMap = new Map(
-        (tourRows ?? []).map((row: any) => [
+        (tourRows ?? []).map((row) => [
             row.tenant_id,
             {
-                status:
-                    (row.status as "not_started" | "in_progress" | "skipped" | "completed" | null) ?? "not_started",
-                startedAt: (row.started_at as string | null) ?? null,
-                completedAt: (row.completed_at as string | null) ?? null,
-                lastEventAt: (row.last_event_at as string | null) ?? null,
+                status: row.status ?? "not_started",
+                startedAt: row.started_at ?? null,
+                completedAt: row.completed_at ?? null,
+                lastEventAt: row.last_event_at ?? null,
             },
         ])
     );

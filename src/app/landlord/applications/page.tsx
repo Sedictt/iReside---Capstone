@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 export default function ApplicationsPage() {
     return (
-        <Suspense fallback={<div className="p-8 flex items-center justify-center text-neutral-400">Loading applications...</div>}>
+        <Suspense fallback={<div className="flex items-center justify-center p-8 text-muted-foreground">Loading applications...</div>}>
             <RentApplications />
         </Suspense>
     );

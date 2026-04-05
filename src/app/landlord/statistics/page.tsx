@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
 import { KpiCardSkeleton } from "@/components/landlord/dashboard/KpiCardSkeleton";
 import { ChartSkeleton } from "@/components/landlord/dashboard/ChartSkeleton";
-import { FeaturedPropertySkeleton } from "@/components/landlord/dashboard/FeaturedPropertySkeleton";
+import { OperationalSnapshotSkeleton } from "@/components/landlord/dashboard/OperationalSnapshotSkeleton";
 import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
-import { FeaturedPropertyCard } from "@/components/landlord/dashboard/FeaturedPropertyCard";
+import { OperationalSnapshotCard } from "@/components/landlord/dashboard/OperationalSnapshotCard";
 
 type KpiItem = {
     title: string;
@@ -58,13 +58,16 @@ type OverviewApiResponse = {
         month: FinancialChartWindowData;
         year: FinancialChartWindowData;
     };
-    featuredProperty: {
-        propertyName: string;
-        totalSales: string;
-        totalViews: string;
-        image: string;
-        momGrowth: string;
-        occupancyRate: string;
+    operationalSnapshot: {
+        status: "Performing" | "Stable" | "Attention Required";
+        headline: string;
+        summary: string;
+        metrics: Array<{
+            label: string;
+            value: string;
+            detail: string;
+            tone: "default" | "positive" | "warning" | "critical";
+        }>;
     };
 };
 
@@ -191,13 +194,16 @@ const DEFAULT_FINANCIAL_CHART: OverviewApiResponse["financialChart"] = {
     },
 };
 
-const DEFAULT_FEATURED_PROPERTY: OverviewApiResponse["featuredProperty"] = {
-    propertyName: "No Property Data Yet",
-    totalSales: "₱0",
-    totalViews: "0 inquiries",
-    image: "/hero-images/apartment-03.png",
-    momGrowth: "0.0%",
-    occupancyRate: "0%",
+const DEFAULT_OPERATIONAL_SNAPSHOT: OverviewApiResponse["operationalSnapshot"] = {
+    status: "Stable",
+    headline: "Operations are stabilizing",
+    summary: "Snapshot data will appear here once the reporting window syncs with your latest portfolio activity.",
+    metrics: [
+        { label: "Occupied Units", value: "0/0", detail: "0% occupied", tone: "default" },
+        { label: "Urgent Issues", value: "0", detail: "0 open total", tone: "default" },
+        { label: "Renewals Soon", value: "0", detail: "Next 30 days", tone: "default" },
+        { label: "Outstanding Rent", value: "PHP 0", detail: "0 overdue invoices", tone: "default" },
+    ],
 };
 
 const formatIsoDate = (date: Date) => {
@@ -245,7 +251,7 @@ export default function StatisticsPage() {
     const [primaryKpis, setPrimaryKpis] = useState<KpiItem[]>(DEFAULT_PRIMARY_KPIS);
     const [extendedKpis, setExtendedKpis] = useState<KpiItem[]>(DEFAULT_EXTENDED_KPIS);
     const [financialChart, setFinancialChart] = useState<OverviewApiResponse["financialChart"]>(DEFAULT_FINANCIAL_CHART);
-    const [featuredProperty, setFeaturedProperty] = useState<OverviewApiResponse["featuredProperty"]>(DEFAULT_FEATURED_PROPERTY);
+    const [operationalSnapshot, setOperationalSnapshot] = useState<OverviewApiResponse["operationalSnapshot"]>(DEFAULT_OPERATIONAL_SNAPSHOT);
     const [statsLoading, setStatsLoading] = useState(false);
     const [statsError, setStatsError] = useState<string | null>(null);
 
@@ -491,7 +497,7 @@ export default function StatisticsPage() {
                 setPrimaryKpis((previous) => mergeKpiValues(previous, payload.primaryKpis ?? []));
                 setExtendedKpis((previous) => mergeKpiValues(previous, payload.extendedKpis ?? []));
                 setFinancialChart(payload.financialChart ?? DEFAULT_FINANCIAL_CHART);
-                setFeaturedProperty(payload.featuredProperty ?? DEFAULT_FEATURED_PROPERTY);
+                setOperationalSnapshot(payload.operationalSnapshot ?? DEFAULT_OPERATIONAL_SNAPSHOT);
             } catch (error) {
                 if ((error as Error).name === "AbortError") return;
                 setStatsError("Unable to load live statistics right now.");
@@ -589,36 +595,36 @@ export default function StatisticsPage() {
     if (!mounted) return null;
 
     return (
-        <div className="flex flex-col w-full bg-[#0a0a0a] text-white p-6 md:p-8 space-y-6">
+        <div className="flex w-full flex-col space-y-6 bg-background p-6 text-foreground md:p-8">
             <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Portfolio Statistics</h1>
-                <p className="text-neutral-400 text-sm font-medium">Detailed insights into your property performance</p>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Portfolio Statistics</h1>
+                <p className="text-sm font-medium text-muted-foreground">Detailed insights into your property performance</p>
             </div>
 
             {/* Performance Overview Header */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-[#111] p-4 rounded-xl border border-white/5">
+            <div className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card/95 p-4 shadow-sm xl:flex-row xl:items-center">
                 <div className="flex items-center gap-4">
                     <div className="flex flex-col gap-0.5">
-                        <h2 className="text-lg font-bold text-white tracking-tight">
+                        <h2 className="text-lg font-bold tracking-tight text-foreground">
                             {simplifiedMode ? "How You're Doing" : "Performance Overview"}
                         </h2>
                         {simplifiedMode && (
-                            <p className="text-xs text-neutral-400">Simplified for easy reading</p>
+                            <p className="text-xs text-muted-foreground">Simplified for easy reading</p>
                         )}
                     </div>
-                    <div className="w-[1px] h-8 bg-white/10 mx-2 hidden sm:block"></div>
+                    <div className="mx-2 hidden h-8 w-px bg-border sm:block"></div>
                     <button
                         onClick={() => setSimplifiedMode(!simplifiedMode)}
                         className={cn(
                             "hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wide uppercase transition-all",
                             !simplifiedMode
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                : "bg-white/5 text-neutral-400 border border-white/5 hover:bg-white/10"
+                                ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                : "border border-border bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                     >
                         <div className={cn(
                             "w-1.5 h-1.5 rounded-full",
-                            !simplifiedMode ? "bg-emerald-400 animate-pulse" : "bg-neutral-500"
+                            !simplifiedMode ? "bg-emerald-500 animate-pulse dark:bg-emerald-400" : "bg-slate-400 dark:bg-neutral-500"
                         )} />
                         {simplifiedMode ? "Show Detailed Analytics" : "Hide Detailed Analytics"}
                     </button>
@@ -626,21 +632,21 @@ export default function StatisticsPage() {
 
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     {statsLoading && (
-                        <div className="text-[11px] px-2.5 py-1 rounded-full border border-blue-400/30 bg-blue-500/10 text-blue-300">
+                        <div className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-[11px] text-blue-700 dark:text-blue-300">
                             Syncing with database...
                         </div>
                     )}
                     {statsError && (
-                        <div className="text-[11px] px-2.5 py-1 rounded-full border border-red-400/30 bg-red-500/10 text-red-300">
+                        <div className="rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-700 dark:text-red-300">
                             {statsError}
                         </div>
                     )}
-                    <div className="text-[11px] px-2.5 py-1 rounded-full border border-white/10 bg-black/30 text-neutral-300">
+                    <div className="rounded-full border border-border bg-muted/70 px-2.5 py-1 text-[11px] text-muted-foreground">
                         {insightSource === "ai" ? "iRis AI Insights: Live" : "iRis Insights: Fallback"}
                     </div>
                     <button
                         onClick={() => setIsExportModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border border-white/10 text-white bg-white/5 hover:bg-white/10 transition-colors"
+                        className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted"
                     >
                         <Download className="h-3.5 w-3.5" />
                         Export Report
@@ -711,7 +717,7 @@ export default function StatisticsPage() {
             <div className="flex justify-center -mt-2 mb-2">
                 <button
                     onClick={() => setShowMoreKpis(!showMoreKpis)}
-                    className="flex items-center gap-2 text-xs font-semibold text-neutral-400 hover:text-white transition-all bg-[#0a0a0a] hover:bg-white/5 px-4 py-2 rounded-full border border-white/5 z-10 shadow-sm"
+                    className="z-10 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground shadow-sm transition-all hover:bg-muted hover:text-foreground"
                 >
                     {showMoreKpis ? "Show Less Statistics" : "View More Statistics"}
                     <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", showMoreKpis && "rotate-180")} />
@@ -729,46 +735,46 @@ export default function StatisticsPage() {
                     )}
                 </div>
 
-                {/* Featured Property Card */}
+                {/* Operational Snapshot */}
                 <div className="lg:col-span-1 h-[400px]">
                     {statsLoading ? (
-                        <FeaturedPropertySkeleton />
+                        <OperationalSnapshotSkeleton />
                     ) : (
-                        <FeaturedPropertyCard
-                            propertyName={featuredProperty.propertyName}
-                            totalSales={featuredProperty.totalSales}
-                            totalViews={featuredProperty.totalViews}
-                            image={featuredProperty.image}
-                            momGrowth={featuredProperty.momGrowth}
-                            occupancyRate={featuredProperty.occupancyRate}
-                            className="h-full shadow-2xl"
+                        <OperationalSnapshotCard
+                            status={operationalSnapshot.status}
+                            headline={operationalSnapshot.headline}
+                            summary={operationalSnapshot.summary}
+                            metrics={operationalSnapshot.metrics}
+                            className="h-full"
                             simplifiedMode={simplifiedMode}
                         />
                     )}
                 </div>
             </div>
 
-            <div className="rounded-xl border border-white/5 bg-[#111] p-5 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-white mb-4">
-                    <History className="h-4 w-4 text-neutral-400" />
+            <div className="rounded-2xl border border-border bg-card/95 p-5 shadow-sm">
+                <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <History className="h-4 w-4 text-muted-foreground" />
                     Recent Report Exports
                 </div>
                 {exportHistory.length === 0 ? (
-                    <p className="text-sm text-neutral-500 italic">No reports exported recently.</p>
+                    <p className="text-sm italic text-muted-foreground">No reports exported recently.</p>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                         {exportHistory.slice(0, 5).map((item) => (
-                            <div key={item.id} className="flex flex-col gap-1 text-xs bg-black/40 border border-white/5 rounded-lg px-3.5 py-3 hover:border-white/10 transition-colors">
+                            <div key={item.id} className="flex flex-col gap-1 rounded-xl border border-border bg-muted/30 px-3.5 py-3 text-xs transition-colors hover:border-border/80 hover:bg-muted/50">
                                 <div className="flex items-center justify-between">
                                     <span className={cn(
                                         "font-bold text-[10px] tracking-wider uppercase px-2 py-0.5 rounded-full",
-                                        item.format.toLowerCase() === 'pdf' ? "bg-blue-500/10 text-blue-400" : "bg-emerald-500/10 text-emerald-400"
+                                        item.format.toLowerCase() === 'pdf'
+                                            ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                                            : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                                     )}>
                                         {item.format}
                                     </span>
-                                    <span className="text-neutral-500 text-[10px]">{new Date(item.generatedAt).toLocaleDateString()}</span>
+                                    <span className="text-[10px] text-muted-foreground">{new Date(item.generatedAt).toLocaleDateString()}</span>
                                 </div>
-                                <span className="text-neutral-300 font-medium mt-1 truncate">{item.range}</span>
+                                <span className="mt-1 truncate font-medium text-foreground">{item.range}</span>
                             </div>
                         ))}
                     </div>
@@ -777,15 +783,15 @@ export default function StatisticsPage() {
 
             {isExportModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
-                        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Download className="h-5 w-5 text-emerald-400" />
+                    <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
+                            <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                                <Download className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                 Export Statistics Report
                             </h3>
                             <button
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="text-neutral-400 hover:text-white transition-colors p-1 rounded-md hover:bg-white/10"
+                                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                             >
                                 <X className="h-5 w-5" />
                             </button>
@@ -794,8 +800,8 @@ export default function StatisticsPage() {
                         <div className="p-6 flex flex-col gap-8">
                             {/* Report Period Section */}
                             <div className="flex flex-col gap-3">
-                                <label className="text-sm font-semibold text-neutral-200 flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs">1</div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-xs text-emerald-700 dark:text-emerald-400">1</div>
                                     Select Report Period
                                 </label>
                                 <div className="pl-8 flex flex-col gap-4">
@@ -807,8 +813,8 @@ export default function StatisticsPage() {
                                                 className={cn(
                                                     "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
                                                     selectedRange === option.id
-                                                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-sm"
-                                                        : "bg-white/5 border-white/5 text-neutral-400 hover:text-white hover:bg-white/10"
+                                                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 shadow-sm dark:text-emerald-300"
+                                                        : "border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                                                 )}
                                             >
                                                 {option.label}
@@ -817,25 +823,25 @@ export default function StatisticsPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 flex flex-col gap-1.5">
-                                            <span className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider">Start Date</span>
+                                            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Start Date</span>
                                             <input
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(event) => onStartDateChange(event.target.value)}
-                                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground transition-colors focus:border-emerald-500/50 focus:outline-none"
                                                 aria-label="Report start date"
                                             />
                                         </div>
                                         <div className="pt-6">
-                                            <span className="text-neutral-600">-</span>
+                                            <span className="text-muted-foreground">-</span>
                                         </div>
                                         <div className="flex-1 flex flex-col gap-1.5">
-                                            <span className="text-[10px] text-neutral-500 font-medium uppercase tracking-wider">End Date</span>
+                                            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">End Date</span>
                                             <input
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(event) => onEndDateChange(event.target.value)}
-                                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-neutral-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground transition-colors focus:border-emerald-500/50 focus:outline-none"
                                                 aria-label="Report end date"
                                             />
                                         </div>
@@ -845,8 +851,8 @@ export default function StatisticsPage() {
 
                             {/* Export Format Section */}
                             <div className="flex flex-col gap-3">
-                                <label className="text-sm font-semibold text-neutral-200 flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs">2</div>
+                                <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-xs text-emerald-700 dark:text-emerald-400">2</div>
                                     Select Format
                                 </label>
                                 <div className="pl-8 grid grid-cols-2 gap-3">
@@ -855,8 +861,8 @@ export default function StatisticsPage() {
                                         className={cn(
                                             "flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-200",
                                             exportFormat === "pdf"
-                                                ? "border-blue-500/50 bg-blue-500/10 text-blue-300"
-                                                : "border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200"
+                                                ? "border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                                                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
                                         )}
                                     >
                                         <FileText className="h-8 w-8" />
@@ -867,8 +873,8 @@ export default function StatisticsPage() {
                                         className={cn(
                                             "flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all duration-200",
                                             exportFormat === "csv"
-                                                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300"
-                                                : "border-white/5 bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-neutral-200"
+                                                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
                                         )}
                                     >
                                         <Download className="h-8 w-8" />
@@ -878,10 +884,10 @@ export default function StatisticsPage() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 bg-black/40 border-t border-white/5 flex justify-end gap-3">
+                        <div className="flex justify-end gap-3 border-t border-border bg-muted/20 px-6 py-4">
                             <button
                                 onClick={() => setIsExportModalOpen(false)}
-                                className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-colors"
+                                className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                             >
                                 Cancel
                             </button>
@@ -901,7 +907,7 @@ export default function StatisticsPage() {
             )}
 
             {toastMessage && (
-                <div className="fixed bottom-6 right-6 px-4 py-3 rounded-lg border border-emerald-400/30 bg-emerald-500/15 text-emerald-100 text-sm font-semibold shadow-lg backdrop-blur-sm z-50">
+                <div className="fixed bottom-6 right-6 z-50 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-4 py-3 text-sm font-semibold text-emerald-900 shadow-lg backdrop-blur-sm dark:text-emerald-100">
                     {toastMessage}
                 </div>
             )}

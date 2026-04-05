@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, type ChangeEvent, type ElementType, type InputHTMLAttributes, type ReactNode } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { useState, useEffect, useCallback, useMemo, startTransition, type ChangeEvent, type ElementType, type InputHTMLAttributes, type ReactNode } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
     X,
@@ -268,32 +268,12 @@ function validateFormStep(
 
 // ─── Sub-Components ──────────────────────────────────────────────────
 
-const Noise = () => (
-    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 mix-blend-soft-light" 
-         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2003/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} 
-    />
-);
+const Noise = () => null;
 
 const BackgroundGlow = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <motion.div 
-            animate={{ 
-                x: [0, 50, -50, 0], 
-                y: [0, -30, 30, 0],
-                scale: [1, 1.2, 0.8, 1],
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#6d9838]/20 blur-[100px] rounded-full" 
-        />
-        <motion.div 
-            animate={{ 
-                x: [0, -40, 40, 0], 
-                y: [0, 50, -50, 0],
-                scale: [1, 0.9, 1.1, 1],
-            }}
-            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/15 blur-[100px] rounded-full" 
-        />
+        <div className="absolute left-[-12%] top-[-14%] h-[45%] w-[45%] rounded-full bg-primary/12 blur-[90px]" />
+        <div className="absolute bottom-[-12%] right-[-12%] h-[42%] w-[42%] rounded-full bg-sky-500/10 blur-[90px] dark:bg-blue-500/15" />
     </div>
 );
 
@@ -319,14 +299,14 @@ const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...p
             {label && (
                 <label 
                     htmlFor={id} 
-                    className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 group-focus-within:text-primary transition-all duration-300 ml-1 cursor-pointer"
+                    className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary"
                 >
                     {label}
                 </label>
             )}
             <div className="relative isolate">
-                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl group-hover:bg-white/[0.09] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/20 group-focus-within:border-primary/50 group-focus-within:bg-white/[0.1]" />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-all duration-500 transform group-focus-within:scale-110 group-focus-within:rotate-[5deg]">
+                <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90 transition-all duration-300 group-hover:bg-card group-focus-within:border-primary/50 group-focus-within:ring-4 group-focus-within:ring-primary/20" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 transform group-focus-within:rotate-[5deg] group-focus-within:scale-110 group-focus-within:text-primary">
                     <Icon size={18} strokeWidth={1.5} />
                 </div>
                 <input
@@ -334,7 +314,7 @@ const GlassInput = ({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...p
                     id={id}
                     onKeyDown={handleKeyDown}
                     className={cn(
-                        "w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-500 font-medium tracking-tight",
+                        "h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground",
                         "focus-visible:ring-0"
                     )}
                 />
@@ -352,8 +332,8 @@ interface CardFrameProps {
 
 const CardFrame = ({ children, className, glow = true }: CardFrameProps) => (
     <div className={cn(
-        "relative rounded-[2.5rem] border border-white/[0.12] overflow-hidden bg-white/[0.05] backdrop-blur-2xl transition-all",
-        glow && "hover:border-white/25 hover:shadow-[0_0_50px_rgba(255,255,255,0.04)]",
+        "relative overflow-hidden rounded-[2.5rem] border border-border bg-card/92 backdrop-blur-2xl transition-all shadow-sm",
+        glow && "hover:border-primary/20 hover:shadow-[0_18px_38px_-28px_rgba(15,23,42,0.35)]",
         className
     )}>
         <Noise />
@@ -524,20 +504,22 @@ export function WalkInApplicationModal({
         if (validateKeys.length > 0) {
             const liveErrors = validateFormStep(step, selectedUnit, nextFormData, existingApplication);
 
-            setTouchedFields((prev) => {
-                const next = { ...prev };
-                validateKeys.forEach((key) => {
-                    next[key] = true;
+            startTransition(() => {
+                setTouchedFields((prev) => {
+                    const next = { ...prev };
+                    validateKeys.forEach((key) => {
+                        next[key] = true;
+                    });
+                    return next;
                 });
-                return next;
-            });
 
-            setFormErrors((prev) => {
-                const next = { ...prev };
-                validateKeys.forEach((key) => {
-                    next[key] = liveErrors[key];
+                setFormErrors((prev) => {
+                    const next = { ...prev };
+                    validateKeys.forEach((key) => {
+                        next[key] = liveErrors[key];
+                    });
+                    return next;
                 });
-                return next;
             });
         }
     }, [existingApplication, formData, selectedUnit, step]);
@@ -694,17 +676,16 @@ export function WalkInApplicationModal({
     if (!isOpen) return null;
 
     return (
-        <LayoutGroup>
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden p-4 sm:p-6">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+                className="absolute inset-0 bg-black/60 backdrop-blur-xl"
             />
 
-            <ToolAccessBar propertyId={currentUnit?.property_id ?? null} />
+            {currentUnit?.property_id ? <ToolAccessBar propertyId={currentUnit.property_id} /> : null}
              
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 30 }}
@@ -713,7 +694,7 @@ export function WalkInApplicationModal({
                 transition={{ type: "spring", damping: 25, stiffness: 150 }}
                 className={cn(
                     "relative w-full max-w-5xl h-[85vh] flex flex-col sm:flex-row z-10",
-                    "bg-[#141414] border border-white/[0.12] rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.7)] overflow-hidden",
+                    "overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(15,23,42,0.16)]",
                     "backdrop-blur-[60px]"
                 )}
             >
@@ -721,13 +702,13 @@ export function WalkInApplicationModal({
                 <Noise />
 
                 {/* Left Rails / Navigation */}
-                <aside className="w-full sm:w-80 p-10 border-b sm:border-b-0 sm:border-r border-white/[0.1] bg-white/[0.04] relative hidden sm:flex flex-col z-20 overflow-hidden shrink-0">
+                <aside className="relative z-20 hidden w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background/80 p-10 sm:flex sm:w-80 sm:border-b-0 sm:border-r">
                     <div className="mb-14 flex items-center gap-4">
                         <div className="h-10 w-10 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.1)]">
                             <Building2 className="text-primary w-5 h-5" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-white tracking-tighter leading-none">iReside</h2>
+                            <h2 className="text-xl font-black tracking-tighter leading-none text-foreground">iReside</h2>
                             <p className="text-primary font-black text-[9px] uppercase tracking-[0.4em] opacity-80 mt-1">MASTER PANEL</p>
                         </div>
                     </div>
@@ -745,27 +726,27 @@ export function WalkInApplicationModal({
                                     disabled={isLocked}
                                     className={cn(
                                         "group relative w-full flex items-center gap-5 p-4 rounded-2xl transition-all duration-500 text-left outline-none overflow-hidden",
-                                        isActive ? "bg-white/[0.04] translate-x-1" : "hover:bg-white/[0.02] opacity-40 hover:opacity-70"
+                                        isActive ? "translate-x-1 bg-card/95" : "opacity-55 hover:bg-muted/50 hover:opacity-85"
                                     )}
                                 >
                                     <div className={cn(
                                         "relative w-11 h-11 rounded-xl flex items-center justify-center z-10 transition-all duration-500 overflow-hidden",
-                                        isActive ? "bg-primary text-black scale-110 shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] animate-pulse" : 
+                                        isActive ? "scale-105 bg-primary text-primary-foreground shadow-[0_0_24px_rgba(var(--primary-rgb),0.24)]" : 
                                         isCompleted ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
-                                        "bg-neutral-900 border border-white/5 text-neutral-600"
+                                        "border border-border bg-background text-muted-foreground"
                                     )}>
                                         {isCompleted ? <Check size={20} strokeWidth={3} /> : <s.icon size={19} strokeWidth={isActive ? 2.5 : 1.5} />}
                                     </div>
                                     <div className="relative z-10 flex-1">
-                                        <p className={cn("font-black text-sm tracking-tight transition-all", isActive ? "text-white" : "text-neutral-400")}>
+                                        <p className={cn("font-black text-sm tracking-tight transition-all", isActive ? "text-foreground" : "text-muted-foreground")}>
                                             {s.label}
                                         </p>
-                                        <p className={cn("text-[9px] uppercase tracking-widest font-bold", isActive ? "text-primary opacity-80" : "text-neutral-600")}>
+                                        <p className={cn("text-[9px] uppercase tracking-widest font-bold", isActive ? "text-primary opacity-80" : "text-slate-500 dark:text-neutral-600")}>
                                             {s.sub}
                                         </p>
                                     </div>
                                     {isActive && (
-                                        <motion.div layoutId="rail-indicator" className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_20px_rgba(109,152,56,1)]" />
+                                        <div className="absolute left-0 top-1/2 h-6 w-1.5 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_12px_rgba(109,152,56,0.65)]" />
                                     )}
                                 </button>
                             );
@@ -775,16 +756,16 @@ export function WalkInApplicationModal({
 
                 {/* Primary Content Container */}
                 <div className="flex-1 flex flex-col relative overflow-hidden">
-                     <div className="sm:hidden border-b border-white/[0.1] bg-[#1a1a1a] backdrop-blur-md relative">
+                     <div className="relative border-b border-border bg-card/95 backdrop-blur-md sm:hidden">
                         <div className="p-6 flex items-center justify-between">
                             <div>
-                                <h2 className="text-xl font-black text-white uppercase tracking-tighter">{STEPS[step].label}</h2>
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">{STEPS[step].label}</h2>
                                 <p className="text-[9px] text-primary font-black uppercase tracking-widest">Step {step + 1} of 6</p>
                             </div>
-                            <button onClick={onClose} className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white"><X size={20}/></button>
+                            <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-xl bg-background text-foreground"><X size={20}/></button>
                         </div>
                         {/* Mobile Progress Bar */}
-                        <div className="absolute bottom-0 left-0 h-0.5 bg-white/10 w-full overflow-hidden">
+                        <div className="absolute bottom-0 left-0 h-0.5 w-full overflow-hidden bg-border">
                             <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
@@ -797,14 +778,14 @@ export function WalkInApplicationModal({
                     {/* Desktop Status Bar */}
                     <div className="hidden sm:flex px-12 py-8 items-center justify-between pointer-events-none relative z-20">
                          <div>
-                             <h1 className="text-3xl font-black text-white tracking-tighter italic">
+                             <h1 className="text-3xl font-black tracking-tighter italic text-foreground">
                                  {STEPS[step].label.toUpperCase()} <span className="text-primary">STEP</span>
                              </h1>
-                             <p className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.4em] ml-1 mt-1">Tenant Application Wizard</p>
+                             <p className="ml-1 mt-1 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Tenant Application Wizard</p>
                          </div>
                           <button 
                              onClick={onClose} 
-                             className="pointer-events-auto h-12 w-12 bg-white/5 hover:bg-red-500/20 hover:text-red-400 border border-white/10 flex items-center justify-center rounded-2xl transition-all hover:scale-110 active:scale-90 focus-visible:ring-2 focus-visible:ring-red-500/50 outline-none"
+                             className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-background text-muted-foreground transition-all hover:scale-110 hover:bg-red-500/10 hover:text-red-500 active:scale-90 focus-visible:ring-2 focus-visible:ring-red-500/50 outline-none"
                          >
                              <X size={20} />
                          </button>
@@ -815,14 +796,14 @@ export function WalkInApplicationModal({
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={step}
-                                initial={{ opacity: 0, scale: 0.95, y: 15, filter: "blur(10px)" }}
-                                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-                                exit={{ opacity: 0, scale: 1.05, y: -15, filter: "blur(10px)" }}
-                                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
                                 className="h-full"
                             >
                                 {error && (
-                                    <div className="mb-10 p-5 bg-red-500/5 border border-red-500/20 rounded-2xl flex items-center gap-4 text-red-400 text-sm font-bold backdrop-blur-sm animate-shake">
+                                    <div className="mb-10 flex items-center gap-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-5 text-sm font-bold text-red-700 backdrop-blur-sm animate-shake dark:text-red-400">
                                         <AlertCircle size={20} /> {error}
                                     </div>
                                 )}
@@ -833,12 +814,12 @@ export function WalkInApplicationModal({
                                             <section className="space-y-6">
                                                   <div className="flex items-center gap-4 text-primary">
                                                      <MapPin size={18} strokeWidth={2.5} />
-                                                     <label htmlFor="unit-select" className="text-[11px] font-black uppercase tracking-[0.3em] text-neutral-400 cursor-pointer">Select Unit</label>
+                                                  <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Select Unit</label>
                                                  </div>
                                                 
                                                 <CardFrame className="!p-0" glow={false}>
                                                     <div className="relative group">
-                                                        <Building className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-all duration-300 pointer-events-none" size={20} />
+                                                     <Building className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-300 group-focus-within:text-primary" size={20} />
                                                          <select
                                                              id="unit-select"
                                                              value={selectedUnit}
@@ -851,26 +832,26 @@ export function WalkInApplicationModal({
                                                              }}
                                                              disabled={!!existingApplication}
                                                              className={cn(
-                                                                 "w-full h-20 bg-transparent pl-16 pr-12 text-white text-lg font-black outline-none transition-all appearance-none cursor-pointer tracking-tighter disabled:opacity-50",
+                                                                 "w-full h-20 appearance-none cursor-pointer bg-transparent pl-16 pr-12 text-lg font-black tracking-tighter text-foreground outline-none transition-all disabled:opacity-50",
                                                                  "focus-visible:ring-4 focus-visible:ring-primary/10",
                                                                  formErrors.unit && "text-red-400"
                                                              )}
                                                          >
-                                                            <option value="" className="bg-[#1a1a1a] text-sm">Select Target Unit...</option>
-                                                            {units.map((u) => (
-                                                                <option key={u.id} value={u.id} className="bg-[#1a1a1a] text-sm py-4">
+                                                            <option value="" className="bg-card text-sm text-foreground">Select Target Unit...</option>
+                                                             {units.map((u) => (
+                                                                <option key={u.id} value={u.id} className="bg-card py-4 text-sm text-foreground">
                                                                     {u.name} — {u.property_name}
                                                                 </option>
                                                             ))}
                                                         </select>
-                                                        <ArrowRight size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-neutral-700 rotate-90 pointer-events-none" />
+                                                        <ArrowRight size={20} className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 rotate-90 text-muted-foreground" />
                                                     </div>
                                                 </CardFrame>
                                                 {formErrors.unit && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
                                                 {currentUnit && (
                                                     <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
                                                          <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
-                                                        <span className="text-lg font-black text-white italic">₱{currentUnit.rent_amount.toLocaleString()}</span>
+                                                        <span className="text-lg font-black italic text-foreground">₱{currentUnit.rent_amount.toLocaleString()}</span>
                                                     </motion.div>
                                                 )}
                                             </section>
@@ -916,12 +897,12 @@ export function WalkInApplicationModal({
 
                                                  {/* Move-in Date */}
                                                  <div className="space-y-2.5 group">
-                                                     <label htmlFor="move-in-date" className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 group-focus-within:text-primary transition-all duration-300 ml-1 cursor-pointer">
+                                                     <label htmlFor="move-in-date" className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary">
                                                          Move-in Date
                                                      </label>
                                                      <div className="relative isolate">
-                                                         <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl group-hover:bg-white/[0.09] transition-all duration-300 -z-10 group-focus-within:ring-4 group-focus-within:ring-primary/20 group-focus-within:border-primary/50 group-focus-within:bg-white/[0.1]" />
-                                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-all duration-500">
+                                                         <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90 transition-all duration-300 group-hover:bg-card group-focus-within:border-primary/50 group-focus-within:ring-4 group-focus-within:ring-primary/20" />
+                                                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all duration-500 group-focus-within:text-primary">
                                                              <MapPin size={18} strokeWidth={1.5} />
                                                          </div>
                                                          <input
@@ -929,7 +910,7 @@ export function WalkInApplicationModal({
                                                              type="date"
                                                              value={formData.move_in_date}
                                                              onChange={(e) => updateField("move_in_date", e.target.value, ["move_in_date"])}
-                                                             className="w-full h-15 bg-transparent rounded-2xl pl-12 pr-4 text-white text-sm outline-none transition-all py-4 placeholder:text-neutral-500 font-medium tracking-tight focus-visible:ring-0 [color-scheme:dark]"
+                                                             className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0 [color-scheme:light] dark:[color-scheme:dark]"
                                                          />
                                                      </div>
                                                      {formErrors.move_in_date && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.move_in_date}</p>}
@@ -1016,17 +997,17 @@ export function WalkInApplicationModal({
                                         </section>
 
                                         <section className="space-y-6">
-                                              <div className="flex items-center gap-4 text-neutral-400">
-                                                 <FileCheck size={18} strokeWidth={2.5} />
-                                                 <label htmlFor="additional-notes" className="text-[11px] font-black uppercase tracking-[0.3em] text-neutral-400 cursor-pointer">Additional Notes</label>
-                                             </div>
+                                              <div className="flex items-center gap-4 text-muted-foreground">
+                                                  <FileCheck size={18} strokeWidth={2.5} />
+                                                 <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">Additional Notes</label>
+                                              </div>
                                             <div className="relative isolate">
-                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-[2rem] -z-10 hover:bg-white/[0.08] transition-all duration-300" />
+                                                <div className="absolute inset-0 -z-10 rounded-[2rem] border border-border bg-card/90 transition-all duration-300 hover:bg-card" />
                                                 <textarea
                                                      id="additional-notes"
                                                      placeholder="Add internal notes about the applicant's character, urgent requests, or specific unit adjustments here..."
                                                      className={cn(
-                                                         "w-full bg-transparent p-7 text-white text-sm outline-none transition-all min-h-[180px] resize-none leading-relaxed font-medium placeholder:text-neutral-500",
+                                                         "min-h-[180px] w-full resize-none bg-transparent p-7 text-sm font-medium leading-relaxed text-foreground outline-none transition-all placeholder:text-muted-foreground",
                                                          "focus-visible:ring-4 focus-visible:ring-primary/20"
                                                      )}
                                                      value={formData.message}
@@ -1050,8 +1031,8 @@ export function WalkInApplicationModal({
                                              </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {Object.entries(formData.requirements_checklist).map(([key, value], idx) => (
+                                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                 {Object.entries(formData.requirements_checklist).map(([key, value], idx) => (
                                                 <motion.button
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
@@ -1060,23 +1041,23 @@ export function WalkInApplicationModal({
                                                     onClick={() => toggleRequirement(key)}
                                                     className={cn(
                                                         "w-full h-24 rounded-[2rem] border transition-all duration-500 flex items-center justify-between px-8 group relative overflow-hidden text-left",
-                                                        value 
-                                                            ? "bg-emerald-500/5 border-emerald-500/30 shadow-[0_10px_30px_rgba(16,185,129,0.1)]" 
-                                                            : "bg-white/[0.05] border-white/[0.12] hover:bg-white/[0.08] hover:border-white/25"
-                                                    )}
-                                                >
+                                                            value 
+                                                                ? "bg-emerald-500/5 border-emerald-500/30 shadow-[0_10px_30px_rgba(16,185,129,0.1)]" 
+                                                                : "bg-card/90 border-border hover:bg-card hover:border-primary/20"
+                                                        )}
+                                                    >
                                                     <div className="relative z-10 flex items-center gap-6">
                                                         <div className={cn(
                                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            value ? "bg-emerald-500 text-black shadow-lg" : "bg-white/[0.1] text-neutral-400"
+                                                            value ? "bg-emerald-500 text-black shadow-lg" : "bg-background text-muted-foreground"
                                                         )}>
                                                             {value ? <Check size={20} strokeWidth={3} /> : <FileCheck size={20} />}
                                                         </div>
                                                         <div>
-                                                            <p className={cn("text-base font-black tracking-tight transition-colors", value ? "text-white" : "text-neutral-400")}>
+                                                            <p className={cn("text-base font-black tracking-tight transition-colors", value ? "text-foreground" : "text-muted-foreground")}>
                                                                 {REQUIREMENT_LABELS[key]}
                                                             </p>
-                                                            <p className={cn("text-[9px] uppercase tracking-[0.2em] font-bold mt-0.5", value ? "text-emerald-500/70" : "text-neutral-600")}>
+                                                            <p className={cn("mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em]", value ? "text-emerald-700/70 dark:text-emerald-500/70" : "text-slate-500 dark:text-neutral-600")}>
                                                                 {value ? "Verified Success" : "Awaiting Audit"}
                                                             </p>
                                                         </div>
@@ -1087,7 +1068,7 @@ export function WalkInApplicationModal({
                                                                 <Check size={14} strokeWidth={4} />
                                                             </div>
                                                         ) : (
-                                                            <div className="w-8 h-8 rounded-full border-2 border-dashed border-white/10 group-hover:border-primary/50 group-hover:rotate-180 transition-all duration-700" />
+                                                            <div className="h-8 w-8 rounded-full border-2 border-dashed border-border transition-all duration-700 group-hover:rotate-180 group-hover:border-primary/50" />
                                                         )}
                                                     </div>
                                                     
@@ -1142,63 +1123,63 @@ export function WalkInApplicationModal({
 
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                                         <div className="space-y-2.5 group">
-                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 Start Date
                                                             </label>
                                                             <div className="relative isolate">
-                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                                <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
                                                                 <input
                                                                     type="date"
                                                                     value={leaseData.start_date}
                                                                     onChange={(e) => setLeaseData({ ...leaseData, start_date: e.target.value })}
-                                                                    className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
+                                                                    className="h-15 w-full rounded-2xl bg-transparent px-4 py-4 text-sm font-medium text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2.5 group">
-                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 End Date
                                                             </label>
                                                             <div className="relative isolate">
-                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
+                                                                <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
                                                                 <input
                                                                     type="date"
                                                                     value={leaseData.end_date}
                                                                     onChange={(e) => setLeaseData({ ...leaseData, end_date: e.target.value })}
-                                                                    className="w-full h-15 bg-transparent rounded-2xl px-4 text-white text-sm outline-none py-4 font-medium [color-scheme:dark]"
+                                                                    className="h-15 w-full rounded-2xl bg-transparent px-4 py-4 text-sm font-medium text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2.5 group">
-                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 Monthly Rent
                                                             </label>
                                                             <div className="relative isolate">
-                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
-                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
+                                                                <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
+                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 font-medium text-muted-foreground">₱</div>
                                                                 <input
                                                                     type="number"
                                                                     value={leaseData.monthly_rent}
                                                                     onChange={(e) => setLeaseData({ ...leaseData, monthly_rent: parseFloat(e.target.value) || 0 })}
-                                                                    className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
+                                                                    className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium text-foreground outline-none"
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2.5 group">
-                                                            <label className="text-[11px] font-black uppercase tracking-[0.25em] text-neutral-400 ml-1">
+                                                            <label className="ml-1 text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
                                                                 Security Deposit
                                                             </label>
                                                             <div className="relative isolate">
-                                                                <div className="absolute inset-0 bg-white/[0.06] border border-white/[0.12] rounded-2xl -z-10" />
-                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">₱</div>
+                                                                <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
+                                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 font-medium text-muted-foreground">₱</div>
                                                                 <input
                                                                     type="number"
                                                                     value={leaseData.security_deposit}
                                                                     onChange={(e) => setLeaseData({ ...leaseData, security_deposit: parseFloat(e.target.value) || 0 })}
-                                                                    className="w-full h-15 bg-transparent rounded-2xl pl-8 pr-4 text-white text-sm outline-none py-4 font-medium"
+                                                                    className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium text-foreground outline-none"
                                                                 />
                                                             </div>
                                                         </div>
@@ -1225,7 +1206,7 @@ export function WalkInApplicationModal({
 
                                                             {!leaseData.tenant_signature ? (
                                                                 <div className="space-y-3">
-                                                                    <p className="text-xs text-neutral-400 px-1">Tenant must sign first before landlord can countersign</p>
+                                                            <p className="px-1 text-xs text-muted-foreground">Tenant must sign first before landlord can countersign</p>
                                                                     <SignaturePad
                                                                         onSave={(dataUrl) => setLeaseData({ ...leaseData, tenant_signature: dataUrl })}
                                                                         onClear={() => setLeaseData({ ...leaseData, tenant_signature: null })}
@@ -1239,7 +1220,7 @@ export function WalkInApplicationModal({
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setLeaseData({ ...leaseData, tenant_signature: null, landlord_signature: null })}
-                                                                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all"
+                                                                        className="h-12 w-full rounded-xl border border-border bg-background text-sm font-bold uppercase tracking-wider text-foreground transition-all hover:bg-muted"
                                                                     >
                                                                         Clear & Re-sign
                                                                     </button>
@@ -1264,7 +1245,7 @@ export function WalkInApplicationModal({
 
                                                             {!leaseData.tenant_signature ? (
                                                                 <div className="p-6 rounded-2xl border border-neutral-500/30 bg-neutral-500/5">
-                                                                    <p className="text-sm text-neutral-400 text-center">Waiting for tenant signature first...</p>
+                                                    <p className="text-center text-sm text-muted-foreground">Waiting for tenant signature first...</p>
                                                                 </div>
                                                             ) : !leaseData.landlord_signature ? (
                                                                 <SignaturePad
@@ -1279,7 +1260,7 @@ export function WalkInApplicationModal({
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setLeaseData({ ...leaseData, landlord_signature: null })}
-                                                                        className="w-full h-12 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm uppercase tracking-wider transition-all"
+                                                                        className="h-12 w-full rounded-xl border border-border bg-background text-sm font-bold uppercase tracking-wider text-foreground transition-all hover:bg-muted"
                                                                     >
                                                                         Clear & Re-sign
                                                                     </button>
@@ -1297,10 +1278,10 @@ export function WalkInApplicationModal({
                                                                 <Mail className="text-blue-400 shrink-0 mt-1" size={20} />
                                                                 <div className="space-y-2">
                                                                     <p className="text-sm font-medium text-blue-200">Remote Signing Selected</p>
-                                                                    <p className="text-xs text-neutral-400 leading-relaxed">
+                                                    <p className="text-xs leading-relaxed text-muted-foreground">
                                                                         A signing link will be emailed to the tenant. The landlord signature will be added after the tenant signs remotely.
                                                                     </p>
-                                                                    <p className="text-xs text-neutral-500 leading-relaxed">
+                                                    <p className="text-xs leading-relaxed text-slate-500 dark:text-neutral-500">
                                                                         This option is available only after the application is approved.
                                                                     </p>
                                                                 </div>
@@ -1421,11 +1402,7 @@ export function WalkInApplicationModal({
                                                      allRequirementsMet ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-amber-500/10 border-amber-500 text-amber-500"
                                                  )}>
                                                      {allRequirementsMet ? <CheckCircle2 size={40} strokeWidth={2.5}/> : <AlertCircle size={40} strokeWidth={2.5} />}
-                                                     <motion.div 
-                                                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                        className={cn("absolute inset-0 rounded-[2.5rem] border-inherit blur-xl", allRequirementsMet ? "bg-emerald-500" : "bg-amber-500")}
-                                                     />
+                                                     <div className={cn("absolute inset-0 rounded-[2.5rem] border-inherit blur-xl opacity-35", allRequirementsMet ? "bg-emerald-500" : "bg-amber-500")} />
                                                  </div>
                                                  <div className="text-center sm:text-left space-y-3">
                                                      <div className="flex items-center gap-3 justify-center sm:justify-start">
@@ -1433,10 +1410,10 @@ export function WalkInApplicationModal({
                                                               {allRequirementsMet ? "Ready to Move In" : "Pending Review"}
                                                          </span>
                                                      </div>
-                                                      <h3 className="text-5xl font-black text-white tracking-tight italic">
+                                                      <h3 className="text-5xl font-black tracking-tight italic text-foreground">
                                                           {allRequirementsMet ? "APPROVED" : "PENDING"}
                                                       </h3>
-                                                     <p className="text-neutral-400 text-sm font-bold max-w-lg leading-relaxed mix-blend-plus-lighter opacity-80">
+                                                     <p className="max-w-lg text-sm font-bold leading-relaxed text-muted-foreground">
                                                          {allRequirementsMet 
                                                              ? "Verification pass complete. Finalizing this will immediately allocate the asset and generate relevant legal documentation." 
                                                              : "Verification threshold not met. System will store applicant data but require physical documents before asset handover."}
@@ -1445,64 +1422,64 @@ export function WalkInApplicationModal({
                                              </div>
                                         </CardFrame>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Unit Name</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter">{currentUnit?.name || "N/A"}</p>
+                                             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                                                 <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Name</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">{currentUnit?.name || "N/A"}</p>
                                                  <div className="pt-2">
                                                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">{currentUnit?.property_name}</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Applicant Name</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter">{formData.applicant_name || "Guest"}</p>
+                                             <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Applicant Name</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">{formData.applicant_name || "Guest"}</p>
                                                  <div className="pt-2">
                                                      <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] break-all">{formData.applicant_email}</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Monthly Income</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter uppercase italic">₱{Number(formData.employment_info.monthly_income).toLocaleString()}</p>
+                                             <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Income</p>
+                                                 <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">₱{Number(formData.employment_info.monthly_income).toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">Verified Monthly</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Verified Monthly</p>
                                                  </div>
                                              </div>
                                              <div className="p-7 rounded-[2rem] bg-primary/10 border border-primary/20 space-y-4 shadow-lg shadow-primary/5">
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">Monthly Rent</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter italic">₱{leaseData.monthly_rent.toLocaleString()}</p>
+                                                 <p className="text-2xl font-black tracking-tighter italic text-foreground">₱{leaseData.monthly_rent.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                                                      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">Locked Rate</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Lease Period</p>
-                                                 <p className="text-lg font-black text-white tracking-tighter">{leaseData.start_date} to {leaseData.end_date}</p>
+                                             <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Lease Period</p>
+                                                 <p className="text-lg font-black tracking-tighter text-foreground">{leaseData.start_date} to {leaseData.end_date}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">12 Months</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">12 Months</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Security Deposit</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter">₱{leaseData.security_deposit.toLocaleString()}</p>
+                                             <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">₱{leaseData.security_deposit.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">{paymentData.security_deposit_payment.status === "completed" ? "Paid" : "Pending"}</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{paymentData.security_deposit_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Advance Payment</p>
-                                                 <p className="text-2xl font-black text-white tracking-tighter">₱{paymentData.advance_payment.amount.toLocaleString()}</p>
+                                             <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Advance Payment</p>
+                                                 <p className="text-2xl font-black tracking-tighter text-foreground">₱{paymentData.advance_payment.amount.toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                                                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.3em]">{paymentData.advance_payment.status === "completed" ? "Paid" : "Pending"}</p>
+                                                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">{paymentData.advance_payment.status === "completed" ? "Paid" : "Pending"}</p>
                                                  </div>
                                              </div>
-                                             <div className="p-7 rounded-[2rem] bg-white/[0.06] border border-white/[0.12] space-y-4">
-                                                  <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Emergency Contact</p>
-                                                 <p className="text-xl font-black text-white tracking-tighter">{formData.emergency_contact_name || "—"}</p>
+                                             <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
+                                                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Emergency Contact</p>
+                                                 <p className="text-xl font-black tracking-tighter text-foreground">{formData.emergency_contact_name || "—"}</p>
                                                  <div className="pt-2">
                                                      <p className="text-[9px] font-black text-red-400 uppercase tracking-[0.3em]">{formData.emergency_contact_phone || "—"}</p>
                                                  </div>
@@ -1514,8 +1491,8 @@ export function WalkInApplicationModal({
                                             <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-4">
                                                 <Check className="text-purple-500" size={24} />
                                                 <div>
-                                                    <p className="text-sm font-black text-white">Landlord Signature Captured</p>
-                                                    <p className="text-xs text-neutral-400">Tenant will receive signing link via email</p>
+                                                    <p className="text-sm font-black text-foreground">Landlord Signature Captured</p>
+                                                    <p className="text-xs text-muted-foreground">Tenant will receive signing link via email</p>
                                                 </div>
                                             </div>
                                         )}
@@ -1526,14 +1503,14 @@ export function WalkInApplicationModal({
                     </div>
 
                     {/* Footer / Unified Action Bridge */}
-                    <div className="p-8 sm:px-12 bg-[#1a1a1a] border-t border-white/[0.1] flex items-center justify-between gap-6 backdrop-blur-3xl relative z-30">
+                    <div className="relative z-30 flex items-center justify-between gap-6 border-t border-border bg-card/95 p-8 backdrop-blur-3xl sm:px-12">
                         <div className="flex gap-4 w-full sm:w-auto">
                             {step > 0 && (
                                 <button
                                     onClick={() => setStep(step - 1)}
-                                    className="h-16 px-10 rounded-[1.25rem] bg-white/5 border border-white/10 text-white font-black transition-all flex items-center justify-center gap-3 active:scale-95 hover:bg-white/10 group overflow-hidden relative"
+                                    className="group relative flex h-16 items-center justify-center gap-3 overflow-hidden rounded-[1.25rem] border border-border bg-background px-10 font-black text-foreground transition-all hover:bg-muted active:scale-95"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                    <div className="absolute inset-0 -translate-x-[100%] bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-1000 group-hover:translate-x-[100%] dark:via-white/5" />
                                     <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> 
                                     <span className="hidden sm:inline tracking-tighter text-sm uppercase">Prev</span>
                                 </button>
@@ -1544,7 +1521,7 @@ export function WalkInApplicationModal({
                             {step < 5 ? (
                                 <button
                                     onClick={handleContinue}
-                                    className="group flex-1 h-16 rounded-[1.25rem] bg-primary text-black font-black transition-all flex items-center justify-center gap-4 shadow-[0_15px_45px_rgba(var(--primary-rgb),0.25)] hover:shadow-primary/40 active:scale-[0.98] relative overflow-hidden"
+                                    className="group relative flex h-16 flex-1 items-center justify-center gap-4 overflow-hidden rounded-[1.25rem] bg-primary font-black text-primary-foreground shadow-[0_15px_45px_rgba(var(--primary-rgb),0.25)] transition-all hover:bg-primary/90 hover:shadow-primary/40 active:scale-[0.98]"
                                 >
                                     <div className="absolute inset-x-0 bottom-0 h-1.5 bg-black/10 transition-all duration-300 group-hover:h-2" />
                                      <span className="text-lg uppercase tracking-tight italic">Continue</span>
@@ -1556,7 +1533,7 @@ export function WalkInApplicationModal({
                                         <button
                                             onClick={() => handleSubmit(true)}
                                             disabled={submitting}
-                                            className="group px-8 h-16 rounded-[1.25rem] bg-amber-500/10 border border-amber-500/20 text-amber-500 font-black transition-all flex items-center justify-center gap-3 hover:bg-amber-500/20 active:scale-95"
+                                            className="group flex h-16 items-center justify-center gap-3 rounded-[1.25rem] border border-amber-500/20 bg-amber-500/10 px-8 font-black text-amber-700 transition-all hover:bg-amber-500/20 active:scale-95 dark:text-amber-500"
                                         >
                                             <Save size={20} className="group-hover:scale-110 transition-transform" />                                             <span className="uppercase tracking-tight text-xs">Save as Draft</span>
                                         </button>
@@ -1568,7 +1545,7 @@ export function WalkInApplicationModal({
                                             "flex-1 h-16 rounded-[1.25rem] font-black transition-all flex items-center justify-center gap-4 active:scale-[0.98] shadow-2xl group overflow-hidden relative",
                                             allRequirementsMet 
                                                 ? "bg-emerald-500 text-black shadow-emerald-500/20" 
-                                                : "bg-primary text-black shadow-primary/20"
+                                                : "bg-primary text-primary-foreground shadow-primary/20"
                                         )}
                                     >
                                         <div className="absolute inset-0 bg-white/10 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500" />
@@ -1584,6 +1561,5 @@ export function WalkInApplicationModal({
                 </div>
             </motion.div>
         </div>
-        </LayoutGroup>
     );
 }

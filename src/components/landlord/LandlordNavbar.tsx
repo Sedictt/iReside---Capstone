@@ -53,7 +53,10 @@ export function LandlordNavbar() {
                         <p className="max-w-[150px] truncate text-xs text-muted-foreground">{profile?.email || user?.email}</p>
                     </div>
                     <button
-                        onClick={signOut}
+                        type="button"
+                        onClick={() => {
+                            void signOut()
+                        }}
                         className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-red-500/15 text-red-500 ring-2 ring-border transition-colors hover:bg-red-500/25"
                         title="Log Out"
                     >

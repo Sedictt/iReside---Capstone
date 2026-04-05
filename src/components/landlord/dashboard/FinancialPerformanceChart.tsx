@@ -13,6 +13,7 @@ import { Bar } from "react-chartjs-2";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 
 ChartJS.register(
     CategoryScale,
@@ -41,6 +42,8 @@ type FinancialPerformanceChartProps = {
 export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow }: FinancialPerformanceChartProps) {
     void simplifiedMode;
     const [activeTab, setActiveTab] = useState<"earnings" | "expenses" | "netIncome">("earnings");
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme !== "light";
 
     const [timeWindow, setTimeWindow] = useState<"week" | "month" | "year">("month");
 
@@ -126,7 +129,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                 enabled: false, // Disable tooltip since we're using datalabels now
             },
             datalabels: {
-                color: '#f8fafc',
+                color: isDark ? '#f8fafc' : '#334155',
                 align: 'end' as const,
                 anchor: 'end' as const,
                 font: { weight: 'bold' as const, size: 12 },
@@ -141,19 +144,19 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                     drawBorder: false
                 },
                 ticks: {
-                    color: '#64748b',
+                    color: isDark ? '#94a3b8' : '#64748b',
                     font: { size: 12 }
                 }
             },
             y: {
                 grid: {
-                    color: '#334155',
+                    color: isDark ? 'rgba(51, 65, 85, 0.9)' : 'rgba(203, 213, 225, 0.9)',
                     drawBorder: false,
                     lineWidth: 1,
                 },
                 border: { display: false },
                 ticks: {
-                    color: '#64748b',
+                    color: isDark ? '#94a3b8' : '#64748b',
                     callback: (val: string | number) => `₱${val}`,
                     padding: 10,
                     font: { size: 12 }
@@ -175,7 +178,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-[#1e293b]/30 rounded-xl border border-white/5 p-6 backdrop-blur-sm">
+        <div className="flex h-full w-full flex-col rounded-2xl border border-border bg-card/95 p-6 shadow-sm backdrop-blur-sm">
             {/* Header / Tabs */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-8">
@@ -183,7 +186,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                         onClick={() => setActiveTab("earnings")}
                         className={cn(
                             "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
-                            activeTab === "earnings" ? "text-white" : "text-slate-500 hover:text-slate-300"
+                            activeTab === "earnings" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         {activeTab === "earnings" && (
@@ -195,7 +198,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                         onClick={() => setActiveTab("expenses")}
                         className={cn(
                             "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
-                            activeTab === "expenses" ? "text-white" : "text-slate-500 hover:text-slate-300"
+                            activeTab === "expenses" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         {activeTab === "expenses" && (
@@ -207,7 +210,7 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                         onClick={() => setActiveTab("netIncome")}
                         className={cn(
                             "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
-                            activeTab === "netIncome" ? "text-white" : "text-slate-500 hover:text-slate-300"
+                            activeTab === "netIncome" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         {activeTab === "netIncome" && (
@@ -222,13 +225,13 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                     <select
                         value={timeWindow}
                         onChange={(e) => setTimeWindow(e.target.value as "week" | "month" | "year")}
-                        className="appearance-none bg-neutral-900/50 border border-white/10 text-slate-300 text-sm py-2 pl-4 pr-10 rounded-lg hover:bg-neutral-800/80 transition-colors focus:outline-none focus:ring-1 focus:ring-slate-500 cursor-pointer"
+                        className="cursor-pointer appearance-none rounded-lg border border-border bg-background py-2 pl-4 pr-10 text-sm text-foreground transition-colors hover:bg-muted focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
                     >
-                        <option value="week" className="bg-neutral-900">This Week</option>
-                        <option value="month" className="bg-neutral-900">This Month</option>
-                        <option value="year" className="bg-neutral-900">This Year</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
                     </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
                         <ChevronDown className="h-4 w-4" />
                     </div>
                 </div>

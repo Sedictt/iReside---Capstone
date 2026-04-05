@@ -161,7 +161,10 @@ export function ProfileWidget() {
                             <div className="my-1.5 h-px bg-border dark:bg-white/10"></div>
 
                             <button
-                                onClick={signOut}
+                                type="button"
+                                onClick={() => {
+                                    void signOut();
+                                }}
                                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors group text-left"
                             >
                                 <LogOut className="h-4 w-4" />

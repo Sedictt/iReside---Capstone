@@ -108,3 +108,4 @@ node_modules/
 /.windsurf
 /openspec
 /docs/.outdated-docs
+/tmp

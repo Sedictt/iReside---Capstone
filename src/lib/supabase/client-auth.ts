@@ -1,5 +1,20 @@
 import { createClient } from "./client"
 
+const CLIENT_SIGN_OUT_TIMEOUT_MS = 1500
+
+async function signOutWithTimeout() {
+    const supabase = createClient()
+
+    return Promise.race([
+        supabase.auth.signOut({ scope: 'global' }),
+        new Promise<{ error: Error }>((resolve) => {
+            window.setTimeout(() => {
+                resolve({ error: new Error(`Client sign-out timed out after ${CLIENT_SIGN_OUT_TIMEOUT_MS}ms`) })
+            }, CLIENT_SIGN_OUT_TIMEOUT_MS)
+        }),
+    ])
+}
+
 /**
  * Unified, fully destructive sign-out function.
  *
@@ -12,11 +27,10 @@ import { createClient } from "./client"
  * Use this function from client components for consistent sign-out behavior.
  */
 export async function signOut() {
-    const supabase = createClient()
-
     try {
-        // Clear browser session AND invalidate refresh token globally
-        const { error } = await supabase.auth.signOut({ scope: 'global' })
+        // Clear browser session AND invalidate refresh token globally, but do not
+        // let a hanging client request trap the user on a protected page.
+        const { error } = await signOutWithTimeout()
         if (error) {
             console.error('Supabase global signOut failed:', error)
         }
@@ -41,18 +55,8 @@ export async function signOut() {
         console.warn('Could not clear custom storage:', e)
     }
 
-    // Ask the server to clear middleware-visible cookies (non-blocking)
-    void fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-        cache: 'no-store',
-        keepalive: true,
-    }).catch((error) => {
-        console.error('Server logout request failed:', error)
-    })
-
-    // Always leave protected routes immediately with cache-busting URL
-    // This prevents back-button access to cached pages
+    // Route logout through the server so middleware-visible cookies are
+    // definitely cleared before we land on the login page.
     const timestamp = Date.now()
-    window.location.replace(`/login?logout=${timestamp}`)
+    window.location.replace(`/auth/logout?logout=${timestamp}`)
 }

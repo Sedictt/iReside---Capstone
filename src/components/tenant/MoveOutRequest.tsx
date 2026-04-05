@@ -32,19 +32,22 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
         <>
             {variant === "sidebar" ? (
                 /* Sidebar Card Trigger */
-                <div className="rounded-2xl border border-red-500/20 bg-red-950/20 p-6 backdrop-blur-sm relative overflow-hidden group flex-shrink-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-50" />
+                <div className="rounded-3xl border border-border/60 bg-card p-6 relative overflow-hidden group flex-shrink-0 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.16)]">
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.045] via-transparent to-transparent opacity-80" />
+                    <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-red-400/80 via-red-300/35 to-transparent" />
                     <div className="relative z-10">
-                        <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                            <LogOut className="w-5 h-5 text-red-400" />
+                        <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 border border-red-500/15 shadow-sm">
+                                <LogOut className="w-4.5 h-4.5" />
+                            </span>
                             End of Lease
                         </h3>
-                        <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                             Planning to move out? You must initiate a digital clearance request before leaving the property.
                         </p>
                         <button
                             onClick={handleRequest}
-                            className="w-full py-3 rounded-xl bg-red-500/10 text-red-400 font-semibold hover:bg-red-500 hover:text-white transition-all border border-red-500/20"
+                            className="w-full py-3 rounded-xl bg-red-500/10 text-red-600 font-semibold hover:bg-red-500/15 transition-all border border-red-500/20"
                         >
                             Request Move-Out
                         </button>

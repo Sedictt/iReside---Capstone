@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
   <diagram id="ireside-use-case-main" name="iReside Use Case Diagram">
-    <mxGraphModel dx="595" dy="385" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+    <mxGraphModel dx="1489" dy="963" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -14,7 +14,7 @@
           <mxGeometry height="170" width="90" x="20" y="110" as="geometry" />
         </mxCell>
         <mxCell id="actor-landlord" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" value="Landlord" vertex="1">
-          <mxGeometry height="170" width="90" x="60" y="470" as="geometry" />
+          <mxGeometry height="170" width="90" y="560" as="geometry" />
         </mxCell>
         <mxCell id="actor-tenant" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" value="Tenant" vertex="1">
           <mxGeometry height="170" width="90" x="1580" y="60" as="geometry" />

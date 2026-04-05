@@ -136,7 +136,7 @@ export function KpiCard({
     };
 
     return (
-        <div className={cn("relative flex flex-col justify-between overflow-visible rounded-3xl bg-gradient-to-br from-[#171717] to-[#0a0a0a] shadow-xl border border-white/5", className)}>
+        <div className={cn("relative flex flex-col justify-between overflow-visible rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_14px_32px_-26px_rgba(15,23,42,0.22)] dark:border-white/5 dark:from-[#171717] dark:via-[#111111] dark:to-[#0a0a0a] dark:shadow-xl", className)}>
 
             {/* AI Helper Widget */}
             {!simplifiedMode && (
@@ -156,16 +156,16 @@ export function KpiCard({
                                 initial={{ opacity: 0, y: 5, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                                className="absolute right-0 top-10 w-64 p-4 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 pointer-events-none"
+                                className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur-xl pointer-events-none"
                             >
                                 <div className="flex items-center gap-2 mb-2">
                                     <CircleHelp className="h-4 w-4 text-primary" />
                                     <span className="text-sm font-bold text-primary">i.R.i.s. Insight</span>
                                 </div>
-                                <p className="text-sm text-neutral-300 leading-relaxed font-medium">
+                                <p className="text-sm font-medium leading-relaxed text-foreground">
                                     {insightSummary}
                                 </p>
-                                <div className="mt-3 pt-2 border-t border-white/10 flex items-center gap-1.5 bg-primary/5 rounded-lg px-2 py-1.5">
+                                <div className="mt-3 flex items-center gap-1.5 rounded-lg border-t border-border bg-primary/5 px-2 py-1.5 pt-2">
                                     <svg
                                         className="h-3.5 w-3.5 text-primary animate-pulse"
                                         fill="none"
@@ -198,34 +198,34 @@ export function KpiCard({
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#171717] border border-white/10 rounded-2xl shadow-2xl z-[101] p-6"
+                                className="fixed left-1/2 top-1/2 z-[101] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-6 shadow-2xl"
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
                                         <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                                             <CircleHelp className="h-5 w-5 text-primary" />
                                         </div>
-                                        <h3 className="text-lg font-bold text-white">i.R.i.s. Analysis: {title}</h3>
+                                        <h3 className="text-lg font-bold text-foreground">i.R.i.s. Analysis: {title}</h3>
                                     </div>
                                     <button
                                         onClick={() => setShowAiModal(false)}
-                                        className="p-1 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+                                        className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     >
                                         <X className="h-5 w-5" />
                                     </button>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
-                                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Current Status</h4>
-                                        <p className="text-sm text-white leading-relaxed">
+                                    <div className="rounded-xl border border-border bg-muted/30 p-4">
+                                        <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Current Status</h4>
+                                        <p className="text-sm leading-relaxed text-foreground">
                                             {insightStatus}
                                         </p>
                                     </div>
 
-                                    <div className="p-4 rounded-xl bg-neutral-900 border border-white/5">
-                                        <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Recommendation</h4>
-                                        <p className="text-sm text-neutral-300 leading-relaxed">
+                                    <div className="rounded-xl border border-border bg-muted/30 p-4">
+                                        <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Recommendation</h4>
+                                        <p className="text-sm leading-relaxed text-foreground">
                                             {insightRecommendation}
                                         </p>
                                     </div>
@@ -248,15 +248,15 @@ export function KpiCard({
             <div className="p-6 pb-2 z-10 w-full">
                 <div className="flex items-center gap-2 mb-3">
                     <span className={cn("h-2 w-2 rounded-full", iconColor)}></span>
-                    <span className="text-sm font-medium text-neutral-300 tracking-wide">{displayTitle}</span>
+                    <span className="text-sm font-medium tracking-wide text-slate-600 dark:text-neutral-300">{displayTitle}</span>
                 </div>
 
-                <h3 className="text-3xl font-bold text-white mb-2 tracking-tight">{value}</h3>
+                <h3 className="mb-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">{value}</h3>
 
                 <p className={cn(
                     "text-sm font-medium",
-                    changeType === "positive" ? "text-emerald-400" :
-                        changeType === "negative" ? "text-red-400" : "text-neutral-400"
+                    changeType === "positive" ? "text-emerald-600 dark:text-emerald-400" :
+                        changeType === "negative" ? "text-red-600 dark:text-red-400" : "text-slate-500 dark:text-neutral-400"
                 )}>
                     {displayChange}
                 </p>
@@ -271,7 +271,7 @@ export function KpiCard({
                     />
 
                     {/* Overlay Arrow Button */}
-                    <button className="absolute bottom-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800/80 text-neutral-400 transition-colors hover:bg-neutral-700 hover:text-white backdrop-blur-md border border-white/5">
+                    <button className="absolute bottom-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-slate-500 backdrop-blur-md transition-colors hover:bg-white hover:text-slate-900 dark:border-white/5 dark:bg-neutral-800/80 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-white">
                         <ArrowRight className="h-4 w-4" />
                     </button>
                 </div>

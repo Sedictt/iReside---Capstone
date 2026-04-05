@@ -1,0 +1,345 @@
+3.6.4.2 Feature-based Questionnaire
+Directions: Please pick a rating for each criterion whether:
+STRONGLY DISAGREE (1), DISAGREE (2), AGREE (3), or STRONGLY AGREE (4).
+Panuto: Pumili ng antas ng iyong pagsang-ayon para sa bawat pamantayan kung ikaw ay:
+LUBOS NA HINDI SUMASANG-AYON (1), HINDI SUMASANG-AYON (2), SUMASANG-AYON
+(3), o LUBOS NA SUMASANG-AYON (4).
+Actor: Researcher
+Statement STRONGLY
+DISAGREE /
+LUBOS NA
+HINDI
+
+SUMASANG-
+AYON (1)
+
+DISAGREE /
+HINDI
+
+SUMASANG-
+AYON (2)
+
+AGREE /
+SUMASANG
+-AYON (3)
+
+STRONGLY
+AGREE /
+LUBOS NA
+
+SUMASANG-
+AYON (4)
+
+1. The search and article
+viewing features are effective
+and intuitive.
+(Ang paghahanap at pagtingin
+sa mga artikulo ay epektibo at
+madaling maunawaan.)
+2. The bookmarking feature
+allows for effective
+organization and categorization
+of saved articles into folders.
+(Ang bookmarks ay nagbibigay
+daan para sa epektibong
+organisasyon at pag-kategorya
+ng mga naiimbak na artikulo sa
+loob ng mga folder.)
+3. The reference management
+feature provides sufficient
+options for exporting citations
+in required styles and file
+types.
+
+174
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+(Ang pamamahala ng mga
+sanggunian ay nagbibigay ng
+sapat na pagpipilian para
+magluwas ng mga sipi sa
+kinakailangang istilo at uri ng
+file.)
+4. The manuscript access
+request process is
+straightforward and provides
+clear status updates.
+(Ang proseso sa paghingi ng
+pahintulot sa pagbubukas ng
+manuskrito ay tuwiran at
+nagbibigay ng malinaw na
+kaalaman sa kalagayan nito.)
+5. The content protection
+features (e.g., anti-screenshot)
+for approved manuscripts
+appropriately balance security
+with usability.
+(Ang proteksyon sa nilalaman
+ng mga aprubadong
+manuskrito (hal., pagbabawal
+sa screenshot) ay angkop na
+nababalanse ang seguridad sa
+kakayahang paggamit nito.)
+6. The team management and
+collaboration features (e.g.,
+creating teams, sharing
+references) significantly
+enhance research productivity.
+(Ang pamamahala ng teams at
+kolaborasyon (hal., paglikha
+ng teams, pagbabahagi ng
+sanggunian) ay makabuluhang
+nagpapataas ng pagiging
+mahusay sa pananaliksik.)
+
+175
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+7. The AI chatbot provides
+accurate and helpful insights
+when discussing research
+articles, especially with pinned
+contexts.
+(Nagbibigay ang AI chatbot ng
+tumpak at kapaki-pakinabang
+na mga kaisipan sa
+pagtatalakay ng mga artikulo
+sa pananaliksik, lalo na rin
+kung may naka-pin na
+konteksto.)
+8. The system provides
+adequate guidance and tutorials
+to support researcher activities.
+(Ang system ay nagbibigay ng
+sapat na gabay at panuto
+upang maalalayan ang mga
+gawaing pampananaliksik.)
+9. The notification feature
+effectively prioritizes alerts
+relevant to your updates and
+requests.
+(Ang notification ay mabisang
+nagbibigay pangunahin sa mga
+abiso na may kaugnayan sa
+mga ulat at pahintulot.)
+10. The account management
+features (such as viewing
+personal details and changing
+password) are simple and
+secure.
+(Ang pamamahala sa account
+(tulad ng pagtingin sa personal
+na detalye ng account at
+pagpapalit ng password) ay
+payak at may matatag na
+seguridad.)
+
+176
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+11. The password reset feature
+(using recovery keys) works
+reliably to recover account
+access.
+(Ang pag-reset ng password
+(gamit ang recovery key) ay
+gumagana nang maaasahan
+upang mabawi ang pagbubukas
+sa account.)
+
+177
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Actor: Library Staff
+Statement STRONGLY
+DISAGREE (1)
+
+DISAGREE
+(2)
+
+AGREE (3) STRONGLY
+AGREE (4)
+
+1. The account management
+feature allows for efficient
+supervision of researcher
+accounts (viewing, warning,
+enabling/disabling).
+2. The send warnings feature
+provides clear context when
+issuing messages to
+researchers.
+3. The manuscript access
+request approval workflow
+provides sufficient information
+for effective decision-making.
+4. The requests interface
+clearly displays the current
+status of all pending
+manuscript access requests.
+5. The system provides
+adequate guidance and tutorials
+to support your responsibilities.
+6. The notification feature
+effectively prioritizes alerts
+relevant to your duties.
+7. The about page is
+comprehensive and helpful.
+8. The account management
+features (such as viewing
+personal details and changing
+password) are simple and
+secure.
+
+178
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+9. The password reset feature
+(using recovery keys) works
+reliably to recover account
+access.
+
+179
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Actor: Chairperson
+Statement STRONGLY
+DISAGREE (1)
+
+DISAGREE
+(2)
+
+AGREE (3) STRONGLY
+AGREE (4)
+
+1. The manuscript upload
+feature for your department is
+straightforward and efficient.
+2. The manuscript management
+feature clearly indicates the
+review status (e.g., pending) of
+departmental manuscripts.
+3. The publish/unpublish
+feature allows for effective
+content management for your
+department.
+4. The system appropriately
+restricts access to manuscripts
+and data belonging to other
+departments.
+5. The dual-view
+(Chairperson/Researcher)
+feature is effective for
+examining system functionality
+from a researcher perspective.
+6. The system provides
+adequate guidance and tutorials
+regarding your role and
+responsibilities.
+7. The notification feature
+effectively prioritizes alerts
+relevant to your duties.
+8. The about page is
+comprehensive and helpful.
+9. The account management
+features (such as viewing
+
+180
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+personal details and changing
+password) are simple and
+secure.
+10. The password reset feature
+(using recovery keys) works
+reliably to recover account
+access.
+
+181
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Actor: Administrator
+Statement STRONGLY
+DISAGREE
+(1)
+
+DISAGREE
+(2)
+
+AGREE (3) STRONGLY
+AGREE (4)
+
+1. The dashboard analytics and
+reporting features (including
+CSV exports) provide
+meaningful insights into system
+usage and trends.
+2. The system logs feature
+offers effective tracking of user
+actions and system events for
+auditing purposes.
+3. The accounts management
+features (single/batch creation,
+editing, etc.) are efficient and
+comprehensive.
+4. The manuscript management
+features (single/batch creation,
+editing, etc.) are efficient.
+5. The approval workflows for
+both chairperson submissions
+and researcher access requests
+provide sufficient information
+for decision-making.
+6. The dual-view
+(Administrator/Researcher)
+feature is effective for
+examining system functionality
+from a researcher perspective.
+7. The system provides
+adequate guidance and tutorials
+to support your administrative
+responsibilities.
+
+182
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+8. The notification feature
+effectively prioritizes alerts
+relevant to your duties.
+9. The about page is
+comprehensive and helpful.
+10. The account management
+features (such as viewing
+personal details and changing
+password) are simple and
+secure.
+11. The password reset feature
+(using recovery keys) works
+reliably to recover account

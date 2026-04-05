@@ -19,7 +19,7 @@ const assertAdmin = async () => {
         return { user: null, error: "Forbidden" as const };
     }
 
-    return { user, error: null as const };
+    return { user, error: null };
 };
 
 export async function GET(request: Request) {

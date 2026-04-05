@@ -38,10 +38,10 @@ export function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
 
     const getStatusStyle = (status: string) => {
         switch (status) {
-            case "paid": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-            case "overdue": return "bg-red-500/10 text-red-400 border-red-500/20";
-            case "pending": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-            default: return "bg-white/5 text-neutral-400 border-white/10";
+            case "paid": return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+            case "overdue": return "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300";
+            case "pending": return "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+            default: return "border-border bg-muted text-muted-foreground";
         }
     };
 
@@ -56,116 +56,109 @@ export function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
 
     const modalContent = (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
-            <div className="relative w-full max-w-3xl bg-[#111] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity dark:bg-black/80" onClick={onClose} />
+            <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_28px_70px_-36px_rgba(15,23,42,0.45)] animate-in zoom-in-95 duration-200 dark:shadow-2xl">
                 
-                {/* Decorative header glow matching system UI */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-primary/20 blur-[100px] pointer-events-none" />
+                <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-[80%] -translate-x-1/2 bg-primary/16 blur-[100px] dark:bg-primary/20" />
 
-                {/* Header */}
-                <div className="relative flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
+                <div className="relative flex items-center justify-between border-b border-border bg-muted/35 p-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(var(--primary),0.15)]">
-                            <FileText className="w-6 h-6" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-[0_10px_30px_-24px_rgba(var(--primary-rgb),0.65)]">
+                            <FileText className="h-6 w-6" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white mb-1">Invoice <span className="text-neutral-400 font-medium">#{invoice.id.split('-').pop()}</span></h2>
-                            <span className={cn("inline-flex px-2.5 py-1 rounded-md text-xs font-bold border uppercase tracking-wider items-center gap-1.5", getStatusStyle(invoice.status))}>
+                            <h2 className="mb-1 text-xl font-bold text-foreground">Invoice <span className="font-medium text-muted-foreground">#{invoice.id.split('-').pop()}</span></h2>
+                            <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-wider", getStatusStyle(invoice.status))}>
                                 {getStatusIcon(invoice.status)} {invoice.status}
                             </span>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/10 text-neutral-400 hover:text-white transition-colors bg-black/20 border border-white/5">
-                        <X className="w-5 h-5" />
+                    <button onClick={onClose} className="rounded-xl border border-border bg-background/75 p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="relative flex-1 overflow-y-auto p-8 hide-scrollbar">
-                    
-                    {/* Invoice Meta Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 pb-8 border-b border-white/5">
+                    <div className="mb-10 grid grid-cols-1 gap-8 border-b border-border pb-8 md:grid-cols-2">
                         <div className="space-y-4">
-                            <h3 className="text-xs font-black text-neutral-500 uppercase tracking-widest flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-neutral-500/50" /> Billed From
+                            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                                <span className="h-2 w-2 rounded-full bg-muted-foreground/50" /> Billed From
                             </h3>
                             <div>
-                                <p className="font-bold text-white text-lg flex items-center gap-2">
+                                <p className="flex items-center gap-2 text-lg font-bold text-foreground">
                                     iReside Properties
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                 </p>
-                                <p className="text-neutral-400 mt-1 text-sm leading-relaxed">
+                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                                     123 Corporate Ave, Suite 400<br />
                                     Makati City, Metro Manila<br />
-                                    <span className="text-primary mt-1 inline-block">billing@ireside.com</span>
+                                    <span className="mt-1 inline-block text-primary">billing@ireside.com</span>
                                 </p>
                             </div>
                         </div>
-                        <div className="md:text-left space-y-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
-                            <h3 className="text-xs font-black text-neutral-500 uppercase tracking-widest flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-primary/50" /> Billed To
+                        <div className="space-y-4 rounded-2xl border border-border bg-muted/35 p-5 md:text-left">
+                            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                                <span className="h-2 w-2 rounded-full bg-primary/50" /> Billed To
                             </h3>
                             <div>
-                                <p className="font-bold text-white text-lg">{invoice.tenant}</p>
-                                <p className="text-neutral-400 mt-1 text-sm leading-relaxed">
+                                <p className="text-lg font-bold text-foreground">{invoice.tenant}</p>
+                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                                     {invoice.property}<br />
-                                    <span className="text-white font-medium">{invoice.unit}</span>
+                                    <span className="font-medium text-foreground">{invoice.unit}</span>
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Timeline Data */}
-                    <div className="flex flex-wrap gap-4 mb-10">
-                        <div className="flex-1 min-w-[140px] bg-[#0a0a0a] rounded-2xl p-5 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform"><Clock className="w-16 h-16" /></div>
-                            <p className="text-xs text-neutral-500 uppercase font-black tracking-wider mb-2">Issue Date</p>
-                            <p className="font-bold text-white text-lg">{new Date(invoice.issuedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    <div className="mb-10 flex flex-wrap gap-4">
+                        <div className="group relative min-w-[140px] flex-1 overflow-hidden rounded-2xl border border-border bg-background/75 p-5 transition-colors hover:border-primary/15">
+                            <div className="pointer-events-none absolute right-0 top-0 p-4 opacity-[0.08] transition-transform group-hover:scale-110"><Clock className="h-16 w-16" /></div>
+                            <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">Issue Date</p>
+                            <p className="text-lg font-bold text-foreground">{new Date(invoice.issuedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
                         </div>
-                        <div className="flex-1 min-w-[140px] bg-[#0a0a0a] rounded-2xl p-5 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover:scale-110 transition-transform"><AlertCircle className="w-16 h-16" /></div>
-                            <p className="text-xs text-neutral-500 uppercase font-black tracking-wider mb-2">Due Date</p>
-                            <p className={cn("font-bold text-lg", invoice.status === 'overdue' ? 'text-red-400' : 'text-white')}>
-                                {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        <div className="group relative min-w-[140px] flex-1 overflow-hidden rounded-2xl border border-border bg-background/75 p-5 transition-colors hover:border-primary/15">
+                            <div className="pointer-events-none absolute right-0 top-0 p-4 opacity-[0.08] transition-transform group-hover:scale-110"><AlertCircle className="h-16 w-16" /></div>
+                            <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">Due Date</p>
+                            <p className={cn("text-lg font-bold", invoice.status === "overdue" ? "text-red-700 dark:text-red-300" : "text-foreground")}>
+                                {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                             </p>
                         </div>
-                        <div className="flex-[2] min-w-[200px] bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20 flex flex-col justify-end">
-                            <p className="text-xs text-primary/70 uppercase font-black tracking-wider mb-1">Total Due</p>
-                            <p className="font-black text-primary text-3xl">₱{(invoice.status === 'overdue' ? invoice.amount * 1.05 : invoice.amount).toLocaleString()}</p>
+                        <div className="flex min-w-[200px] flex-[2] flex-col justify-end rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/12 to-primary/5 p-5">
+                            <p className="mb-1 text-xs font-black uppercase tracking-wider text-primary/75">Total Due</p>
+                            <p className="text-3xl font-black text-primary">₱{(invoice.status === "overdue" ? invoice.amount * 1.05 : invoice.amount).toLocaleString()}</p>
                         </div>
                     </div>
 
-                    {/* Line Items Table */}
-                    <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#0a0a0a]">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-background/75">
                         <table className="w-full text-left">
-                            <thead className="bg-[#111] border-b border-white/10">
+                            <thead className="border-b border-border bg-muted/35">
                                 <tr>
-                                    <th className="p-5 text-xs tracking-widest text-neutral-500 uppercase font-black">Description & Period</th>
-                                    <th className="p-5 text-xs tracking-widest text-neutral-500 uppercase font-black text-right">Amount</th>
+                                    <th className="p-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Description & Period</th>
+                                    <th className="p-5 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
-                                <tr className="group hover:bg-white/[0.02] transition-colors">
+                            <tbody className="divide-y divide-border">
+                                <tr className="group transition-colors hover:bg-muted/20">
                                     <td className="p-5">
-                                        <p className="font-bold text-white text-[15px]">{invoice.type} For {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
-                                        <p className="text-sm text-neutral-400 mt-1.5 flex items-center gap-2">
-                                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-neutral-600" />
-                                            {new Date(invoice.issuedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric'})} - {new Date(invoice.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric'})}
+                                        <p className="text-[15px] font-bold text-foreground">{invoice.type} For {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+                                        <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+                                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+                                            {new Date(invoice.issuedDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                                         </p>
                                     </td>
-                                    <td className="p-5 text-right font-black text-white text-lg">
+                                    <td className="p-5 text-right text-lg font-black text-foreground">
                                         ₱{invoice.amount.toLocaleString()}
                                     </td>
                                 </tr>
-                                {invoice.status === 'overdue' && (
-                                    <tr className="bg-red-500/[0.02]">
+                                {invoice.status === "overdue" && (
+                                    <tr className="bg-red-500/[0.04] dark:bg-red-500/[0.02]">
                                         <td className="p-5">
-                                            <p className="font-bold text-red-400 text-[15px] flex items-center gap-2">
-                                                <AlertCircle className="w-4 h-4" /> Late Payment Penalty
+                                            <p className="flex items-center gap-2 text-[15px] font-bold text-red-700 dark:text-red-300">
+                                                <AlertCircle className="h-4 w-4" /> Late Payment Penalty
                                             </p>
-                                            <p className="text-sm text-red-400/70 mt-1.5">5% penalty applied for overdue balance.</p>
+                                            <p className="mt-1.5 text-sm text-red-700/80 dark:text-red-300/80">5% penalty applied for overdue balance.</p>
                                         </td>
-                                        <td className="p-5 text-right font-black text-red-400 text-lg">
+                                        <td className="p-5 text-right text-lg font-black text-red-700 dark:text-red-300">
                                             ₱{(invoice.amount * 0.05).toLocaleString()}
                                         </td>
                                     </tr>
@@ -174,44 +167,42 @@ export function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
                         </table>
                     </div>
 
-                    {/* Summary Footer */}
                     <div className="mt-8 flex justify-end">
-                        <div className="w-full md:w-[320px] rounded-2xl p-6 border border-white/5 space-y-4 bg-[#111]">
-                            <div className="flex justify-between items-center text-neutral-400 font-medium">
+                        <div className="w-full space-y-4 rounded-2xl border border-border bg-muted/35 p-6 md:w-[320px]">
+                            <div className="flex items-center justify-between font-medium text-muted-foreground">
                                 <span>Subtotal</span>
-                                <span className="text-white">₱{invoice.amount.toLocaleString()}</span>
+                                <span className="text-foreground">₱{invoice.amount.toLocaleString()}</span>
                             </div>
-                            {invoice.status === 'overdue' && (
-                                <div className="flex justify-between items-center text-red-400 font-medium pt-2 border-t border-white/5">
+                            {invoice.status === "overdue" && (
+                                <div className="flex items-center justify-between border-t border-border pt-2 font-medium text-red-700 dark:text-red-300">
                                     <span>Late Fee (5%)</span>
                                     <span>+ ₱{(invoice.amount * 0.05).toLocaleString()}</span>
                                 </div>
                             )}
-                            <div className="h-px w-full bg-white/10" />
-                            <div className="flex justify-between items-end">
-                                <span className="text-neutral-300 font-bold">Total Due</span>
-                                <span className="text-white font-black text-2xl">₱{(invoice.status === 'overdue' ? invoice.amount * 1.05 : invoice.amount).toLocaleString()}</span>
+                            <div className="h-px w-full bg-border" />
+                            <div className="flex items-end justify-between">
+                                <span className="font-bold text-foreground">Total Due</span>
+                                <span className="text-2xl font-black text-foreground">₱{(invoice.status === "overdue" ? invoice.amount * 1.05 : invoice.amount).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="p-6 border-t border-white/5 bg-white/[0.02] flex flex-wrap justify-end gap-3">
-                    <button onClick={onClose} className="h-11 px-5 rounded-xl border border-white/10 text-white font-medium hover:bg-white/5 flex items-center gap-2 transition-colors">
+                <div className="flex flex-wrap justify-end gap-3 border-t border-border bg-muted/35 p-6">
+                    <button onClick={onClose} className="flex h-11 items-center gap-2 rounded-xl border border-border px-5 font-medium text-foreground transition-colors hover:bg-muted">
                         Close
                     </button>
-                    <button className="h-11 px-5 rounded-xl bg-white/5 text-white font-medium hover:bg-white/10 flex items-center gap-2 transition-colors">
-                        <Download className="w-4 h-4" /> Download
+                    <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background/75 px-5 font-medium text-foreground transition-colors hover:bg-muted">
+                        <Download className="h-4 w-4" /> Download
                     </button>
-                    {invoice.status === 'overdue' && (
-                        <button className="h-11 px-6 rounded-xl bg-red-500/10 text-red-500 font-bold hover:bg-red-500/20 flex items-center gap-2 transition-colors border border-red-500/20">
-                            <Send className="w-4 h-4" /> Send Reminder
+                    {invoice.status === "overdue" && (
+                        <button className="flex h-11 items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-6 font-bold text-red-700 transition-colors hover:bg-red-500/20 dark:text-red-300">
+                            <Send className="h-4 w-4" /> Send Reminder
                         </button>
                     )}
-                    {invoice.status === 'pending' && (
-                        <button className="h-11 px-6 rounded-xl bg-primary text-black font-bold hover:bg-primary/90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)] flex items-center gap-2">
-                            <CheckCircle2 className="w-5 h-5" /> Mark as Paid
+                    {invoice.status === "pending" && (
+                        <button className="flex h-11 items-center gap-2 rounded-xl bg-primary px-6 font-bold text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
+                            <CheckCircle2 className="h-5 w-5" /> Mark as Paid
                         </button>
                     )}
                 </div>

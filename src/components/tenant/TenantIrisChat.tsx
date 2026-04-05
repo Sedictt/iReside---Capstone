@@ -214,49 +214,49 @@ export function TenantIrisChat() {
     };
 
     return (
-        <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/40 via-[#0a0a0a] to-[#0a0a0a] overflow-hidden shadow-2xl relative" data-tour-id="tour-messages-chat">
+        <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-border bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-card via-background to-background overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.24)] relative" data-tour-id="tour-messages-chat">
             {/* Header */}
-            <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/20 backdrop-blur-md z-10">
+            <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/80 backdrop-blur-md z-10">
                 <div className="flex items-center gap-4">
                     <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-white overflow-hidden border border-white/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
                             <img src="/iris-avatar.png" alt="iRis" className="w-full h-full object-cover" />
                         </div>
-                        <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#0a0a0a] flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-card border border-border flex items-center justify-center shadow-sm">
                             <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-white text-base">iRis Assistant</h3>
+                        <h3 className="font-bold text-foreground text-base">iRis Assistant</h3>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
-                            <span className="text-[10px] text-neutral-400 font-medium">Always Available</span>
+                            <span className="text-[10px] text-muted-foreground font-medium">Always Available</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Dummy Tools to match layout & guide tour step 5 */}
                 <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
-                    <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Search not available for iRis">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Search not available for iRis">
                         <Search className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Files not available for iRis">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Files not available for iRis">
                         <Folder className="w-4 h-4" />
                     </button>
-                    <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Settings">
+                    <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Settings">
                         <MoreVertical className="w-4 h-4" />
                     </button>
                 </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 flex flex-col items-center">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 flex flex-col items-center bg-background/60">
                 <div className="w-full max-w-4xl space-y-6 flex flex-col">
                     <div className="text-center py-6 flex flex-col items-center gap-3">
-                        <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/5 shadow-2xl">
+                        <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/60 shadow-[0_18px_35px_-24px_rgba(15,23,42,0.45)]">
                             <img src="/iris-avatar.png" alt="iRis" className="w-full h-full object-cover" />
                         </div>
-                        <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest bg-neutral-900 px-4 py-1.5 rounded-full border border-white/5 shadow-sm">
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
                             Conversation with iRis • Private & Secured
                         </span>
                     </div>
@@ -268,16 +268,16 @@ export function TenantIrisChat() {
 
                                 return (
                                     <div key={`skeleton-${index}`} className={cn("flex w-full gap-4", isRight ? "justify-end" : "justify-start")}>
-                                        {!isRight && <div className="w-8 h-8 rounded-full bg-neutral-700/70 animate-pulse" />}
+                                        {!isRight && <div className="w-8 h-8 rounded-full bg-slate-300/80 animate-pulse" />}
                                         <div
                                             className={cn(
                                                 "animate-pulse rounded-2xl",
                                                 isRight
                                                     ? "h-16 w-40 bg-primary/25 rounded-br-sm"
-                                                    : "h-20 w-64 bg-neutral-800 border border-white/5 rounded-bl-sm"
+                                                    : "h-20 w-64 bg-card border border-border rounded-bl-sm"
                                             )}
                                         />
-                                        {isRight && <div className="w-8 h-8 rounded-full bg-neutral-800 animate-pulse" />}
+                                        {isRight && <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse" />}
                                     </div>
                                 );
                             })}
@@ -288,7 +288,7 @@ export function TenantIrisChat() {
                                 <div key={msg.id} className={cn("flex w-full gap-4", msg.role === "user" ? "justify-end" : "justify-start")}>
                                     {msg.role === "iris" && (
                                         <div className="shrink-0 mt-auto">
-                                            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-white/10">
+                                            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
                                                 <img src="/iris-avatar.png" alt="iRis" className="w-7 h-7 object-cover" />
                                             </div>
                                         </div>
@@ -298,44 +298,44 @@ export function TenantIrisChat() {
                                         <div className={cn(
                                             "px-5 py-3.5 rounded-2xl shadow-sm text-sm md:text-base leading-relaxed",
                                             msg.role === "user"
-                                                ? "bg-primary text-black rounded-br-sm font-medium shadow-[0_4px_15px_rgb(109,152,56,0.3)]"
-                                                : "bg-neutral-800 text-neutral-200 rounded-bl-sm border border-white/5"
+                                                ? "bg-primary text-primary-foreground rounded-br-sm font-medium shadow-[0_10px_24px_-16px_rgba(109,152,56,0.55)]"
+                                                : "bg-card text-foreground rounded-bl-sm border border-border"
                                         )}>
                                             <p>{msg.content}</p>
                                         </div>
 
                                         {msg.hasDataCard && (
-                                            <div className="w-full bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-lg mt-1 relative group">
+                                            <div className="w-full bg-card border border-border rounded-xl overflow-hidden shadow-lg mt-1 relative group">
                                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <div className="p-4 border-b border-white/5 flex justify-between items-center relative z-10">
+                                                <div className="p-4 border-b border-border flex justify-between items-center relative z-10">
                                                     <div className="flex-1">
-                                                        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-1">Network Name</p>
+                                                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Network Name</p>
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all">TheLofts_Guest</p>
                                                     </div>
-                                                    <button className="p-2 text-neutral-500 hover:text-primary transition rounded-lg hover:bg-primary/10">
+                                                    <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
                                                         <Wifi className="w-5 h-5" />
                                                     </button>
                                                 </div>
-                                                <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-white/[0.02] transition-colors">
+                                                <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-muted/40 transition-colors">
                                                     <div className="flex-1">
-                                                        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider mb-1">Password</p>
+                                                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider mb-1">Password</p>
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all">WelcomeHome2024</p>
                                                     </div>
-                                                    <button className="p-2 text-neutral-500 hover:text-primary transition rounded-lg hover:bg-primary/10">
+                                                    <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
                                                         <Copy className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                             </div>
                                         )}
 
-                                        <span className={cn("text-[10px] font-medium text-neutral-600 px-1", msg.role === "user" ? "text-right" : "text-left")}>
+                                        <span className={cn("text-[10px] font-medium text-muted-foreground px-1", msg.role === "user" ? "text-right" : "text-left")}>
                                             {msg.role === "user" ? "Seen" : msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
 
                                     {msg.role === "user" && (
                                         <div className="shrink-0 mt-auto">
-                                            <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center font-bold text-xs text-neutral-400 border border-white/10">
+                                            <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center font-bold text-xs text-muted-foreground border border-border">
                                                 {userInitials}
                                             </div>
                                         </div>
@@ -348,11 +348,11 @@ export function TenantIrisChat() {
                     {isTyping && !isChatInitializing && (
                         <div className="flex w-full gap-4 justify-start">
                             <div className="shrink-0 mt-auto">
-                                <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-white/10">
+                                <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
                                     <img src="/iris-avatar.png" alt="iRis" className="w-7 h-7 object-cover" />
                                 </div>
                             </div>
-                            <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-neutral-800 border border-white/5 flex items-center gap-1.5">
+                            <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-card border border-border flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
@@ -364,14 +364,14 @@ export function TenantIrisChat() {
             </div>
 
             {/* Input Area */}
-            <div className="shrink-0 p-6 bg-neutral-900/50 backdrop-blur-xl border-t border-white/5 z-10 w-full flex justify-center" data-tour-id="tour-messages-input">
+            <div className="shrink-0 p-6 bg-card/80 backdrop-blur-xl border-t border-border z-10 w-full flex justify-center" data-tour-id="tour-messages-input">
                 <div className="max-w-4xl w-full flex flex-col gap-3 relative">
                     {/* Feature Suggester */}
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                         {["WiFi Password", "Maintenance", "Rent Status", "Amenity Hours"].map((feature) => (
                             <button
                                 key={feature}
-                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-bold bg-white/5 text-neutral-400 border border-white/10 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
+                                className="whitespace-nowrap px-4 py-1.5 rounded-full text-[11px] font-bold bg-background text-muted-foreground border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all active:scale-95"
                                 onClick={() => {
                                     setInput(feature);
                                 }}
@@ -383,7 +383,7 @@ export function TenantIrisChat() {
 
                     <div className="relative group">
                         <div className="absolute -inset-[1px] bg-gradient-to-r from-primary/30 to-blue-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                        <div className="relative flex items-end gap-2 bg-neutral-900/80 border border-white/10 rounded-2xl p-2 focus-within:border-primary/50 transition-colors backdrop-blur-md">
+                        <div className="relative flex items-end gap-2 bg-background/90 border border-border rounded-2xl p-2 focus-within:border-primary/50 transition-colors backdrop-blur-md">
                             <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
@@ -395,13 +395,13 @@ export function TenantIrisChat() {
                                 }}
                                 placeholder="Message iRis Assistant..."
                                 disabled={isChatInitializing}
-                                className="flex-1 bg-transparent border-none outline-none resize-none pt-2.5 px-3 min-h-[44px] max-h-[120px] text-sm text-white placeholder:text-neutral-500 custom-scrollbar"
+                                className="flex-1 bg-transparent border-none outline-none resize-none pt-2.5 px-3 min-h-[44px] max-h-[120px] text-sm text-foreground placeholder:text-muted-foreground custom-scrollbar"
                                 rows={1}
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isChatInitializing}
-                                className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-black shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
+                                className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
                             >
                                 <ArrowUp className="w-5 h-5" />
                             </button>

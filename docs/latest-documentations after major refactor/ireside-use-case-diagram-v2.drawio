@@ -1,0 +1,328 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="ireside-use-case-v2" name="iReside Use Case Diagram v2">
+    <mxGraphModel dx="1737" dy="1123" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys-boundary" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8FBFF;strokeColor=#6C8EBF;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="1790" width="1080" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sys-title" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCE9FF;strokeColor=#6C8EBF;strokeWidth=2;fontStyle=1;fontSize=22;align=left;spacingLeft=18;" value="iReside Property Management System" vertex="1">
+          <mxGeometry height="60" width="580" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="Super&#xa;Administrator" vertex="1">
+          <mxGeometry height="170" width="90" x="30" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-landlord" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="Landlord" vertex="1">
+          <mxGeometry height="170" width="90" x="50" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-tenant" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="Tenant" vertex="1">
+          <mxGeometry height="170" width="90" x="1450" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="actor-ai" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" value="External AI&#xa;Service" vertex="1">
+          <mxGeometry height="170" width="100" x="1350" y="1450" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-auth" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;strokeWidth=2;fontSize=15;" value="Sign In &amp;&#xa;Access Role Portal" vertex="1">
+          <mxGeometry height="80" width="230" x="780" y="118" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-metrics" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8F1D8;strokeColor=#D6B656;strokeWidth=2;fontSize=14;" value="Monitor&#xa;Platform Metrics" vertex="1">
+          <mxGeometry height="58" width="220" x="300" y="129" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-review" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8F1D8;strokeColor=#D6B656;strokeWidth=2;fontSize=14;" value="Review Landlord&#xa;Registrations" vertex="1">
+          <mxGeometry height="58" width="240" x="290" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-admin-gov" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8F1D8;strokeColor=#D6B656;strokeWidth=2;fontSize=14;" value="Manage Users&#xa;&amp; Governance" vertex="1">
+          <mxGeometry height="58" width="240" x="280" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-property" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Manage Properties&#xa;&amp; Units" vertex="1">
+          <mxGeometry height="58" width="250" x="640" y="372" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-upload-media" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Upload Unit&#xa;Media" vertex="1">
+          <mxGeometry height="58" width="210" x="640" y="492" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-walkin" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Record Walk-in&#xa;Applications" vertex="1">
+          <mxGeometry height="58" width="250" x="620" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-finalize" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Finalize Lease &amp;&#xa;Onboard Tenant" vertex="1">
+          <mxGeometry height="65" width="260" x="615" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-billing" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="View Financial&#xa;Ledger" vertex="1">
+          <mxGeometry height="58" width="220" x="640" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-analytics" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="View Analytics &amp;&#xa;Generate Reports" vertex="1">
+          <mxGeometry height="58" width="250" x="630" y="1114" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-moderate" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Moderate Community&#xa;Content" vertex="1">
+          <mxGeometry height="58" width="250" x="635" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-approve-transfer" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;strokeWidth=2;fontSize=14;" value="Approve Transfer&#xa;/ Move-Out Requests" vertex="1">
+          <mxGeometry height="58" width="260" x="640" y="1330" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-lease-view" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="View Lease &amp;&#xa;Documents" vertex="1">
+          <mxGeometry height="58" width="220" x="930" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-lease-sign" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Complete Lease&#xa;Signing" vertex="1">
+          <mxGeometry height="58" width="220" x="930" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-lease-track" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Track Lease&#xa;Status Progress" vertex="1">
+          <mxGeometry height="58" width="230" x="930" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-payments" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="View Payments&#xa;&amp; History" vertex="1">
+          <mxGeometry height="58" width="220" x="930" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-maintenance" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Submit Maintenance&#xa;Requests" vertex="1">
+          <mxGeometry height="58" width="250" x="920" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-messages" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Exchange&#xa;Messages" vertex="1">
+          <mxGeometry height="58" width="210" x="920" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-community" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Participate in&#xa;Community Hub" vertex="1">
+          <mxGeometry height="58" width="250" x="960" y="972" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-transfer" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Request Unit&#xa;Transfer / Move-Out" vertex="1">
+          <mxGeometry height="58" width="250" x="960" y="1072" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-doc-vault" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;strokeWidth=2;fontSize=14;" value="Access&#xa;Document Vault" vertex="1">
+          <mxGeometry height="58" width="210" x="960" y="1172" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-iris" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#9673A6;strokeWidth=2;fontSize=14;" value="Ask iRis&#xa;AI Assistant" vertex="1">
+          <mxGeometry height="65" width="200" x="1010" y="1310" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-fallback" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#9673A6;strokeWidth=2;fontSize=14;" value="Provide AI Fallback&#xa;Response" vertex="1">
+          <mxGeometry height="58" width="230" x="1000" y="1471" as="geometry" />
+        </mxCell>
+        <mxCell id="uc-ai-insights" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E1D5F7;strokeColor=#9673A6;strokeWidth=2;fontSize=14;" value="Generate AI-Driven&#xa;Insights" vertex="1">
+          <mxGeometry height="58" width="230" x="995" y="1610" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="actor-admin" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-auth">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="60" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="actor-admin" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-admin-metrics">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="actor-admin" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-admin-review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="actor-admin" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-admin-gov">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="actor-admin" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-moderate">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120" y="910" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-auth">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-property">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-upload-media">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="630" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-walkin">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-finalize">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;" target="uc-billing">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-analytics">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="1090" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-moderate">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="1200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-approve-transfer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="1270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-lease-sign">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-maintenance">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-messages">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="actor-landlord" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-community">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;curved=1;" target="uc-auth">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-lease-view">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1330" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-lease-sign">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1360" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-lease-track">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-payments">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1460" y="630" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-maintenance">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1480" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-messages">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1530" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e26" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-community">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1530" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e27" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-transfer">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1550" y="940" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e28" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-doc-vault">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1570" y="1010" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e29" edge="1" parent="1" source="actor-tenant" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-iris">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1600" y="940" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e30" edge="1" parent="1" source="actor-ai" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-iris">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1300" y="1420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e31" edge="1" parent="1" source="actor-ai" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-fallback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" edge="1" parent="1" source="actor-ai" style="endArrow=none;html=1;strokeWidth=2;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;curved=1;" target="uc-ai-insights">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1290" y="1610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel-27" edge="1" parent="1" source="uc-finalize" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#4C4C4C;edgeStyle=orthogonalEdgeStyle;" target="uc-lease-sign" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="873" />
+              <mxPoint x="910" y="329" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel-28" edge="1" parent="1" source="uc-finalize" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#4C4C4C;" target="uc-walkin" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-29" edge="1" parent="1" source="uc-iris" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#4C4C4C;" target="uc-fallback" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-30" edge="1" parent="1" source="uc-analytics" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#4C4C4C;edgeStyle=orthogonalEdgeStyle;" target="uc-ai-insights" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="1143" />
+              <mxPoint x="950" y="1639" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uc-filter-content" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F0F0F0;strokeColor=#999999;strokeWidth=2;fontSize=13;dashed=0;" value="Filter Unsafe&#xa;Content" vertex="1">
+          <mxGeometry height="58" width="190" x="930" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="rel-31" edge="1" parent="1" source="uc-messages" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=8 8;endArrow=open;endFill=0;fontSize=12;labelBackgroundColor=#FFFFFF;strokeColor=#808080;" target="uc-filter-content" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

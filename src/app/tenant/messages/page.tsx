@@ -428,11 +428,11 @@ export default function TenantMessagesPage() {
             setIsSidebarLoading(false);
 
             setActiveConversationId((current) => {
-                if (conversationFromUrl && hydratedContacts.some((contact) => contact.id === conversationFromUrl)) {
-                    return conversationFromUrl;
-                }
                 if (hydratedContacts.some((contact) => contact.id === current)) {
                     return current;
+                }
+                if (conversationFromUrl && hydratedContacts.some((contact) => contact.id === conversationFromUrl)) {
+                    return conversationFromUrl;
                 }
                 return hydratedContacts[0]?.id ?? "iris";
             });
@@ -788,11 +788,11 @@ export default function TenantMessagesPage() {
             }
 
             setActiveConversationId((current) => {
-                if (conversationFromUrl && mapped.some((contact) => contact.id === conversationFromUrl)) {
-                    return conversationFromUrl;
-                }
                 if (mapped.some((contact) => contact.id === current)) {
                     return current;
+                }
+                if (conversationFromUrl && mapped.some((contact) => contact.id === conversationFromUrl)) {
+                    return conversationFromUrl;
                 }
                 return mapped[0]?.id ?? "iris";
             });
@@ -1507,86 +1507,86 @@ export default function TenantMessagesPage() {
         (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
 
     return (
-        <div className="flex h-full w-full bg-[#0a0a0a] text-white overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative">
+        <div className="flex h-full w-full overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative bg-[radial-gradient(circle_at_top_left,_rgba(173,200,125,0.16),_transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,242,0.96))] text-foreground">
             <MessagesTour />
             {shouldShowLoadingOverlay && (
-                <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 backdrop-blur-sm">
-                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-neutral-900/80 px-8 py-6 text-center shadow-2xl">
+                <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/70 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card/95 px-8 py-6 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]">
                         <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-600 border-t-primary" aria-hidden="true" />
                         <div>
-                            <p className="text-sm font-semibold text-white">Loading conversation...</p>
-                            <p className="mt-1 text-xs text-neutral-400">Preparing your messages.</p>
+                            <p className="text-sm font-semibold text-foreground">Loading conversation...</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Preparing your messages.</p>
                         </div>
                     </div>
                 </div>
             )}
 
             {isGlobalFileDrag && (
-                <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="rounded-3xl border border-primary/40 bg-neutral-900/90 px-10 py-8 shadow-2xl shadow-primary/20 text-center">
+                <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-background/60 backdrop-blur-sm">
+                    <div className="rounded-3xl border border-primary/25 bg-card/95 px-10 py-8 shadow-[0_30px_80px_-35px_rgba(90,122,52,0.35)] text-center">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
                             <Paperclip className="h-6 w-6 text-primary" />
                         </div>
-                        <p className="text-lg font-bold text-white">
+                        <p className="text-lg font-bold text-foreground">
                             {activeConversationId === "iris" ? "File sharing unavailable in Iris chat" : "Drop here to upload"}
                         </p>
-                        <p className="mt-1 text-xs text-neutral-400">Release to add this file to the composer</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Release to add this file to the composer</p>
                     </div>
                 </div>
             )}
 
             {/* Sidebar Contact List */}
             <div
-                className="w-80 lg:w-96 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col shrink-0 h-full overflow-hidden shadow-2xl"
+                className="w-80 lg:w-96 rounded-2xl border border-border bg-card/95 flex flex-col shrink-0 h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl"
                 data-tour-id="tour-messages-sidebar"
             >
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 shrink-0 flex flex-col gap-4">
+                <div className="p-6 border-b border-border shrink-0 flex flex-col gap-4">
                     <div className="flex items-center gap-3">
                         <Link
                             href="/tenant/dashboard"
-                            className="bg-neutral-800 hover:bg-white/10 p-2 rounded-xl border border-white/10 transition-colors"
+                            className="bg-background hover:bg-muted p-2 rounded-xl border border-border transition-colors"
                             title="Back to Dashboard"
                         >
-                            <ArrowLeft className="w-4 h-4 text-neutral-300" />
+                            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
                         </Link>
-                        <h2 className="text-xl font-bold text-white leading-none mt-0.5">Messages</h2>
+                        <h2 className="text-xl font-bold text-foreground leading-none mt-0.5">Messages</h2>
                     </div>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search users to message..."
-                            className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-primary transition-all"
+                            className="w-full bg-background/80 border border-border rounded-xl py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
                         />
 
                         {searchQuery.trim().length >= 2 && (
-                            <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-neutral-950/95 p-1 shadow-2xl backdrop-blur">
+                            <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 max-h-64 overflow-y-auto rounded-xl border border-border bg-popover/95 p-1 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.28)] backdrop-blur">
                                 {isSearchingUsers && (
-                                    <div className="px-3 py-2 text-xs text-neutral-400">Searching users...</div>
+                                    <div className="px-3 py-2 text-xs text-muted-foreground">Searching users...</div>
                                 )}
                                 {!isSearchingUsers && userSearchError && (
-                                    <div className="px-3 py-2 text-xs text-red-300">{userSearchError}</div>
+                                    <div className="px-3 py-2 text-xs text-red-600">{userSearchError}</div>
                                 )}
                                 {!isSearchingUsers && !userSearchError && userSearchResults.length === 0 && (
-                                    <div className="px-3 py-2 text-xs text-neutral-400">No matching users found.</div>
+                                    <div className="px-3 py-2 text-xs text-muted-foreground">No matching users found.</div>
                                 )}
                                 {!isSearchingUsers && !userSearchError && userSearchResults.map((result) => (
                                     <button
                                         key={result.id}
                                         onClick={() => handleStartConversation(result.id)}
-                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/10"
+                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
                                     >
                                         <img
                                             src={result.avatarUrl || FALLBACK_AVATAR}
                                             alt={result.fullName}
-                                            className="h-8 w-8 rounded-full border border-white/10 object-cover"
+                                            className="h-8 w-8 rounded-full border border-border object-cover"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <div className="truncate text-sm font-semibold text-white">{result.fullName}</div>
-                                            <div className="truncate text-[11px] text-neutral-400">{result.role} â€¢ {result.email}</div>
+                                            <div className="truncate text-sm font-semibold text-foreground">{result.fullName}</div>
+                                            <div className="truncate text-[11px] text-muted-foreground">{result.role} • {result.email}</div>
                                         </div>
                                     </button>
                                 ))}
@@ -1594,12 +1594,12 @@ export default function TenantMessagesPage() {
                         )}
                     </div>
                     {conversationsError && (
-                        <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
+                        <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-700">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
                             <div className="flex-1 leading-relaxed">{conversationsError}</div>
                             <button
                                 onClick={() => setConversationsError(null)}
-                                className="rounded p-0.5 text-red-200/80 hover:bg-white/10 hover:text-red-100"
+                                className="rounded p-0.5 text-red-600/80 hover:bg-red-500/10 hover:text-red-700"
                                 aria-label="Dismiss conversation error"
                             >
                                 <X className="h-3.5 w-3.5" />
@@ -1613,11 +1613,11 @@ export default function TenantMessagesPage() {
                     {isSidebarLoading ? (
                         <div className="space-y-2" aria-live="polite" aria-busy="true">
                             {Array.from({ length: 6 }).map((_, index) => (
-                                <div key={`sidebar-skeleton-${index}`} className="w-full flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-white/[0.02] animate-pulse">
-                                    <div className="w-12 h-12 rounded-full bg-neutral-700/70" />
+                                <div key={`sidebar-skeleton-${index}`} className="w-full flex items-center gap-3 p-3 rounded-2xl border border-border bg-muted/40 animate-pulse">
+                                    <div className="w-12 h-12 rounded-full bg-slate-300/80" />
                                     <div className="flex-1 min-w-0 space-y-2">
-                                        <div className="h-3.5 w-1/2 rounded bg-neutral-700/70" />
-                                        <div className="h-2.5 w-2/3 rounded bg-neutral-800/70" />
+                                        <div className="h-3.5 w-1/2 rounded bg-slate-300/80" />
+                                        <div className="h-2.5 w-2/3 rounded bg-slate-200/90" />
                                     </div>
                                 </div>
                             ))}
@@ -1630,33 +1630,35 @@ export default function TenantMessagesPage() {
                                     onClick={() => setActiveConversationId(contact.id)}
                                     className={cn(
                                         "w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left",
-                                        activeConversationId === contact.id ? "bg-white/10 border border-white/10" : "hover:bg-white/[0.03] border border-transparent"
+                                        activeConversationId === contact.id
+                                            ? "bg-primary/10 border border-primary/20 shadow-sm"
+                                            : "hover:bg-muted/50 border border-transparent"
                                     )}
                                 >
                                     <div className="relative shrink-0">
                                         <div className={cn(
                                             "w-12 h-12 rounded-full overflow-hidden flex items-center justify-center border",
-                                            contact.isAI ? "border-primary bg-primary/10" : "border-white/10"
+                                            contact.isAI ? "border-primary bg-primary/10" : "border-border bg-background"
                                         )}>
                                             <img src={contact.avatar} alt={contact.name} className="w-full h-full object-cover" />
                                         </div>
                                         {contact.unread > 0 && (
-                                            <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-[#0a0a0a] flex items-center justify-center">
+                                            <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-card flex items-center justify-center">
                                                 <span className="text-[9px] font-bold text-white">{contact.unread}</span>
                                             </div>
                                         )}
                                         {contact.isAI && (
-                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-[#0a0a0a] border-2 border-[#0a0a0a] flex items-center justify-center">
+                                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-card border-2 border-card flex items-center justify-center shadow-sm">
                                                 <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <h4 className={cn("font-bold text-sm truncate pr-2", contact.isAI ? "text-primary" : "text-white")}>{contact.name}</h4>
-                                            <span className={cn("text-[10px] shrink-0", contact.isAI ? "text-primary uppercase tracking-widest font-bold" : "text-neutral-500")}>{contact.lastContact}</span>
+                                            <h4 className={cn("font-bold text-sm truncate pr-2", contact.isAI ? "text-primary" : "text-foreground")}>{contact.name}</h4>
+                                            <span className={cn("text-[10px] shrink-0", contact.isAI ? "text-primary uppercase tracking-widest font-bold" : "text-muted-foreground")}>{contact.lastContact}</span>
                                         </div>
-                                        <p className={cn("text-xs font-medium truncate", contact.isAI ? "text-neutral-300" : "text-neutral-400")}>{contact.unit}</p>
+                                        <p className={cn("text-xs font-medium truncate", contact.isAI ? "text-slate-600" : "text-muted-foreground")}>{contact.unit}</p>
                                     </div>
                                 </button>
                             ))}
@@ -1670,22 +1672,22 @@ export default function TenantMessagesPage() {
                 <TenantIrisChat />
             ) : (
                 <>
-                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-white/5 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/40 via-[#0a0a0a] to-[#0a0a0a] overflow-hidden shadow-2xl" data-tour-id="tour-messages-chat">
+                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-border bg-[radial-gradient(circle_at_top,_rgba(173,200,125,0.14),_transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,243,0.96))] overflow-hidden shadow-[0_30px_80px_-35px_rgba(15,23,42,0.3)]" data-tour-id="tour-messages-chat">
                         {/* Chat Header */}
-                        <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/20 backdrop-blur-md z-10">
+                        <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/90 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
-                                <img src={activeContact.avatar} alt={activeContact.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                                <img src={activeContact.avatar} alt={activeContact.name} className="w-10 h-10 rounded-full object-cover border border-border shadow-sm" />
                                 <div>
-                                    <h3 className="font-bold text-white text-base">{activeContact.name}</h3>
+                                    <h3 className="font-bold text-foreground text-base">{activeContact.name}</h3>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs text-neutral-400 font-medium">{activeContact.unit}</span>
+                                        <span className="text-xs text-muted-foreground font-medium">{activeContact.unit}</span>
 
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
 
-                                <button className="p-2 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                                <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
                                     <Search className="w-4 h-4" />
                                 </button>
                                 <button
@@ -1694,8 +1696,8 @@ export default function TenantMessagesPage() {
                                         setShowInfoSidebar(false);
                                     }}
                                     className={cn(
-                                        "p-2 hover:text-white rounded-lg transition-colors",
-                                        showFilesSidebar ? "bg-white/10 text-white" : "text-neutral-400 hover:bg-white/5"
+                                            "p-2 hover:text-foreground rounded-lg transition-colors",
+                                            showFilesSidebar ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"
                                     )}
                                     title="Shared Files"
                                 >
@@ -1707,8 +1709,8 @@ export default function TenantMessagesPage() {
                                         setShowFilesSidebar(false);
                                     }}
                                     className={cn(
-                                        "p-2 hover:text-white rounded-lg transition-colors",
-                                        showInfoSidebar ? "bg-white/10 text-white" : "text-neutral-400 hover:bg-white/5"
+                                            "p-2 hover:text-foreground rounded-lg transition-colors",
+                                            showInfoSidebar ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"
                                     )}
                                 >
                                     <MoreVertical className="w-4 h-4" />
@@ -1717,12 +1719,12 @@ export default function TenantMessagesPage() {
                         </div>
 
                         {messagesError && (
-                            <div className="mx-6 mt-4 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
-                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-300" />
+                            <div className="mx-6 mt-4 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-700">
+                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
                                 <div className="flex-1 leading-relaxed">{messagesError}</div>
                                 <button
                                     onClick={() => setMessagesError(null)}
-                                    className="rounded p-0.5 text-red-200/80 hover:bg-white/10 hover:text-red-100"
+                                    className="rounded p-0.5 text-red-600/80 hover:bg-red-500/10 hover:text-red-700"
                                     aria-label="Dismiss message error"
                                 >
                                     <X className="h-3.5 w-3.5" />
@@ -1734,7 +1736,7 @@ export default function TenantMessagesPage() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full">
                             <div className="w-full max-w-4xl p-6 space-y-6">
                                 <div className="text-center py-4">
-                                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest bg-neutral-900 px-4 py-1.5 rounded-full border border-white/5 shadow-sm">
+                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-background/90 px-4 py-1.5 rounded-full border border-border shadow-sm">
                                         Conversation Started â€¢ February 1, 2026
                                     </span>
                                 </div>
@@ -1746,13 +1748,13 @@ export default function TenantMessagesPage() {
 
                                             return (
                                                 <div key={`message-skeleton-${index}`} className={cn("flex items-end gap-3 w-full", isMe ? "justify-end" : "justify-start")}>
-                                                    {!isMe && <div className="w-8 h-8 rounded-full bg-neutral-700/70 animate-pulse shrink-0" />}
+                                                    {!isMe && <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse shrink-0" />}
                                                     <div
                                                         className={cn(
                                                             "animate-pulse border",
                                                             isMe
                                                                 ? "h-14 w-[45%] max-w-sm rounded-3xl rounded-br-sm bg-primary/25 border-primary/20"
-                                                                : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm bg-neutral-800 border-white/5"
+                                                                : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm bg-card border-border"
                                                         )}
                                                     />
                                                 </div>
@@ -1766,7 +1768,7 @@ export default function TenantMessagesPage() {
                                         return (
                                             <div key={msg.id} className="flex justify-center max-w-4xl mx-auto my-6 px-4">
                                                 {msg.systemType === "payment_submitted" ? (
-                                                    <div className="flex flex-col gap-0 bg-neutral-900 overflow-hidden border border-primary/30 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-primary/10 max-w-sm w-full transition-all hover:border-primary/50 hover:shadow-primary/20 group pb-4">
+                                                    <div className="flex flex-col gap-0 bg-card overflow-hidden border border-primary/20 rounded-3xl shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] max-w-sm w-full transition-all hover:border-primary/35 group pb-4">
                                                         <div className="bg-gradient-to-r from-primary/80 to-primary p-5 relative overflow-hidden h-24 flex items-center shrink-0">
                                                             <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
                                                             <div className="relative z-10 flex items-center gap-3">
@@ -1782,9 +1784,9 @@ export default function TenantMessagesPage() {
 
                                                         {/* Details Section */}
                                                         <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
-                                                            <div className="flex justify-between items-center bg-black/30 rounded-2xl p-4 border border-white/5">
+                                                            <div className="flex justify-between items-center bg-muted/40 rounded-2xl p-4 border border-border">
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold mb-1">Amount Paid</span>
+                                                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Amount Paid</span>
                                                                     <span className="text-2xl font-black text-primary">â‚±{msg.paymentAmount}</span>
                                                                 </div>
                                                                 <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
@@ -1792,14 +1794,14 @@ export default function TenantMessagesPage() {
                                                                 </div>
                                                             </div>
 
-                                                            <p className="text-xs text-neutral-400 leading-relaxed bg-neutral-800/30 p-3 rounded-xl border border-white/5">
+                                                            <p className="text-xs text-muted-foreground leading-relaxed bg-muted/40 p-3 rounded-xl border border-border">
                                                                 {msg.content}
                                                             </p>
 
                                                             {msg.receiptImg && (
                                                                 <div className="flex flex-col gap-2 mt-1">
-                                                                    <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold ml-1">Proof of Payment</span>
-                                                                    <div className="rounded-2xl overflow-hidden border border-white/10 relative cursor-pointer shadow-inner">
+                                                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold ml-1">Proof of Payment</span>
+                                                                    <div className="rounded-2xl overflow-hidden border border-border relative cursor-pointer shadow-inner">
                                                                         <img src={msg.receiptImg} alt="Receipt" className="w-full h-32 object-cover opacity-90 transition-opacity" />
                                                                     </div>
                                                                 </div>
@@ -1807,9 +1809,9 @@ export default function TenantMessagesPage() {
                                                         </div>
                                                     </div>
                                                 ) : msg.systemType === "invoice" ? (
-                                                    <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-neutral-900 border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+                                                    <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-card border border-border rounded-3xl overflow-hidden shadow-[0_30px_70px_-35px_rgba(15,23,42,0.35)] animate-in zoom-in-95 duration-500">
                                                         {/* Invoice Watermark Header */}
-                                                        <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-6 border-b border-white/5 relative overflow-hidden">
+                                                        <div className="bg-gradient-to-br from-muted/70 to-card p-6 border-b border-border relative overflow-hidden">
                                                             <div className="absolute top-0 right-0 p-4 opacity-5">
                                                                 <Receipt size={120} className="-rotate-12" />
                                                             </div>
@@ -1821,13 +1823,13 @@ export default function TenantMessagesPage() {
                                                                         </div>
                                                                         <h2 className="text-primary font-black tracking-tighter text-lg italic">iReside</h2>
                                                                     </div>
-                                                                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Digital Payment Invoice</p>
+                                                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Digital Payment Invoice</p>
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
                                                                         Status: Paid
                                                                     </span>
-                                                                    <p className="text-[10px] text-neutral-400 mt-2 font-medium">{msg.invoiceId}</p>
+                                                                    <p className="text-[10px] text-muted-foreground mt-2 font-medium">{msg.invoiceId}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1836,27 +1838,27 @@ export default function TenantMessagesPage() {
                                                         <div className="p-6 space-y-6">
                                                             <div className="grid grid-cols-2 gap-4">
                                                                 <div>
-                                                                    <p className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">Billed To</p>
-                                                                    <p className="text-sm font-bold text-white leading-tight">{msg.tenantName}</p>
-                                                                    <p className="text-[11px] text-neutral-400 mt-0.5">{msg.unit}</p>
+                                                                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Billed To</p>
+                                                                    <p className="text-sm font-bold text-foreground leading-tight">{msg.tenantName}</p>
+                                                                    <p className="text-[11px] text-muted-foreground mt-0.5">{msg.unit}</p>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <p className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">Date Issued</p>
-                                                                    <p className="text-sm font-bold text-white leading-tight">{msg.date}</p>
+                                                                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Date Issued</p>
+                                                                    <p className="text-sm font-bold text-foreground leading-tight">{msg.date}</p>
                                                                 </div>
                                                             </div>
 
-                                                            <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
-                                                                <div className="p-3 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                                                                    <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider px-1">Description</span>
-                                                                    <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider px-1">Amount</span>
+                                                            <div className="bg-background/80 rounded-2xl border border-border overflow-hidden">
+                                                                <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
+                                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider px-1">Description</span>
+                                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider px-1">Amount</span>
                                                                 </div>
                                                                 <div className="p-4 flex items-center justify-between">
-                                                                    <p className="text-xs text-neutral-300 font-medium">{msg.description}</p>
-                                                                    <p className="text-sm font-black text-white">â‚±{msg.amount}</p>
+                                                                    <p className="text-xs text-foreground font-medium">{msg.description}</p>
+                                                                    <p className="text-sm font-black text-foreground">â‚±{msg.amount}</p>
                                                                 </div>
-                                                                <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-white/5">
-                                                                    <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Total Paid</span>
+                                                                <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-border">
+                                                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total Paid</span>
                                                                     <span className="text-lg font-black text-primary">â‚±{msg.amount}</span>
                                                                 </div>
                                                             </div>
@@ -1866,31 +1868,31 @@ export default function TenantMessagesPage() {
                                                                     disabled={isDownloading}
                                                                     onClick={() => handleDownloadImage(`invoice-${msg.id}`, `Invoice-${msg.invoiceId}`)}
                                                                     className={cn(
-                                                                        "flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-2xl text-[11px] font-bold transition-all border border-white/5 flex items-center justify-center gap-2 group",
+                                                                        "flex-1 bg-muted/50 hover:bg-muted text-foreground py-3 rounded-2xl text-[11px] font-bold transition-all border border-border flex items-center justify-center gap-2 group",
                                                                         isDownloading && "opacity-50 cursor-not-allowed"
                                                                     )}
                                                                 >
-                                                                    <Download className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-colors" />
+                                                                    <Download className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
                                                                     {isDownloading ? "Generating..." : "Download Image"}
                                                                 </button>
-                                                                <button className="w-12 h-12 bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center rounded-2xl transition-all border border-white/5">
+                                                                <button className="w-12 h-12 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center rounded-2xl transition-all border border-border">
                                                                     <ShieldCheck className="w-5 h-5" />
                                                                 </button>
                                                             </div>
                                                         </div>
 
-                                                        <div className="px-6 py-3 bg-neutral-900 border-t border-white/5 text-center">
-                                                            <p className="text-[9px] text-neutral-600 font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
+                                                        <div className="px-6 py-3 bg-muted/40 border-t border-border text-center">
+                                                            <p className="text-[9px] text-muted-foreground font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-3 bg-neutral-900/60 border border-white/5 backdrop-blur-sm px-5 py-3 rounded-2xl shadow-sm text-center">
-                                                        <div className="bg-black/50 p-2 rounded-full border border-white/5 shrink-0">
+                                                    <div className="flex items-center gap-3 bg-card/90 border border-border backdrop-blur-sm px-5 py-3 rounded-2xl shadow-sm text-center">
+                                                        <div className="bg-background/90 p-2 rounded-full border border-border shrink-0">
                                                             {renderSystemIcon(msg.systemType || '')}
                                                         </div>
                                                         <div className="text-left flex flex-col justify-center">
-                                                            <p className="text-xs text-neutral-300 font-medium leading-relaxed">{msg.content}</p>
-                                                            <p className="text-[9px] text-neutral-500 mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
+                                                            <p className="text-xs text-foreground font-medium leading-relaxed">{msg.content}</p>
+                                                            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1906,19 +1908,19 @@ export default function TenantMessagesPage() {
                                         <div key={msg.id} className={cn("flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
                                             <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                                                 {!isMe && (
-                                                    <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-white/10 shrink-0" alt="avatar" />
+                                                    <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-border shrink-0" alt="avatar" />
                                                 )}
                                                 <div className={cn(
                                                     "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
                                                     isMe
                                                         ? "bg-primary text-black rounded-3xl rounded-br-sm font-medium border border-primary mr-2"
-                                                        : "bg-neutral-800 text-white rounded-3xl rounded-bl-sm border border-white/5",
+                                                        : "bg-card text-foreground rounded-3xl rounded-bl-sm border border-border",
                                                     hasFileAttachment && "px-0 py-0 bg-transparent border-none shadow-none mr-0"
                                                 )}>
                                                     {hasImageAttachment && (
                                                         <button
                                                             onClick={() => setPreviewImageUrl(msg.fileUrl || null)}
-                                                            className="block mb-2 rounded-2xl overflow-hidden border border-white/10 bg-black/40 w-full"
+                                                            className="block mb-2 rounded-2xl overflow-hidden border border-border bg-background/80 w-full"
                                                         >
                                                             <img src={msg.fileUrl} alt={msg.fileName || "Shared image"} className="w-full max-h-64 object-contain" />
                                                         </button>
@@ -1929,14 +1931,14 @@ export default function TenantMessagesPage() {
                                                             href={msg.fileUrl}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="mb-2 flex items-center gap-3 rounded-2xl border p-3 border-white/10 bg-neutral-900/80"
+                                                            className="mb-2 flex items-center gap-3 rounded-2xl border p-3 border-border bg-card/90"
                                                         >
-                                                            <div className="p-2 rounded-lg bg-white/10">
-                                                                <File className="w-4 h-4 text-neutral-100" />
+                                                            <div className="p-2 rounded-lg bg-muted">
+                                                                <File className="w-4 h-4 text-foreground" />
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className="text-xs font-bold truncate text-neutral-100">{msg.fileName || msg.content}</p>
-                                                                <p className="text-[10px] text-neutral-400">
+                                                                <p className="text-xs font-bold truncate text-foreground">{msg.fileName || msg.content}</p>
+                                                                <p className="text-[10px] text-muted-foreground">
                                                                     {formatFileSize(msg.fileSize ?? 0)}
                                                                 </p>
                                                             </div>
@@ -1954,7 +1956,7 @@ export default function TenantMessagesPage() {
                                                 </div>
                                             </div>
 
-                                            <div className={cn("px-2 text-[10px] flex items-center gap-1", isMe ? "text-neutral-500" : "text-neutral-600")}>
+                                            <div className={cn("px-2 text-[10px] flex items-center gap-1", isMe ? "text-muted-foreground" : "text-slate-500")}>
                                                 {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
                                             </div>
 
@@ -1964,7 +1966,7 @@ export default function TenantMessagesPage() {
                                                         "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
                                                         msg.isPhishing 
                                                             ? "text-red-300 bg-red-900/40 border-red-500/40 shadow-red-500/10" 
-                                                            : "text-neutral-300 bg-neutral-900/60 border-amber-500/20 shadow-amber-500/5"
+                                                            : "text-slate-700 bg-amber-50 border-amber-200 shadow-amber-500/5"
                                                     )}>
                                                         <div className="flex items-center justify-center gap-1.5 mb-2">
                                                             <AlertTriangle className={cn("w-4 h-4", msg.isPhishing ? "text-red-500" : "text-amber-500")} />
@@ -1972,7 +1974,7 @@ export default function TenantMessagesPage() {
                                                                 {msg.isPhishing ? "Malicious Content Detected" : "Iris AI Intercepted"}
                                                             </strong>
                                                         </div>
-                                                        <p className="leading-relaxed opacity-90 text-neutral-400">
+                                                        <p className="leading-relaxed opacity-90 text-current">
                                                             {msg.isPhishing 
                                                                 ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
                                                                 : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
@@ -1994,12 +1996,12 @@ export default function TenantMessagesPage() {
 
                                 {isOtherUserTyping && (
                                     <div className="flex items-end gap-3 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
-                                        <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-white/10 shrink-0" alt="avatar" />
-                                        <div className="px-4 py-3 bg-neutral-800 text-white rounded-3xl rounded-bl-sm border border-white/5 shadow-lg">
+                                        <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-border shrink-0" alt="avatar" />
+                                        <div className="px-4 py-3 bg-card text-foreground rounded-3xl rounded-bl-sm border border-border shadow-lg">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
-                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
-                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce" />
+                                                <span className="h-2 w-2 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.2s]" />
+                                                <span className="h-2 w-2 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.1s]" />
+                                                <span className="h-2 w-2 rounded-full bg-slate-400 animate-bounce" />
                                             </div>
                                         </div>
                                     </div>
@@ -2012,17 +2014,17 @@ export default function TenantMessagesPage() {
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 md:p-6 bg-neutral-900/50 border-t border-white/5 shrink-0 flex justify-center w-full" data-tour-id="tour-messages-input">
+                        <div className="p-4 md:p-6 bg-card/85 border-t border-border shrink-0 flex justify-center w-full" data-tour-id="tour-messages-input">
                             <div className="w-full max-w-4xl flex flex-col gap-3">
                                 {/* Security Announcement Banner */}
                                 <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shrink-0 mb-1">
                                     <div className="flex items-center gap-3">
                                         <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                                        <span className="text-xs font-medium text-amber-400/90 hidden sm:inline">
+                                        <span className="text-xs font-medium text-amber-700 hidden sm:inline">
                                             <strong className="text-amber-500 mr-1">Security Warning:</strong>
                                             Never share sensitive credentials or passwords. Admins will NEVER ask for this.
                                         </span>
-                                        <span className="text-xs font-medium text-amber-400/90 sm:hidden">
+                                        <span className="text-xs font-medium text-amber-700 sm:hidden">
                                             Keep credentials private.
                                         </span>
                                     </div>
@@ -2035,10 +2037,10 @@ export default function TenantMessagesPage() {
                                 </div>
 
                                 {pendingAttachment && (
-                                    <div className="relative w-36 rounded-2xl border border-white/10 bg-black/30 p-2">
+                                    <div className="relative w-36 rounded-2xl border border-border bg-background/90 p-2 shadow-sm">
                                         <button
                                             onClick={clearPendingAttachment}
-                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-neutral-900 border border-white/20 flex items-center justify-center text-neutral-300 hover:text-white hover:bg-neutral-800"
+                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
                                             aria-label="Remove attachment"
                                         >
                                             <X className="h-3.5 w-3.5" />
@@ -2047,12 +2049,12 @@ export default function TenantMessagesPage() {
                                             <img
                                                 src={pendingAttachment.previewUrl}
                                                 alt="Attachment preview"
-                                                className="h-24 w-full rounded-xl bg-black/40 object-contain"
+                                                className="h-24 w-full rounded-xl bg-muted/40 object-contain"
                                             />
                                         ) : (
-                                            <div className="h-24 w-full rounded-xl border border-white/10 bg-neutral-900/50 p-3 flex flex-col justify-center">
+                                            <div className="h-24 w-full rounded-xl border border-border bg-muted/40 p-3 flex flex-col justify-center">
                                                 <File className="w-4 h-4 text-primary mb-2" />
-                                                <p className="text-[10px] text-neutral-300 font-semibold truncate">{pendingAttachment.file.name}</p>
+                                                <p className="text-[10px] text-foreground font-semibold truncate">{pendingAttachment.file.name}</p>
                                             </div>
                                         )}
                                     </div>
@@ -2063,7 +2065,7 @@ export default function TenantMessagesPage() {
                                     onDragLeave={handleComposerDragLeave}
                                     onDrop={handleComposerDrop}
                                     className={cn(
-                                        "flex items-end gap-3 rounded-3xl bg-black/40 border border-white/10 p-2 pl-4 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all",
+                                        "flex items-end gap-3 rounded-3xl bg-background/95 border border-border p-2 pl-4 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all shadow-sm",
                                         isComposerDragOver && "border-primary/80 bg-primary/10"
                                     )}
                                 >
@@ -2078,14 +2080,14 @@ export default function TenantMessagesPage() {
                                         onChange={(e) => handleMessageInputChange(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Type your message..."
-                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-white placeholder:text-neutral-500 resize-none max-h-32 py-2.5 custom-scrollbar"
+                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-foreground placeholder:text-muted-foreground resize-none max-h-32 py-2.5 custom-scrollbar"
                                         rows={1}
                                     />
                                     <div className="flex items-center gap-1 shrink-0 pb-1">
                                         <button
                                             onClick={handleFilePickerOpen}
                                             disabled={isUploadingFile || activeConversationId === "iris"}
-                                            className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <Paperclip className="w-5 h-5" />
                                         </button>
@@ -2099,7 +2101,7 @@ export default function TenantMessagesPage() {
                                     </div>
                                 </div>
                                 {isUploadingFile && (
-                                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                    <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
                                         <div
                                             className="h-full bg-primary transition-all duration-150"
                                             style={{ width: `${uploadProgress ?? 0}%` }}
@@ -2107,10 +2109,10 @@ export default function TenantMessagesPage() {
                                     </div>
                                 )}
                                 <div className="flex items-center justify-between px-2">
-                                    <span className="text-[10px] text-neutral-500 flex items-center gap-1">
+                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                         <ShieldCheck className="w-3 h-3" /> Secure connection
                                     </span>
-                                    <span className="text-[10px] text-neutral-500">
+                                    <span className="text-[10px] text-muted-foreground">
                                         {isUploadingFile
                                             ? `Uploading file... ${uploadProgress ?? 0}%`
                                             : isComposerDragOver
@@ -2119,7 +2121,7 @@ export default function TenantMessagesPage() {
                                     </span>
                                 </div>
                                 {fileUploadError && (
-                                    <p className="text-[11px] text-red-400 px-2">{fileUploadError}</p>
+                                    <p className="text-[11px] text-red-600 px-2">{fileUploadError}</p>
                                 )}
                             </div>
                         </div>
@@ -2127,9 +2129,9 @@ export default function TenantMessagesPage() {
 
                     {/* Right Info Sidebar (Slide out panel) - TENANT FOCUSED */}
                     {showInfoSidebar && (
-                        <div className="w-72 shrink-0 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col h-full overflow-hidden shadow-2xl animate-in slide-in-from-right-8 duration-300">
-                            <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/30">
-                                <h3 className="font-bold text-white">
+                        <div className="w-72 shrink-0 rounded-2xl border border-border bg-card/90 flex flex-col h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.3)] animate-in slide-in-from-right-8 duration-300 backdrop-blur-xl">
+                            <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/95">
+                                <h3 className="font-bold text-foreground">
                                     {activeRelationshipStatus === "tenant_landlord"
                                         ? "Landlord Info"
                                         : activeRelationshipStatus === "prospective"
@@ -2138,7 +2140,7 @@ export default function TenantMessagesPage() {
                                 </h3>
                                 <button
                                     onClick={() => setShowInfoSidebar(false)}
-                                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -2148,7 +2150,7 @@ export default function TenantMessagesPage() {
                                 {/* Quick Actions - TENANT SPECIFIC */}
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                                             <Zap className="w-4 h-4 text-primary" /> Quick Actions
                                         </h4>
                                     </div>
@@ -2160,12 +2162,12 @@ export default function TenantMessagesPage() {
                                                 <button
                                                     key={action.key}
                                                     onClick={() => handleTenantQuickAction(action.key)}
-                                                    className="flex flex-col items-center justify-center gap-2 p-3 bg-neutral-800/50 hover:bg-neutral-800 rounded-xl border border-white/5 hover:border-white/10 transition-all group"
+                                                    className="flex flex-col items-center justify-center gap-2 p-3 bg-muted/50 hover:bg-muted rounded-xl border border-border transition-all group"
                                                 >
                                                     <div className={cn("p-2 rounded-lg group-hover:scale-110 transition-transform", action.iconContainerClassName)}>
                                                         <ActionIcon className={cn("w-4 h-4", action.iconClassName)} />
                                                     </div>
-                                                    <span className="text-[10px] text-neutral-400 group-hover:text-white font-medium text-center leading-tight">
+                                                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground font-medium text-center leading-tight">
                                                         {action.labelTop}<br />{action.labelBottom}
                                                     </span>
                                                 </button>
@@ -2180,24 +2182,24 @@ export default function TenantMessagesPage() {
                                 {canShowPaymentHistory && (
                                     <div className="pb-4">
                                         <div className="flex items-center justify-between mb-4">
-                                            <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                            <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                                                 <History className="w-4 h-4 text-primary" /> Payment History
                                             </h4>
                                             <button
                                                 onClick={() => setShowPaymentHistoryModal(true)}
-                                                className="text-[10px] uppercase font-bold text-neutral-500 cursor-pointer hover:text-white transition-colors"
+                                                className="text-[10px] uppercase font-bold text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                                             >
                                                 View All
                                             </button>
                                         </div>
                                         {paymentHistoryLoading ? (
-                                            <p className="text-xs text-neutral-500">Loading payment history...</p>
+                                            <p className="text-xs text-muted-foreground">Loading payment history...</p>
                                         ) : paymentHistoryError ? (
-                                            <p className="text-xs text-red-300">{paymentHistoryError}</p>
+                                            <p className="text-xs text-red-600">{paymentHistoryError}</p>
                                         ) : paymentHistory.length === 0 ? (
-                                            <p className="text-xs text-neutral-500">No payment history yet.</p>
+                                            <p className="text-xs text-muted-foreground">No payment history yet.</p>
                                         ) : (
-                                            <div className="flex flex-col gap-3 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/5 before:to-transparent">
+                                            <div className="flex flex-col gap-3 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
                                                 {paymentHistory.slice(0, 3).map((payment) => {
                                                     const isPaid = payment.statusTone === "paid";
 
@@ -2206,14 +2208,14 @@ export default function TenantMessagesPage() {
                                                             <div className="flex items-center gap-4">
                                                                 <div
                                                                     className={cn(
-                                                                        "h-5 w-5 rounded-full bg-neutral-900 border-2 flex items-center justify-center relative z-10",
+                                                                        "h-5 w-5 rounded-full bg-background border-2 flex items-center justify-center relative z-10",
                                                                         isPaid
-                                                                            ? "border-white/20"
+                                                                            ? "border-border"
                                                                             : "border-primary shadow-[0_0_10px_rgba(200,255,0,0.2)]"
                                                                     )}
                                                                 >
                                                                     {isPaid ? (
-                                                                        <CheckCircle2 className="w-3 h-3 text-neutral-400" />
+                                                                        <CheckCircle2 className="w-3 h-3 text-muted-foreground" />
                                                                     ) : (
                                                                         <div className="h-1.5 w-1.5 bg-primary rounded-full"></div>
                                                                     )}
@@ -2222,7 +2224,7 @@ export default function TenantMessagesPage() {
                                                                     <span
                                                                         className={cn(
                                                                             "text-[11px] font-bold",
-                                                                            isPaid ? "text-neutral-300" : "text-white"
+                                                                            isPaid ? "text-slate-600" : "text-foreground"
                                                                         )}
                                                                     >
                                                                         {payment.monthLabel} {payment.typeLabel}
@@ -2230,7 +2232,7 @@ export default function TenantMessagesPage() {
                                                                     <span
                                                                         className={cn(
                                                                             "text-[10px]",
-                                                                            isPaid ? "text-neutral-500" : "text-primary"
+                                                                            isPaid ? "text-muted-foreground" : "text-primary"
                                                                         )}
                                                                     >
                                                                         {isPaid ? payment.dateLabel : payment.statusLabel}
@@ -2240,7 +2242,7 @@ export default function TenantMessagesPage() {
                                                             <span
                                                                 className={cn(
                                                                     "text-xs font-bold",
-                                                                    isPaid ? "text-neutral-400" : "text-white"
+                                                                    isPaid ? "text-muted-foreground" : "text-foreground"
                                                                 )}
                                                             >
                                                                 ₱{formatAmount(payment.amount)}
@@ -2258,9 +2260,9 @@ export default function TenantMessagesPage() {
 
                     {/* Shared Files Sidebar (Slide out panel) */}
                     {showFilesSidebar && (
-                        <div className="w-80 shrink-0 rounded-2xl border border-white/5 bg-neutral-900/50 flex flex-col h-full overflow-hidden shadow-2xl animate-in slide-in-from-right-8 duration-300">
+                        <div className="w-80 shrink-0 rounded-2xl border border-border bg-card/90 flex flex-col h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.3)] animate-in slide-in-from-right-8 duration-300 backdrop-blur-xl">
                             {/* Header */}
-                            <div className="h-20 border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-neutral-900/40 relative overflow-hidden">
+                            <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/95 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                                     <Folder size={80} className="-rotate-12" />
                                 </div>
@@ -2269,23 +2271,23 @@ export default function TenantMessagesPage() {
                                         <Folder className="w-5 h-5 text-primary" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-white text-base">Shared Files</h3>
-                                        <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+                                        <h3 className="font-bold text-foreground text-base">Shared Files</h3>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                                             {sharedFiles.length} Items â€¢ {formatFileSize(totalSharedSize)}
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setShowFilesSidebar(false)}
-                                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors relative z-10"
+                                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors relative z-10"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
                             {/* Filter Tabs */}
-                            <div className="px-6 py-4 border-b border-white/5 shrink-0">
-                                <div className="flex p-1 bg-black/40 rounded-xl border border-white/5">
+                            <div className="px-6 py-4 border-b border-border shrink-0">
+                                <div className="flex p-1 bg-muted/60 rounded-xl border border-border">
                                     {['all', 'media', 'docs'].map((filter) => (
                                         <button
                                             key={filter}
@@ -2293,8 +2295,8 @@ export default function TenantMessagesPage() {
                                             className={cn(
                                                 "flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all",
                                                 fileFilter === filter
-                                                    ? "bg-white/10 text-white shadow-sm"
-                                                    : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                                                    ? "bg-background text-foreground shadow-sm"
+                                                    : "text-muted-foreground hover:text-foreground hover:bg-background/70"
                                             )}
                                         >
                                             {filter}
@@ -2308,12 +2310,12 @@ export default function TenantMessagesPage() {
                                 {(fileFilter === 'all' || fileFilter === 'media') && (
                                     <div>
                                         <div className="flex items-center justify-between mb-4">
-                                            <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                            <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                                                 <ImageIcon className="w-4 h-4 text-blue-400" /> Recent Media
                                             </h4>
                                         </div>
                                         {sharedFiles.filter((item) => item.isMedia).length === 0 ? (
-                                            <p className="text-xs text-neutral-500">No media shared in this conversation yet.</p>
+                                            <p className="text-xs text-muted-foreground">No media shared in this conversation yet.</p>
                                         ) : (
                                             <div className="grid grid-cols-2 gap-3">
                                                 {sharedFiles
@@ -2324,14 +2326,14 @@ export default function TenantMessagesPage() {
                                                             href={item.url}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="group relative rounded-2xl overflow-hidden border border-white/10 aspect-square cursor-pointer bg-neutral-800"
+                                                            className="group relative rounded-2xl overflow-hidden border border-border aspect-square cursor-pointer bg-muted/50"
                                                         >
-                                                            <img src={item.url} alt={item.name} className="w-full h-full object-contain bg-black/40 opacity-90 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                                            <img src={item.url} alt={item.name} className="w-full h-full object-contain bg-background/80 opacity-90 group-hover:opacity-100 transition-all duration-500 group-hover:scale-105" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                                                                 <div className="w-full flex justify-between items-center">
-                                                                    <span className="text-[9px] text-white/90 font-semibold truncate max-w-[70%]">{item.name}</span>
-                                                                    <div className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg border border-white/20 backdrop-blur-md transition-colors">
-                                                                        <Download className="w-4 h-4 text-white" />
+                                                                    <span className="text-[9px] text-foreground font-semibold truncate max-w-[70%]">{item.name}</span>
+                                                                    <div className="bg-card/90 hover:bg-card p-1.5 rounded-lg border border-border backdrop-blur-md transition-colors">
+                                                                        <Download className="w-4 h-4 text-foreground" />
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -2346,12 +2348,12 @@ export default function TenantMessagesPage() {
                                 {(fileFilter === 'all' || fileFilter === 'docs') && (
                                     <div>
                                         <div className="flex items-center justify-between mb-4">
-                                            <h4 className="text-sm font-bold text-neutral-300 flex items-center gap-2">
+                                            <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                                                 <FileText className="w-4 h-4 text-primary" /> Shared Documents
                                             </h4>
                                         </div>
                                         {sharedFiles.filter((item) => !item.isMedia).length === 0 ? (
-                                            <p className="text-xs text-neutral-500">No documents shared in this conversation yet.</p>
+                                            <p className="text-xs text-muted-foreground">No documents shared in this conversation yet.</p>
                                         ) : (
                                             <div className="flex flex-col gap-3">
                                                 {sharedFiles
@@ -2362,20 +2364,20 @@ export default function TenantMessagesPage() {
                                                             href={item.url}
                                                             target="_blank"
                                                             rel="noreferrer"
-                                                            className="flex items-center gap-3 p-3 rounded-2xl border border-white/5 bg-black/20 hover:bg-white/[0.05] hover:border-white/10 cursor-pointer transition-all group"
+                                                            className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-background/70 hover:bg-muted/50 cursor-pointer transition-all group"
                                                         >
                                                             <div className="p-2.5 bg-primary/10 rounded-xl shrink-0 border border-primary/20 group-hover:scale-105 transition-transform">
                                                                 <File className="w-4 h-4 text-primary" />
                                                             </div>
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="text-xs text-neutral-200 font-bold truncate group-hover:text-white transition-colors">{item.name}</p>
+                                                                <p className="text-xs text-foreground font-bold truncate group-hover:text-foreground transition-colors">{item.name}</p>
                                                                 <div className="flex items-center gap-2 mt-1 blur-0">
-                                                                    <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{formatFileSize(item.size)}</span>
-                                                                    <span className="w-1 h-1 rounded-full bg-white/10"></span>
-                                                                    <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider">{item.timestampLabel}</span>
+                                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">{formatFileSize(item.size)}</span>
+                                                                    <span className="w-1 h-1 rounded-full bg-border"></span>
+                                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">{item.timestampLabel}</span>
                                                                 </div>
                                                             </div>
-                                                            <div className="p-2 text-neutral-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                                            <div className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
                                                                 <Download className="w-4 h-4" />
                                                             </div>
                                                         </a>
@@ -2386,9 +2388,9 @@ export default function TenantMessagesPage() {
                                 )}
 
                                 {sharedFiles.length === 0 && fileFilter === "all" && (
-                                    <div className="rounded-2xl border border-white/5 bg-black/20 p-4 text-center">
-                                        <p className="text-xs text-neutral-400">No shared files yet.</p>
-                                        <p className="text-[10px] text-neutral-600 mt-1">Use the paperclip button in chat to upload files.</p>
+                                    <div className="rounded-2xl border border-border bg-background/70 p-4 text-center">
+                                        <p className="text-xs text-muted-foreground">No shared files yet.</p>
+                                        <p className="text-[10px] text-slate-500 mt-1">Use the paperclip button in chat to upload files.</p>
                                     </div>
                                 )}
                             </div>
@@ -2399,22 +2401,22 @@ export default function TenantMessagesPage() {
 
             {/* Payment History Full Modal Overlay */}
             {showPaymentHistoryModal && canShowPaymentHistory && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div id="payment-statement" className="w-full max-w-2xl bg-neutral-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-background/75 backdrop-blur-md animate-in fade-in duration-300">
+                    <div id="payment-statement" className="w-full max-w-2xl bg-card border border-border rounded-3xl shadow-[0_30px_90px_-35px_rgba(15,23,42,0.35)] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-neutral-900/50">
+                        <div className="p-6 border-b border-border flex items-center justify-between bg-card/95">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
                                     <History className="w-6 h-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">Full Payment history</h3>
-                                    <p className="text-xs text-neutral-500 mt-1">{activeContact.name} â€¢ {activeContact.unit}</p>
+                                    <h3 className="text-xl font-bold text-foreground">Full Payment history</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">{activeContact.name} â€¢ {activeContact.unit}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowPaymentHistoryModal(false)}
-                                className="p-2 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all"
                             >
                                 <X className="w-6 h-6" />
                             </button>
@@ -2424,17 +2426,17 @@ export default function TenantMessagesPage() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="space-y-4">
                                 {paymentHistoryLoading ? (
-                                    <p className="text-xs text-neutral-500">Loading payment history...</p>
+                                    <p className="text-xs text-muted-foreground">Loading payment history...</p>
                                 ) : paymentHistoryError ? (
-                                    <p className="text-xs text-red-300">{paymentHistoryError}</p>
+                                    <p className="text-xs text-red-600">{paymentHistoryError}</p>
                                 ) : paymentHistory.length === 0 ? (
-                                    <p className="text-xs text-neutral-500">No payment history yet.</p>
+                                    <p className="text-xs text-muted-foreground">No payment history yet.</p>
                                 ) : (
                                     paymentHistory.map((payment) => {
                                         const isPaid = payment.statusTone === "paid";
 
                                         return (
-                                            <div key={payment.id} className="flex items-center justify-between p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.05] transition-all group">
+                                            <div key={payment.id} className="flex items-center justify-between p-4 bg-background/70 border border-border rounded-2xl hover:bg-muted/40 transition-all group">
                                                 <div className="flex items-center gap-4">
                                                     <div
                                                         className={cn(
@@ -2445,16 +2447,16 @@ export default function TenantMessagesPage() {
                                                         <CreditCard className="w-5 h-5" />
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-white group-hover:text-primary transition-colors">{payment.monthLabel}</span>
+                                                        <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{payment.monthLabel}</span>
                                                         <div className="flex items-center gap-2 mt-0.5">
-                                                            <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-semibold">{payment.typeLabel} via {payment.methodLabel}</span>
-                                                            <span className="w-1 h-1 rounded-full bg-neutral-700"></span>
-                                                            <span className="text-[10px] text-neutral-500">{payment.dateLabel}</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{payment.typeLabel} via {payment.methodLabel}</span>
+                                                            <span className="w-1 h-1 rounded-full bg-border"></span>
+                                                            <span className="text-[10px] text-muted-foreground">{payment.dateLabel}</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="text-right flex flex-col items-end">
-                                                    <span className="text-base font-black text-white">₱{formatAmount(payment.amount)}</span>
+                                                    <span className="text-base font-black text-foreground">₱{formatAmount(payment.amount)}</span>
                                                     <span
                                                         className={cn(
                                                             "text-[10px] font-bold px-2 py-0.5 rounded-full mt-1",
@@ -2472,10 +2474,10 @@ export default function TenantMessagesPage() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 border-t border-white/5 bg-neutral-900/50 flex items-center justify-between">
+                        <div className="p-6 border-t border-border bg-card/95 flex items-center justify-between">
                             <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-0.5">Total Paid (Lifetime)</span>
-                                <span className="text-lg font-black text-white">{paymentHistoryLoading ? "—" : `₱${formatAmount(paymentHistoryTotal)}`}</span>
+                                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-0.5">Total Paid (Lifetime)</span>
+                                <span className="text-lg font-black text-foreground">{paymentHistoryLoading ? "—" : `₱${formatAmount(paymentHistoryTotal)}`}</span>
                             </div>
                             <button
                                 disabled={isDownloading}
@@ -2493,12 +2495,12 @@ export default function TenantMessagesPage() {
             )}
 
             {pendingConfirmAction && (
-                <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-6 space-y-4">
-                        <h4 className="text-lg font-bold text-white">
+                <div className="fixed inset-0 z-[90] bg-background/75 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 space-y-4 shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]">
+                        <h4 className="text-lg font-bold text-foreground">
                             {pendingConfirmAction === "archive" ? "Archive this conversation?" : "Block this contact?"}
                         </h4>
-                        <p className="text-sm text-neutral-300 leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
                             {pendingConfirmAction === "archive"
                                 ? "Archived chats are hidden from your list but can be restored later by support."
                                 : "Blocked contacts are removed from your message list and future direct messaging should be restricted."}
@@ -2507,7 +2509,7 @@ export default function TenantMessagesPage() {
                             <button
                                 onClick={() => setPendingConfirmAction(null)}
                                 disabled={isSubmittingConfirmAction}
-                                className="px-3 py-2 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                                className="px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -2524,24 +2526,24 @@ export default function TenantMessagesPage() {
             )}
 
             {showModerationModal && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-md rounded-2xl border border-red-500/20 bg-neutral-900 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-[100] bg-background/75 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-md rounded-2xl border border-red-500/20 bg-card overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)] animate-in zoom-in-95 duration-200">
                         <div className="bg-red-500/10 p-6 flex flex-col items-center text-center">
                             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4 text-red-500">
                                 <AlertTriangle className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-black text-white mb-2">Message Blocked</h4>
-                            <p className="text-sm text-neutral-300 leading-relaxed font-semibold">
+                            <h4 className="text-xl font-black text-foreground mb-2">Message Blocked</h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed font-semibold">
                                 {moderationMessage || "Your message violated our community guidelines."}
                             </p>
                         </div>
-                        <div className="p-6 bg-[#0a0a0a] border-t border-white/5 space-y-4">
-                            <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-neutral-400 leading-relaxed text-center">
-                                <strong className="text-white">Warning:</strong> Repeated violations of our chat policies—including hate speech, severe profanity, harassment, or spam—may lead to formal account offense or permanent suspension.
+                        <div className="p-6 bg-card border-t border-border space-y-4">
+                            <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground leading-relaxed text-center">
+                                <strong className="text-foreground">Warning:</strong> Repeated violations of our chat policies—including hate speech, severe profanity, harassment, or spam—may lead to formal account offense or permanent suspension.
                             </div>
                             <button
                                 onClick={() => setShowModerationModal(false)}
-                                className="w-full py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all focus:outline-none focus:ring-2 focus:ring-white/20"
+                                className="w-full py-3 rounded-xl bg-muted text-foreground font-bold hover:bg-muted/80 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20"
                             >
                                 I Understand
                             </button>
@@ -2551,52 +2553,52 @@ export default function TenantMessagesPage() {
             )}
 
             {showChatRulesModal && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-neutral-900 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-neutral-900 z-10 shrink-0">
+                <div className="fixed inset-0 z-[100] bg-background/75 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)] animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500">
                                     <ShieldCheck className="w-5 h-5" />
                                 </div>
-                                <h4 className="text-xl font-black text-white">Chat Rules & Policy</h4>
+                                <h4 className="text-xl font-black text-foreground">Chat Rules & Policy</h4>
                             </div>
                             <button
                                 onClick={() => setShowChatRulesModal(false)}
-                                className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar text-left">
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">1. Professional Conduct</h5>
-                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">1. Professional Conduct</h5>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
                                     All communications must remain professional, respectful, and courteous. Hate speech, discrimination, harassment, and severe profanity are strictly prohibited.
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">2. Prohibited Content</h5>
-                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">2. Prohibited Content</h5>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
                                     You may not send spam, unauthorized advertisements, explicit media, or any illegal content. Our AI moderation system actively intercepts and blocks such content.
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">3. Platform Safety</h5>
-                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">3. Platform Safety</h5>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
                                     Do not attempt to bypass platform processes. Sharing external payment links, requesting off-platform security deposits, or phishing for sensitive credentials (passwords, bank details) is forbidden.
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-white uppercase tracking-wider">4. Reporting Violations</h5>
-                                <p className="text-sm text-neutral-300 leading-relaxed">
+                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">4. Reporting Violations</h5>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
                                     If you encounter a user violating these rules, please use the "Report User" feature. Repeated violations will result in permanent suspension of the offending account.
                                 </p>
                             </div>
                         </div>
-                        <div className="p-6 bg-[#0a0a0a] border-t border-white/5 shrink-0 flex justify-end">
+                        <div className="p-6 bg-card border-t border-border shrink-0 flex justify-end">
                             <button
                                 onClick={() => setShowChatRulesModal(false)}
-                                className="px-6 py-2.5 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all focus:outline-none"
+                                className="px-6 py-2.5 rounded-xl bg-muted text-foreground font-bold hover:bg-muted/80 transition-all focus:outline-none"
                             >
                                 Close
                             </button>
@@ -2606,24 +2608,24 @@ export default function TenantMessagesPage() {
             )}
 
             {showReportWizard && (
-                <div className="fixed inset-0 z-[95] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-neutral-900 p-6 space-y-4">
+                <div className="fixed inset-0 z-[95] bg-background/75 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 space-y-4 shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]">
                         <div className="flex items-center justify-between">
-                            <h4 className="text-lg font-bold text-white">Report User</h4>
+                            <h4 className="text-lg font-bold text-foreground">Report User</h4>
                             <button
                                 onClick={() => setShowReportWizard(false)}
-                                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10"
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
                             >
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Category</label>
+                            <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Category</label>
                             <select
                                 value={reportCategory}
                                 onChange={(event) => setReportCategory(event.target.value)}
-                                className="w-full rounded-xl bg-black/40 border border-white/10 text-sm text-white px-3 py-2"
+                                className="w-full rounded-xl bg-background border border-border text-sm text-foreground px-3 py-2"
                             >
                                 <option value="spam">Spam</option>
                                 <option value="harassment">Harassment</option>
@@ -2634,23 +2636,23 @@ export default function TenantMessagesPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs uppercase tracking-wider text-neutral-500 font-bold">What happened?</label>
+                            <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">What happened?</label>
                             <textarea
                                 value={reportDetails}
                                 onChange={(event) => setReportDetails(event.target.value)}
                                 rows={5}
                                 placeholder="Describe the issue with enough detail for moderation review."
-                                className="w-full rounded-xl bg-black/40 border border-white/10 text-sm text-white placeholder:text-neutral-500 px-3 py-2 resize-none"
+                                className="w-full rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground px-3 py-2 resize-none"
                             />
                         </div>
 
-                        {reportWizardError && <p className="text-xs text-red-400">{reportWizardError}</p>}
+                        {reportWizardError && <p className="text-xs text-red-600">{reportWizardError}</p>}
 
                         <div className="flex items-center justify-end gap-2 pt-2">
                             <button
                                 onClick={() => setShowReportWizard(false)}
                                 disabled={isSubmittingReport}
-                                className="px-3 py-2 rounded-lg border border-white/10 text-neutral-300 hover:text-white hover:bg-white/5 disabled:opacity-50"
+                                className="px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50"
                             >
                                 Cancel
                             </button>
