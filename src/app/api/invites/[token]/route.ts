@@ -1,0 +1,269 @@
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { DEFAULT_CHECKLIST } from "@/lib/application-intake";
+import { getInviteAvailability, hashInviteToken } from "@/lib/tenant-intake-invites";
+import type { Database } from "@/types/database";
+
+type InviteRecord = {
+    id: string;
+    landlord_id: string;
+    property_id: string;
+    unit_id: string | null;
+    mode: "property" | "unit";
+    public_token: string;
+    token_hash: string;
+    status: "active" | "revoked" | "expired" | "consumed";
+    max_uses: number;
+    use_count: number;
+    expires_at: string | null;
+};
+
+async function loadInviteRecord(token: string) {
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient
+        .from("tenant_intake_invites")
+        .select("id, landlord_id, property_id, unit_id, mode, public_token, token_hash, status, max_uses, use_count, expires_at")
+        .eq("public_token", token)
+        .maybeSingle();
+
+    if (error) {
+        throw error;
+    }
+
+    if (!data) {
+        return null;
+    }
+
+    const invite = data as InviteRecord;
+    if (invite.token_hash !== hashInviteToken(token)) {
+        return null;
+    }
+
+    return invite;
+}
+
+async function expireInviteIfNeeded(invite: InviteRecord) {
+    const adminClient = createAdminClient();
+    const availability = getInviteAvailability({
+        status: invite.status,
+        expiresAt: invite.expires_at,
+        useCount: invite.use_count,
+        maxUses: invite.max_uses,
+    });
+
+    if (availability.expired && invite.status !== "expired") {
+        await adminClient.from("tenant_intake_invites").update({ status: "expired" }).eq("id", invite.id);
+        await adminClient.from("tenant_intake_invite_events").insert({
+            invite_id: invite.id,
+            event_type: "expired",
+            metadata: {},
+        });
+    }
+
+    return availability;
+}
+
+export async function GET(
+    _request: Request,
+    context: { params: Promise<{ token: string }> }
+) {
+    const { token } = await context.params;
+    const adminClient = createAdminClient();
+
+    try {
+        const invite = await loadInviteRecord(token);
+        if (!invite) {
+            return NextResponse.json({ error: "Invite not found." }, { status: 404 });
+        }
+
+        const availability = await expireInviteIfNeeded(invite);
+        if (!availability.active) {
+            return NextResponse.json({ error: "Invite is no longer available." }, { status: 410 });
+        }
+
+        const { data: property } = await adminClient
+            .from("properties")
+            .select("id, name")
+            .eq("id", invite.property_id)
+            .maybeSingle();
+
+        const { data: units } = await adminClient
+            .from("units")
+            .select("id, property_id, name, rent_amount, status")
+            .eq("property_id", invite.property_id)
+            .eq("status", "vacant")
+            .order("name", { ascending: true });
+
+        const eligibleUnits = (units ?? [])
+            .filter((unit) => invite.mode === "property" || unit.id === invite.unit_id)
+            .map((unit) => ({
+                id: unit.id,
+                name: unit.name,
+                rent_amount: Number(unit.rent_amount ?? 0),
+                property_id: unit.property_id,
+                property_name: property?.name ?? "Property",
+            }));
+
+        const selectedUnit = invite.mode === "unit" ? eligibleUnits[0] ?? null : null;
+
+        await adminClient.from("tenant_intake_invite_events").insert({
+            invite_id: invite.id,
+            event_type: "opened",
+            metadata: { mode: invite.mode },
+        });
+
+        return NextResponse.json({
+            invite: {
+                id: invite.id,
+                mode: invite.mode,
+                propertyId: invite.property_id,
+                propertyName: property?.name ?? "Property",
+                unitId: invite.unit_id,
+                selectedUnit,
+                units: eligibleUnits,
+                expiresAt: invite.expires_at,
+            },
+        });
+    } catch {
+        return NextResponse.json({ error: "Failed to validate invite." }, { status: 500 });
+    }
+}
+
+export async function POST(
+    request: Request,
+    context: { params: Promise<{ token: string }> }
+) {
+    const { token } = await context.params;
+    const adminClient = createAdminClient();
+
+    try {
+        const invite = await loadInviteRecord(token);
+        if (!invite) {
+            return NextResponse.json({ error: "Invite not found." }, { status: 404 });
+        }
+
+        const availability = await expireInviteIfNeeded(invite);
+        if (!availability.active) {
+            return NextResponse.json({ error: "Invite is no longer available." }, { status: 410 });
+        }
+
+        const body = (await request.json()) as {
+            unit_id?: string;
+            applicant_name?: string;
+            applicant_phone?: string;
+            applicant_email?: string;
+            move_in_date?: string | null;
+            emergency_contact_name?: string | null;
+            emergency_contact_phone?: string | null;
+            employment_info?: {
+                occupation?: string;
+                employer?: string;
+                monthly_income?: number;
+            };
+            message?: string;
+        };
+
+        const occupation = body.employment_info?.occupation?.trim() ?? "";
+        const employer = body.employment_info?.employer?.trim() ?? "";
+        const monthlyIncome = Number(body.employment_info?.monthly_income ?? 0);
+
+        if (!body.applicant_name?.trim() || !body.applicant_email?.trim()) {
+            return NextResponse.json({ error: "Applicant name and email are required." }, { status: 400 });
+        }
+
+        if (!occupation || !employer || !Number.isFinite(monthlyIncome) || monthlyIncome <= 0) {
+            return NextResponse.json({ error: "Employment details are incomplete." }, { status: 400 });
+        }
+
+        let resolvedUnitId = invite.unit_id;
+        if (invite.mode === "property") {
+            resolvedUnitId = body.unit_id ?? null;
+        }
+
+        if (!resolvedUnitId) {
+            return NextResponse.json({ error: "A unit must be selected." }, { status: 400 });
+        }
+
+        const { data: unit } = await adminClient
+            .from("units")
+            .select("id, property_id, status")
+            .eq("id", resolvedUnitId)
+            .maybeSingle();
+
+        if (!unit || unit.property_id !== invite.property_id || unit.status !== "vacant") {
+            return NextResponse.json({ error: "Selected unit is no longer available." }, { status: 400 });
+        }
+
+        const inviteChecklist = {
+            ...DEFAULT_CHECKLIST,
+            application_form: true,
+        };
+
+        const insertPayload: ApplicationInsert = {
+            unit_id: resolvedUnitId,
+            applicant_id: null,
+            landlord_id: invite.landlord_id,
+            created_by: null,
+            applicant_name: body.applicant_name.trim(),
+            applicant_email: body.applicant_email.trim(),
+            applicant_phone: body.applicant_phone?.trim() || null,
+            move_in_date: body.move_in_date || null,
+            emergency_contact_name: body.emergency_contact_name?.trim() || null,
+            emergency_contact_phone: body.emergency_contact_phone?.trim() || null,
+            employment_info: {
+                occupation,
+                employer,
+                monthly_income: monthlyIncome,
+            },
+            employment_status: occupation,
+            monthly_income: monthlyIncome,
+            requirements_checklist: inviteChecklist,
+            message: body.message?.trim() || null,
+            status: "pending",
+            application_source: "invite_link",
+            invite_id: invite.id,
+        };
+
+        const { data: application, error: insertError } = await adminClient
+            .from("applications")
+            .insert(insertPayload)
+            .select("id, status, created_at")
+            .single();
+
+        if (insertError || !application) {
+            return NextResponse.json({ error: "Failed to submit application." }, { status: 500 });
+        }
+
+        const nextUseCount = invite.use_count + 1;
+        const nextStatus = nextUseCount >= invite.max_uses ? "consumed" : invite.status;
+
+        await adminClient
+            .from("tenant_intake_invites")
+            .update({
+                use_count: nextUseCount,
+                status: nextStatus,
+                last_used_at: new Date().toISOString(),
+            })
+            .eq("id", invite.id);
+
+        await adminClient.from("tenant_intake_invite_events").insert({
+            invite_id: invite.id,
+            event_type: nextStatus === "consumed" ? "consumed" : "submitted",
+            metadata: {
+                applicationId: application.id,
+                unitId: resolvedUnitId,
+            },
+        });
+
+        return NextResponse.json({
+            application: {
+                id: application.id,
+                status: application.status,
+                createdAt: application.created_at,
+            },
+        });
+    } catch {
+        return NextResponse.json({ error: "Failed to submit invite application." }, { status: 500 });
+    }
+}
+type ApplicationInsert = Database["public"]["Tables"]["applications"]["Insert"];

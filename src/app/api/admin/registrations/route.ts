@@ -20,6 +20,12 @@ interface RegistrationRow {
     liveness_document_url: string | null;
     status: ApplicationStatus;
     admin_notes: string | null;
+    business_name: string | null;
+    business_address: string | null;
+    verification_status: string | null;
+    verification_data: unknown | null;
+    verification_checked_at: string | null;
+    verification_notes: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -80,6 +86,12 @@ export async function GET() {
             liveness_document_url,
             status,
             admin_notes,
+            business_name,
+            business_address,
+            verification_status,
+            verification_data,
+            verification_checked_at,
+            verification_notes,
             created_at,
             updated_at
         `)

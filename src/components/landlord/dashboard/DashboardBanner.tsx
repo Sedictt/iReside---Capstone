@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, Wrench, Map, UserPlus } from "lucide-react";
+import { Search, Bell, Wrench, Map, QrCode, UserPlus } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 
@@ -60,6 +60,7 @@ interface DashboardBannerProps {
     className?: string;
     simplifiedMode?: boolean;
     onNewWalkIn?: () => void;
+    onCreateInvite?: () => void;
 }
 
 export function DashboardBanner({
@@ -68,7 +69,8 @@ export function DashboardBanner({
     image = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop", // City Night Architecture
     className,
     simplifiedMode = false,
-    onNewWalkIn
+    onNewWalkIn,
+    onCreateInvite
 }: DashboardBannerProps) {
     const [time, setTime] = useState<Date | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -266,6 +268,15 @@ export function DashboardBanner({
                                 <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
                                 <span className="text-sm font-black tracking-tight relative z-10">New Application</span>
                             </Link>
+                        )}
+                        {onCreateInvite && (
+                            <button
+                                onClick={onCreateInvite}
+                                className="group flex items-center gap-2 rounded-xl border border-white/70 bg-white/75 px-4 py-2 text-slate-700 backdrop-blur-sm transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                            >
+                                <QrCode className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                <span className="text-sm font-medium">Invite Link</span>
+                            </button>
                         )}
                         <Link href="/landlord/maintenance" className="group flex items-center gap-2 rounded-xl border border-white/70 bg-white/75 px-4 py-2 text-slate-700 backdrop-blur-sm transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
                             <Wrench className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />

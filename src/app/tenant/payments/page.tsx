@@ -1,272 +1,148 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-    CreditCard,
-    History,
-    ArrowUpRight,
-    CheckCircle2,
-    AlertCircle,
-    Calendar,
-    Download,
-    Home,
-    Droplets,
-    Plus,
-    RefreshCw,
-    Loader2,
-    Zap,
-    XCircle,
-    FileText
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, CheckCircle2, History, Loader2, QrCode, Receipt, Waves } from "lucide-react";
 import Link from "next/link";
+
+import type { InvoiceListItem } from "@/lib/billing/server";
+import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
-type PaymentItem = {
-    id: string;
-    label: string;
-    amount: number;
-    category: string;
-};
-
-type PaymentData = {
-    id: string;
-    amount: number;
-    status: string;
-    method: string | null;
-    description: string | null;
-    due_date: string;
-    paid_at?: string;
-    reference_number?: string;
-    payment_items?: PaymentItem[];
-    lease?: {
-        unit?: {
-            name: string;
-        }
-    };
+type PaymentsPayload = {
+    nextPayment: (InvoiceListItem & { paymentItems?: Array<{ id: string; label: string; amount: number; category: string }> }) | null;
+    history: InvoiceListItem[];
 };
 
 export default function PaymentsPage() {
-    const [nextPayment, setNextPayment] = useState<PaymentData | null>(null);
-    const [history, setHistory] = useState<PaymentData[]>([]);
+    const [payload, setPayload] = useState<PaymentsPayload | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let isMounted = true;
-        const fetchPayments = async () => {
+        let alive = true;
+        const load = async () => {
             try {
-                const res = await fetch("/api/tenant/payments", { cache: "no-store" });
-                if (!res.ok) throw new Error("Failed to load payments");
-                const payload = await res.json();
-                if (isMounted) {
-                    setNextPayment(payload.nextPayment);
-                    setHistory(payload.history);
-                }
-            } catch (err) {
-                console.error(err);
+                const response = await fetch("/api/tenant/payments", { cache: "no-store" });
+                if (!response.ok) throw new Error();
+                const next = (await response.json()) as PaymentsPayload;
+                if (alive) setPayload(next);
             } finally {
-                if (isMounted) setLoading(false);
+                if (alive) setLoading(false);
             }
         };
-        fetchPayments();
-        return () => { isMounted = false; };
+        void load();
+        return () => {
+            alive = false;
+        };
     }, []);
 
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value);
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "N/A";
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    };
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case "completed": return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
-            case "failed": return <XCircle className="w-5 h-5 text-red-500" />;
-            case "refunded": return <RefreshCw className="w-5 h-5 text-purple-500" />;
-            default: return <AlertCircle className="w-5 h-5 text-amber-500" />;
-        }
-    };
-
-    const isOverdue = nextPayment ? new Date(nextPayment.due_date).getTime() < Date.now() : false;
-
     if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] opacity-70 space-y-4 text-foreground">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Fetching Financial Data...</span>
-            </div>
-        );
+        return <div className="flex min-h-[50vh] items-center justify-center text-foreground"><Loader2 className="mr-3 h-5 w-5 animate-spin" />Loading your payment dashboard...</div>;
     }
 
+    const nextPayment = payload?.nextPayment ?? null;
+    const history = payload?.history ?? [];
+
     return (
-        <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-4xl md:text-5xl font-display text-foreground mb-3 mt-4">Financials Base</h1>
-                    <p className="text-muted-foreground text-sm md:text-base max-w-2xl">
-                        Manage your upcoming rent, review comprehensive utility breakdowns, and access your payment history dashboard.
-                    </p>
+        <div className="space-y-8">
+            <section className="relative overflow-hidden rounded-[2.5rem] border border-border/40 bg-gradient-to-br from-card/80 via-card/50 to-muted/30 p-10 shadow-xl backdrop-blur-3xl">
+                <div className="absolute -left-[20%] -top-[20%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+                <div className="absolute -right-[10%] -bottom-[20%] h-[400px] w-[400px] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none" />
+                <div className="relative z-10 max-w-2xl">
+                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 py-1.5 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground shadow-sm backdrop-blur-md">
+                        <Receipt className="h-3.5 w-3.5 text-primary" />
+                        Tenant Billing
+                    </div>
+                    <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl leading-tight">Clear invoices, readable utilities, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">cleaner checkout</span></h1>
+                    <p className="mt-4 text-base leading-relaxed text-muted-foreground max-w-xl">Review the full monthly bill, see how meter readings affect the total, and submit payment with the right landlord destination every time.</p>
                 </div>
-                <button className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-card text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl text-xs font-bold uppercase tracking-widest transition-colors border border-border shadow-sm">
-                    <Download className="w-4 h-4" />
-                    Export Ledger
-                </button>
-            </div>
+            </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Main Content (Left) */}
-                <div className="lg:col-span-8 flex flex-col gap-8">
-                    
-                    {/* Current Balance Card */}
-                    <div
-                        className="rounded-[2.5rem] border border-primary/20 bg-card p-8 md:p-12 relative overflow-hidden shadow-[0_24px_60px_-28px_rgba(15,23,42,0.25)]"
-                        data-tour-id="tour-payments-balance"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
-                        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
-
-                        <div className="relative z-10">
-                            {nextPayment ? (
-                                <>
-                                    <div className="flex items-start justify-between mb-8">
-                                        <div>
-                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-4">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                                Next Invoice
-                                            </div>
-                                            <h2 className="text-5xl md:text-6xl font-black text-foreground tracking-tighter tabular-nums">
-                                                {formatCurrency(nextPayment.amount)}
-                                            </h2>
-                                            <p className={cn(
-                                                "text-sm font-bold mt-4 flex items-center gap-2 tracking-wide",
-                                                isOverdue ? "text-red-600" : "text-muted-foreground"
-                                            )}>
-                                                <Calendar className="w-4 h-4" />
-                                                {isOverdue ? "Overdue Since" : "Due By"} {formatDate(nextPayment.due_date)}
-                                            </p>
-                                        </div>
-                                        <div className={cn(
-                                            "hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border backdrop-blur-md shadow-sm",
-                                            isOverdue ? "bg-red-500/10 text-red-700 border-red-500/20" : "bg-amber-500/10 text-amber-700 border-amber-500/20"
-                                        )}>
-                                            <AlertCircle className="w-4 h-4" />
-                                            {isOverdue ? "Past Due" : "Payment Pending"}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col sm:flex-row gap-4 mt-10">
-                                        <Link href={`/tenant/payments/${nextPayment.id}/checkout`} className="flex-1 max-w-sm bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs py-4 px-6 rounded-2xl transition-all shadow-[0_16px_30px_-18px_rgba(var(--primary-rgb),0.55)] flex items-center justify-center gap-3">
-                                            <CreditCard className="w-4 h-4" />
-                                            Settle Balance
-                                        </Link>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-10">
-                                    <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-400 mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                                        <CheckCircle2 className="w-10 h-10" />
-                                    </div>
-                                    <h2 className="text-3xl font-black text-foreground tracking-tight">All Caught Up!</h2>
-                                    <p className="text-muted-foreground font-medium mt-2 max-w-sm mx-auto">
-                                        You have no pending payments at the moment. Your account is in excellent standing.
-                                    </p>
-                                </div>
-                            )}
+            <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+                <section className="rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl flex flex-col">
+                    <div className="mb-8 flex items-center gap-4">
+                        <div className="rounded-2xl border border-primary/20 bg-primary/10 p-3.5 text-primary shadow-sm"><Waves className="h-6 w-6" /></div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Next invoice</p>
+                            <h2 className="mt-1.5 text-3xl font-black text-foreground">{nextPayment ? nextPayment.invoiceNumber : "You're all settled"}</h2>
                         </div>
                     </div>
 
-                    {/* Payment Breakdown */}
-                    {nextPayment && nextPayment.payment_items && nextPayment.payment_items.length > 0 && (
-                        <div className="rounded-[2.5rem] border border-border bg-card/95 p-8 backdrop-blur-3xl shadow-[0_20px_50px_-28px_rgba(15,23,42,0.2)]">
-                            <h3 className="text-xl font-display text-foreground mb-8 flex items-center gap-3">
-                                <FileText className="w-5 h-5 text-primary" /> 
-                                Invoice Breakdown
-                            </h3>
-                            <div className="space-y-4">
-                                {nextPayment.payment_items.map((item, idx) => (
-                                    <div key={item.id || idx} className="flex items-center justify-between p-5 rounded-2xl bg-muted/45 border border-border hover:bg-muted/70 transition-colors">
-                                        <div className="flex items-center gap-5">
-                                            <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-muted-foreground border border-border shadow-sm">
-                                                {item.category.toLowerCase().includes("water") || item.label.toLowerCase().includes("water") ? (
-                                                    <Droplets className="w-5 h-5 text-blue-400" />
-                                                ) : item.category.toLowerCase().includes("electric") || item.label.toLowerCase().includes("electric") ? (
-                                                    <Zap className="w-5 h-5 text-yellow-400" />
-                                                ) : (
-                                                    <Home className="w-5 h-5 text-primary" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-foreground text-sm">{item.label}</p>
-                                                <p className="text-[10px] font-black tracking-widest uppercase text-muted-foreground mt-1">{item.category}</p>
-                                            </div>
+                    {nextPayment ? (
+                        <div className="space-y-6 flex-1 flex flex-col">
+                            <div className="rounded-[2rem] border border-border/50 bg-background/60 p-6 shadow-inner backdrop-blur-md">
+                                <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+                                    <div>
+                                        <p className="text-base font-black text-foreground">{nextPayment.property} <span className="mx-1 text-border">•</span> {nextPayment.unit}</p>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <span className="rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 shadow-sm">{nextPayment.status}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">due {nextPayment.dueDate}</span>
                                         </div>
-                                        <span className="font-black text-lg text-foreground tabular-nums tracking-tight">
-                                            {formatCurrency(item.amount)}
-                                        </span>
+                                    </div>
+                                    <div className="md:text-right">
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Balance due</p>
+                                        <p className="mt-1 text-4xl font-black text-primary">{formatPhpCurrency(nextPayment.balanceRemaining)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 flex-1">
+                                {(nextPayment.paymentItems ?? []).map((item) => (
+                                    <div key={item.id} className="group flex items-center justify-between rounded-[1.6rem] border border-border/50 bg-background/80 px-5 py-4 transition-all hover:bg-background hover:scale-[1.01] hover:border-primary/30 shadow-sm backdrop-blur-md">
+                                        <div>
+                                            <p className="text-sm font-black text-foreground">{item.label}</p>
+                                            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{item.category}</p>
+                                        </div>
+                                        <span className="text-base font-black text-foreground group-hover:text-primary transition-colors">{formatPhpCurrency(item.amount)}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
-                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Total Amount</span>
-                                <span className="text-2xl font-black text-foreground tabular-nums">
-                                    {formatCurrency(nextPayment.amount)}
-                                </span>
+                            <Link href={`/tenant/payments/${nextPayment.id}/checkout`} className="group mt-auto inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-primary to-blue-600 px-6 py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95">
+                                Continue to checkout <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="flex flex-1 flex-col items-center justify-center rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-12 text-center shadow-inner">
+                            <div className="mb-6 rounded-full bg-emerald-500/20 p-4">
+                                <CheckCircle2 className="h-12 w-12 text-emerald-500" />
                             </div>
+                            <p className="text-2xl font-black text-foreground">No pending balance</p>
+                            <p className="mt-3 text-sm leading-relaxed text-muted-foreground max-w-sm">Your landlord has no invoice waiting for payment right now. You are completely caught up!</p>
                         </div>
                     )}
+                </section>
 
-                </div>
-
-                {/* Sidebar (Right) */}
-                <div className="lg:col-span-4 space-y-8">
-                    
-                    {/* Payment History */}
-                    <div className="rounded-[2.5rem] border border-border bg-card/95 backdrop-blur-3xl shadow-[0_20px_50px_-28px_rgba(15,23,42,0.2)] overflow-hidden p-8">
-                        <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-lg font-display text-foreground flex items-center gap-2">
-                                <History className="w-4 h-4 text-primary" />
-                                Ledger
-                            </h3>
-                            <button className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-foreground transition-colors">
-                                View All
-                            </button>
-                        </div>
-
-                        <div className="space-y-6">
-                            {history.length === 0 ? (
-                                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center py-6">No previous transactions</p>
-                            ) : (
-                                history.map((item) => (
-                                    <div key={item.id} className="group relative flex gap-4 cursor-pointer">
-                                        <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center border border-border group-hover:scale-110 transition-transform shadow-sm">
-                                            {getStatusIcon(item.status)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <p className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate pr-2">
-                                                    {item.description || "Payment"}
-                                                </p>
-                                                <span className="font-black text-sm text-foreground tabular-nums tracking-tight">
-                                                    {formatCurrency(item.amount)}
-                                                </span>
-                                            </div>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
-                                                {formatDate(item.paid_at || item.due_date)} • {item.method || "Cash"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                <section className="rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl flex flex-col max-h-[85vh]">
+                    <div className="mb-8 flex items-center gap-4 shrink-0">
+                        <div className="rounded-2xl border border-border/50 bg-background/80 p-3.5 text-foreground shadow-sm"><History className="h-6 w-6" /></div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Ledger</p>
+                            <h2 className="mt-1.5 text-3xl font-black text-foreground">Recent invoices</h2>
                         </div>
                     </div>
-
-
-                </div>
+                    <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                        {history.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">No completed invoices yet.</div>}
+                        {history.map((invoice) => (
+                            <div key={invoice.id} className="group rounded-[1.8rem] border border-border/50 bg-background/80 p-5 shadow-sm backdrop-blur-md transition-all hover:bg-background hover:scale-[1.01] hover:border-border hover:shadow-md">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p className="text-base font-black text-foreground">{invoice.invoiceNumber}</p>
+                                        <p className="mt-1 text-xs font-medium text-muted-foreground">{invoice.property} <span className="mx-1 text-border">•</span> {invoice.unit}</p>
+                                    </div>
+                                    <span className={cn("rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm", invoice.status === "paid" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-muted text-muted-foreground border border-border")}>{invoice.status}</span>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-4">
+                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">due {invoice.dueDate}</span>
+                                    <span className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{formatPhpCurrency(invoice.amount)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-6 shrink-0 rounded-[2rem] border border-primary/20 bg-primary/5 p-5 text-sm text-foreground shadow-inner">
+                        <div className="flex items-center gap-2.5 font-black"><QrCode className="h-5 w-5 text-primary" />Landlord-specific checkout</div>
+                        <p className="mt-2.5 leading-relaxed text-muted-foreground text-xs font-medium">Each invoice now securely loads the active landlord GCash destination instead of a shared hardcoded QR.</p>
+                    </div>
+                </section>
             </div>
         </div>
     );

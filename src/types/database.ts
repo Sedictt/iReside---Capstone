@@ -12,6 +12,8 @@ export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
 export type LeaseStatus = 'draft' | 'pending_signature' | 'pending_tenant_signature' | 'pending_landlord_signature' | 'active' | 'expired' | 'terminated'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
+export type UtilityType = 'water' | 'electricity'
+export type UtilityBillingMode = 'included_in_rent' | 'tenant_paid'
 export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'withdrawn'
 export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
@@ -22,6 +24,9 @@ export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announceme
 export type ListingScope = 'property' | 'unit'
 export type ListingStatus = 'draft' | 'published' | 'paused'
 export type LocationType = 'city' | 'barangay' | 'street'
+export type TenantInviteMode = 'property' | 'unit'
+export type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
+export type ApplicationSource = 'walk_in_application' | 'invite_link'
 
 export interface Database {
     public: {
@@ -98,6 +103,12 @@ export interface Database {
                     liveness_document_url: string | null
                     status: ApplicationStatus
                     admin_notes: string | null
+                    business_name: string | null
+                    business_address: string | null
+                    verification_status: 'not_verified' | 'verified' | 'not_found' | 'error' | null
+                    verification_data: Json | null
+                    verification_checked_at: string | null
+                    verification_notes: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -110,6 +121,12 @@ export interface Database {
                     liveness_document_url?: string | null
                     status?: ApplicationStatus
                     admin_notes?: string | null
+                    business_name?: string | null
+                    business_address?: string | null
+                    verification_status?: 'not_verified' | 'verified' | 'not_found' | 'error' | null
+                    verification_data?: Json | null
+                    verification_checked_at?: string | null
+                    verification_notes?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -122,6 +139,12 @@ export interface Database {
                     liveness_document_url?: string | null
                     status?: ApplicationStatus
                     admin_notes?: string | null
+                    business_name?: string | null
+                    business_address?: string | null
+                    verification_status?: 'not_verified' | 'verified' | 'not_found' | 'error' | null
+                    verification_data?: Json | null
+                    verification_checked_at?: string | null
+                    verification_notes?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -201,6 +224,77 @@ export interface Database {
                     views?: number
                     leads?: number
                     updated_at?: string
+                }
+                Relationships: any[]
+            }
+            tenant_intake_invites: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    property_id: string
+                    unit_id: string | null
+                    mode: TenantInviteMode
+                    public_token: string
+                    token_hash: string
+                    status: TenantInviteStatus
+                    max_uses: number
+                    use_count: number
+                    expires_at: string | null
+                    last_used_at: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    property_id: string
+                    unit_id?: string | null
+                    mode: TenantInviteMode
+                    public_token: string
+                    token_hash: string
+                    status?: TenantInviteStatus
+                    max_uses?: number
+                    use_count?: number
+                    expires_at?: string | null
+                    last_used_at?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    property_id?: string
+                    unit_id?: string | null
+                    mode?: TenantInviteMode
+                    public_token?: string
+                    token_hash?: string
+                    status?: TenantInviteStatus
+                    max_uses?: number
+                    use_count?: number
+                    expires_at?: string | null
+                    last_used_at?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            tenant_intake_invite_events: {
+                Row: {
+                    id: string
+                    invite_id: string
+                    event_type: 'created' | 'opened' | 'submitted' | 'revoked' | 'expired' | 'consumed'
+                    metadata: Json
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    invite_id: string
+                    event_type: 'created' | 'opened' | 'submitted' | 'revoked' | 'expired' | 'consumed'
+                    metadata?: Json
+                    created_at?: string
+                }
+                Update: {
+                    invite_id?: string
+                    event_type?: 'created' | 'opened' | 'submitted' | 'revoked' | 'expired' | 'consumed'
+                    metadata?: Json
                 }
                 Relationships: any[]
             }
@@ -411,6 +505,24 @@ export interface Database {
                     paid_at: string | null
                     reference_number: string | null
                     landlord_confirmed: boolean
+                    invoice_number: string | null
+                    billing_cycle: string | null
+                    invoice_period_start: string | null
+                    invoice_period_end: string | null
+                    subtotal: number
+                    paid_amount: number
+                    balance_remaining: number
+                    late_fee_amount: number
+                    late_fee_applied_at: string | null
+                    allow_partial_payments: boolean
+                    due_day_snapshot: number | null
+                    payment_submitted_at: string | null
+                    payment_proof_path: string | null
+                    payment_proof_url: string | null
+                    payment_note: string | null
+                    reminder_sent_at: string | null
+                    receipt_number: string | null
+                    metadata: Json
                     created_at: string
                     updated_at: string
                 }
@@ -427,6 +539,24 @@ export interface Database {
                     paid_at?: string | null
                     reference_number?: string | null
                     landlord_confirmed?: boolean
+                    invoice_number?: string | null
+                    billing_cycle?: string | null
+                    invoice_period_start?: string | null
+                    invoice_period_end?: string | null
+                    subtotal?: number
+                    paid_amount?: number
+                    balance_remaining?: number
+                    late_fee_amount?: number
+                    late_fee_applied_at?: string | null
+                    allow_partial_payments?: boolean
+                    due_day_snapshot?: number | null
+                    payment_submitted_at?: string | null
+                    payment_proof_path?: string | null
+                    payment_proof_url?: string | null
+                    payment_note?: string | null
+                    reminder_sent_at?: string | null
+                    receipt_number?: string | null
+                    metadata?: Json
                     created_at?: string
                     updated_at?: string
                 }
@@ -442,6 +572,24 @@ export interface Database {
                     paid_at?: string | null
                     reference_number?: string | null
                     landlord_confirmed?: boolean
+                    invoice_number?: string | null
+                    billing_cycle?: string | null
+                    invoice_period_start?: string | null
+                    invoice_period_end?: string | null
+                    subtotal?: number
+                    paid_amount?: number
+                    balance_remaining?: number
+                    late_fee_amount?: number
+                    late_fee_applied_at?: string | null
+                    allow_partial_payments?: boolean
+                    due_day_snapshot?: number | null
+                    payment_submitted_at?: string | null
+                    payment_proof_path?: string | null
+                    payment_proof_url?: string | null
+                    payment_note?: string | null
+                    reminder_sent_at?: string | null
+                    receipt_number?: string | null
+                    metadata?: Json
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -453,6 +601,11 @@ export interface Database {
                     label: string
                     amount: number
                     category: string
+                    sort_order: number
+                    utility_type: UtilityType | null
+                    billing_mode: UtilityBillingMode | null
+                    reading_id: string | null
+                    metadata: Json
                     created_at: string
                 }
                 Insert: {
@@ -461,6 +614,11 @@ export interface Database {
                     label: string
                     amount: number
                     category?: string
+                    sort_order?: number
+                    utility_type?: UtilityType | null
+                    billing_mode?: UtilityBillingMode | null
+                    reading_id?: string | null
+                    metadata?: Json
                     created_at?: string
                 }
                 Update: {
@@ -468,6 +626,207 @@ export interface Database {
                     label?: string
                     amount?: number
                     category?: string
+                    sort_order?: number
+                    utility_type?: UtilityType | null
+                    billing_mode?: UtilityBillingMode | null
+                    reading_id?: string | null
+                    metadata?: Json
+                }
+                Relationships: any[]
+            }
+            landlord_payment_destinations: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    provider: 'gcash'
+                    account_name: string
+                    account_number: string
+                    qr_image_path: string | null
+                    qr_image_url: string | null
+                    is_enabled: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    provider?: 'gcash'
+                    account_name: string
+                    account_number: string
+                    qr_image_path?: string | null
+                    qr_image_url?: string | null
+                    is_enabled?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    provider?: 'gcash'
+                    account_name?: string
+                    account_number?: string
+                    qr_image_path?: string | null
+                    qr_image_url?: string | null
+                    is_enabled?: boolean
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            utility_configs: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    property_id: string
+                    unit_id: string | null
+                    utility_type: UtilityType
+                    billing_mode: UtilityBillingMode
+                    rate_per_unit: number
+                    unit_label: 'kwh' | 'cubic_meter'
+                    is_active: boolean
+                    effective_from: string
+                    effective_to: string | null
+                    note: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    property_id: string
+                    unit_id?: string | null
+                    utility_type: UtilityType
+                    billing_mode?: UtilityBillingMode
+                    rate_per_unit?: number
+                    unit_label: 'kwh' | 'cubic_meter'
+                    is_active?: boolean
+                    effective_from?: string
+                    effective_to?: string | null
+                    note?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    property_id?: string
+                    unit_id?: string | null
+                    utility_type?: UtilityType
+                    billing_mode?: UtilityBillingMode
+                    rate_per_unit?: number
+                    unit_label?: 'kwh' | 'cubic_meter'
+                    is_active?: boolean
+                    effective_from?: string
+                    effective_to?: string | null
+                    note?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            utility_readings: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    lease_id: string
+                    property_id: string
+                    unit_id: string
+                    utility_type: UtilityType
+                    billing_mode: UtilityBillingMode
+                    billing_period_start: string
+                    billing_period_end: string
+                    previous_reading: number
+                    current_reading: number
+                    usage: number
+                    billed_rate: number
+                    computed_charge: number
+                    entered_at: string
+                    note: string | null
+                    proof_image_path: string | null
+                    proof_image_url: string | null
+                    payment_id: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    lease_id: string
+                    property_id: string
+                    unit_id: string
+                    utility_type: UtilityType
+                    billing_mode: UtilityBillingMode
+                    billing_period_start: string
+                    billing_period_end: string
+                    previous_reading?: number
+                    current_reading?: number
+                    usage?: number
+                    billed_rate?: number
+                    computed_charge?: number
+                    entered_at?: string
+                    note?: string | null
+                    proof_image_path?: string | null
+                    proof_image_url?: string | null
+                    payment_id?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    landlord_id?: string
+                    lease_id?: string
+                    property_id?: string
+                    unit_id?: string
+                    utility_type?: UtilityType
+                    billing_mode?: UtilityBillingMode
+                    billing_period_start?: string
+                    billing_period_end?: string
+                    previous_reading?: number
+                    current_reading?: number
+                    usage?: number
+                    billed_rate?: number
+                    computed_charge?: number
+                    entered_at?: string
+                    note?: string | null
+                    proof_image_path?: string | null
+                    proof_image_url?: string | null
+                    payment_id?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            payment_receipts: {
+                Row: {
+                    id: string
+                    payment_id: string
+                    landlord_id: string
+                    tenant_id: string
+                    receipt_number: string
+                    amount: number
+                    issued_at: string
+                    issued_by: string | null
+                    notes: string | null
+                    metadata: Json
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    payment_id: string
+                    landlord_id: string
+                    tenant_id: string
+                    receipt_number: string
+                    amount: number
+                    issued_at?: string
+                    issued_by?: string | null
+                    notes?: string | null
+                    metadata?: Json
+                    created_at?: string
+                }
+                Update: {
+                    payment_id?: string
+                    landlord_id?: string
+                    tenant_id?: string
+                    receipt_number?: string
+                    amount?: number
+                    issued_at?: string
+                    issued_by?: string | null
+                    notes?: string | null
+                    metadata?: Json
                 }
                 Relationships: any[]
             }
@@ -492,6 +851,8 @@ export interface Database {
                     reviewed_at: string | null
                     created_at: string
                     updated_at: string
+                    invite_id: string | null
+                    application_source: ApplicationSource
                     // Walk-in application fields
                     created_by: string | null
                     applicant_name: string | null
@@ -520,6 +881,8 @@ export interface Database {
                     reviewed_at?: string | null
                     created_at?: string
                     updated_at?: string
+                    invite_id?: string | null
+                    application_source?: ApplicationSource
                     // Walk-in application fields
                     created_by?: string | null
                     applicant_name?: string | null
@@ -546,6 +909,8 @@ export interface Database {
                     compliance_checklist?: Json | null
                     reviewed_at?: string | null
                     updated_at?: string
+                    invite_id?: string | null
+                    application_source?: ApplicationSource
                     // Walk-in application fields
                     created_by?: string | null
                     applicant_name?: string | null
@@ -946,6 +1311,8 @@ export interface Database {
             unit_transfer_status: UnitTransferStatus
             message_type: MessageType
             notification_type: NotificationType
+            utility_type: UtilityType
+            utility_billing_mode: UtilityBillingMode
         }
         CompositeTypes: {
             [_ in never]: never
@@ -961,6 +1328,10 @@ export type Lease = Database['public']['Tables']['leases']['Row']
 export type LandlordReview = Database['public']['Tables']['landlord_reviews']['Row']
 export type Payment = Database['public']['Tables']['payments']['Row']
 export type PaymentItem = Database['public']['Tables']['payment_items']['Row']
+export type LandlordPaymentDestination = Database['public']['Tables']['landlord_payment_destinations']['Row']
+export type UtilityConfig = Database['public']['Tables']['utility_configs']['Row']
+export type UtilityReading = Database['public']['Tables']['utility_readings']['Row']
+export type PaymentReceipt = Database['public']['Tables']['payment_receipts']['Row']
 export type Application = Database['public']['Tables']['applications']['Row']
 export type LandlordInquiryAction = Database['public']['Tables']['landlord_inquiry_actions']['Row']
 export type MaintenanceRequest = Database['public']['Tables']['maintenance_requests']['Row']
@@ -990,6 +1361,9 @@ export type PaymentWithDetails = Payment & {
     lease: Lease
     tenant: Profile
     items: PaymentItem[]
+    readings?: UtilityReading[]
+    payment_destination?: LandlordPaymentDestination | null
+    receipts?: PaymentReceipt[]
 }
 
 export type ApplicationWithDetails = Application & {

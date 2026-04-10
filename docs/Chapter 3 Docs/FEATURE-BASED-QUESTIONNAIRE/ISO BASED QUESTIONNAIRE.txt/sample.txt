@@ -1,0 +1,798 @@
+3.6.4.3 ISO-based Questionnaire
+Directions: Please pick a rating for each criterion whether:
+STRONGLY DISAGREE (1), DISAGREE (2), AGREE (3), or STRONGLY AGREE (4).
+ISO/EIC 25010 Criteria STRONGLY
+DISAGREE (1)
+
+DISAGREE
+(2)
+
+AGREE (3) STRONGLY
+AGREE (4)
+
+A. Functional Suitability
+
+Functional Completeness:
+The system provides all
+functions specified in the
+requirements (account
+management, manuscripts,
+manuscript files, bookmarks,
+references, teams, discourses,
+notifications, analytics).
+As a Researcher, I was able to
+search for articles, bookmark
+them, save references, request
+manuscripts, use teams, and
+interact with chatbot to
+conduct my research.
+Bilang Mananaliksik,
+nagawa kong maghanap ng
+mga artikulo, mag-bookmark
+ng mga ito, mag-imbak ng mga
+sanggunian, humingi ng
+pahintulot sa manuskrito,
+gumamit ng mga team, at
+makipag-usap sa chatbot
+upang makatulong sa proseso
+ng pananaliksik.
+As a Library Staff, I was able
+to process manuscript requests
+as well as enable and disable
+user accounts to facilitate
+research access.
+As a Chairperson, I was able
+to manage department-specific
+manuscripts and submissions to
+the administrator.
+
+184
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+As an Administrator, I was
+able to manage all system
+aspects including users,
+manuscripts, and analytics to
+ensure proper system
+operation.
+Functional Correctness: The
+system produces accurate
+results when performing tasks
+(e.g., searching articles,
+managing references,
+processing manuscript
+requests).
+As a Researcher, I was able to
+find accurate search results
+and could properly format
+reference exports to strengthen
+my research.
+Bilang Mananaliksik, nagawa
+kong makahanap ng tumpak na
+resulta at maayos kong
+naisalansan ang mga
+sangguniang panluwas upang
+mapagtibay ang aking
+pananaliksik.
+As a Library Staff, I was able
+to facilitate manuscript request
+processing to ensure
+researchers get appropriate
+access.
+As a Chairperson, I was able
+to accurately manage and
+update the status of
+manuscripts within my
+department.
+As an Administrator, I was
+able to find accurate system
+logs and analytics to help make
+informed decisions.
+Functional Appropriateness:
+The system's functions
+facilitate completion of
+
+185
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+specified objectives for
+administrators, library staff,
+and researchers.
+As a Researcher, I was able to
+use research tools that match
+my workflow to work
+ef iciently.
+Bilang Mananaliksik, nagawa
+kong magamit ang mga
+kasangkapan sa pananaliksik
+na tugma sa aking daloy ng
+paggawa upang makagawa
+nang mabisa.
+As a Library Staff, I was able
+to use appropriate management
+tools to fulfill my
+responsibilities.
+As a Chairperson, I was able
+to use appropriate interfaces to
+manage my department’s
+manuscripts.
+As an Administrator, I was
+able to use helpful control
+interfaces to properly manage
+the system.
+
+B. Performance Efficiency
+
+Time Behavior: The system
+responds within acceptable
+time limits for all operations
+such as loading pages and
+generating exports.
+As a Researcher, I was able to
+see quick search results and
+responsive interfaces.
+Bilang Mananaliksik, nagawa
+kong makahanap ng mabilis na
+resulta at makakita ng
+responsive interface.
+As a Library Staff, I was able
+to handle manuscript requests
+
+186
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+in real-time.
+As a Chairperson, I was able
+to submit and manage
+manuscripts without significant
+delays.
+As an Administrator, I was
+able to quickly generate system
+analytics.
+Resource Utilization: The
+system efficiently uses
+available hardware and
+software resources to perform
+its functions without
+unnecessary load or
+performance degradation.
+As a Researcher, I was able to
+perform searches and retrieve
+manuscripts without system
+lag.
+Bilang Mananaliksik, nagawa
+kong magsagawa ng
+paghahanap at makakuha ng
+mga manuskrito nang walang
+pagbagal sa system.
+As a Library Staff, I was able
+to process manuscript requests
+smoothly, even with multiple
+active users.
+As a Chairperson, I was able
+to access and review
+departmental manuscripts with
+minimal loading time.
+As an Administrator, I was
+able to generate analytics and
+export reports without
+performance issues.
+Capacity: The system can
+accommodate multiple users
+and large volumes of research
+data without affecting
+
+187
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+performance.
+As a Researcher, I was able to
+request documents
+simultaneously with other
+users.
+Bilang Mananaliksik, nagawa
+kong makahingi ng pahintulot
+sa mga dokumento kasabay ng
+iba pang gumagamit ng system.
+As a Library Staff, I was able
+to manage multiple requests in
+real-time without the system
+slowing down.
+As a Chairperson, I was able
+to submit and monitor multiple
+manuscript approvals
+concurrently.
+As an Administrator, I was
+able to oversee simultaneous
+system operations and user
+activity without delays.
+
+C. Compatibility
+
+Interoperability: The system
+can exchange information with
+other components or systems
+(e.g., importing manuscripts,
+exporting references in APA,
+MLA, or Chicago, and
+generating reports).
+As a Researcher, I was able to
+export references to other
+formats and file types to
+integrate it with my writing
+workflow.
+Bilang Mananaliksik, nagawa
+kong magluwas ng mga
+sanggunian sa iba't-ibang mga
+anyo at uri ng file upang
+maisama ito sa proseso ng
+aking pagsulat.
+
+188
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+As a Chairperson, I was able
+to upload manuscripts in PDF
+format to the system.
+As an Administrator, I was
+able to import manuscripts in
+PDF and export reports.
+
+D. Interaction Capability
+
+Appropriateness
+Recognizability: Users can
+easily recognize whether the
+system is appropriate for their
+research needs through clear
+labeling and organization of
+features.
+As a Researcher, I was able to
+find clear interface labeling to
+identify relevant features
+quickly.
+Bilang Mananaliksik, nagawa
+kong makahanap ng malinaw
+na interface label upang
+mabilis na matukoy ang
+hinahanap kong bahagi.
+As a Library Staff, I was able
+to recognize manuscript
+request controls seamlessly.
+As a Chairperson, I was able
+to recognize the departmental
+manuscript management tools
+easily.
+As an Administrator, I was
+able to access an organized
+dashboard to oversee the
+system properly.
+Learnability: New users can
+learn to use the system
+effectively within a reasonable
+timeframe.
+
+189
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+As a Researcher, I was able to
+use intuitive research tools to
+become productive quickly.
+Bilang Mananaliksik, nagawa
+kong magamit nang madali ang
+mga kasangkapan sa
+pananaliksik upang maging
+mahusay nang mabilis.
+As a Library Staff, I was able
+to use straightforward
+manuscript request controls to
+minimize training time.
+As a Chairperson, I was able
+to learn how to manage
+department manuscripts and
+submissions quickly.
+As an Administrator, I was
+able to use a self-explanatory
+dashboard to comprehensively
+make informed decisions.
+Operability: The system is
+easy to operate for all user
+roles including administrators
+managing accounts,
+chairpersons uploading
+manuscripts, library staff
+processing requests, and
+researchers using research tools
+such as the AI chatbot.
+As a Researcher, I was able to
+easily and conveniently use
+research tools to aid my
+workflow.
+Bilang Mananaliksik, nagawa
+kong magamit nang madali at
+maginhawa ang mga
+kasangkapan sa pananaliksik
+upang makatulong sa proseso
+ng aking paggawa.
+As a Library Staff, I was able
+to see requests pop-ups to
+
+190
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+immediately respond to
+manuscript requests.
+As a Chairperson, I was able
+to easily manage uploading,
+publishing, unpublishing, and
+updating manuscripts.
+As an Administrator, I was
+able to conveniently use
+ef ective and straightforward
+controls for user and
+manuscript management.
+User Error Protection: The
+system protects users against
+making errors by providing
+confirmation prompts before
+critical actions like deleting
+manuscripts, accounts, and
+teams.
+As a Researcher, I was able to
+see confirmation prompts
+before making critical
+decisions to not accidentally
+lose valuable information.
+Bilang Mananaliksik, nagawa
+kong makakita ng mga
+kumpirmasyon bago ako
+gumawa ng mga kritikal na
+desisyon upang hindi ako
+aksidenteng makapagbura ng
+mahalagang impormasyon.
+As a Library Staff, I was able
+to see confirmation prompts
+before making delete actions to
+not accidentally lose
+information.
+As a Chairperson, I was able
+to see confirmation prompts
+before deleting a manuscript
+from my department.
+As an Administrator, I was
+able to see confirmation
+
+191
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+prompts before making critical
+decisions to not accidentally
+lose sensitive data.
+User Engagement: The
+interface is appealing and
+engaging to users.
+As a Researcher, I was able to
+access a conversational
+chatbot that responds to my
+research-related queries.
+Bilang Mananaliksik, nagawa
+kong makipag-usap sa isang
+chatbot na tumutugon sa aking
+mga katanungan na may
+kaugnayan sa pananaliksik.
+As a Library Staff /
+Chairperson / Administrator,
+I was able to find engaging and
+dynamic displays through
+various controls within the
+system.
+User Assistance: The system
+provides comprehensive help
+and documentation through
+contextual hints and guided
+instructions, enabling users to
+understand and utilize system
+functionalities effectively.
+As a Researcher / Library
+Staff / Chairperson /
+Administrator, I was able to
+learn how to navigate and
+perform tasks ef iciently
+through an integrated tutorial
+implemented across the system.
+Bilang Mananaliksik /
+Library Staff / Chairperson /
+Administrator, nagawa kong
+matuto kung paano maglibot at
+gumawa ng mga gawain nang
+mabilis sa pamamagitan ng
+mga panuto na makikita sa
+bawat bahagi ng system.
+
+192
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Self-descriptiveness: The
+system's functions and
+elements are self-explanatory,
+with clear labels and
+instructions throughout the
+interface.
+As a Researcher / Library
+Staff / Chairperson /
+Administrator, I was able to
+understand features based on
+clear labels and hints.
+Bilang Mannaaliksik /
+Library Staff / Chairperson /
+Administrator, nagawa kong
+maunawaan ang mga bahagi
+sa pamamagitan ng mga label
+at pahiwatig nito.
+
+E. Reliability
+
+Faultlessness: The system
+operates without failures when
+performing critical operations
+such as uploading manuscripts
+and processing manuscript
+requests.
+As a Researcher / Library
+Staff / Chairperson /
+Administrator, I was able to
+find no errors in using research
+/ management tools that may
+hinder my work and progress.
+Bilang Mananaliksik /
+Library Staff / Chairperson /
+Administrator, wala akong
+nakita na kamalian sa
+paggamit ng mga kasangkapan
+sa pananaliksik na maaaring
+makahadlang sa proseso ng
+aking paggawa.
+Availability: The system is
+operational and accessible
+when required by
+administrators, chairpersons,
+
+193
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+library staff, and researchers
+within the CEIT Library.
+As a Researcher / Library
+Staff / Chairperson /
+Administrator, I was able to
+access the system as long as I
+am connected to the university
+network.
+Bilang Mananaliksik /
+Library Staff / Chairperson /
+Administrator, nagawa kong
+magamit ang system hangga’t
+nakakonekta ako sa network ng
+pamantasan.
+Fault Tolerance: The system
+operates as intended despite the
+presence of hardware or
+software faults.
+As a Researcher / Library
+Staff / Chairperson /
+Administrator, I was able to
+continually access the system
+despite minor issues.
+Bilang Mananaliksik/
+Library Staff / Chairperson /
+Administrator, patuloy kong
+nagamit ang system sa kabila
+ng maliliit na isyu.
+
+F. Security
+
+Confidentiality: The system
+ensures that data is accessible
+only to authorized users with
+appropriate access controls
+between administrators,
+chairpersons, library staff, and
+researchers.
+As a Researcher, I was able to
+prevent unauthorized access to
+my account by changing my
+own password upon first time
+access.
+
+194
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Bilang Mananaliksik, nagawa
+kong mabago ang password ng
+aking account sa unang
+pagbubukas nito upang
+maiwasan ang hindi
+pinahihintulutang paggamit
+nito.
+As a Chairperson, I was only
+able to access and manage
+manuscripts for my specific
+department.
+As an Administrator, I was
+able to create, delete, and
+update account information
+while other user roles are not
+able to.
+Integrity: The system ensures
+that data is protected from
+unauthorized alteration or
+deletion through strict access
+control and secure data
+management.
+As an Administrator, I was
+able to prevent unauthorized or
+malicious modifications and
+deletions through
+password-protected
+administrative actions.
+Non-repudiation: The system
+provides proof that actions
+such as manuscript
+management, account
+management, and researcher
+actions have occurred through
+system logs.
+As an Administrator, I was
+able to access system logs to
+verify all user activities.
+Accountability: User actions
+can be traced uniquely to the
+responsible individuals.
+
+195
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+As an Administrator, I was
+able to access system logs and
+filter them for a specific user to
+observe their activity log.
+Authenticity: The identity of
+users and resources can be
+verified.
+As an Administrator, I was
+able to view system log data to
+look up more information about
+a specific activity done by a
+specific user at a specific point
+in time.
+
+G. Maintainability
+
+Modularity: The system is
+composed of modular
+components such that changes
+to one component have
+minimal impact on others.
+As a Developer, I was able to
+observe dif erent page files
+which applies the design
+principle of separation of
+concerns.
+Reusability: Assets within the
+system can be used in other
+systems or for building other
+modules.
+As a Developer, I was able to
+reuse similar React
+components for all the modules
+that need them.
+Analyzability: The system can
+be effectively analyzed for
+potential impacts of changes or
+for diagnosing deficiencies in
+integrating components.
+
+196
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+As a Developer, I was able to
+easily identify the af ected
+modules when I modify a
+specific component.
+Modifiability: The system
+allows updates and feature
+adjustments to be implemented
+efficiently without causing
+defects or compromising
+existing functionality.
+As a Developer, I was able to
+modify components and
+improve features of the CBDA
+without af ecting overall system
+stability.
+Testability: The system can be
+tested effectively to verify that
+user requirements are met
+across all functional areas.
+As a Developer, I was able to
+test component functionality
+before integrating them with
+other components on a module.
+
+H. Flexibility
+
+Adaptability: The system
+adapts to different
+environments including various
+browsers with responsive
+design.
+As a Researcher / Library
+Staff / Chairperson /
+Administrator, I was able to
+access and use the system
+ef ectively on dif erent modern
+browsers.
+Bilang Mananaliksik/
+Library Staff / Chairperson /
+Administrator, nagawa kong
+magamit nang mabisa ang
+system gamit ang iba’t-ibang
+modernong browsers.
+
+197
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Scalability: The system can
+accommodate growth in the
+number of users, manuscripts,
+manuscript files, and references
+without performance
+degradation.
+As a Researcher, I was able to
+expand my research team
+without impeding my
+experience with the system.
+Bilang Mananaliksik, nagawa
+kong mapalawak ang aking
+team sa pananaliksik nang
+walang hadlang sa system.
+As a Library Staff, I was able
+to manage more online users
+without the system slowing
+down.
+As a Chairperson, I was able
+to manage more manuscripts
+without a noticeable drop in
+performance.
+As an Administrator, I was
+able to add more accounts and
+manuscripts without impacting
+system performance.
+Installability: The system can
+be effectively installed or
+uninstalled in the target
+environment without much
+inconvenience.
+As an Administrator, I was
+able to deploy the system for
+the CEIT Library ecosystem
+with minimal complexity.
+
+I. Safety
+
+198
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Hazard Warning: The system
+warns users about potentially
+destructive operations such as
+deleting manuscripts, accounts,
+or teams.
+As a Researcher, I was able to
+receive confirmation prompts
+before deleting bookmarks,
+references, discourses,
+requests, and invitations as
+well as leaving teams.
+Bilang Mananaliksik, nagawa
+kong makatanggap ng mga
+kumpirmasyon bago magbura
+ng mga bookmark, sanggunian,
+diskurso, pahintulot, at
+imbitasyon gayundin sa
+pag-alis sa teams.
+As a Library Staff, I was able
+to receive confirmation
+prompts before rejecting
+manuscript requests.
+As a Chairperson, I was able
+to receive confirmation
+prompts before deleting a
+manuscript from my
+department.
+As an Administrator: I was
+able to receive confirmation
+prompts before rejecting
+requests and deleting user
+accounts or digital copies of
+manuscripts.
+
+199
+
+PAMANTASAN NG LUNGSOD NG VALENZUELA
+College of Engineering and Information Technology
+INFORMATION TECHNOLOGY DEPARTMENT
+
+Safe Integration: The system
+integrates safely with other
+components and maintains
+consistent data across all
+modules.
+As a Researcher, I was able to
+see consistent data across my
+personal and shared team
+resources.
+Bilang Mananaliksik, nagawa
+kong makita ang mga
+magkakatugma at
+pare-parehong datos sa aking
+mga sangguniang personal
+maging sa mga team.
+As a Library Staff, I was able
+to see consistent data across
+researcher accounts within the
+system.
+As a Chairperson, I was able
+to see consistent data for
+manuscripts within my
+department.
+As an Administrator, I was
+able to verify that user
+information remained
+consistent across all system
+interfaces.

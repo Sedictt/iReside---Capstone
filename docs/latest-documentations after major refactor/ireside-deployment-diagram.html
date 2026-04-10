@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physical View - iReside Deployment Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #efefec;
+    --paper: #ffffff;
+    --ink: #3f3f3f;
+    --muted: #8e8e8e;
+    --line: #9aa3a7;
+    --dash: #c7cdcf;
+    --teal: #56c3d6;
+    --top: #fbfbfb;
+    --left: #ececec;
+    --right: #dcdcdc;
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+  }
+
+  .page {
+    width: min(1700px, calc(100vw - 48px));
+    min-height: calc(100vh - 48px);
+    margin: 24px auto;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .header {
+    padding: 34px 44px 8px;
+  }
+
+  .eyebrow {
+    margin: 0 0 6px;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 3vw, 3.5rem);
+    line-height: 1;
+    letter-spacing: -0.06em;
+    font-weight: 800;
+  }
+
+  h1 span {
+    color: #73b246;
+  }
+
+  .diagram-wrap {
+    padding: 6px 28px 32px;
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (max-width: 1100px) {
+    .page {
+      width: calc(100vw - 24px);
+      margin: 12px auto;
+    }
+
+    .header {
+      padding: 24px 20px 4px;
+    }
+
+    .diagram-wrap {
+      padding: 0 10px 20px;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <p class="eyebrow">Modeling System Architecture with UML</p>
+      <h1><span>Physical View</span> Deployment Diagram</h1>
+    </header>
+
+    <section class="diagram-wrap">
+      <svg viewBox="0 0 1600 920" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clean physical view deployment diagram for iReside">
+        <defs>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="160%">
+            <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.10"/>
+          </filter>
+
+          <g id="iso-node-sm">
+            <polygon points="0,16 18,6 36,16 18,26" fill="var(--top)"/>
+            <polygon points="0,16 0,38 18,48 18,26" fill="var(--left)"/>
+            <polygon points="36,16 36,38 18,48 18,26" fill="var(--right)"/>
+            <rect x="10" y="12" width="16" height="10" rx="2" fill="var(--teal)"/>
+          </g>
+
+          <g id="iso-node-md">
+            <polygon points="0,22 24,8 48,22 24,36" fill="var(--top)"/>
+            <polygon points="0,22 0,50 24,64 24,36" fill="var(--left)"/>
+            <polygon points="48,22 48,50 24,64 24,36" fill="var(--right)"/>
+            <rect x="15" y="18" width="18" height="12" rx="2" fill="var(--teal)"/>
+          </g>
+
+          <g id="server-stack">
+            <polygon points="0,30 44,6 92,30 48,54" fill="#fafafa"/>
+            <polygon points="0,30 0,84 48,108 48,54" fill="#e9e9e9"/>
+            <polygon points="92,30 92,84 48,108 48,54" fill="#d9d9d9"/>
+            <rect x="28" y="22" width="30" height="16" rx="2" fill="var(--teal)"/>
+          </g>
+
+          <g id="label-lg">
+            <rect width="176" height="54" rx="3" fill="#fff" filter="url(#softShadow)"/>
+          </g>
+
+          <g id="label-md">
+            <rect width="150" height="46" rx="3" fill="#fff" filter="url(#softShadow)"/>
+          </g>
+
+          <g id="label-sm">
+            <rect width="120" height="38" rx="3" fill="#fff" filter="url(#softShadow)"/>
+          </g>
+
+          <style>
+            .zone {
+              fill: none;
+              stroke: var(--dash);
+              stroke-width: 2.5;
+              stroke-dasharray: 10 10;
+            }
+            .connector {
+              fill: none;
+              stroke: var(--line);
+              stroke-width: 3.2;
+              stroke-dasharray: 10 9;
+            }
+            .connector-solid {
+              fill: none;
+              stroke: #626a6e;
+              stroke-width: 3.6;
+            }
+            .zone-title {
+              font-size: 18px;
+              letter-spacing: 0.18em;
+              text-transform: uppercase;
+              fill: var(--muted);
+              font-weight: 700;
+            }
+            .label-title {
+              font-size: 18px;
+              fill: #555;
+              font-weight: 700;
+            }
+            .label-sub {
+              font-size: 16px;
+              fill: #707070;
+              font-weight: 500;
+            }
+            .cluster-title {
+              font-size: 34px;
+              fill: #4a4a4a;
+              font-weight: 500;
+              letter-spacing: -0.04em;
+            }
+          </style>
+        </defs>
+
+        <rect x="0" y="0" width="1600" height="920" fill="#fff"/>
+
+        <rect x="110" y="150" width="260" height="250" class="zone"/>
+        <text x="120" y="132" class="zone-title">Client Access</text>
+
+        <rect x="420" y="150" width="520" height="390" class="zone"/>
+        <text x="430" y="132" class="zone-title">Application Core</text>
+
+        <rect x="410" y="590" width="520" height="220" class="zone"/>
+        <text x="420" y="572" class="zone-title">Managed Data Services</text>
+
+        <rect x="1020" y="150" width="420" height="660" class="zone"/>
+        <text x="1030" y="132" class="zone-title">External Services</text>
+
+        <g transform="translate(150 214)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(56 -10)">
+            <use href="#label-md"/>
+            <text x="75" y="21" text-anchor="middle" class="label-title">Tenant</text>
+            <text x="75" y="38" text-anchor="middle" class="label-sub">Browser</text>
+          </g>
+        </g>
+
+        <g transform="translate(150 308)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(56 -10)">
+            <use href="#label-md"/>
+            <text x="75" y="21" text-anchor="middle" class="label-title">Landlord</text>
+            <text x="75" y="38" text-anchor="middle" class="label-sub">Browser</text>
+          </g>
+        </g>
+
+        <g transform="translate(470 212)">
+          <use href="#iso-node-sm"/>
+          <g transform="translate(44 -8)">
+            <use href="#label-sm"/>
+            <text x="60" y="17" text-anchor="middle" class="label-title">WAF</text>
+            <text x="60" y="31" text-anchor="middle" class="label-sub">Firewall</text>
+          </g>
+        </g>
+
+        <g transform="translate(644 190)">
+          <use href="#iso-node-sm"/>
+          <g transform="translate(46 -8)">
+            <use href="#label-sm"/>
+            <text x="60" y="24" text-anchor="middle" class="label-sub">Cloud Monitor</text>
+          </g>
+        </g>
+
+        <g transform="translate(788 332)">
+          <use href="#iso-node-sm"/>
+          <g transform="translate(42 -4)">
+            <use href="#label-sm"/>
+            <text x="60" y="24" text-anchor="middle" class="label-sub">SLB</text>
+          </g>
+        </g>
+
+        <g transform="translate(478 434)">
+          <use href="#iso-node-sm"/>
+          <g transform="translate(44 -8)">
+            <use href="#label-sm"/>
+            <text x="60" y="17" text-anchor="middle" class="label-title">Message</text>
+            <text x="60" y="31" text-anchor="middle" class="label-sub">Queue</text>
+          </g>
+        </g>
+
+        <g transform="translate(745 460)">
+          <use href="#iso-node-sm"/>
+          <g transform="translate(42 -8)">
+            <use href="#label-sm"/>
+            <text x="60" y="24" text-anchor="middle" class="label-sub">Auto Scaling</text>
+          </g>
+        </g>
+
+        <g transform="translate(556 286)">
+          <text x="136" y="-20" text-anchor="middle" class="cluster-title">Web Server Cluster</text>
+          <polygon points="0,92 126,20 270,92 144,166" fill="#efefef" stroke="#d7d7d7" stroke-width="2"/>
+          <polygon points="0,92 0,194 144,266 144,166" fill="#e5e5e5" stroke="#d2d2d2" stroke-width="2"/>
+          <polygon points="270,92 270,194 144,266 144,166" fill="#d9d9d9" stroke="#c9c9c9" stroke-width="2"/>
+
+          <g transform="translate(56 84)"><use href="#server-stack"/></g>
+          <g transform="translate(132 120)"><use href="#server-stack"/></g>
+          <g transform="translate(108 52)"><use href="#server-stack"/></g>
+        </g>
+
+        <g transform="translate(470 650)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Supabase DB</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Core records</text>
+          </g>
+        </g>
+
+        <g transform="translate(680 650)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Storage Bucket</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Media files</text>
+          </g>
+        </g>
+
+        <g transform="translate(560 748)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Realtime</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Live updates</text>
+          </g>
+        </g>
+
+        <g transform="translate(790 748)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Analytics DB</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Reports</text>
+          </g>
+        </g>
+
+        <g transform="translate(1080 214)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Identity Auth</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Roles and sessions</text>
+          </g>
+        </g>
+
+        <g transform="translate(1280 170)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">iRis AI</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Groq service</text>
+          </g>
+        </g>
+
+        <g transform="translate(1280 300)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Notification</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Email and alerts</text>
+          </g>
+        </g>
+
+        <g transform="translate(1120 420)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">Cloud App</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Hosted entry point</text>
+          </g>
+        </g>
+
+        <g transform="translate(1200 690)">
+          <use href="#iso-node-md"/>
+          <g transform="translate(58 -10)">
+            <use href="#label-lg"/>
+            <text x="88" y="23" text-anchor="middle" class="label-title">VPC</text>
+            <text x="88" y="40" text-anchor="middle" class="label-sub">Private network</text>
+          </g>
+        </g>
+
+        <path d="M200 246 L470 246" class="connector"/>
+        <path d="M200 340 L470 246" class="connector"/>
+        <path d="M506 228 L644 208" class="connector"/>
+        <path d="M506 244 L556 332" class="connector"/>
+        <path d="M826 354 L1120 452" class="connector-solid"/>
+        <path d="M830 352 L1080 246" class="connector"/>
+        <path d="M830 352 L1280 202" class="connector"/>
+        <path d="M830 352 L1280 332" class="connector"/>
+        <path d="M686 552 L470 682" class="connector"/>
+        <path d="M706 552 L680 682" class="connector"/>
+        <path d="M724 552 L560 780" class="connector"/>
+        <path d="M742 552 L790 780" class="connector"/>
+        <path d="M782 492 L1200 722" class="connector-solid"/>
+      </svg>
+    </section>
+  </main>
+</body>
+</html>

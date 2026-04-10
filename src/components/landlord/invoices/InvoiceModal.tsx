@@ -1,214 +1,230 @@
 "use client";
 
-import { X, FileText, Download, Send, CheckCircle2, Clock, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { CheckCircle2, Clock3, Loader2, QrCode, Receipt, Send, X, XCircle } from "lucide-react";
 import { createPortal } from "react-dom";
 
-export interface Invoice {
-    id: string;
-    tenant: string;
-    property: string;
-    unit: string;
-    amount: number;
-    dueDate: string;
-    status: "paid" | "overdue" | "pending";
-    type: string;
-    issuedDate: string;
-}
+import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
+import { cn } from "@/lib/utils";
 
-interface InvoiceModalProps {
-    invoice: Invoice | null;
+type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
+
+export function InvoiceModal({
+    invoiceId,
+    onClose,
+    onUpdated,
+}: {
+    invoiceId: string | null;
     onClose: () => void;
-}
+    onUpdated: () => void;
+}) {
+    const [invoice, setInvoice] = useState<InvoiceDetail>(null);
+    const [loading, setLoading] = useState(false);
+    const [actionLoading, setActionLoading] = useState<"confirm" | "reject" | "remind" | null>(null);
+    const [reviewNote, setReviewNote] = useState("");
 
-export function InvoiceModal({ invoice, onClose }: InvoiceModalProps) {
     useEffect(() => {
-        if (invoice) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
+        if (!invoiceId) return;
+        let alive = true;
+        setLoading(true);
+        document.body.style.overflow = "hidden";
+
+        const load = async () => {
+            try {
+                const response = await fetch(`/api/landlord/invoices/${invoiceId}`, { cache: "no-store" });
+                if (!response.ok) throw new Error();
+                const payload = await response.json();
+                if (alive) setInvoice(payload.invoice ?? null);
+            } finally {
+                if (alive) setLoading(false);
+            }
         };
-    }, [invoice]);
 
-    if (!invoice) return null;
+        void load();
+        return () => {
+            alive = false;
+            document.body.style.overflow = "unset";
+        };
+    }, [invoiceId]);
 
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case "paid": return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
-            case "overdue": return "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300";
-            case "pending": return "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300";
-            default: return "border-border bg-muted text-muted-foreground";
+    if (!invoiceId) return null;
+
+    const runAction = async (action: "confirm" | "reject" | "remind") => {
+        setActionLoading(action);
+        try {
+            const endpoint = action === "remind" ? "reminder" : "review";
+            const response = await fetch(`/api/landlord/invoices/${invoiceId}/${endpoint}`, {
+                method: "POST",
+                headers: action === "remind" ? undefined : { "Content-Type": "application/json" },
+                body: action === "remind" ? undefined : JSON.stringify({
+                    decision: action === "confirm" ? "confirm" : "reject",
+                    note: reviewNote || undefined,
+                }),
+            });
+            if (!response.ok) throw new Error();
+            onUpdated();
+            onClose();
+        } finally {
+            setActionLoading(null);
         }
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case "paid": return <CheckCircle2 className="w-4 h-4" />;
-            case "overdue": return <AlertCircle className="w-4 h-4" />;
-            case "pending": return <Clock className="w-4 h-4" />;
-            default: return null;
-        }
-    };
+    const statusTone = invoice?.status === "paid"
+        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+        : invoice?.status === "overdue"
+            ? "border-rose-500/20 bg-rose-500/10 text-rose-200"
+            : invoice?.status === "processing"
+                ? "border-amber-500/20 bg-amber-500/10 text-amber-200"
+                : "border-white/10 bg-white/5 text-slate-200";
 
-    const modalContent = (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6">
-            <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity dark:bg-black/80" onClick={onClose} />
-            <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_28px_70px_-36px_rgba(15,23,42,0.45)] animate-in zoom-in-95 duration-200 dark:shadow-2xl">
-                
-                <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-[80%] -translate-x-1/2 bg-primary/16 blur-[100px] dark:bg-primary/20" />
-
-                <div className="relative flex items-center justify-between border-b border-border bg-muted/35 p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-[0_10px_30px_-24px_rgba(var(--primary-rgb),0.65)]">
-                            <FileText className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h2 className="mb-1 text-xl font-bold text-foreground">Invoice <span className="font-medium text-muted-foreground">#{invoice.id.split('-').pop()}</span></h2>
-                            <span className={cn("inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-bold uppercase tracking-wider", getStatusStyle(invoice.status))}>
-                                {getStatusIcon(invoice.status)} {invoice.status}
-                            </span>
-                        </div>
+    const content = (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm">
+            <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0e1a2c] shadow-[0_32px_90px_-44px_rgba(15,23,42,0.95)]">
+                <div className="flex items-start justify-between border-b border-white/10 bg-[#132238] px-6 py-5">
+                    <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Invoice detail</p>
+                        <h2 className="mt-2 text-2xl font-black text-white">{invoice?.invoiceNumber ?? "Loading invoice"}</h2>
+                        {invoice && <p className="mt-2 text-sm text-slate-400">{invoice.tenant?.full_name} • {invoice.property?.name} • {invoice.unit?.name}</p>}
                     </div>
-                    <button onClick={onClose} className="rounded-xl border border-border bg-background/75 p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                        <X className="h-5 w-5" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {invoice && <span className={cn("rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em]", statusTone)}>{invoice.status}</span>}
+                        <button onClick={onClose} className="rounded-full border border-white/10 p-2 text-slate-300 transition hover:bg-white/5 hover:text-white"><X className="h-4 w-4" /></button>
+                    </div>
                 </div>
 
-                <div className="relative flex-1 overflow-y-auto p-8 hide-scrollbar">
-                    <div className="mb-10 grid grid-cols-1 gap-8 border-b border-border pb-8 md:grid-cols-2">
-                        <div className="space-y-4">
-                            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-                                <span className="h-2 w-2 rounded-full bg-muted-foreground/50" /> Billed From
-                            </h3>
-                            <div>
-                                <p className="flex items-center gap-2 text-lg font-bold text-foreground">
-                                    iReside Properties
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                </p>
-                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                                    123 Corporate Ave, Suite 400<br />
-                                    Makati City, Metro Manila<br />
-                                    <span className="mt-1 inline-block text-primary">billing@ireside.com</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div className="space-y-4 rounded-2xl border border-border bg-muted/35 p-5 md:text-left">
-                            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
-                                <span className="h-2 w-2 rounded-full bg-primary/50" /> Billed To
-                            </h3>
-                            <div>
-                                <p className="text-lg font-bold text-foreground">{invoice.tenant}</p>
-                                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                                    {invoice.property}<br />
-                                    <span className="font-medium text-foreground">{invoice.unit}</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-10 flex flex-wrap gap-4">
-                        <div className="group relative min-w-[140px] flex-1 overflow-hidden rounded-2xl border border-border bg-background/75 p-5 transition-colors hover:border-primary/15">
-                            <div className="pointer-events-none absolute right-0 top-0 p-4 opacity-[0.08] transition-transform group-hover:scale-110"><Clock className="h-16 w-16" /></div>
-                            <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">Issue Date</p>
-                            <p className="text-lg font-bold text-foreground">{new Date(invoice.issuedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                        </div>
-                        <div className="group relative min-w-[140px] flex-1 overflow-hidden rounded-2xl border border-border bg-background/75 p-5 transition-colors hover:border-primary/15">
-                            <div className="pointer-events-none absolute right-0 top-0 p-4 opacity-[0.08] transition-transform group-hover:scale-110"><AlertCircle className="h-16 w-16" /></div>
-                            <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">Due Date</p>
-                            <p className={cn("text-lg font-bold", invoice.status === "overdue" ? "text-red-700 dark:text-red-300" : "text-foreground")}>
-                                {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                            </p>
-                        </div>
-                        <div className="flex min-w-[200px] flex-[2] flex-col justify-end rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/12 to-primary/5 p-5">
-                            <p className="mb-1 text-xs font-black uppercase tracking-wider text-primary/75">Total Due</p>
-                            <p className="text-3xl font-black text-primary">₱{(invoice.status === "overdue" ? invoice.amount * 1.05 : invoice.amount).toLocaleString()}</p>
-                        </div>
-                    </div>
-
-                    <div className="overflow-hidden rounded-2xl border border-border bg-background/75">
-                        <table className="w-full text-left">
-                            <thead className="border-b border-border bg-muted/35">
-                                <tr>
-                                    <th className="p-5 text-xs font-black uppercase tracking-widest text-muted-foreground">Description & Period</th>
-                                    <th className="p-5 text-right text-xs font-black uppercase tracking-widest text-muted-foreground">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                <tr className="group transition-colors hover:bg-muted/20">
-                                    <td className="p-5">
-                                        <p className="text-[15px] font-bold text-foreground">{invoice.type} For {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
-                                        <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
-                                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
-                                            {new Date(invoice.issuedDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {new Date(invoice.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                                        </p>
-                                    </td>
-                                    <td className="p-5 text-right text-lg font-black text-foreground">
-                                        ₱{invoice.amount.toLocaleString()}
-                                    </td>
-                                </tr>
-                                {invoice.status === "overdue" && (
-                                    <tr className="bg-red-500/[0.04] dark:bg-red-500/[0.02]">
-                                        <td className="p-5">
-                                            <p className="flex items-center gap-2 text-[15px] font-bold text-red-700 dark:text-red-300">
-                                                <AlertCircle className="h-4 w-4" /> Late Payment Penalty
-                                            </p>
-                                            <p className="mt-1.5 text-sm text-red-700/80 dark:text-red-300/80">5% penalty applied for overdue balance.</p>
-                                        </td>
-                                        <td className="p-5 text-right text-lg font-black text-red-700 dark:text-red-300">
-                                            ₱{(invoice.amount * 0.05).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="mt-8 flex justify-end">
-                        <div className="w-full space-y-4 rounded-2xl border border-border bg-muted/35 p-6 md:w-[320px]">
-                            <div className="flex items-center justify-between font-medium text-muted-foreground">
-                                <span>Subtotal</span>
-                                <span className="text-foreground">₱{invoice.amount.toLocaleString()}</span>
-                            </div>
-                            {invoice.status === "overdue" && (
-                                <div className="flex items-center justify-between border-t border-border pt-2 font-medium text-red-700 dark:text-red-300">
-                                    <span>Late Fee (5%)</span>
-                                    <span>+ ₱{(invoice.amount * 0.05).toLocaleString()}</span>
+                <div className="grid flex-1 gap-0 overflow-y-auto lg:grid-cols-[1.15fr_0.85fr]">
+                    <div className="space-y-6 p-6">
+                        {loading || !invoice ? (
+                            <div className="flex min-h-[320px] items-center justify-center text-slate-300"><Loader2 className="mr-3 h-5 w-5 animate-spin" />Loading invoice details...</div>
+                        ) : (
+                            <>
+                                <div className="grid gap-4 sm:grid-cols-3">
+                                    <Metric label="Total due" value={formatPhpCurrency(invoice.totalAmount)} />
+                                    <Metric label="Balance" value={formatPhpCurrency(invoice.balanceRemaining)} />
+                                    <Metric label="Submitted" value={invoice.paymentSubmittedAt ? formatDateLong(invoice.paymentSubmittedAt) : "Not yet"} />
                                 </div>
-                            )}
-                            <div className="h-px w-full bg-border" />
-                            <div className="flex items-end justify-between">
-                                <span className="font-bold text-foreground">Total Due</span>
-                                <span className="text-2xl font-black text-foreground">₱{(invoice.status === "overdue" ? invoice.amount * 1.05 : invoice.amount).toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="flex flex-wrap justify-end gap-3 border-t border-border bg-muted/35 p-6">
-                    <button onClick={onClose} className="flex h-11 items-center gap-2 rounded-xl border border-border px-5 font-medium text-foreground transition-colors hover:bg-muted">
-                        Close
-                    </button>
-                    <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background/75 px-5 font-medium text-foreground transition-colors hover:bg-muted">
-                        <Download className="h-4 w-4" /> Download
-                    </button>
-                    {invoice.status === "overdue" && (
-                        <button className="flex h-11 items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-6 font-bold text-red-700 transition-colors hover:bg-red-500/20 dark:text-red-300">
-                            <Send className="h-4 w-4" /> Send Reminder
-                        </button>
-                    )}
-                    {invoice.status === "pending" && (
-                        <button className="flex h-11 items-center gap-2 rounded-xl bg-primary px-6 font-bold text-primary-foreground shadow-[0_14px_30px_-18px_rgba(var(--primary-rgb),0.65)] transition-all hover:bg-primary/90">
-                            <CheckCircle2 className="h-5 w-5" /> Mark as Paid
-                        </button>
-                    )}
+                                <Panel title="Line items">
+                                    <div className="space-y-3">
+                                        {invoice.lineItems.map((item) => (
+                                            <div key={item.id} className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-white">{item.label}</p>
+                                                    <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{item.category}</p>
+                                                </div>
+                                                <span className="text-sm font-bold text-white">{formatPhpCurrency(item.amount)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Panel>
+
+                                <Panel title="Utility readings">
+                                    <div className="space-y-3">
+                                        {invoice.readings.length === 0 && <p className="text-sm text-slate-400">No readings attached to this invoice yet.</p>}
+                                        {invoice.readings.map((reading) => (
+                                            <div key={reading.id} className="rounded-2xl border border-white/8 bg-white/5 p-4">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div>
+                                                        <p className="text-sm font-semibold capitalize text-white">{reading.utility_type}</p>
+                                                        <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{formatDateLong(reading.billing_period_start)} to {formatDateLong(reading.billing_period_end)}</p>
+                                                    </div>
+                                                    <span className={cn("rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em]", reading.billing_mode === "included_in_rent" ? "bg-slate-500/15 text-slate-200" : "bg-blue-500/15 text-blue-200")}>{reading.billing_mode === "included_in_rent" ? "Bundled" : "Tenant paid"}</span>
+                                                </div>
+                                                <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                                                    <TinyMetric label="Previous" value={reading.previous_reading.toString()} />
+                                                    <TinyMetric label="Current" value={reading.current_reading.toString()} />
+                                                    <TinyMetric label="Usage" value={reading.usage.toString()} />
+                                                    <TinyMetric label="Charge" value={formatPhpCurrency(reading.computed_charge)} />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Panel>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="space-y-5 border-l border-white/10 bg-[#132238]/85 p-6">
+                        {invoice && (
+                            <>
+                                <Panel title="Tenant submission">
+                                    <div className="space-y-3 text-sm text-slate-300">
+                                        <InfoRow label="Method" value={invoice.paymentMethod ?? "Not selected"} />
+                                        <InfoRow label="Reference" value={invoice.referenceNumber ?? "None"} />
+                                        <InfoRow label="Receipt no." value={invoice.receiptNumber ?? "Pending"} />
+                                        <InfoRow label="Proof" value={invoice.paymentProofUrl ? "Uploaded" : "Not uploaded"} />
+                                        {invoice.paymentDestination && (
+                                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                                <div className="mb-3 flex items-center gap-2 text-white"><QrCode className="h-4 w-4 text-blue-300" />GCash destination</div>
+                                                <p className="text-sm font-semibold text-white">{invoice.paymentDestination.account_name}</p>
+                                                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">{invoice.paymentDestination.account_number}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Panel>
+
+                                <Panel title="Landlord actions">
+                                    <textarea value={reviewNote} onChange={(event) => setReviewNote(event.target.value)} rows={4} className="w-full rounded-2xl border border-white/10 bg-[#0b1626] px-4 py-3 text-sm text-white outline-none" placeholder="Add review note or correction request." />
+                                    <div className="mt-4 grid gap-3">
+                                        <ActionButton onClick={() => runAction("confirm")} loading={actionLoading === "confirm"} icon={<CheckCircle2 className="h-4 w-4" />} className="bg-emerald-500 text-white hover:bg-emerald-400">Confirm payment</ActionButton>
+                                        <ActionButton onClick={() => runAction("reject")} loading={actionLoading === "reject"} icon={<XCircle className="h-4 w-4" />} className="bg-rose-500/15 text-rose-100 hover:bg-rose-500/25">Reject proof</ActionButton>
+                                        <ActionButton onClick={() => runAction("remind")} loading={actionLoading === "remind"} icon={<Send className="h-4 w-4" />} className="bg-white/5 text-white hover:bg-white/10">Send reminder</ActionButton>
+                                    </div>
+                                </Panel>
+
+                                <Panel title="Receipt history">
+                                    <div className="space-y-3">
+                                        {invoice.receipts.length === 0 && <p className="text-sm text-slate-400">No receipts issued yet.</p>}
+                                        {invoice.receipts.map((receipt) => (
+                                            <div key={receipt.id} className="rounded-2xl border border-white/8 bg-white/5 p-4">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-2 text-white"><Receipt className="h-4 w-4 text-emerald-300" />{receipt.receipt_number}</div>
+                                                    <span className="text-sm font-bold text-white">{formatPhpCurrency(receipt.amount)}</span>
+                                                </div>
+                                                <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-400">{formatDateLong(receipt.issued_at)}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Panel>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
     );
 
-    return typeof window !== 'undefined' ? createPortal(modalContent, document.body) : null;
+    return typeof window === "undefined" ? null : createPortal(content, document.body);
+}
+
+function Panel({ title, children }: { title: string; children: ReactNode }) {
+    return <section><h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-white"><Clock3 className="h-4 w-4 text-slate-400" />{title}</h3><div>{children}</div></section>;
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+    return <div className="rounded-2xl border border-white/8 bg-white/5 p-4"><p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{label}</p><p className="mt-3 text-lg font-black text-white">{value}</p></div>;
+}
+
+function TinyMetric({ label, value }: { label: string; value: string }) {
+    return <div className="rounded-2xl border border-white/8 bg-[#0b1626] px-3 py-3"><p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">{label}</p><p className="mt-2 text-sm font-semibold text-white">{value}</p></div>;
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+    return <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/5 px-4 py-3"><span className="text-slate-400">{label}</span><span className="text-right text-white">{value}</span></div>;
+}
+
+function ActionButton({
+    children,
+    className,
+    icon,
+    loading,
+    onClick,
+}: {
+    children: ReactNode;
+    className: string;
+    icon: ReactNode;
+    loading: boolean;
+    onClick: () => void;
+}) {
+    return <button onClick={onClick} disabled={loading} className={cn("inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition disabled:opacity-60", className)}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}{children}</button>;
 }

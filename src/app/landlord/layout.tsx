@@ -15,13 +15,15 @@ export default function LandlordLayout({
     const pathname = usePathname();
     const isMessages = pathname?.startsWith("/landlord/messages");
     const isUnitMap = pathname?.startsWith("/landlord/unit-map");
-    const showContactsSidebar = !isMessages && !isUnitMap;
+    const isSettings = pathname?.startsWith("/landlord/settings");
+    const showSidebar = !isMessages && !isSettings;
+    const showContactsSidebar = !isMessages && !isUnitMap && !isSettings;
 
     return (
         <AuthProvider>
             <div className="flex h-screen bg-background text-foreground">
-                {!isMessages && <Sidebar />}
-                <main className={cn("flex-1 overflow-y-auto", !isMessages ? "ml-64" : "", showContactsSidebar ? "md:pr-24" : "")}>
+                {showSidebar && <Sidebar />}
+                <main className={cn("flex-1 overflow-y-auto", showSidebar ? "ml-64" : "", showContactsSidebar ? "md:pr-24" : "")}>
                     {children}
                 </main>
                 {showContactsSidebar && <ContactsSidebar />}

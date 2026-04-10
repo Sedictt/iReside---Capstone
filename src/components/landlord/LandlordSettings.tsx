@@ -7,12 +7,10 @@ import {
     ChevronRight,
     CreditCard,
     Edit2,
-    Lock,
-    Plus,
+    type LucideIcon,
     ShieldCheck,
     User,
     Users,
-    UserPlus,
     Download,
     Trash2,
     Building2,
@@ -21,13 +19,11 @@ import {
     Eye,
     EyeOff,
     Smartphone,
-    QrCode,
     Globe,
     Camera,
     MapPin,
     Phone,
     FileText,
-    Clock,
     Monitor,
     LogOut,
     Key,
@@ -35,23 +31,20 @@ import {
     Save,
     X,
     ChevronDown,
-    ExternalLink,
     Archive,
     HardDrive,
-    Calendar,
     Receipt,
-    Wallet,
     Info,
-    AlertCircle,
 } from "lucide-react";
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 
 // Types
-type Section = "My Profile" | "Security" | "Privacy" | "Notifications" | "Billing" | "Data Export" | "Delete Account";
+type Section = "My Profile" | "Security" | "Privacy" | "Notifications" | "Billing" | "Data Export" | "Delete Account" | "GCash Destination" | "Water Billing" | "Electricity Billing";
 
-const SIDEBAR_ITEMS: { icon: any; label: Section; className?: string }[] = [
+const SIDEBAR_ITEMS: { icon: LucideIcon; label: Section; className?: string }[] = [
     { icon: User, label: "My Profile" },
     { icon: ShieldCheck, label: "Security" },
     { icon: Eye, label: "Privacy" },
@@ -61,6 +54,8 @@ const SIDEBAR_ITEMS: { icon: any; label: Section; className?: string }[] = [
     { icon: Trash2, label: "Delete Account", className: "text-red-500 hover:text-red-400 hover:bg-red-500/10" },
 ];
 
+const BILLING_SECTIONS: Section[] = ["GCash Destination", "Water Billing", "Electricity Billing"];
+
 // Reusable Toggle Switch Component
 function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolean; onToggle: () => void; size?: "default" | "small" }) {
     const isSmall = size === "small";
@@ -68,8 +63,8 @@ function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolea
         <button
             onClick={onToggle}
             className={cn(
-                "relative inline-flex items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900",
-                enabled ? "bg-blue-600 shadow-[0_0_12px_rgba(59,130,246,0.4)]" : "bg-slate-700",
+                "relative inline-flex items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:ring-offset-2 focus:ring-offset-[#101911]",
+                enabled ? "bg-primary shadow-[0_0_16px_rgba(var(--primary-rgb),0.45)]" : "bg-white/10",
                 isSmall ? "h-5 w-9" : "h-6 w-11"
             )}
         >
@@ -90,10 +85,10 @@ function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolea
 function SettingRow({ title, description, children, border = true }: { title: string; description: string; children: React.ReactNode; border?: boolean }) {
     return (
         <div className={cn("py-5", border && "border-b border-white/5")}>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-0.5 min-w-0">
-                    <h3 className="text-sm font-medium text-white">{title}</h3>
-                    <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
+                    <h3 className="text-sm font-semibold text-white">{title}</h3>
+                    <p className="text-sm leading-relaxed text-neutral-400">{description}</p>
                 </div>
                 <div className="flex-shrink-0">{children}</div>
             </div>
@@ -102,16 +97,16 @@ function SettingRow({ title, description, children, border = true }: { title: st
 }
 
 // Section Header Component
-function SectionHeader({ icon: Icon, title, description }: { icon: any; title: string; description: string }) {
+function SectionHeader({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
     return (
         <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                    <Icon className="h-5 w-5 text-blue-400" />
+            <div className="mb-2 flex items-center gap-3">
+                <div className="rounded-2xl border border-primary/20 bg-primary/10 p-2.5">
+                    <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <h2 className="text-xl font-semibold text-white">{title}</h2>
             </div>
-            <p className="text-sm text-slate-400 ml-12">{description}</p>
+            <p className="ml-14 max-w-2xl text-sm text-neutral-400">{description}</p>
         </div>
     );
 }
@@ -158,13 +153,12 @@ export function LandlordSettings() {
     const [notifMarketingSms, setNotifMarketingSms] = useState(false);
     const [notifMarketingPush, setNotifMarketingPush] = useState(false);
 
-    // Billing State
-    const [selectedPayoutMethod, setSelectedPayoutMethod] = useState("gcash");
-
     // Delete Account State
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    // Billing Expanded State
+    const [billingExpanded, setBillingExpanded] = useState(false);
     const renderContent = () => {
         switch (activeTab) {
             case "My Profile":
@@ -173,9 +167,9 @@ export function LandlordSettings() {
                         <SectionHeader icon={User} title="My Profile" description="Manage your company profile information visible to tenants." />
 
                         {/* Profile Card */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] overflow-hidden">
+                        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#171717]">
                             {/* Cover */}
-                            <div className="relative h-32 bg-gradient-to-r from-blue-600/30 via-purple-600/20 to-blue-600/30">
+                            <div className="relative h-36 bg-[linear-gradient(120deg,rgba(var(--primary-rgb),0.4),rgba(16,185,129,0.14),rgba(10,10,10,0.2))]">
                                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
                             </div>
 
@@ -184,17 +178,17 @@ export function LandlordSettings() {
                                 <div className="flex flex-col md:flex-row md:items-end justify-between -mt-12 mb-8 gap-4">
                                     <div className="flex items-end gap-5">
                                         <div className="relative group">
-                                            <div className="h-24 w-24 rounded-2xl bg-white p-3 shadow-xl flex items-center justify-center ring-4 ring-[#1e293b]">
-                                                <Building2 className="h-12 w-12 text-blue-600" />
+                                            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white p-3 shadow-xl ring-4 ring-[#171717]">
+                                                <Building2 className="h-12 w-12 text-primary" />
                                             </div>
-                                            <button className="absolute -bottom-1 -right-1 h-8 w-8 bg-blue-600 hover:bg-blue-500 rounded-full flex items-center justify-center shadow-lg transition-colors opacity-0 group-hover:opacity-100">
+                                            <button className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-colors opacity-0 group-hover:opacity-100 hover:bg-primary/90">
                                                 <Camera className="h-3.5 w-3.5 text-white" />
                                             </button>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <h3 className="text-lg font-bold text-white">{profileName}</h3>
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-400 border border-blue-500/20">
+                                                <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
                                                     <CheckCircle className="h-3 w-3" /> Verified
                                                 </span>
                                             </div>
@@ -206,8 +200,8 @@ export function LandlordSettings() {
                                         className={cn(
                                             "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all shadow-sm",
                                             isEditingProfile
-                                                ? "bg-blue-600 text-white hover:bg-blue-500"
-                                                : "border border-white/10 bg-[#0f172a] text-slate-300 hover:bg-slate-800 hover:text-white"
+                                                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                                : "border border-white/10 bg-[#101010] text-slate-300 hover:bg-white/5 hover:text-white"
                                         )}
                                     >
                                         {isEditingProfile ? <><Save className="h-4 w-4" /> Save Changes</> : <><Edit2 className="h-4 w-4" /> Edit Profile</>}
@@ -228,7 +222,7 @@ export function LandlordSettings() {
                                             className={cn(
                                                 "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
                                                 isEditingProfile
-                                                    ? "bg-[#0f172a] border-white/10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                                     : "bg-transparent border-transparent cursor-default"
                                             )}
                                         />
@@ -245,7 +239,7 @@ export function LandlordSettings() {
                                             className={cn(
                                                 "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
                                                 isEditingProfile
-                                                    ? "bg-[#0f172a] border-white/10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                                     : "bg-transparent border-transparent cursor-default"
                                             )}
                                         />
@@ -262,7 +256,7 @@ export function LandlordSettings() {
                                             className={cn(
                                                 "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
                                                 isEditingProfile
-                                                    ? "bg-[#0f172a] border-white/10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                                     : "bg-transparent border-transparent cursor-default"
                                             )}
                                         />
@@ -279,7 +273,7 @@ export function LandlordSettings() {
                                             className={cn(
                                                 "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
                                                 isEditingProfile
-                                                    ? "bg-[#0f172a] border-white/10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                                     : "bg-transparent border-transparent cursor-default"
                                             )}
                                         />
@@ -296,7 +290,7 @@ export function LandlordSettings() {
                                             className={cn(
                                                 "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
                                                 isEditingProfile
-                                                    ? "bg-[#0f172a] border-white/10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                                     : "bg-transparent border-transparent cursor-default"
                                             )}
                                         />
@@ -313,7 +307,7 @@ export function LandlordSettings() {
                                             className={cn(
                                                 "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all resize-none",
                                                 isEditingProfile
-                                                    ? "bg-[#0f172a] border-white/10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                                     : "bg-transparent border-transparent cursor-default"
                                             )}
                                         />
@@ -330,14 +324,14 @@ export function LandlordSettings() {
                         <SectionHeader icon={ShieldCheck} title="Security" description="Keep your account safe with these security settings." />
 
                         {/* Email Address */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-slate-400" /> Email Address
                             </h3>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                        <Mail className="h-5 w-5 text-blue-400" />
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                                        <Mail className="h-5 w-5 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-white">{profileEmail}</p>
@@ -353,7 +347,7 @@ export function LandlordSettings() {
                         </div>
 
                         {/* Password */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <Key className="h-4 w-4 text-slate-400" /> Password
                             </h3>
@@ -366,7 +360,7 @@ export function LandlordSettings() {
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
                                             placeholder="Enter current password"
-                                            className="w-full rounded-lg bg-[#0f172a] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors pr-10"
+                                            className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-600 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                         <button
                                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -384,7 +378,7 @@ export function LandlordSettings() {
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="Enter new password"
-                                            className="w-full rounded-lg bg-[#0f172a] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors pr-10"
+                                            className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-600 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
                                         <button
                                             onClick={() => setShowNewPassword(!showNewPassword)}
@@ -401,7 +395,7 @@ export function LandlordSettings() {
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="Confirm new password"
-                                        className="w-full rounded-lg bg-[#0f172a] border border-white/10 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                                        className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
                                 </div>
                                 {/* Password Strength Indicator */}
@@ -415,7 +409,7 @@ export function LandlordSettings() {
                                                         "h-1 flex-1 rounded-full transition-colors",
                                                         newPassword.length >= i * 3
                                                             ? newPassword.length >= 12 ? "bg-emerald-500" : newPassword.length >= 8 ? "bg-amber-500" : "bg-red-500"
-                                                            : "bg-slate-700"
+                                                            : "bg-neutral-700"
                                                     )}
                                                 />
                                             ))}
@@ -425,14 +419,14 @@ export function LandlordSettings() {
                                         </p>
                                     </div>
                                 )}
-                                <button className="mt-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-blue-600/20 w-fit">
+                                <button className="mt-2 w-fit rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90">
                                     Update Password
                                 </button>
                             </div>
                         </div>
 
                         {/* Two-Factor Auth */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-start gap-4">
                                     <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -440,7 +434,7 @@ export function LandlordSettings() {
                                     </div>
                                     <div className="space-y-1">
                                         <h3 className="text-sm font-semibold text-white">Two-Factor Authentication</h3>
-                                        <p className="text-sm text-slate-400">Add an extra layer of security. You'll need to enter a verification code in addition to your password.</p>
+                                        <p className="text-sm text-slate-400">Add an extra layer of security. You&apos;ll need to enter a verification code in addition to your password.</p>
                                         {isTwoFactorEnabled && (
                                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400 mt-2">
                                                 <CheckCircle className="h-3 w-3" /> Active
@@ -453,22 +447,22 @@ export function LandlordSettings() {
                         </div>
 
                         {/* Active Sessions */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <Monitor className="h-4 w-4 text-slate-400" /> Active Sessions
                             </h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-[#0f172a] border border-blue-500/20">
+                                <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/10 p-3">
                                     <div className="flex items-center gap-3">
-                                        <Monitor className="h-4 w-4 text-blue-400" />
+                                        <Monitor className="h-4 w-4 text-primary" />
                                         <div>
                                             <p className="text-sm text-white">Chrome on Windows</p>
                                             <p className="text-xs text-slate-500">Manila, Philippines · Current session</p>
                                         </div>
                                     </div>
-                                    <span className="text-[10px] font-bold tracking-wider text-blue-400 uppercase bg-blue-500/10 px-2 py-1 rounded">Current</span>
+                                    <span className="rounded bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">Current</span>
                                 </div>
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-[#0f172a]">
+                                <div className="flex items-center justify-between rounded-lg bg-[#101010] p-3">
                                     <div className="flex items-center gap-3">
                                         <Smartphone className="h-4 w-4 text-slate-500" />
                                         <div>
@@ -508,7 +502,7 @@ export function LandlordSettings() {
                     <div className="space-y-6 max-w-4xl">
                         <SectionHeader icon={Eye} title="Privacy" description="Manage how your information is seen and used." />
 
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <Globe className="h-4 w-4 text-slate-400" /> Public Visibility
                             </h3>
@@ -530,7 +524,7 @@ export function LandlordSettings() {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <HardDrive className="h-4 w-4 text-slate-400" /> Data & Usage
                             </h3>
@@ -545,7 +539,7 @@ export function LandlordSettings() {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <Users className="h-4 w-4 text-slate-400" /> Blocked Users
                             </h3>
@@ -563,7 +557,7 @@ export function LandlordSettings() {
                         <SectionHeader icon={Bell} title="Notifications" description="Choose how and when you want to be notified about activity." />
 
                         {/* Notification Matrix */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] overflow-hidden">
+                        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#171717]">
                             {/* Header */}
                             <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
                                 <div className="flex items-center justify-end gap-8 pr-1">
@@ -655,148 +649,27 @@ export function LandlordSettings() {
                 );
 
             case "Billing":
+            case "GCash Destination":
+            case "Water Billing":
+            case "Electricity Billing":
                 return (
                     <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={CreditCard} title="Billing & Payments" description="Manage how you receive rental payments from tenants." />
-
-                        {/* Current Plan */}
-                        <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-600/10 to-purple-600/5 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                                        <Wallet className="h-5 w-5 text-blue-400" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-white">Professional Plan</h3>
-                                        <p className="text-xs text-slate-400">Unlimited properties · Priority support</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-2xl font-bold text-white">₱2,500<span className="text-sm font-normal text-slate-400">/mo</span></p>
-                                    <p className="text-[10px] text-slate-500 uppercase tracking-wider">Next billing: Mar 1, 2026</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors shadow-lg shadow-blue-600/20">
-                                    Upgrade Plan
-                                </button>
-                                <button className="px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors">
-                                    View Plans
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Payout Method */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <CreditCard className="h-4 w-4 text-slate-400" /> Payout Method
-                            </h3>
-                            <div className="grid gap-3">
-                                <label
-                                    className={cn(
-                                        "flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all",
-                                        selectedPayoutMethod === "gcash"
-                                            ? "border-blue-500/30 bg-blue-500/5"
-                                            : "border-white/5 bg-[#0f172a] hover:border-white/10"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            type="radio"
-                                            name="payout"
-                                            value="gcash"
-                                            checked={selectedPayoutMethod === "gcash"}
-                                            onChange={() => setSelectedPayoutMethod("gcash")}
-                                            className="accent-blue-500"
-                                        />
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                                <Smartphone className="h-5 w-5 text-blue-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-white">GCash (E-Wallet)</p>
-                                                <p className="text-xs text-slate-400">+63 917 *** 4567</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {selectedPayoutMethod === "gcash" && (
-                                        <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase bg-emerald-500/10 px-2 py-1 rounded flex items-center gap-1">
-                                            <CheckCircle className="h-3 w-3" /> Verified
-                                        </span>
-                                    )}
-                                </label>
-
-                                <label
-                                    className={cn(
-                                        "flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all",
-                                        selectedPayoutMethod === "bank"
-                                            ? "border-blue-500/30 bg-blue-500/5"
-                                            : "border-white/5 bg-[#0f172a] hover:border-white/10"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            type="radio"
-                                            name="payout"
-                                            value="bank"
-                                            checked={selectedPayoutMethod === "bank"}
-                                            onChange={() => setSelectedPayoutMethod("bank")}
-                                            className="accent-blue-500"
-                                        />
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                                                <Building2 className="h-5 w-5 text-purple-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-white">Bank Transfer (BDO)</p>
-                                                <p className="text-xs text-slate-400">**** **** **** 8921</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <button className="flex items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-white/10 text-sm text-slate-400 hover:text-white hover:border-white/20 transition-all">
-                                    <Plus className="h-4 w-4" /> Add New Payment Method
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Billing History */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                                    <Receipt className="h-4 w-4 text-slate-400" /> Billing History
-                                </h3>
-                                <button className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors">
-                                    Download All <Download className="h-3 w-3" />
-                                </button>
-                            </div>
-                            <div className="space-y-2">
-                                {[
-                                    { date: "Feb 1, 2026", amount: "₱2,500.00", status: "Paid", invoice: "#INV-2026-02" },
-                                    { date: "Jan 1, 2026", amount: "₱2,500.00", status: "Paid", invoice: "#INV-2026-01" },
-                                    { date: "Dec 1, 2025", amount: "₱2,500.00", status: "Paid", invoice: "#INV-2025-12" },
-                                ].map((item) => (
-                                    <div key={item.invoice} className="flex items-center justify-between p-3 rounded-lg bg-[#0f172a] hover:bg-slate-800/50 transition-colors group">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                                <CheckCircle className="h-4 w-4 text-emerald-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-white">{item.invoice}</p>
-                                                <p className="text-xs text-slate-500">{item.date}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-sm font-medium text-white">{item.amount}</span>
-                                            <button className="opacity-0 group-hover:opacity-100 text-xs text-blue-400 hover:text-blue-300 font-medium transition-all">
-                                                <Download className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                        <SectionHeader 
+                            icon={CreditCard} 
+                            title={activeTab === "Billing" ? "GCash Destination" : activeTab} 
+                            description={
+                                activeTab === "Water Billing" ? "Configure water defaults and overrides per property." :
+                                activeTab === "Electricity Billing" ? "Configure electricity defaults and overrides per property." :
+                                "Manage how you receive rental payments from tenants."
+                            } 
+                        />
+                        <BillingOperationsPanel 
+                            activeSection={
+                                activeTab === "Water Billing" ? "water" : 
+                                activeTab === "Electricity Billing" ? "electricity" : 
+                                "gcash"
+                            } 
+                        />
                     </div>
                 );
 
@@ -805,10 +678,10 @@ export function LandlordSettings() {
                     <div className="space-y-6 max-w-4xl">
                         <SectionHeader icon={Download} title="Data Export" description="Download a copy of your data from iReside." />
 
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <div className="flex items-start gap-4 mb-6">
-                                <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                                    <HardDrive className="h-6 w-6 text-blue-400" />
+                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                                    <HardDrive className="h-6 w-6 text-primary" />
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-semibold text-white mb-1">Export Your Data</h3>
@@ -826,11 +699,11 @@ export function LandlordSettings() {
                                     { icon: Users, label: "Tenant Records", desc: "Lease agreements, contacts, payment history" },
                                     { icon: Receipt, label: "Financial Records", desc: "Invoices, payouts, transaction logs" },
                                 ].map((item) => (
-                                    <label key={item.label} className="flex items-center gap-4 p-4 rounded-xl bg-[#0f172a] border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
-                                        <input type="checkbox" defaultChecked className="accent-blue-500 h-4 w-4" />
+                                    <label key={item.label} className="group flex cursor-pointer items-center gap-4 rounded-xl border border-white/10 bg-[#101010] p-4 transition-colors hover:border-white/15">
+                                        <input type="checkbox" defaultChecked className="h-4 w-4 accent-primary" />
                                         <div className="flex items-center gap-3 flex-1">
                                             <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                                                <item.icon className="h-4 w-4 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                                                <item.icon className="h-4 w-4 text-slate-400 transition-colors group-hover:text-primary" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-white">{item.label}</p>
@@ -845,18 +718,18 @@ export function LandlordSettings() {
                                 <p className="text-xs text-slate-500 flex items-center gap-1">
                                     <Info className="h-3 w-3" /> Export may take up to 24 hours to process.
                                 </p>
-                                <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2">
+                                <button className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90">
                                     <Download className="h-4 w-4" /> Request Export
                                 </button>
                             </div>
                         </div>
 
                         {/* Previous Exports */}
-                        <div className="rounded-2xl border border-white/5 bg-[#1e293b] p-6">
+                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
                             <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                                 <Archive className="h-4 w-4 text-slate-400" /> Previous Exports
                             </h3>
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-[#0f172a]">
+                            <div className="flex items-center justify-between rounded-lg bg-[#101010] p-3">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                                         <CheckCircle className="h-4 w-4 text-emerald-400" />
@@ -866,7 +739,7 @@ export function LandlordSettings() {
                                         <p className="text-xs text-slate-500">Jan 15, 2026 · 12.4 MB</p>
                                     </div>
                                 </div>
-                                <button className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors">
+                                <button className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80">
                                     <Download className="h-3 w-3" /> Download
                                 </button>
                             </div>
@@ -893,7 +766,7 @@ export function LandlordSettings() {
                                 </div>
                             </div>
 
-                            <div className="rounded-xl bg-[#0f172a] border border-red-500/10 p-4 mb-6">
+                            <div className="mb-6 rounded-xl border border-red-500/10 bg-[#101010] p-4">
                                 <h4 className="text-sm font-medium text-white mb-3">What will be deleted:</h4>
                                 <ul className="space-y-2">
                                     {[
@@ -932,7 +805,7 @@ export function LandlordSettings() {
                                         value={deleteConfirmText}
                                         onChange={(e) => setDeleteConfirmText(e.target.value)}
                                         placeholder="Type DELETE"
-                                        className="w-full max-w-xs rounded-lg bg-[#0f172a] border border-red-500/20 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
+                                        className="w-full max-w-xs rounded-lg border border-red-500/20 bg-[#101010] px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-colors focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                                     />
                                     <div className="flex gap-3">
                                         <button
@@ -941,7 +814,7 @@ export function LandlordSettings() {
                                                 "px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
                                                 deleteConfirmText === "DELETE"
                                                     ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20"
-                                                    : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                                                    : "cursor-not-allowed bg-neutral-800 text-slate-500"
                                             )}
                                         >
                                             Permanently Delete
@@ -969,41 +842,98 @@ export function LandlordSettings() {
     };
 
     return (
-        <div className="flex w-full flex-col lg:flex-row gap-8">
-            {/* Sidebar */}
-            <aside className="w-full lg:w-64 flex-shrink-0">
-                <div className="sticky top-24 space-y-6">
-                    <div>
-                        <h2 className="text-lg font-bold text-white mb-1 px-3">Settings</h2>
-                        <p className="text-xs text-slate-500 px-3 mb-4">Manage your account preferences</p>
-                        <nav className="space-y-1">
-                            {SIDEBAR_ITEMS.map((item) => (
-                                <button
-                                    key={item.label}
-                                    onClick={() => setActiveTab(item.label)}
-                                    className={cn(
-                                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                                        activeTab === item.label
-                                            ? "bg-blue-600/10 text-blue-400 shadow-sm shadow-blue-500/5"
-                                            : item.label === "Delete Account"
-                                                ? "text-red-500 hover:bg-red-500/10"
-                                                : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
-                                    )}
-                                >
-                                    <item.icon className="h-4 w-4" />
-                                    {item.label}
-                                    {activeTab === item.label && (
-                                        <ChevronRight className="h-3 w-3 ml-auto" />
-                                    )}
-                                </button>
-                            ))}
-                        </nav>
+        <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)]">
+            <aside className="xl:sticky xl:top-8 xl:self-start">
+                <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/95 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.4)] backdrop-blur-xl">
+                    <div className="border-b border-border/60 px-5 py-5">
+                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Settings Map</p>
+                        <h2 className="mt-2 text-lg font-semibold text-foreground">Landlord Preferences</h2>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">Navigate profile, trust, alerts, and billing controls from one place.</p>
                     </div>
+
+                    <nav className="space-y-1.5 p-3">
+                        {SIDEBAR_ITEMS.map((item) => {
+                            const isBilling = item.label === "Billing";
+                            const isActive = activeTab === item.label || (isBilling && BILLING_SECTIONS.includes(activeTab));
+
+                            return (
+                                <div key={item.label}>
+                                    <button
+                                        onClick={() => {
+                                            if (isBilling) {
+                                                setBillingExpanded(!billingExpanded);
+                                                if (!BILLING_SECTIONS.includes(activeTab)) {
+                                                    setActiveTab("GCash Destination");
+                                                }
+                                            } else {
+                                                setActiveTab(item.label);
+                                            }
+                                        }}
+                                        className={cn(
+                                            "group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all duration-200",
+                                            isActive
+                                                ? "border border-primary/20 bg-primary/10 text-primary shadow-[0_18px_30px_-26px_rgba(var(--primary-rgb),0.7)]"
+                                                : item.label === "Delete Account"
+                                                    ? "text-red-500 hover:bg-red-500/10"
+                                                    : "border border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/80 hover:text-foreground"
+                                        )}
+                                    >
+                                        <span className={cn(
+                                            "flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
+                                            isActive
+                                                ? "border-primary/20 bg-primary/15 text-primary"
+                                                : item.label === "Delete Account"
+                                                    ? "border-red-500/20 bg-red-500/10 text-red-400"
+                                                    : "border-border/70 bg-background/80 text-muted-foreground group-hover:text-foreground"
+                                        )}>
+                                            <item.icon className="h-4 w-4" />
+                                        </span>
+                                        <span className="min-w-0 flex-1">{item.label}</span>
+                                        {isBilling ? (
+                                            <ChevronDown className={cn("h-4 w-4 transition-transform", billingExpanded ? "rotate-180" : "-rotate-90")} />
+                                        ) : activeTab === item.label ? (
+                                            <ChevronRight className="h-4 w-4" />
+                                        ) : null}
+                                    </button>
+
+                                    {isBilling && (
+                                        <AnimatePresence>
+                                            {billingExpanded && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: "auto" }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="mt-2 space-y-1.5 pl-6 pr-1 pb-2">
+                                                        {BILLING_SECTIONS.map((subLabel) => (
+                                                            <button
+                                                                key={subLabel}
+                                                                onClick={() => setActiveTab(subLabel as Section)}
+                                                                className={cn(
+                                                                    "flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-colors",
+                                                                    activeTab === subLabel
+                                                                        ? "bg-primary/10 text-primary"
+                                                                        : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                <div className={cn("h-1.5 w-1.5 rounded-full", activeTab === subLabel ? "bg-primary" : "bg-border")} />
+                                                                {subLabel}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </nav>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <div className="flex-1 min-h-[600px]">
+            <div className="min-h-[600px] rounded-[1.9rem] border border-border/60 bg-card/95 p-5 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl md:p-7">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}

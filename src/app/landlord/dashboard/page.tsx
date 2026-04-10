@@ -6,12 +6,15 @@ import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner
 import {
     CreditCard,
     AlertTriangle,
+    QrCode,
+    X,
     ExternalLink as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
 import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
+import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -52,13 +55,31 @@ export default function LandlordDashboard() {
     const [paymentsError, setPaymentsError] = useState<string | null>(null);
     const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [availableUnits, setAvailableUnits] = useState<{
         id: string;
         name: string;
         rent_amount: number;
         property_id: string;
         property_name: string;
+        status?: string;
     }[]>([]);
+    const [tenantInvites, setTenantInvites] = useState<Array<{
+        id: string;
+        mode: "property" | "unit";
+        status: string;
+        propertyId: string;
+        propertyName: string;
+        unitId: string | null;
+        unitName: string | null;
+        expiresAt: string | null;
+        useCount: number;
+        maxUses: number;
+        lastUsedAt: string | null;
+        createdAt: string;
+        shareUrl: string;
+        qrUrl: string;
+    }>>([]);
 
     useEffect(() => {
         setMounted(true);
@@ -154,6 +175,7 @@ export default function LandlordDashboard() {
                         units?: Array<{
                             id: string;
                             name: string;
+                            status?: string;
                             rentAmount?: number;
                         }>;
                     }>;
@@ -168,6 +190,7 @@ export default function LandlordDashboard() {
                         rent_amount: Number(unit.rentAmount ?? 0),
                         property_id: property.id,
                         property_name: property.name,
+                        status: unit.status,
                     }));
                 });
 
@@ -177,12 +200,50 @@ export default function LandlordDashboard() {
         void loadUnits();
     }, []);
 
+    useEffect(() => {
+        const controller = new AbortController();
+
+        const loadInvites = async () => {
+            try {
+                const response = await fetch("/api/landlord/invites", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = (await response.json()) as {
+                    invites?: typeof tenantInvites;
+                };
+
+                setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") {
+                    return;
+                }
+
+                setTenantInvites([]);
+            }
+        };
+
+        void loadInvites();
+
+        return () => {
+            controller.abort();
+        };
+    }, []);
+
     if (!mounted) return null;
 
     return (
         <>
             <div className="custom-scrollbar flex h-full w-full flex-col space-y-8 overflow-y-auto bg-background p-6 text-foreground animate-in fade-in duration-700 md:p-8">
-                <DashboardBanner onNewWalkIn={() => setIsWalkInModalOpen(true)} />
+                <DashboardBanner
+                    onNewWalkIn={() => setIsWalkInModalOpen(true)}
+                    onCreateInvite={() => setIsInviteModalOpen(true)}
+                />
 
             {/* Payment Overview */}
             <div className="space-y-4 rounded-3xl border border-border bg-card p-6 pt-6 shadow-sm">
@@ -287,6 +348,62 @@ export default function LandlordDashboard() {
                     // Could trigger a toast or refresh here if needed
                 }}
             />
+
+            {isInviteModalOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                    <button
+                        type="button"
+                        aria-label="Close invite modal"
+                        className="absolute inset-0 bg-black/65 backdrop-blur-sm"
+                        onClick={() => setIsInviteModalOpen(false)}
+                    />
+                    <div className="relative z-10 max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[2rem] border border-border bg-background shadow-2xl">
+                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-6 py-5 backdrop-blur">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <QrCode className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-foreground">Create private tenant invite</h2>
+                                    <p className="text-sm text-muted-foreground">
+                                        Generate a shareable link or QR code without leaving the dashboard.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsInviteModalOpen(false)}
+                                className="rounded-xl border border-border bg-background p-2 text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            <TenantInviteManager
+                                availableUnits={availableUnits}
+                                invites={tenantInvites}
+                                onRefresh={async () => {
+                                    try {
+                                        const response = await fetch("/api/landlord/invites");
+                                        if (!response.ok) {
+                                            return;
+                                        }
+
+                                        const payload = (await response.json()) as {
+                                            invites?: typeof tenantInvites;
+                                        };
+
+                                        setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
+                                    } catch {
+                                        // Silently fail
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

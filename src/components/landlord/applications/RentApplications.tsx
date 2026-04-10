@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ import {
     Pencil,
 } from "lucide-react";
 import { WalkInApplicationModal } from "./WalkInApplicationModal";
+import { TenantInviteManager } from "./TenantInviteManager";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
 import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
 import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
@@ -50,6 +51,7 @@ interface Applicant {
 
 interface RentApplication {
     id: string;
+    source?: "walk_in_application" | "invite_link";
     applicant: Applicant;
     propertyName: string;
     unitNumber: string;
@@ -300,7 +302,24 @@ export function RentApplications() {
         rent_amount: number;
         property_id: string;
         property_name: string;
+        status?: string;
     }[]>([]);
+    const [tenantInvites, setTenantInvites] = useState<Array<{
+        id: string;
+        mode: "property" | "unit";
+        status: string;
+        propertyId: string;
+        propertyName: string;
+        unitId: string | null;
+        unitName: string | null;
+        expiresAt: string | null;
+        useCount: number;
+        maxUses: number;
+        lastUsedAt: string | null;
+        createdAt: string;
+        shareUrl: string;
+        qrUrl: string;
+    }>>([]);
     const [reloadKey, setReloadKey] = useState(0);
     const [signingLinkState, setSigningLinkState] = useState<{
         loading: boolean;
@@ -394,6 +413,7 @@ export function RentApplications() {
                         units?: Array<{
                             id: string;
                             name: string;
+                            status?: string;
                             rentAmount?: number;
                         }>;
                     }>;
@@ -408,6 +428,7 @@ export function RentApplications() {
                         rent_amount: Number(unit.rentAmount ?? 0),
                         property_id: property.id,
                         property_name: property.name,
+                        status: unit.status,
                     }));
                 });
 
@@ -419,6 +440,21 @@ export function RentApplications() {
 
         void loadUnits();
     }, []);
+
+    const loadInvites = useCallback(async () => {
+        try {
+            const response = await fetch("/api/landlord/invites");
+            if (!response.ok) return;
+            const payload = (await response.json()) as { invites?: typeof tenantInvites };
+            setTenantInvites(Array.isArray(payload.invites) ? payload.invites : []);
+        } catch {
+            // Silently fail
+        }
+    }, []);
+
+    useEffect(() => {
+        void loadInvites();
+    }, [loadInvites]);
 
     const [tenantCredentials, setTenantCredentials] = useState<{
         email: string;
@@ -769,6 +805,14 @@ export function RentApplications() {
                 </button>
             </div>
 
+            <TenantInviteManager
+                availableUnits={availableUnits}
+                invites={tenantInvites}
+                onRefresh={() => {
+                    void loadInvites();
+                }}
+            />
+
             {/* KPI Stats Toggle */}
             <div className="flex items-center gap-2">
                 <button
@@ -944,6 +988,11 @@ export function RentApplications() {
                                                         <span className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Property</span>
                                                         <span className="truncate text-sm font-bold text-foreground">{app.propertyName}</span>
                                                         <span className="text-xs font-bold text-primary mt-0.5">{app.unitNumber}</span>
+                                                        {app.source === "invite_link" && (
+                                                            <span className="mt-2 inline-flex w-fit rounded-full bg-blue-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 dark:text-blue-300">
+                                                                Invite
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     {/* Rent & Date */}
@@ -1103,6 +1152,11 @@ export function RentApplications() {
                                                 <span className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-lg text-sm font-bold shadow-sm backdrop-blur-md">
                                                     {selectedApp.unitNumber}
                                                 </span>
+                                                {selectedApp.source === "invite_link" && (
+                                                    <span className="ml-3 inline-flex rounded-lg border border-blue-400/20 bg-blue-500/15 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-blue-200">
+                                                        Invite submission
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="text-right">
                                                 <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-200/85">Monthly Rent</span>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Use Case View - iReside</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0f0ec;
+    --paper: #ffffff;
+    --ink: #1f3347;
+    --muted: #68707a;
+    --navy: #213d57;
+    --green: #73b246;
+    --peach-fill: #f8e6d7;
+    --peach-stroke: #ff9964;
+    --blue-fill: #dfeaf8;
+    --blue-stroke: #9bc3f5;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+  }
+
+  .page {
+    width: min(1720px, calc(100vw - 48px));
+    min-height: calc(100vh - 48px);
+    margin: 24px auto;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .header {
+    padding: 32px 42px 10px;
+  }
+
+  .eyebrow {
+    margin: 0 0 6px;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #83909a;
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 3vw, 3.7rem);
+    line-height: 1;
+    letter-spacing: -0.06em;
+    font-weight: 800;
+  }
+
+  h1 span {
+    color: var(--green);
+  }
+
+  .diagram-wrap {
+    padding: 0 18px 24px;
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media (max-width: 1100px) {
+    .page {
+      width: calc(100vw - 20px);
+      margin: 10px auto;
+    }
+
+    .header {
+      padding: 22px 18px 8px;
+    }
+
+    .diagram-wrap {
+      padding: 0 8px 16px;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <p class="eyebrow">4 + 1 Architectural View Model</p>
+      <h1><span>Use Case View</span> iReside System</h1>
+    </header>
+
+    <section class="diagram-wrap">
+      <svg viewBox="0 0 1650 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Infographic style use case view for iReside">
+        <defs>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="180%">
+            <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#000" flood-opacity="0.10"/>
+          </filter>
+          <linearGradient id="centerGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a5e7ff"/>
+            <stop offset="100%" stop-color="#68bfe3"/>
+          </linearGradient>
+          <style>
+            .panel-title {
+              font-size: 18px;
+              letter-spacing: 0.16em;
+              text-transform: uppercase;
+              fill: #69727c;
+              font-weight: 700;
+            }
+            .role-tag {
+              fill: #213d57;
+            }
+            .role-text {
+              fill: #ffffff;
+              font-size: 24px;
+              font-weight: 800;
+              letter-spacing: 0.02em;
+            }
+            .desc-box {
+              fill: #213d57;
+            }
+            .desc-text {
+              fill: #ffffff;
+              font-size: 12px;
+              font-weight: 700;
+              letter-spacing: 0.03em;
+            }
+            .action-bar {
+              fill: #213d57;
+            }
+            .action-text {
+              fill: #ffffff;
+              font-size: 12px;
+              font-weight: 800;
+              letter-spacing: 0.03em;
+            }
+            .line {
+              fill: none;
+              stroke: #213d57;
+              stroke-width: 5;
+            }
+            .arrow {
+              fill: #213d57;
+            }
+            .mini-label {
+              fill: #5a6a78;
+              font-size: 15px;
+              font-weight: 700;
+            }
+            .center-label {
+              fill: #17314b;
+              font-size: 62px;
+              font-weight: 800;
+              letter-spacing: -0.05em;
+            }
+            .center-sub {
+              fill: #17314b;
+              font-size: 23px;
+              font-weight: 700;
+              letter-spacing: 0.08em;
+            }
+          </style>
+        </defs>
+
+        <rect x="0" y="0" width="1650" height="980" fill="#fff"/>
+
+        <rect x="170" y="82" width="590" height="796" rx="46" fill="var(--peach-fill)" stroke="var(--peach-stroke)" stroke-width="10"/>
+        <rect x="816" y="82" width="648" height="796" rx="46" fill="var(--blue-fill)" stroke="var(--blue-stroke)" stroke-width="10"/>
+
+        <text x="220" y="126" class="panel-title">Administration and Management</text>
+        <text x="866" y="126" class="panel-title">End User Interactions</text>
+
+        <circle cx="825" cy="505" r="170" fill="url(#centerGlow)" filter="url(#softShadow)"/>
+        <circle cx="825" cy="505" r="160" fill="none" stroke="#2a7fb2" stroke-width="6" opacity="0.55"/>
+        <text x="825" y="485" text-anchor="middle" class="center-sub">USE CASE VIEW</text>
+        <text x="825" y="560" text-anchor="middle" class="center-label">iReside</text>
+
+        <rect x="722" y="300" width="206" height="50" fill="#ff9660"/>
+        <text x="825" y="333" text-anchor="middle" fill="#fff" style="font-size:28px;font-weight:800;">SYSTEM</text>
+
+        <g transform="translate(90 322)">
+          <circle cx="58" cy="28" r="24" fill="#ffd59d"/>
+          <rect x="32" y="54" width="52" height="56" rx="18" fill="#f19858"/>
+          <rect x="10" y="82" width="96" height="74" rx="24" fill="#c07a4f"/>
+          <circle cx="44" cy="24" r="4" fill="#5a3c2b"/>
+          <circle cx="72" cy="24" r="4" fill="#5a3c2b"/>
+          <path d="M44 40 Q58 50 72 40" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+          <rect x="0" y="158" width="136" height="82" class="role-tag"/>
+          <text x="68" y="198" text-anchor="middle" class="role-text">SYSTEM</text>
+          <text x="68" y="230" text-anchor="middle" class="role-text">ADMIN</text>
+          <rect x="-12" y="274" width="170" height="132" class="desc-box"/>
+          <text x="73" y="306" text-anchor="middle" class="desc-text">MANAGE USERS, REVIEW</text>
+          <text x="73" y="324" text-anchor="middle" class="desc-text">ACCOUNTS, CONTROL</text>
+          <text x="73" y="342" text-anchor="middle" class="desc-text">ACCESS, MONITOR</text>
+          <text x="73" y="360" text-anchor="middle" class="desc-text">PLATFORM STATUS,</text>
+          <text x="73" y="378" text-anchor="middle" class="desc-text">MAINTAIN SYSTEM</text>
+        </g>
+
+        <g transform="translate(1382 300)">
+          <circle cx="52" cy="28" r="24" fill="#ffd2b5"/>
+          <rect x="26" y="54" width="52" height="56" rx="18" fill="#7c5c58"/>
+          <rect x="4" y="82" width="96" height="74" rx="24" fill="#9b736c"/>
+          <circle cx="38" cy="24" r="4" fill="#443432"/>
+          <circle cx="66" cy="24" r="4" fill="#443432"/>
+          <path d="M38 40 Q52 50 66 40" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+          <rect x="-6" y="162" width="120" height="50" class="role-tag"/>
+          <text x="54" y="194" text-anchor="middle" class="role-text" style="font-size:20px;">TENANT</text>
+          <rect x="114" y="132" width="170" height="136" class="desc-box"/>
+          <text x="199" y="165" text-anchor="middle" class="desc-text">VIEW LEASES, CHECK</text>
+          <text x="199" y="183" text-anchor="middle" class="desc-text">PAYMENTS, SUBMIT</text>
+          <text x="199" y="201" text-anchor="middle" class="desc-text">MAINTENANCE, USE</text>
+          <text x="199" y="219" text-anchor="middle" class="desc-text">MESSAGING, ACCESS</text>
+          <text x="199" y="237" text-anchor="middle" class="desc-text">DOCUMENTS AND IRIS</text>
+        </g>
+
+        <g transform="translate(1364 558)">
+          <circle cx="56" cy="28" r="24" fill="#ffe0ab"/>
+          <rect x="30" y="54" width="52" height="56" rx="18" fill="#e8bb62"/>
+          <rect x="8" y="82" width="96" height="74" rx="24" fill="#f0d887"/>
+          <circle cx="42" cy="24" r="4" fill="#66573f"/>
+          <circle cx="70" cy="24" r="4" fill="#66573f"/>
+          <path d="M42 40 Q56 50 70 40" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+          <rect x="2" y="162" width="152" height="50" class="role-tag"/>
+          <text x="78" y="194" text-anchor="middle" class="role-text" style="font-size:18px;">LANDLORD</text>
+          <rect x="152" y="134" width="188" height="138" class="desc-box"/>
+          <text x="246" y="166" text-anchor="middle" class="desc-text">MANAGE PROPERTIES,</text>
+          <text x="246" y="184" text-anchor="middle" class="desc-text">TRACK LEASES, ISSUE</text>
+          <text x="246" y="202" text-anchor="middle" class="desc-text">PAYMENTS, HANDLE</text>
+          <text x="246" y="220" text-anchor="middle" class="desc-text">MAINTENANCE, REVIEW</text>
+          <text x="246" y="238" text-anchor="middle" class="desc-text">COMMUNITY ACTIVITY</text>
+        </g>
+
+        <path d="M250 500 L520 500" class="line"/>
+        <polygon points="520,500 480,470 480,530" class="arrow"/>
+        <path d="M520 500 L650 500" class="line"/>
+
+        <path d="M1292 324 L1100 324" class="line"/>
+        <polygon points="1100,324 1140,294 1140,354" class="arrow"/>
+        <path d="M1100 324 L1038 324 L1038 406" class="line"/>
+
+        <path d="M1284 682 L1118 682" class="line"/>
+        <polygon points="1118,682 1158,652 1158,712" class="arrow"/>
+        <path d="M1118 682 L1118 604 L1006 604" class="line"/>
+
+        <path d="M1014 240 L1260 240 L1260 184" class="line"/>
+        <polygon points="1014,240 1054,210 1054,270" class="arrow"/>
+        <rect x="1048" y="136" width="234" height="42" class="action-bar"/>
+        <text x="1165" y="162" text-anchor="middle" class="action-text">AUTHENTICATE AND AUTHORIZE USERS</text>
+
+        <path d="M986 428 L1236 428 L1236 472" class="line"/>
+        <polygon points="986,428 1026,398 1026,458" class="arrow"/>
+        <rect x="1078" y="474" width="320" height="44" class="action-bar"/>
+        <text x="1238" y="500" text-anchor="middle" class="action-text">VIEW LEASE, DOCUMENTS, PAYMENTS, MESSAGES</text>
+
+        <path d="M986 586 L1220 586 L1220 706" class="line"/>
+        <polygon points="986,586 1026,556 1026,616" class="arrow"/>
+        <rect x="1032" y="710" width="356" height="46" class="action-bar"/>
+        <text x="1210" y="737" text-anchor="middle" class="action-text">MANAGE PROPERTY, LEASES, PAYMENTS, MAINTENANCE</text>
+
+        <path d="M388 214 L388 256 L642 256" class="line"/>
+        <polygon points="642,256 602,226 602,286" class="arrow"/>
+        <rect x="416" y="276" width="326" height="44" class="action-bar"/>
+        <text x="579" y="302" text-anchor="middle" class="action-text">REVIEW ACCESS, APPROVE USERS, MAINTAIN ACCOUNTS</text>
+
+        <path d="M388 634 L388 676 L642 676" class="line"/>
+        <polygon points="642,676 602,646 602,706" class="arrow"/>
+        <rect x="350" y="692" width="398" height="48" class="action-bar"/>
+        <text x="549" y="720" text-anchor="middle" class="action-text">CONFIGURE MODULES, MODERATE CONTENT, MONITOR SYSTEM</text>
+
+        <rect x="742" y="612" width="166" height="58" fill="#ffd923"/>
+        <text x="825" y="651" text-anchor="middle" fill="#111" style="font-size:42px;font-weight:900;letter-spacing:-0.06em;">UC</text>
+
+        <text x="710" y="405" class="mini-label">Lease</text>
+        <text x="927" y="405" class="mini-label">Messages</text>
+        <text x="705" y="705" class="mini-label">Reports</text>
+        <text x="924" y="706" class="mini-label">iRis</text>
+        <text x="818" y="254" text-anchor="middle" class="mini-label">System Boundary</text>
+      </svg>
+    </section>
+  </main>
+</body>
+</html>

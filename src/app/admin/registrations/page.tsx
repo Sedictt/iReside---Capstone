@@ -5,9 +5,13 @@ import Link from "next/link";
 import {
     BadgeCheck,
     CircleDashed,
+    ExternalLink,
     FileCheck,
     FileText,
     LoaderCircle,
+    Search,
+    ShieldCheck,
+    ShieldX,
     StickyNote,
 } from "lucide-react";
 import type { ApplicationStatus, UserRole } from "@/types/database";
@@ -25,6 +29,12 @@ interface RegistrationRow {
     admin_notes: string | null;
     created_at: string;
     updated_at: string;
+    business_name: string | null;
+    business_address: string | null;
+    verification_status: string | null;
+    verification_data: any | null;
+    verification_checked_at: string | null;
+    verification_notes: string | null;
     applicant: {
         id: string;
         full_name: string;
@@ -50,6 +60,13 @@ const STATUS_META: Record<Exclude<RegistrationStatus, "withdrawn">, { label: str
     rejected: { label: "Rejected", color: "#ef4444", bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.24)" },
 };
 
+const VERIFICATION_STATUS_META: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
+    not_verified: { label: "Not Verified", color: "#6b7280", bg: "rgba(107,114,128,0.12)", border: "rgba(107,114,128,0.24)", icon: CircleDashed },
+    verified: { label: "Verified", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.24)", icon: ShieldCheck },
+    not_found: { label: "Not Found", color: "#f59e0b", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.24)", icon: ShieldX },
+    error: { label: "Error", color: "#ef4444", bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.24)", icon: ShieldX },
+};
+
 const FILTERS = ["all", "pending", "reviewing", "approved", "rejected"] as const;
 
 export default function AdminRegistrationsPage() {
@@ -60,6 +77,11 @@ export default function AdminRegistrationsPage() {
     const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
     const [savingId, setSavingId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [verifyingId, setVerifyingId] = useState<string | null>(null);
+    const [verificationResults, setVerificationResults] = useState<Record<string, any>>({});
+    const [showVerificationModal, setShowVerificationModal] = useState<string | null>(null);
+    const [businessNameInput, setBusinessNameInput] = useState<Record<string, string>>({});
+    const [businessAddressInput, setBusinessAddressInput] = useState<Record<string, string>>({});
 
     const loadRegistrations = async () => {
         setLoading(true);
@@ -77,6 +99,8 @@ export default function AdminRegistrationsPage() {
             setRegistrations(nextRows);
             setSummary(payload.summary ?? null);
             setDraftNotes(Object.fromEntries(nextRows.map((row) => [row.id, row.admin_notes ?? ""])));
+            setBusinessNameInput(Object.fromEntries(nextRows.map((row) => [row.id, row.business_name ?? ""])));
+            setBusinessAddressInput(Object.fromEntries(nextRows.map((row) => [row.id, row.business_address ?? ""])));
         } catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : "Failed to load registrations.");
         } finally {
@@ -127,6 +151,59 @@ export default function AdminRegistrationsPage() {
             setError(updateError instanceof Error ? updateError.message : "Failed to update registration.");
         } finally {
             setSavingId(null);
+        }
+    };
+
+    const handleVerifyBusiness = async (registration: RegistrationRow) => {
+        setVerifyingId(registration.id);
+        setError(null);
+
+        try {
+            const businessName = businessNameInput[registration.id]?.trim();
+            const businessAddress = businessAddressInput[registration.id]?.trim();
+
+            if (!businessName) {
+                throw new Error("Business name is required for verification.");
+            }
+
+            const response = await fetch(`/api/admin/registrations/${registration.id}/verify`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    businessName,
+                    businessAddress: businessAddress || undefined,
+                }),
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload?.error || "Failed to verify business.");
+            }
+
+            setVerificationResults((current) => ({
+                ...current,
+                [registration.id]: payload.verification,
+            }));
+
+            await loadRegistrations();
+        } catch (verifyError) {
+            setError(verifyError instanceof Error ? verifyError.message : "Failed to verify business.");
+        } finally {
+            setVerifyingId(null);
+        }
+    };
+
+    const getManualSearchURL = async (registration: RegistrationRow) => {
+        try {
+            const response = await fetch(`/api/admin/registrations/${registration.id}/verify`);
+            const payload = await response.json();
+            if (response.ok && payload.manualSearchURL) {
+                window.open(payload.manualSearchURL, "_blank");
+            }
+        } catch (error) {
+            console.error("Failed to get manual search URL:", error);
         }
     };
 
@@ -315,6 +392,99 @@ export default function AdminRegistrationsPage() {
                                                     )}
                                                 </div>
                                             ))}
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className="rounded-2xl p-4"
+                                        style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                    >
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Search className="h-4 w-4 text-neutral-500" />
+                                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-500">Business Verification</p>
+                                        </div>
+                                        
+                                        {registration.verification_status && registration.verification_status !== 'not_verified' && (
+                                            <div className="mb-3">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    {(() => {
+                                                        const StatusIcon = VERIFICATION_STATUS_META[registration.verification_status]?.icon || CircleDashed;
+                                                        const meta = VERIFICATION_STATUS_META[registration.verification_status] || VERIFICATION_STATUS_META.not_verified;
+                                                        return <StatusIcon className="h-4 w-4" style={{ color: meta.color }} />;
+                                                    })()}
+                                                    <span
+                                                        className="text-sm font-semibold"
+                                                        style={{ color: VERIFICATION_STATUS_META[registration.verification_status]?.color || "#6b7280" }}
+                                                    >
+                                                        {VERIFICATION_STATUS_META[registration.verification_status]?.label || "Unknown"}
+                                                    </span>
+                                                </div>
+                                                {registration.verification_checked_at && (
+                                                    <p className="text-xs text-neutral-500">
+                                                        Checked: {new Date(registration.verification_checked_at).toLocaleString()}
+                                                    </p>
+                                                )}
+                                                {registration.verification_data && (
+                                                    <div className="mt-2 p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                                        <p className="text-xs text-neutral-400 mb-1">Business Details:</p>
+                                                        <p className="text-sm text-neutral-200">{registration.verification_data.businessName || "N/A"}</p>
+                                                        <p className="text-sm text-neutral-400">{registration.verification_data.address || "N/A"}</p>
+                                                    </div>
+                                                )}
+                                                {registration.verification_notes && (
+                                                    <p className="text-xs text-neutral-500 mt-1">Note: {registration.verification_notes}</p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Business Name"
+                                                value={businessNameInput[registration.id] || ""}
+                                                onChange={(e) => setBusinessNameInput((current) => ({ ...current, [registration.id]: e.target.value }))}
+                                                className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:outline-none"
+                                                style={{ background: "#090909", border: "1px solid rgba(255,255,255,0.08)" }}
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="Business Address (optional)"
+                                                value={businessAddressInput[registration.id] || ""}
+                                                onChange={(e) => setBusinessAddressInput((current) => ({ ...current, [registration.id]: e.target.value }))}
+                                                className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:outline-none"
+                                                style={{ background: "#090909", border: "1px solid rgba(255,255,255,0.08)" }}
+                                            />
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            <button
+                                                type="button"
+                                                disabled={verifyingId === registration.id}
+                                                onClick={() => void handleVerifyBusiness(registration)}
+                                                className="px-3 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-60 flex items-center gap-2"
+                                                style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.22)", color: "#60a5fa" }}
+                                            >
+                                                {verifyingId === registration.id ? (
+                                                    <>
+                                                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                                                        Verifying...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <ShieldCheck className="h-4 w-4" />
+                                                        Verify Business
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => void getManualSearchURL(registration)}
+                                                className="px-3 py-2 rounded-xl text-sm font-semibold transition-opacity flex items-center gap-2"
+                                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#8a8a8a" }}
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                                Manual Search
+                                            </button>
                                         </div>
                                     </div>
 

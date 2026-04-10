@@ -27,7 +27,8 @@
       "Bash(docker ps:*)",
       "Bash(supabase status:*)",
       "Bash(node:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(python generate_questionnaire.py)"
     ]
   }
 }

@@ -4,6 +4,7 @@ import type { ApplicationStatus, LeaseStatus } from "@/types/database";
 
 type ApplicationResponse = {
     id: string;
+    source: "walk_in_application" | "invite_link";
     applicant: {
         name: string;
         email: string;
@@ -166,6 +167,7 @@ export async function GET() {
         "applicant_name",
         "applicant_email",
         "applicant_phone",
+        "application_source",
     ];
 
     let appSelect = appFields.join(", ");
@@ -362,6 +364,7 @@ export async function GET() {
 
         return {
             id: row.id,
+            source: row.application_source === "invite_link" ? "invite_link" : "walk_in_application",
             applicant: {
                 name: walkInName ?? applicant?.full_name ?? "Unknown applicant",
                 email: walkInEmail ?? applicant?.email ?? "Not provided",

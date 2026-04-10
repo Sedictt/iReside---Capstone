@@ -56,7 +56,9 @@ export default function SignUpPage() {
                         <p className="text-slate-400 leading-relaxed">
                             iReside is a private system. Landlord accounts are created by the
                             system administrator, and tenant accounts are automatically created
-                            when a lease is finalized.
+                            only after landlord approval and lease finalization. Tenant invite
+                            links or QR codes may be used for private application intake, but
+                            they do not create an account by themselves.
                         </p>
                     </div>
 
@@ -70,6 +72,10 @@ export default function SignUpPage() {
                             <li className="flex items-start gap-2">
                                 <span className="text-primary font-bold mt-0.5">•</span>
                                 <span><strong className="text-white">Tenants:</strong> Your account will be created automatically when your landlord finalizes your lease agreement.</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="text-primary font-bold mt-0.5">â€¢</span>
+                                <span><strong className="text-white">Private invite holders:</strong> Use your landlord-issued application link or QR code instead of signing up here.</span>
                             </li>
                         </ul>
                     </div>

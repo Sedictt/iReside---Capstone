@@ -1,0 +1,36 @@
+wing: ireside
+rooms:
+- name: documentation
+  description: Files from docs/
+- name: echo
+  description: Files from echo/
+- name: mkdir
+  description: Files from mkdir/
+- name: openspec
+  description: Files from openspec/
+- name: output
+  description: Files from output/
+- name: playwright_report
+  description: Files from playwright-report/
+- name: public
+  description: Files from public/
+- name: scripts
+  description: Files from scripts/
+- name: src
+  description: Files from src/
+- name: stitch_assets
+  description: Files from stitch_assets/
+- name: supabase
+  description: Files from supabase/
+- name: test_results
+  description: Files from test-results/
+- name: testing
+  description: Files from tests/
+- name: tmp
+  description: Files from tmp/
+- name: planning
+  description: Files from specs/
+- name: frontend
+  description: Files from components/
+- name: general
+  description: Files that don't fit other rooms

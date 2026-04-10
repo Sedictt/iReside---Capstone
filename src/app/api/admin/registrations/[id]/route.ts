@@ -10,6 +10,12 @@ interface RegistrationRecord {
     profile_id: string;
     phone: string;
     status: ApplicationStatus;
+    business_name?: string | null;
+    business_address?: string | null;
+    verification_status?: string | null;
+    verification_data?: unknown | null;
+    verification_checked_at?: string | null;
+    verification_notes?: string | null;
 }
 
 async function assertAdmin() {
@@ -63,7 +69,13 @@ export async function PATCH(
             id,
             profile_id,
             phone,
-            status
+            status,
+            business_name,
+            business_address,
+            verification_status,
+            verification_data,
+            verification_checked_at,
+            verification_notes
         `)
         .eq("id", id)
         .maybeSingle();
@@ -147,6 +159,12 @@ export async function PATCH(
             liveness_document_url,
             status,
             admin_notes,
+            business_name,
+            business_address,
+            verification_status,
+            verification_data,
+            verification_checked_at,
+            verification_notes,
             created_at,
             updated_at
         `)
