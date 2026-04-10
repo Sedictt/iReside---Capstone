@@ -204,7 +204,10 @@ export default function LoginScreen() {
                         onClick={() => navigate("signup")}
                     >
                         Sign Up
+                    </button>
+                </p>
             </div>
+
 
             {/* Test Accounts Help Text */}
             <div className={styles.testAccountsHint}>
