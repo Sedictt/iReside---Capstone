@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, ShieldAlert, Upload, X } from "lucide-react";
 import Link from "next/link";
 import {
     ApplicationIdentityStep,
@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 type InvitePayload = {
     id: string;
     mode: "property" | "unit";
+    applicationType: "online" | "face_to_face";
+    requiredRequirements: string[];
     propertyId: string;
     propertyName: string;
     unitId: string | null;
@@ -27,12 +29,28 @@ type InvitePayload = {
     expiresAt: string | null;
 };
 
+type UploadedRequirementDocument = {
+    requirementKey: string;
+    url: string;
+    fileName: string;
+};
+
+const REQUIREMENT_LABELS: Record<string, string> = {
+    valid_id: "Government ID",
+    proof_of_income: "Proof of Income",
+    background_reference: "References",
+    application_form: "Application Form",
+    move_in_payment: "Advance Payment",
+};
+
 export function InviteApplicationClient({ token }: { token: string }) {
     const [invite, setInvite] = useState<InvitePayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [step, setStep] = useState(0);
     const [selectedUnit, setSelectedUnit] = useState("");
+    const [uploadingRequirementKey, setUploadingRequirementKey] = useState<string | null>(null);
+    const [uploadedDocuments, setUploadedDocuments] = useState<UploadedRequirementDocument[]>([]);
     const [formData, setFormData] = useState<WalkInFormData>({
         applicant_name: "",
         applicant_phone: "",
@@ -70,9 +88,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 if (ignore) return;
                 setLoadError(error instanceof Error ? error.message : "Invite is no longer available.");
             } finally {
-                if (!ignore) {
-                    setLoading(false);
-                }
+                if (!ignore) setLoading(false);
             }
         };
 
@@ -86,6 +102,14 @@ export function InviteApplicationClient({ token }: { token: string }) {
         () => invite?.units.find((unit) => unit.id === selectedUnit),
         [invite?.units, selectedUnit]
     );
+    const isOnlineInvite = invite?.applicationType === "online";
+    const requiredRequirementKeys = useMemo(() => {
+        if (!invite || !isOnlineInvite) return [] as string[];
+        const keys = invite.requiredRequirements.filter((key) => key in REQUIREMENT_LABELS);
+        return keys.length > 0 ? keys : Object.keys(REQUIREMENT_LABELS);
+    }, [invite, isOnlineInvite]);
+    const totalSteps = isOnlineInvite ? 4 : 3;
+    const finalStepIndex = totalSteps - 1;
 
     const updateField = (
         field: keyof WalkInFormData,
@@ -121,6 +145,64 @@ export function InviteApplicationClient({ token }: { token: string }) {
         return Object.keys(errors).length === 0;
     };
 
+    const toggleRequirement = (key: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            requirements_checklist: {
+                ...prev.requirements_checklist,
+                [key]: !prev.requirements_checklist[key],
+            },
+        }));
+    };
+
+    const handleUploadRequirementFiles = async (requirementKey: string, files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        setSubmitError(null);
+        setUploadingRequirementKey(requirementKey);
+
+        try {
+            const form = new FormData();
+            form.append("requirementKey", requirementKey);
+            Array.from(files).forEach((file) => form.append("files", file));
+
+            const response = await fetch(`/api/invites/${token}/documents`, {
+                method: "POST",
+                body: form,
+            });
+            const payload = (await response.json()) as {
+                error?: string;
+                documents?: UploadedRequirementDocument[];
+            };
+
+            if (!response.ok || !Array.isArray(payload.documents)) {
+                throw new Error(payload.error || "Failed to upload files.");
+            }
+
+            setUploadedDocuments((prev) => {
+                const next = [...prev, ...payload.documents];
+                const dedup = new Map<string, UploadedRequirementDocument>();
+                next.forEach((doc) => dedup.set(`${doc.requirementKey}-${doc.url}`, doc));
+                return Array.from(dedup.values());
+            });
+
+            setFormData((prev) => ({
+                ...prev,
+                requirements_checklist: {
+                    ...prev.requirements_checklist,
+                    [requirementKey]: true,
+                },
+            }));
+        } catch (error) {
+            setSubmitError(error instanceof Error ? error.message : "Failed to upload files.");
+        } finally {
+            setUploadingRequirementKey(null);
+        }
+    };
+
+    const removeUploadedDocument = (docUrl: string) => {
+        setUploadedDocuments((prev) => prev.filter((doc) => doc.url !== docUrl));
+    };
+
     const handleSubmit = async () => {
         const stepZeroErrors = validateFormStep(0, selectedUnit, formData);
         const stepOneErrors = validateFormStep(1, selectedUnit, formData);
@@ -133,6 +215,19 @@ export function InviteApplicationClient({ token }: { token: string }) {
             }));
             setStep(Object.keys(stepZeroErrors).length > 0 ? 0 : 1);
             return;
+        }
+
+        if (isOnlineInvite) {
+            for (const key of requiredRequirementKeys) {
+                const checked = Boolean(formData.requirements_checklist[key]);
+                const hasDoc = uploadedDocuments.some((doc) => doc.requirementKey === key);
+                const needsPhoto = key !== "application_form";
+                if (!checked || (needsPhoto && !hasDoc)) {
+                    setSubmitError(`Complete uploads for ${REQUIREMENT_LABELS[key]}.`);
+                    setStep(2);
+                    return;
+                }
+            }
         }
 
         setSubmitting(true);
@@ -153,6 +248,8 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         ...formData.employment_info,
                         monthly_income: Number(formData.employment_info.monthly_income) || 0,
                     },
+                    requirements_checklist: formData.requirements_checklist,
+                    uploaded_documents: uploadedDocuments,
                     message: formData.message,
                 }),
             });
@@ -218,7 +315,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     <p className="text-[10px] font-black uppercase tracking-[0.35em] text-blue-300">Private tenant intake</p>
                     <h1 className="mt-3 text-3xl font-black tracking-tight">{invite.propertyName}</h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-                        This invite is tied to a landlord-managed property. Fill out the application on your own device and the landlord will review it privately.
+                        {isOnlineInvite
+                            ? "This is an online application invite. Upload required requirement photos before final submission."
+                            : "This is a face-to-face intake invite. Submit your details and the landlord will complete document verification in person."}
                     </p>
                 </div>
 
@@ -231,9 +330,15 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-6 sm:p-10">
                     <div className="mb-8 flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Step {step + 1} of 3</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">Step {step + 1} of {totalSteps}</p>
                             <h2 className="mt-2 text-2xl font-black tracking-tight">
-                                {step === 0 ? "Applicant details" : step === 1 ? "Employment profile" : "Review and submit"}
+                                {step === 0
+                                    ? "Applicant details"
+                                    : step === 1
+                                        ? "Employment profile"
+                                        : isOnlineInvite && step === 2
+                                            ? "Upload requirements"
+                                            : "Review and submit"}
                             </h2>
                         </div>
                     </div>
@@ -272,7 +377,81 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         />
                     )}
 
-                    {step === 2 && (
+                    {isOnlineInvite && step === 2 && (
+                        <div className="space-y-4">
+                            <p className="text-sm leading-relaxed text-slate-300">
+                                Upload at least one clear photo for each required document.
+                            </p>
+                            {requiredRequirementKeys.map((key) => {
+                                const docs = uploadedDocuments.filter((doc) => doc.requirementKey === key);
+                                const checked = Boolean(formData.requirements_checklist[key]);
+                                return (
+                                    <div key={key} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-100">
+                                                {REQUIREMENT_LABELS[key] ?? key}
+                                            </p>
+                                            <div className="flex gap-2">
+                                                {key !== "application_form" && (
+                                                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black uppercase tracking-[0.15em] hover:bg-white/10">
+                                                        <Upload className="h-3.5 w-3.5" />
+                                                        {uploadingRequirementKey === key ? "Uploading..." : "Upload"}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            multiple
+                                                            className="hidden"
+                                                            disabled={uploadingRequirementKey !== null}
+                                                            onChange={(event) => {
+                                                                void handleUploadRequirementFiles(key, event.target.files);
+                                                                event.target.value = "";
+                                                            }}
+                                                        />
+                                                    </label>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleRequirement(key)}
+                                                    className={cn(
+                                                        "rounded-xl border px-3 py-2 text-xs font-black uppercase tracking-[0.15em]",
+                                                        checked
+                                                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                                                            : "border-white/10 bg-white/5 text-slate-300"
+                                                    )}
+                                                >
+                                                    {checked ? "Ready" : "Mark Ready"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 grid gap-2">
+                                            {key === "application_form" ? (
+                                                <p className="text-xs text-slate-400">No photo upload required for this item.</p>
+                                            ) : docs.length === 0 ? (
+                                                <p className="text-xs text-slate-400">No uploaded photos yet.</p>
+                                            ) : (
+                                                docs.map((doc) => (
+                                                    <div key={doc.url} className="flex items-center justify-between rounded-xl border border-white/10 bg-[#0f1218] px-3 py-2 text-xs">
+                                                        <a className="truncate text-blue-300 hover:text-blue-200" href={doc.url} target="_blank" rel="noreferrer">
+                                                            {doc.fileName}
+                                                        </a>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeUploadedDocument(doc.url)}
+                                                            className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {step === finalStepIndex && (
                         <div className="grid gap-5 sm:grid-cols-2">
                             <SummaryCard label="Property" value={invite.propertyName} />
                             <SummaryCard label="Unit" value={currentUnit?.name ?? "Not selected"} />
@@ -280,6 +459,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             <SummaryCard label="Email" value={formData.applicant_email || "Not provided"} />
                             <SummaryCard label="Move-in date" value={formData.move_in_date || "Not provided"} />
                             <SummaryCard label="Monthly income" value={formData.employment_info.monthly_income ? `P${Number(formData.employment_info.monthly_income).toLocaleString()}` : "Not provided"} />
+                            {isOnlineInvite && (
+                                <SummaryCard label="Uploaded Requirement Photos" value={`${uploadedDocuments.length} file(s)`} />
+                            )}
                             <div className="sm:col-span-2 rounded-[2rem] border border-white/10 bg-white/5 p-6">
                                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Notes</p>
                                 <p className="mt-3 text-sm leading-relaxed text-slate-200">{formData.message || "No additional notes provided."}</p>
@@ -302,13 +484,15 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     Back
                                 </button>
                             )}
-                            {step < 2 ? (
+                            {step < finalStepIndex ? (
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        if (validateCurrentStep(step)) {
-                                            setStep((current) => current + 1);
+                                        if (step <= 1) {
+                                            if (validateCurrentStep(step)) setStep((current) => current + 1);
+                                            return;
                                         }
+                                        setStep((current) => current + 1);
                                     }}
                                     className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white hover:bg-blue-500"
                                 >

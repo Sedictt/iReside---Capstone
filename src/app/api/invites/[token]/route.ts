@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_CHECKLIST } from "@/lib/application-intake";
-import { getInviteAvailability, hashInviteToken } from "@/lib/tenant-intake-invites";
+import {
+    TENANT_INVITE_REQUIREMENT_KEYS,
+    getInviteAvailability,
+    hashInviteToken,
+    type TenantInviteApplicationType,
+    type TenantInviteRequirementKey,
+} from "@/lib/tenant-intake-invites";
 import type { Database } from "@/types/database";
 
 type InviteRecord = {
@@ -10,6 +16,8 @@ type InviteRecord = {
     property_id: string;
     unit_id: string | null;
     mode: "property" | "unit";
+    application_type: TenantInviteApplicationType;
+    required_requirements: TenantInviteRequirementKey[] | null;
     public_token: string;
     token_hash: string;
     status: "active" | "revoked" | "expired" | "consumed";
@@ -22,7 +30,7 @@ async function loadInviteRecord(token: string) {
     const adminClient = createAdminClient();
     const { data, error } = await adminClient
         .from("tenant_intake_invites")
-        .select("id, landlord_id, property_id, unit_id, mode, public_token, token_hash, status, max_uses, use_count, expires_at")
+        .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, token_hash, status, max_uses, use_count, expires_at")
         .eq("public_token", token)
         .maybeSingle();
 
@@ -116,6 +124,12 @@ export async function GET(
             invite: {
                 id: invite.id,
                 mode: invite.mode,
+                applicationType: invite.application_type ?? "face_to_face",
+                requiredRequirements: Array.isArray(invite.required_requirements)
+                    ? invite.required_requirements.filter((item): item is TenantInviteRequirementKey =>
+                        typeof item === "string" && TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey)
+                    )
+                    : [],
                 propertyId: invite.property_id,
                 propertyName: property?.name ?? "Property",
                 unitId: invite.unit_id,
@@ -160,6 +174,11 @@ export async function POST(
                 employer?: string;
                 monthly_income?: number;
             };
+            requirements_checklist?: Record<string, boolean>;
+            uploaded_documents?: Array<{
+                requirementKey?: string;
+                url?: string;
+            }>;
             message?: string;
         };
 
@@ -196,8 +215,42 @@ export async function POST(
 
         const inviteChecklist = {
             ...DEFAULT_CHECKLIST,
+            ...(body.requirements_checklist ?? {}),
             application_form: true,
         };
+        const submittedDocuments = Array.isArray(body.uploaded_documents)
+            ? body.uploaded_documents
+                .map((doc) => ({
+                    requirementKey: typeof doc?.requirementKey === "string" ? doc.requirementKey : null,
+                    url: typeof doc?.url === "string" ? doc.url.trim() : "",
+                }))
+                .filter((doc) => doc.url.length > 0 && /^https?:\/\//i.test(doc.url))
+            : [];
+
+        if (invite.application_type === "online") {
+            const requiredKeys = Array.isArray(invite.required_requirements)
+                ? invite.required_requirements.filter((item): item is TenantInviteRequirementKey =>
+                    typeof item === "string" && TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey)
+                )
+                : [];
+
+            if (requiredKeys.length === 0) {
+                return NextResponse.json({ error: "Online invite is missing required checklist configuration." }, { status: 400 });
+            }
+
+            for (const key of requiredKeys) {
+                if (!inviteChecklist[key]) {
+                    return NextResponse.json({ error: `Please mark ${key.replaceAll("_", " ")} as provided.` }, { status: 400 });
+                }
+
+                if (key !== "application_form") {
+                    const hasProof = submittedDocuments.some((doc) => doc.requirementKey === key);
+                    if (!hasProof) {
+                        return NextResponse.json({ error: `Upload at least one photo for ${key.replaceAll("_", " ")}.` }, { status: 400 });
+                    }
+                }
+            }
+        }
 
         const insertPayload: ApplicationInsert = {
             unit_id: resolvedUnitId,
@@ -217,6 +270,7 @@ export async function POST(
             },
             employment_status: occupation,
             monthly_income: monthlyIncome,
+            documents: submittedDocuments.map((doc) => doc.url),
             requirements_checklist: inviteChecklist,
             message: body.message?.trim() || null,
             status: "pending",

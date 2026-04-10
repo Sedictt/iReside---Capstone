@@ -307,6 +307,8 @@ export function RentApplications() {
     const [tenantInvites, setTenantInvites] = useState<Array<{
         id: string;
         mode: "property" | "unit";
+        applicationType: "online" | "face_to_face";
+        requiredRequirements: string[];
         status: string;
         propertyId: string;
         propertyName: string;

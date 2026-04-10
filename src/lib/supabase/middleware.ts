@@ -28,6 +28,8 @@ const resolveRole = async (supabase: any, user: any): Promise<string> => {
 const isTourAutoStartRoute = (pathname: string) =>
     TOUR_AUTO_START_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
+const PUBLIC_ROUTE_PREFIXES = ["/login", "/signup", "/auth", "/apply"];
+
 const resolveTenantTourRedirectSource = (reason: string) => {
     if (reason === "eligible_resume") return "resume";
     if (reason === "eligible_reprompt") return "resume";
@@ -98,12 +100,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // If user is not signed in and the current path is not /login, /signup, or /auth, redirect to /login.
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith("/login") &&
-        !request.nextUrl.pathname.startsWith("/signup") &&
-        !request.nextUrl.pathname.startsWith("/auth")
-    ) {
+    if (!user && !PUBLIC_ROUTE_PREFIXES.some((prefix) => request.nextUrl.pathname.startsWith(prefix))) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
         return NextResponse.redirect(url);

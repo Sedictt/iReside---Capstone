@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildInviteQrUrl, buildInviteUrl, generateInviteToken, getInviteAvailability, hashInviteToken, type TenantInviteMode } from "@/lib/tenant-intake-invites";
+import {
+    buildInviteQrUrl,
+    buildInviteUrl,
+    generateInviteToken,
+    getInviteAvailability,
+    hashInviteToken,
+    TENANT_INVITE_REQUIREMENT_KEYS,
+    type TenantInviteApplicationType,
+    type TenantInviteMode,
+    type TenantInviteRequirementKey,
+} from "@/lib/tenant-intake-invites";
 
 type InviteRow = {
     id: string;
@@ -9,6 +19,8 @@ type InviteRow = {
     property_id: string;
     unit_id: string | null;
     mode: TenantInviteMode;
+    application_type: TenantInviteApplicationType;
+    required_requirements: TenantInviteRequirementKey[] | null;
     public_token: string;
     status: "active" | "revoked" | "expired" | "consumed";
     max_uses: number;
@@ -62,7 +74,7 @@ export async function GET(request: Request) {
 
     const { data: invites, error } = await adminClient
         .from("tenant_intake_invites")
-        .select("id, landlord_id, property_id, unit_id, mode, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at")
+        .select("id, landlord_id, property_id, unit_id, mode, application_type, required_requirements, public_token, status, max_uses, use_count, expires_at, last_used_at, created_at")
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -101,6 +113,12 @@ export async function GET(request: Request) {
             return {
                 id: invite.id,
                 mode: invite.mode,
+                applicationType: invite.application_type ?? "face_to_face",
+                requiredRequirements: Array.isArray(invite.required_requirements)
+                    ? invite.required_requirements.filter((item): item is TenantInviteRequirementKey =>
+                        typeof item === "string" && TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey)
+                    )
+                    : [],
                 status: availability.expired ? "expired" : availability.consumed ? "consumed" : invite.status,
                 propertyId: invite.property_id,
                 propertyName: propertyMap.get(invite.property_id) ?? "Property",
@@ -132,17 +150,24 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as {
         mode?: TenantInviteMode;
+        applicationType?: TenantInviteApplicationType;
+        requiredRequirements?: TenantInviteRequirementKey[];
         propertyId?: string;
         unitId?: string | null;
         expiresAt?: string | null;
     };
 
     const mode = body.mode;
+    const applicationType = body.applicationType;
     const propertyId = body.propertyId;
     const unitId = body.unitId ?? null;
 
     if (mode !== "property" && mode !== "unit") {
         return NextResponse.json({ error: "Invalid invite mode." }, { status: 400 });
+    }
+
+    if (applicationType !== "face_to_face" && applicationType !== "online") {
+        return NextResponse.json({ error: "Invalid invite application type." }, { status: 400 });
     }
 
     if (!propertyId) {
@@ -188,6 +213,16 @@ export async function POST(request: Request) {
 
     const token = generateInviteToken();
     const inviteId = crypto.randomUUID();
+    const requiredRequirements = applicationType === "online"
+        ? Array.from(new Set((Array.isArray(body.requiredRequirements) ? body.requiredRequirements : []).filter(
+            (item): item is TenantInviteRequirementKey =>
+                typeof item === "string" && TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey)
+        )))
+        : [];
+
+    if (applicationType === "online" && requiredRequirements.length === 0) {
+        return NextResponse.json({ error: "Select at least one required document for online applications." }, { status: 400 });
+    }
 
     const { error: insertError } = await adminClient.from("tenant_intake_invites").insert({
         id: inviteId,
@@ -195,6 +230,8 @@ export async function POST(request: Request) {
         property_id: propertyId,
         unit_id: mode === "unit" ? unitId : null,
         mode,
+        application_type: applicationType,
+        required_requirements: requiredRequirements,
         public_token: token,
         token_hash: hashInviteToken(token),
         expires_at: expiresAt ? expiresAt.toISOString() : null,
@@ -214,7 +251,13 @@ export async function POST(request: Request) {
     const { error: eventError } = await adminClient.from("tenant_intake_invite_events").insert({
         invite_id: inviteId,
         event_type: "created",
-        metadata: { mode, propertyId, unitId: mode === "unit" ? unitId : null },
+        metadata: {
+            mode,
+            applicationType,
+            requiredRequirements,
+            propertyId,
+            unitId: mode === "unit" ? unitId : null,
+        },
     });
 
     if (eventError) {
@@ -228,6 +271,8 @@ export async function POST(request: Request) {
         invite: {
             id: inviteId,
             mode,
+            applicationType,
+            requiredRequirements,
             propertyId,
             unitId: mode === "unit" ? unitId : null,
             status: "active",

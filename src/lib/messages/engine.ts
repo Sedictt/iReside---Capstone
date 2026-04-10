@@ -98,30 +98,43 @@ const resolvePartnerRelationshipData = async (
     ]);
 
     if (tenantLeasesError || landlordLeasesError) {
-        throw new Error("Failed to load lease relationships.");
+        console.error("Failed to load lease relationships.", {
+            tenantLeasesError,
+            landlordLeasesError,
+        });
     }
 
     if (tenantApplicationsError || landlordApplicationsError) {
-        throw new Error("Failed to load application relationships.");
+        console.error("Failed to load application relationships.", {
+            tenantApplicationsError,
+            landlordApplicationsError,
+        });
     }
 
     if (tenantPaymentsError || landlordPaymentsError) {
-        throw new Error("Failed to load payment history relationships.");
+        console.error("Failed to load payment history relationships.", {
+            tenantPaymentsError,
+            landlordPaymentsError,
+        });
     }
 
     const leasePartnerIds = new Set<string>([
-        ...(tenantLeases ?? []).map((row) => row.landlord_id),
-        ...(landlordLeases ?? []).map((row) => row.tenant_id),
+        ...(tenantLeasesError ? [] : (tenantLeases ?? [])).map((row) => row.landlord_id),
+        ...(landlordLeasesError ? [] : (landlordLeases ?? [])).map((row) => row.tenant_id),
     ]);
 
     const applicationPartnerIds = new Set<string>([
-        ...(tenantApplications ?? []).map((row) => row.landlord_id).filter((id): id is string => id !== null),
-        ...(landlordApplications ?? []).map((row) => row.applicant_id).filter((id): id is string => id !== null),
+        ...(tenantApplicationsError ? [] : (tenantApplications ?? []))
+            .map((row) => row.landlord_id)
+            .filter((id): id is string => id !== null),
+        ...(landlordApplicationsError ? [] : (landlordApplications ?? []))
+            .map((row) => row.applicant_id)
+            .filter((id): id is string => id !== null),
     ]);
 
     const paymentPartnerIds = new Set<string>([
-        ...(tenantPayments ?? []).map((row) => row.landlord_id),
-        ...(landlordPayments ?? []).map((row) => row.tenant_id),
+        ...(tenantPaymentsError ? [] : (tenantPayments ?? [])).map((row) => row.landlord_id),
+        ...(landlordPaymentsError ? [] : (landlordPayments ?? [])).map((row) => row.tenant_id),
     ]);
 
     return {

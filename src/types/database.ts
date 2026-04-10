@@ -26,6 +26,7 @@ export type ListingStatus = 'draft' | 'published' | 'paused'
 export type LocationType = 'city' | 'barangay' | 'street'
 export type TenantInviteMode = 'property' | 'unit'
 export type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
+export type TenantInviteApplicationType = 'online' | 'face_to_face'
 export type ApplicationSource = 'walk_in_application' | 'invite_link'
 
 export interface Database {
@@ -234,6 +235,8 @@ export interface Database {
                     property_id: string
                     unit_id: string | null
                     mode: TenantInviteMode
+                    application_type: TenantInviteApplicationType
+                    required_requirements: Json
                     public_token: string
                     token_hash: string
                     status: TenantInviteStatus
@@ -250,6 +253,8 @@ export interface Database {
                     property_id: string
                     unit_id?: string | null
                     mode: TenantInviteMode
+                    application_type?: TenantInviteApplicationType
+                    required_requirements?: Json
                     public_token: string
                     token_hash: string
                     status?: TenantInviteStatus
@@ -265,6 +270,8 @@ export interface Database {
                     property_id?: string
                     unit_id?: string | null
                     mode?: TenantInviteMode
+                    application_type?: TenantInviteApplicationType
+                    required_requirements?: Json
                     public_token?: string
                     token_hash?: string
                     status?: TenantInviteStatus
