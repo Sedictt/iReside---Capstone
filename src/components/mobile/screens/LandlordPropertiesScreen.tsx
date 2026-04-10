@@ -44,9 +44,17 @@ export default function LandlordPropertiesScreen() {
       <div className={styles.header}>
         <div className={styles.headerTop}>
           <h1 className={styles.headerTitle}>Properties</h1>
-          <button className={styles.headerFilterBtn}>
-            <Filter />
-          </button>
+          <div className={styles.headerActions}>
+            <button className={styles.headerActionBtn}>
+              <Filter size={18} />
+            </button>
+            <button 
+              className={styles.headerActionBtn}
+              onClick={() => alert("Add New Property flow...")}
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </div>
         <div className={styles.searchContainer}>
           <div className={styles.searchIcon}>
@@ -116,13 +124,6 @@ export default function LandlordPropertiesScreen() {
         })}
       </div>
 
-      {/* Floating Action Button (FAB) for adding new property */}
-      <button 
-        className={styles.fab}
-        onClick={() => alert("Add New Property flow...")}
-      >
-        <Plus size={24} />
-      </button>
     </div>
   );
 }

@@ -32,7 +32,12 @@
     letter-spacing: -0.5px;
 }
 
-.headerFilterBtn {
+.headerActions {
+    display: flex;
+    gap: 8px;
+}
+
+.headerActionBtn {
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -46,14 +51,9 @@
     transition: all 0.2s ease;
 }
 
-.headerFilterBtn:active {
+.headerActionBtn:active {
     background: #1a1a1a;
     transform: scale(0.95);
-}
-
-.headerFilterBtn svg {
-    width: 18px;
-    height: 18px;
 }
 
 /* ─── Search Bar ───────────────────────────────────────── */
@@ -102,7 +102,7 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0 20px 80px; /* extra padding for FAB */
+    padding: 0 20px 20px;
 }
 
 .scrollArea::-webkit-scrollbar {
@@ -228,32 +228,3 @@
     color: #6d9838;
 }
 
-/* ─── Floating Action Button (FAB) ─────────────────────── */
-.fab {
-    position: absolute;
-    bottom: 24px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 28px;
-    background: #6d9838;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 16px rgba(109, 152, 56, 0.3);
-    border: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 10;
-}
-
-.fab:active {
-    transform: scale(0.9);
-}
-
-.fab svg {
-    width: 24px;
-    height: 24px;
-}
