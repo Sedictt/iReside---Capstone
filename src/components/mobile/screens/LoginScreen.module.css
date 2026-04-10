@@ -141,6 +141,16 @@
     height: 18px;
 }
 
+.errorMessage {
+    color: #ef4444;
+    font-size: 13px;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
 /* ─── Options Row ──────────────────────────────────────── */
 .optionsRow {
     display: flex;

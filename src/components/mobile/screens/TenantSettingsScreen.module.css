@@ -221,4 +221,21 @@
 
 .saveButton:active {
     transform: scale(0.98);
+}.signOutButton {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    font-size: 15px;
+    font-weight: 700;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 16px;
+}
+
+.signOutButton:active {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(0.98);
 }

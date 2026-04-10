@@ -1,8 +1,3 @@
-import { createBrowserClient } from '@supabase/ssr'
-
-export function createClient() {
-    return createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-}
+// Re-export the browser client for backward compatibility
+// Prefer importing from '@/lib/supabase/client' or '@/lib/supabase/server' directly
+export { createClient } from './supabase/client'

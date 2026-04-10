@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Bell, Smartphone, Mail, Moon } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./TenantSettingsScreen.module.css";
 
 // ─── Custom Toggle Component ─────────────────────────────
@@ -19,7 +20,7 @@ function Toggle({ isOn, onToggle }: { isOn: boolean; onToggle: () => void }) {
 
 // ─── Main Component ──────────────────────────────────────
 export default function TenantSettingsScreen() {
-    const { goBack } = useNavigation();
+    const { goBack, setRole, navigate } = useNavigation();
 
     // Settings State
     const [form, setForm] = useState({
@@ -42,6 +43,13 @@ export default function TenantSettingsScreen() {
 
     const handleSave = () => {
         goBack(); // In a real app, this would save to global state or DB
+    };
+
+    const handleSignOut = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        setRole(null as any);
+        navigate("login");
     };
 
     return (
@@ -156,6 +164,12 @@ export default function TenantSettingsScreen() {
                             />
                         </div>
                     </div>
+                </div>
+                {/* Sign Out */}
+                <div className={styles.section}>
+                    <button className={styles.signOutButton} onClick={handleSignOut}>
+                        Sign Out
+                    </button>
                 </div>
             </div>
 

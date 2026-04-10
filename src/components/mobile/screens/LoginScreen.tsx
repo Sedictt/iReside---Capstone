@@ -11,6 +11,7 @@ import {
     Chrome,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./LoginScreen.module.css";
 
 // Simple Facebook icon since Lucide doesn't have one
@@ -33,11 +34,32 @@ export default function LoginScreen() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = () => {
-        // For now, navigate to tenant dashboard as default
-        // In the future, this will authenticate via Supabase
-        setRole("tenant");
+    const handleLogin = async () => {
+        if (!email || !password) return;
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const supabase = createClient();
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (authError) throw authError;
+
+            // Navigate to appropriate dashboard based on user metadata role
+            const userRole = data.user?.user_metadata?.role || "tenant";
+            setRole(userRole as "tenant" | "landlord");
+            navigate(userRole === "landlord" ? "landlordHome" : "tenantHome");
+        } catch (err: any) {
+            setError(err.message || "Failed to sign in. Please check your credentials.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -112,9 +134,16 @@ export default function LoginScreen() {
                     </button>
                 </div>
 
+                {/* Error Message */}
+                {error && <div className={styles.errorMessage}>{error}</div>}
+
                 {/* Login Button */}
-                <button className={styles.loginButton} onClick={handleLogin}>
-                    Log In
+                <button 
+                    className={styles.loginButton} 
+                    onClick={handleLogin}
+                    disabled={isLoading}
+                >
+                    {isLoading ? "Logging in..." : "Log In"}
                 </button>
             </div>
 
