@@ -18,6 +18,7 @@ import PaymentsScreen from "./screens/PaymentsScreen";
 import TenantProfileScreen from "./screens/TenantProfileScreen";
 import TenantSettingsScreen from "./screens/TenantSettingsScreen";
 import LandlordHomeScreen from "./screens/LandlordHomeScreen";
+import AdminHomeScreen from "./screens/AdminHomeScreen";
 import LandlordPropertiesScreen from "./screens/LandlordPropertiesScreen";
 import LandlordPropertyDetailScreen from "./screens/LandlordPropertyDetailScreen";
 import LandlordUnitDetailScreen from "./screens/LandlordUnitDetailScreen";
@@ -45,6 +46,7 @@ import {
     Settings,
     Bell,
     Bot,
+    Shield,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import styles from "./MobileAppShell.module.css";
@@ -69,6 +71,12 @@ const LANDLORD_TABS: TabConfig[] = [
     { id: "activity", label: "Activity", icon: ClipboardList },
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "profile", label: "Profile", icon: User },
+];
+
+const ADMIN_TABS: TabConfig[] = [
+    { id: "home", label: "Dashboard", icon: Home },
+    { id: "landlords", label: "System", icon: Shield },
+    { id: "settings", label: "Settings", icon: Settings },
 ];
 
 // ─── Screens that should NOT show the tab bar ──────────────
@@ -123,8 +131,7 @@ function StatusBar() {
 // ─── Bottom Tab Bar ────────────────────────────────────────
 function BottomTabBar() {
     const { role, activeTab, switchTab } = useNavigation();
-
-    const tabs = role === "landlord" ? LANDLORD_TABS : TENANT_TABS;
+    const tabs = role === "admin" ? ADMIN_TABS : role === "landlord" ? LANDLORD_TABS : TENANT_TABS;
 
     return (
         <div className={styles.tabBar}>
@@ -204,6 +211,7 @@ function ScreenRouter() {
         landlordChat: LandlordChatScreen,
         notifications: NotificationsScreen,
         irisChat: IrisChatScreen,
+        adminHome: AdminHomeScreen,
         // Screens will be registered here as they're built
     };
 
@@ -261,7 +269,7 @@ export default function MobileAppShell() {
                             <LayoutGrid size={32} />
                         </div>
                         <div className={styles.roleSwitcherText}>
-                            Switching to {role === 'landlord' ? 'Landlord' : 'Tenant'} view...
+                            Switching to {role === 'admin' ? 'Admin' : role === 'landlord' ? 'Landlord' : 'Tenant'} view...
                         </div>
                     </div>
                 )}

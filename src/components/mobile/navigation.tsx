@@ -44,15 +44,20 @@ export type ScreenName =
     | "landlordSettings"
     // Shared
     | "notifications"
-    | "irisChat";
+    | "irisChat"
+    // Admin Screens
+    | "adminHome"
+    | "adminLandlords"
+    | "adminSettings";
 
 // ─── Tab Names ─────────────────────────────────────────────
 export type TenantTab = "home" | "activity" | "chat" | "profile";
 export type LandlordTab = "home" | "properties" | "activity" | "chat" | "profile";
-export type TabName = TenantTab | LandlordTab;
+export type AdminTab = "home" | "landlords" | "settings";
+export type TabName = TenantTab | LandlordTab | AdminTab;
 
 // ─── User Roles ────────────────────────────────────────────
-export type AppRole = "tenant" | "landlord" | null;
+export type AppRole = "tenant" | "landlord" | "admin" | null;
 
 // ─── Tab → Default Screen Mapping ─────────────────────────
 export const TENANT_TAB_SCREENS: Record<TenantTab, ScreenName> = {
@@ -68,6 +73,12 @@ export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
     activity: "landlordApplications",
     chat: "landlordChat",
     profile: "landlordProfile",
+};
+
+export const ADMIN_TAB_SCREENS: Record<AdminTab, ScreenName> = {
+    home: "adminHome",
+    landlords: "adminLandlords",
+    settings: "adminSettings",
 };
 
 // ─── Navigation Context Type ───────────────────────────────
@@ -134,6 +145,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
                 setCurrentScreen(TENANT_TAB_SCREENS[tab as TenantTab]);
             } else if (role === "landlord") {
                 setCurrentScreen(LANDLORD_TAB_SCREENS[tab as LandlordTab]);
+            } else if (role === "admin") {
+                setCurrentScreen(ADMIN_TAB_SCREENS[tab as AdminTab]);
             }
         },
         [role]

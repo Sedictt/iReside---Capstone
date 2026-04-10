@@ -1,0 +1,162 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+.header {
+    padding: 16px 20px 24px;
+    background: linear-gradient(145deg, #1f1f1f 0%, #141414 100%);
+    border-bottom: 1px solid #262626;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.shieldIcon {
+    color: #ef4444; /* Red for admin/security */
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.header p {
+    font-size: 14px;
+    color: #a3a3a3;
+    font-weight: 500;
+}
+
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* Metrics Grid */
+.metricsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.metricCard {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.metricHeader {
+    margin-bottom: 12px;
+}
+
+.metricIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metricValue {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.metricLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: #737373;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Section Header */
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.sectionLink {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ef4444;
+}
+
+/* Action Items */
+.actionList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.actionItem {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.actionIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actionContent {
+    flex: 1;
+}
+
+.actionTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.actionDesc {
+    font-size: 13px;
+    color: #a3a3a3;
+}
+
+.actionRight {
+    color: #525252;
+}

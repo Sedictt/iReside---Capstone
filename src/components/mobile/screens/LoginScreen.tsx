@@ -42,6 +42,19 @@ export default function LoginScreen() {
         setIsLoading(true);
         setError(null);
 
+        // --- HARDCODED TEST ACCOUNTS BYPASS ---
+        if (password === "password") {
+            const testEmail = email.toLowerCase().trim();
+            if (testEmail === "tenant@ireside.com") {
+                setRole("tenant"); navigate("tenantHome"); return;
+            } else if (testEmail === "landlord@ireside.com") {
+                setRole("landlord"); navigate("landlordHome"); return;
+            } else if (testEmail === "admin@ireside.com") {
+                setRole("admin"); navigate("adminHome"); return;
+            }
+        }
+        // --------------------------------------
+
         try {
             const supabase = createClient();
             const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -53,13 +66,27 @@ export default function LoginScreen() {
 
             // Navigate to appropriate dashboard based on user metadata role
             const userRole = data.user?.user_metadata?.role || "tenant";
-            setRole(userRole as "tenant" | "landlord");
-            navigate(userRole === "landlord" ? "landlordHome" : "tenantHome");
+            setRole(userRole as "tenant" | "landlord" | "admin");
+            
+            if (userRole === "admin") {
+                navigate("adminHome");
+            } else if (userRole === "landlord") {
+                navigate("landlordHome");
+            } else {
+                navigate("tenantHome");
+            }
         } catch (err: any) {
             setError(err.message || "Failed to sign in. Please check your credentials.");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const devBypass = (bypassRole: "tenant" | "landlord" | "admin") => {
+        setRole(bypassRole);
+        if (bypassRole === "admin") navigate("adminHome");
+        else if (bypassRole === "landlord") navigate("landlordHome");
+        else navigate("tenantHome");
     };
 
     return (
@@ -177,8 +204,14 @@ export default function LoginScreen() {
                         onClick={() => navigate("signup")}
                     >
                         Sign Up
-                    </button>
-                </p>
+            </div>
+
+            {/* Test Accounts Help Text */}
+            <div className={styles.testAccountsHint}>
+                <b>Test Accounts (Pass: password)</b>
+                <p>tenant@ireside.com</p>
+                <p>landlord@ireside.com</p>
+                <p>admin@ireside.com</p>
             </div>
         </div>
     );

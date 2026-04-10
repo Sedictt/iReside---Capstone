@@ -20,11 +20,15 @@ export default function SplashScreen() {
                 
                 if (session && session.user) {
                     const role = session.user.user_metadata?.role || "tenant";
-                    setRole(role as "tenant" | "landlord");
-                    // setRole automatically navigates to home due to tab logic in MobileAppShell 
-                    // Wait, setRole doesn't auto-navigate currentScreen! We need to switch tab!
-                    // Wait, does setRole trigger switchTab? No, let's navigate to home explicitly:
-                    navigate(role === "landlord" ? "landlordHome" : "tenantHome");
+                    setRole(role as "tenant" | "landlord" | "admin");
+                    
+                    if (role === "admin") {
+                        navigate("adminHome");
+                    } else if (role === "landlord") {
+                        navigate("landlordHome");
+                    } else {
+                        navigate("tenantHome");
+                    }
                 } else {
                     navigate("welcome");
                 }

@@ -336,3 +336,22 @@
 .footerLink:active {
     color: #89b84f;
 }
+
+/* ─── Test Accounts Hint ─────────────────────────────────── */
+.testAccountsHint {
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(30, 30, 30, 0.6);
+    border: 1px dashed #333;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 11px;
+    color: #737373;
+    line-height: 1.6;
+}
+
+.testAccountsHint b {
+    color: #a3a3a3;
+    display: block;
+    margin-bottom: 4px;
+}
