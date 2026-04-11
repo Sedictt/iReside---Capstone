@@ -95,12 +95,12 @@ const STEPS = [
 ];
 
 const REQUIREMENT_LABELS: Record<string, string> = {
-    valid_id: "Government ID",
+    valid_id: "Valid ID",
     proof_of_income: "Proof of Income",
-    background_reference: "References",
     application_form: "Application Form",
     move_in_payment: "Advance Payment",
 };
+const ACTIVE_REQUIREMENT_KEYS = Object.keys(REQUIREMENT_LABELS);
 
 const STEP_FIELD_KEYS: Record<number, FormErrorKey[]> = {
     0: ["unit", "applicant_name", "applicant_email", "applicant_phone", "move_in_date", "emergency_contact_name", "emergency_contact_phone"],
@@ -369,9 +369,10 @@ export function WalkInApplicationModal({
         }));
     }, []);
 
-    const allRequirementsMet = useMemo(() => 
-        Object.values(formData.requirements_checklist).every(Boolean), 
-    [formData.requirements_checklist]);
+    const allRequirementsMet = useMemo(
+        () => ACTIVE_REQUIREMENT_KEYS.every((key) => Boolean(formData.requirements_checklist[key])),
+        [formData.requirements_checklist]
+    );
 
     const validateStep = (currentStep: number) => {
         const errors = validateFormStep(currentStep, selectedUnit, formData, { requireUnit: !existingApplication });
@@ -446,11 +447,15 @@ export function WalkInApplicationModal({
                 );
                 if (!ok) return;
             }
+            const normalizedChecklist = Object.fromEntries(
+                ACTIVE_REQUIREMENT_KEYS.map((key) => [key, Boolean(formData.requirements_checklist[key])])
+            );
+
             const payload = existingApplication ? {
                 application_id: existingApplication.id,
-                requirements_checklist: formData.requirements_checklist,
+                requirements_checklist: normalizedChecklist,
                 employment_info: { ...formData.employment_info, monthly_income: Number(formData.employment_info.monthly_income) || 0 },
-                status: asPending ? "pending" : allRequirementsMet ? "approved" : "pending",
+                status: asPending ? "pending" : allRequirementsMet ? "reviewing" : "pending",
             } : {
                 unit_id: selectedUnit,
                 applicant_name: formData.applicant_name,
@@ -460,9 +465,9 @@ export function WalkInApplicationModal({
                 emergency_contact_name: formData.emergency_contact_name || null,
                 emergency_contact_phone: formData.emergency_contact_phone || null,
                 employment_info: { ...formData.employment_info, monthly_income: Number(formData.employment_info.monthly_income) || 0 },
-                requirements_checklist: formData.requirements_checklist,
+                requirements_checklist: normalizedChecklist,
                 message: formData.message,
-                status: asPending ? "pending" : "approved",
+                status: asPending ? "pending" : "reviewing",
                 lease_data: {
                     start_date: leaseData.start_date,
                     end_date: leaseData.end_date,
@@ -867,7 +872,9 @@ export function WalkInApplicationModal({
                                         </div>
 
                                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                                 {Object.entries(formData.requirements_checklist).map(([key, value], idx) => (
+                                                 {ACTIVE_REQUIREMENT_KEYS.map((key, idx) => {
+                                                    const value = Boolean(formData.requirements_checklist[key]);
+                                                    return (
                                                 <motion.button
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
@@ -915,7 +922,8 @@ export function WalkInApplicationModal({
                                                         />
                                                     )}
                                                 </motion.button>
-                                            ))}
+                                            );
+                                            })}
                                         </div>
                                     </div>
                                 )}

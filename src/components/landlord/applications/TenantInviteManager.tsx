@@ -9,7 +9,6 @@ type InviteApplicationType = "online" | "face_to_face";
 type InviteRequirementKey =
     | "valid_id"
     | "proof_of_income"
-    | "background_reference"
     | "application_form"
     | "move_in_payment";
 
@@ -19,14 +18,22 @@ type UnitOption = {
     rent_amount: number;
     property_id: string;
     property_name: string;
+    property_contract_template?: Record<string, unknown> | null;
     status?: string;
+};
+
+type PaymentPreview = {
+    advanceAmount: number;
+    securityDepositAmount: number;
+    estimated: true;
+    disclaimer: string;
 };
 
 type InviteListItem = {
     id: string;
     mode: InviteMode;
     applicationType: InviteApplicationType;
-    requiredRequirements: InviteRequirementKey[];
+    requiredRequirements: string[];
     status: string;
     propertyId: string;
     propertyName: string;
@@ -37,16 +44,87 @@ type InviteListItem = {
     maxUses: number;
     lastUsedAt: string | null;
     createdAt: string;
+    paymentPreview?: PaymentPreview;
     shareUrl: string;
     qrUrl: string;
 };
 
-const REQUIREMENT_OPTIONS: Array<{ key: InviteRequirementKey; label: string }> = [
-    { key: "valid_id", label: "Government ID" },
-    { key: "proof_of_income", label: "Proof of Income" },
-    { key: "background_reference", label: "References" },
-    { key: "move_in_payment", label: "Advance Payment" },
+const ADVANCE_TEMPLATE_KEYS = [
+    "advance",
+    "advance_amount",
+    "advance_payment",
+    "advance_rent",
+    "first_month_advance",
 ];
+
+const DEPOSIT_TEMPLATE_KEYS = [
+    "deposit",
+    "security_deposit",
+    "security_deposit_amount",
+];
+
+function parseAmount(value: unknown, monthlyRent: number): number | null {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+    if (typeof value !== "string") return null;
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return null;
+
+    const monthMatch = normalized.match(/(\d+(?:\.\d+)?)\s*month/);
+    if (monthMatch && monthlyRent > 0) {
+        const months = Number(monthMatch[1]);
+        if (Number.isFinite(months) && months > 0) return months * monthlyRent;
+    }
+
+    if (normalized.includes("month") && monthlyRent > 0) return monthlyRent;
+
+    const numeric = Number(normalized.replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
+
+function pickTemplateAmount(template: Record<string, unknown> | null, keys: string[], monthlyRent: number) {
+    if (!template) return null;
+
+    const pools: Array<Record<string, unknown>> = [template];
+    const answers = template.answers;
+    if (answers && typeof answers === "object" && !Array.isArray(answers)) {
+        pools.push(answers as Record<string, unknown>);
+    }
+    const defaults = template.defaults;
+    if (defaults && typeof defaults === "object" && !Array.isArray(defaults)) {
+        pools.push(defaults as Record<string, unknown>);
+    }
+    const paymentDefaults = template.payment_defaults;
+    if (paymentDefaults && typeof paymentDefaults === "object" && !Array.isArray(paymentDefaults)) {
+        pools.push(paymentDefaults as Record<string, unknown>);
+    }
+
+    for (const pool of pools) {
+        for (const key of keys) {
+            const parsed = parseAmount(pool[key], monthlyRent);
+            if (parsed && parsed > 0) return parsed;
+        }
+    }
+    return null;
+}
+
+function buildPaymentPreview(template: Record<string, unknown> | null, monthlyRent: number): PaymentPreview {
+    const fallback = Number.isFinite(monthlyRent) && monthlyRent > 0 ? monthlyRent : 0;
+    return {
+        advanceAmount: pickTemplateAmount(template, ADVANCE_TEMPLATE_KEYS, fallback) ?? fallback,
+        securityDepositAmount: pickTemplateAmount(template, DEPOSIT_TEMPLATE_KEYS, fallback) ?? fallback,
+        estimated: true,
+        disclaimer: "Estimate only. Final payment requests are generated after landlord review.",
+    };
+}
+
+const REQUIREMENT_OPTIONS: Array<{ key: InviteRequirementKey; label: string }> = [
+    { key: "valid_id", label: "Valid ID" },
+    { key: "proof_of_income", label: "Proof of Income" },
+];
+
+const VALID_ID_TOOLTIP =
+    "Accepted valid IDs: Passport, Driver's License, UMID, PhilSys/National ID, PRC ID, Postal ID, Voter's ID, Senior Citizen ID.";
 
 export function TenantInviteManager({
     availableUnits,
@@ -62,10 +140,10 @@ export function TenantInviteManager({
     const [requiredRequirements, setRequiredRequirements] = useState<InviteRequirementKey[]>([
         "valid_id",
         "proof_of_income",
-        "background_reference",
     ]);
     const [propertyId, setPropertyId] = useState("");
     const [unitId, setUnitId] = useState("");
+    const [previewUnitId, setPreviewUnitId] = useState("");
     const [expiresAt, setExpiresAt] = useState(() => {
         const d = new Date();
         d.setDate(d.getDate() + 7);
@@ -95,6 +173,17 @@ export function TenantInviteManager({
                 .sort((a, b) => a.name.localeCompare(b.name)),
         [availableUnits, propertyId]
     );
+
+    const currentPaymentPreview = useMemo(() => {
+        const activePreviewUnitId = mode === "unit" ? unitId : previewUnitId;
+        const unit = activePreviewUnitId ? propertyUnits.find((item) => item.id === activePreviewUnitId) : null;
+        const fallback = unit?.rent_amount ?? propertyUnits[0]?.rent_amount ?? 0;
+        const template = unit?.property_contract_template ?? propertyUnits[0]?.property_contract_template ?? null;
+        return buildPaymentPreview(template, Number(fallback ?? 0));
+    }, [mode, previewUnitId, propertyUnits, unitId]);
+
+    const showPaymentPreview =
+        Boolean(propertyId) && (mode === "unit" ? Boolean(unitId) : Boolean(previewUnitId));
 
     const createInvite = async () => {
         setSubmitting(true);
@@ -159,6 +248,7 @@ export function TenantInviteManager({
             onClick: () => {
                 setMode("property");
                 setUnitId("");
+                setPreviewUnitId("");
             },
         },
         {
@@ -168,6 +258,7 @@ export function TenantInviteManager({
             onClick: () => {
                 setMode("unit");
                 setUnitId("");
+                setPreviewUnitId("");
             },
         },
     ];
@@ -342,11 +433,49 @@ export function TenantInviteManager({
                                                     : "border-border bg-background text-muted-foreground hover:bg-muted"
                                             }`}
                                         >
-                                            {option.label}
+                                            <span className="inline-flex items-center gap-1.5">
+                                                {option.label}
+                                                {option.key === "valid_id" && (
+                                                    <span className="group/validid relative inline-flex items-center">
+                                                        <CircleHelp
+                                                            className="h-4 w-4 rounded-full border border-amber-400/40 bg-amber-400/15 p-0.5 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
+                                                            aria-label={VALID_ID_TOOLTIP}
+                                                            role="img"
+                                                            tabIndex={0}
+                                                        />
+                                                        <span className="pointer-events-none absolute left-0 top-6 z-30 hidden w-64 rounded-xl border border-border bg-background p-2.5 text-[10px] font-semibold normal-case tracking-normal text-foreground shadow-xl group-hover/validid:block group-focus-within/validid:block">
+                                                            {VALID_ID_TOOLTIP}
+                                                        </span>
+                                                    </span>
+                                                )}
+                                            </span>
                                         </button>
                                     );
                                 })}
                             </div>
+                        </div>
+                    )}
+
+                    {showPaymentPreview && (
+                        <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                            <p className="text-xs font-bold uppercase tracking-wider text-amber-200">
+                                Estimated Move-in Payment Preview
+                            </p>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-amber-100/70">Advance Rent</p>
+                                    <p className="mt-1 text-lg font-black text-amber-50">
+                                        PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+                                    <p className="text-[10px] uppercase tracking-widest text-amber-100/70">Security Deposit</p>
+                                    <p className="mt-1 text-lg font-black text-amber-50">
+                                        PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                            </div>
+                            <p className="mt-3 text-[11px] text-amber-100/80">{currentPaymentPreview.disclaimer}</p>
                         </div>
                     )}
 
@@ -364,6 +493,7 @@ export function TenantInviteManager({
                                     onChange={(event) => {
                                         setPropertyId(event.target.value);
                                         setUnitId("");
+                                        setPreviewUnitId("");
                                     }}
                                     className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-bold text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary"
                                 >
@@ -397,6 +527,37 @@ export function TenantInviteManager({
                                     >
                                         <option value="" disabled>
                                             {!propertyId ? "Select a property first" : "Choose a unit..."}
+                                        </option>
+                                        {propertyUnits.map((unit) => (
+                                            <option key={unit.id} value={unit.id}>
+                                                {unit.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground">
+                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {mode === "property" && (
+                            <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
+                                    Preview Unit Rent Basis
+                                </label>
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                        <DoorOpen className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                    </div>
+                                    <select
+                                        value={previewUnitId}
+                                        onChange={(event) => setPreviewUnitId(event.target.value)}
+                                        className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-bold text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                                        disabled={!propertyId}
+                                    >
+                                        <option value="">
+                                            {!propertyId ? "Select a property first" : "Use first vacant unit"}
                                         </option>
                                         {propertyUnits.map((unit) => (
                                             <option key={unit.id} value={unit.id}>
@@ -487,6 +648,18 @@ export function TenantInviteManager({
                                 <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Share URL</p>
                                 <p className="text-sm font-medium text-foreground break-all">{freshInvite.shareUrl}</p>
                             </div>
+                            {freshInvite.paymentPreview && (
+                                <div className="mb-6 w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-left">
+                                    <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-amber-200">Estimated Payment Preview</p>
+                                    <p className="text-xs text-amber-50">
+                                        Advance: PHP {freshInvite.paymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                    <p className="text-xs text-amber-50">
+                                        Security: PHP {freshInvite.paymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                    <p className="mt-2 text-[10px] text-amber-100/80">{freshInvite.paymentPreview.disclaimer}</p>
+                                </div>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => void copyLink(freshInvite.shareUrl)}

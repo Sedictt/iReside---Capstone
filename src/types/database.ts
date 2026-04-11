@@ -14,7 +14,7 @@ export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
 export type UtilityType = 'water' | 'electricity'
 export type UtilityBillingMode = 'included_in_rent' | 'tenant_paid'
-export type ApplicationStatus = 'pending' | 'reviewing' | 'approved' | 'rejected' | 'withdrawn'
+export type ApplicationStatus = 'pending' | 'reviewing' | 'payment_pending' | 'approved' | 'rejected' | 'withdrawn'
 export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
@@ -837,6 +837,134 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            application_payment_requests: {
+                Row: {
+                    id: string
+                    application_id: string
+                    landlord_id: string
+                    requirement_type: 'advance_rent' | 'security_deposit'
+                    amount: number
+                    due_at: string | null
+                    status: 'pending' | 'processing' | 'completed' | 'rejected' | 'expired'
+                    method: PaymentMethod | null
+                    reference_number: string | null
+                    payment_note: string | null
+                    payment_proof_path: string | null
+                    payment_proof_url: string | null
+                    submitted_at: string | null
+                    reviewed_at: string | null
+                    reviewed_by: string | null
+                    review_note: string | null
+                    bypassed: boolean
+                    linked_payment_id: string | null
+                    metadata: Json
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    application_id: string
+                    landlord_id: string
+                    requirement_type: 'advance_rent' | 'security_deposit'
+                    amount: number
+                    due_at?: string | null
+                    status?: 'pending' | 'processing' | 'completed' | 'rejected' | 'expired'
+                    method?: PaymentMethod | null
+                    reference_number?: string | null
+                    payment_note?: string | null
+                    payment_proof_path?: string | null
+                    payment_proof_url?: string | null
+                    submitted_at?: string | null
+                    reviewed_at?: string | null
+                    reviewed_by?: string | null
+                    review_note?: string | null
+                    bypassed?: boolean
+                    linked_payment_id?: string | null
+                    metadata?: Json
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    application_id?: string
+                    landlord_id?: string
+                    requirement_type?: 'advance_rent' | 'security_deposit'
+                    amount?: number
+                    due_at?: string | null
+                    status?: 'pending' | 'processing' | 'completed' | 'rejected' | 'expired'
+                    method?: PaymentMethod | null
+                    reference_number?: string | null
+                    payment_note?: string | null
+                    payment_proof_path?: string | null
+                    payment_proof_url?: string | null
+                    submitted_at?: string | null
+                    reviewed_at?: string | null
+                    reviewed_by?: string | null
+                    review_note?: string | null
+                    bypassed?: boolean
+                    linked_payment_id?: string | null
+                    metadata?: Json
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            application_payment_audit_events: {
+                Row: {
+                    id: string
+                    application_id: string
+                    payment_request_id: string | null
+                    actor_id: string | null
+                    actor_role: 'system' | 'landlord' | 'prospect'
+                    event_type:
+                        | 'request_generated'
+                        | 'portal_opened'
+                        | 'proof_submitted'
+                        | 'payment_confirmed'
+                        | 'payment_rejected'
+                        | 'payment_needs_correction'
+                        | 'bypass_used'
+                        | 'expired'
+                        | 'finalized'
+                    metadata: Json
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    application_id: string
+                    payment_request_id?: string | null
+                    actor_id?: string | null
+                    actor_role: 'system' | 'landlord' | 'prospect'
+                    event_type:
+                        | 'request_generated'
+                        | 'portal_opened'
+                        | 'proof_submitted'
+                        | 'payment_confirmed'
+                        | 'payment_rejected'
+                        | 'payment_needs_correction'
+                        | 'bypass_used'
+                        | 'expired'
+                        | 'finalized'
+                    metadata?: Json
+                    created_at?: string
+                }
+                Update: {
+                    application_id?: string
+                    payment_request_id?: string | null
+                    actor_id?: string | null
+                    actor_role?: 'system' | 'landlord' | 'prospect'
+                    event_type?:
+                        | 'request_generated'
+                        | 'portal_opened'
+                        | 'proof_submitted'
+                        | 'payment_confirmed'
+                        | 'payment_rejected'
+                        | 'payment_needs_correction'
+                        | 'bypass_used'
+                        | 'expired'
+                        | 'finalized'
+                    metadata?: Json
+                }
+                Relationships: any[]
+            }
             applications: {
                 Row: {
                     id: string
@@ -856,6 +984,10 @@ export interface Database {
                     reference_phone: string | null
                     compliance_checklist: Json | null
                     reviewed_at: string | null
+                    payment_pending_started_at: string | null
+                    payment_pending_expires_at: string | null
+                    payment_portal_token_hash: string | null
+                    payment_portal_token_expires_at: string | null
                     created_at: string
                     updated_at: string
                     invite_id: string | null
@@ -886,6 +1018,10 @@ export interface Database {
                     reference_phone?: string | null
                     compliance_checklist?: Json | null
                     reviewed_at?: string | null
+                    payment_pending_started_at?: string | null
+                    payment_pending_expires_at?: string | null
+                    payment_portal_token_hash?: string | null
+                    payment_portal_token_expires_at?: string | null
                     created_at?: string
                     updated_at?: string
                     invite_id?: string | null
@@ -915,6 +1051,10 @@ export interface Database {
                     reference_phone?: string | null
                     compliance_checklist?: Json | null
                     reviewed_at?: string | null
+                    payment_pending_started_at?: string | null
+                    payment_pending_expires_at?: string | null
+                    payment_portal_token_hash?: string | null
+                    payment_portal_token_expires_at?: string | null
                     updated_at?: string
                     invite_id?: string | null
                     application_source?: ApplicationSource

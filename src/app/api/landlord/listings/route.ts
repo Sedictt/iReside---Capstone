@@ -25,7 +25,7 @@ export async function GET() {
 
     const { data: properties, error: propertiesError } = await supabase
         .from("properties")
-        .select("id, name, address, images")
+        .select("id, name, address, images, contract_template")
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -108,6 +108,12 @@ export async function GET() {
         id: property.id,
         name: property.name,
         address: property.address,
+        contractTemplate:
+            property.contract_template &&
+            typeof property.contract_template === "object" &&
+            !Array.isArray(property.contract_template)
+                ? property.contract_template
+                : null,
         image:
             Array.isArray(property.images) && typeof property.images[0] === "string"
                 ? property.images[0]

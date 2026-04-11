@@ -164,11 +164,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "You do not own this unit." }, { status: 403 });
     }
 
-    // Determine status from requirements checklist
+    // Walk-in creation cannot directly approve under payment-gated flow.
+    // Completed intake can move to reviewing for landlord payment request.
     const checklist = requirements_checklist || {};
     const allComplete = Object.values(checklist).length > 0 &&
         Object.values(checklist).every((v) => v === true);
-    const status = allComplete ? "approved" : "pending";
+    const status = allComplete ? "reviewing" : "pending";
 
     const insertPayload: Record<string, unknown> = {
         unit_id,
@@ -248,10 +249,17 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { application_id, requirements_checklist, employment_info, status } = body;
 
-    const allowedStatuses = new Set(["pending", "reviewing", "approved", "rejected", "withdrawn"]);
+    const allowedStatuses = new Set(["pending", "reviewing", "rejected", "withdrawn"]);
 
     if (!application_id) {
         return NextResponse.json({ error: "application_id is required." }, { status: 400 });
+    }
+
+    if (status === "approved") {
+        return NextResponse.json(
+            { error: "Direct approval is disabled. Move application to payment pending first." },
+            { status: 400 }
+        );
     }
 
     if (status && !allowedStatuses.has(status)) {

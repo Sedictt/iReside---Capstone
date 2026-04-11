@@ -168,15 +168,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "You do not own this unit." }, { status: 403 });
     }
 
-    // Determine status: landlord may override even if checklist incomplete
+    // Tenant-application creation cannot directly approve under payment-gated flow.
     const checklist = requirements_checklist || {};
     const allComplete =
         Object.values(checklist).length > 0 && Object.values(checklist).every((v) => v === true);
     const status =
-        requestedStatus === "approved" || requestedStatus === "pending"
+        requestedStatus === "pending" || requestedStatus === "reviewing"
             ? requestedStatus
             : allComplete
-              ? "approved"
+              ? "reviewing"
               : "pending";
 
     const insertPayload: Record<string, unknown> = {
@@ -272,10 +272,17 @@ export async function PATCH(request: Request) {
         message,
     } = body;
 
-    const allowedStatuses = new Set(["pending", "reviewing", "approved", "rejected", "withdrawn"]);
+    const allowedStatuses = new Set(["pending", "reviewing", "rejected", "withdrawn"]);
 
     if (!application_id) {
         return NextResponse.json({ error: "application_id is required." }, { status: 400 });
+    }
+
+    if (status === "approved") {
+        return NextResponse.json(
+            { error: "Direct approval is disabled. Move application to payment pending first." },
+            { status: 400 }
+        );
     }
 
     if (status && !allowedStatuses.has(status)) {

@@ -56,6 +56,7 @@ const summarizeStatuses = (statuses: ApplicationStatus[]) => {
         total: statuses.length,
         pending: 0,
         reviewing: 0,
+        payment_pending: 0,
         approved: 0,
         rejected: 0,
         withdrawn: 0,
@@ -128,9 +129,10 @@ export async function GET() {
         const statusRank: Record<ApplicationStatus, number> = {
             pending: 0,
             reviewing: 1,
-            approved: 2,
-            rejected: 3,
-            withdrawn: 4,
+            payment_pending: 2,
+            approved: 3,
+            rejected: 4,
+            withdrawn: 5,
         };
 
         const rankDiff = statusRank[left.status as ApplicationStatus] - statusRank[right.status as ApplicationStatus];

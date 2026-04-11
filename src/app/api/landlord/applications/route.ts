@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { applyPaymentPendingExpiry } from "@/lib/application-payment-pending";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ApplicationStatus, LeaseStatus } from "@/types/database";
 
@@ -15,11 +17,14 @@ type ApplicationResponse = {
         avatar: string | null;
     };
     propertyName: string;
+    propertyContractTemplate: Record<string, unknown> | null;
     unitNumber: string;
     propertyImage: string;
     requestedMoveIn: string | null;
     monthlyRent: number | null;
     status: ApplicationStatus;
+    paymentPendingStartedAt?: string | null;
+    paymentPendingExpiresAt?: string | null;
     submittedDate: string;
     notes: string | null;
     documents: string[];
@@ -65,6 +70,19 @@ type ApplicationResponse = {
             | "signing_failed";
         actor_label?: string | null;
         metadata?: Record<string, unknown> | null;
+    }>;
+    preApprovalPayments?: Array<{
+        id: string;
+        requirementType: "advance_rent" | "security_deposit";
+        amount: number;
+        dueAt: string | null;
+        status: "pending" | "processing" | "completed" | "rejected" | "expired";
+        method: "gcash" | "cash" | null;
+        submittedAt: string | null;
+        reviewedAt: string | null;
+        proofUrl: string | null;
+        reviewNote: string | null;
+        bypassed: boolean;
     }>;
 };
 
@@ -136,6 +154,7 @@ function extractMissingColumn(error: PostgrestLikeError | null | undefined) {
 
 export async function GET() {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
 
     const {
         data: { user },
@@ -158,6 +177,8 @@ export async function GET() {
         "applicant_id",
         "unit_id",
         "lease_id",
+        "payment_pending_started_at",
+        "payment_pending_expires_at",
         "emergency_contact_name",
         "emergency_contact_phone",
         "reference_name",
@@ -215,6 +236,32 @@ export async function GET() {
     }
     const applicationRows = applicationRowsRaw as any[];
 
+    const paymentPendingRows = applicationRows.filter((row) => row.status === "payment_pending");
+    if (paymentPendingRows.length > 0) {
+        const expiryResults = await Promise.all(
+            paymentPendingRows.map((row) => applyPaymentPendingExpiry(adminClient, row.id))
+        );
+        const expiryMap = new Map(
+            expiryResults
+                .filter((result) => result.expired && result.application)
+                .map((result) => [result.application.id, result.application])
+        );
+
+        if (expiryMap.size > 0) {
+            for (let idx = 0; idx < applicationRows.length; idx += 1) {
+                const updated = expiryMap.get(applicationRows[idx].id);
+                if (!updated) continue;
+                applicationRows[idx] = {
+                    ...applicationRows[idx],
+                    status: updated.status,
+                    payment_pending_started_at: updated.payment_pending_started_at,
+                    payment_pending_expires_at: updated.payment_pending_expires_at,
+                    requirements_checklist: updated.requirements_checklist ?? applicationRows[idx].requirements_checklist,
+                };
+            }
+        }
+    }
+
     const applicantIds = Array.from(
         new Set(applicationRows.map((row) => row.applicant_id).filter((value): value is string => Boolean(value)))
     );
@@ -252,7 +299,7 @@ export async function GET() {
 
     const { data: propertyRows, error: propertiesError } =
         propertyIds.length > 0
-            ? await supabase.from("properties").select("id, name, images").in("id", propertyIds)
+            ? await supabase.from("properties").select("id, name, images, contract_template").in("id", propertyIds)
             : { data: [], error: null };
 
     if (propertiesError) {
@@ -327,6 +374,51 @@ export async function GET() {
     const actorProfiles = (actorProfilesRaw ?? []) as ActorProfile[];
     const actorMap = new Map(actorProfiles.map((profile) => [profile.id, profile]));
 
+    const applicationIds = applicationRows.map((row) => row.id).filter(Boolean);
+    const { data: paymentRequestRowsRaw } = applicationIds.length
+        ? await supabase
+              .from("application_payment_requests")
+              .select(
+                  "id, application_id, requirement_type, amount, due_at, status, method, submitted_at, reviewed_at, payment_proof_url, review_note, bypassed"
+              )
+              .in("application_id", applicationIds)
+        : { data: [] as any[] };
+    const paymentRequestRows = (paymentRequestRowsRaw ?? []) as Array<{
+        id: string;
+        application_id: string;
+        requirement_type: "advance_rent" | "security_deposit";
+        amount: number;
+        due_at: string | null;
+        status: "pending" | "processing" | "completed" | "rejected" | "expired";
+        method: "gcash" | "cash" | null;
+        submitted_at: string | null;
+        reviewed_at: string | null;
+        payment_proof_url: string | null;
+        review_note: string | null;
+        bypassed: boolean;
+    }>;
+    const paymentRequestsByApplication = new Map<
+        string,
+        ApplicationResponse["preApprovalPayments"]
+    >();
+    for (const row of paymentRequestRows) {
+        const current = paymentRequestsByApplication.get(row.application_id) ?? [];
+        current.push({
+            id: row.id,
+            requirementType: row.requirement_type,
+            amount: Number(row.amount ?? 0),
+            dueAt: row.due_at,
+            status: row.status,
+            method: row.method,
+            submittedAt: row.submitted_at,
+            reviewedAt: row.reviewed_at,
+            proofUrl: row.payment_proof_url,
+            reviewNote: row.review_note,
+            bypassed: Boolean(row.bypassed),
+        });
+        paymentRequestsByApplication.set(row.application_id, current);
+    }
+
     const auditByLeaseId = new Map<string, ApplicationResponse["leaseAuditEvents"]>();
     auditRows.forEach((row) => {
         const current = auditByLeaseId.get(row.lease_id) ?? [];
@@ -375,11 +467,17 @@ export async function GET() {
                 avatar: applicant?.avatar_url ?? null,
             },
             propertyName: property?.name ?? unit?.name ?? "Property",
+            propertyContractTemplate:
+                property?.contract_template && typeof property.contract_template === "object" && !Array.isArray(property.contract_template)
+                    ? (property.contract_template as Record<string, unknown>)
+                    : null,
             unitNumber: unit?.name ?? "Unit",
             propertyImage,
             requestedMoveIn: row.move_in_date ?? null,
             monthlyRent: unit?.rent_amount ?? null,
             status: row.status,
+            paymentPendingStartedAt: row.payment_pending_started_at ?? null,
+            paymentPendingExpiresAt: row.payment_pending_expires_at ?? null,
             submittedDate: row.created_at,
             notes: row.message ?? null,
             documents: Array.isArray(row.documents)
@@ -411,6 +509,7 @@ export async function GET() {
                   }
                 : null,
             leaseAuditEvents: lease ? auditByLeaseId.get(lease.id) ?? [] : [],
+            preApprovalPayments: paymentRequestsByApplication.get(row.id) ?? [],
         };
     }) as any[]);
 

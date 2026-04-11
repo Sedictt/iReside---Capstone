@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+import {
+    ADVANCE_TEMPLATE_KEYS,
+    DEPOSIT_TEMPLATE_KEYS,
+    pickTemplateAmount,
+} from "@/lib/application-payment-pending";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_CHECKLIST } from "@/lib/application-intake";
 import {
@@ -91,7 +96,7 @@ export async function GET(
 
         const { data: property } = await adminClient
             .from("properties")
-            .select("id, name")
+            .select("id, name, contract_template")
             .eq("id", invite.property_id)
             .maybeSingle();
 
@@ -102,6 +107,11 @@ export async function GET(
             .eq("status", "vacant")
             .order("name", { ascending: true });
 
+        const contractTemplate =
+            property?.contract_template && typeof property.contract_template === "object" && !Array.isArray(property.contract_template)
+                ? (property.contract_template as Record<string, unknown>)
+                : null;
+
         const eligibleUnits = (units ?? [])
             .filter((unit) => invite.mode === "property" || unit.id === invite.unit_id)
             .map((unit) => ({
@@ -110,9 +120,20 @@ export async function GET(
                 rent_amount: Number(unit.rent_amount ?? 0),
                 property_id: unit.property_id,
                 property_name: property?.name ?? "Property",
+                paymentPreview: {
+                    advanceAmount:
+                        pickTemplateAmount(contractTemplate, ADVANCE_TEMPLATE_KEYS, Number(unit.rent_amount ?? 0)) ??
+                        Number(unit.rent_amount ?? 0),
+                    securityDepositAmount:
+                        pickTemplateAmount(contractTemplate, DEPOSIT_TEMPLATE_KEYS, Number(unit.rent_amount ?? 0)) ??
+                        Number(unit.rent_amount ?? 0),
+                    estimated: true,
+                    disclaimer: "Estimate only. Final payment requests are generated after landlord review.",
+                },
             }));
 
         const selectedUnit = invite.mode === "unit" ? eligibleUnits[0] ?? null : null;
+        const fallbackPreviewUnit = selectedUnit ?? eligibleUnits[0] ?? null;
 
         await adminClient.from("tenant_intake_invite_events").insert({
             invite_id: invite.id,
@@ -135,6 +156,7 @@ export async function GET(
                 unitId: invite.unit_id,
                 selectedUnit,
                 units: eligibleUnits,
+                paymentPreview: fallbackPreviewUnit?.paymentPreview ?? null,
                 expiresAt: invite.expires_at,
             },
         });
@@ -217,6 +239,8 @@ export async function POST(
             ...DEFAULT_CHECKLIST,
             ...(body.requirements_checklist ?? {}),
             application_form: true,
+            // Move-in payment is only completed after invoice confirmation, never at application submission.
+            move_in_payment: false,
         };
         const submittedDocuments = Array.isArray(body.uploaded_documents)
             ? body.uploaded_documents
@@ -239,6 +263,11 @@ export async function POST(
             }
 
             for (const key of requiredKeys) {
+                if (key === "move_in_payment") {
+                    // Payment proof is handled after approval via invoices, not during application submission.
+                    continue;
+                }
+
                 if (!inviteChecklist[key]) {
                     return NextResponse.json({ error: `Please mark ${key.replaceAll("_", " ")} as provided.` }, { status: 400 });
                 }

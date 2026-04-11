@@ -221,7 +221,8 @@ async function finalizeLease(params: FinalizeLeaseParams) {
                 income_verified: true,
                 application_completed: true,
                 background_checked: true,
-                payment_received: true,
+                // Payment completion should only be true after invoice confirmation.
+                payment_received: false,
                 lease_signed: true,
                 inspection_done: true,
             },

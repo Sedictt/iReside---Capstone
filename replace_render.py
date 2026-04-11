@@ -1,352 +1,7 @@
-"use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import {
-    Briefcase,
-    Calendar,
-    CircleHelp,
-    ChevronLeft,
-    ChevronRight,
-    CheckCircle2,
-    FileText,
-    Home,
-    Loader2,
-    Lock,
-    Mail,
-    ShieldAlert,
-    ShieldCheck,
-    Upload,
-    User,
-    X,
-    Zap,
-    Building,
-    type LucideIcon,
-} from "lucide-react";
-import { motion } from "framer-motion";
-import {
-    ApplicationIdentityStep,
-    ApplicationProfileStep,
-    DEFAULT_CHECKLIST,
-    DEFAULT_EMPLOYMENT,
-    applyLiveFieldValidation,
-    type FormErrorKey,
-    type WalkInFormData,
-    type WalkInUnit,
-    validateFormStep,
-} from "@/components/landlord/applications/application-intake-shared";
-import { cn } from "@/lib/utils";
+import io
 
-type InvitePayload = {
-    id: string;
-    mode: "property" | "unit";
-    applicationType: "online" | "face_to_face";
-    requiredRequirements: string[];
-    propertyId: string;
-    propertyName: string;
-    unitId: string | null;
-    selectedUnit: InviteUnit | null;
-    units: InviteUnit[];
-    paymentPreview?: {
-        advanceAmount: number;
-        securityDepositAmount: number;
-        estimated: boolean;
-        disclaimer: string;
-    } | null;
-    expiresAt: string | null;
-};
-
-type InviteUnit = WalkInUnit & {
-    paymentPreview?: {
-        advanceAmount: number;
-        securityDepositAmount: number;
-        estimated: boolean;
-        disclaimer: string;
-    };
-};
-
-type UploadedRequirementDocument = {
-    requirementKey: string;
-    url: string;
-    fileName: string;
-};
-
-const REQUIREMENT_LABELS: Record<string, string> = {
-    valid_id: "Valid ID",
-    proof_of_income: "Proof of Income",
-    application_form: "Application Form",
-    move_in_payment: "Advance Payment",
-};
-
-const VALID_ID_TOOLTIP =
-    "Accepted valid IDs: Passport, Driver's License, UMID, PhilSys/National ID, PRC ID, Postal ID, Voter's ID, Senior Citizen ID.";
-
-export function InviteApplicationClient({ token }: { token: string }) {
-    const [invite, setInvite] = useState<InvitePayload | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState<string | null>(null);
-    const [step, setStep] = useState(0);
-    const [selectedUnit, setSelectedUnit] = useState("");
-    const [uploadingRequirementKey, setUploadingRequirementKey] = useState<string | null>(null);
-    const [uploadedDocuments, setUploadedDocuments] = useState<UploadedRequirementDocument[]>([]);
-    const [formData, setFormData] = useState<WalkInFormData>({
-        applicant_name: "",
-        applicant_phone: "",
-        applicant_email: "",
-        move_in_date: "",
-        emergency_contact_name: "",
-        emergency_contact_phone: "",
-        employment_info: { ...DEFAULT_EMPLOYMENT },
-        requirements_checklist: { ...DEFAULT_CHECKLIST },
-        message: "",
-    });
-    const [formErrors, setFormErrors] = useState<Partial<Record<FormErrorKey, string>>>({});
-    const [, setTouchedFields] = useState<Partial<Record<FormErrorKey, boolean>>>({});
-    const [submitting, setSubmitting] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
-
-    useEffect(() => {
-        let ignore = false;
-        const loadInvite = async () => {
-            setLoading(true);
-            setLoadError(null);
-            try {
-                const response = await fetch(`/api/invites/${token}`);
-                const payload = (await response.json()) as { invite?: InvitePayload; error?: string };
-                if (!response.ok || !payload.invite) {
-                    throw new Error(payload.error || "Invite is no longer available.");
-                }
-
-                if (ignore) return;
-                setInvite(payload.invite);
-                const initialUnit = payload.invite.selectedUnit?.id ?? payload.invite.unitId ?? "";
-                setSelectedUnit(initialUnit);
-            } catch (error) {
-                if (ignore) return;
-                setLoadError(error instanceof Error ? error.message : "Invite is no longer available.");
-            } finally {
-                if (!ignore) setLoading(false);
-            }
-        };
-
-        void loadInvite();
-        return () => {
-            ignore = true;
-        };
-    }, [token]);
-
-    const currentUnit = useMemo(
-        () => invite?.units.find((u) => u.id === selectedUnit),
-        [invite?.units, selectedUnit]
-    );
-    const paymentPreview = useMemo(() => {
-        if (!currentUnit?.paymentPreview) return null;
-        return currentUnit.paymentPreview;
-    }, [currentUnit]);
-    const isOnlineInvite = invite?.applicationType === "online";
-    const requiredRequirementKeys = useMemo(() => {
-        if (!invite || !isOnlineInvite) return [] as string[];
-        const keys = invite.requiredRequirements.filter(
-            (key) => key in REQUIREMENT_LABELS && key !== "move_in_payment"
-        );
-        return keys.length > 0
-            ? keys
-            : Object.keys(REQUIREMENT_LABELS).filter((key) => key !== "move_in_payment");
-    }, [invite, isOnlineInvite]);
-
-    const totalSteps = isOnlineInvite ? 4 : 3;
-    const finalStepIndex = totalSteps - 1;
-
-    const stepDefinitions = isOnlineInvite ? [
-        { id: 0, title: "Personal Details", icon: User, desc: "Your basic identity and contact information" },
-        { id: 1, title: "Employment", icon: Briefcase, desc: "Verify your source of income and professional background" },
-        { id: 2, title: "Documents", icon: FileText, desc: "Upload necessary proofs for your application" },
-        { id: 3, title: "Review & Submit", icon: ShieldCheck, desc: "Final check and official submission" },
-    ] : [
-        { id: 0, title: "Personal Details", icon: User, desc: "Your basic identity and contact information" },
-        { id: 1, title: "Employment", icon: Briefcase, desc: "Verify your source of income and professional background" },
-        { id: 2, title: "Review & Submit", icon: ShieldCheck, desc: "Final check and official submission" },
-    ];
-
-    const updateField = (
-        field: keyof WalkInFormData,
-        value: WalkInFormData[keyof WalkInFormData],
-        validateKeys: FormErrorKey[] = []
-    ) => {
-        const nextFormData = { ...formData, [field]: value };
-        setFormData(nextFormData);
-
-        if (validateKeys.length > 0) {
-            applyLiveFieldValidation({
-                nextFormData,
-                step,
-                selectedUnit,
-                setTouchedFields,
-                setFormErrors,
-                validateKeys,
-            });
-        }
-    };
-
-    const validateCurrentStep = (currentStep: number) => {
-        const errors = validateFormStep(currentStep, selectedUnit, formData);
-        const stepKeys = currentStep === 0
-            ? ["unit", "applicant_name", "applicant_email", "applicant_phone", "move_in_date", "emergency_contact_name", "emergency_contact_phone"]
-            : ["occupation", "employer", "monthly_income", "message"];
-
-        setTouchedFields((prev) => ({
-            ...prev,
-            ...Object.fromEntries(stepKeys.map((key) => [key, true])),
-        }));
-        setFormErrors((prev) => ({ ...prev, ...errors }));
-        return Object.keys(errors).length === 0;
-    };
-
-    const toggleRequirement = (key: string) => {
-        setFormData((prev) => ({
-            ...prev,
-            requirements_checklist: {
-                ...prev.requirements_checklist,
-                [key]: !prev.requirements_checklist[key],
-            },
-        }));
-    };
-
-    const handleUploadRequirementFiles = async (requirementKey: string, files: FileList | null) => {
-        if (!files || files.length === 0) return;
-        setSubmitError(null);
-        setUploadingRequirementKey(requirementKey);
-
-        try {
-            const form = new FormData();
-            form.append("requirementKey", requirementKey);
-            Array.from(files).forEach((file) => form.append("files", file));
-
-            const response = await fetch(`/api/invites/${token}/documents`, {
-                method: "POST",
-                body: form,
-            });
-            const payload = (await response.json()) as {
-                error?: string;
-                documents?: UploadedRequirementDocument[];
-            };
-
-            if (!response.ok || !Array.isArray(payload.documents)) {
-                throw new Error(payload.error || "Failed to upload files.");
-            }
-            const newDocuments = payload.documents;
-
-            setUploadedDocuments((prev) => {
-                const next = [...prev, ...newDocuments];
-                const dedup = new Map<string, UploadedRequirementDocument>();
-                next.forEach((doc) => dedup.set(`${doc.requirementKey}-${doc.url}`, doc));
-                return Array.from(dedup.values());
-            });
-
-            setFormData((prev) => ({
-                ...prev,
-                requirements_checklist: {
-                    ...prev.requirements_checklist,
-                    [requirementKey]: true,
-                },
-            }));
-        } catch (error) {
-            setSubmitError(error instanceof Error ? error.message : "Failed to upload files.");
-        } finally {
-            setUploadingRequirementKey(null);
-        }
-    };
-
-    const removeUploadedDocument = (docUrl: string) => {
-        setUploadedDocuments((prev) => prev.filter((doc) => doc.url !== docUrl));
-    };
-
-    const handleNext = () => {
-        if (step <= 1) {
-            if (validateCurrentStep(step)) {
-                setStep((current) => current + 1);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-        } else {
-            setStep((current) => current + 1);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-    };
-
-    const handleBack = () => {
-        if (step > 0) {
-            setStep((current) => current - 1);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-    };
-
-    const handleSubmit = async () => {
-        const stepZeroErrors = validateFormStep(0, selectedUnit, formData);
-        const stepOneErrors = validateFormStep(1, selectedUnit, formData);
-        const allErrors = { ...stepZeroErrors, ...stepOneErrors };
-        if (Object.keys(allErrors).length > 0) {
-            setFormErrors(allErrors);
-            setTouchedFields((prev) => ({
-                ...prev,
-                ...Object.fromEntries(Object.keys(allErrors).map((key) => [key, true])),
-            }));
-            setStep(Object.keys(stepZeroErrors).length > 0 ? 0 : 1);
-            return;
-        }
-
-        if (isOnlineInvite) {
-            for (const key of requiredRequirementKeys) {
-                if (key === "move_in_payment") {
-                    continue;
-                }
-                const checked = Boolean(formData.requirements_checklist[key]);
-                const hasDoc = uploadedDocuments.some((doc) => doc.requirementKey === key);
-                const needsPhoto = key !== "application_form";
-                if (!checked || (needsPhoto && !hasDoc)) {
-                    setSubmitError(`Complete uploads for ${REQUIREMENT_LABELS[key] || "this requirement"}.`);
-                    setStep(2);
-                    return;
-                }
-            }
-        }
-
-        setSubmitting(true);
-        setSubmitError(null);
-        try {
-            const response = await fetch(`/api/invites/${token}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    unit_id: selectedUnit,
-                    applicant_name: formData.applicant_name,
-                    applicant_phone: formData.applicant_phone,
-                    applicant_email: formData.applicant_email,
-                    move_in_date: formData.move_in_date,
-                    emergency_contact_name: formData.emergency_contact_name,
-                    emergency_contact_phone: formData.emergency_contact_phone,
-                    employment_info: {
-                        ...formData.employment_info,
-                        monthly_income: Number(formData.employment_info.monthly_income) || 0,
-                    },
-                    requirements_checklist: formData.requirements_checklist,
-                    uploaded_documents: uploadedDocuments,
-                    message: formData.message,
-                }),
-            });
-            const payload = (await response.json()) as { error?: string };
-            if (!response.ok) {
-                throw new Error(payload.error || "Failed to submit application.");
-            }
-            setSubmitted(true);
-        } catch (error) {
-            setSubmitError(error instanceof Error ? error.message : "Failed to submit application.");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    if (loading) {
+new_render = r"""    if (loading) {
         return (
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center">
                 <div className="flex items-center gap-3 text-sm font-bold tracking-wide text-slate-300">
@@ -436,7 +91,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 />
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 py-4 lg:py-6 relative z-10">
+            <div className="max-w-7xl mx-auto px-6 py-4 lg:py-6">
                 <div className="flex flex-col lg:flex-row gap-12">
                     <div className="w-full lg:w-[380px] space-y-6 flex-shrink-0">
                         <div className="space-y-4">
@@ -512,33 +167,17 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         <p className="text-xs text-white/70 mt-1">{new Date(invite.expiresAt).toLocaleString()}</p>
                                     </div>
                                 )}
-                                {paymentPreview && (
-                                    <div className="pt-4 border-t border-white/10">
-                                        <p className="text-[10px] font-black uppercase text-amber-300">
-                                            Estimated Move-in Payment
-                                        </p>
-                                        <p className="mt-1 text-xs text-white/70">
-                                            Advance: PHP {Number(paymentPreview.advanceAmount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="text-xs text-white/70">
-                                            Security: PHP {Number(paymentPreview.securityDepositAmount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="mt-2 text-[10px] text-white/40">
-                                            {paymentPreview.disclaimer}
-                                        </p>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
                     </div>
 
-                    <div className="flex-1 w-full relative z-20">
+                    <div className="flex-1">
                         <motion.div
                             key={step}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-[#0f1218]/80 backdrop-blur-2xl border border-white/10 rounded-[3.5rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden flex flex-col min-h-[600px] w-full"
+                            className="bg-[#0f1218]/80 backdrop-blur-md border border-white/10 rounded-[3.5rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden flex flex-col min-h-[500px]"
                         >
                             <div className="absolute -top-10 -right-10 opacity-[0.03] select-none pointer-events-none">
                                 {(() => {
@@ -547,8 +186,8 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                 })()}
                             </div>
 
-                            <div className="relative z-10 flex-1 flex flex-col w-full h-full max-w-full">
-                                <header className="mb-8">
+                            <div className="relative z-10 flex-1 flex flex-col">
+                                <header className="mb-6">
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
                                             {(() => {
@@ -572,7 +211,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     </div>
                                 )}
 
-                                <div className="flex-1 overflow-hidden w-full max-w-full pb-4">
+                                <div className="space-y-6 flex-1">
                                     {step === 0 && (
                                         <ApplicationIdentityStep
                                             formData={formData}
@@ -608,41 +247,26 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     )}
 
                                     {isOnlineInvite && step === 2 && (
-                                        <div className="space-y-4 w-full">
+                                        <div className="space-y-4 max-w-2xl">
                                             <p className="text-sm leading-relaxed text-slate-300 mb-6">
                                                 Upload at least one clear photo for each required document. Maximum file size 5MB each.
                                             </p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {requiredRequirementKeys.map((key) => {
                                                     const docs = uploadedDocuments.filter((doc) => doc.requirementKey === key);
                                                     const checked = Boolean(formData.requirements_checklist[key]);
                                                     return (
-                                                        <div key={key} className="rounded-3xl border border-white/10 bg-white/5 p-5 relative group hover:border-primary/40 transition-colors w-full">
-                                                            <div className="flex items-start justify-between mb-4 gap-4">
+                                                        <div key={key} className="rounded-3xl border border-white/10 bg-white/5 p-5 relative group hover:border-primary/40 transition-colors">
+                                                            <div className="flex items-start justify-between mb-4">
                                                                 <div>
                                                                     <p className="text-xs font-black uppercase tracking-[0.1em] text-white">
-                                                                        <span className="inline-flex items-center gap-1.5">
-                                                                            {REQUIREMENT_LABELS[key] ?? key}
-                                                                            {key === "valid_id" && (
-                                                                                <span className="group/validid relative inline-flex items-center">
-                                                                                    <CircleHelp
-                                                                                        className="h-4 w-4 rounded-full border border-amber-400/50 bg-amber-400/20 p-0.5 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
-                                                                                        aria-label={VALID_ID_TOOLTIP}
-                                                                                        role="img"
-                                                                                        tabIndex={0}
-                                                                                    />
-                                                                                    <span className="pointer-events-none absolute left-0 top-6 z-30 hidden w-64 rounded-xl border border-white/15 bg-[#10141f] p-2.5 text-[10px] font-semibold normal-case tracking-normal text-white/90 shadow-xl group-hover/validid:block group-focus-within/validid:block">
-                                                                                        {VALID_ID_TOOLTIP}
-                                                                                    </span>
-                                                                                </span>
-                                                                            )}
-                                                                        </span>
+                                                                        {REQUIREMENT_LABELS[key] ?? key}
                                                                     </p>
                                                                     {key !== "application_form" && (
                                                                        <p className="text-[10px] text-white/40 mt-1">Photo Upload</p>
                                                                     )}
                                                                 </div>
-                                                                <div className="flex flex-col gap-2 relative z-10 shrink-0">
+                                                                <div className="flex flex-col gap-2 relative z-10">
                                                                     {key !== "application_form" && (
                                                                         <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] hover:bg-white/20 transition-colors">
                                                                             <Upload className="h-3 w-3" />
@@ -704,7 +328,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     )}
 
                                     {step === finalStepIndex && (
-                                        <div className="space-y-6 w-full">
+                                        <div className="space-y-6 max-w-2xl">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <SummaryCard label="Property" value={invite.propertyName} icon={Building} />
                                                 <SummaryCard label="Unit" value={currentUnit?.name ?? "Not selected"} icon={Home} />
@@ -785,7 +409,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     );
 }
 
-function SummaryCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function SummaryCard({ label, value, icon: Icon }: any) {
     return (
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -802,7 +426,7 @@ function SummaryCard({ label, value, icon: Icon }: { label: string; value: strin
     );
 }
 
-function Seal({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+function Seal({ icon: Icon, label }: any) {
     return (
         <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default duration-500">
             <Icon className="h-4 w-4" />
@@ -810,4 +434,17 @@ function Seal({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
         </div>
     );
 }
+"""
+
+path = "src/components/tenant/invite/InviteApplicationClient.tsx"
+with io.open(path, "r", encoding="utf-8") as f:
+    text = f.read()
+
+parts = text.split("    if (loading) {")
+final = parts[0] + new_render
+
+with io.open(path, "w", encoding="utf-8") as f:
+    f.write(final)
+
+print("Replaced!")
 

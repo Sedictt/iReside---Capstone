@@ -6,14 +6,12 @@ export type TenantInviteApplicationType = "online" | "face_to_face";
 export type TenantInviteRequirementKey =
     | "valid_id"
     | "proof_of_income"
-    | "background_reference"
     | "application_form"
     | "move_in_payment";
 
 export const TENANT_INVITE_REQUIREMENT_KEYS: TenantInviteRequirementKey[] = [
     "valid_id",
     "proof_of_income",
-    "background_reference",
     "application_form",
     "move_in_payment",
 ];

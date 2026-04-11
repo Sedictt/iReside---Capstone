@@ -445,3 +445,85 @@ ${tempPassword ? `Temporary password: ${tempPassword}\n` : ""}${inviteUrl ? `Pas
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }
+
+export async function sendProspectPaymentRequestEmail({
+    to,
+    applicantName,
+    propertyName,
+    unitName,
+    paymentPortalUrl,
+    expiresAt,
+    advanceAmount,
+    securityAmount,
+}: {
+    to: string;
+    applicantName: string;
+    propertyName: string;
+    unitName: string;
+    paymentPortalUrl: string;
+    expiresAt: Date;
+    advanceAmount: number;
+    securityAmount: number;
+}) {
+    const subject = "Action Required: Submit move-in payment details";
+    const expiresLabel = expiresAt.toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+    });
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
+  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
+    <div style="background:#6d9838;padding:24px 32px;">
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;">iReside</h1>
+      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:2px;">Payment Confirmation Step</p>
+    </div>
+    <div style="padding:32px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${applicantName}</strong>,</p>
+      <p style="margin:0 0 18px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+        Your application for <strong style="color:#fff;">${propertyName} - ${unitName}</strong> has passed review.
+        To continue, please submit move-in payment details for verification.
+      </p>
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-bottom:20px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6d9838;">Required Amounts</p>
+        <p style="margin:0 0 6px;color:#fff;font-size:14px;">Advance Rent: <strong>PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
+        <p style="margin:0;color:#fff;font-size:14px;">Security Deposit: <strong>PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></p>
+      </div>
+      <div style="text-align:center;margin-bottom:20px;">
+        <a href="${paymentPortalUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
+          Open Payment Portal
+        </a>
+      </div>
+      <p style="margin:0 0 10px;color:#737373;font-size:12px;">This secure link expires on <strong style="color:#fff;">${expiresLabel}</strong>.</p>
+      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+        We will only finalize approval after both required payments are landlord-confirmed.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `Hi ${applicantName},
+
+Your application for ${propertyName} - ${unitName} passed review.
+
+Submit your payment details here:
+${paymentPortalUrl}
+
+Required amounts:
+- Advance Rent: PHP ${advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Security Deposit: PHP ${securityAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+Link expires on: ${expiresLabel}
+
+We will only finalize approval after both payments are landlord-confirmed.
+`;
+
+    await transporter.sendMail({ from: FROM, to, subject, html, text });
+}

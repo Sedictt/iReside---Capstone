@@ -14,6 +14,56 @@ type RouteContext = {
     params: Promise<{ id: string }>;
 };
 
+async function syncMoveInPaymentChecklist(supabase: Awaited<ReturnType<typeof createClient>>, leaseId: string) {
+    const requiredDescriptions = new Set(["Advance Rent - First Month", "Security Deposit"]);
+    const { data: leasePayments, error: paymentsError } = await supabase
+        .from("payments")
+        .select("description, status, landlord_confirmed")
+        .eq("lease_id", leaseId);
+
+    if (paymentsError) throw paymentsError;
+
+    const requiredPayments = (leasePayments ?? []).filter((payment) =>
+        requiredDescriptions.has(String(payment.description ?? ""))
+    );
+
+    const moveInPaymentComplete =
+        requiredPayments.length === requiredDescriptions.size &&
+        requiredPayments.every(
+            (payment) => payment.status === "completed" && payment.landlord_confirmed === true
+        );
+
+    const { data: applications, error: applicationError } = await supabase
+        .from("applications")
+        .select("id, requirements_checklist")
+        .eq("lease_id", leaseId);
+
+    if (applicationError) throw applicationError;
+
+    await Promise.all(
+        (applications ?? []).map(async (application) => {
+            const currentChecklist =
+                application.requirements_checklist &&
+                typeof application.requirements_checklist === "object" &&
+                !Array.isArray(application.requirements_checklist)
+                    ? (application.requirements_checklist as Record<string, unknown>)
+                    : {};
+
+            const { error: updateError } = await supabase
+                .from("applications")
+                .update({
+                    requirements_checklist: {
+                        ...currentChecklist,
+                        move_in_payment: moveInPaymentComplete,
+                    },
+                })
+                .eq("id", application.id);
+
+            if (updateError) throw updateError;
+        })
+    );
+}
+
 export async function POST(request: Request, context: RouteContext) {
     const { id } = await context.params;
     const supabase = await createClient();
@@ -30,7 +80,9 @@ export async function POST(request: Request, context: RouteContext) {
         const body = reviewSchema.parse(await request.json());
         const { data: payment, error: paymentError } = await supabase
             .from("payments")
-            .select("id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number")
+            .select(
+                "id, lease_id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number"
+            )
             .eq("id", id)
             .eq("landlord_id", user.id)
             .single();
@@ -86,6 +138,10 @@ export async function POST(request: Request, context: RouteContext) {
                 .eq("id", id);
 
             if (rejectError) throw rejectError;
+        }
+
+        if (payment.lease_id) {
+            await syncMoveInPaymentChecklist(supabase, payment.lease_id);
         }
 
         return NextResponse.json({ ok: true });

@@ -9,7 +9,6 @@ export interface WalkInUnit {
 export interface RequirementsChecklist {
     valid_id: boolean;
     proof_of_income: boolean;
-    background_reference: boolean;
     application_form: boolean;
     move_in_payment: boolean;
     [key: string]: boolean;
@@ -49,7 +48,6 @@ export type FormErrorKey =
 export const DEFAULT_CHECKLIST: RequirementsChecklist = {
     valid_id: false,
     proof_of_income: false,
-    background_reference: false,
     application_form: false,
     move_in_payment: false,
 };

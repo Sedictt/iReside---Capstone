@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+    ADVANCE_TEMPLATE_KEYS,
+    DEPOSIT_TEMPLATE_KEYS,
+    pickTemplateAmount,
+} from "@/lib/application-payment-pending";
+import {
     buildInviteQrUrl,
     buildInviteUrl,
     generateInviteToken,
@@ -29,6 +34,35 @@ type InviteRow = {
     last_used_at: string | null;
     created_at: string;
 };
+
+type PaymentPreview = {
+    advanceAmount: number;
+    securityDepositAmount: number;
+    estimated: true;
+    disclaimer: string;
+};
+
+const PAYMENT_PREVIEW_DISCLAIMER =
+    "Estimate only. Final payment requests are generated after landlord review.";
+
+function buildPaymentPreview(args: {
+    contractTemplate: Record<string, unknown> | null;
+    monthlyRentFallback: number;
+}): PaymentPreview {
+    const fallback = Number(args.monthlyRentFallback ?? 0);
+    const safeFallback = Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
+    const advanceAmount =
+        pickTemplateAmount(args.contractTemplate, ADVANCE_TEMPLATE_KEYS, safeFallback) ?? safeFallback;
+    const securityDepositAmount =
+        pickTemplateAmount(args.contractTemplate, DEPOSIT_TEMPLATE_KEYS, safeFallback) ?? safeFallback;
+
+    return {
+        advanceAmount,
+        securityDepositAmount,
+        estimated: true,
+        disclaimer: PAYMENT_PREVIEW_DISCLAIMER,
+    };
+}
 
 function formatInviteError(
     error: { code?: string; message?: string; details?: string | null; hint?: string | null } | null | undefined,
@@ -88,17 +122,46 @@ export async function GET(request: Request) {
 
     const inviteRows = (invites ?? []) as InviteRow[];
     const propertyIds = [...new Set(inviteRows.map((invite) => invite.property_id))];
-    const unitIds = [...new Set(inviteRows.map((invite) => invite.unit_id).filter((value): value is string => Boolean(value)))];
 
     const { data: properties } = propertyIds.length
-        ? await adminClient.from("properties").select("id, name").in("id", propertyIds)
+        ? await adminClient.from("properties").select("id, name, contract_template").in("id", propertyIds)
         : { data: [] };
-    const { data: units } = unitIds.length
-        ? await adminClient.from("units").select("id, name").in("id", unitIds)
+    const { data: units } = propertyIds.length
+        ? await adminClient.from("units").select("id, property_id, name, rent_amount").in("property_id", propertyIds)
         : { data: [] };
 
-    const propertyMap = new Map((properties ?? []).map((row) => [row.id, row.name]));
-    const unitMap = new Map((units ?? []).map((row) => [row.id, row.name]));
+    const propertyMap = new Map(
+        (properties ?? []).map((row) => [
+            row.id,
+            {
+                name: row.name,
+                contractTemplate:
+                    row.contract_template &&
+                    typeof row.contract_template === "object" &&
+                    !Array.isArray(row.contract_template)
+                        ? (row.contract_template as Record<string, unknown>)
+                        : null,
+            },
+        ])
+    );
+    const unitMap = new Map(
+        (units ?? []).map((row) => [
+            row.id,
+            {
+                name: row.name,
+                propertyId: row.property_id,
+                rentAmount: Number(row.rent_amount ?? 0),
+            },
+        ])
+    );
+    const propertyRentFallback = new Map<string, number>();
+    for (const unitRow of units ?? []) {
+        const rent = Number(unitRow.rent_amount ?? 0);
+        if (!Number.isFinite(rent) || rent <= 0) continue;
+        if (!propertyRentFallback.has(unitRow.property_id)) {
+            propertyRentFallback.set(unitRow.property_id, rent);
+        }
+    }
     const origin = new URL(request.url).origin;
 
     return NextResponse.json({
@@ -110,6 +173,9 @@ export async function GET(request: Request) {
                 maxUses: invite.max_uses,
             });
             const shareUrl = buildInviteUrl(origin, invite.public_token);
+            const property = propertyMap.get(invite.property_id);
+            const unit = invite.unit_id ? unitMap.get(invite.unit_id) : null;
+            const monthlyFallback = unit?.rentAmount ?? propertyRentFallback.get(invite.property_id) ?? 0;
             return {
                 id: invite.id,
                 mode: invite.mode,
@@ -121,14 +187,18 @@ export async function GET(request: Request) {
                     : [],
                 status: availability.expired ? "expired" : availability.consumed ? "consumed" : invite.status,
                 propertyId: invite.property_id,
-                propertyName: propertyMap.get(invite.property_id) ?? "Property",
+                propertyName: property?.name ?? "Property",
                 unitId: invite.unit_id,
-                unitName: invite.unit_id ? unitMap.get(invite.unit_id) ?? "Unit" : null,
+                unitName: invite.unit_id ? unit?.name ?? "Unit" : null,
                 expiresAt: invite.expires_at,
                 useCount: invite.use_count,
                 maxUses: invite.max_uses,
                 lastUsedAt: invite.last_used_at,
                 createdAt: invite.created_at,
+                paymentPreview: buildPaymentPreview({
+                    contractTemplate: property?.contractTemplate ?? null,
+                    monthlyRentFallback: monthlyFallback,
+                }),
                 shareUrl,
                 qrUrl: buildInviteQrUrl(shareUrl),
             };
@@ -180,7 +250,7 @@ export async function POST(request: Request) {
 
     const { data: property, error: propertyError } = await adminClient
         .from("properties")
-        .select("id")
+        .select("id, name, contract_template")
         .eq("id", propertyId)
         .eq("landlord_id", user.id)
         .maybeSingle();
@@ -189,10 +259,11 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Property not found." }, { status: 404 });
     }
 
+    let unitForPreview: { id: string; status: string; rent_amount: number } | null = null;
     if (mode === "unit" && unitId) {
         const { data: unit, error: unitError } = await adminClient
             .from("units")
-            .select("id, status")
+            .select("id, status, rent_amount")
             .eq("id", unitId)
             .eq("property_id", propertyId)
             .maybeSingle();
@@ -204,6 +275,11 @@ export async function POST(request: Request) {
         if (unit.status !== "vacant") {
             return NextResponse.json({ error: "Only vacant units can receive invite links." }, { status: 400 });
         }
+        unitForPreview = {
+            id: unit.id,
+            status: unit.status,
+            rent_amount: Number(unit.rent_amount ?? 0),
+        };
     }
 
     const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
@@ -216,7 +292,9 @@ export async function POST(request: Request) {
     const requiredRequirements = applicationType === "online"
         ? Array.from(new Set((Array.isArray(body.requiredRequirements) ? body.requiredRequirements : []).filter(
             (item): item is TenantInviteRequirementKey =>
-                typeof item === "string" && TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey)
+                typeof item === "string" &&
+                TENANT_INVITE_REQUIREMENT_KEYS.includes(item as TenantInviteRequirementKey) &&
+                item !== "move_in_payment"
         )))
         : [];
 
@@ -267,6 +345,18 @@ export async function POST(request: Request) {
     const origin = new URL(request.url).origin;
     const shareUrl = buildInviteUrl(origin, token);
 
+    const propertyTemplate =
+        property.contract_template &&
+        typeof property.contract_template === "object" &&
+        !Array.isArray(property.contract_template)
+            ? (property.contract_template as Record<string, unknown>)
+            : null;
+
+    const paymentPreview = buildPaymentPreview({
+        contractTemplate: propertyTemplate,
+        monthlyRentFallback: unitForPreview?.rent_amount ?? 0,
+    });
+
     return NextResponse.json({
         invite: {
             id: inviteId,
@@ -281,6 +371,7 @@ export async function POST(request: Request) {
             maxUses: 1,
             lastUsedAt: null,
             createdAt: new Date().toISOString(),
+            paymentPreview,
             shareUrl,
             qrUrl: buildInviteQrUrl(shareUrl),
         },

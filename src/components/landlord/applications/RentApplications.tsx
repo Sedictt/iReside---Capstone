@@ -27,6 +27,7 @@ import {
     ClipboardList,
     Loader2,
     Pencil,
+    Wallet,
 } from "lucide-react";
 import { WalkInApplicationModal } from "./WalkInApplicationModal";
 import { TenantInviteManager } from "./TenantInviteManager";
@@ -37,7 +38,13 @@ import type { LeaseStatus } from "@/types/database";
 import { SignaturePad } from "./SignaturePad";
 
 // ─── Types ────────────────────────────────────────────────────────────
-type ApplicationStatus = "pending" | "reviewing" | "approved" | "rejected" | "withdrawn";
+type ApplicationStatus =
+    | "pending"
+    | "reviewing"
+    | "payment_pending"
+    | "approved"
+    | "rejected"
+    | "withdrawn";
 
 interface Applicant {
     name: string;
@@ -54,11 +61,14 @@ interface RentApplication {
     source?: "walk_in_application" | "invite_link";
     applicant: Applicant;
     propertyName: string;
+    propertyContractTemplate?: Record<string, unknown> | null;
     unitNumber: string;
     propertyImage: string;
     requestedMoveIn: string | null;
     monthlyRent: number | null;
     status: ApplicationStatus;
+    paymentPendingStartedAt?: string | null;
+    paymentPendingExpiresAt?: string | null;
     submittedDate: string;
     notes?: string | null;
     documents: string[];
@@ -91,7 +101,22 @@ interface RentApplication {
         signing_link_expires_at: string | null;
     } | null;
     leaseAuditEvents?: LeaseAuditEvent[];
+    preApprovalPayments?: Array<{
+        id: string;
+        requirementType: "advance_rent" | "security_deposit";
+        amount: number;
+        dueAt: string | null;
+        status: "pending" | "processing" | "completed" | "rejected" | "expired";
+        method: "gcash" | "cash" | null;
+        submittedAt: string | null;
+        reviewedAt: string | null;
+        proofUrl: string | null;
+        reviewNote: string | null;
+        bypassed: boolean;
+    }>;
 }
+
+type PaymentReviewAction = "confirm" | "reject" | "needs_correction";
 
 function ApplicationsSkeletonList() {
     return (
@@ -211,6 +236,13 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; b
         borderColor: "border-blue-500/20",
         icon: Eye,
     },
+    payment_pending: {
+        label: "Payment Pending",
+        color: "text-violet-700 dark:text-violet-300",
+        bgColor: "bg-violet-500/10",
+        borderColor: "border-violet-500/20",
+        icon: Wallet,
+    },
     approved: {
         label: "Approved",
         color: "text-emerald-700 dark:text-emerald-400",
@@ -289,12 +321,14 @@ export function RentApplications() {
     const [showContractModal, setShowContractModal] = useState(false);
     const [contractData, setContractData] = useState<{
         application_id: string;
-        unit_id: string;
         unit_name: string;
         property_name: string;
+        property_contract_template: Record<string, unknown> | null;
         applicant_name: string;
         applicant_email: string;
+        requested_move_in: string | null;
         monthly_rent: number;
+        application_status: ApplicationStatus;
     } | null>(null);
     const [availableUnits, setAvailableUnits] = useState<{
         id: string;
@@ -302,6 +336,7 @@ export function RentApplications() {
         rent_amount: number;
         property_id: string;
         property_name: string;
+        property_contract_template?: Record<string, unknown> | null;
         status?: string;
     }[]>([]);
     const [tenantInvites, setTenantInvites] = useState<Array<{
@@ -319,6 +354,12 @@ export function RentApplications() {
         maxUses: number;
         lastUsedAt: string | null;
         createdAt: string;
+        paymentPreview?: {
+            advanceAmount: number;
+            securityDepositAmount: number;
+            estimated: true;
+            disclaimer: string;
+        };
         shareUrl: string;
         qrUrl: string;
     }>>([]);
@@ -345,6 +386,16 @@ export function RentApplications() {
     });
     const [showCountersignModal, setShowCountersignModal] = useState(false);
     const [pendingCountersignature, setPendingCountersignature] = useState<string | null>(null);
+    const [reviewingPaymentRequestId, setReviewingPaymentRequestId] = useState<string | null>(null);
+    const [bypassingPayments, setBypassingPayments] = useState(false);
+    const [bypassReason, setBypassReason] = useState("");
+    const [bypassPassword, setBypassPassword] = useState("");
+
+    useEffect(() => {
+        setBypassReason("");
+        setBypassPassword("");
+        setReviewingPaymentRequestId(null);
+    }, [selectedApp?.id]);
 
     useEffect(() => {
         setMounted(true);
@@ -412,6 +463,7 @@ export function RentApplications() {
                     options?: Array<{
                         id: string;
                         name: string;
+                        contractTemplate?: Record<string, unknown> | null;
                         units?: Array<{
                             id: string;
                             name: string;
@@ -430,6 +482,7 @@ export function RentApplications() {
                         rent_amount: Number(unit.rentAmount ?? 0),
                         property_id: property.id,
                         property_name: property.name,
+                        property_contract_template: property.contractTemplate ?? null,
                         status: unit.status,
                     }));
                 });
@@ -614,7 +667,7 @@ export function RentApplications() {
 
     const updateApplicationStatus = async (
         applicationId: string,
-        status: "approved" | "rejected" | "reviewing"
+        status: "rejected" | "reviewing"
     ) => {
         setActionError(null);
         setUpdatingStatusId(applicationId);
@@ -633,7 +686,7 @@ export function RentApplications() {
             const result = await response.json() as {
                 success: boolean;
                 status: string;
-                tenantAccount?: { email: string; tempPassword: string; inviteUrl?: string };
+                tenant_account?: { email: string; tempPassword: string; inviteUrl?: string };
             };
 
             setApplications((prev) =>
@@ -642,13 +695,93 @@ export function RentApplications() {
             setSelectedApp((prev) => (prev?.id === applicationId ? { ...prev, status } : prev));
 
             // Show credentials to landlord if a new tenant account was provisioned
-            if (result.tenantAccount?.tempPassword) {
-                setTenantCredentials(result.tenantAccount);
+            if (result.tenant_account?.tempPassword) {
+                setTenantCredentials(result.tenant_account);
             }
         } catch {
             setActionError("Unable to update the application status.");
         } finally {
             setUpdatingStatusId(null);
+        }
+    };
+
+    const openApprovalModal = (application: RentApplication) => {
+        const monthlyRent = Number(application.monthlyRent ?? 0);
+        const requiresRentForRequest = application.status !== "payment_pending";
+        if (requiresRentForRequest && (!Number.isFinite(monthlyRent) || monthlyRent <= 0)) {
+            setActionError("This application is missing a valid monthly rent amount. Update the unit rent first.");
+            return;
+        }
+
+        setActionError(null);
+        setContractData({
+            application_id: application.id,
+            unit_name: application.unitNumber,
+            property_name: application.propertyName,
+            property_contract_template: application.propertyContractTemplate ?? null,
+            applicant_name: application.applicant.name,
+            applicant_email: application.applicant.email,
+            requested_move_in: application.requestedMoveIn,
+            monthly_rent: Number.isFinite(monthlyRent) ? monthlyRent : 0,
+            application_status: application.status,
+        });
+        setShowContractModal(true);
+    };
+
+    const reviewPreApprovalPayment = async (requestId: string, action: PaymentReviewAction) => {
+        if (!selectedApp) return;
+        setActionError(null);
+        setReviewingPaymentRequestId(requestId);
+        try {
+            const response = await fetch(
+                `/api/landlord/applications/${selectedApp.id}/payment-requests/${requestId}/review`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action }),
+                }
+            );
+            const payload = (await response.json()) as { error?: string };
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to review payment request.");
+            }
+            refreshApplications();
+        } catch (reviewError) {
+            setActionError(reviewError instanceof Error ? reviewError.message : "Failed to review payment request.");
+        } finally {
+            setReviewingPaymentRequestId(null);
+        }
+    };
+
+    const runPaymentBypass = async () => {
+        if (!selectedApp) return;
+        if (!bypassPassword.trim() || !bypassReason.trim()) {
+            setActionError("Password and bypass reason are both required.");
+            return;
+        }
+
+        setActionError(null);
+        setBypassingPayments(true);
+        try {
+            const response = await fetch(`/api/landlord/applications/${selectedApp.id}/payment-bypass`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    password: bypassPassword,
+                    reason: bypassReason,
+                }),
+            });
+            const payload = (await response.json()) as { error?: string };
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to run payment bypass.");
+            }
+            setBypassPassword("");
+            setBypassReason("");
+            refreshApplications();
+        } catch (bypassError) {
+            setActionError(bypassError instanceof Error ? bypassError.message : "Failed to run payment bypass.");
+        } finally {
+            setBypassingPayments(false);
         }
     };
 
@@ -767,6 +900,7 @@ export function RentApplications() {
         total: applications.length,
         pending: applications.filter((a) => a.status === "pending").length,
         reviewing: applications.filter((a) => a.status === "reviewing").length,
+        payment_pending: applications.filter((a) => a.status === "payment_pending").length,
         approved: applications.filter((a) => a.status === "approved").length,
         rejected: applications.filter((a) => a.status === "rejected").length,
         withdrawn: applications.filter((a) => a.status === "withdrawn").length,
@@ -776,12 +910,26 @@ export function RentApplications() {
         { label: "All", value: "all", count: stats.total },
         { label: "Pending", value: "pending", count: stats.pending },
         { label: "Reviewing", value: "reviewing", count: stats.reviewing },
+        { label: "Payment Pending", value: "payment_pending", count: stats.payment_pending },
         { label: "Approved", value: "approved", count: stats.approved },
         { label: "Rejected", value: "rejected", count: stats.rejected },
         { label: "Withdrawn", value: "withdrawn", count: stats.withdrawn },
     ];
 
     const isUpdatingSelectedApp = selectedApp ? updatingStatusId === selectedApp.id : false;
+    const selectedAppPaymentsReady = selectedApp
+        ? (() => {
+              const requests = selectedApp.preApprovalPayments ?? [];
+              const advanceConfirmed = requests.some(
+                  (request) => request.requirementType === "advance_rent" && request.status === "completed"
+              );
+              const securityConfirmed = requests.some(
+                  (request) =>
+                      request.requirementType === "security_deposit" && request.status === "completed"
+              );
+              return advanceConfirmed && securityConfirmed;
+          })()
+        : false;
 
     return (
         <div className="relative flex h-full w-full animate-in fade-in flex-col space-y-8 overflow-y-auto bg-background p-6 text-foreground duration-700 custom-scrollbar md:p-8">
@@ -1370,8 +1518,7 @@ export function RentApplications() {
                                             { key: 'valid_id', label: '1. Valid Identification', desc: 'Any govt-issued ID (Name match is mandatory)' },
                                             { key: 'proof_of_income', label: '2. Source of Income', desc: 'COE, Payslip, or Contract Verification' },
                                             { key: 'application_form', label: '3. Completed App Form', desc: 'Employment & Emergency Contact Details' },
-                                            { key: 'background_reference', label: '4. Background / Reference Check', desc: 'Mandatory verification — references will be reached' },
-                                            { key: 'move_in_payment', label: '5. Move-in Payments', desc: '1mo Advance + 2mo Deposit (No Installments)' },
+                                            { key: 'move_in_payment', label: '4. Move-in Payments', desc: 'Advance + security deposit invoices must be landlord-confirmed' },
                                         ].map((req) => {
                                             const checklist = selectedApp.complianceChecklist as Record<string, boolean> | null | undefined;
                                             const isDone = checklist?.[req.key] === true;
@@ -1511,15 +1658,138 @@ export function RentApplications() {
                                         </button>
                                         <button
                                             disabled={isUpdatingSelectedApp}
-                                            onClick={() => updateApplicationStatus(selectedApp.id, "approved")}
+                                            onClick={() => openApprovalModal(selectedApp)}
                                             className={cn(
                                                 "flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-black text-primary-foreground transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:bg-primary/90 focus:ring-4 focus:ring-primary/40 active:scale-95",
                                                 isUpdatingSelectedApp && "opacity-60 cursor-not-allowed"
                                             )}
                                         >
                                             <CheckCircle2 className="h-5 w-5" />
-                                            {isUpdatingSelectedApp ? "Updating..." : "Approve & Proceed"}
+                                            {isUpdatingSelectedApp ? "Updating..." : "Request Payments"}
                                         </button>
+                                    </div>
+                                ) : selectedApp.status === "payment_pending" ? (
+                                    <div className="space-y-4">
+                                        <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-4 text-xs text-violet-100">
+                                            <p className="font-black uppercase tracking-wider">Payment Pending</p>
+                                            <p className="mt-1">
+                                                Deadline: {formatDate(selectedApp.paymentPendingExpiresAt ?? null)}
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {(selectedApp.preApprovalPayments ?? []).map((request) => {
+                                                const reviewBusy = reviewingPaymentRequestId === request.id;
+                                                const canReview = request.status === "processing";
+                                                return (
+                                                    <div key={request.id} className="rounded-xl border border-border bg-background/70 p-3">
+                                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                                            <p className="text-sm font-black text-foreground">
+                                                                {request.requirementType === "advance_rent"
+                                                                    ? "Advance Rent"
+                                                                    : "Security Deposit"}{" "}
+                                                                - {formatCurrency(request.amount)}
+                                                            </p>
+                                                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                                                {request.status.replace("_", " ")}
+                                                            </span>
+                                                        </div>
+                                                        <p className="mt-1 text-[11px] text-muted-foreground">
+                                                            Method: {request.method ?? "not submitted"} | Submitted:{" "}
+                                                            {formatDate(request.submittedAt)}
+                                                        </p>
+                                                        {request.reviewNote && (
+                                                            <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-300">
+                                                                Note: {request.reviewNote}
+                                                            </p>
+                                                        )}
+                                                        {request.proofUrl && (
+                                                            <a
+                                                                href={request.proofUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="mt-2 inline-block text-[11px] underline text-blue-600 dark:text-blue-300"
+                                                            >
+                                                                View proof
+                                                            </a>
+                                                        )}
+
+                                                        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                                            <button
+                                                                type="button"
+                                                                disabled={!canReview || reviewBusy}
+                                                                onClick={() => void reviewPreApprovalPayment(request.id, "confirm")}
+                                                                className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 py-2 text-[11px] font-black uppercase tracking-wider text-emerald-700 disabled:opacity-40 dark:text-emerald-300"
+                                                            >
+                                                                Confirm
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={!canReview || reviewBusy}
+                                                                onClick={() => void reviewPreApprovalPayment(request.id, "needs_correction")}
+                                                                className="rounded-lg border border-amber-500/30 bg-amber-500/10 py-2 text-[11px] font-black uppercase tracking-wider text-amber-700 disabled:opacity-40 dark:text-amber-300"
+                                                            >
+                                                                Needs Fix
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={!canReview || reviewBusy}
+                                                                onClick={() => void reviewPreApprovalPayment(request.id, "reject")}
+                                                                className="rounded-lg border border-red-500/30 bg-red-500/10 py-2 text-[11px] font-black uppercase tracking-wider text-red-700 disabled:opacity-40 dark:text-red-300"
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="rounded-xl border border-border bg-background/70 p-4 space-y-3">
+                                            <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+                                                Controlled Bypass
+                                            </p>
+                                            <input
+                                                type="password"
+                                                value={bypassPassword}
+                                                onChange={(event) => setBypassPassword(event.target.value)}
+                                                placeholder="Re-enter landlord password"
+                                                className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm"
+                                            />
+                                            <textarea
+                                                value={bypassReason}
+                                                onChange={(event) => setBypassReason(event.target.value)}
+                                                rows={2}
+                                                placeholder="Reason for bypass (required)"
+                                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={bypassingPayments}
+                                                onClick={() => void runPaymentBypass()}
+                                                className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 py-2.5 text-xs font-black uppercase tracking-wider text-amber-700 disabled:opacity-60 dark:text-amber-300"
+                                            >
+                                                {bypassingPayments ? "Bypassing..." : "Apply Bypass"}
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            disabled={isUpdatingSelectedApp || !selectedAppPaymentsReady}
+                                            onClick={() => openApprovalModal(selectedApp)}
+                                            className={cn(
+                                                "w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-black text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
+                                                (isUpdatingSelectedApp || !selectedAppPaymentsReady) && "opacity-60 cursor-not-allowed"
+                                            )}
+                                        >
+                                            <CheckCircle2 className="h-5 w-5" />
+                                            Final Approve
+                                        </button>
+                                        {!selectedAppPaymentsReady && (
+                                            <p className="text-[11px] text-amber-300">
+                                                Final approval unlocks only after both advance and security requests are confirmed
+                                                or bypassed.
+                                            </p>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-3">
@@ -1655,7 +1925,19 @@ export function RentApplications() {
                     setContractData(null);
                 }}
                 contractData={contractData}
-                onSuccess={() => setReloadKey((k) => k + 1)}
+                onSuccess={(result) => {
+                    setReloadKey((k) => k + 1);
+                    setShowContractModal(false);
+                    setContractData(null);
+                    if (result?.tenant_account?.email) {
+                        setTenantCredentials({
+                            email: result.tenant_account.email,
+                            tempPassword: result.tenant_account.tempPassword ?? null,
+                            inviteUrl: result.tenant_account.inviteUrl ?? null,
+                            accountExisted: false,
+                        });
+                    }
+                }}
             />
 
             {/* Tenant Credentials Modal */}
@@ -1824,3 +2106,4 @@ export function RentApplications() {
         </div>
     );
 }
+
