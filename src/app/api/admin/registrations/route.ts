@@ -78,27 +78,11 @@ export async function GET() {
     const adminClient = createAdminClient();
     const { data, error } = await adminClient
         .from("landlord_applications")
-        .select(`
-            id,
-            profile_id,
-            phone,
-            identity_document_url,
-            ownership_document_url,
-            liveness_document_url,
-            status,
-            admin_notes,
-            business_name,
-            business_address,
-            verification_status,
-            verification_data,
-            verification_checked_at,
-            verification_notes,
-            created_at,
-            updated_at
-        `)
+        .select(`*`)
         .order("created_at", { ascending: false });
 
     if (error) {
+        console.error("Landlord applications query error:", error);
         return NextResponse.json({ error: "Failed to load registrations." }, { status: 500 });
     }
 

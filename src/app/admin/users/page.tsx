@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Users, UserCheck, UserX, ShieldAlert } from "lucide-react";
+import { Search, Users, UserCheck, ShieldAlert, MoreHorizontal, Mail, Calendar, Key } from "lucide-react";
 import type { UserRole } from "@/types/database";
+import { cn } from "@/lib/utils";
 
 interface UserRow {
     id: string;
@@ -13,24 +14,11 @@ interface UserRow {
     created_at: string;
 }
 
-const ROLE_CONFIG: Record<UserRole, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
-    tenant: { label: "Tenant", color: "#3b82f6", bg: "rgba(59,130,246,0.1)", border: "rgba(59,130,246,0.2)", icon: UserX },
-    landlord: { label: "Landlord", color: "#10b981", bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.2)", icon: UserCheck },
-    admin: { label: "Admin", color: "#f43f5e", bg: "rgba(244,63,94,0.1)", border: "rgba(244,63,94,0.2)", icon: ShieldAlert },
+const ROLE_CONFIG: Record<UserRole, { label: string; colorClass: string; bgClass: string; borderClass: string; icon: React.ElementType }> = {
+    tenant: { label: "Tenant", colorClass: "text-blue-400", bgClass: "bg-blue-500/10", borderClass: "border-blue-500/20", icon: Users },
+    landlord: { label: "Landlord", colorClass: "text-primary", bgClass: "bg-primary/20", borderClass: "border-primary/20", icon: UserCheck },
+    admin: { label: "Admin", colorClass: "text-purple-400", bgClass: "bg-purple-500/10", borderClass: "border-purple-500/20", icon: ShieldAlert },
 };
-
-function Avatar({ name, url }: { name: string; url: string | null }) {
-    const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
-    if (url) {
-        return <img src={url} alt={name} className="h-9 w-9 rounded-full object-cover" style={{ border: "1px solid rgba(255,255,255,0.1)" }} />;
-    }
-    return (
-        <div className="h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-            style={{ background: "linear-gradient(135deg, #374151 0%, #1f2937 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
-            {initials}
-        </div>
-    );
-}
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<UserRow[]>([]);
@@ -41,7 +29,7 @@ export default function AdminUsersPage() {
     useEffect(() => {
         fetch("/api/admin/users")
             .then((r) => r.json())
-            .then(({ users }) => setUsers(users ?? []))
+            .then((data) => setUsers(data.users ?? []))
             .finally(() => setLoading(false));
     }, []);
 
@@ -61,133 +49,170 @@ export default function AdminUsersPage() {
     };
 
     return (
-        <div className="min-h-screen p-8">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-8">
-                <div>
-                    <div className="flex items-center gap-2.5 mb-1">
-                        <div className="h-7 w-7 rounded-lg flex items-center justify-center"
-                            style={{ background: "rgba(59,130,246,0.2)", border: "1px solid rgba(59,130,246,0.3)" }}>
-                            <Users className="h-4 w-4 text-blue-400" />
+        <div className="flex flex-col gap-8 pb-12">
+            {/* Header & Controls - Gestalt Grouping */}
+            <section className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
+                <div className="pointer-events-none absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.03] mix-blend-overlay" />
+                <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/20 blur-[100px]" />
+                
+                <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-2xl space-y-4">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/20 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary/80 shadow-[0_0_20px_rgba(109,152,56,0.2)]">
+                            <Users className="h-3.5 w-3.5" />
+                            Directory Access
                         </div>
-                        <h1 className="text-2xl font-black text-white tracking-tight">Users</h1>
+                        <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+                            User Records
+                        </h1>
+                        <p className="text-base font-medium leading-relaxed text-white/50">
+                            Search, filter, and audit every account provisioned on the iReside platform.
+                        </p>
                     </div>
-                    <p className="text-sm text-neutral-500 ml-9.5">All registered users on the platform</p>
-                </div>
-                <div className="px-3 py-1.5 rounded-full text-xs font-semibold"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "#a3a3a3" }}>
-                    {loading ? "—" : `${users.length} total`}
-                </div>
-            </div>
 
-            {/* Filters row */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                {/* Search */}
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-600 pointer-events-none" />
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-600 rounded-xl focus:outline-none transition-all duration-200"
-                        style={{
-                            background: "#111111",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                        }}
-                        onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)")}
-                        onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
-                    />
-                </div>
-
-                {/* Role filter pills */}
-                <div className="flex gap-2 flex-wrap">
-                    {(["all", "tenant", "landlord", "admin"] as const).map((role) => {
-                        const active = roleFilter === role;
-                        const cfg = role !== "all" ? ROLE_CONFIG[role] : null;
-                        return (
-                            <button
-                                key={role}
-                                onClick={() => setRoleFilter(role)}
-                                className="px-3.5 py-2 rounded-xl text-xs font-semibold capitalize transition-all duration-200"
-                                style={active ? {
-                                    background: cfg ? cfg.bg : "rgba(255,255,255,0.1)",
-                                    border: `1px solid ${cfg ? cfg.border : "rgba(255,255,255,0.2)"}`,
-                                    color: cfg ? cfg.color : "#ffffff",
-                                } : {
-                                    background: "rgba(255,255,255,0.04)",
-                                    border: "1px solid rgba(255,255,255,0.07)",
-                                    color: "#737373",
-                                }}
-                            >
-                                {role} {!loading && <span className="opacity-60">({counts[role]})</span>}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.07)" }}>
-                {/* Table header */}
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3.5"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600">User</p>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600 w-24 text-center">Role</p>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-600 w-28 text-right">Joined</p>
-                </div>
-
-                {loading ? (
-                    <div className="py-16 flex flex-col items-center gap-3">
-                        <div className="h-8 w-8 rounded-full border-2 border-neutral-800 border-t-neutral-500 animate-spin" />
-                        <p className="text-sm text-neutral-600">Loading users...</p>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="py-16 flex flex-col items-center gap-2">
-                        <Users className="h-8 w-8 text-neutral-700" />
-                        <p className="text-sm text-neutral-500">No users found</p>
-                        <p className="text-xs text-neutral-700">Try adjusting your search or filters</p>
-                    </div>
-                ) : (
-                    <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
-                        {filtered.map((u) => {
-                            const cfg = ROLE_CONFIG[u.role];
-                            const RoleIcon = cfg.icon;
+                    {/* Fitts''s Law Optimized Filters */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {(["all", "tenant", "landlord", "admin"] as const).map((role) => {
+                            const isActive = roleFilter === role;
                             return (
-                                <div key={u.id}
-                                    className="grid grid-cols-[1fr_auto_auto] gap-4 items-center px-5 py-4 transition-colors duration-150"
-                                    style={{ cursor: "default" }}
-                                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
-                                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                                    {/* User info */}
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <Avatar name={u.full_name} url={u.avatar_url} />
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-white truncate">{u.full_name}</p>
-                                            <p className="text-xs text-neutral-500 truncate">{u.email}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Role badge */}
-                                    <div className="w-24 flex justify-center">
-                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                                            style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
-                                            <RoleIcon className="h-3 w-3" />
-                                            {cfg.label}
-                                        </span>
-                                    </div>
-
-                                    {/* Joined date */}
-                                    <div className="w-28 text-right">
-                                        <p className="text-xs text-neutral-500">
-                                            {new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                        </p>
-                                    </div>
-                                </div>
+                                <button
+                                    key={role}
+                                    onClick={() => setRoleFilter(role)}
+                                    className={cn(
+                                        "relative flex h-12 items-center justify-center rounded-2xl border px-6 font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                                        isActive
+                                            ? "border-primary/20 bg-primary/20 text-primary shadow-[0_0_20px_rgba(109,152,56,0.2)]"
+                                            : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.06] hover:text-white"
+                                    )}
+                                >
+                                    <span className="capitalize">{role}</span>
+                                    <span className="ml-2 rounded-md bg-black/30 px-2 py-0.5 text-[10px] text-white/40">
+                                        {counts[role]}
+                                    </span>
+                                </button>
                             );
                         })}
                     </div>
-                )}
+                </div>
+
+                {/* Hick''s Law - Unified Search Bar */}
+                <div className="relative z-10 mt-8">
+                    <div className="group relative flex items-center">
+                        <Search className="absolute left-6 h-5 w-5 text-white/30 transition-colors group-focus-within:text-primary" />
+                        <input
+                            type="text"
+                            placeholder="Search by name, email, or identity..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="h-16 w-full rounded-2xl border border-white/10 bg-black/40 pl-14 pr-6 text-lg font-medium text-white placeholder-white/30 shadow-inner transition-all focus:border-primary/20 focus:bg-black/60 focus:outline-none focus:ring-4 focus:ring-primary/20"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            {/* Directory Table Area - Psychological Layout structured for scanning */}
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+                
+                {/* Table Data */}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-white/5 text-[11px] font-extrabold uppercase tracking-widest text-white/30 bg-black/20">
+                                <th className="px-8 py-5 font-bold">Identity</th>
+                                <th className="px-8 py-5 font-bold">Contact</th>
+                                <th className="px-8 py-5 font-bold">Clearance Role</th>
+                                <th className="px-8 py-5 font-bold">Provisioned</th>
+                                <th className="px-8 py-5 text-right font-bold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="p-8">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-12 w-12 rounded-full bg-white/5" />
+                                                <div className="space-y-2">
+                                                    <div className="h-4 w-32 rounded bg-white/5" />
+                                                    <div className="h-3 w-20 rounded bg-white/5" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-8"><div className="h-4 w-40 rounded bg-white/5" /></td>
+                                        <td className="p-8"><div className="h-8 w-24 rounded-xl bg-white/5" /></td>
+                                        <td className="p-8"><div className="h-4 w-24 rounded bg-white/5" /></td>
+                                        <td className="p-8 text-right"><div className="inline-block h-8 w-8 rounded-lg bg-white/5" /></td>
+                                    </tr>
+                                ))
+                            ) : filtered.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="p-16 text-center">
+                                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/5 mb-4">
+                                            <Search className="h-8 w-8 text-white/20" />
+                                        </div>
+                                        <p className="text-lg font-bold text-white">No records found</p>
+                                        <p className="text-sm text-white/40 mt-1">Adjust your filters or search query.</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                filtered.map((user) => {
+                                    const roleInfo = ROLE_CONFIG[user.role];
+                                    const RoleIcon = roleInfo.icon;
+                                    const dateObj = new Date(user.created_at);
+                                    
+                                    return (
+                                        <tr key={user.id} className="group transition-colors hover:bg-white/[0.02]">
+                                            <td className="px-8 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    {user.avatar_url ? (
+                                                        <img src={user.avatar_url} alt="" className="h-12 w-12 shrink-0 rounded-full border border-white/10 object-cover shadow-lg" />
+                                                    ) : (
+                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5 shadow-inner">
+                                                            <span className="text-sm font-bold text-white/70">
+                                                                {user.full_name.substring(0, 2).toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">{user.full_name}</p>
+                                                        <div className="flex items-center gap-1.5 mt-1 text-[11px] font-medium text-white/40">
+                                                            <Key className="h-3 w-3" />
+                                                            <span className="truncate max-w-[120px] font-mono">{user.id.split('-')[0]}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="flex items-center gap-2 text-sm font-medium text-white/70">
+                                                    <Mail className="h-4 w-4 text-white/30" />
+                                                    {user.email}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
+                                                    <RoleIcon className={cn("h-4 w-4 shrink-0", roleInfo.colorClass)} />
+                                                    <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
+                                                        {roleInfo.label}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="flex items-center gap-2 text-sm font-medium text-white/50">
+                                                    <Calendar className="h-4 w-4 text-white/20" />
+                                                    {dateObj.toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-right">
+                                                <button className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] text-white/40 transition-all hover:bg-white/10 hover:text-white">
+                                                    <MoreHorizontal className="h-5 w-5" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

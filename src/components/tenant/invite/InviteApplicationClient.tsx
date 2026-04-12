@@ -1,29 +1,34 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
+    ArrowLeft,
+    ArrowRight,
     Briefcase,
     Calendar,
-    CircleHelp,
     ChevronLeft,
     ChevronRight,
     CheckCircle2,
     FileText,
     Home,
+    Info,
     Loader2,
     Lock,
     Mail,
+    MapPin,
+    Shield,
     ShieldAlert,
     ShieldCheck,
+    Sparkles,
     Upload,
     User,
     X,
     Zap,
-    Building,
-    type LucideIcon,
+    Building
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     ApplicationIdentityStep,
     ApplicationProfileStep,
@@ -45,24 +50,9 @@ type InvitePayload = {
     propertyId: string;
     propertyName: string;
     unitId: string | null;
-    selectedUnit: InviteUnit | null;
-    units: InviteUnit[];
-    paymentPreview?: {
-        advanceAmount: number;
-        securityDepositAmount: number;
-        estimated: boolean;
-        disclaimer: string;
-    } | null;
+    selectedUnit: WalkInUnit | null;
+    units: WalkInUnit[];
     expiresAt: string | null;
-};
-
-type InviteUnit = WalkInUnit & {
-    paymentPreview?: {
-        advanceAmount: number;
-        securityDepositAmount: number;
-        estimated: boolean;
-        disclaimer: string;
-    };
 };
 
 type UploadedRequirementDocument = {
@@ -72,16 +62,15 @@ type UploadedRequirementDocument = {
 };
 
 const REQUIREMENT_LABELS: Record<string, string> = {
-    valid_id: "Valid ID",
+    valid_id: "Government ID",
     proof_of_income: "Proof of Income",
+    background_reference: "References",
     application_form: "Application Form",
     move_in_payment: "Advance Payment",
 };
 
-const VALID_ID_TOOLTIP =
-    "Accepted valid IDs: Passport, Driver's License, UMID, PhilSys/National ID, PRC ID, Postal ID, Voter's ID, Senior Citizen ID.";
-
 export function InviteApplicationClient({ token }: { token: string }) {
+    const router = useRouter();
     const [invite, setInvite] = useState<InvitePayload | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -140,19 +129,11 @@ export function InviteApplicationClient({ token }: { token: string }) {
         () => invite?.units.find((u) => u.id === selectedUnit),
         [invite?.units, selectedUnit]
     );
-    const paymentPreview = useMemo(() => {
-        if (!currentUnit?.paymentPreview) return null;
-        return currentUnit.paymentPreview;
-    }, [currentUnit]);
     const isOnlineInvite = invite?.applicationType === "online";
     const requiredRequirementKeys = useMemo(() => {
         if (!invite || !isOnlineInvite) return [] as string[];
-        const keys = invite.requiredRequirements.filter(
-            (key) => key in REQUIREMENT_LABELS && key !== "move_in_payment"
-        );
-        return keys.length > 0
-            ? keys
-            : Object.keys(REQUIREMENT_LABELS).filter((key) => key !== "move_in_payment");
+        const keys = invite.requiredRequirements.filter((key) => key in REQUIREMENT_LABELS);
+        return keys.length > 0 ? keys : Object.keys(REQUIREMENT_LABELS);
     }, [invite, isOnlineInvite]);
 
     const totalSteps = isOnlineInvite ? 4 : 3;
@@ -235,10 +216,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
             if (!response.ok || !Array.isArray(payload.documents)) {
                 throw new Error(payload.error || "Failed to upload files.");
             }
-            const newDocuments = payload.documents;
 
             setUploadedDocuments((prev) => {
-                const next = [...prev, ...newDocuments];
+                const next = [...prev, ...payload.documents];
                 const dedup = new Map<string, UploadedRequirementDocument>();
                 next.forEach((doc) => dedup.set(`${doc.requirementKey}-${doc.url}`, doc));
                 return Array.from(dedup.values());
@@ -297,9 +277,6 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
         if (isOnlineInvite) {
             for (const key of requiredRequirementKeys) {
-                if (key === "move_in_payment") {
-                    continue;
-                }
                 const checked = Boolean(formData.requirements_checklist[key]);
                 const hasDoc = uploadedDocuments.some((doc) => doc.requirementKey === key);
                 const needsPhoto = key !== "application_form";
@@ -512,22 +489,6 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                         <p className="text-xs text-white/70 mt-1">{new Date(invite.expiresAt).toLocaleString()}</p>
                                     </div>
                                 )}
-                                {paymentPreview && (
-                                    <div className="pt-4 border-t border-white/10">
-                                        <p className="text-[10px] font-black uppercase text-amber-300">
-                                            Estimated Move-in Payment
-                                        </p>
-                                        <p className="mt-1 text-xs text-white/70">
-                                            Advance: PHP {Number(paymentPreview.advanceAmount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="text-xs text-white/70">
-                                            Security: PHP {Number(paymentPreview.securityDepositAmount ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="mt-2 text-[10px] text-white/40">
-                                            {paymentPreview.disclaimer}
-                                        </p>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -621,22 +582,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                             <div className="flex items-start justify-between mb-4 gap-4">
                                                                 <div>
                                                                     <p className="text-xs font-black uppercase tracking-[0.1em] text-white">
-                                                                        <span className="inline-flex items-center gap-1.5">
-                                                                            {REQUIREMENT_LABELS[key] ?? key}
-                                                                            {key === "valid_id" && (
-                                                                                <span className="group/validid relative inline-flex items-center">
-                                                                                    <CircleHelp
-                                                                                        className="h-4 w-4 rounded-full border border-amber-400/50 bg-amber-400/20 p-0.5 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.35)] animate-pulse"
-                                                                                        aria-label={VALID_ID_TOOLTIP}
-                                                                                        role="img"
-                                                                                        tabIndex={0}
-                                                                                    />
-                                                                                    <span className="pointer-events-none absolute left-0 top-6 z-30 hidden w-64 rounded-xl border border-white/15 bg-[#10141f] p-2.5 text-[10px] font-semibold normal-case tracking-normal text-white/90 shadow-xl group-hover/validid:block group-focus-within/validid:block">
-                                                                                        {VALID_ID_TOOLTIP}
-                                                                                    </span>
-                                                                                </span>
-                                                                            )}
-                                                                        </span>
+                                                                        {REQUIREMENT_LABELS[key] ?? key}
                                                                     </p>
                                                                     {key !== "application_form" && (
                                                                        <p className="text-[10px] text-white/40 mt-1">Photo Upload</p>
@@ -785,7 +731,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     );
 }
 
-function SummaryCard({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function SummaryCard({ label, value, icon: Icon }: any) {
     return (
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6 hover:bg-white/[0.07] transition-colors relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -802,7 +748,7 @@ function SummaryCard({ label, value, icon: Icon }: { label: string; value: strin
     );
 }
 
-function Seal({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+function Seal({ icon: Icon, label }: any) {
     return (
         <div className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default duration-500">
             <Icon className="h-4 w-4" />
