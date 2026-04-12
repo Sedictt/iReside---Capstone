@@ -32,6 +32,7 @@ import LandlordProfileScreen from "./screens/LandlordProfileScreen";
 import LandlordChatScreen from "./screens/LandlordChatScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
 import IrisChatScreen from "./screens/IrisChatScreen";
+import CommunityFeedScreen from "./screens/CommunityFeedScreen";
 import {
     Home,
     Search,
@@ -49,6 +50,7 @@ import {
     Bell,
     Bot,
     Shield,
+    Users,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import styles from "./MobileAppShell.module.css";
@@ -61,18 +63,20 @@ interface TabConfig {
 }
 
 const TENANT_TABS: TabConfig[] = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "activity", label: "Activity", icon: ClipboardList },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "profile", label: "Profile", icon: User },
+    { id: "home",      label: "Home",      icon: Home },
+    { id: "community", label: "Community", icon: Users },
+    { id: "activity",  label: "Activity",  icon: ClipboardList },
+    { id: "chat",      label: "Chat",      icon: MessageSquare },
+    { id: "profile",   label: "Profile",   icon: User },
 ];
 
 const LANDLORD_TABS: TabConfig[] = [
-    { id: "home", label: "Home", icon: Home },
+    { id: "home",       label: "Home",       icon: Home },
     { id: "properties", label: "Properties", icon: Building2 },
-    { id: "activity", label: "Activity", icon: ClipboardList },
-    { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "profile", label: "Profile", icon: User },
+    { id: "community",  label: "Community",  icon: Users },
+    { id: "activity",   label: "Activity",   icon: ClipboardList },
+    { id: "chat",       label: "Chat",       icon: MessageSquare },
+    { id: "profile",    label: "Profile",    icon: User },
 ];
 
 const ADMIN_TABS: TabConfig[] = [
@@ -216,6 +220,7 @@ function ScreenRouter() {
         adminHome: AdminHomeScreen,
         adminLandlords: AdminLandlordsScreen,
         adminSettings: AdminSettingsScreen,
+        communityFeed: CommunityFeedScreen,
         // Screens will be registered here as they're built
     };
 

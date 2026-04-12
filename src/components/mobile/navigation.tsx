@@ -45,14 +45,15 @@ export type ScreenName =
     // Shared
     | "notifications"
     | "irisChat"
+    | "communityFeed"
     // Admin Screens
     | "adminHome"
     | "adminLandlords"
     | "adminSettings";
 
 // ─── Tab Names ─────────────────────────────────────────────
-export type TenantTab = "home" | "activity" | "chat" | "profile";
-export type LandlordTab = "home" | "properties" | "activity" | "chat" | "profile";
+export type TenantTab = "home" | "community" | "activity" | "chat" | "profile";
+export type LandlordTab = "home" | "properties" | "community" | "activity" | "chat" | "profile";
 export type AdminTab = "home" | "landlords" | "settings";
 export type TabName = TenantTab | LandlordTab | AdminTab;
 
@@ -61,18 +62,20 @@ export type AppRole = "tenant" | "landlord" | "admin" | null;
 
 // ─── Tab → Default Screen Mapping ─────────────────────────
 export const TENANT_TAB_SCREENS: Record<TenantTab, ScreenName> = {
-    home: "tenantHome",
-    activity: "applicationTracker",
-    chat: "tenantChat",
-    profile: "tenantProfile",
+    home:      "tenantHome",
+    community: "communityFeed",
+    activity:  "applicationTracker",
+    chat:      "tenantChat",
+    profile:   "tenantProfile",
 };
 
 export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
-    home: "landlordHome",
+    home:       "landlordHome",
     properties: "landlordProperties",
-    activity: "landlordApplications",
-    chat: "landlordChat",
-    profile: "landlordProfile",
+    community:  "communityFeed",
+    activity:   "landlordApplications",
+    chat:       "landlordChat",
+    profile:    "landlordProfile",
 };
 
 export const ADMIN_TAB_SCREENS: Record<AdminTab, ScreenName> = {
