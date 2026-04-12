@@ -74,7 +74,7 @@ export async function POST(
                 business_name: businessName,
                 business_address: businessAddress || null,
                 verification_status: verificationResult.status,
-                verification_data: verificationResult.data || null,
+                verification_data: (verificationResult.data || null) as any,
                 verification_checked_at: verificationResult.checkedAt,
                 verification_notes: verificationResult.error || null,
                 updated_at: new Date().toISOString(),

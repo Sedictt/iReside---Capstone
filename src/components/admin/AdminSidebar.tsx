@@ -11,6 +11,7 @@ import {
     ChevronRight,
     FileCheck
 } from "lucide-react";
+import { ThemeToggle } from '@/components/theme-toggle';
 import { signOut } from "@/lib/supabase/client-auth";
 
 const NAV_ITEMS = [
@@ -99,6 +100,12 @@ export function AdminSidebar() {
                 </nav>
             </div>
 
+            
+            {/* Footer Features */}
+            <div className="px-4 pb-4">
+                <ThemeToggle />
+            </div>
+            
             {/* Footer Profile/Actions */}
             <div className="relative shrink-0 border-t border-white/[0.06] p-4 bg-black/20">
                 <button

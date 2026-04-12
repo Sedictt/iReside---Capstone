@@ -1,12 +1,15 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
     ArrowLeft,
     ArrowRight,
     Briefcase,
+    Building,
     Calendar,
     ChevronLeft,
     ChevronRight,
@@ -25,8 +28,7 @@ import {
     Upload,
     User,
     X,
-    Zap,
-    Building
+    Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -218,7 +220,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
             }
 
             setUploadedDocuments((prev) => {
-                const next = [...prev, ...payload.documents];
+                const next = [...prev, ...(payload.documents || [])];
                 const dedup = new Map<string, UploadedRequirementDocument>();
                 next.forEach((doc) => dedup.set(`${doc.requirementKey}-${doc.url}`, doc));
                 return Array.from(dedup.values());
@@ -281,7 +283,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 const hasDoc = uploadedDocuments.some((doc) => doc.requirementKey === key);
                 const needsPhoto = key !== "application_form";
                 if (!checked || (needsPhoto && !hasDoc)) {
-                    setSubmitError(`Complete uploads for ${REQUIREMENT_LABELS[key] || "this requirement"}.`);
+                    setSubmitError(`Complete uploads for ${REQUIREMENT_LABELS[key]}.`);
                     setStep(2);
                     return;
                 }
@@ -357,6 +359,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     if (submitted) {
         return (
             <div className="min-h-[100vh] relative flex flex-col items-center justify-center p-6 overflow-hidden bg-[#0f1218]">
+                {/* Background Blobs for Success */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 blur-[150px] rounded-full" />
                 </div>
@@ -381,7 +384,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     </h1>
 
                     <p className="text-white/60 text-lg mb-12 leading-relaxed">
-                        Excellent Choice! Your application for <span className="text-white font-semibold">{invite.propertyName}</span> is now being reviewed by the team. You will only receive an account after approval.
+                        Excellent Choice! Your application for <span className="text-white font-semibold">{invite.propertyName}</span> is now being reviewed by the team. You&apos;ll only receive an account after approval.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -400,6 +403,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
     return (
         <div className="relative min-h-screen bg-[#0f1218] text-white">
+            {/* Ambient Animated Background */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
                 <motion.div
                     animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, -30, 0] }}
@@ -413,8 +417,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                 />
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 py-4 lg:py-6 relative z-10">
+            <div className="max-w-7xl mx-auto px-6 py-4 lg:py-6">
                 <div className="flex flex-col lg:flex-row gap-12">
+                    {/* Left Panel: Context & Navigation */}
                     <div className="w-full lg:w-[380px] space-y-6 flex-shrink-0">
                         <div className="space-y-4">
                             <h1 className="text-4xl font-extrabold text-white tracking-tighter leading-none">
@@ -426,6 +431,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                             </p>
                         </div>
 
+                        {/* Progress Stepper - Refined */}
                         <div className="space-y-3">
                             {stepDefinitions.map((stepDef) => {
                                 const isActive = step === stepDef.id;
@@ -494,13 +500,15 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
                     </div>
 
-                    <div className="flex-1 w-full relative z-20">
+                    {/* Main Flow Panel */}
+                    <div className="flex-1">
                         <motion.div
                             key={step}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-[#0f1218]/80 backdrop-blur-2xl border border-white/10 rounded-[3.5rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden flex flex-col min-h-[600px] w-full"
+                            className="bg-[#0f1218]/80 backdrop-blur-md border border-white/10 rounded-[3.5rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden flex flex-col min-h-[500px]"
                         >
+                            {/* Decorative Background Icons */}
                             <div className="absolute -top-10 -right-10 opacity-[0.03] select-none pointer-events-none">
                                 {(() => {
                                     const Icon = stepDefinitions[step].icon;
@@ -508,8 +516,8 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                 })()}
                             </div>
 
-                            <div className="relative z-10 flex-1 flex flex-col w-full h-full max-w-full">
-                                <header className="mb-8">
+                            <div className="relative z-10 flex-1 flex flex-col">
+                                <header className="mb-6">
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
                                             {(() => {
@@ -533,7 +541,8 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     </div>
                                 )}
 
-                                <div className="flex-1 overflow-hidden w-full max-w-full pb-4">
+                                {/* Form Content */}
+                                <div className="space-y-6 flex-1">
                                     {step === 0 && (
                                         <ApplicationIdentityStep
                                             formData={formData}
@@ -569,17 +578,17 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     )}
 
                                     {isOnlineInvite && step === 2 && (
-                                        <div className="space-y-4 w-full">
+                                        <div className="space-y-4 max-w-2xl">
                                             <p className="text-sm leading-relaxed text-slate-300 mb-6">
                                                 Upload at least one clear photo for each required document. Maximum file size 5MB each.
                                             </p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {requiredRequirementKeys.map((key) => {
                                                     const docs = uploadedDocuments.filter((doc) => doc.requirementKey === key);
                                                     const checked = Boolean(formData.requirements_checklist[key]);
                                                     return (
-                                                        <div key={key} className="rounded-3xl border border-white/10 bg-white/5 p-5 relative group hover:border-primary/40 transition-colors w-full">
-                                                            <div className="flex items-start justify-between mb-4 gap-4">
+                                                        <div key={key} className="rounded-3xl border border-white/10 bg-white/5 p-5 relative group hover:border-primary/40 transition-colors">
+                                                            <div className="flex items-start justify-between mb-4">
                                                                 <div>
                                                                     <p className="text-xs font-black uppercase tracking-[0.1em] text-white">
                                                                         {REQUIREMENT_LABELS[key] ?? key}
@@ -588,7 +597,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                        <p className="text-[10px] text-white/40 mt-1">Photo Upload</p>
                                                                     )}
                                                                 </div>
-                                                                <div className="flex flex-col gap-2 relative z-10 shrink-0">
+                                                                <div className="flex flex-col gap-2 relative z-10">
                                                                     {key !== "application_form" && (
                                                                         <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] hover:bg-white/20 transition-colors">
                                                                             <Upload className="h-3 w-3" />
@@ -650,7 +659,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     )}
 
                                     {step === finalStepIndex && (
-                                        <div className="space-y-6 w-full">
+                                        <div className="space-y-6 max-w-2xl">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <SummaryCard label="Property" value={invite.propertyName} icon={Building} />
                                                 <SummaryCard label="Unit" value={currentUnit?.name ?? "Not selected"} icon={Home} />
@@ -683,6 +692,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                     )}
                                 </div>
 
+                                {/* Footer Navigation */}
                                 <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
                                     <button
                                         type="button"
@@ -756,4 +766,3 @@ function Seal({ icon: Icon, label }: any) {
         </div>
     );
 }
-

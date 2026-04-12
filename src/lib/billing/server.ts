@@ -609,7 +609,7 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
             ...property,
             units: (unitsByProperty.get(property.id) ?? []).toSorted((a, b) => a.name.localeCompare(b.name)),
         })),
-        activeLeases: ((leaseRows ?? []) as ActiveLeaseWorkspaceRow[]).map((lease) => ({
+        activeLeases: ((leaseRows ?? []) as unknown as ActiveLeaseWorkspaceRow[]).map((lease) => ({
             id: lease.id,
             tenant: lease.tenant ?? null,
             unit: lease.unit ?? null,
@@ -702,7 +702,7 @@ export async function generateMonthlyInvoices(
     if (existingPaymentIds.error) throw existingPaymentIds.error;
     const existingLeaseIds = new Set((existingPaymentIds.data ?? []).map((row) => row.lease_id));
 
-    const typedLeases = leases as BillingLeaseRow[];
+    const typedLeases = leases as unknown as BillingLeaseRow[];
     const unitIds = typedLeases.map((lease) => lease.unit_id);
     const propertyIds = typedLeases.map((lease) => lease.unit?.property_id).filter((value): value is string => Boolean(value));
 
