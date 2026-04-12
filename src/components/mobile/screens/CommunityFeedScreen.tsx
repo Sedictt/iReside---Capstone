@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
     Heart, MessageCircle, Share2, Image as ImageIcon,
-    Plus, Pin, Megaphone, BookOpen, ChevronDown
+    Plus, Pin, Megaphone, BookOpen, ChevronDown, GalleryHorizontalEnd
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./CommunityFeedScreen.module.css";
@@ -218,11 +218,16 @@ export default function CommunityFeedScreen() {
                     <h1 className={styles.headerTitle}>Community</h1>
                     <p className={styles.headerSub}>Building updates & announcements</p>
                 </div>
-                {canPost && (
-                    <button className={styles.newPostBtn}>
-                        <Plus size={18} />
+                <div className={styles.headerActions}>
+                    <button className={styles.galleryBtn} onClick={() => navigate("photoGallery")}>
+                        <GalleryHorizontalEnd size={18} />
                     </button>
-                )}
+                    {canPost && (
+                        <button className={styles.newPostBtn}>
+                            <Plus size={18} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Filter Pills */}

@@ -33,6 +33,7 @@ import LandlordChatScreen from "./screens/LandlordChatScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
 import IrisChatScreen from "./screens/IrisChatScreen";
 import CommunityFeedScreen from "./screens/CommunityFeedScreen";
+import PhotoGalleryScreen from "./screens/PhotoGalleryScreen";
 import {
     Home,
     Search,
@@ -221,6 +222,7 @@ function ScreenRouter() {
         adminLandlords: AdminLandlordsScreen,
         adminSettings: AdminSettingsScreen,
         communityFeed: CommunityFeedScreen,
+        photoGallery: PhotoGalleryScreen,
         // Screens will be registered here as they're built
     };
 

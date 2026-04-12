@@ -46,6 +46,7 @@ export type ScreenName =
     | "notifications"
     | "irisChat"
     | "communityFeed"
+    | "photoGallery"
     // Admin Screens
     | "adminHome"
     | "adminLandlords"
