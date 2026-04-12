@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Grid3x3, Image as ImageIcon, Maximize2, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { X, Grid3x3, Image as ImageIcon, Maximize2, ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "./PhotoGalleryScreen.module.css";
 
 // ─── Types ─────────────────────────────────────────────────

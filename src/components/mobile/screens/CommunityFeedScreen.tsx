@@ -193,7 +193,7 @@ function PostCard({ post }: { post: Post }) {
 
 // ─── Main Screen ────────────────────────────────────────────
 export default function CommunityFeedScreen() {
-    const { role } = useNavigation();
+    const { role, navigate } = useNavigation();
     const [filter, setFilter] = useState<"all" | PostCategory>("all");
 
     const filters: Array<{ key: "all" | PostCategory; label: string }> = [
