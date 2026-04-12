@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Grid3X3, ImageIcon, Maximize2, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { X, Grid3x3, Image as ImageIcon, Maximize2, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import styles from "./PhotoGalleryScreen.module.css";
 
 // ─── Types ─────────────────────────────────────────────────
@@ -113,9 +113,10 @@ export default function PhotoGalleryScreen() {
                     <p className={styles.headerSub}>{PHOTOS.length} photos across {CATEGORIES.length - 1} albums</p>
                 </div>
                 <div className={styles.headerIcon}>
-                    <Grid3X3 size={20} />
+                    <Grid3x3 size={20} />
                 </div>
             </div>
+
 
             {/* Category Pills */}
             <div className={styles.filterRow}>
