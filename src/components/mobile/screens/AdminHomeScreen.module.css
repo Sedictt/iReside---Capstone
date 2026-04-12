@@ -93,12 +93,85 @@
     letter-spacing: 0.5px;
 }
 
+.metricTrend {
+    font-size: 10px;
+    color: #525252;
+    margin-top: 4px;
+}
+
+/* Quick Links */
+.quickLinks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.quickLinkCard {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    padding: 14px 16px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.quickLinkCard:active {
+    border-color: rgba(239,68,68,0.4);
+}
+
+.quickLinkIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.quickLinkContent {
+    flex: 1;
+}
+
+.quickLinkLabel {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.quickLinkDesc {
+    font-size: 12px;
+    color: #737373;
+}
+
+.quickLinkChevron {
+    color: #404040;
+}
+
 /* Section Header */
 .sectionHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+}
+
+.badge {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
 }
 
 .sectionTitle {
@@ -130,33 +203,32 @@
     gap: 16px;
 }
 
-.actionIcon {
+.actionIconWrap {
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    background: rgba(234, 179, 8, 0.1);
+    color: #eab308;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.actionContent {
-    flex: 1;
+.actionChevron {
+    color: #404040;
 }
 
-.actionTitle {
-    font-size: 15px;
-    font-weight: 700;
-    color: #fafafa;
-    margin-bottom: 2px;
-}
+.actionContent { flex: 1; }
+.actionTitle { font-size: 15px; font-weight: 700; color: #fafafa; margin-bottom: 2px; }
+.actionDesc { font-size: 13px; color: #a3a3a3; }
 
-.actionDesc {
-    font-size: 13px;
-    color: #a3a3a3;
-}
-
-.actionRight {
-    color: #525252;
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 0;
+    color: #404040;
+    font-size: 14px;
 }

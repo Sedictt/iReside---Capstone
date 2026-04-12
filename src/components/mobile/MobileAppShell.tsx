@@ -19,6 +19,8 @@ import TenantProfileScreen from "./screens/TenantProfileScreen";
 import TenantSettingsScreen from "./screens/TenantSettingsScreen";
 import LandlordHomeScreen from "./screens/LandlordHomeScreen";
 import AdminHomeScreen from "./screens/AdminHomeScreen";
+import AdminLandlordsScreen from "./screens/AdminLandlordsScreen";
+import AdminSettingsScreen from "./screens/AdminSettingsScreen";
 import LandlordPropertiesScreen from "./screens/LandlordPropertiesScreen";
 import LandlordPropertyDetailScreen from "./screens/LandlordPropertyDetailScreen";
 import LandlordUnitDetailScreen from "./screens/LandlordUnitDetailScreen";
@@ -212,6 +214,8 @@ function ScreenRouter() {
         notifications: NotificationsScreen,
         irisChat: IrisChatScreen,
         adminHome: AdminHomeScreen,
+        adminLandlords: AdminLandlordsScreen,
+        adminSettings: AdminSettingsScreen,
         // Screens will be registered here as they're built
     };
 
