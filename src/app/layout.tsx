@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PageTransitionProvider } from "@/components/transitions/PageTransitionProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,7 +44,7 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="ireside-theme"
         >
-          {children}
+          <PageTransitionProvider>{children}</PageTransitionProvider>
         </ThemeProvider>
       </body>
     </html>
