@@ -1,0 +1,11 @@
+Model Information:
+* title:	Lowpoly Apartment
+* source:	https://sketchfab.com/3d-models/lowpoly-apartment-69cd2834bdcc4f3c9c837b67f42002dd
+* author:	AspectStudios (https://sketchfab.com/AspectStudio)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Lowpoly Apartment" (https://sketchfab.com/3d-models/lowpoly-apartment-69cd2834bdcc4f3c9c837b67f42002dd) by AspectStudios (https://sketchfab.com/AspectStudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

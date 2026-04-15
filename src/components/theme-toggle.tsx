@@ -1,47 +1,21 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { MoonStar, SunMedium } from "lucide-react";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 
-type ThemeToggleProps = {
-    variant?: "floating" | "sidebar";
-    className?: string;
-    dataTourId?: string;
-};
+export function ThemeToggle() {
+  const { setTheme, theme } = useTheme()
 
-export function ThemeToggle({ variant = "floating", className, dataTourId }: ThemeToggleProps) {
-    const { resolvedTheme, setTheme } = useTheme();
-    const [mounted, setMounted] = React.useState(false);
-
-    React.useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    if (!mounted) {
-        return null;
-    }
-
-    const isDark = resolvedTheme !== "light";
-
-    return (
-        <button
-            type="button"
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-            data-tour-id={dataTourId}
-            className={cn(
-                variant === "floating"
-                    ? "fixed bottom-4 right-4 z-[120] inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur transition-all hover:-translate-y-0.5"
-                    : "inline-flex h-10 w-10 items-center justify-center rounded-xl border text-foreground transition-colors hover:bg-muted",
-                "border-border/80 bg-card/90 text-foreground hover:bg-card",
-                className
-            )}
-            aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-            title={`Switch to ${isDark ? "light" : "dark"} mode`}
-        >
-            {isDark ? <SunMedium className="h-4 w-4 text-amber-500" /> : <MoonStar className="h-4 w-4 text-sky-500" />}
-            {variant === "floating" && <span className="hidden sm:inline">{isDark ? "Light mode" : "Dark mode"}</span>}
-        </button>
-    );
+  return (
+    <button
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 text-zinc-900 transition-all hover:bg-zinc-100 hover:border-zinc-300 dark:border-white/10 dark:bg-white/[0.02] dark:text-white dark:hover:bg-white/[0.08] dark:hover:border-white/20"
+      title="Toggle theme"
+    >
+      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </button>
+  )
 }
