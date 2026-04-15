@@ -1,0 +1,19 @@
+3.5.1 Proposed System Context Diagram
+
+Figure 16. Data Flow Diagram Level 0
+
+The above diagram shows an overview of the features of the system. There are four primary user
+roles being Administrator, Chairperson, Library Staff, and Researcher. The Administrator oversees the
+system’s overall management, including user account creation, access control, and research manuscript
+management. They can enable or disable accounts, upload and delete research manuscripts, and review
+and approve access requests. Additionally, they have access to system analytics, system logs, and receive
+system notifications.
+Meanwhile, the Chairperson oversees and ensures their department’s relevant manuscripts are
+visible to researchers. They can upload manuscripts to be approved by administrators, publish and
+unpublish, as well as edit and delete manuscript files when necessary.
+On the other hand, the Library Staff can view, enable and disable online researchers, send
+warning messages, review and approve access requests as well as view notifications.
+Lastly, Researchers are the primary users of the system, able to browse, search, and access articles
+in the system. They also have access to saving and exporting references, making bookmarks, requesting
+for manuscript access, creating and managing collaboration teams, and creating and managing personal
+chatbot discourse.
