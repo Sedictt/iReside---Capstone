@@ -4,6 +4,10 @@ rooms:
   description: Files from docs/
 - name: echo
   description: Files from echo/
+- name: iris_3d_model
+  description: Files from iris-3d-model/
+- name: lowpoly_apartment
+  description: Files from lowpoly_apartment/
 - name: mkdir
   description: Files from mkdir/
 - name: openspec
@@ -12,6 +16,8 @@ rooms:
   description: Files from output/
 - name: playwright_report
   description: Files from playwright-report/
+- name: plugins
+  description: Files from plugins/
 - name: public
   description: Files from public/
 - name: scripts
@@ -30,6 +36,10 @@ rooms:
   description: Files from tmp/
 - name: planning
   description: Files from specs/
+- name: design
+  description: Files from assets/
+- name: backend
+  description: Files from models/
 - name: frontend
   description: Files from components/
 - name: general
