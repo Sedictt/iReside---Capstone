@@ -336,7 +336,7 @@ export async function scrapeValenzuelaBusinessDatabank(
         console.log('📝 Raw table HTML (first 500 chars):', rawTableHtml);
         
         const tableData = await page.evaluate(() => {
-            const rows: Array<Record<string, string>> = [];
+            const rows: { businessName: string; district: string; barangay: string; industry: string; fullText: string }[] = [];
             
             // Find the results table - look for table with business data
             const tables = document.querySelectorAll('table');

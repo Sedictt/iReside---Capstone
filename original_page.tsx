@@ -1,475 +1,968 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Building2,
-  ShieldCheck,
-  Search,
-  FileText,
-  Bot,
-  House,
-  Wallet,
-  MessageSquare,
-  Wrench,
-  Sparkles,
-  BarChart3,
-  Zap,
-  MapPin,
-  Calendar,
-  Users,
-  ChevronRight,
-  Star,
-  Heart,
-  ArrowRight,
-  TrendingUp,
-  Map as MapIcon,
-  Globe,
-  Menu,
-  X,
-  ChevronDown
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { properties } from "@/lib/data";
-import PropertyCard from "@/components/PropertyCard";
+import { useRef } from "react";
+import { motion } from "framer-motion";
+import { ThemeToggle } from '@/components/theme-toggle';
+import { ArrowRight, ShieldCheck, Lock, Activity, Users, Building, ChevronRight, MapPin, LayoutDashboard, Receipt, Sparkles, MessageSquare, PieChart, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import gsap from "gsap";
+import ScrollTrigger from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+import { TransitionLink } from "@/components/transitions/PageTransitionProvider";
 
-export default function LandingPage() {
-  const [activeCategory, setActiveCategory] = useState("All Rentals");
-  const [isLiked, setIsLiked] = useState<Record<string, boolean>>({});
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+if (typeof window !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger, useGSAP);
+    ScrollTrigger.config({
+        limitCallbacks: true,
+        ignoreMobileResize: true,
+    });
+}
 
-  const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState(false);
-  const [selectedPropertyType, setSelectedPropertyType] = useState("Apartments");
-  const [isPriceRangeOpen, setIsPriceRangeOpen] = useState(false);
-  const [selectedPriceRange, setSelectedPriceRange] = useState("₱5,000 - ₱15,000");
+const HOW_IT_WORKS = [
+    {
+        id: 1,
+        title: "Private Workspace",
+        desc: "Get invited to a private iReside workspace.",
+        highlights: [
+            "Invite-only onboarding and role-based access",
+            "Property and tenant data isolated per portfolio",
+            "Centralized timeline for leases, rent, and requests",
+        ],
+        metric: "Invite-only",
+        metricLabel: "Access model",
+        icon: Lock,
+        color: "from-emerald-500/20",
+        accent: "text-primary dark:text-primary-200"
+    },
+    {
+        id: 2,
+        title: "Quality Placement",
+        desc: "Verify and place qualified tenants.",
+        highlights: [
+            "Guided application intake with document checks",
+            "Structured screening for faster final decisions",
+            "Clear approval trail for compliance confidence",
+        ],
+        metric: "Guided",
+        metricLabel: "Placement flow",
+        icon: Users,
+        color: "from-teal-500/20 dark:from-teal-500/10",
+        accent: "text-teal-600 dark:text-teal-400"
+    },
+    {
+        id: 3,
+        title: "Automated Ops",
+        desc: "Automate rent and daily operations with iRis support.",
+        highlights: [
+            "Automated rent reminders and payment tracking",
+            "Daily priority brief across all active units",
+            "Actionable recommendations from iRis",
+        ],
+        metric: "Centralized",
+        metricLabel: "Operations hub",
+        icon: Activity,
+        color: "from-zinc-500/20 dark:from-zinc-500/10",
+        accent: "text-muted-foreground"
+    }
+];
 
-  const propertyTypes = ["Any Type", "Apartments", "Bedspaces", "Houses for Rent"];
-  const priceRanges = ["Any Budget", "Under ₱5,000", "₱5,000 - ₱15,000", "₱15,000 - ₱30,000", "₱30,000+"];
+const SHOWCASE_MODULES = [
+    {
+        id: "dashboard",
+        title: "Operations Dashboard",
+        desc: "See occupancy, income, lease status, and urgent tasks in one real-time command center.",
+        href: "/modules/dashboard",
+        icon: LayoutDashboard,
+        color: "bg-blue-500",
+        shadow: "shadow-blue-500/20",
+    },
+    {
+        id: "map",
+        title: "Unit Map",
+        desc: "Visualize every property and unit at a glance to spot vacancies, turnover risk, and leasing opportunities faster.",
+        href: "/modules/unit-map",
+        icon: MapPin,
+        color: "bg-emerald-500",
+        shadow: "shadow-emerald-500/20",
+    },
+    {
+        id: "finance",
+        title: "Rent & Invoices",
+        desc: "Automate billing, track payment status, and keep monthly collections predictable with less manual follow-up.",
+        href: "/modules/financials",
+        icon: Receipt,
+        color: "bg-purple-500",
+        shadow: "shadow-purple-500/20",
+    }
+];
 
-  const toggleLike = (id: string) => {
-    setIsLiked(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+const IRIS_WORKFLOWS = [
+    {
+        title: "Portfolio Pulse",
+        detail: "Ask one question and get occupancy gaps, late-risk units, and immediate follow-ups.",
+        icon: PieChart,
+    },
+    {
+        title: "Faster Resident Replies",
+        detail: "Generate clear, policy-aligned responses in seconds, then edit and send with confidence.",
+        icon: MessageSquare,
+    },
+    {
+        title: "Daily Execution Brief",
+        detail: "Start each day with prioritized tasks, status flags, and recommended next actions.",
+        icon: LayoutDashboard,
+    },
+];
 
-  const categories = [
-    { name: "All Rentals", icon: Globe },
-    { name: "Apartments", icon: Building2 },
-    { name: "Family Homes", icon: House },
-    { name: "Bedspaces", icon: Users },
-    { name: "Condos", icon: Zap },
-    { name: "Budget Friendly", icon: Wallet },
-  ];
+const OUTCOMES = [
+    {
+        metric: "Focused",
+        label: "Follow-up workload",
+        detail: "Designed to reduce repetitive admin loops through clearer communication and reminders.",
+    },
+    {
+        metric: "Streamlined",
+        label: "Placement decisions",
+        detail: "Shared visibility helps teams evaluate applicants with fewer handoff delays.",
+    },
+    {
+        metric: "Daily",
+        label: "Portfolio visibility",
+        detail: "One timeline for leases, payments, and requests keeps teams aligned day to day.",
+    },
+    {
+        metric: "Private",
+        label: "Data exposure risk",
+        detail: "Invite-only workflows are built to limit unnecessary public exposure.",
+    },
+];
 
-  return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30">
+export default function ScrollyTellingLandingPage() {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const scrollWrapperRef = useRef<HTMLDivElement>(null);
+    const showcaseContainerRef = useRef<HTMLDivElement>(null);
+    const irisSectionRef = useRef<HTMLElement>(null);
+    const outcomesSectionRef = useRef<HTMLElement>(null);
+    const ctaSectionRef = useRef<HTMLElement>(null);
 
-      {/* Navigation */}
-      <div className="fixed top-0 z-[100] w-full flex justify-center pt-6 px-4 md:px-6 transition-all duration-300">
-        <nav className="w-full max-w-7xl bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center justify-between px-4 md:px-6 py-4 shadow-2xl">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 md:gap-3 font-black text-lg md:text-xl tracking-wide">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/20">
-              <div className="h-3 w-3 bg-white rounded-sm drop-shadow-md" />
+    useGSAP(() => {
+        const showcaseRoot = showcaseContainerRef.current;
+        if (!showcaseRoot) return;
+
+        const cards = gsap.utils.toArray<HTMLElement>(".showcase-card", showcaseRoot);
+        if (cards.length === 0) return;
+        const moduleBodies = cards.map((card) => card.querySelector<HTMLElement>(".module-body"));
+        const moduleCtas = cards.map((card) => card.querySelector<HTMLElement>(".module-cta"));
+
+        ScrollTrigger.getById("landing-showcase-stack")?.kill();
+        gsap.set(cards, { yPercent: 100, scale: 1, opacity: 1, force3D: true, willChange: "transform" });
+        gsap.set(cards[0], { yPercent: 0 });
+        gsap.set(moduleBodies, { autoAlpha: 0, y: 24 });
+        gsap.set(moduleCtas, { autoAlpha: 0, x: -12 });
+        if (moduleBodies[0]) gsap.set(moduleBodies[0], { autoAlpha: 1, y: 0 });
+        if (moduleCtas[0]) gsap.set(moduleCtas[0], { autoAlpha: 1, x: 0 });
+        const segments = Math.max(cards.length - 1, 1);
+
+        ScrollTrigger.create({
+            id: "landing-showcase-stack",
+            trigger: showcaseRoot,
+            pin: true,
+            pinSpacing: true,
+            scrub: 1,
+            snap: segments > 1 ? {
+                snapTo: 1 / segments,
+                duration: { min: 0.15, max: 0.35 },
+                delay: 0.05,
+                ease: "power1.inOut",
+            } : false,
+            start: "top top",
+            end: `+=${window.innerHeight * segments}`,
+            anticipatePin: 1,
+            refreshPriority: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+                const p = self.progress * segments;
+                const firstReveal = gsap.utils.clamp(0, 1, 1 - p);
+                if (moduleBodies[0]) {
+                    gsap.to(moduleBodies[0], {
+                        autoAlpha: firstReveal,
+                        y: (1 - firstReveal) * 24,
+                        duration: 0.18,
+                        ease: "none",
+                        overwrite: true,
+                    });
+                }
+                if (moduleCtas[0]) {
+                    gsap.to(moduleCtas[0], {
+                        autoAlpha: firstReveal,
+                        x: (1 - firstReveal) * -12,
+                        duration: 0.18,
+                        ease: "none",
+                        overwrite: true,
+                    });
+                }
+
+                for (let i = 1; i < cards.length; i++) {
+                    const local = gsap.utils.clamp(0, 1, p - (i - 1));
+                    gsap.set(cards[i], { yPercent: (1 - local) * 100 });
+                    if (moduleBodies[i]) {
+                        gsap.to(moduleBodies[i], {
+                            autoAlpha: local,
+                            y: (1 - local) * 24,
+                            duration: 0.18,
+                            ease: "none",
+                            overwrite: true,
+                        });
+                    }
+                    if (moduleCtas[i]) {
+                        gsap.to(moduleCtas[i], {
+                            autoAlpha: local,
+                            x: (1 - local) * -12,
+                            duration: 0.18,
+                            ease: "none",
+                            overwrite: true,
+                        });
+                    }
+                }
+            },
+        });
+
+        return () => {
+            ScrollTrigger.getById("landing-showcase-stack")?.kill();
+            gsap.set(cards, { clearProps: "transform,willChange" });
+        };
+    }, { scope: showcaseContainerRef });
+
+    useGSAP(() => {
+        const wrapper = scrollWrapperRef.current;
+        const trigger = containerRef.current;
+        if (!wrapper || !trigger) return;
+
+        let tween: gsap.core.Tween | null = null;
+        const triggerId = "landing-horizontal-features";
+        const getScrollDistance = () => Math.max(0, (wrapper.scrollWidth || 0) - window.innerWidth);
+        const getSnapStops = () => {
+            const distance = getScrollDistance();
+            if (distance <= 0) return [0];
+
+            const panels = gsap.utils.toArray<HTMLElement>(".howit-panel", wrapper);
+            const stops = panels
+                .map((panel) => gsap.utils.clamp(0, 1, panel.offsetLeft / distance))
+                .filter((value, index, arr) => index === 0 || Math.abs(value - arr[index - 1]) > 0.003);
+
+            if (stops[0] !== 0) stops.unshift(0);
+            if (stops[stops.length - 1] !== 1) stops.push(1);
+            return stops;
+        };
+
+        const setupAnimation = () => {
+            ScrollTrigger.getById(triggerId)?.kill();
+            tween?.kill();
+            tween = null;
+
+            if (window.matchMedia("(max-width: 1023px)").matches) {
+                gsap.set(wrapper, { clearProps: "transform,willChange" });
+                return;
+            }
+
+            gsap.set(wrapper, { x: 0, force3D: true, willChange: "transform" });
+
+            tween = gsap.to(wrapper, {
+                x: () => -getScrollDistance(),
+                ease: "none",
+                force3D: true,
+                overwrite: true,
+                scrollTrigger: {
+                    id: triggerId,
+                    trigger,
+                    start: "top top",
+                    pin: true,
+                    pinSpacing: true,
+                    scrub: 1,
+                    snap: {
+                        snapTo: (rawProgress: number) => {
+                            const stops = getSnapStops();
+                            let closest = stops[0];
+                            let minDiff = Math.abs(rawProgress - closest);
+                            for (let i = 1; i < stops.length; i++) {
+                                const diff = Math.abs(rawProgress - stops[i]);
+                                if (diff < minDiff) {
+                                    closest = stops[i];
+                                    minDiff = diff;
+                                }
+                            }
+                            return closest;
+                        },
+                        duration: { min: 0.2, max: 0.45 },
+                        delay: 0.06,
+                        ease: "power1.inOut",
+                    },
+                    anticipatePin: 1,
+                    refreshPriority: 2,
+                    invalidateOnRefresh: true,
+                    end: () => `+=${Math.max(getScrollDistance(), 1)}`
+                }
+            });
+        };
+
+        const handleRefreshInit = () => {
+            setupAnimation();
+        };
+
+        const resizeObserver = new ResizeObserver(() => {
+            ScrollTrigger.refresh();
+        });
+        resizeObserver.observe(wrapper);
+
+        const onWindowLoad = () => {
+            ScrollTrigger.refresh();
+        };
+
+        setupAnimation();
+        ScrollTrigger.addEventListener("refreshInit", handleRefreshInit);
+        window.addEventListener("load", onWindowLoad);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener("load", onWindowLoad);
+            ScrollTrigger.removeEventListener("refreshInit", handleRefreshInit);
+            tween?.kill();
+            ScrollTrigger.getById(triggerId)?.kill();
+            gsap.set(wrapper, { clearProps: "transform,willChange" });
+        };
+    }, { scope: containerRef });
+
+    useGSAP(() => {
+        const scheduleRefresh = () => {
+            requestAnimationFrame(() => ScrollTrigger.refresh());
+        };
+
+        scheduleRefresh();
+        window.addEventListener("load", scheduleRefresh);
+        document.fonts?.ready.then(scheduleRefresh).catch(() => {
+            /* no-op */
+        });
+
+        return () => {
+            window.removeEventListener("load", scheduleRefresh);
+        };
+    });
+
+    useGSAP(() => {
+        const irisSection = irisSectionRef.current;
+        const outcomesSection = outcomesSectionRef.current;
+        const ctaSection = ctaSectionRef.current;
+        if (!irisSection || !outcomesSection || !ctaSection) return;
+
+        const mm = gsap.matchMedia();
+        mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+            const irisReveal = gsap.utils.toArray<HTMLElement>(".iris-reveal", irisSection);
+            const irisCards = gsap.utils.toArray<HTMLElement>(".iris-card", irisSection);
+            const irisContent = irisSection.querySelector<HTMLElement>(".iris-content");
+            const irisBgAvatar = irisSection.querySelector<HTMLElement>(".iris-bg-avatar");
+            const irisGlow = irisSection.querySelector<HTMLElement>(".iris-glow");
+            const outcomesHeading = outcomesSection.querySelector<HTMLElement>(".outcomes-heading");
+            const outcomeItems = gsap.utils.toArray<HTMLElement>(".outcome-item", outcomesSection);
+            const outcomesGlow = outcomesSection.querySelector<HTMLElement>(".outcomes-glow");
+            const ctaReveal = gsap.utils.toArray<HTMLElement>(".cta-reveal", ctaSection);
+            const ctaPanel = ctaSection.querySelector<HTMLElement>(".cta-panel");
+            const ctaAmbient = ctaSection.querySelector<HTMLElement>(".cta-ambient");
+
+            gsap.set(irisReveal, { autoAlpha: 0, y: 90 });
+            gsap.set(irisCards, { autoAlpha: 0, y: 110, scale: 0.96 });
+            gsap.set(outcomesHeading, { autoAlpha: 0, y: 100 });
+            gsap.set(outcomeItems, { autoAlpha: 0, y: 110 });
+            gsap.set(ctaReveal, { autoAlpha: 0, y: 90 });
+            if (ctaPanel) gsap.set(ctaPanel, { autoAlpha: 0, y: 120, scale: 0.95 });
+
+            const irisTl = gsap.timeline({
+                scrollTrigger: {
+                    id: "landing-iris-story",
+                    trigger: irisSection,
+                    start: "top top",
+                    end: "+=140%",
+                    pin: true,
+                    scrub: 1.15,
+                    anticipatePin: 1,
+                    invalidateOnRefresh: true,
+                },
+            });
+
+            irisTl
+                .fromTo(irisReveal, { y: 80, autoAlpha: 0 }, {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 0.55,
+                    stagger: 0.12,
+                    ease: "none",
+                }, 0)
+                .fromTo(irisCards, { y: 64, autoAlpha: 0.3, scale: 0.96 }, {
+                    y: 0,
+                    autoAlpha: 1,
+                    scale: 1,
+                    duration: 0.6,
+                    stagger: 0.1,
+                    ease: "none",
+                }, 0.18)
+                .to(irisCards, {
+                    y: -18,
+                    duration: 0.45,
+                    stagger: 0.06,
+                    ease: "none",
+                }, 0.62);
+
+            if (irisContent) {
+                gsap.to(irisContent, {
+                    yPercent: -12,
+                    ease: "none",
+                    scrollTrigger: {
+                        id: "landing-iris-content-parallax",
+                        trigger: irisSection,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: 1.25,
+                    },
+                });
+            }
+
+            if (irisBgAvatar) {
+                gsap.fromTo(irisBgAvatar, {
+                    xPercent: 24,
+                    autoAlpha: 0.05,
+                    scale: 0.9,
+                }, {
+                    xPercent: -24,
+                    autoAlpha: 0.24,
+                    scale: 1.12,
+                    ease: "none",
+                    scrollTrigger: {
+                        id: "landing-iris-avatar-parallax",
+                        trigger: irisSection,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: 1.45,
+                    },
+                });
+            }
+
+            if (irisGlow) {
+                gsap.to(irisGlow, {
+                    yPercent: -24,
+                    scale: 1.32,
+                    opacity: 0.9,
+                    ease: "none",
+                    scrollTrigger: {
+                        id: "landing-iris-glow-parallax",
+                        trigger: irisSection,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: 1.2,
+                    },
+                });
+            }
+
+            const outcomesTl = gsap.timeline({
+                scrollTrigger: {
+                    id: "landing-outcomes-story",
+                    trigger: outcomesSection,
+                    start: "top top",
+                    end: "+=130%",
+                    pin: true,
+                    scrub: 1.1,
+                    anticipatePin: 1,
+                    invalidateOnRefresh: true,
+                },
+            });
+            outcomesTl
+                .to(outcomesHeading, {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 0.4,
+                    ease: "none",
+                }, 0)
+                .to(outcomeItems, {
+                    y: 0,
+                    autoAlpha: 1,
+                    duration: 0.6,
+                    stagger: 0.14,
+                    ease: "none",
+                }, 0.12)
+                .to(outcomeItems, {
+                    y: -16,
+                    duration: 0.38,
+                    stagger: 0.07,
+                    ease: "none",
+                }, 0.64);
+
+            if (outcomesGlow) {
+                gsap.to(outcomesGlow, {
+                    yPercent: -26,
+                    scale: 1.3,
+                    ease: "none",
+                    scrollTrigger: {
+                        id: "landing-outcomes-glow-parallax",
+                        trigger: outcomesSection,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: 1.3,
+                    },
+                });
+            }
+
+            const ctaTl = gsap.timeline({
+                scrollTrigger: {
+                    id: "landing-cta-story",
+                    trigger: ctaSection,
+                    start: "top 84%",
+                    end: "bottom top",
+                    scrub: 1.15,
+                },
+            });
+            ctaTl.to(ctaReveal, {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.55,
+                stagger: 0.12,
+                ease: "none",
+            }, 0);
+            if (ctaPanel) {
+                ctaTl.to(ctaPanel, {
+                    y: 0,
+                    autoAlpha: 1,
+                    scale: 1,
+                    duration: 0.48,
+                    ease: "none",
+                }, 0.2);
+            }
+
+            if (ctaAmbient) {
+                gsap.to(ctaAmbient, {
+                    yPercent: -20,
+                    scale: 1.2,
+                    ease: "none",
+                    scrollTrigger: {
+                        id: "landing-cta-ambient-parallax",
+                        trigger: ctaSection,
+                        start: "top bottom",
+                        end: "bottom top",
+                        scrub: 1.3,
+                    },
+                });
+            }
+        });
+
+        mm.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+            const irisReveal = gsap.utils.toArray<HTMLElement>(".iris-reveal", irisSection);
+            const outcomeItems = gsap.utils.toArray<HTMLElement>(".outcome-item", outcomesSection);
+            const ctaReveal = gsap.utils.toArray<HTMLElement>(".cta-reveal", ctaSection);
+
+            gsap.fromTo(irisReveal, { y: 40, autoAlpha: 0 }, {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.75,
+                stagger: 0.1,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: irisSection,
+                    start: "top 80%",
+                },
+            });
+
+            gsap.fromTo(outcomeItems, { y: 40, autoAlpha: 0 }, {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.75,
+                stagger: 0.12,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: outcomesSection,
+                    start: "top 80%",
+                },
+            });
+
+            gsap.fromTo(ctaReveal, { y: 40, autoAlpha: 0 }, {
+                y: 0,
+                autoAlpha: 1,
+                duration: 0.75,
+                stagger: 0.12,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: ctaSection,
+                    start: "top 82%",
+                },
+            });
+        });
+
+        return () => {
+            mm.revert();
+        };
+    }, []);
+
+    return (
+        <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 font-sans overflow-x-hidden">
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.02))] dark:bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.5))]" />
+                <div className="absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.04] mix-blend-overlay z-10" />
+                
+                <style dangerouslySetInnerHTML={{__html: `
+                    .ripple-background {
+                        position: absolute;
+                        inset: 0;
+                        background: transparent;
+                        overflow: hidden;
+                        z-index: -1;
+                    }
+                    .ripple-circle {
+                        position: absolute;
+                        border-radius: 50%;
+                        background: var(--primary);
+                        animation: ripple 15s infinite;
+                        box-shadow: 0px 0px 1px 0px var(--primary);
+                    }
+                    .ripple-small { width: 200px; height: 200px; left: -100px; bottom: -100px; }
+                    .ripple-medium { width: 400px; height: 400px; left: -200px; bottom: -200px; }
+                    .ripple-large { width: 600px; height: 600px; left: -300px; bottom: -300px; }
+                    .ripple-xlarge { width: 800px; height: 800px; left: -400px; bottom: -400px; }
+                    .ripple-xxlarge { width: 1000px; height: 1000px; left: -500px; bottom: -500px; }
+                    
+                    .ripple-shade1 { opacity: 0.03; }
+                    .ripple-shade2 { opacity: 0.05; }
+                    .ripple-shade3 { opacity: 0.08; }
+                    .ripple-shade4 { opacity: 0.12; }
+                    .ripple-shade5 { opacity: 0.15; }
+
+                    .dark .ripple-circle {
+                        background: var(--primary);
+                        box-shadow: 0px 0px 1px 0px var(--primary);
+                    }
+                    .dark .ripple-shade1 { opacity: 0.02; }
+                    .dark .ripple-shade2 { opacity: 0.04; }
+                    .dark .ripple-shade3 { opacity: 0.06; }
+                    .dark .ripple-shade4 { opacity: 0.08; }
+                    .dark .ripple-shade5 { opacity: 0.1; }
+
+                    @keyframes ripple {
+                        0% { transform: scale(0.8); }
+                        50% { transform: scale(1.2); }
+                        100% { transform: scale(0.8); }
+                    }
+                `}} />
+                <div className="ripple-background">
+                    <div className="ripple-circle ripple-xxlarge ripple-shade1"></div>
+                    <div className="ripple-circle ripple-xlarge ripple-shade2"></div>
+                    <div className="ripple-circle ripple-large ripple-shade3"></div>
+                    <div className="ripple-circle ripple-medium ripple-shade4"></div>
+                    <div className="ripple-circle ripple-small ripple-shade5"></div>
+                </div>
+
+                <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_0%,#000_70%,transparent_100%)]" />
             </div>
-            iRESIDE
-          </Link>
 
-          {/* Desktop Links - Pill Container */}
-          <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] p-1 rounded-full border border-white/[0.05]">
-            <Link href="/search" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">Rent a Home</Link>
-            <Link href="/login" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">List a Property</Link>
-            <Link href="#" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">AI Assistant</Link>
-            <Link href="#" className="px-5 py-2.5 rounded-full text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all">How it Works</Link>
-          </div>
-
-          {/* Actions */}
-          <div className="hidden lg:flex items-center gap-4">
-            <Link href="/login" className="px-4 py-2 text-sm font-semibold text-white/80 hover:text-white transition-colors">Log In</Link>
-            <Link href="/search" className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:-translate-y-0.5 transition-all">
-              Get Started
-            </Link>
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button
-            className="lg:hidden p-2 text-white/70 hover:text-white transition-colors"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </nav>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              className="absolute top-[88px] left-4 right-4 md:left-6 md:right-6 bg-neutral-900/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col gap-2 lg:hidden"
+            <motion.nav 
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-2xl"
             >
-              <Link href="/search" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">Rent a Home</Link>
-              <Link href="/login" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">List a Property</Link>
-              <Link href="#" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">AI Assistant</Link>
-              <Link href="#" className="p-3 bg-white/5 rounded-xl text-base font-medium text-white hover:bg-white/10 transition-colors">How it Works</Link>
-              <div className="h-[1px] w-full bg-white/10 my-2" />
-              <Link href="/login" className="p-3 text-center text-base font-semibold text-white hover:text-primary transition-colors">Log In</Link>
-              <Link href="/search" className="p-3 text-center rounded-xl bg-white text-black text-base font-bold shadow-lg transition-all">
-                Get Started
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Hero Section - Klook Style */}
-      <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center pt-32 pb-20">
-        {/* Cinematic 3-Column Background */}
-        <div className="absolute inset-0 grid grid-cols-3 w-full h-full opacity-40 select-none pointer-events-none overflow-hidden">
-          {/* Apartment Column */}
-          <div className="relative h-full w-full overflow-hidden border-r border-white/5">
-            <div className="absolute top-0 w-full flex flex-col animate-[scroll-up_50s_linear_infinite]">
-              <div className="relative h-[100vh] w-full"><Image alt="Apartments 1" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Apartments 2" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Apartments 3" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Apartments 4" src="/hero-images/apartment-01.png" fill className="object-cover" unoptimized /></div>
-            </div>
-          </div>
-
-          {/* Dorm Column */}
-          <div className="relative h-full w-full overflow-hidden border-r border-white/5">
-            <div className="absolute top-0 w-full flex flex-col animate-[scroll-down_45s_linear_infinite]">
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 1" src="/hero-images/dorm-01.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 2" src="/hero-images/dorm-02.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 3" src="/hero-images/dorm-03.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Dorms 4" src="/hero-images/dorm-01.png" fill className="object-cover" unoptimized /></div>
-            </div>
-          </div>
-
-          {/* Boarding House Column */}
-          <div className="relative h-full w-full overflow-hidden">
-            <div className="absolute top-0 w-full flex flex-col animate-[scroll-up_55s_linear_infinite]">
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 1" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 2" src="/hero-images/dorm-03.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 3" src="/hero-images/apartment-03.png" fill className="object-cover" unoptimized /></div>
-              <div className="relative h-[100vh] w-full"><Image alt="Boarding 4" src="/hero-images/apartment-02.png" fill className="object-cover" unoptimized /></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Global Dark Gradient Overlay for perfect text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black pointer-events-none" />
-
-        <div className="container mx-auto px-6 relative z-10 w-full flex flex-col items-center">
-
-          {/* Main Hero Copy Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-center max-w-4xl mx-auto mb-12 flex flex-col items-center mt-8"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 text-[11px] font-black tracking-[0.25em] text-white uppercase mb-8 shadow-2xl">
-              <Sparkles className="h-4 w-4 text-emerald-400" />
-              <span>A new standard for renting</span>
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] mb-8 text-white drop-shadow-2xl">
-              RENTING MADE <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-primary to-emerald-500 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]">EFFORTLESS.</span>
-            </h1>
-            <p className="text-slate-300 text-lg md:text-xl font-medium leading-relaxed max-w-2xl text-center shadow-black drop-shadow-md">
-              Find your ideal apartment, dorm, or boarding house seamlessly. Connect with verified landlords and manage everything in one place.
-            </p>
-          </motion.div>
-
-          {/* Search Dock Container */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="w-full max-w-5xl"
-          >
-            <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-3 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row items-center gap-2">
-              {/* Location Input */}
-              <div className="flex-1 w-full px-6 py-4 flex items-center gap-4 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/10 transition-colors group rounded-[2rem] md:rounded-r-none md:rounded-l-[2rem]">
-                <MapPin className="h-5 w-5 text-primary" />
-                <div className="text-left w-full">
-                  <p className="text-[10px] font-black tracking-widest text-slate-400 group-hover:text-emerald-300 transition-colors uppercase">Location</p>
-                  <input
-                    type="text"
-                    placeholder="Where do you want to live?"
-                    className="bg-transparent border-none text-white placeholder-slate-500 focus:outline-none w-full font-bold text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Property Type */}
-              <div
-                className="flex-1 w-full px-6 py-4 flex items-center gap-4 border-b md:border-b-0 md:border-r border-white/10 hover:bg-white/10 transition-colors group rounded-[2rem] md:rounded-none relative cursor-pointer"
-                onClick={() => { setIsPropertyTypeOpen(!isPropertyTypeOpen); setIsPriceRangeOpen(false); }}
-              >
-                <House className="h-5 w-5 text-primary" />
-                <div className="text-left w-full relative">
-                  <p className="text-[10px] font-black tracking-widest text-slate-400 group-hover:text-emerald-300 transition-colors uppercase">Property Type</p>
-                  <div className="flex items-center justify-between w-full">
-                    <p className="font-bold text-sm text-white">{selectedPropertyType}</p>
-                    <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-300", isPropertyTypeOpen ? "rotate-180" : "")} />
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {isPropertyTypeOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-[110%] left-0 w-full min-w-[200px] bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50 text-left"
-                    >
-                      {propertyTypes.map((type) => (
-                        <div
-                          key={type}
-                          onClick={(e) => { e.stopPropagation(); setSelectedPropertyType(type); setIsPropertyTypeOpen(false); }}
-                          className="px-6 py-3.5 hover:bg-white/10 text-white text-sm font-semibold transition-colors cursor-pointer border-b border-white/5 last:border-0"
-                        >
-                          {type}
+                <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
+                    <div className="flex items-center gap-4 group cursor-pointer">
+                        <div className="h-10 w-10 bg-gradient-to-br from-primary-200 to-primary-dark flex items-center justify-center rounded-xl shadow-[0_0_25px_rgba(109,152,56,0.3)] transition-transform group-hover:scale-105 ring-1 ring-border">
+                            <Building className="h-5 w-5 text-black" />
                         </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                        <div className="flex flex-col">
+                            <span className="text-xl md:text-2xl font-extrabold tracking-tight leading-none text-foreground">iReside</span>
+                            <span className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-[0.25em] text-primary leading-tight mt-0.5">Landlord Access</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4"><ThemeToggle /><TransitionLink href="/login" className="relative flex items-center gap-2 overflow-hidden group px-6 py-2.5 rounded-full border border-zinc-200 bg-muted border-border text-sm font-bold text-foreground transition-all hover:bg-muted/80 hover:border-primary/30">
+                        <span className="relative z-10 hidden md:block">Access Portal</span>
+                        <span className="relative z-10 md:hidden">Login</span>
+                        <ChevronRight className="h-4 w-4 relative z-10 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </TransitionLink></div>
+                </div>
+            </motion.nav>
 
-              {/* Price Range */}
-              <div
-                className="flex-1 w-full px-6 py-4 flex items-center gap-4 hover:bg-white/10 transition-colors group rounded-[2rem] md:rounded-none mr-2 relative cursor-pointer"
-                onClick={() => { setIsPriceRangeOpen(!isPriceRangeOpen); setIsPropertyTypeOpen(false); }}
-              >
-                <Wallet className="h-5 w-5 text-primary" />
-                <div className="text-left w-full relative">
-                  <p className="text-[10px] font-black tracking-widest text-slate-400 group-hover:text-emerald-300 transition-colors uppercase">Price Range</p>
-                  <div className="flex items-center justify-between w-full">
-                    <p className="font-bold text-sm text-white">{selectedPriceRange}</p>
-                    <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-300", isPriceRangeOpen ? "rotate-180" : "")} />
-                  </div>
+            {/* Hero Section */}
+            <section className="relative min-h-[100svh] flex flex-col items-center justify-center px-6 pt-24 pb-20 md:pb-24 z-10 box-border">
+                <motion.div 
+                    className="max-w-[70rem] mx-auto text-center w-full relative"
+                >
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                    >
+                        <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/30 bg-primary/10 text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-6 shadow-[0_0_30px_rgba(109,152,56,0.15)] backdrop-blur-md">
+                            <ShieldCheck className="h-4 w-4" />
+                            Exclusive Network
+                        </span>
+                        
+                        <h1 className="text-[3.5rem] sm:text-6xl md:text-[6.5rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] mb-6">
+                            <span className="text-foreground block pb-2 md:pb-4 drop-shadow-sm dark:drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)]">iReside</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark dark:from-primary-200 dark:via-primary dark:to-primary block pr-4">Perfected.</span>
+                        </h1>
+                        
+                        <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed mb-8 tracking-tight">
+                            Run your rentals with less friction, stronger security, and predictable cash flow.
+                        </p>
+                        
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+                            <TransitionLink href="/apply-landlord" className="group relative flex items-center justify-center h-14 md:h-16 px-8 md:px-10 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-105 hover:bg-primary-dark shadow-[0_0_40px_rgba(109,152,56,0.3)] hover:shadow-[0_0_60px_rgba(109,152,56,0.5)] overflow-hidden w-full sm:w-auto">
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+                                <span className="relative z-10 flex items-center gap-3">
+                                    Request Access
+                                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
+                                </span>
+                            </TransitionLink>
+                            <TransitionLink href="/demo" className="group relative flex items-center justify-center h-14 md:h-16 px-8 md:px-10 rounded-full bg-background border-2 border-primary text-primary font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.1)] hover:shadow-[0_0_60px_rgba(109,152,56,0.2)] overflow-hidden w-full sm:w-auto">
+                                <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+                                <span className="relative z-10 flex items-center gap-3">
+                                    Book a Demo
+                                </span>
+                            </TransitionLink>
+                        </div>
+                    </motion.div>
+                </motion.div>
+                
+                <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    transition={{ delay: 1.5, duration: 1 }}
+                    className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 md:gap-3"
+                >
+                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Scroll to Explore</span>
+                    <div className="w-[1px] h-6 md:h-10 bg-gradient-to-b from-primary/50 to-transparent" />
+                </motion.div>
+            </section>
+
+            {/* Trust Line */}
+            <section className="relative z-20 py-24 px-6 bg-muted/30 border-y border-border/50 text-center">
+                <div className="max-w-4xl mx-auto">
+                    <p className="text-2xl md:text-4xl font-black tracking-tight text-foreground/80 leading-relaxed">
+                        Built for landlords and operators who value <span className="text-primary italic px-1">control</span>, compliance, and consistency.
+                    </p>
+                </div>
+            </section>
+
+            {/* How It Works (GSAP Horizontal) */}
+            <section ref={containerRef} className="relative h-screen z-20 overflow-hidden bg-background">
+                <div ref={scrollWrapperRef} style={{ willChange: "transform" }} className="flex h-screen items-center w-max px-[5vw] pt-8 md:pt-12 [transform:translate3d(0,0,0)]">
+                    
+                    <div className="howit-panel w-[90vw] md:w-[60vw] shrink-0 flex flex-col justify-center px-12 md:px-20">
+                        <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 text-foreground leading-tight">
+                            How It<br className="hidden md:block"/>Works
+                        </h2>
+                        <p className="text-2xl text-muted-foreground font-medium leading-relaxed max-w-xl">
+                            Step into a simpler, calmer way to manage your portfolio with iReside.
+                        </p>
+                    </div>
+
+                    {HOW_IT_WORKS.map((feature, i) => (
+                        <div key={feature.id} className="howit-panel w-[90vw] md:w-[70vw] lg:w-[60vw] shrink-0 h-[min(68vh,580px)] min-h-[460px] flex items-center px-6 md:px-12">
+                            <div className="relative w-full h-full rounded-[3rem] border border-border bg-card px-8 py-7 md:px-12 md:py-10 flex flex-col justify-between overflow-hidden group shadow-lg transition-all hover:border-primary/50">
+                                
+                                <div className={cn("absolute -top-40 -right-40 hidden md:block w-[500px] h-[500px] rounded-full blur-[100px] opacity-20 transition-opacity duration-700 group-hover:opacity-50 bg-gradient-to-br", feature.color)} />
+                                
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-6 md:mb-8">
+                                        <div className="h-16 w-16 md:h-20 md:w-20 rounded-[1.25rem] bg-muted border border-border flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
+                                            <feature.icon className={cn("h-7 w-7 md:h-8 md:w-8", feature.accent)} />
+                                        </div>
+                                        <span className="text-muted-foreground font-black text-5xl md:text-6xl opacity-20">0{i + 1}</span>
+                                    </div>
+                                    
+                                    <h3 className="text-4xl md:text-5xl lg:text-[3.5rem] font-black tracking-tighter text-foreground mb-4 md:mb-5 leading-[0.95]">
+                                        {feature.title}
+                                    </h3>
+                                    <p className="text-lg md:text-xl text-muted-foreground font-medium leading-relaxed max-w-3xl">
+                                        {feature.desc}
+                                    </p>
+                                </div>
+
+                                <div className="relative z-10 mt-6 md:mt-8 pt-5 md:pt-6 border-t border-border/70 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-end">
+                                    <div className="md:col-span-8">
+                                        <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3">What You Get</p>
+                                        <ul className="space-y-2">
+                                            {feature.highlights.map((highlight) => (
+                                                <li key={highlight} className="flex items-start gap-2.5 text-sm md:text-[15px] text-foreground/85 leading-snug">
+                                                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                                    <span>{highlight}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div className="md:col-span-4 flex md:justify-end">
+                                        <div className="rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 min-w-[10.5rem]">
+                                            <p className="text-3xl md:text-[2.1rem] font-black tracking-tight text-primary leading-none">{feature.metric}</p>
+                                            <p className="text-[11px] md:text-xs font-semibold text-muted-foreground mt-1.5">{feature.metricLabel}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    <div className="w-[20vw] shrink-0"></div>
+                </div>
+            </section>
+
+            {/* Featured Modules (GSAP Stack) */}
+            <section ref={showcaseContainerRef} className="relative h-screen bg-background z-20 overflow-hidden">
+                <div className="absolute top-12 md:top-24 left-0 right-0 z-30 text-center px-6 pointer-events-none">
+                    <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] text-primary mb-2">Featured Modules</h2>
+                    <p className="text-xl md:text-3xl font-bold tracking-tight max-w-2xl mx-auto text-foreground">Three core tools landlords use to run properties with confidence.</p>
                 </div>
 
-                <AnimatePresence>
-                  {isPriceRangeOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-[110%] left-0 w-full min-w-[200px] bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden z-50 text-left"
+                {SHOWCASE_MODULES.map((mod, i) => (
+                    <div 
+                        key={mod.id} 
+                        className="showcase-card absolute inset-0 flex items-center justify-center p-6 md:p-12 border-t border-border bg-background shadow-lg origin-top [transform:translate3d(0,0,0)] [will-change:transform]"
+                        style={{ zIndex: i + 1 }}
                     >
-                      {priceRanges.map((range) => (
-                        <div
-                          key={range}
-                          onClick={(e) => { e.stopPropagation(); setSelectedPriceRange(range); setIsPriceRangeOpen(false); }}
-                          className="px-6 py-3.5 hover:bg-white/10 text-white text-sm font-semibold transition-colors cursor-pointer border-b border-white/5 last:border-0"
-                        >
-                          {range}
+                        <div className="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mt-24">
+                            <div className="module-body flex flex-col">
+                                <div className={cn("h-16 w-16 rounded-2xl flex items-center justify-center mb-8 shadow-2xl", mod.color, mod.shadow)}>
+                                    <mod.icon className="h-8 w-8 text-white" />
+                                </div>
+                                <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6">{mod.title}</h2>
+                                <p className="text-xl md:text-2xl text-muted-foreground font-medium leading-relaxed">
+                                    {mod.desc}
+                                </p>
+                                <TransitionLink
+                                    href={mod.href}
+                                    className="module-cta mt-8 inline-flex w-max items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-black uppercase tracking-[0.12em] text-primary hover:bg-primary/20 transition-colors"
+                                >
+                                    Learn More
+                                    <ChevronRight className="h-4 w-4" />
+                                </TransitionLink>
+                            </div>
+                            <div className="relative h-[40vh] md:h-[60vh] w-full rounded-[2.5rem] border border-white/5 bg-white/[0.02] shadow-xl overflow-hidden flex flex-col items-center justify-center dark:bg-black/20 transition-transform duration-500 hover:scale-[1.02]">
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
+                                
+                                <div className="absolute top-6 left-6 flex gap-2 z-20">
+                                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                                    <div className="w-3 h-3 rounded-full bg-amber-500/50" />
+                                    <div className="w-3 h-3 rounded-full bg-emerald-500/50" />
+                                </div>
+                                
+                                <mod.icon className="w-32 h-32 md:w-48 md:h-48 text-primary shadow-[0_0_80px_rgba(109,152,56,0.3)] bg-primary/10 rounded-3xl p-6 md:p-8 rotate-[8deg] transition-all duration-700 hover:rotate-0 z-20" />
+                            </div>
                         </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                    </div>
+                ))}
+            </section>
 
-              {/* Search Button */}
-              <Link
-                href="/search"
-                className="w-full md:w-[200px] h-14 md:h-16 flex items-center justify-center gap-3 bg-white text-black rounded-full md:rounded-[1.8rem] font-black text-xs tracking-widest uppercase hover:bg-primary shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:text-white transition-all duration-300 group"
-              >
-                <Search className="h-4 w-4 transition-transform group-hover:scale-125" />
-                Search
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Floating Icons for Aesthetic */}
-        <div className="absolute bottom-10 left-10 hidden xl:flex flex-col gap-6 opacity-40">
-          <Link href="#" className="h-12 w-12 rounded-2xl border border-white/20 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-            <TrendingUp className="h-5 w-5" />
-          </Link>
-          <Link href="#" className="h-12 w-12 rounded-2xl border border-white/20 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
-            <MapIcon className="h-5 w-5" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Category Navigation */}
-      <section className="py-12 bg-black overflow-x-auto whitespace-nowrap flex justify-center items-center gap-4 px-6 no-scrollbar border-b border-white/5">
-        {categories.map((cat) => (
-          <button
-            key={cat.name}
-            onClick={() => setActiveCategory(cat.name)}
-            className={cn(
-              "flex flex-col items-center gap-3 px-6 py-4 rounded-[2rem] transition-all group",
-              activeCategory === cat.name ? "bg-white/10 text-white" : "text-slate-500 hover:text-white"
-            )}
-          >
-            <div className={cn(
-              "p-4 rounded-full border transition-all",
-              activeCategory === cat.name ? "bg-primary border-primary text-white scale-110" : "bg-neutral-900 border-white/10 text-slate-500 group-hover:border-white/30"
-            )}>
-              <cat.icon className="h-5 w-5" />
-            </div>
-            <span className="text-[10px] font-black tracking-widest uppercase">{cat.name}</span>
-          </button>
-        ))}
-      </section>
-
-      {/* Featured Collections */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black tracking-[0.2em] uppercase mb-4">
-              <Star className="h-3 w-3 fill-current" /> Popular Right Now
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter">GREAT RENTAL <span className="text-slate-600">FINDS.</span></h2>
-          </div>
-          <Link href="/search" className="flex items-center gap-3 text-xs font-black tracking-widest uppercase text-slate-500 hover:text-primary transition-colors group">
-            View All <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.filter(p => p.featured).map((property, idx) => (
-            <motion.div
-              key={property.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
+            {/* iRis Section */}
+            <section
+                ref={irisSectionRef}
+                className="relative py-18 md:py-24 px-6 border-t border-border overflow-hidden z-20 bg-[radial-gradient(130%_100%_at_80%_0%,rgba(109,152,56,0.22),transparent_60%),linear-gradient(to_bottom,var(--background),color-mix(in_oklab,var(--muted)_60%,var(--background)_40%))]"
             >
-              <PropertyCard
-                property={property}
-                isLiked={!!isLiked[property.id]}
-                onLike={() => toggleLike(property.id)}
-                onClick={() => { }} // Handle redirection if needed
-              />
-            </motion.div>
-          ))}
+                <div className="iris-glow absolute -top-24 right-[-8%] h-[22rem] w-[22rem] rounded-full bg-primary/20 blur-[80px] opacity-60 pointer-events-none" />
+                <div className="absolute -bottom-20 left-[-6%] h-[16rem] w-[16rem] rounded-full bg-primary/10 blur-[70px] pointer-events-none" />
+                <div
+                    className="iris-bg-avatar hidden md:block absolute inset-0 pointer-events-none opacity-[0.12] [mask-image:radial-gradient(70%_70%_at_85%_45%,black,transparent_78%)]"
+                    style={{
+                        backgroundImage: "url('/iris-avatar.png')",
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 6% center",
+                        backgroundSize: "clamp(280px, 30vw, 460px)",
+                    }}
+                />
+
+                <div className="iris-content relative max-w-7xl mx-auto">
+                    <div>
+                        <div className="iris-reveal inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-xs font-black uppercase tracking-[0.2em] text-primary mb-6">
+                            <Sparkles className="h-4 w-4" />
+                            iRis Intelligence Layer
+                        </div>
+                        <h2 className="iris-reveal text-4xl md:text-5xl lg:text-6xl font-black tracking-[-0.03em] text-foreground leading-[0.95] max-w-4xl">
+                            One assistant that
+                            <span className="block text-primary">orchestrates your day.</span>
+                        </h2>
+                        <p className="iris-reveal text-base md:text-xl text-muted-foreground font-medium mt-4 md:mt-5 max-w-4xl leading-relaxed">
+                            iRis turns your live portfolio data into clear actions, so your team moves faster without sacrificing compliance or quality.
+                        </p>
+
+                        <div className="mt-7 md:mt-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+                            {IRIS_WORKFLOWS.map((item, idx) => (
+                                <article key={item.title} className="iris-reveal iris-card rounded-2xl border border-border/70 bg-background/70 backdrop-blur-sm px-4 py-4 md:px-5 md:py-5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="h-10 w-10 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                                            <item.icon className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <span className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground">0{idx + 1}</span>
+                                    </div>
+                                    <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground mt-3">{item.title}</h3>
+                                    <p className="text-sm md:text-base text-muted-foreground mt-2 leading-relaxed">{item.detail}</p>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Outcomes Section */}
+            <section ref={outcomesSectionRef} className="relative py-28 md:py-36 px-6 z-20 overflow-hidden bg-background border-t border-border/60">
+                <div className="outcomes-glow absolute top-10 left-1/2 -translate-x-1/2 h-[20rem] w-[20rem] rounded-full bg-primary/15 blur-[85px] pointer-events-none" />
+
+                <div className="relative max-w-7xl mx-auto">
+                    <div className="outcomes-heading max-w-3xl mb-14 md:mb-20">
+                        <p className="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-primary mb-5">Operational Outcomes</p>
+                        <h2 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-foreground leading-[0.95]">
+                            Calm operations, measurable gains.
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6 md:gap-y-8">
+                        {OUTCOMES.map((outcome) => (
+                            <article key={outcome.label} className="outcome-item border-t border-border/70 pt-7 md:pt-9">
+                                <div className="flex items-end gap-4">
+                                    <span className="text-5xl md:text-7xl font-black tracking-[-0.04em] text-primary leading-none">{outcome.metric}</span>
+                                    <CheckCircle2 className="h-7 w-7 text-primary mb-2" />
+                                </div>
+                                <h3 className="text-2xl md:text-3xl font-bold tracking-tight mt-4 text-foreground">{outcome.label}</h3>
+                                <p className="text-base md:text-lg text-muted-foreground mt-3 max-w-xl leading-relaxed">{outcome.detail}</p>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Final CTA */}
+            <section ref={ctaSectionRef} className="relative py-28 md:py-36 px-6 border-t border-border overflow-hidden z-20 bg-card">
+                <div className="cta-ambient absolute inset-0 bg-[radial-gradient(110%_90%_at_10%_100%,rgba(109,152,56,0.22),transparent_62%),radial-gradient(80%_80%_at_90%_0%,rgba(109,152,56,0.15),transparent_60%)] pointer-events-none" />
+
+                <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-14 items-end">
+                    <div className="lg:col-span-8">
+                        <p className="cta-reveal text-xs md:text-sm font-black uppercase tracking-[0.2em] text-primary mb-6">Private Network Intake</p>
+                        <h2 className="cta-reveal text-5xl md:text-7xl lg:text-[5.75rem] font-black tracking-[-0.04em] text-foreground leading-[0.9]">
+                            Build your next growth cycle
+                            <span className="block">with iReside.</span>
+                        </h2>
+                        <p className="cta-reveal text-lg md:text-2xl text-muted-foreground font-medium mt-7 max-w-3xl leading-relaxed">
+                            Request access and our team will guide setup, portfolio onboarding, and your first automation workflow.
+                        </p>
+                    </div>
+
+                    <div className="lg:col-span-4 w-full">
+                        <div className="cta-reveal cta-panel border border-border/70 bg-background/75 backdrop-blur-sm rounded-3xl p-6 md:p-8">
+                            <p className="text-sm md:text-base text-muted-foreground mb-6">Application review usually completes within two business days.</p>
+                            <div className="flex flex-col gap-4">
+                                <TransitionLink href="/apply-landlord" className="group inline-flex items-center justify-center h-14 md:h-16 px-6 md:px-8 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-[1.02] hover:bg-primary-dark shadow-[0_0_40px_rgba(109,152,56,0.35)] overflow-hidden relative">
+                                    <span className="relative z-10 flex items-center">
+                                        Request Access
+                                        <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
+                                    </span>
+                                </TransitionLink>
+                                <TransitionLink href="/demo" className="inline-flex items-center justify-center h-12 md:h-14 px-6 rounded-full border border-border bg-card text-foreground text-sm md:text-base font-semibold hover:border-primary/40 transition-colors">
+                                    Book Product Walkthrough
+                                </TransitionLink>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
-      </section>
-
-      {/* Lifestyle Banners */}
-      <section className="py-24 bg-neutral-950">
-        <div className="container mx-auto px-6 grid md:grid-cols-2 gap-8">
-          <div className="group relative h-[500px] rounded-[3rem] overflow-hidden cursor-pointer border border-white/5">
-            <Image
-              src="https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=2600&auto=format&fit=crop"
-              alt="City Living"
-              fill
-              className="object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-            <div className="absolute bottom-12 left-12 right-12">
-              <h3 className="text-4xl font-black tracking-tighter mb-4">Near <br />Work.</h3>
-              <p className="text-slate-400 text-sm font-bold tracking-widest uppercase mb-8">Convenient stays near transport hubs and CBDs</p>
-              <button className="h-14 w-14 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all group/btn">
-                <ArrowRight className="h-6 w-6 transition-transform group-hover/btn:translate-x-1" />
-              </button>
-            </div>
-          </div>
-
-          <div className="group relative h-[500px] rounded-[3rem] overflow-hidden cursor-pointer border border-white/5">
-            <Image
-              src="https://images.unsplash.com/photo-1449156001935-d2863fb72690?q=80&w=2600&auto=format&fit=crop"
-              alt="Quiet Retreat"
-              fill
-              className="object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-            <div className="absolute bottom-12 left-12 right-12">
-              <h3 className="text-4xl font-black tracking-tighter mb-4">Budget <br />Friendly.</h3>
-              <p className="text-slate-400 text-sm font-bold tracking-widest uppercase mb-8">Affordable rentals for you and your family</p>
-              <button className="h-14 w-14 rounded-full bg-white text-black flex items-center justify-center hover:bg-primary hover:text-white transition-all group/btn">
-                <ArrowRight className="h-6 w-6 transition-transform group-hover/btn:translate-x-1" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* Landlord CTA - Final Pitch */}
-      <section className="py-32 px-6">
-        <div className="max-w-6xl mx-auto rounded-[4rem] overflow-hidden bg-white text-black flex flex-col lg:flex-row">
-          <div className="flex-1 p-12 md:p-20">
-            <span className="inline-block text-[10px] font-black tracking-[0.3em] uppercase mb-8 opacity-40">For Landlords</span>
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8">HAVE A PROPERTY <br /><span className="text-primary italic">TO RENT OUT?</span></h2>
-            <p className="text-lg font-medium text-black/60 mb-12 max-w-md">
-              Managing your properties is now easier! Track rents, check analytics, and communicate with your tenants seamlessly.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/login" className="px-10 py-5 rounded-full bg-black text-white text-xs font-black tracking-widest uppercase hover:bg-primary transition-all text-center">
-                Start Now
-              </Link>
-              <Link href="#" className="px-10 py-5 rounded-full border border-black/10 text-xs font-black tracking-widest uppercase hover:bg-black/5 transition-all text-center">
-                View Features
-              </Link>
-            </div>
-          </div>
-          <div className="flex-1 min-h-[400px] relative">
-            <Image
-              src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2669&auto=format&fit=crop"
-              alt="Modern Workspace"
-              fill
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
-          </div>
-        </div>
-      </section>
-
-      {/* Minimal Footer */}
-      <footer className="py-20 border-t border-white/5 opacity-40 hover:opacity-100 transition-all duration-700">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-10 text-center md:text-left">
-          <div className="flex items-center gap-3 font-black text-xl tracking-tighter">
-            <div className="h-6 w-6 rounded bg-white flex items-center justify-center">
-              <div className="h-3 w-3 bg-black rounded-sm" />
-            </div>
-            iRESIDE
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-8 text-[9px] font-black tracking-[0.3em] uppercase">
-            <Link href="#" className="hover:text-primary transition-colors">Twitter</Link>
-            <Link href="#" className="hover:text-primary transition-colors">LinkedIn</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Instagram</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Legal</Link>
-          </div>
-
-          <p className="text-[9px] font-black tracking-widest uppercase">© 2026 iReside Co. Built for a better future.</p>
-        </div>
-      </footer>
-
-      <style jsx global>{`
-        @keyframes slow-zoom {
-          from { transform: scale(1.05); }
-          to { transform: scale(1.15); }
-        }
-        @keyframes scroll-up {
-          from { transform: translateY(0); }
-          to { transform: translateY(-50%); }
-        }
-        @keyframes scroll-down {
-          from { transform: translateY(-50%); }
-          to { transform: translateY(0); }
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-
-    </div>
-  );
+    );
 }

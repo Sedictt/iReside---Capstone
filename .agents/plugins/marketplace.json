@@ -1,0 +1,20 @@
+{
+  "name": "ireside-local-marketplace",
+  "interface": {
+    "displayName": "iReside Local Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "caveman",
+      "source": {
+        "source": "local",
+        "path": "./plugins/caveman"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
