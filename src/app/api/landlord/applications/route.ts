@@ -17,6 +17,7 @@ type ApplicationResponse = {
         avatar: string | null;
     };
     propertyName: string;
+    propertyId?: string | null;
     propertyContractTemplate: Record<string, unknown> | null;
     unitNumber: string;
     propertyImage: string;
@@ -467,6 +468,7 @@ export async function GET() {
                 avatar: applicant?.avatar_url ?? null,
             },
             propertyName: property?.name ?? unit?.name ?? "Property",
+            propertyId: property?.id ?? null,
             propertyContractTemplate:
                 property?.contract_template && typeof property.contract_template === "object" && !Array.isArray(property.contract_template)
                     ? (property.contract_template as Record<string, unknown>)

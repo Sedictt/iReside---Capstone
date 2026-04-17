@@ -62,6 +62,50 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Application not found." }, { status: 404 });
     }
 
+    // --- Environment Validations ---
+    // Fetch unit to get property_id
+    const { data: unit, error: unitError } = await adminClient
+        .from("units")
+        .select("property_id")
+        .eq("id", unit_id)
+        .single();
+
+    if (unitError || !unit) {
+        return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+    }
+
+    // Fetch property environment policy
+    const { data: policy } = await adminClient
+        .from("property_environment_policies")
+        .select("needs_review, max_occupants_per_unit")
+        .eq("property_id", unit.property_id)
+        .single();
+    
+    if (policy?.needs_review) {
+        return NextResponse.json(
+            { error: "Action Blocked: Property environment profile needs your review. Please review policy configurations in the dashboard." },
+            { status: 400 }
+        );
+    }
+
+    // Fetch unit environment override (if any)
+    const { data: override } = await adminClient
+        .from("unit_environment_overrides")
+        .select("max_occupants_per_unit")
+        .eq("unit_id", unit_id)
+        .single();
+
+    const maxOccupants = override?.max_occupants_per_unit ?? policy?.max_occupants_per_unit;
+    const projectedOccupants = body.occupant_count || 1;
+
+    if (maxOccupants && projectedOccupants > maxOccupants) {
+        return NextResponse.json(
+            { error: `Projected occupants (${projectedOccupants}) exceeds the defined capacity limit for this unit (${maxOccupants}).` },
+            { status: 400 }
+        );
+    }
+    // --------------------------------
+
     if (application.landlord_id !== user.id) {
         return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }

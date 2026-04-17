@@ -29,6 +29,7 @@ import {
     Pencil,
     Wallet,
 } from "lucide-react";
+import { ToolAccessBar } from "./ToolAccessBar";
 import { WalkInApplicationModal } from "./WalkInApplicationModal";
 import { TenantInviteManager } from "./TenantInviteManager";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
@@ -58,6 +59,7 @@ interface Applicant {
 
 interface RentApplication {
     id: string;
+    propertyId?: string | null;
     source?: "walk_in_application" | "invite_link";
     applicant: Applicant;
     propertyName: string;
@@ -1236,9 +1238,21 @@ export function RentApplications() {
                             animate={{ x: 0, opacity: 1 }}
                             exit={{ x: "100%", opacity: 0 }}
                             transition={{ type: "spring", damping: 30, stiffness: 350 }}
-                            className="fixed right-0 top-0 z-[120] flex h-screen w-full max-w-xl flex-col overflow-y-auto border-l border-border bg-card/98 shadow-2xl custom-scrollbar"
+                            className="fixed right-0 top-0 z-[120] flex h-screen w-full max-w-xl flex-col border-l border-border bg-card/98 shadow-2xl"
                         >
-                            {/* Panel Header */}
+                            {/* Outer Left Side Tools */}
+                            {selectedApp.propertyId && (
+                                <div className="absolute left-0 top-32 -translate-x-full pr-4 hidden sm:flex">
+                                    <ToolAccessBar 
+                                        variant="icons" 
+                                        direction="vertical" 
+                                        propertyId={selectedApp.propertyId} 
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+                                {/* Panel Header */}
                             <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card/92 px-6 py-4 shadow-sm backdrop-blur-3xl">
                                 <div className="flex items-center gap-3">
                                     <span className="rounded-md border border-border bg-background px-2 py-1 font-mono text-xs font-bold text-muted-foreground">{selectedApp.id}</span>
@@ -1904,7 +1918,8 @@ export function RentApplications() {
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
+                        </div>
+                    </motion.div>
                     </>
                 )}
             </AnimatePresence>

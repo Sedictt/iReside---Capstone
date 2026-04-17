@@ -46,10 +46,18 @@ export async function GET(
         return NextResponse.json({ error: "Failed to load property units." }, { status: 500 });
     }
 
+    // Load environment policy fields for wizard hydration (best-effort)
+    const { data: envPolicy } = await supabase
+        .from("property_environment_policies")
+        .select("utility_split_method, utility_fixed_charge_amount, max_occupants_per_unit")
+        .eq("property_id", propertyId)
+        .maybeSingle();
+
     return NextResponse.json({
         property: {
             ...property,
             unitCount: unitCount ?? 1,
+            env_policy: envPolicy ?? null,
         },
     });
 }

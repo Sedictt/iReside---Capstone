@@ -7,7 +7,8 @@ export type Json =
     | Json[]
 
 export type UserRole = 'tenant' | 'landlord' | 'admin'
-export type PropertyType = 'apartment' | 'condo' | 'house' | 'townhouse' | 'studio'
+export type PropertyType = 'apartment' | 'dormitory' | 'boarding_house'
+export type UtilitySplitMethod = 'equal_per_head' | 'equal_per_unit' | 'fixed_charge' | 'individual_meter'
 export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
 export type LeaseStatus = 'draft' | 'pending_signature' | 'pending_tenant_signature' | 'pending_landlord_signature' | 'active' | 'expired' | 'terminated'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
@@ -834,6 +835,70 @@ export interface Database {
                     issued_by?: string | null
                     notes?: string | null
                     metadata?: Json
+                }
+                Relationships: any[]
+            }
+            property_environment_policies: {
+                Row: {
+                    property_id: string
+                    environment_mode: string
+                    max_occupants_per_unit: number | null
+                    curfew_enabled: boolean
+                    curfew_time: string | null
+                    visitor_cutoff_enabled: boolean
+                    visitor_cutoff_time: string | null
+                    quiet_hours_start: string | null
+                    quiet_hours_end: string | null
+                    gender_restriction_mode: string
+                    utility_policy_mode: string
+                    utility_split_method: UtilitySplitMethod | null
+                    utility_fixed_charge_amount: number | null
+                    payment_profile_defaults: Json | null
+                    needs_review: boolean
+                    reviewed_at: string | null
+                    reviewed_by: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    property_id: string
+                    environment_mode: string
+                    max_occupants_per_unit?: number | null
+                    curfew_enabled?: boolean
+                    curfew_time?: string | null
+                    visitor_cutoff_enabled?: boolean
+                    visitor_cutoff_time?: string | null
+                    quiet_hours_start?: string | null
+                    quiet_hours_end?: string | null
+                    gender_restriction_mode?: string
+                    utility_policy_mode?: string
+                    utility_split_method?: UtilitySplitMethod | null
+                    utility_fixed_charge_amount?: number | null
+                    payment_profile_defaults?: Json | null
+                    needs_review?: boolean
+                    reviewed_at?: string | null
+                    reviewed_by?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    environment_mode?: string
+                    max_occupants_per_unit?: number | null
+                    curfew_enabled?: boolean
+                    curfew_time?: string | null
+                    visitor_cutoff_enabled?: boolean
+                    visitor_cutoff_time?: string | null
+                    quiet_hours_start?: string | null
+                    quiet_hours_end?: string | null
+                    gender_restriction_mode?: string
+                    utility_policy_mode?: string
+                    utility_split_method?: UtilitySplitMethod | null
+                    utility_fixed_charge_amount?: number | null
+                    payment_profile_defaults?: Json | null
+                    needs_review?: boolean
+                    reviewed_at?: string | null
+                    reviewed_by?: string | null
+                    updated_at?: string
                 }
                 Relationships: any[]
             }
