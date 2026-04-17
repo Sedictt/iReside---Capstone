@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PageTransitionProvider } from "@/components/transitions/PageTransitionProvider";
+import GlobalClickSpark from "@/components/ui/ClickSparkWrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,7 +45,9 @@ export default function RootLayout({
           disableTransitionOnChange
           storageKey="ireside-theme"
         >
-          <PageTransitionProvider>{children}</PageTransitionProvider>
+          <PageTransitionProvider>
+            <GlobalClickSpark>{children}</GlobalClickSpark>
+          </PageTransitionProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -62,6 +62,11 @@ export async function GET() {
         .select("id, property_id, status, rent_amount")
         .in("property_id", propertyIds);
 
+    const { data: policies, error: policiesError } = await supabase
+        .from("property_environment_policies")
+        .select("property_id, environment_mode, needs_review")
+        .in("property_id", propertyIds);
+
     if (unitsError) {
         return NextResponse.json({ error: "Failed to fetch units." }, { status: 500 });
     }
@@ -115,6 +120,11 @@ export async function GET() {
         );
     }
 
+    const policiesByProperty = new Map<string, any>();
+    for (const policy of policies ?? []) {
+        policiesByProperty.set(policy.property_id, policy);
+    }
+
     const leasesByUnit = new Map<string, string[]>();
     for (const lease of leases ?? []) {
         const existing = leasesByUnit.get(lease.unit_id) ?? [];
@@ -159,11 +169,14 @@ export async function GET() {
             recentActivity = "All units currently occupied";
         }
 
+        const policy = policiesByProperty.get(property.id);
+
         return {
             id: property.id,
             name: property.name,
             address: property.address,
-            type: property.type,
+            type: policy?.environment_mode || property.type,
+            needsReview: policy?.needs_review || false,
             capRate: `${capRate.toFixed(1)}%`,
             noi: formatCompactCurrency(noiValue),
             valuation: formatCompactCurrency(valuationValue),

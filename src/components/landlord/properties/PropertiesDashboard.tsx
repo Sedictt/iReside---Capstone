@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import RevenueChart from "@/components/RevenueChart";
+import { PropertyEnvironmentBanner } from "@/components/landlord/PropertyEnvironmentBanner";
 import {
     Search,
     Plus,
@@ -31,6 +32,7 @@ type PropertyCard = {
     name: string;
     address: string;
     type: string;
+    needsReview?: boolean;
     capRate: string;
     noi: string;
     valuation: string;
@@ -483,6 +485,8 @@ export function PropertiesDashboard() {
                                         <h2 className="text-2xl font-bold leading-tight text-foreground">{activeProperty.name}</h2>
                                     </div>
                                 </div>
+
+                                <PropertyEnvironmentBanner environmentMode={activeProperty.type} needsReview={activeProperty.needsReview} propertyId={activeProperty.id} className="mb-6" />
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <Link href={`/landlord/properties/new?id=${activeProperty.id}&mode=edit`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">

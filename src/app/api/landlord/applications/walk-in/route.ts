@@ -164,6 +164,37 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "You do not own this unit." }, { status: 403 });
     }
 
+    // --- Environment Validations ---
+    const { data: policy } = await adminClient
+        .from("property_environment_policies")
+        .select("needs_review, max_occupants_per_unit")
+        .eq("property_id", property.id)
+        .single();
+    
+    if (policy?.needs_review) {
+        return NextResponse.json(
+            { error: "Action Blocked: Property environment profile needs review. Please check policy configurations before accepting applications." },
+            { status: 400 }
+        );
+    }
+
+    const { data: override } = await adminClient
+        .from("unit_environment_overrides")
+        .select("max_occupants_per_unit")
+        .eq("unit_id", unit_id)
+        .single();
+
+    const maxOccupants = override?.max_occupants_per_unit ?? policy?.max_occupants_per_unit;
+    const projectedOccupants = body.occupant_count || 1;
+
+    if (maxOccupants && projectedOccupants > maxOccupants) {
+        return NextResponse.json(
+            { error: `Projected occupants (${projectedOccupants}) exceeds the defined capacity limit for this unit (${maxOccupants}).` },
+            { status: 400 }
+        );
+    }
+    // -------------------------------
+
     // Walk-in creation cannot directly approve under payment-gated flow.
     // Completed intake can move to reviewing for landlord payment request.
     const checklist = requirements_checklist || {};

@@ -20,33 +20,62 @@ import {
     ShieldCheck,
     Trash2,
     ArrowUp,
-    Star
+    Star,
+    Zap,
+    Users,
+    DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
     SmartContractBuilderModal,
     type SmartContractTemplate,
 } from "@/components/landlord/properties/SmartContractBuilderModal";
+import ClickSpark from "@/components/ui/ClickSpark";
 import { createClient } from "@/lib/supabase/client";
+import type { UtilitySplitMethod } from "@/types/database";
 
 type Step = 1 | 2 | 3 | 4;
 
-const PROPERTY_TYPE_TO_ENUM: Record<string, "apartment" | "condo" | "house" | "townhouse" | "studio"> = {
+type SupportedPropertyEnum = "apartment" | "dormitory" | "boarding_house";
+
+const PROPERTY_TYPE_TO_ENUM: Record<string, SupportedPropertyEnum> = {
+    "Apartment": "apartment",
+    "Dormitory": "dormitory",
+    "Boarding House": "boarding_house",
+    // Legacy display names (edit-mode hydration compat)
     "Apartment Complex": "apartment",
-    Condominium: "condo",
-    "Single Family Home": "house",
-    Townhouse: "townhouse",
-    Studio: "studio",
+    Condominium: "apartment",
+    "Single Family Home": "apartment",
+    Townhouse: "apartment",
+    Studio: "apartment",
     "Commercial Space": "apartment",
 };
 
 const ENUM_TO_PROPERTY_TYPE: Record<string, string> = {
-    apartment: "Apartment Complex",
-    condo: "Condominium",
-    house: "Single Family Home",
-    townhouse: "Townhouse",
-    studio: "Studio",
+    apartment: "Apartment",
+    dormitory: "Dormitory",
+    boarding_house: "Boarding House",
 };
+
+// Default occupancy by type
+const DEFAULT_OCCUPANCY: Record<SupportedPropertyEnum, number> = {
+    apartment: 5,
+    dormitory: 4,
+    boarding_house: 2,
+};
+
+// Dynamic occupancy field label
+const OCCUPANCY_LABEL: Record<SupportedPropertyEnum, string> = {
+    apartment: "Household Capacity (Head Limit)",
+    dormitory: "Head Limit (Bedspace Capacity)",
+    boarding_house: "Room Limit (Head Limit)",
+};
+
+const SPLIT_OPTIONS: { value: UtilitySplitMethod; label: string; description: string }[] = [
+    { value: "equal_per_head", label: "Split by Head", description: "Divide the shared utility bill equally among all occupants residing in the property." },
+    { value: "fixed_charge", label: "Fixed Monthly Fee", description: "Charge a flat monthly utility fee per occupant, regardless of actual consumption." },
+    { value: "individual_meter", label: "Individual Meter", description: "Each tenant manages their own meter and pays the utility company directly — no shared billing involved." },
+];
 
 const PRESET_AMENITIES = [
     "PWD Friendly",
@@ -125,14 +154,21 @@ function NewAssetContent() {
     // Form fields mapped for prepopulating if editing
     const [formData, setFormData] = useState({
         propertyName: "",
-        propertyType: "Apartment Complex",
+        propertyType: "Apartment",
         yearBuilt: "",
         address: "",
         totalUnits: "1",
-        description: "" // Add other fields as necessary
+        floorCount: "1",
+        description: "",
+        occupancyLimit: "5",
+        utilitySplitMethod: "individual_meter" as UtilitySplitMethod,
+        fixedChargeAmount: "500",
     });
 
     const hasHydratedEditData = formData.propertyName.trim().length > 0 && formData.address.trim().length > 0;
+
+    // Derived property enum
+    const resolvedPropertyEnum: SupportedPropertyEnum = PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment";
 
     useEffect(() => {
         if (!isEditMode || !id) return;
@@ -166,6 +202,11 @@ function NewAssetContent() {
                         images: string[] | null;
                         contract_template: unknown;
                         unitCount: number;
+                        env_policy?: {
+                            utility_split_method?: string | null;
+                            utility_fixed_charge_amount?: number | null;
+                            max_occupants_per_unit?: number | null;
+                        } | null;
                     };
                     error?: string;
                 };
@@ -176,13 +217,21 @@ function NewAssetContent() {
 
                 const property = payload.property;
 
+                const enumKey = (property.type ?? "apartment") as SupportedPropertyEnum;
+                const displayType = ENUM_TO_PROPERTY_TYPE[enumKey] ?? "Apartment";
+                const defaultOcc = DEFAULT_OCCUPANCY[enumKey] ?? 5;
+
                 setFormData({
                     propertyName: property.name,
-                    propertyType: ENUM_TO_PROPERTY_TYPE[property.type] ?? "Apartment Complex",
+                    propertyType: displayType,
                     yearBuilt: "",
                     address: property.address,
                     totalUnits: String(property.unitCount ?? 1),
+                    floorCount: "1",
                     description: property.description ?? "",
+                    occupancyLimit: String(property.env_policy?.max_occupants_per_unit ?? defaultOcc),
+                    utilitySplitMethod: (property.env_policy?.utility_split_method as UtilitySplitMethod) ?? "individual_meter",
+                    fixedChargeAmount: String(property.env_policy?.utility_fixed_charge_amount ?? 500),
                 });
 
                 const incomingAmenities = Array.isArray(property.amenities)
@@ -511,9 +560,16 @@ function NewAssetContent() {
                 mergedImages = [coverExistingUrl, ...mergedImages.filter(url => url !== coverExistingUrl)];
             }
 
+            const envType = PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment";
+            const occupancyLimit = Math.max(1, Math.floor(Number(formData.occupancyLimit) || DEFAULT_OCCUPANCY[envType]));
+            const splitMethod: UtilitySplitMethod = formData.utilitySplitMethod;
+            const fixedChargeAmount = splitMethod === "fixed_charge"
+                ? (parseFloat(formData.fixedChargeAmount) || 500)
+                : null;
+
             const payload = {
                 name,
-                type: PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment",
+                type: envType,
                 address,
                 description: formData.description.trim() || null,
                 amenities: selectedAmenities,
@@ -533,6 +589,16 @@ function NewAssetContent() {
 
                 if (error) throw new Error(`Failed to update property: ${error.message}`);
                 propertyId = id;
+
+                // Update environment policy
+                await supabase.from("property_environment_policies")
+                    .update({
+                        environment_mode: envType,
+                        max_occupants_per_unit: occupancyLimit,
+                        utility_split_method: splitMethod,
+                        utility_fixed_charge_amount: fixedChargeAmount,
+                    })
+                    .eq("property_id", propertyId);
             } else {
                 setSaveStage("Creating property profile...");
                 const { data: insertedProperty, error } = await supabase
@@ -548,6 +614,22 @@ function NewAssetContent() {
                 if (error) throw new Error(`Failed to create property: ${error.message}`);
                 if (!insertedProperty?.id) throw new Error("Property created but ID missing.");
                 propertyId = insertedProperty.id;
+
+                await supabase.from("property_environment_policies").insert({
+                    property_id: propertyId,
+                    environment_mode: envType,
+                    needs_review: envType !== "apartment",
+                    max_occupants_per_unit: occupancyLimit,
+                    curfew_enabled: envType === "dormitory",
+                    visitor_cutoff_enabled: envType === "dormitory",
+                    quiet_hours_start: envType === "dormitory" ? "22:00:00" : null,
+                    quiet_hours_end: envType === "dormitory" ? "06:00:00" : null,
+                    gender_restriction_mode: "none",
+                    utility_split_method: splitMethod,
+                    utility_fixed_charge_amount: fixedChargeAmount,
+                    utility_policy_mode: splitMethod === "individual_meter" ? "separate_metered" :
+                                         splitMethod === "equal_per_head" ? "mixed" : "included_in_rent",
+                });
             }
 
             // Sync units
@@ -745,15 +827,21 @@ function NewAssetContent() {
                                             <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Property Type</label>
                                             <select 
                                                 value={formData.propertyType}
-                                                onChange={(e) => handleInputChange("propertyType", e.target.value)}
+                                                onChange={(e) => {
+                                                    const newType = e.target.value;
+                                                    const newEnum: SupportedPropertyEnum = PROPERTY_TYPE_TO_ENUM[newType] ?? "apartment";
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        propertyType: newType,
+                                                        occupancyLimit: String(DEFAULT_OCCUPANCY[newEnum]),
+                                                        utilitySplitMethod: newEnum === "apartment" ? "individual_meter" : "equal_per_head",
+                                                    }));
+                                                }}
                                                 className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium appearance-none cursor-pointer"
                                             >
-                                                <option>Apartment Complex</option>
-                                                <option>Condominium</option>
-                                                <option>Single Family Home</option>
-                                                <option>Townhouse</option>
-                                                <option>Studio</option>
-                                                <option>Commercial Space</option>
+                                                <option value="Apartment">Apartment</option>
+                                                <option value="Dormitory">Dormitory</option>
+                                                <option value="Boarding House">Boarding House</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">
@@ -784,50 +872,129 @@ function NewAssetContent() {
                             </div>
                         )}
 
-                        {/* 2. Units */}
+                        {/* 2. Units & Billing */}
                         {step === 2 && (
                             <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
                                 <div>
                                     <h2 className="text-xl font-bold text-white mb-1">Unit Configuration</h2>
-                                    <p className="text-sm text-neutral-400">Define the composition and layout of the asset.</p>
+                                    <p className="text-sm text-neutral-400">Define the composition, occupancy limits, and billing policy.</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group hover:border-white/20 transition-all">
-                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center text-primary">
-                                                <Home className="w-6 h-6" />
+                                {/* 3-column number steppers */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {/* Total Units */}
+                                    {([
+                                        { key: "totalUnits" as const, label: "Total Units", icon: Home, color: "text-primary", accent: "border-primary/30 bg-primary/5", focusBorder: "focus:border-primary", min: 1 },
+                                        { key: "floorCount" as const, label: "Floors", icon: Grid, color: "text-blue-400", accent: "border-blue-400/30 bg-blue-400/5", focusBorder: "focus:border-blue-400", min: 1 },
+                                        { key: "occupancyLimit" as const, label: OCCUPANCY_LABEL[resolvedPropertyEnum], icon: Users, color: "text-amber-400", accent: "border-amber-400/30 bg-amber-400/5", focusBorder: "focus:border-amber-400", min: 1 },
+                                    ] as const).map(({ key, label, icon: Icon, color, accent, focusBorder, min }) => (
+                                        <div key={key} className={`rounded-2xl border ${accent} p-5 flex flex-col gap-3 min-w-0`}>
+                                            <div className="flex items-center gap-2">
+                                                <Icon className={`w-4 h-4 ${color} shrink-0`} />
+                                                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest leading-none truncate">{label}</span>
                                             </div>
-                                            <div>
-                                                <p className="text-sm text-neutral-400 font-medium">Total Units</p>
-                                                <div className="flex items-center gap-3">
-                                                    <input 
-                                                        type="number" 
-                                                        value={formData.totalUnits}
-                                                        onChange={(e) => handleInputChange("totalUnits", e.target.value)}
-                                                        min="1" 
-                                                        className="w-20 bg-transparent text-2xl font-bold text-white focus:outline-none border-b border-white/20 focus:border-primary transition-colors pb-1" 
-                                                    />
-                                                </div>
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const cur = Number(formData[key] ?? min);
+                                                        if (cur > min) handleInputChange(key, String(cur - 1));
+                                                    }}
+                                                    className="w-9 h-9 shrink-0 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white hover:bg-white/10 hover:border-white/20 transition-all text-lg font-bold leading-none select-none"
+                                                >
+                                                    −
+                                                </button>
+                                                <input
+                                                    type="number"
+                                                    min={min}
+                                                    value={formData[key] ?? min}
+                                                    onChange={(e) => handleInputChange(key, e.target.value)}
+                                                    className={`w-full min-w-0 text-center bg-transparent text-2xl font-black text-white focus:outline-none border-b-2 border-white/10 ${focusBorder} transition-colors pb-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const cur = Number(formData[key] ?? min);
+                                                        handleInputChange(key, String(cur + 1));
+                                                    }}
+                                                    className="w-9 h-9 shrink-0 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white hover:bg-white/10 hover:border-white/20 transition-all text-lg font-bold leading-none select-none"
+                                                >
+                                                    +
+                                                </button>
                                             </div>
                                         </div>
+                                    ))}
+
+                                </div>
+
+                                {/* Billing & Utility Split Section */}
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <Zap className="w-4 h-4 text-primary" />
+                                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Billing &amp; Utility Split</label>
+                                    </div>
+                                    <p className="text-xs text-neutral-500">
+                                        {resolvedPropertyEnum === "apartment"
+                                            ? "Apartments default to individual metering. Tenants pay their own meter bills."
+                                            : "Choose how shared utility bills are split among occupants for this property."}
+                                    </p>
+
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {SPLIT_OPTIONS
+                                            .filter(opt =>
+                                                resolvedPropertyEnum === "apartment"
+                                                    ? opt.value === "individual_meter"
+                                                    : opt.value !== "equal_per_unit"
+                                            )
+                                            .map(opt => {
+                                                const isSelected = formData.utilitySplitMethod === opt.value;
+                                                return (
+                                                    <button
+                                                        key={opt.value}
+                                                        type="button"
+                                                        onClick={() => handleInputChange("utilitySplitMethod", opt.value)}
+                                                        className={cn(
+                                                            "w-full text-left px-5 py-4 rounded-xl border-2 transition-all flex items-center justify-between group",
+                                                            isSelected
+                                                                ? "bg-primary/10 border-primary text-white"
+                                                                : "bg-white/[0.02] border-white/5 text-neutral-300 hover:border-white/20 hover:bg-white/[0.05]"
+                                                        )}
+                                                    >
+                                                        <div>
+                                                            <p className="font-bold text-sm">{opt.label}</p>
+                                                            <p className="text-xs text-neutral-500 mt-0.5">{opt.description}</p>
+                                                        </div>
+                                                        <div className={cn(
+                                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ml-4 transition-colors",
+                                                            isSelected ? "border-primary bg-primary" : "border-white/20"
+                                                        )}>
+                                                            {isSelected && <Check className="w-3 h-3 text-black" />}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })
+                                        }
                                     </div>
 
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group hover:border-white/20 transition-all">
-                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className="h-12 w-12 bg-white/10 rounded-xl flex items-center justify-center text-blue-400">
-                                                <Grid className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-neutral-400 font-medium">Floor Count</p>
-                                                <div className="flex items-center gap-3">
-                                                    <input type="number" defaultValue="1" min="1" className="w-20 bg-transparent text-2xl font-bold text-white focus:outline-none border-b border-white/20 focus:border-blue-400 transition-colors pb-1" />
-                                                </div>
+                                    {/* Fixed Charge Amount input */}
+                                    {formData.utilitySplitMethod === "fixed_charge" && (
+                                        <div className="mt-3 space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                <DollarSign className="w-3.5 h-3.5" /> Fixed Monthly Fee per Occupant (₱)
+                                            </label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-neutral-500">₱</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={formData.fixedChargeAmount}
+                                                    onChange={(e) => handleInputChange("fixedChargeAmount", e.target.value)}
+                                                    placeholder="500"
+                                                    className="w-full bg-[#111] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white text-lg font-bold focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-neutral-600"
+                                                />
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -1225,9 +1392,16 @@ function NewAssetContent() {
                 isOpen={isContractBuilderOpen}
                 onClose={() => setIsContractBuilderOpen(false)}
                 initialTemplate={contractTemplate}
+                propertyType={resolvedPropertyEnum}
+                utilitySplitMethod={formData.utilitySplitMethod}
+                fixedChargeAmount={formData.utilitySplitMethod === "fixed_charge" ? Number(formData.fixedChargeAmount) : undefined}
                 onSave={(template) => {
                     setContractTemplate(template);
                     setIsContractGenerated(true);
+                    // Sync occupancy limit from contract builder back into wizard state
+                    if (template.answers.hard_occupancy_limit) {
+                        setFormData(prev => ({ ...prev, occupancyLimit: String(template.answers.hard_occupancy_limit) }));
+                    }
                 }}
             />
         </div>
@@ -1236,8 +1410,10 @@ function NewAssetContent() {
 
 export default function NewAssetPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
-            <NewAssetContent />
-        </Suspense>
+        <ClickSpark sparkColor="#7CA34D" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+                <NewAssetContent />
+            </Suspense>
+        </ClickSpark>
     );    
 } 
