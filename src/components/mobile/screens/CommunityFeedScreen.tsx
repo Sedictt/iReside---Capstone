@@ -114,11 +114,20 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 // ─── Post Component ─────────────────────────────────────────
-function PostCard({ post, userRole }: { post: Post, userRole: string | null }) {
+function PostCard({ 
+    post, 
+    userRole, 
+    isMenuOpen, 
+    onToggleMenu 
+}: { 
+    post: Post, 
+    userRole: string | null,
+    isMenuOpen: boolean,
+    onToggleMenu: (id: string | null) => void
+}) {
     const [liked, setLiked] = useState(post.liked ?? false);
     const [likeCount, setLikeCount] = useState(post.likes);
     const [isHidden, setIsHidden] = useState(post.hidden ?? false);
-    const [showMenu, setShowMenu] = useState(false);
     
     const { label, className, icon: CategoryIcon } = CATEGORY_CONFIG[post.category];
     const canModerate = userRole === "landlord" || userRole === "admin";
@@ -130,7 +139,7 @@ function PostCard({ post, userRole }: { post: Post, userRole: string | null }) {
 
     const toggleHide = () => {
         setIsHidden(!isHidden);
-        setShowMenu(false);
+        onToggleMenu(null);
     };
 
     // Tenants don't see hidden posts at all (simulating RLS)
@@ -179,34 +188,40 @@ function PostCard({ post, userRole }: { post: Post, userRole: string | null }) {
                         <span className={styles.timestamp}>{post.timestamp}</span>
                     </div>
                 </div>
-                <div className={`${styles.categoryBadge} ${styles[className]}`}>
-                    <CategoryIcon size={10} />
-                    {label}
-                </div>
                 
-                {canModerate && (
-                    <div className={styles.modActionArea}>
-                        <button 
-                            className={styles.modMenuBtn}
-                            onClick={() => setShowMenu(!showMenu)}
-                        >
-                            <MoreHorizontal size={18} />
-                        </button>
-                        
-                        {showMenu && (
-                            <div className={styles.modMenu}>
-                                <button className={styles.modMenuItem} onClick={toggleHide}>
-                                    {isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
-                                    <span>{isHidden ? "Show Post" : "Hide Post"}</span>
-                                </button>
-                                <button className={styles.modMenuItem} onClick={() => setShowMenu(false)}>
-                                    <ShieldOff size={14} />
-                                    <span>Flag Content</span>
-                                </button>
-                            </div>
-                        )}
+                <div className={styles.headerRight}>
+                    <div className={`${styles.categoryBadge} ${styles[className]}`}>
+                        <CategoryIcon size={10} />
+                        {label}
                     </div>
-                )}
+                    
+                    {canModerate && (
+                        <div className={styles.modActionArea}>
+                            <button 
+                                className={styles.modMenuBtn}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleMenu(isMenuOpen ? null : post.id);
+                                }}
+                            >
+                                <MoreHorizontal size={18} />
+                            </button>
+                            
+                            {isMenuOpen && (
+                                <div className={styles.modMenu} onClick={(e) => e.stopPropagation()}>
+                                    <button className={styles.modMenuItem} onClick={toggleHide}>
+                                        {isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                                        <span>{isHidden ? "Show Post" : "Hide Post"}</span>
+                                    </button>
+                                    <button className={styles.modMenuItem} onClick={() => onToggleMenu(null)}>
+                                        <ShieldOff size={14} />
+                                        <span>Flag Content</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Post Content */}
@@ -247,6 +262,7 @@ export default function CommunityFeedScreen() {
     const { role, navigate } = useNavigation();
     const [filter, setFilter] = useState<"all" | PostCategory>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
     const filters: Array<{ key: "all" | PostCategory; label: string }> = [
         { key: "all",          label: "All" },
@@ -268,7 +284,7 @@ export default function CommunityFeedScreen() {
     };
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} onClick={() => setActiveMenuId(null)}>
             {/* Header */}
             <div className={styles.header}>
                 <div className={styles.headerLeft}>
@@ -306,7 +322,13 @@ export default function CommunityFeedScreen() {
             {/* Feed */}
             <div className={styles.feed}>
                 {visiblePosts.map((post) => (
-                    <PostCard key={post.id} post={post} userRole={role} />
+                    <PostCard 
+                        key={post.id} 
+                        post={post} 
+                        userRole={role} 
+                        isMenuOpen={activeMenuId === post.id}
+                        onToggleMenu={setActiveMenuId}
+                    />
                 ))}
 
                 {/* Load More */}
