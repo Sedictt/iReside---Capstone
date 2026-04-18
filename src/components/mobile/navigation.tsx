@@ -50,7 +50,9 @@ export type ScreenName =
     // Admin Screens
     | "adminHome"
     | "adminLandlords"
-    | "adminSettings";
+    | "adminSettings"
+    // Phase 9
+    | "landlordWalkInApp";
 
 // ─── Tab Names ─────────────────────────────────────────────
 export type TenantTab = "home" | "community" | "activity" | "chat" | "profile";

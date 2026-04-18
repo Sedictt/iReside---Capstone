@@ -31,6 +31,32 @@
     letter-spacing: -0.5px;
 }
 
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.addWalkInBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #6d9838;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(109, 152, 56, 0.2);
+}
+
+.addWalkInBtn:active {
+    transform: scale(0.9);
+    opacity: 0.8;
+}
+
 .headerFilterBtn {
     width: 36px;
     height: 36px;
@@ -44,6 +70,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 
 .headerFilterBtn:active {
     background: #1a1a1a;

@@ -34,6 +34,7 @@ import NotificationsScreen from "./screens/NotificationsScreen";
 import IrisChatScreen from "./screens/IrisChatScreen";
 import CommunityFeedScreen from "./screens/CommunityFeedScreen";
 import PhotoGalleryScreen from "./screens/PhotoGalleryScreen";
+import LandlordWalkInAppScreen from "./screens/LandlordWalkInAppScreen";
 import {
     Home,
     Search,
@@ -106,6 +107,7 @@ const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "landlordApplicationReview",
     "landlordInvoiceDetail",
     "landlordMaintenanceDetail",
+    "landlordWalkInApp",
 ];
 
 // ─── Status Bar ────────────────────────────────────────────
@@ -223,6 +225,7 @@ function ScreenRouter() {
         adminSettings: AdminSettingsScreen,
         communityFeed: CommunityFeedScreen,
         photoGallery: PhotoGalleryScreen,
+        landlordWalkInApp: LandlordWalkInAppScreen,
         // Screens will be registered here as they're built
     };
 

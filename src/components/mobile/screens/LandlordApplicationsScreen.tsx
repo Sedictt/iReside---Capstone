@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Filter, Building2, MapPin } from "lucide-react";
+import { Filter, Building2, MapPin, Plus } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordApplicationsScreen.module.css";
 
@@ -44,9 +44,17 @@ export default function LandlordApplicationsScreen() {
       <div className={styles.header}>
         <div className={styles.headerTop}>
           <h1 className={styles.headerTitle}>Applications</h1>
-          <button className={styles.headerFilterBtn}>
-            <Filter />
-          </button>
+          <div className={styles.headerActions}>
+            <button 
+              className={styles.addWalkInBtn}
+              onClick={() => navigate("landlordWalkInApp")}
+            >
+              <Plus size={20} />
+            </button>
+            <button className={styles.headerFilterBtn}>
+              <Filter size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Filter Tabs */}
