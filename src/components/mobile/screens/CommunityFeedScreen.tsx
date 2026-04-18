@@ -6,6 +6,7 @@ import {
     Plus, Pin, Megaphone, BookOpen, ChevronDown, GalleryHorizontalEnd
 } from "lucide-react";
 import { useNavigation } from "../navigation";
+import MediaUploadModal from "../modals/MediaUploadModal";
 import styles from "./CommunityFeedScreen.module.css";
 
 // ─── Types ─────────────────────────────────────────────────
@@ -195,6 +196,7 @@ function PostCard({ post }: { post: Post }) {
 export default function CommunityFeedScreen() {
     const { role, navigate } = useNavigation();
     const [filter, setFilter] = useState<"all" | PostCategory>("all");
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const filters: Array<{ key: "all" | PostCategory; label: string }> = [
         { key: "all",          label: "All" },
@@ -210,6 +212,11 @@ export default function CommunityFeedScreen() {
 
     const canPost = role === "landlord" || role === "admin";
 
+    const handlePostSuccess = (postData: any) => {
+        console.log("New Post Created:", postData);
+        // In a real app, we would refetch the feed here
+    };
+
     return (
         <div className={styles.container}>
             {/* Header */}
@@ -223,7 +230,10 @@ export default function CommunityFeedScreen() {
                         <GalleryHorizontalEnd size={18} />
                     </button>
                     {canPost && (
-                        <button className={styles.newPostBtn}>
+                        <button 
+                            className={styles.newPostBtn}
+                            onClick={() => setIsModalOpen(true)}
+                        >
                             <Plus size={18} />
                         </button>
                     )}
@@ -255,6 +265,13 @@ export default function CommunityFeedScreen() {
                     Load older posts
                 </button>
             </div>
+
+            {/* Upload Modal */}
+            <MediaUploadModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={handlePostSuccess}
+            />
         </div>
     );
 }
