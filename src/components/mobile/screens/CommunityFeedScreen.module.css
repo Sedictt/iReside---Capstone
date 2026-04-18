@@ -125,6 +125,29 @@
     border-color: rgba(109, 152, 56, 0.35);
 }
 
+.postCardHidden {
+    opacity: 0.6;
+    border-style: dashed;
+    border-color: rgba(239, 68, 68, 0.3);
+    background: linear-gradient(to bottom right, #141414, #1a0d0d);
+}
+
+/* Moderation Badge */
+.hiddenBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(239, 68, 68, 0.1);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.15);
+    font-size: 10px;
+    font-weight: 800;
+    color: #ef4444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
 /* Pinned Banner */
 .pinnedBanner {
     display: flex;
@@ -206,6 +229,65 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
 }
+
+.modActionArea {
+    position: relative;
+    margin-left: auto;
+}
+
+.modMenuBtn {
+    background: transparent;
+    border: none;
+    color: #525252;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modMenuBtn:active {
+    background: #1e1e1e;
+    color: #fafafa;
+}
+
+.modMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 150px;
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 100;
+    margin-top: 8px;
+    padding: 4px;
+}
+
+.modMenuItem {
+    width: 100%;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    color: #a3a3a3;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.modMenuItem:active {
+    background: #262626;
+    color: #fafafa;
+}
+
 
 .categoryAnnouncement {
     background: rgba(239, 68, 68, 0.12);

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import {
     Heart, MessageCircle, Share2, Image as ImageIcon,
-    Plus, Pin, Megaphone, BookOpen, ChevronDown, GalleryHorizontalEnd
+    Plus, Pin, Megaphone, BookOpen, ChevronDown, GalleryHorizontalEnd,
+    MoreHorizontal, ShieldOff, Eye, EyeOff
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import MediaUploadModal from "../modals/MediaUploadModal";
@@ -26,6 +27,7 @@ interface Post {
     pinned?: boolean;
     hasImage?: boolean;
     liked?: boolean;
+    hidden?: boolean;
 }
 
 // ─── Mock Data ─────────────────────────────────────────────
@@ -112,20 +114,44 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 // ─── Post Component ─────────────────────────────────────────
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, userRole }: { post: Post, userRole: string | null }) {
     const [liked, setLiked] = useState(post.liked ?? false);
     const [likeCount, setLikeCount] = useState(post.likes);
+    const [isHidden, setIsHidden] = useState(post.hidden ?? false);
+    const [showMenu, setShowMenu] = useState(false);
+    
     const { label, className, icon: CategoryIcon } = CATEGORY_CONFIG[post.category];
+    const canModerate = userRole === "landlord" || userRole === "admin";
 
     const handleLike = () => {
         setLiked((prev) => !prev);
         setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
     };
 
+    const toggleHide = () => {
+        setIsHidden(!isHidden);
+        setShowMenu(false);
+    };
+
+    // Tenants don't see hidden posts at all (simulating RLS)
+    if (isHidden && userRole === "tenant") return null;
+
     return (
-        <div className={`${styles.postCard} ${post.pinned ? styles.postCardPinned : ""}`}>
+        <div className={`
+            ${styles.postCard} 
+            ${post.pinned ? styles.postCardPinned : ""}
+            ${isHidden ? styles.postCardHidden : ""}
+        `}>
+            {/* Moderation Badge */}
+            {isHidden && (
+                <div className={styles.hiddenBadge}>
+                    <ShieldOff size={11} />
+                    Visible to Moderators Only
+                </div>
+            )}
+
             {/* Pinned Banner */}
-            {post.pinned && (
+            {post.pinned && !isHidden && (
                 <div className={styles.pinnedBanner}>
                     <Pin size={11} />
                     Pinned Post
@@ -157,6 +183,30 @@ function PostCard({ post }: { post: Post }) {
                     <CategoryIcon size={10} />
                     {label}
                 </div>
+                
+                {canModerate && (
+                    <div className={styles.modActionArea}>
+                        <button 
+                            className={styles.modMenuBtn}
+                            onClick={() => setShowMenu(!showMenu)}
+                        >
+                            <MoreHorizontal size={18} />
+                        </button>
+                        
+                        {showMenu && (
+                            <div className={styles.modMenu}>
+                                <button className={styles.modMenuItem} onClick={toggleHide}>
+                                    {isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
+                                    <span>{isHidden ? "Show Post" : "Hide Post"}</span>
+                                </button>
+                                <button className={styles.modMenuItem} onClick={() => setShowMenu(false)}>
+                                    <ShieldOff size={14} />
+                                    <span>Flag Content</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Post Content */}
@@ -256,7 +306,7 @@ export default function CommunityFeedScreen() {
             {/* Feed */}
             <div className={styles.feed}>
                 {visiblePosts.map((post) => (
-                    <PostCard key={post.id} post={post} />
+                    <PostCard key={post.id} post={post} userRole={role} />
                 ))}
 
                 {/* Load More */}
