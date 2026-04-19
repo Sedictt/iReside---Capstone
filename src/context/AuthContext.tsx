@@ -59,11 +59,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     /**
      * Fetch the *verified* user from Supabase (hits the server, not localStorage).
      * This is what Supabase recommends as the authoritative check.
+     * Silently returns null on AbortError (component unmount/navigation).
      */
     const fetchVerifiedUser = useCallback(async () => {
-        const { data, error } = await supabaseRef.current.auth.getUser()
-        if (error || !data.user) return null
-        return data.user
+        try {
+            const { data, error } = await supabaseRef.current.auth.getUser()
+            if (error || !data.user) return null
+            return data.user
+        } catch (e) {
+            // Silently ignore AbortError (request cancelled due to navigation/unmount)
+            if (e instanceof Error && e.name === 'AbortError') return null
+            // Log other unexpected errors but don't crash
+            console.warn('[AuthProvider] getUser failed:', e)
+            return null
+        }
     }, [])
 
     /**

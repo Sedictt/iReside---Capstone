@@ -39,6 +39,13 @@ BEGIN
        '{"provider":"email","providers":["email"]}'::jsonb,
        '{"full_name":"Carlos Villanueva","role":"landlord","phone":"+639171110006","business_name":"Villanueva Estates","business_permits":["permit-004.pdf"]}'::jsonb,
        now(), now()),
+      -- NINA LUCIA APARTMENT RENTAL (pending registration)
+      ('00000000-0000-0000-0000-000000000000', '55555555-5555-5555-5555-555555555555',
+       'authenticated','authenticated','nina.lucia@ireside.local',
+       crypt('Passw0rd!', gen_salt('bf')), now(),
+       '{"provider":"email","providers":["email"]}'::jsonb,
+       '{"full_name":"Nina Lucia","role":"landlord","phone":"+639171110009","business_name":"NINA LUCIA APARTMENT RENTAL","business_permits":["permit-005.pdf"]}'::jsonb,
+       now(), now()),
       -- Tenants
       ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333',
        'authenticated','authenticated','tenant.one@ireside.local',
@@ -78,6 +85,7 @@ INSERT INTO public.profiles (id, email, full_name, role, phone, business_name, b
   ('22222222-2222-2222-2222-222222222222','landlord.two@ireside.local','Gabriel Santos','landlord','+639171110002','Santos Homes',ARRAY['permit-002.pdf']),
   ('11111111-1111-1111-1111-111111111113','landlord.three@ireside.local','Isabella Mendoza','landlord','+639171110005','Mendoza Realty',ARRAY['permit-003.pdf']),
   ('11111111-1111-1111-1111-111111111114','landlord.four@ireside.local','Carlos Villanueva','landlord','+639171110006','Villanueva Estates',ARRAY['permit-004.pdf']),
+  ('55555555-5555-5555-5555-555555555555','nina.lucia@ireside.local','Nina Lucia','landlord','+639171110009','NINA LUCIA APARTMENT RENTAL',ARRAY['permit-005.pdf']),
   ('33333333-3333-3333-3333-333333333333','tenant.one@ireside.local','Ariana Cruz','tenant','+639171110003',NULL,ARRAY[]::text[]),
   ('44444444-4444-4444-4444-444444444444','tenant.two@ireside.local','Noah Villanueva','tenant','+639171110004',NULL,ARRAY[]::text[]),
   ('33333333-3333-3333-3333-333333333335','tenant.three@ireside.local','Sophia Tan','tenant','+639171110007',NULL,ARRAY[]::text[]),
@@ -371,9 +379,11 @@ ON CONFLICT (id) DO UPDATE SET user_id=EXCLUDED.user_id, property_id=EXCLUDED.pr
 -- ---------------------------------------------------------------------------
 -- 13) Landlord applications, reviews, exports, IRIS chat, etc.
 -- ---------------------------------------------------------------------------
-INSERT INTO public.landlord_applications (id, profile_id, phone, identity_document_url, ownership_document_url, liveness_document_url, status, admin_notes) VALUES
+INSERT INTO public.landlord_applications (id, profile_id, phone, identity_document_url, ownership_document_url, liveness_document_url, status, admin_notes, business_name, business_address) VALUES
   ('f9f9f9f9-f9f9-f9f9-f9f9-f9f9f9f9f9f1','44444444-4444-4444-4444-444444444444','+639171110004',
-   '/docs/id-tenant-two.pdf','/docs/title-tenant-two.pdf','/docs/liveness-tenant-two.mp4','reviewing','Documents complete. Awaiting verification.')
+   '/docs/id-tenant-two.pdf','/docs/title-tenant-two.pdf','/docs/liveness-tenant-two.mp4','reviewing','Documents complete. Awaiting verification.',NULL,NULL),
+  ('f9f9f9f9-f9f9-f9f9-f9f9-f9f9f9f9f9f2','55555555-5555-5555-5555-555555555555','+639171110009',
+   '/docs/id-nina-lucia.pdf','/docs/title-nina-lucia.pdf','/docs/liveness-nina-lucia.mp4','pending','New registration from Valenzuela.','NINA LUCIA APARTMENT RENTAL','123 McArthur Highway, Valenzuela City')
 ON CONFLICT (id) DO UPDATE SET
   profile_id=EXCLUDED.profile_id, phone=EXCLUDED.phone, identity_document_url=EXCLUDED.identity_document_url,
   ownership_document_url=EXCLUDED.ownership_document_url, liveness_document_url=EXCLUDED.liveness_document_url,

@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     }
 
     // Fetch unit environment override (if any)
-    const { data: override } = await adminClient
+    const { data: override } = await (adminClient as any)
         .from("unit_environment_overrides")
         .select("max_occupants_per_unit")
         .eq("unit_id", unit_id)
