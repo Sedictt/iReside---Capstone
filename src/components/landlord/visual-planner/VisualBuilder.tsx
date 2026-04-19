@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
 import { UnitListingWizard } from "./UnitListingWizard";
+import { Logo } from "@/components/ui/Logo";
 
 export interface Unit {
     id: string;
@@ -1476,9 +1477,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
             {/* Header */}
             <header className={`h-16 flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-slate-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
-                        <span className="material-icons-round">apartment</span>
-                        iReside
+                    <div className="flex items-center gap-2">
+                        <Logo className="h-6 w-auto" />
                     </div>
                     <div className={`mx-2 h-6 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                     <div>

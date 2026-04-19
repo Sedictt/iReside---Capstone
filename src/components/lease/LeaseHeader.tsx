@@ -3,6 +3,7 @@
 import { Lock, Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 
 interface LeaseHeaderProps {
     currentStep: number;
@@ -17,7 +18,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                 {/* Left: Branding & Status */}
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold tracking-tight text-blue-400">iReside</span>
+                        <Logo theme="dark" className="h-10 w-32" />
                         <span className="text-gray-400">|</span>
                     </div>
 

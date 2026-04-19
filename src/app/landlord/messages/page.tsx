@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Logo } from "@/components/ui/Logo";
 import {
     Search,
     MoreVertical,
@@ -1867,12 +1868,7 @@ export default function MessagesPage() {
                                                     </div>
                                                     <div className="relative z-10 flex justify-between items-start">
                                                         <div>
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
-                                                                    <div className="w-3 h-3 bg-black rounded-sm rotate-45" />
-                                                                </div>
-                                                                <h2 className="text-primary font-black tracking-tighter text-lg italic">iReside</h2>
-                                                            </div>
+                                                            <Logo theme="dark" className="h-6 w-auto mb-1" />
                                                             <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Digital Payment Invoice</p>
                                                         </div>
                                                         <div className="text-right">

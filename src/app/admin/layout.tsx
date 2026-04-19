@@ -6,9 +6,12 @@ import { AuthProvider } from "@/context/AuthContext";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
         <AuthProvider>
-            <div className="relative flex h-screen overflow-hidden bg-[#0A0A0A] text-foreground dark:bg-[#050505]">
+            <div
+                data-admin-portal="true"
+                className="relative flex h-screen overflow-hidden bg-slate-100 text-slate-900 dark:bg-[#050505] dark:text-foreground"
+            >
                 {/* Visual Depth & Psychological Layering */}
-                <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/20 via-black/0 to-black/0" />
+                <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent dark:via-black/0 dark:to-black/0" />
                 <div className="pointer-events-none absolute inset-0 z-0 bg-[url('/assets/noise.png')] opacity-[0.015] mix-blend-overlay" />
 
                 <AdminSidebar />

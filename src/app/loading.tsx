@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Logo } from "@/components/ui/Logo";
 
 export default function Loading() {
     return (
@@ -40,9 +41,7 @@ export default function Loading() {
                 </div>
 
                 <div className="flex flex-col items-center gap-2">
-                    <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                        iReside
-                    </h2>
+                    <Logo theme="dark" className="h-10 w-32" />
                     <div className="flex items-center gap-1.5">
                         <motion.div
                             className="h-1 w-1 bg-primary rounded-full"

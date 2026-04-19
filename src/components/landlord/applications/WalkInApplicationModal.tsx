@@ -28,6 +28,7 @@ import {
     DollarSign,
 } from "lucide-react";
 import { SignaturePad } from "./SignaturePad";
+import { Logo } from "@/components/ui/Logo";
 import { SigningModeSelector } from "./SigningModeSelector";
 import { PaymentRecordForm } from "./PaymentRecordForm";
 import { ToolAccessBar } from "./ToolAccessBar";
@@ -543,14 +544,9 @@ export function WalkInApplicationModal({
 
                 {/* Left Rails / Navigation */}
                 <aside className="relative z-20 hidden w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background/80 p-10 sm:flex sm:w-80 sm:border-b-0 sm:border-r">
-                    <div className="mb-14 flex items-center gap-4">
-                        <div className="h-10 w-10 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.1)]">
-                            <Building2 className="text-primary w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black tracking-tighter leading-none text-foreground">iReside</h2>
-                            <p className="text-primary font-black text-[9px] uppercase tracking-[0.4em] opacity-80 mt-1">MASTER PANEL</p>
-                        </div>
+                    <div className="mb-14 flex flex-col items-start gap-1">
+                        <Logo theme="dark" className="h-8 w-auto mb-1" />
+                        <p className="text-primary font-black text-[9px] uppercase tracking-[0.4em] opacity-80 mt-1">MASTER PANEL</p>
                     </div>
 
                     <nav className="flex-1 space-y-2">

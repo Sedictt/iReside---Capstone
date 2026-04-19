@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 import {
     LayoutDashboard,
     Building2,
@@ -55,7 +56,7 @@ const NAV_ITEMS: NavSection[] = [
         items: [
             { label: "Invoices", href: "/landlord/invoices", icon: CreditCard },
             { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: 3 },
-    { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
+            { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
             { label: "Messaging", href: "/landlord/messages", icon: MessageSquare },
         ]
     },
@@ -69,11 +70,8 @@ export function Sidebar() {
         <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border/70 bg-card/95 text-foreground backdrop-blur-sm">
             {/* Brand */}
             <div className="flex h-20 items-center justify-between border-b border-border/70 px-6">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
-                        <Building2 className="h-5 w-5" />
-                    </div>
-                    <span className="text-xl font-bold tracking-tight text-foreground">iReside</span>
+                <div className="flex items-center mt-2">
+                    <Logo className="h-30 w-36" />
                 </div>
                 <ThemeToggle variant="sidebar" />
             </div>

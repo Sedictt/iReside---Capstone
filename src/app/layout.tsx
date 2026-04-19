@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "iReside",
   description: "Modern Property Management Platform",
+  icons: {
+    icon: "/logos/favicon.png",
+  },
 };
 
 export default function RootLayout({

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/ui/Logo";
 import {
     Bell,
     User,
@@ -91,9 +92,8 @@ export function TenantSidebar() {
         <>
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background/95 backdrop-blur">
                 <div className="h-full px-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="h-6 w-6 bg-primary rounded-sm" />
-                        <span className="font-bold text-lg tracking-tight">iReside</span>
+                    <Link href="/" className="flex items-center">
+                        <Logo className="h-30 w-66" />
                     </Link>
                     <button
                         type="button"
@@ -109,10 +109,7 @@ export function TenantSidebar() {
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card/95 backdrop-blur-sm flex-col text-foreground" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-bold text-primary-foreground">
-                            <Building2 className="h-5 w-5" />
-                        </div>
-                        <span className="font-bold text-xl tracking-tight">iReside</span>
+                        <Logo className="h-30 w-36" />
                     </div>
                     <ThemeToggle variant="sidebar" dataTourId="tour-theme-toggle" />
                 </div>
@@ -174,9 +171,8 @@ export function TenantSidebar() {
                     )}
                 >
                     <div className="mb-6 flex items-center justify-between">
-                        <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileOpen(false)}>
-                            <div className="h-6 w-6 bg-primary rounded-sm" />
-                            <span className="font-bold text-lg tracking-tight">iReside</span>
+                        <Link href="/" className="flex items-center" onClick={() => setIsMobileOpen(false)}>
+                            <Logo className="h-9 w-28" />
                         </Link>
                         <button
                             type="button"
