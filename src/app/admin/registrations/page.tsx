@@ -68,14 +68,13 @@ interface LiveVerificationResult {
     checkedAt?: string;
 }
 
-const STATUS_META: Record<IncomingStatus, { label: string; icon: LucideIcon; dotClass: string; bgClass: string; textClass: string; glowClass: string }> = {
+const STATUS_META: Record<IncomingStatus, { label: string; icon: LucideIcon; dotClass: string; bgClass: string; textClass: string }> = {
     pending: {
         label: "Pending",
         icon: CircleDashed,
         dotClass: "bg-amber-400",
         bgClass: "border-amber-500/20 bg-amber-500/10",
         textClass: "text-amber-300",
-        glowClass: "shadow-amber-500/20",
     },
     reviewing: {
         label: "Reviewing",
@@ -83,7 +82,6 @@ const STATUS_META: Record<IncomingStatus, { label: string; icon: LucideIcon; dot
         dotClass: "bg-blue-400",
         bgClass: "border-blue-500/20 bg-blue-500/10",
         textClass: "text-blue-300",
-        glowClass: "shadow-blue-500/20",
     },
 };
 
@@ -100,7 +98,7 @@ function KpiCard({ icon: Icon, label, value, accentText }: {
     accentText: string;
 }) {
     return (
-        <div className="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-[#0F0F12]/80 p-6 transition-all duration-500 ease-out hover:-translate-y-0.5 hover:border-white/10 hover:bg-white/[0.04]">
+        <div className="group relative overflow-hidden rounded-[2rem] border border-border/70 bg-card p-6 transition-colors duration-300 hover:border-border hover:bg-muted/20">
             <div className="relative z-10 flex flex-col gap-4">
                 <div className={cn("flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] shadow-inner", accentText)}>
                     <Icon className="h-5 w-5" strokeWidth={1.5} />
@@ -232,7 +230,7 @@ export default function AdminRegistrationsPage() {
             {!selected && (
                 <>
                     {/* ─── Hero Header ─── */}
-                    <section className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-8 md:p-12">
+                    <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8 md:p-12">
                         <div className="relative z-10 space-y-8">
                             <div className="space-y-4">
                                 <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-amber-300/80">
@@ -266,7 +264,7 @@ export default function AdminRegistrationsPage() {
                     )}
 
                     {/* ─── Registration Queue ─── */}
-                    <section className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-6 md:p-8">
+                    <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-6 md:p-8">
 
                         <div className="relative z-10">
                             <div className="mb-6 flex items-center justify-between">
@@ -299,8 +297,8 @@ export default function AdminRegistrationsPage() {
                                                 type="button"
                                                 onClick={() => setSelectedId(row.id)}
                                                 className={cn(
-                                                    "group relative grid w-full grid-cols-1 gap-4 overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-4 text-left transition-all duration-300",
-                                                    "hover:-translate-y-0.5 hover:border-primary/25 hover:bg-white/[0.05]",
+                                                    "group relative grid w-full grid-cols-1 gap-4 overflow-hidden rounded-2xl border border-border/70 bg-background px-5 py-4 text-left transition-colors duration-200",
+                                                    "hover:border-primary/25 hover:bg-muted/30",
                                                     "md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.2fr)_auto_auto]"
                                                 )}
                                             >
@@ -330,8 +328,8 @@ export default function AdminRegistrationsPage() {
                                                 </div>
 
                                                 <span className={cn(
-                                                    "relative inline-flex items-center gap-1.5 self-center rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest shadow-sm",
-                                                    meta.bgClass, meta.textClass, meta.glowClass
+                                                    "relative inline-flex items-center gap-1.5 self-center rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest",
+                                                    meta.bgClass, meta.textClass
                                                 )}>
                                                     <span className={cn("h-1.5 w-1.5 rounded-full", meta.dotClass)} />
                                                     <StatusIcon className="h-3 w-3" />

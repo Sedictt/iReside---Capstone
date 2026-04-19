@@ -16,7 +16,6 @@ import {
     MessageSquare,
     Map,
     Home,
-    Building2,
     Menu,
     X,
 } from "lucide-react";
@@ -90,7 +89,7 @@ export function TenantSidebar() {
 
     return (
         <>
-            <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background/95 backdrop-blur">
+            <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
                 <div className="h-full px-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center">
                         <Logo className="h-30 w-66" />
@@ -106,7 +105,7 @@ export function TenantSidebar() {
                 </div>
             </header>
 
-            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card/95 backdrop-blur-sm flex-col text-foreground" data-tour-id="tour-tenant-navigation">
+            <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 border-r border-border/70 bg-card flex-col text-foreground" data-tour-id="tour-tenant-navigation">
                 <div className="h-20 px-6 border-b border-border/70 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <Logo className="h-30 w-36" />

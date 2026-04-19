@@ -32,9 +32,6 @@ export default function TenantLayout({
                     "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20",
                     (isChatPage || isUnitMapPage) && "h-screen overflow-hidden"
                 )}>
-                    <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#94a3b80f_1px,transparent_1px),linear-gradient(to_bottom,#94a3b80f_1px,transparent_1px)] bg-[size:14px_24px]">
-                        <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/16 opacity-40 blur-[100px]"></div>
-                    </div>
                     {!useImmersiveLayout && <TenantSidebar />}
                     <main className={cn(
                         "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden",
