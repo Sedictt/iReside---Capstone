@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { ArrowRight, ShieldCheck, Lock, Activity, Users, Building, ChevronRight, MapPin, LayoutDashboard, Receipt, Sparkles, MessageSquare, PieChart, CheckCircle2 } from "lucide-react";
+import { Building, ChevronRight, ShieldCheck, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, PieChart, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -768,12 +769,9 @@ export default function ScrollyTellingLandingPage() {
             >
                 <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
                     <div className="flex items-center gap-4 group cursor-pointer">
-                        <div className="h-10 w-10 bg-gradient-to-br from-primary-200 to-primary-dark flex items-center justify-center rounded-xl shadow-[0_0_25px_rgba(109,152,56,0.3)] transition-transform group-hover:scale-105 ring-1 ring-border">
-                            <Building className="h-5 w-5 text-black" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xl md:text-2xl font-extrabold tracking-tight leading-none text-foreground">iReside</span>
-                            <span className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-[0.25em] text-primary leading-tight mt-0.5">Landlord Access</span>
+                        <Logo className="h-8 md:h-10 w-auto transition-transform group-hover:scale-105" />
+                        <div className="flex flex-col border-l border-border/50 pl-4">
+                            <span className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-[0.25em] text-primary leading-tight">Landlord Access</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4"><ThemeToggle /><TransitionLink href="/login" className="relative flex items-center gap-2 overflow-hidden group px-6 py-2.5 rounded-full border border-zinc-200 bg-muted border-border text-sm font-bold text-foreground transition-all hover:bg-muted/80 hover:border-primary/30">
@@ -800,9 +798,9 @@ export default function ScrollyTellingLandingPage() {
                             Exclusive Network
                         </span>
                         
-                        <h1 className="text-[3.5rem] sm:text-6xl md:text-[6.5rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] mb-6">
-                            <span className="text-foreground block pb-2 md:pb-4 drop-shadow-sm dark:drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)]">iReside</span>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark dark:from-primary-200 dark:via-primary dark:to-primary block pr-4">Perfected.</span>
+                        <h1 className="text-[3.5rem] sm:text-6xl md:text-[6.5rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] mb-6 flex flex-col items-center">
+                            <Logo variant="primary" className="h-[0.8em] w-[3em] block drop-shadow-sm dark:drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] mb-2" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark dark:from-primary-200 dark:via-primary dark:to-primary block text-center">Perfected.</span>
                         </h1>
                         
                         <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed mb-8 tracking-tight">

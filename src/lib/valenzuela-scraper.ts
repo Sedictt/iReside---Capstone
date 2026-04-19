@@ -1,81 +1,29 @@
 import puppeteer from 'puppeteer';
 
-export interface ScrapedBusinessData {
+export interface ScrapedBusinessRow {
     businessName: string;
-    address: string;
-    owner?: string;
-    permitNumber?: string;
-    businessType?: string;
-    registrationDate?: string;
-    status?: string;
-    rawText?: string;
-    matchScore?: number;
-    candidateCount?: number;
-    candidates?: Array<{
-        businessName: string;
-        address: string;
-        businessType?: string;
-        matchScore?: number;
-    }>;
+    district: string;
+    barangay: string;
+    industry: string;
 }
 
-function normalizeText(value: string): string {
-    return value
-        .normalize('NFKD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-function tokenize(value: string): string[] {
-    return normalizeText(value)
-        .split(' ')
-        .filter((token) => token.length > 1);
-}
-
-function overlapScore(left: string[], right: string[]): number {
-    if (left.length === 0 || right.length === 0) return 0;
-
-    const leftSet = new Set(left);
-    const rightSet = new Set(right);
-    const intersection = [...leftSet].filter((token) => rightSet.has(token)).length;
-    const union = new Set([...leftSet, ...rightSet]).size;
-
-    return union === 0 ? 0 : intersection / union;
-}
-
-function scoreCandidate(searchName: string, candidateName: string, searchAddress?: string, candidateAddress?: string): number {
-    const normalizedSearch = normalizeText(searchName);
-    const normalizedCandidate = normalizeText(candidateName);
-    const exactScore = normalizedSearch === normalizedCandidate ? 1 : 0;
-    const containsScore =
-        normalizedSearch && normalizedCandidate &&
-        (normalizedCandidate.includes(normalizedSearch) || normalizedSearch.includes(normalizedCandidate))
-            ? 0.85
-            : 0;
-    const tokenScore = overlapScore(tokenize(searchName), tokenize(candidateName));
-    const addressScore = searchAddress && candidateAddress ? overlapScore(tokenize(searchAddress), tokenize(candidateAddress)) : 0;
-
-    return Number(Math.min(1, exactScore * 0.55 + containsScore * 0.25 + tokenScore * 0.15 + addressScore * 0.05).toFixed(3));
+export interface ScrapedBusinessData {
+    rows: ScrapedBusinessRow[];
 }
 
 /**
- * Real browser automation to search Valenzuela Business Databank
- * Uses Puppeteer to interact with the actual website
+ * Real browser automation to search the Valenzuela Business Databank.
+ * Returns ALL result rows exactly as the VLINK site shows them — no scoring or filtering.
  */
 export async function scrapeValenzuelaBusinessDatabank(
     businessName: string,
-    businessAddress?: string,
-    timeout: number = 30000
-): Promise<ScrapedBusinessData | null> {
+    timeout: number = 60000
+): Promise<ScrapedBusinessData> {
     let browser;
-    
+
     try {
-        console.log(`🔍 Starting real scrape for: ${businessName}`);
-        
-        // Launch headless browser
+        console.log(`🔍 Starting scrape for: ${businessName}`);
+
         browser = await puppeteer.launch({
             headless: true,
             args: [
@@ -89,124 +37,138 @@ export async function scrapeValenzuelaBusinessDatabank(
         });
 
         const page = await browser.newPage();
-        
-        // Set user agent to look like a real browser
+
         await page.setUserAgent(
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         );
-        
-        // Set viewport
         await page.setViewport({ width: 1920, height: 1080 });
-        
-        // Navigate to the business databank
+
         console.log('🌐 Navigating to Valenzuela Business Databank...');
-        await page.goto('https://bd.valenzuela.gov.ph/', {
-            waitUntil: 'networkidle2',
-            timeout: timeout,
-        });
-        
-        // Wait for the page to load completely
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Take screenshot for debugging (optional)
-        // await page.screenshot({ path: 'debug-initial.png' });
-        
-        // Try to find and fill the search input
-        console.log('📝 Filling search form...');
-        
-        // Common selectors for search inputs
-        const searchInputSelectors = [
-            'input[name="business_name"]',
-            'input[name="search"]',
-            'input[name="query"]',
-            'input[name="keyword"]',
-            'input[placeholder*="business" i]',
-            'input[placeholder*="search" i]',
-            '#search',
-            '#business-search',
-            '.search-input',
-            'input[type="text"]',
-        ];
-        
-        let searchInputFound = false;
-        for (const selector of searchInputSelectors) {
+
+        // Try HTTPS first; if the site redirects and Puppeteer throws ERR_ABORTED,
+        // we follow through and wait for the DataTables UI to appear instead.
+        const TARGET_URL = 'https://bd.valenzuela.gov.ph/';
+
+        const navigateTo = async (url: string, waitStrategy: 'load' | 'domcontentloaded' | 'networkidle0') => {
             try {
-                const input = await page.$(selector);
-                if (input) {
-                    await input.click();
-                    await input.type(businessName, { delay: 100 });
-                    console.log(`✅ Found search input: ${selector}`);
-                    searchInputFound = true;
-                    break;
+                await page.goto(url, { waitUntil: waitStrategy, timeout });
+            } catch (navErr) {
+                const msg = navErr instanceof Error ? navErr.message : String(navErr);
+                if (msg.includes('ERR_ABORTED') || msg.includes('net::ERR_')) {
+                    console.log(`⚠️ nav ${waitStrategy} aborted — checking page state...`);
+                } else {
+                    throw navErr;
                 }
-            } catch {
-                continue;
             }
+        };
+
+        // First attempt with 'load'
+        await navigateTo(TARGET_URL, 'load');
+
+        // Check if the page actually loaded the search form
+        let pageReady = await page.evaluate(() => {
+            return document.querySelector('input[placeholder*="business" i]') !== null
+                || document.querySelector('table') !== null;
+        });
+
+        if (!pageReady) {
+            console.log('⚠️ Page did not load properly, retrying with domcontentloaded...');
+            await navigateTo(TARGET_URL, 'domcontentloaded');
+            // Extra wait for JS to execute
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            pageReady = await page.evaluate(() => {
+                return document.querySelector('input[placeholder*="business" i]') !== null
+                    || document.querySelector('table') !== null;
+            });
         }
-        
-        if (!searchInputFound) {
-            console.log('⚠️ Could not find search input, trying JavaScript injection...');
-            // Try to find any input and use it
-            await page.evaluate((name) => {
-                const inputs = document.querySelectorAll('input');
-                for (const input of inputs) {
-                    if (input.type === 'text' || input.type === 'search') {
-                        (input as HTMLInputElement).value = name;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                        input.dispatchEvent(new Event('change', { bubbles: true }));
-                        return true;
-                    }
-                }
-                return false;
-            }, businessName);
+
+        const currentUrl = page.url();
+        console.log(`🔗 Current URL: ${currentUrl}`);
+
+        if (!pageReady) {
+            throw new Error(`Page did not load expected content. URL: ${currentUrl}`);
         }
-        
-        // If address provided, try to fill address field
-        if (businessAddress) {
-            const addressSelectors = [
-                'input[name="address"]',
-                'input[name="location"]',
-                'input[placeholder*="address" i]',
-                '#address',
+
+        // Wait for DataTables to finish initialising (loads the default dataset first)
+        console.log('⏳ Waiting for DataTables to initialise...');
+        try {
+            await page.waitForFunction(
+                () => (document.querySelector('table tbody tr td') as HTMLElement | null) !== null,
+                { timeout: 20000 }
+            );
+        } catch {
+            console.log('⚠️ DataTables did not populate — continuing anyway');
+        }
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+
+        // Fill the search input — use both Puppeteer typing and JS value assignment
+        // to ensure the site's JavaScript framework picks up the value correctly.
+        console.log('📝 Filling search form...');
+
+        const inputFilled = await page.evaluate((name: string) => {
+            const selectors = [
+                'input[placeholder*="business" i]',
+                'input[placeholder*="search" i]',
+                'input[name="business_name"]',
+                'input[name="search"]',
+                'input[name="query"]',
+                'input[type="text"]',
             ];
-            
-            for (const selector of addressSelectors) {
-                try {
-                    const input = await page.$(selector);
-                    if (input) {
-                        await input.click();
-                        await input.type(businessAddress, { delay: 50 });
-                        console.log(`✅ Found address input: ${selector}`);
-                        break;
-                    }
-                } catch {
-                    continue;
+            for (const selector of selectors) {
+                const input = document.querySelector(selector) as HTMLInputElement | null;
+                if (input) {
+                    input.focus();
+                    // Clear existing value
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    // Set new value
+                    input.value = name;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+                    return selector;
                 }
             }
+            return null;
+        }, businessName);
+
+        if (inputFilled) {
+            console.log(`✅ Filled search input via JS: ${inputFilled}`);
+        } else {
+            console.log('⚠️ Could not fill search input via JS evaluate');
         }
-        
-        // Find and click the search button - CRITICAL: Must click button, not press Enter
+
+        // Short pause so the UI registers the value before we click search
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Click the search button
+        // ─── Snapshot table state BEFORE clicking search ─────────────────────────
+        // DataTables loads ALL businesses by default, so we must detect when the
+        // table actually updates to show filtered results — not just that rows exist.
+        const stateBeforeSearch = await page.evaluate(() => {
+            const firstCell = document.querySelector('table tbody tr td');
+            return firstCell?.textContent?.trim() ?? '__EMPTY__';
+        });
+        console.log(`📌 Table state before search: "${stateBeforeSearch}"`);
+
+        // Click the search button
         console.log('🔘 Looking for search button...');
-        
         let searchClicked = false;
-        
-        // Try 1: Look for button by text content using page.evaluate
+
         try {
             const buttonClicked = await page.evaluate(() => {
-                // Find all buttons and look for one with "Search" text
                 const buttons = Array.from(document.querySelectorAll('button, input[type="submit"], a.btn, .btn'));
                 const searchBtn = buttons.find(btn => {
                     const text = btn.textContent?.toLowerCase() || '';
-                    return text.includes('search') || text.includes('find') || text.includes('🔍') || text.includes('magnify');
+                    return text.includes('search') || text.includes('find');
                 });
-                
                 if (searchBtn) {
                     (searchBtn as HTMLElement).click();
                     return true;
                 }
                 return false;
             });
-            
             if (buttonClicked) {
                 console.log('✅ Clicked search button via text match');
                 searchClicked = true;
@@ -214,25 +176,9 @@ export async function scrapeValenzuelaBusinessDatabank(
         } catch (e) {
             console.log('⚠️ Text-based button click failed:', e);
         }
-        
-        // Try 2: Common CSS selectors if text match didn't work
+
         if (!searchClicked) {
-            const searchButtonSelectors = [
-                'button[type="submit"]',
-                'input[type="submit"]',
-                '.btn-search',
-                '#btn-search',
-                '.search-btn',
-                '[class*="search"]',
-                'button.btn',
-                '.btn-primary',
-                // Based on screenshot - red/maroon button
-                'button[style*="background"]',
-                'button.red',
-                'button.maroon',
-            ];
-            
-            for (const selector of searchButtonSelectors) {
+            for (const selector of ['.search-btn', 'button[type="submit"]', 'input[type="submit"]', '.btn-primary', 'button.btn']) {
                 try {
                     const button = await page.$(selector);
                     if (button) {
@@ -240,7 +186,6 @@ export async function scrapeValenzuelaBusinessDatabank(
                             const style = window.getComputedStyle(el);
                             return style.display !== 'none' && style.visibility !== 'hidden';
                         });
-                        
                         if (isVisible) {
                             await button.click();
                             console.log(`✅ Clicked search button: ${selector}`);
@@ -253,174 +198,66 @@ export async function scrapeValenzuelaBusinessDatabank(
                 }
             }
         }
-        
-        // Try 3: XPath as last resort
+
         if (!searchClicked) {
-            try {
-                const xpathClicked = await page.evaluate(() => {
-                    // Try XPath to find button with search icon or text
-                    const xpathResult = document.evaluate(
-                        "//button[contains(., 'Search') or contains(., '🔍') or contains(@class, 'search')]",
-                        document,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null
-                    );
-                    const btn = xpathResult.singleNodeValue as HTMLElement;
-                    if (btn) {
-                        btn.click();
-                        return true;
-                    }
-                    return false;
-                });
-                
-                if (xpathClicked) {
-                    console.log('✅ Clicked search button via XPath');
-                    searchClicked = true;
-                }
-            } catch {
-                console.log('⚠️ XPath button click failed');
-            }
+            throw new Error('Could not find search button on the Valenzuela website.');
         }
-        
-        // If still no button found, this is an error - don't proceed
-        if (!searchClicked) {
-            throw new Error('Could not find search button - search cannot proceed without clicking the button');
-        }
-        
-        // Wait for actual result rows or an explicit empty-state message, then fall back to a brief grace period.
-        console.log('⏳ Waiting for results...');
+
+        // ─── Wait for table to UPDATE ─────────────────────────────────────────────
+        console.log('⏳ Waiting for table to update with filtered results...');
+
         try {
             await page.waitForFunction(
-                () => {
-                    const rows = document.querySelectorAll('table tbody tr, table tr');
+                (prevFirstCell: string) => {
                     const bodyText = document.body?.innerText?.toLowerCase() || '';
-                    return rows.length > 1 || bodyText.includes('no matching records found') || bodyText.includes('no data available');
+                    if (
+                        bodyText.includes('no matching records found') ||
+                        bodyText.includes('no data available in table')
+                    ) {
+                        return true; // Confirmed empty result
+                    }
+                    const firstCell = document.querySelector('table tbody tr td');
+                    const currentText = firstCell?.textContent?.trim() ?? '';
+                    // Accept if the first cell changed (filtered) OR if there are now 0 rows
+                    return currentText !== prevFirstCell && currentText !== '';
                 },
-                { timeout: Math.min(timeout, 12000) }
+                { timeout: Math.min(timeout, 15000) },
+                stateBeforeSearch
             );
+            console.log('✅ Table updated after search');
         } catch {
-            await new Promise(resolve => setTimeout(resolve, 4000));
+            console.log('⚠️ waitForFunction timed out — scraping current state anyway');
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
-        
-        // Take screenshot to debug
-        try {
-            await page.screenshot({ path: 'debug-after-search.png', fullPage: true });
-            console.log('📸 Screenshot saved: debug-after-search.png');
-        } catch {
-            console.log('⚠️ Could not save screenshot');
-        }
-        
-        // Check current URL and page info
-        const currentUrl = page.url();
-        console.log('🔗 Current URL:', currentUrl);
-        
-        const pageTitle = await page.title();
-        console.log('📄 Page title:', pageTitle);
-        
-        // Check if page has search results
-        const hasTable = await page.$('table');
-        console.log('📊 Table found:', !!hasTable);
-        
-        const hasResults = await page.$('.dataTables_wrapper, .search-results, #DataTables_Table_0');
-        console.log('🔍 Results container found:', !!hasResults);
-        
-        // Extract all table rows from the results table
+
+        // Extract all rows
         console.log('🔍 Extracting table data...');
-        
-        // DEBUG: Get raw HTML of first table
-        const rawTableHtml = await page.evaluate(() => {
-            const firstTable = document.querySelector('table');
-            return firstTable ? firstTable.outerHTML.substring(0, 500) : 'No table found';
-        });
-        console.log('📝 Raw table HTML (first 500 chars):', rawTableHtml);
-        
-        const tableData = await page.evaluate(() => {
-            const rows: { businessName: string; district: string; barangay: string; industry: string; fullText: string }[] = [];
-            
-            // Find the results table - look for table with business data
+        const rows = await page.evaluate(() => {
+            const result: { businessName: string; district: string; barangay: string; industry: string }[] = [];
             const tables = document.querySelectorAll('table');
-            console.log(`Found ${tables.length} tables on page`);
-            
-            for (let i = 0; i < tables.length; i++) {
-                const table = tables[i];
-                const tableRows = table.querySelectorAll('tbody tr, tr');
-                console.log(`Table ${i}: ${tableRows.length} rows`);
-                
-                for (const row of tableRows) {
+
+            for (const table of tables) {
+                for (const row of table.querySelectorAll('tbody tr')) {
                     const cells = row.querySelectorAll('td');
                     if (cells.length >= 4) {
-                        // Based on the screenshot, columns are:
-                        // 1: Business Name, 2: District, 3: Barangay, 4: Industry
                         const businessName = cells[0]?.textContent?.trim() || '';
                         const district = cells[1]?.textContent?.trim() || '';
                         const barangay = cells[2]?.textContent?.trim() || '';
                         const industry = cells[3]?.textContent?.trim() || '';
-                        
-                        if (businessName && 
-                            businessName !== 'Business Name' && 
-                            businessName !== 'Name' &&
-                            !businessName.includes('Entries')) {
-                            rows.push({
-                                businessName,
-                                district,
-                                barangay,
-                                industry,
-                                fullText: row.textContent?.trim() || ''
-                            });
+
+                        if (businessName && businessName !== 'Business Name' && businessName !== 'Name') {
+                            result.push({ businessName, district, barangay, industry });
                         }
                     }
                 }
             }
-            
-            return rows;
-        });
-        
-        console.log(`✅ Found ${tableData.length} businesses in table`);
-        
-        // DEBUG: Show first few results
-        console.log('📋 First 3 results from table:');
-        tableData.slice(0, 3).forEach((row, i) => {
-            console.log(`  ${i + 1}. "${row.businessName}" | ${row.district} | ${row.barangay}`);
-        });
-        
-        const rankedMatches = tableData
-            .map((row) => ({
-                ...row,
-                matchScore: scoreCandidate(
-                    businessName,
-                    row.businessName,
-                    businessAddress,
-                    `${row.district}, ${row.barangay}`
-                ),
-            }))
-            .sort((left, right) => right.matchScore - left.matchScore);
 
-        const bestMatch = rankedMatches[0];
+            return result;
+        });
 
-        if (bestMatch && bestMatch.matchScore >= 0.45) {
-            console.log('✅ Best match found:', bestMatch.businessName);
-            return {
-                businessName: bestMatch.businessName,
-                address: `${bestMatch.district}, ${bestMatch.barangay}`,
-                owner: bestMatch.barangay, // Using barangay as location info
-                permitNumber: undefined, // Not shown in table
-                businessType: bestMatch.industry,
-                rawText: bestMatch.fullText,
-                matchScore: bestMatch.matchScore,
-                candidateCount: rankedMatches.length,
-                candidates: rankedMatches.slice(0, 5).map((candidate) => ({
-                    businessName: candidate.businessName,
-                    address: `${candidate.district}, ${candidate.barangay}`,
-                    businessType: candidate.industry,
-                    matchScore: candidate.matchScore,
-                })),
-            };
-        }
-        
-        console.log('❌ No matching business found');
-        return null;
-        
+        console.log(`✅ Scraped ${rows.length} result rows`);
+        return { rows };
+
     } catch (error) {
         console.error('❌ Error during scraping:', error);
         throw error;
@@ -430,37 +267,4 @@ export async function scrapeValenzuelaBusinessDatabank(
             console.log('🔒 Browser closed');
         }
     }
-}
-
-/**
- * Quick test function to verify scraper works
- */
-export async function testScraper(businessName: string = 'Jollibee'): Promise<void> {
-    console.log('='.repeat(50));
-    console.log('🧪 Testing Real Valenzuela Business Scraper');
-    console.log('='.repeat(50));
-    console.log(`\nSearching for: ${businessName}\n`);
-    
-    try {
-        const result = await scrapeValenzuelaBusinessDatabank(businessName);
-        
-        if (result) {
-            console.log('\n✅ SUCCESS - Real data found!');
-            console.log('\nBusiness Details:');
-            console.log(`  Name: ${result.businessName}`);
-            console.log(`  Address: ${result.address}`);
-            console.log(`  Owner: ${result.owner || 'N/A'}`);
-            console.log(`  Permit: ${result.permitNumber || 'N/A'}`);
-            console.log(`  Type: ${result.businessType || 'N/A'}`);
-            if (result.rawText) {
-                console.log(`\n  Raw Data: ${result.rawText.substring(0, 200)}...`);
-            }
-        } else {
-            console.log('\n❌ No results found');
-        }
-    } catch (error) {
-        console.error('\n❌ Error:', error);
-    }
-    
-    console.log('\n' + '='.repeat(50));
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
+import { Logo } from "@/components/ui/Logo";
 
 export default function SignUpPage() {
     return (
@@ -17,10 +18,7 @@ export default function SignUpPage() {
 
                 <div className="relative z-10 p-16 space-y-8">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                            <Building2 className="h-6 w-6 text-white" />
-                        </div>
-                        <span className="text-2xl font-bold tracking-tight text-white drop-shadow-md">iReside</span>
+                        <Logo theme="dark" className="h-10 w-auto" />
                     </div>
 
                     <div className="space-y-4 max-w-lg">
@@ -39,10 +37,7 @@ export default function SignUpPage() {
                 <div className="mx-auto w-full max-w-[400px] space-y-8 text-center">
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center justify-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                            <Building2 className="h-6 w-6 text-white" />
-                        </div>
-                        <span className="text-2xl font-bold tracking-tight text-white">iReside</span>
+                        <Logo theme="dark" className="h-10 w-auto" />
                     </div>
 
                     <div className="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto">

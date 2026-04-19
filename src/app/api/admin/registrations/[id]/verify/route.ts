@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { searchValenzuelaBusinessDatabank, generateValenzuelaSearchURL, type BusinessVerificationResult } from "@/lib/business-verification";
+import { searchValenzuelaBusinessDatabank, generateValenzuelaSearchURL } from "@/lib/business-verification";
 
 async function assertAdmin() {
     const supabase = await createClient();
@@ -32,27 +32,16 @@ export async function POST(
     const { id } = await context.params;
     const body = await request.json().catch(() => null);
     const businessName = body?.businessName as string | undefined;
-    const businessAddress = body?.businessAddress as string | undefined;
 
     if (!businessName) {
         return NextResponse.json({ error: "Business name is required for verification." }, { status: 400 });
     }
 
     const adminClient = createAdminClient();
-    
-    // First, get the registration record
+
     const { data: registration, error: registrationError } = await adminClient
         .from("landlord_applications")
-        .select(`
-            id,
-            profile_id,
-            business_name,
-            business_address,
-            verification_status,
-            verification_data,
-            verification_checked_at,
-            verification_notes
-        `)
+        .select("id")
         .eq("id", id)
         .maybeSingle();
 
@@ -61,53 +50,35 @@ export async function POST(
     }
 
     try {
-        // Perform verification search
-        const verificationResult: BusinessVerificationResult = await searchValenzuelaBusinessDatabank(
-            businessName,
-            businessAddress
-        );
+        const verificationResult = await searchValenzuelaBusinessDatabank(businessName);
 
-        // Update the registration with verification results
-        const { data: updatedRegistration, error: updateError } = await adminClient
+        // Map to the DB column's allowed enum
+        const dbStatus: 'not_verified' | 'verified' | 'not_found' | 'error' =
+            verificationResult.status === 'found' ? 'verified' :
+            verificationResult.status === 'not_found' ? 'not_found' : 'error';
+
+        // Persist the search result so the admin can revisit it
+        await adminClient
             .from("landlord_applications")
             .update({
                 business_name: businessName,
-                business_address: businessAddress || null,
-                verification_status: verificationResult.status,
-                verification_data: (verificationResult.data || null) as any,
+                verification_status: dbStatus,
+                verification_data: { rows: verificationResult.rows } as any,
                 verification_checked_at: verificationResult.checkedAt,
                 verification_notes: verificationResult.error || null,
                 updated_at: new Date().toISOString(),
             })
-            .eq("id", id)
-            .select(`
-                id,
-                profile_id,
-                business_name,
-                business_address,
-                verification_status,
-                verification_data,
-                verification_checked_at,
-                verification_notes
-            `)
-            .maybeSingle();
+            .eq("id", id);
 
-        if (updateError || !updatedRegistration) {
-            return NextResponse.json({ error: "Failed to update registration with verification results." }, { status: 500 });
-        }
-
-        // Generate manual search URL as fallback
-        const manualSearchURL = generateValenzuelaSearchURL(businessName, businessAddress);
+        const manualSearchURL = generateValenzuelaSearchURL(businessName);
 
         return NextResponse.json({
-            registration: updatedRegistration,
             verification: verificationResult,
             manualSearchURL,
         });
     } catch (error) {
         console.error("Error during business verification:", error);
-        
-        // Update registration with error status
+
         await adminClient
             .from("landlord_applications")
             .update({
@@ -137,19 +108,9 @@ export async function GET(
     const { id } = await context.params;
     const adminClient = createAdminClient();
 
-    // Get the registration with verification data
     const { data: registration, error: registrationError } = await adminClient
         .from("landlord_applications")
-        .select(`
-            id,
-            profile_id,
-            business_name,
-            business_address,
-            verification_status,
-            verification_data,
-            verification_checked_at,
-            verification_notes
-        `)
+        .select("id, business_name")
         .eq("id", id)
         .maybeSingle();
 
@@ -157,13 +118,9 @@ export async function GET(
         return NextResponse.json({ error: "Registration not found." }, { status: 404 });
     }
 
-    // Generate manual search URL if business name exists
     const manualSearchURL = registration.business_name
-        ? generateValenzuelaSearchURL(registration.business_name, registration.business_address || undefined)
+        ? generateValenzuelaSearchURL(registration.business_name)
         : null;
 
-    return NextResponse.json({
-        registration,
-        manualSearchURL,
-    });
+    return NextResponse.json({ registration, manualSearchURL });
 }

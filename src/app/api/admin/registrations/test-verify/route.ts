@@ -5,20 +5,13 @@ export async function POST(request: Request) {
     try {
         const body = await request.json().catch(() => null);
         const businessName = body?.businessName as string | undefined;
-        const businessAddress = body?.businessAddress as string | undefined;
 
         if (!businessName) {
             return NextResponse.json({ error: "Business name is required." }, { status: 400 });
         }
 
-        // Perform verification search
-        const verificationResult = await searchValenzuelaBusinessDatabank(
-            businessName,
-            businessAddress
-        );
-
-        // Generate manual search URL as fallback
-        const manualSearchURL = generateValenzuelaSearchURL(businessName, businessAddress);
+        const verificationResult = await searchValenzuelaBusinessDatabank(businessName);
+        const manualSearchURL = generateValenzuelaSearchURL(businessName);
 
         return NextResponse.json({
             verification: verificationResult,

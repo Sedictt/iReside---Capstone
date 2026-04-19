@@ -111,9 +111,75 @@ export default function AdminUsersPage() {
 
             {/* Directory Table Area - Psychological Layout structured for scanning */}
             <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
-                
-                {/* Table Data */}
-                <div className="overflow-x-auto">
+                {/* Mobile Cards */}
+                <div className="p-4 md:hidden">
+                    {loading ? (
+                        <div className="space-y-3">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="animate-pulse rounded-2xl border border-white/10 bg-black/30 p-4">
+                                    <div className="mb-3 h-4 w-1/2 rounded bg-white/10" />
+                                    <div className="h-3 w-2/3 rounded bg-white/10" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : filtered.length === 0 ? (
+                        <div className="p-10 text-center">
+                            <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
+                                <Search className="h-7 w-7 text-white/20" />
+                            </div>
+                            <p className="text-base font-bold text-white">No records found</p>
+                            <p className="mt-1 text-sm text-white/40">Adjust your filters or search query.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {filtered.map((user) => {
+                                const roleInfo = ROLE_CONFIG[user.role];
+                                const RoleIcon = roleInfo.icon;
+                                const dateObj = new Date(user.created_at);
+
+                                return (
+                                    <article key={user.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                                        <div className="flex items-center gap-3">
+                                            {user.avatar_url ? (
+                                                <img src={user.avatar_url} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
+                                            ) : (
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
+                                                    <span className="text-xs font-bold text-white/70">
+                                                        {user.full_name.substring(0, 2).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-bold text-white">{user.full_name}</p>
+                                                <p className="truncate text-xs text-white/50">{user.email}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                                            <div className={cn("inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-inner", roleInfo.bgClass, roleInfo.borderClass)}>
+                                                <RoleIcon className={cn("h-4 w-4 shrink-0", roleInfo.colorClass)} />
+                                                <span className={cn("text-[11px] font-bold uppercase tracking-wider", roleInfo.colorClass)}>
+                                                    {roleInfo.label}
+                                                </span>
+                                            </div>
+                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/60">
+                                                <Calendar className="h-3.5 w-3.5 text-white/30" />
+                                                {dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                            </span>
+                                            <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-mono text-white/60">
+                                                <Key className="h-3.5 w-3.5 text-white/30" />
+                                                {user.id.split("-")[0]}
+                                            </span>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                {/* Desktop Table Data */}
+                <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-white/5 text-[11px] font-extrabold uppercase tracking-widest text-white/30 bg-black/20">

@@ -3,10 +3,10 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 import {
     LayoutDashboard,
     Users,
-    ShieldCheck,
     LogOut,
     ChevronRight,
     FileCheck
@@ -24,32 +24,30 @@ export function AdminSidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="hidden md:flex fixed inset-y-4 left-4 z-40 w-72 flex-col overflow-hidden rounded-[2rem] border border-white/5 bg-[#0F0F12]/80 backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]">
-            
-            {/* Ambient Lighting Behind Sidebar */}
-            <div className="absolute top-0 left-0 h-48 w-full bg-gradient-to-b from-primary/20 to-transparent pointer-events-none"></div>
+        <aside className="hidden md:flex fixed inset-y-4 left-4 z-40 w-72 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0A0D14]/90 backdrop-blur-2xl shadow-[0_24px_80px_rgba(0,0,0,0.55)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]">
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-lime-400/20 via-emerald-300/8 to-transparent" />
+                <div className="absolute -right-16 top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]" />
+            </div>
 
-            {/* Brand Header (Gestalt: Proximate Grouping) */}
-            <div className="relative flex shrink-0 items-center justify-between px-6 py-8">
-                <div className="flex items-center gap-4">
-                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary shadow-xl shadow-primary/20 ring-1 ring-white/10 overflow-hidden">
-                        <div className="absolute inset-0 bg-white/20 blur-[2px] opacity-10"></div>
-                        <ShieldCheck className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="text-[19px] font-bold tracking-tight text-white/95">iReside</span>
-                        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">Admin Axis</span>
-                    </div>
+            <div className="relative shrink-0 border-b border-white/[0.08] px-6 pt-4 pb-3">
+                <Logo theme="dark" className="h-[7.5rem] w-52 -my-5 self-start -ml-6" />
+                <span className="mt-0.5 block text-left text-[11px] font-semibold uppercase tracking-[0.28em] text-white/45">
+                    Admin Dashboard
+                </span>
+                <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white/55">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.7)]" />
+                    Secure Session
                 </div>
             </div>
 
-            {/* Navigation Block - Hick's Law (Chunking Choices) */}
-            <div className="relative flex-1 overflow-y-auto px-4 py-2 pb-8 scrollbar-none">
-                <div className="mb-5 px-3">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-white/30">Main Infrastructure</span>
+            <div className="relative flex-1 overflow-y-auto px-3 py-4 scrollbar-none">
+                <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
+                    Main Infrastructure
                 </div>
-                
-                <nav className="flex flex-col space-y-2">
+
+                <nav className="space-y-1.5">
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
                         const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -59,68 +57,63 @@ export function AdminSidebar() {
                                 key={item.href}
                                 href={item.href}
                                 className={cn(
-                                    "group relative flex items-center rounded-2xl p-3 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                                    active 
-                                        ? "bg-white/[0.04] shadow-[inset_0_1px_rgba(255,255,255,0.05),0_4px_16px_rgba(0,0,0,0.2)] text-white" 
-                                        : "text-white/50 hover:bg-white/[0.02] hover:text-white/90"
+                                    "group relative grid grid-cols-[2.8rem_1fr_auto] items-center gap-3 rounded-2xl px-3 py-3.5 text-white/65 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-300/40",
+                                    active
+                                        ? "bg-white/[0.07] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_12px_24px_rgba(0,0,0,0.28)]"
+                                        : "hover:bg-white/[0.04] hover:text-white"
                                 )}
                             >
-                                {/* Active Fitts's Law Callout Indicator */}
                                 {active && (
-                                    <div className="absolute inset-y-1/4 left-0 w-1 rounded-r-md bg-primary shadow-[0_0_12px_rgba(225,29,72,0.8)]"></div>
+                                    <span className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-lime-300 shadow-[0_0_14px_rgba(163,230,53,0.8)]" />
                                 )}
-                                
-                                <div className={cn(
-                                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-400 mr-4 border border-white/5",
-                                    active 
-                                        ? "bg-gradient-to-tr from-primary/20 to-primary/20 text-primary ring-1 ring-white/10 shadow-inner shadow-primary/20" 
-                                        : "bg-white/[0.03] group-hover:bg-white/[0.05] group-hover:border-white/10"
-                                )}>
-                                    <Icon className={cn("h-5 w-5 transition-transform duration-400 ease-out", active ? "scale-[1.15]" : "group-hover:scale-110")} strokeWidth={active ? 2.5 : 1.5} />
-                                </div>
-                                <div className="flex min-w-0 flex-1 flex-col justify-center">
-                                    <span className="text-[14px] font-semibold leading-tight tracking-wide">{item.label}</span>
-                                    <span className={cn(
-                                        "truncate text-[11px] mt-0.5 font-medium transition-colors duration-400", 
-                                        active ? "text-primary/20/60" : "text-white/30"
-                                    )}>
+
+                                <span
+                                    className={cn(
+                                        "flex h-11 w-11 items-center justify-center rounded-xl border transition-all duration-300",
+                                        active
+                                            ? "border-lime-300/30 bg-lime-300/12 text-lime-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]"
+                                            : "border-white/10 bg-white/[0.03] text-white/70 group-hover:border-white/20 group-hover:bg-white/[0.05]"
+                                    )}
+                                >
+                                    <Icon className={cn("h-5 w-5 transition-transform duration-300", active ? "scale-110" : "group-hover:scale-105")} strokeWidth={active ? 2.25 : 1.9} />
+                                </span>
+
+                                <span className="min-w-0">
+                                    <span className="block truncate text-[1.02rem] font-semibold leading-tight tracking-tight">{item.label}</span>
+                                    <span className={cn("mt-0.5 block truncate text-xs", active ? "text-white/75" : "text-white/40 group-hover:text-white/60")}>
                                         {item.description}
                                     </span>
-                                </div>
-                                
-                                <div className={cn(
-                                    "transition-all duration-400 transform ml-2",
-                                    active ? "opacity-100 translate-x-0 text-primary" : "opacity-0 -translate-x-2 group-hover:opacity-40 group-hover:translate-x-0"
-                                )}>
+                                </span>
+
+                                <span className={cn("pr-1 transition-all duration-300", active ? "translate-x-0 text-lime-200 opacity-100" : "-translate-x-1 text-white/35 opacity-0 group-hover:translate-x-0 group-hover:opacity-100")}>
                                     <ChevronRight className="h-4 w-4" />
-                                </div>
+                                </span>
                             </Link>
                         );
                     })}
                 </nav>
             </div>
 
-            
-            {/* Footer Features */}
-            <div className="px-4 pb-4">
-                <ThemeToggle />
-            </div>
-            
-            {/* Footer Profile/Actions */}
-            <div className="relative shrink-0 border-t border-white/[0.06] p-4 bg-black/20">
-                <button
-                    type="button"
-                    onClick={() => void signOut()}
-                    className="group flex w-full items-center gap-4 rounded-xl p-3 outline-none transition-all duration-300 hover:bg-primary/20[0.08]"
-                >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-red-500/10 text-red-400/80 transition-all duration-300 group-hover:bg-red-500/20 group-hover:text-red-400 border border-red-500/10">
-                        <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" strokeWidth={2} />
-                    </div>
-                    <div className="flex flex-col text-left">
-                        <span className="text-[13px] font-bold text-white/70 group-hover:text-primary/20 transition-colors">Terminate Session</span>
-                        <span className="text-[10px] text-white/30 font-medium tracking-wide">Secure sign out</span>
-                    </div>
-                </button>
+            <div className="relative shrink-0 border-t border-white/[0.08] bg-black/25">
+                <div className="px-4 pt-3 pb-2">
+                    <ThemeToggle />
+                </div>
+
+                <div className="px-4 pb-4">
+                    <button
+                        type="button"
+                        onClick={() => void signOut()}
+                        className="group flex w-full items-center gap-3 rounded-xl border border-red-400/15 bg-red-500/[0.06] px-3 py-2.5 text-left outline-none transition-all duration-300 hover:border-red-300/30 hover:bg-red-500/[0.1] focus-visible:ring-2 focus-visible:ring-red-300/40"
+                    >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-300 transition-colors duration-300 group-hover:bg-red-500/25">
+                            <LogOut className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" strokeWidth={2.2} />
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-[13px] font-semibold text-white/85">Terminate Session</span>
+                            <span className="block text-[10px] uppercase tracking-[0.18em] text-red-200/70">Secure sign out</span>
+                        </span>
+                    </button>
+                </div>
             </div>
         </aside>
     );

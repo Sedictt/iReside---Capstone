@@ -4,6 +4,7 @@ import { Bell, Building2, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/ui/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 
@@ -21,9 +22,8 @@ export function LandlordNavbar() {
     return (
         <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/70 bg-card/95 px-6 text-foreground shadow-sm backdrop-blur">
             <div className="flex items-center gap-8">
-                <Link href="/landlord/dashboard" className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground hover:opacity-90">
-                    <Building2 className="h-6 w-6 text-blue-500" />
-                    <span>iReside</span>
+                <Link href="/landlord/dashboard" className="flex items-center hover:opacity-90">
+                    <Logo className="h-10 w-32" />
                 </Link>
                 <div className="hidden md:flex items-center gap-6">
                     {NAV_ITEMS.map((item) => (
