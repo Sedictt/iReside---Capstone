@@ -323,7 +323,7 @@ export default function TenantDashboard() {
 
                 {/* Hero Banner */}
                 <div 
-                    className="relative w-full h-[280px] rounded-3xl overflow-hidden group border border-border/50 shadow-2xl"
+                    className="relative w-full h-[280px] rounded-3xl overflow-hidden group border border-border/50 shadow-lg shadow-slate-900/10 dark:shadow-2xl dark:shadow-black/40"
                     data-tour-id="tour-dashboard-overview"
                 >
                     <Image
@@ -333,22 +333,22 @@ export default function TenantDashboard() {
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                         priority
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/25 to-black/5 dark:from-black/60 dark:via-black/35 dark:to-black/10" />
 
                     <div className="absolute bottom-0 left-0 right-0 p-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div className="space-y-6 w-full md:w-auto">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-white/80 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] dark:text-white/80">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-white/85 dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
                                         {isInitialLoading ? "Loading..." : nextPayment ? "Next Payment" : "No Upcoming Payments"}
                                     </span>
                                 </div>
-                                <h2 className={cn("mb-2 text-4xl font-bold tracking-tight text-white drop-shadow-[0_8px_28px_rgba(0,0,0,0.65)] md:text-5xl", isInitialLoading && "animate-pulse")}>
+                                <h2 className={cn("mb-2 text-4xl font-bold tracking-tight text-white dark:drop-shadow-[0_8px_28px_rgba(0,0,0,0.65)] md:text-5xl", isInitialLoading && "animate-pulse")}>
                                     {"\u20B1"}{displayPaymentParts.whole}
                                     <span className="text-2xl text-white/70">.{displayPaymentParts.decimal}</span>
                                 </h2>
-                                <p className={cn("flex items-center gap-2 font-medium text-white/80 drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]", isInitialLoading && "animate-pulse")}>
+                                <p className={cn("flex items-center gap-2 font-medium text-white/85 dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]", isInitialLoading && "animate-pulse")}>
                                     <Calendar className="w-4 h-4" />
                                     {isInitialLoading ? "Loading payment..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
                                 </p>
@@ -366,24 +366,24 @@ export default function TenantDashboard() {
                                 )}
                                 <Link
                                     href="/tenant/payments"
-                                    className="rounded-xl border border-white/15 bg-black/35 px-6 py-3 text-sm font-medium text-white/90 backdrop-blur-md transition-colors hover:bg-black/45 dark:border-white/15 dark:bg-black/35 dark:text-white/90"
+                                    className="rounded-xl border border-white/20 bg-black/45 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-black/55 dark:border-white/15 dark:bg-black/35 dark:text-white/90 dark:hover:bg-black/45"
                                 >
                                     View Details
                                 </Link>
                             </div>
                         </div>
 
-                        <div className={cn("flex min-w-[200px] flex-col items-center justify-center rounded-xl border border-white/15 bg-black/35 p-6 shadow-lg shadow-black/30 backdrop-blur-md", isInitialLoading && "animate-pulse")}>
-                            <p className="mb-2 text-sm font-medium text-white/75">Time Remaining</p>
+                        <div className={cn("flex min-w-[200px] flex-col items-center justify-center rounded-xl border border-white/20 bg-black/45 p-6 shadow-md shadow-black/20 dark:border-white/15 dark:bg-black/35 dark:shadow-lg dark:shadow-black/30", isInitialLoading && "animate-pulse")}>
+                            <p className="mb-2 text-sm font-medium text-white/85 dark:text-white/75">Time Remaining</p>
                             <div className="flex items-start gap-4 text-white">
                                 <div className="text-center">
                                     <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.days).padStart(2, "0")}</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">Days</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 dark:text-white/60">Days</span>
                                 </div>
-                                <span className="mt-1 animate-blink text-2xl font-light text-white/35">:</span>
+                                <span className="mt-1 animate-blink text-2xl font-light text-white/55 dark:text-white/35">:</span>
                                 <div className="text-center">
                                     <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.hours).padStart(2, "0")}</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">Hrs</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 dark:text-white/60">Hrs</span>
                                 </div>
                             </div>
                         </div>
@@ -837,7 +837,7 @@ export default function TenantDashboard() {
                                             </div>
                                             <h3 className="text-xl font-display text-foreground">Landlord / Support</h3>
                                         </div>
-                                        <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                                        <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
                                             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                                             Online
                                         </div>
@@ -856,7 +856,7 @@ export default function TenantDashboard() {
                                         ))}
                                     </div>
                                 ) : lease ? (
-                                        <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(23,23,23,0.96),rgba(10,10,10,0.98))] p-5 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.6)]">
+                                        <div className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.96),rgba(10,10,10,0.98))] dark:shadow-[0_18px_40px_-30px_rgba(0,0,0,0.6)]">
                                             <div className="flex items-start gap-4">
                                                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-sm ring-1 ring-primary/10">
                                                     <span className="text-lg font-black uppercase">
@@ -878,7 +878,7 @@ export default function TenantDashboard() {
 
                                             <div className="mt-5 grid gap-3">
                                                 {lease.landlordEmail && (
-                                                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3">
+                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-muted/30 px-3.5 py-3 dark:border-white/10 dark:bg-white/5">
                                                         <div className="mt-0.5 rounded-xl bg-blue-500/10 p-2 text-blue-600">
                                                             <Mail className="h-4 w-4" />
                                                         </div>
@@ -889,7 +889,7 @@ export default function TenantDashboard() {
                                                     </div>
                                                 )}
                                                 {lease.landlordPhone && (
-                                                    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3">
+                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-muted/30 px-3.5 py-3 dark:border-white/10 dark:bg-white/5">
                                                         <div className="mt-0.5 rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
                                                             <Phone className="h-4 w-4" />
                                                         </div>

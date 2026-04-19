@@ -105,7 +105,7 @@ const IRIS_CONTACT: ContactItem = {
     unit: "AI Concierge",
     unread: 0,
     lastContact: "Always Available",
-    avatar: "/iris-avatar.png",
+    avatar: "/logos/favicon.png",
     isAI: true,
     relationshipStatus: "stranger",
     hasPaymentHistory: false,

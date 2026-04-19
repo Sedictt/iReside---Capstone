@@ -10,7 +10,8 @@ import {
     ClipboardList,
     Map,
     ArrowUpRight,
-    Megaphone
+    Megaphone,
+    Settings
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
@@ -39,6 +40,7 @@ const NAV_ITEMS: SidebarNavSection[] = [
             { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: 3 },
             { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
             { label: "Messaging", href: "/landlord/messages", icon: MessageSquare },
+            { label: "Settings", href: "/landlord/settings", icon: Settings },
         ]
     },
 ];
