@@ -446,7 +446,7 @@ ON CONFLICT (id) DO UPDATE SET
   status=EXCLUDED.status, views=EXCLUDED.views, leads=EXCLUDED.leads, updated_at=now();
 
 -- ---------------------------------------------------------------------------
--- Admin user (deterministic UUID 00000000-0000-0000-0000-000000000001)
+-- Admin users (deterministic UUIDs ...0001 and ...0002)
 -- ---------------------------------------------------------------------------
 DO $
 BEGIN
@@ -457,6 +457,12 @@ BEGIN
     ) VALUES
       ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000001',
        'authenticated', 'authenticated', 'admin@ireside.local',
+       crypt('Passw0rd!', gen_salt('bf')), now(),
+       '{"provider":"email","providers":["email"]}'::jsonb,
+       '{"role":"admin"}'::jsonb,
+       now(), now()),
+      ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000002',
+       'authenticated', 'authenticated', 'admin.test@ireside.local',
        crypt('Passw0rd!', gen_salt('bf')), now(),
        '{"provider":"email","providers":["email"]}'::jsonb,
        '{"role":"admin"}'::jsonb,
@@ -471,7 +477,8 @@ BEGIN
 END $;
 
 INSERT INTO public.profiles (id, email, full_name, role) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'admin@ireside.local', 'System Admin', 'admin')
+  ('00000000-0000-0000-0000-000000000001', 'admin@ireside.local', 'System Admin', 'admin'),
+  ('00000000-0000-0000-0000-000000000002', 'admin.test@ireside.local', 'QA Admin', 'admin')
 ON CONFLICT (id) DO UPDATE SET
   email = EXCLUDED.email,
   full_name = EXCLUDED.full_name,
