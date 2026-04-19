@@ -38,7 +38,7 @@ export function RoleSidebar({
     const pathname = usePathname();
 
     return (
-        <aside className={cn("fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border/70 bg-card/95 text-foreground backdrop-blur-sm", className)}>
+        <aside className={cn("fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border/70 bg-card text-foreground", className)}>
             <div className="flex h-20 items-center justify-between gap-3 border-b border-border/70 px-6">
                 <div className="flex items-center gap-3">
                     <Logo className="h-30 w-36" />

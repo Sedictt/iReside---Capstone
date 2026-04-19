@@ -5,12 +5,21 @@
   color-scheme: light;
   --background: #f3f5f9;
   --foreground: #0f172a;
+  --surface-0: #f3f5f9;
+  --surface-1: #ffffff;
+  --surface-2: #eef2f7;
+  --surface-3: #e5ebf3;
+  --surface-4: #dce4ee;
   --card: #ffffff;
   --card-foreground: #0f172a;
   --input: #ffffff;
   --border: #d9e2ec;
+  --divider: rgba(15, 23, 42, 0.12);
   --muted: #e8edf5;
   --muted-foreground: #64748b;
+  --text-high: rgba(15, 23, 42, 0.92);
+  --text-medium: rgba(15, 23, 42, 0.68);
+  --text-disabled: rgba(15, 23, 42, 0.42);
   --secondary: #dfe7f1;
   --secondary-foreground: #0f172a;
   --primary: #6d9838;
@@ -31,6 +40,15 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-text-high: var(--text-high);
+  --color-text-medium: var(--text-medium);
+  --color-text-disabled: var(--text-disabled);
+  --color-divider: var(--divider);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
@@ -56,23 +74,27 @@
 
 .dark {
   color-scheme: dark;
-  --background: #0a0a0a;
-  /* Neutral 950 */
-  --foreground: #fafafa;
-  /* Neutral 50 */
+  --background: #121212;
+  --foreground: rgba(255, 255, 255, 0.87);
+  --surface-0: #121212;
+  --surface-1: #1e1e1e;
+  --surface-2: #222222;
+  --surface-3: #272727;
+  --surface-4: #2e2e2e;
+  --text-high: rgba(255, 255, 255, 0.87);
+  --text-medium: rgba(255, 255, 255, 0.6);
+  --text-disabled: rgba(255, 255, 255, 0.38);
+  --divider: rgba(255, 255, 255, 0.12);
   --primary: #6d9838;
   --primary-rgb: 109, 152, 56;
-  /* Sage Green */
-  --card: #171717;
-  --card-foreground: #fafafa;
-  /* Neutral 900 */
-  --input: #262626;
-  /* Neutral 800 */
-  --border: #262626;
-  --muted: #171717;
-  --muted-foreground: #a3a3a3;
-  --secondary: #262626;
-  --secondary-foreground: #fafafa;
+  --card: var(--surface-1);
+  --card-foreground: var(--text-high);
+  --input: var(--surface-2);
+  --border: var(--divider);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-medium);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text-high);
   --primary-foreground: #0a0a0a;
 }
 
@@ -90,6 +112,21 @@ body {
   font-family: var(--font-sans), sans-serif;
   transition: background-color 0.2s ease, color 0.2s ease;
   overscroll-behavior-y: none;
+}
+
+.surface-0 { background-color: var(--surface-0); }
+.surface-1 { background-color: var(--surface-1); }
+.surface-2 { background-color: var(--surface-2); }
+.surface-3 { background-color: var(--surface-3); }
+.surface-4 { background-color: var(--surface-4); }
+.text-high { color: var(--text-high); }
+.text-medium { color: var(--text-medium); }
+.text-disabled { color: var(--text-disabled); }
+
+/* Dark-mode consistency: remove expensive blur glass effects globally */
+.dark :where(.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl, .backdrop-blur-2xl) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 /* Hide number input spinners */

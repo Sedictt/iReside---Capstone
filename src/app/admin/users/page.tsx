@@ -51,13 +51,11 @@ export default function AdminUsersPage() {
     return (
         <div className="flex flex-col gap-8 pb-12">
             {/* Header & Controls - Gestalt Grouping */}
-            <section className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-10">
-                <div className="pointer-events-none absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.03] mix-blend-overlay" />
-                <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/20 blur-[100px]" />
+            <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8 md:p-10">
                 
                 <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl space-y-4">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/20 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary/80 shadow-[0_0_20px_rgba(109,152,56,0.2)]">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary">
                             <Users className="h-3.5 w-3.5" />
                             Directory Access
                         </div>
@@ -80,7 +78,7 @@ export default function AdminUsersPage() {
                                     className={cn(
                                         "relative flex h-12 items-center justify-center rounded-2xl border px-6 font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                                         isActive
-                                            ? "border-primary/20 bg-primary/20 text-primary shadow-[0_0_20px_rgba(109,152,56,0.2)]"
+                                            ? "border-primary/25 bg-primary/10 text-primary"
                                             : "border-white/10 bg-white/[0.02] text-white/50 hover:bg-white/[0.06] hover:text-white"
                                     )}
                                 >
@@ -103,20 +101,20 @@ export default function AdminUsersPage() {
                             placeholder="Search by name, email, or identity..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="h-16 w-full rounded-2xl border border-white/10 bg-black/40 pl-14 pr-6 text-lg font-medium text-white placeholder-white/30 shadow-inner transition-all focus:border-primary/20 focus:bg-black/60 focus:outline-none focus:ring-4 focus:ring-primary/20"
+                            className="h-16 w-full rounded-2xl border border-border/70 bg-background pl-14 pr-6 text-lg font-medium text-foreground placeholder:text-muted-foreground transition-all focus:border-primary/30 focus:outline-none focus:ring-4 focus:ring-primary/20"
                         />
                     </div>
                 </div>
             </section>
 
             {/* Directory Table Area - Psychological Layout structured for scanning */}
-            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card">
                 {/* Mobile Cards */}
                 <div className="p-4 md:hidden">
                     {loading ? (
                         <div className="space-y-3">
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="animate-pulse rounded-2xl border border-white/10 bg-black/30 p-4">
+                                <div key={i} className="animate-pulse rounded-2xl border border-border/70 bg-muted/30 p-4">
                                     <div className="mb-3 h-4 w-1/2 rounded bg-white/10" />
                                     <div className="h-3 w-2/3 rounded bg-white/10" />
                                 </div>
@@ -138,7 +136,7 @@ export default function AdminUsersPage() {
                                 const dateObj = new Date(user.created_at);
 
                                 return (
-                                    <article key={user.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                                    <article key={user.id} className="rounded-2xl border border-border/70 bg-background p-4">
                                         <div className="flex items-center gap-3">
                                             {user.avatar_url ? (
                                                 <img src={user.avatar_url} alt="" className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover" />
@@ -182,7 +180,7 @@ export default function AdminUsersPage() {
                 <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-white/5 text-[11px] font-extrabold uppercase tracking-widest text-white/30 bg-black/20">
+                            <tr className="border-b border-border/70 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground bg-muted/30">
                                 <th className="px-8 py-5 font-bold">Identity</th>
                                 <th className="px-8 py-5 font-bold">Contact</th>
                                 <th className="px-8 py-5 font-bold">Clearance Role</th>

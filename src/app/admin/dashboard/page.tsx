@@ -5,11 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
     ArrowRight,
-    ArrowUpRight,
     BellRing,
     Building2,
     FileCheck,
-    Home,
     ShieldCheck,
     Sparkles,
     TrendingUp,
@@ -44,21 +42,17 @@ function StatTile({
     label,
     value,
     accentColorClass,
-    accentBgClass,
     icon: Icon,
     loading,
 }: {
     label: string;
     value: number;
     accentColorClass: string;
-    accentBgClass: string;
     icon: ElementType;
     loading: boolean;
 }) {
     return (
-        <div className="group relative overflow-hidden rounded-[2rem] border border-white/5 bg-[#0F0F12]/80 p-6 shadow-[0_0_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-500 ease-out hover:-translate-y-1 hover:border-white/10 hover:bg-white/[0.04]">
-            {/* Ambient Lighting */}
-            <div className={cn("pointer-events-none absolute -top-10 -right-10 h-32 w-32 blur-3xl opacity-20 transition-opacity duration-500 group-hover:opacity-40", accentBgClass)} />
+        <div className="group relative overflow-hidden rounded-[2rem] border border-border/70 bg-card p-6 transition-all duration-300 ease-out hover:border-border hover:bg-muted/20">
             
             <div className="relative z-10 flex flex-col h-full gap-6">
                 <div className="flex items-start justify-between">
@@ -167,14 +161,11 @@ export default function AdminDashboardPage() {
     return (
         <div className="flex flex-col gap-8 pb-12">
             {/* Command Center Hero */}
-            <section className="relative overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-8 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl md:p-12">
-                <div className="pointer-events-none absolute inset-0 bg-[url('/assets/noise.png')] opacity-[0.03] mix-blend-overlay" />
-                <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/20 blur-[100px]" />
-                <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
+            <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8 md:p-12">
 
                 <div className="relative z-10 flex flex-col justify-between gap-12 lg:flex-row lg:items-center">
                     <div className="max-w-2xl space-y-6">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/20 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary/80 shadow-[0_0_20px_rgba(225,29,72,0.15)]">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary">
                             <span className="relative flex h-2 w-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
@@ -208,7 +199,7 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <div className="grid w-full shrink-0 gap-4 sm:grid-cols-2 lg:w-auto lg:min-w-[400px] lg:grid-cols-1">
-                        <div className="group relative overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/205 p-6 shadow-inner transition-colors hover:border-primary/20 hover:bg-primary/20">
+                        <div className="group relative overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/10 p-6 transition-colors hover:bg-primary/15">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-[11px] font-extrabold uppercase tracking-widest text-primary/20">Registration Load</p>
@@ -223,7 +214,7 @@ export default function AdminDashboardPage() {
                             </div>
                         </div>
 
-                        <div className="group relative overflow-hidden rounded-[2rem] border border-primary/20 bg-gradient-to-br from-primary/20 to-primary/205 p-6 shadow-inner transition-colors hover:border-primary/20 hover:bg-primary/20">
+                        <div className="group relative overflow-hidden rounded-[2rem] border border-primary/20 bg-primary/10 p-6 transition-colors hover:bg-primary/15">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-[11px] font-extrabold uppercase tracking-widest text-primary/20">System Adoption</p>
@@ -248,7 +239,6 @@ export default function AdminDashboardPage() {
                     value={totalUsers}
                     icon={Users}
                     accentColorClass="text-blue-400"
-                    accentBgClass="bg-blue-500"
                     loading={loading}
                 />
                 <StatTile
@@ -256,7 +246,6 @@ export default function AdminDashboardPage() {
                     value={totalTenants}
                     icon={Users}
                     accentColorClass="text-primary"
-                    accentBgClass="bg-primary"
                     loading={loading}
                 />
                 <StatTile
@@ -264,7 +253,6 @@ export default function AdminDashboardPage() {
                     value={totalLandlords}
                     icon={ShieldCheck}
                     accentColorClass="text-amber-400"
-                    accentBgClass="bg-amber-500"
                     loading={loading}
                 />
                 <StatTile
@@ -272,7 +260,6 @@ export default function AdminDashboardPage() {
                     value={totalProperties}
                     icon={Building2}
                     accentColorClass="text-purple-400"
-                    accentBgClass="bg-purple-500"
                     loading={loading}
                 />
             </section>
@@ -281,7 +268,7 @@ export default function AdminDashboardPage() {
             <section className="grid gap-6 xl:grid-cols-3">
                 
                 {/* Platform Balance */}
-                <div className="xl:col-span-2 flex flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+                <div className="xl:col-span-2 flex flex-col overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <p className="text-[11px] font-extrabold uppercase tracking-widest text-white/30">Demographics</p>
@@ -292,7 +279,7 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex-1 rounded-[2rem] border border-white/5 bg-white/[0.01] p-8 shadow-inner">
+                    <div className="flex-1 rounded-[2rem] border border-border/70 bg-background p-8">
                         <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
                             <div className="space-y-8 flex flex-col justify-center">
                                 <MetricBar label="Tenant Saturation" value={tenantShare} colorClass="bg-primary" />
@@ -300,19 +287,19 @@ export default function AdminDashboardPage() {
                                 <MetricBar label="Property Lease Coverage" value={leaseCoverage} colorClass="bg-purple-500" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-[1.5rem] bg-black/20 p-5 border border-white/5">
+                                <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
                                     <p className="text-3xl font-black text-primary">{totalTenants}</p>
                                     <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Tenants</p>
                                 </div>
-                                <div className="rounded-[1.5rem] bg-black/20 p-5 border border-white/5">
+                                <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
                                     <p className="text-3xl font-black text-amber-400">{totalLandlords}</p>
                                     <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Landlords</p>
                                 </div>
-                                <div className="rounded-[1.5rem] bg-black/20 p-5 border border-white/5">
+                                <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
                                     <p className="text-3xl font-black text-purple-400">{totalProperties}</p>
                                     <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Properties</p>
                                 </div>
-                                <div className="rounded-[1.5rem] bg-black/20 p-5 border border-white/5">
+                                <div className="rounded-[1.5rem] bg-muted/30 p-5 border border-border/70">
                                     <p className="text-3xl font-black text-primary">{activeLeases}</p>
                                     <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/40">Leases</p>
                                 </div>
@@ -322,19 +309,19 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Onboarding Funnel (Fitts Law Target Optimization) */}
-                <div className="flex flex-col overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#0F0F12]/80 p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+                <div className="flex flex-col overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <p className="text-[11px] font-extrabold uppercase tracking-widest text-white/30">Analytics</p>
                             <h2 className="mt-2 text-2xl font-black text-white">Tour Funnel</h2>
                         </div>
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.03] text-white/40">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/40 text-muted-foreground">
                             <BellRing className="h-6 w-6" />
                         </div>
                     </div>
 
                     <div className="flex flex-1 flex-col gap-4">
-                        <div className="flex flex-1 items-center justify-between rounded-[1.5rem] border border-white/5 bg-black/20 p-6 transition-colors hover:bg-white/[0.03]">
+                        <div className="flex flex-1 items-center justify-between rounded-[1.5rem] border border-border/70 bg-muted/30 p-6 transition-colors hover:bg-muted/40">
                             <div>
                                 <p className="text-sm font-bold text-white/50">Entered</p>
                                 <p className="text-xs font-semibold text-white/30 mt-1">Total initiated</p>
