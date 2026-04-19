@@ -15,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="pointer-events-none absolute inset-0 z-0 bg-[url('/assets/noise.png')] opacity-[0.015] mix-blend-overlay" />
 
                 <AdminSidebar />
-                <main className="relative z-10 flex-1 ml-0 overflow-y-auto px-8 md:ml-80 lg:ml-80 lg:px-12 py-10 min-h-screen">
+                <main className="relative z-10 flex-1 ml-0 overflow-y-auto px-8 py-10 min-h-screen md:ml-64 lg:px-12">
                     <div className="mx-auto max-w-7xl animate-in fade-in duration-700 slide-in-from-bottom-6">
                         {children}
                     </div>
