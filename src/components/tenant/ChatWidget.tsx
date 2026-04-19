@@ -249,7 +249,7 @@ export function ChatWidget({
                                 <div className="relative h-11 w-11 rounded-full bg-white/20 p-0.5">
                                     <div className="h-full w-full rounded-full bg-white overflow-hidden">
                                         <Image
-                                            src="/iris-avatar.png"
+                                            src="/logos/favicon.png"
                                             alt="iRis"
                                             width={44} height={44}
                                             className="object-cover"
@@ -326,7 +326,7 @@ export function ChatWidget({
                                             <div className="flex-shrink-0 mt-auto mb-1">
                                                 <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20">
                                                     <Image
-                                                        src="/iris-avatar.png"
+                                                        src="/logos/favicon.png"
                                                         alt="iRis"
                                                         width={28} height={28}
                                                     />
@@ -359,7 +359,7 @@ export function ChatWidget({
                                 className="flex gap-3"
                             >
                                 <div className="h-7 w-7 rounded-full overflow-hidden bg-primary/10 border border-primary/20 flex-shrink-0 mt-auto">
-                                    <Image src="/iris-avatar.png" alt="iRis" width={28} height={28} />
+                                    <Image src="/logos/favicon.png" alt="iRis" width={28} height={28} />
                                 </div>
                                 <div className="bg-card px-4 py-3 rounded-[1.25rem] rounded-bl-none border border-border shadow-sm flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -440,3 +440,4 @@ export function ChatWidget({
         </AnimatePresence>
     );
 }
+

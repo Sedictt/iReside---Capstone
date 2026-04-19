@@ -899,7 +899,7 @@ export function TenantContactsSidebar() {
                                 >
                                     <div className="relative shrink-0">
                                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white overflow-hidden border-2 border-card">
-                                            <img src="/iris-avatar.png" alt="iRis" className="w-full h-full object-cover" />
+                                            <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
                                         </div>
                                         <div className="absolute top-0 right-0 h-3 w-3 rounded-full bg-primary animate-pulse border-2 border-card" />
                                     </div>
@@ -1378,3 +1378,4 @@ function ContactCard({ name, unit, phone, avatar, status, isExpanded }: any) {
         </div>
     )
 }
+
