@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
+import ScrollToPlugin from "gsap/ScrollToPlugin";
 import { useGSAP } from "@gsap/react";
 import { TransitionLink } from "@/components/transitions/PageTransitionProvider";
 
 if (typeof window !== "undefined") {
-    gsap.registerPlugin(ScrollTrigger, useGSAP);
+    gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, useGSAP);
     ScrollTrigger.config({
         limitCallbacks: true,
         ignoreMobileResize: true,
@@ -145,6 +146,78 @@ export default function ScrollyTellingLandingPage() {
     const irisSectionRef = useRef<HTMLElement>(null);
     const outcomesSectionRef = useRef<HTMLElement>(null);
     const ctaSectionRef = useRef<HTMLElement>(null);
+    const navRef = useRef<HTMLElement>(null);
+    const backToTopRef = useRef<HTMLButtonElement>(null);
+
+    // 0. Smart Header Behavior
+    useGSAP(() => {
+        const nav = navRef.current;
+        if (!nav) return;
+
+        let lastScroll = 0;
+        const showAnim = gsap.from(nav, { 
+            yPercent: -100,
+            paused: true,
+            duration: 0.3,
+            ease: "power2.out"
+        }).progress(1);
+
+        ScrollTrigger.create({
+            start: "top top",
+            end: 99999,
+            onUpdate: (self) => {
+                const scrollY = self.scroll();
+                const isScrollingDown = self.direction === 1;
+                
+                // Hide if scrolling down and past a small threshold
+                if (isScrollingDown && scrollY > 100) {
+                    showAnim.reverse();
+                } else {
+                    // Show if scrolling up or at the very top
+                    showAnim.play();
+                }
+                
+                lastScroll = scrollY;
+            }
+        });
+
+        // Entrance Reveal
+        gsap.from(nav, {
+            y: -100,
+            opacity: 0,
+            duration: 1.2,
+            ease: "expo.out",
+            delay: 0.5
+        });
+    }, { scope: containerRef });
+
+    // 0.5. Back to Top Progress & Visibility
+    useGSAP(() => {
+        const btn = backToTopRef.current;
+        const progressPath = btn?.querySelector(".progress-ring-path");
+        if (!btn || !progressPath) return;
+
+        gsap.set(btn, { autoAlpha: 0, scale: 0.5, y: 40 });
+
+        ScrollTrigger.create({
+            trigger: "body",
+            start: "top -100%",
+            onEnter: () => gsap.to(btn, { autoAlpha: 1, scale: 1, y: 0, duration: 0.6, ease: "back.out(1.7)" }),
+            onLeaveBack: () => gsap.to(btn, { autoAlpha: 0, scale: 0.5, y: 40, duration: 0.4, ease: "power2.in" }),
+        });
+
+        const totalLength = (progressPath as SVGPathElement).getTotalLength();
+        gsap.set(progressPath, { strokeDasharray: totalLength, strokeDashoffset: totalLength });
+
+        ScrollTrigger.create({
+            start: 0,
+            end: "max",
+            onUpdate: (self) => {
+                const offset = totalLength - (self.progress * totalLength);
+                gsap.set(progressPath, { strokeDashoffset: offset });
+            }
+        });
+    }, { scope: containerRef });
 
     // 1. Showcase Stack Animation
     useGSAP(() => {
@@ -494,24 +567,45 @@ export default function ScrollyTellingLandingPage() {
                 <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_0%,#000_70%,transparent_100%)]" />
             </div>
 
-            <motion.nav 
-                initial={{ y: -100 }} animate={{ y: 0 }}
-                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            <nav 
+                ref={navRef}
                 className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-2xl"
             >
                 <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
-                    <div className="flex items-center gap-4 group cursor-pointer">
+                    <div className="flex items-center gap-4 group cursor-pointer" onClick={() => gsap.to(window, { scrollTo: 0, duration: 1, ease: "power2.inOut" })}>
                         <Logo className="h-8 md:h-10 w-auto transition-transform group-hover:scale-105" />
                         <div className="flex flex-col border-l border-border/50 pl-4">
                             <span className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-[0.25em] text-primary leading-tight">Landlord Access</span>
                         </div>
                     </div>
+
+                    <div className="hidden lg:flex items-center gap-8">
+                        {[
+                            { label: "Our Process", id: "#how-it-works" },
+                            { label: "Smart Tools", id: "#features" },
+                            { label: "Meet iRis", id: "#iris" },
+                            { label: "Why iReside", id: "#outcomes" },
+                        ].map((item) => (
+                            <button
+                                key={item.id}
+                                onClick={() => gsap.to(window, { 
+                                    scrollTo: { y: item.id, autoKill: false }, 
+                                    duration: 1.2, 
+                                    ease: "power2.inOut" 
+                                })}
+                                className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors tracking-tight"
+                            >
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="flex items-center gap-4"><ThemeToggle /><TransitionLink href="/login" className="relative flex items-center gap-2 overflow-hidden group px-6 py-2.5 rounded-full border border-zinc-200 bg-muted border-border text-sm font-bold text-foreground transition-all hover:bg-muted/80 hover:border-primary/30">
                         <span className="relative z-10 hidden md:block">Access Portal</span><span className="relative z-10 md:hidden">Login</span>
                         <ChevronRight className="h-4 w-4 relative z-10 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                     </TransitionLink></div>
                 </div>
-            </motion.nav>
+            </nav>
 
             {/* Hero Section */}
             <section className="relative min-h-[100svh] flex flex-col items-center justify-center px-6 pt-24 pb-20 z-10">
@@ -537,7 +631,7 @@ export default function ScrollyTellingLandingPage() {
             </section>
 
             {/* How It Works */}
-            <section ref={containerRef} className="relative h-screen z-20 overflow-hidden bg-background">
+            <section id="how-it-works" ref={containerRef} className="relative h-screen z-20 overflow-hidden bg-background">
                 <div ref={scrollWrapperRef} className="flex h-screen items-center w-max px-[5vw]">
                     <div className="howit-panel w-[90vw] md:w-[60vw] shrink-0 flex flex-col justify-center px-12 md:px-20">
                         <h2 className="text-5xl md:text-8xl font-black mb-8">How It<br/>Works</h2>
@@ -570,7 +664,7 @@ export default function ScrollyTellingLandingPage() {
             </section>
 
             {/* Showcase Stack */}
-            <section ref={showcaseContainerRef} className="relative h-screen bg-background z-20 overflow-hidden">
+            <section id="features" ref={showcaseContainerRef} className="relative h-screen bg-background z-20 overflow-hidden">
                 <div className="absolute top-24 left-0 right-0 z-30 text-center pointer-events-none">
                     <p className="text-sm font-black uppercase tracking-widest text-primary mb-2">Featured Modules</p>
                     <h2 className="text-3xl font-bold">Three core tools for confident management.</h2>
@@ -596,7 +690,7 @@ export default function ScrollyTellingLandingPage() {
             </section>
 
             {/* iRis Section */}
-            <section ref={irisSectionRef} className="relative h-[100svh] flex flex-col justify-center px-6 border-t border-border overflow-hidden z-20 bg-background">
+            <section id="iris" ref={irisSectionRef} className="relative h-[100svh] flex flex-col justify-center px-6 border-t border-border overflow-hidden z-20 bg-background">
                 <div className="iris-glow absolute top-[30%] right-[10%] h-[30rem] w-[30rem] rounded-full bg-primary/10 blur-[100px] opacity-60 pointer-events-none" />
                 <div className="relative max-w-7xl mx-auto w-full">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -622,7 +716,7 @@ export default function ScrollyTellingLandingPage() {
             </section>
 
             {/* Outcomes Section */}
-            <section ref={outcomesSectionRef} className="relative py-32 px-6 z-20 overflow-hidden bg-background border-t border-border/40">
+            <section id="outcomes" ref={outcomesSectionRef} className="relative py-32 px-6 z-20 overflow-hidden bg-background border-t border-border/40">
                 <div className="outcomes-glow absolute top-[20%] right-[10%] h-[28rem] w-[28rem] bg-primary/10 blur-[90px] rounded-full pointer-events-none" />
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-20">
                     <div className="outcomes-left lg:w-1/2 lg:sticky lg:top-40">
@@ -656,6 +750,53 @@ export default function ScrollyTellingLandingPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Unique Back to Top Button */}
+            <button
+                ref={backToTopRef}
+                onClick={() => {
+                    const arrow = backToTopRef.current?.querySelector(".arrow-icon");
+                    if (arrow) {
+                        gsap.to(arrow, { 
+                            y: -40, opacity: 0, duration: 0.3, ease: "power2.in",
+                            onComplete: () => {
+                                gsap.set(arrow, { y: 20 });
+                                gsap.to(arrow, { y: 0, opacity: 1, duration: 0.6, ease: "back.out(1.7)", delay: 0.8 });
+                            }
+                        });
+                    }
+                    gsap.to(window, { scrollTo: 0, duration: 1.5, ease: "power4.inOut" });
+                }}
+                className="fixed bottom-10 right-10 z-[100] group flex items-center justify-center h-16 w-16 rounded-full bg-background/40 backdrop-blur-md border border-primary/20 shadow-2xl transition-transform hover:scale-110 active:scale-95 overflow-visible"
+                aria-label="Scroll to top"
+            >
+                {/* Ripple Effect */}
+                <div className="absolute inset-0 rounded-full bg-primary/10 scale-100 group-hover:scale-150 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none" />
+                
+                {/* SVG Progress Ring */}
+                <svg className="absolute inset-[-4px] -rotate-90 pointer-events-none" width="72" height="72" viewBox="0 0 100 100">
+                    <circle 
+                        className="text-muted/10" 
+                        stroke="currentColor" strokeWidth="4" fill="transparent" r="46" cx="50" cy="50" 
+                    />
+                    <path 
+                        className="progress-ring-path text-primary drop-shadow-[0_0_8px_rgba(109,152,56,0.6)]"
+                        stroke="currentColor" strokeWidth="4" strokeLinecap="round" fill="transparent"
+                        d="M 50,50 m -46,0 a 46,46 0 1,0 92,0 a 46,46 0 1,0 -92,0"
+                    />
+                </svg>
+
+                {/* Fun Icon Container */}
+                <div className="relative z-10 flex flex-col items-center">
+                    <ArrowRight className="arrow-icon h-6 w-6 -rotate-90 text-primary transition-colors group-hover:text-primary-dark" />
+                    <div className="absolute -bottom-8 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Top</span>
+                    </div>
+                </div>
+
+                {/* Particle Glow */}
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity" />
+            </button>
         </div>
     );
 }
