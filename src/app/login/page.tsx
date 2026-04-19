@@ -8,6 +8,12 @@ import { useState, Suspense, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 
+const getDashboardPathForRole = (role: string) => {
+    if (role === "admin") return "/admin/dashboard";
+    if (role === "landlord") return "/landlord/dashboard";
+    return "/tenant/dashboard";
+};
+
 function LoginContent() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -47,8 +53,18 @@ function LoginContent() {
             return;
         }
 
-        const role = data.user?.user_metadata?.role || "tenant";
-        const target = role === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard";
+        let role = data.user?.user_metadata?.role;
+
+        if (!role && data.user?.id) {
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", data.user.id)
+                .single();
+            role = profile?.role;
+        }
+
+        const target = getDashboardPathForRole(role || "tenant");
         router.push(redirectUrl || target);
     };
 
@@ -279,4 +295,4 @@ export default function LoginPage() {
             <LoginContent />
         </Suspense>
     );
-}
+}

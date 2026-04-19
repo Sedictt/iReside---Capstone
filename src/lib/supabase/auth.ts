@@ -3,6 +3,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from './server'
 
+const getDashboardPathForRole = (role: string) => {
+    if (role === 'admin') return '/admin/dashboard'
+    if (role === 'landlord') return '/landlord/dashboard'
+    return '/tenant/dashboard'
+}
+
 export async function signUp(formData: FormData) {
     const supabase = await createClient()
 
@@ -26,7 +32,7 @@ export async function signUp(formData: FormData) {
         return { error: error.message }
     }
 
-    return { error: null, url: role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard' }
+    return { error: null, url: getDashboardPathForRole(role) }
 }
 
 export async function signIn(formData: FormData) {
@@ -44,11 +50,19 @@ export async function signIn(formData: FormData) {
         return { error: error.message }
     }
 
-    // Get user role to redirect to proper dashboard
     const { data: { user } } = await supabase.auth.getUser()
-    const role = user?.user_metadata?.role || 'tenant'
+    let role = user?.user_metadata?.role
 
-    return { error: null, url: role === 'landlord' ? '/landlord/dashboard' : '/tenant/dashboard' }
+    if (!role && user?.id) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+        role = profile?.role ?? undefined
+    }
+
+    return { error: null, url: getDashboardPathForRole(role || 'tenant') }
 }
 
     export async function signOut() {
