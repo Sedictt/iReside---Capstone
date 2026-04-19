@@ -48,6 +48,13 @@ function mockSupabaseClient(signInWithPassword: ReturnType<vi.Mock> = { data: nu
             signInWithPassword: vi.fn().mockResolvedValue(signInWithPassword),
             signInWithOAuth: vi.fn().mockResolvedValue(signInWithOAuth),
         },
+        from: vi.fn(() => ({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn().mockResolvedValue({ data: { role: "tenant" }, error: null }),
+                })),
+            })),
+        })),
     };
     (createClient as vi.Mock).mockReturnValue(supabase);
     return supabase;
@@ -223,6 +230,33 @@ describe("LoginPage - Authentication", () => {
 
         await waitFor(() => {
             expect(mockPush).toHaveBeenCalledWith("/landlord/dashboard");
+        });
+    });
+
+    it("redirects admin user to admin dashboard after login", async () => {
+        const mockPush = vi.fn();
+        mockRouter(mockPush);
+        mockSearchParams();
+        mockSupabaseClient({
+            data: {
+                user: { user_metadata: { role: "admin" } },
+                session: { access_token: "token", refresh_token: "refresh" },
+            },
+            error: null,
+        });
+
+        render(<LoginPage />);
+
+        const emailInput = screen.getByLabelText(/email address/i);
+        const passwordInput = screen.getByLabelText(/password/i);
+        const submitButton = screen.getByRole("button", { name: /log in/i });
+
+        fireEvent.change(emailInput, { target: { value: "admin@example.com" } });
+        fireEvent.change(passwordInput, { target: { value: "password123" } });
+        fireEvent.click(submitButton);
+
+        await waitFor(() => {
+            expect(mockPush).toHaveBeenCalledWith("/admin/dashboard");
         });
     });
 
