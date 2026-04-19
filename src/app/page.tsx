@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Building, ChevronRight, ShieldCheck, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, PieChart, MessageSquare } from "lucide-react";
+import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, PieChart, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import gsap from "gsap";
@@ -411,12 +411,14 @@ export default function ScrollyTellingLandingPage() {
             const irisHeader = irisSection.querySelectorAll(".iris-header-anim");
             const irisCards = gsap.utils.toArray<HTMLElement>(".iris-card", irisSection);
             const irisMascot = irisSection.querySelector<HTMLElement>(".iris-mascot");
+            const irisLinks = gsap.utils.toArray<HTMLElement>(".iris-link", irisSection);
             
             // Set initial state
-            gsap.set(irisHeader, { autoAlpha: 0, y: 100, rotateX: 20 });
-            gsap.set(irisCards, { autoAlpha: 0, y: 300, scale: 0.8, rotateZ: () => gsap.utils.random(-15, 15) });
+            gsap.set(irisHeader, { autoAlpha: 0, y: 42 });
+            gsap.set(irisCards, { autoAlpha: 0, y: 64, scale: 0.96 });
+            gsap.set(irisLinks, { scaleX: 0, transformOrigin: "left center" });
             if (irisMascot) {
-                gsap.set(irisMascot, { autoAlpha: 0, xPercent: 42, yPercent: 10, rotate: -6, scale: 0.9 });
+                gsap.set(irisMascot, { autoAlpha: 0, xPercent: 20, yPercent: 5, rotate: -2, scale: 0.92 });
             }
             
             const irisTl = gsap.timeline({
@@ -424,9 +426,9 @@ export default function ScrollyTellingLandingPage() {
                     id: "landing-iris-story-v2",
                     trigger: irisSection,
                     start: "top top",
-                    end: "+=220%",
+                    end: "+=170%",
                     pin: true,
-                    scrub: 1.2,
+                    scrub: 1,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
                 },
@@ -436,48 +438,51 @@ export default function ScrollyTellingLandingPage() {
                 irisTl.to(irisMascot, {
                     xPercent: 0,
                     yPercent: 0,
-                    rotate: -1,
+                    rotate: 0,
                     scale: 1,
-                    autoAlpha: 0.85,
-                    duration: 0.9,
+                    autoAlpha: 0.92,
+                    duration: 0.85,
                     ease: "power2.out",
-                }, 0.58);
+                }, 0.08);
 
                 irisTl.to(irisMascot, {
-                    yPercent: -6,
-                    rotate: 1.2,
+                    yPercent: -3,
                     duration: 1.2,
                     ease: "none",
-                }, 1.45);
+                }, 0.95);
             }
 
-            // 1. Reveal header with 3D flip
+            // 1. Reveal header
             irisTl.to(irisHeader, {
                 y: 0,
                 autoAlpha: 1,
-                rotateX: 0,
-                duration: 1,
-                stagger: 0.15,
-                ease: "power3.out",
-            });
+                duration: 0.72,
+                stagger: 0.1,
+                ease: "power2.out",
+            }, 0.12);
 
-            // 2. Cards fly in from chaos to organized grid
+            // 2. Reveal callouts and connector lines
             irisTl.to(irisCards, {
                 y: 0,
                 autoAlpha: 1,
                 scale: 1,
-                rotateZ: 0,
-                duration: 1.5,
-                stagger: 0.15,
-                ease: "back.out(1.2)",
-            }, "-=0.4");
+                duration: 0.9,
+                stagger: 0.14,
+                ease: "power2.out",
+            }, 0.32);
+            irisTl.to(irisLinks, {
+                scaleX: 1,
+                duration: 0.7,
+                stagger: 0.08,
+                ease: "power2.out",
+            }, 0.42);
             
-            // 3. Subtle float/drift effect while scrolling
+            // 3. Subtle drift while scrolling
             irisTl.to(irisCards, {
-                y: -30,
+                y: -12,
                 ease: "none",
                 duration: 1,
-            });
+            }, 1.05);
 
             // Subtle parallax for the main glow
             if (irisGlow) {
@@ -793,14 +798,9 @@ export default function ScrollyTellingLandingPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
                     >
-                        <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/30 bg-primary/10 text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-6 shadow-[0_0_30px_rgba(109,152,56,0.15)] backdrop-blur-md">
-                            <ShieldCheck className="h-4 w-4" />
-                            Exclusive Network
-                        </span>
-                        
                         <h1 className="text-[3.5rem] sm:text-6xl md:text-[6.5rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] mb-6 flex flex-col items-center">
                             <Logo variant="primary" className="h-[0.8em] w-[3em] block drop-shadow-sm dark:drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] mb-2" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark dark:from-primary-200 dark:via-primary dark:to-primary block text-center">Perfected.</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark dark:from-primary-200 dark:via-primary dark:to-primary block text-center">For Rental Ops.</span>
                         </h1>
                         
                         <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium leading-relaxed mb-8 tracking-tight">
@@ -813,12 +813,6 @@ export default function ScrollyTellingLandingPage() {
                                 <span className="relative z-10 flex items-center gap-3">
                                     Request Access
                                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
-                                </span>
-                            </TransitionLink>
-                            <TransitionLink href="/demo" className="group relative flex items-center justify-center h-14 md:h-16 px-8 md:px-10 rounded-full bg-background border-2 border-primary text-primary font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.1)] hover:shadow-[0_0_60px_rgba(109,152,56,0.2)] overflow-hidden w-full sm:w-auto">
-                                <div className="absolute inset-0 bg-primary/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" />
-                                <span className="relative z-10 flex items-center gap-3">
-                                    Book a Demo
                                 </span>
                             </TransitionLink>
                         </div>
@@ -953,55 +947,77 @@ export default function ScrollyTellingLandingPage() {
                 ))}
             </section>
 
-            {/* iRis Section - Enhanced Scrollytelling */}
+            {/* iRis Section */}
             <section
                 ref={irisSectionRef}
                 className="relative min-h-screen pt-20 md:pt-24 pb-28 md:pb-36 px-6 border-t border-border overflow-hidden z-20 bg-background perspective-1000"
                 style={{ perspective: "1000px" }}
             >
-                <div className="iris-glow absolute top-[30%] left-1/2 -translate-x-1/2 h-[30rem] w-[30rem] rounded-full bg-primary/10 blur-[100px] opacity-80 pointer-events-none" />
-                <div className="iris-mascot absolute right-[-14rem] md:right-[-10rem] lg:right-[-7rem] top-[14%] md:top-[18%] z-0 pointer-events-none">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- image-sequence animation requires direct frame swapping on a native img element */}
-                    <img
-                        ref={irisSequenceRef}
-                        src="/assets/happy-wave/frame_0001.png"
-                        alt="iRis happy wave animation"
-                        className="w-[min(80vw,34rem)] h-[min(54vh,30rem)] object-contain opacity-45 [mask-image:radial-gradient(circle_at_center,black_68%,transparent_98%)]"
-                        loading="eager"
-                        decoding="async"
-                    />
+                <div className="iris-glow absolute top-[34%] right-[14%] h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-[110px] opacity-80 pointer-events-none" />
+
+                <div className="iris-inner-container relative max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-12 lg:gap-16 items-center">
+                    <div className="relative z-10">
+                        <div className="iris-header-anim inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-xs font-black uppercase tracking-[0.2em] text-primary mb-7 shadow-[0_0_20px_rgba(109,152,56,0.15)]">
+                            <Sparkles className="h-4 w-4" />
+                            iRis Intelligence Layer
+                        </div>
+
+                        <h2 className="iris-header-anim text-4xl md:text-6xl lg:text-[4.2rem] font-black tracking-[-0.03em] text-foreground leading-[0.95] max-w-3xl">
+                            Portfolio context.
+                            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-focus">Action-ready guidance.</span>
+                        </h2>
+
+                        <p className="iris-header-anim text-lg md:text-xl text-muted-foreground font-medium mt-6 max-w-2xl leading-relaxed">
+                            iRis reads current leasing, payment, and request signals so your team can prioritize next steps with less back-and-forth.
+                        </p>
+
+                        <div className="mt-8 md:mt-10 grid grid-cols-1 gap-5 md:gap-6 max-w-xl">
+                            {IRIS_WORKFLOWS.map((item, idx) => (
+                                <article key={item.title} className="iris-card relative rounded-[1.6rem] border border-primary/20 bg-background/75 backdrop-blur-md px-5 py-5 shadow-xl overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/6 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="relative z-10 flex items-start gap-4">
+                                        <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                            <item.icon className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">{item.title}</h3>
+                                            <p className="text-sm md:text-base text-muted-foreground mt-1.5 leading-relaxed">{item.detail}</p>
+                                        </div>
+                                    </div>
+                                    <div className="iris-link hidden lg:flex items-center absolute -right-16 top-1/2 -translate-y-1/2 w-14 h-px bg-primary/35">
+                                        <span className="ml-auto block h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(109,152,56,0.8)]" />
+                                    </div>
+                                    <span className="absolute top-3 right-4 text-xs font-black tracking-[0.2em] text-primary/40">0{idx + 1}</span>
+                                </article>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative lg:min-h-[42rem] flex items-center justify-center">
+                        <div className="absolute inset-x-[18%] bottom-10 h-24 rounded-full bg-primary/20 blur-3xl" />
+                        <div className="iris-mascot relative z-20 pointer-events-none">
+                            <div className="absolute inset-x-[22%] bottom-4 h-14 rounded-full border border-primary/40 bg-primary/15 blur-[0.5px] shadow-[0_0_40px_rgba(109,152,56,0.35)]" />
+                            {/* eslint-disable-next-line @next/next/no-img-element -- image-sequence animation requires direct frame swapping on a native img element */}
+                            <img
+                                ref={irisSequenceRef}
+                                src="/assets/happy-wave/frame_0001.png"
+                                alt="iRis happy wave animation"
+                                className="w-[min(88vw,36rem)] h-[min(60vh,34rem)] object-contain drop-shadow-[0_24px_45px_rgba(109,152,56,0.25)]"
+                                loading="eager"
+                                decoding="async"
+                            />
+                        </div>
+                    </div>
                 </div>
-                
-                <div className="iris-inner-container relative max-w-7xl mx-auto flex flex-col items-center text-center gap-3 md:gap-4">
+
+                <div className="relative max-w-7xl mx-auto mt-12 lg:mt-10">
                     <div className="iris-header-anim inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-xs font-black uppercase tracking-[0.2em] text-primary mb-8 shadow-[0_0_20px_rgba(109,152,56,0.15)]">
                         <Sparkles className="h-4 w-4" />
-                        iRis Intelligence Layer
+                        Workflow Fit
                     </div>
-                    
-                    <h2 className="iris-header-anim text-5xl md:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-foreground leading-[0.95] max-w-4xl mx-auto drop-shadow-xl">
-                        One assistant that
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-focus">orchestrates your day.</span>
-                    </h2>
-                    
-                    <p className="iris-header-anim text-lg md:text-2xl text-muted-foreground font-medium mt-6 max-w-3xl leading-relaxed">
-                        iRis turns your live portfolio data into clear actions, so your team moves faster without sacrificing compliance or quality.
+                    <p className="iris-header-anim text-base md:text-lg text-muted-foreground max-w-3xl leading-relaxed">
+                        iRis supports existing operator workflows. Teams can review suggestions, edit responses, and keep decisions in their own control.
                     </p>
-
-                    <div className="mt-10 md:mt-14 xl:mt-16 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 w-full relative z-10" style={{ transformStyle: "preserve-3d" }}>
-                        {IRIS_WORKFLOWS.map((item, idx) => (
-                            <article key={item.title} className="iris-card rounded-[2rem] border border-primary/20 bg-background/60 backdrop-blur-xl px-6 py-8 shadow-2xl relative overflow-hidden group hover:border-primary/50 transition-colors h-full flex flex-col justify-center">
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="flex items-start justify-between gap-4 relative z-10 w-full">
-                                    <div className="h-14 w-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 shadow-inner">
-                                        <item.icon className="h-7 w-7 text-primary" />
-                                    </div>
-                                    <span className="text-sm font-black tracking-[0.2em] text-primary/40">0{idx + 1}</span>
-                                </div>
-                                <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mt-6 relative z-10 text-left">{item.title}</h3>
-                                <p className="text-base text-muted-foreground mt-3 leading-relaxed relative z-10 text-left">{item.detail}</p>
-                            </article>
-                        ))}
-                    </div>
                 </div>
             </section>
 
