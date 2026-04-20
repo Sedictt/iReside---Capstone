@@ -16,13 +16,17 @@ export default function PropertyCard({ property, isLiked, onLike, onClick }: Pro
     return (
         <div
             onClick={() => onClick(property)}
+            onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { onClick(property); } }}
+            role="button"
+            tabIndex={0}
+            aria-label={`View details for ${property.name}, price ${property.price} per month`}
             className="group relative h-[480px] w-full bg-neutral-900 rounded-[2rem] overflow-hidden cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-black/50 hover:-translate-y-1"
         >
             {/* Full Background Image */}
             <div className="absolute inset-0">
                 <Image
                     src={property.images[0]}
-                    alt={property.name}
+                    alt={`Exterior shot of ${property.name}`}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -41,10 +45,12 @@ export default function PropertyCard({ property, isLiked, onLike, onClick }: Pro
 
                 {/* Favorite Button */}
                 <button
+                    type="button"
                     onClick={(e) => {
                         e.stopPropagation();
                         onLike(property.id);
                     }}
+                    aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
                     className={cn(
                         "h-10 w-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all group/btn",
                         isLiked
@@ -52,7 +58,7 @@ export default function PropertyCard({ property, isLiked, onLike, onClick }: Pro
                             : "bg-neutral-900/40 border-white/10 text-white hover:bg-neutral-900/60"
                     )}
                 >
-                    <Heart className={cn("h-5 w-5 transition-colors", isLiked ? "fill-current" : "group-hover/btn:text-red-500")} />
+                    <Heart className={cn("h-5 w-5 transition-colors", isLiked ? "fill-current" : "group-hover/btn:text-red-500")} aria-hidden="true" />
                 </button>
             </div>
 
@@ -64,46 +70,47 @@ export default function PropertyCard({ property, isLiked, onLike, onClick }: Pro
                             {property.name}
                         </h3>
                         <div className="flex items-center gap-1 text-orange-400 flex-shrink-0 bg-neutral-900/30 backdrop-blur-sm px-2 py-0.5 rounded-lg border border-white/5">
-                            <Star className="h-3.5 w-3.5 fill-orange-400" />
+                            <Star className="h-3.5 w-3.5 fill-orange-400" aria-hidden="true" />
                             <span className="text-sm font-bold text-white">4.8</span>
-                            <span className="text-xs text-neutral-400">(20)</span>
+                            <span className="text-xs text-neutral-400" aria-label="Based on 20 reviews">(20)</span>
                         </div>
                     </div>
 
                     <p className="text-neutral-300 text-sm flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400" />
+                        <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400" aria-hidden="true" />
                         <span className="truncate">{property.address}</span>
                     </p>
                 </div>
 
                 {/* Divider */}
-                <div className="h-px w-full bg-white/20" />
+                <div className="h-px w-full bg-white/20" aria-hidden="true" />
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-3 gap-2 text-white/90">
                     <div className="flex items-center gap-2">
-                        <Bed className="h-4 w-4 text-neutral-400" />
+                        <Bed className="h-4 w-4 text-neutral-400" aria-hidden="true" />
                         <span className="text-xs font-medium">{property.beds} Bedrooms</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Bath className="h-4 w-4 text-neutral-400" />
+                        <Bath className="h-4 w-4 text-neutral-400" aria-hidden="true" />
                         <span className="text-xs font-medium">{property.baths} Bathrooms</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <LayoutGrid className="h-4 w-4 text-neutral-400" />
+                        <LayoutGrid className="h-4 w-4 text-neutral-400" aria-hidden="true" />
                         <span className="text-xs font-medium">{property.sqft} Sqft</span>
                     </div>
                 </div>
 
                 {/* Action Button */}
                 <button
+                    type="button"
                     onClick={(e) => {
                         e.stopPropagation();
                         onClick(property);
                     }}
                     className="w-full bg-white text-black font-bold text-sm py-3.5 rounded-full flex items-center justify-center gap-2 hover:bg-neutral-200 transition-colors shadow-lg active:scale-[0.98]"
                 >
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-4 w-4" aria-hidden="true" />
                     View Details
                 </button>
             </div>
