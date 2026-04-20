@@ -6,7 +6,6 @@ import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
-import { UnitListingWizard } from "./UnitListingWizard";
 import { Logo } from "@/components/ui/Logo";
 
 export interface Unit {
@@ -2753,7 +2752,6 @@ const UnitDetailsPanel = ({
     onClose: () => void;
 }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [isListingWizardOpen, setIsListingWizardOpen] = useState(false);
 
     const unitAreaSqftByType: Record<Unit["type"], number> = {
         Studio: 400,
@@ -2765,10 +2763,10 @@ const UnitDetailsPanel = ({
 
     // Status configuration for consistent styling
     const statusConfig = {
-        occupied: { color: 'text-blue-600', label: 'Occupied', icon: 'check_circle' },
-        vacant: { color: 'text-emerald-600', label: 'Available Now', icon: 'vpn_key' },
-        maintenance: { color: 'text-rose-600', label: 'Maintenance', icon: 'build' },
-        neardue: { color: 'text-amber-600', label: 'Near Due', icon: 'warning' }
+        occupied: { color: 'text-blue-600 dark:text-blue-300', label: 'Occupied', icon: 'check_circle' },
+        vacant: { color: 'text-emerald-600 dark:text-emerald-300', label: 'Available Now', icon: 'vpn_key' },
+        maintenance: { color: 'text-rose-600 dark:text-rose-300', label: 'Maintenance', icon: 'build' },
+        neardue: { color: 'text-amber-600 dark:text-amber-300', label: 'Near Due', icon: 'warning' }
     };
 
     const currentStatus = statusConfig[unit.status] || statusConfig.vacant;
@@ -2793,92 +2791,62 @@ const UnitDetailsPanel = ({
                 : 'Studio • 1 Bath';
 
     return (
-        <div className="flex flex-col h-full bg-card border-l border-border shadow-2xl overflow-hidden relative font-sans text-slate-800">
+        <div className="relative flex h-full flex-col overflow-hidden border-l border-border bg-card font-sans text-foreground shadow-2xl">
 
             {/* Hero Header Section */}
             <div className="relative h-64 w-full shrink-0 group overflow-hidden">
                 {/* Background Image / Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-sky-500/10 z-0"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-500/10 to-slate-500/5 z-0"></div>
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-70 z-0 grayscale-[0.05] transition-transform duration-700 group-hover:scale-105"></div>
 
                 {/* Overlay Gradients */}
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent z-10"></div>
-                <div className="absolute inset-0 bg-white/10 z-10"></div>
+                <div className="absolute inset-0 z-10 bg-gradient-to-t from-white via-white/20 to-transparent dark:from-slate-950/90 dark:via-slate-950/35 dark:to-transparent"></div>
+                <div className="absolute inset-0 z-10 bg-white/10 dark:bg-black/15"></div>
 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-6 z-20 w-8 h-8 rounded-full bg-white/70 hover:bg-white backdrop-blur-md flex items-center justify-center text-slate-600 hover:text-slate-900 border border-white/60 transition-all"
+                    className="absolute right-6 top-6 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/60 bg-white/70 text-slate-600 backdrop-blur-md transition-all hover:bg-white hover:text-slate-900 dark:border-white/20 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                 >
                     <span className="material-icons-round text-lg">close</span>
                 </button>
 
                 {/* Bottom Content */}
                 <div className="absolute bottom-6 left-6 right-6 z-20">
-                    <h1 className="text-[2.6rem] leading-none font-bold text-slate-900 tracking-tight drop-shadow-sm mb-4">{unit.name}</h1>
+                    <h1 className="mb-4 text-[2.6rem] font-bold leading-none tracking-tight text-slate-900 drop-shadow-sm dark:text-slate-50">{unit.name}</h1>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm dark:border-white/15 dark:bg-slate-900/75">
                             <span className="material-icons-round text-[14px] text-primary-300">king_bed</span>
-                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{unitLayoutLabel}</span>
+                            <span className="text-xs font-semibold tracking-wide text-slate-800 dark:text-slate-100">{unitLayoutLabel}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm dark:border-white/15 dark:bg-slate-900/75">
                             <span className={`material-icons-round text-[14px] drop-shadow-md ${currentStatus.color}`}>event_available</span>
-                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{currentStatus.label}</span>
+                            <span className="text-xs font-semibold tracking-wide text-slate-800 dark:text-slate-100">{currentStatus.label}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
+                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm dark:border-white/15 dark:bg-slate-900/75">
                             <span className="material-icons-round text-[14px] text-cyan-300 drop-shadow-md">aspect_ratio</span>
-                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{unitAreaSqm} m²</span>
+                            <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 tracking-wide">{unitAreaSqm} m²</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-0 mb-24 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
+            <div className="relative z-0 mb-24 flex-1 space-y-6 overflow-y-auto px-6 py-6 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5">
 
                 {!isEditing ? (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
 
-                        {/* Public Listing Action */}
-                        <div className="bg-gradient-to-br from-primary/10 to-white border border-border rounded-2xl p-5 relative overflow-hidden group hover:border-primary/20 transition-colors shadow-sm">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
-                            <div className="flex items-center justify-between relative z-10 gap-2">
-                                <div>
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <span className="material-icons-round text-[16px] text-primary">storefront</span>
-                                        <h3 className="text-slate-900 font-bold text-sm">Unit Listing</h3>
-                                    </div>
-                                        <p className="text-slate-500 text-[10px] leading-relaxed mt-1">
-                                        Open listing wizard to publish this unit.
-                                    </p>
-                                </div>
-                                <button 
-                                    onClick={() => setIsListingWizardOpen(true)}
-                                    className="bg-primary hover:bg-primary/90 text-white rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary/20 active:scale-95 shrink-0"
-                                >
-                                    <span className="material-icons-round text-[16px]">rocket_launch</span>
-                                    List Unit
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Wizard */}
-                        <UnitListingWizard 
-                            isOpen={isListingWizardOpen} 
-                            onClose={() => setIsListingWizardOpen(false)} 
-                            unit={unit} 
-                        />
-
                         {/* Tenant Section */}
                         <div className="mt-4">
-                            <h3 className="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase mb-4 pl-1">
+                            <h3 className="mb-4 pl-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                                 Current Tenant
                             </h3>
                             <div className="flex items-center justify-between group px-1">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                            <div className="w-12 h-12 rounded-full p-0.5 border-2 border-sky-500 relative">
-                                            <div className="w-full h-full rounded-full bg-slate-100 overflow-hidden">
+                                            <div className="relative h-12 w-12 rounded-full border-2 border-sky-500 p-0.5">
+                                            <div className="h-full w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                                                 <img
                                                     src="https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"
                                                     alt="Tenant"
@@ -2886,15 +2854,15 @@ const UnitDetailsPanel = ({
                                                 />
                                             </div>
                                             {/* Status Dot */}
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full translate-x-1 translate-y-1"></div>
+                                            <div className="absolute bottom-0 right-0 h-3 w-3 translate-x-1 translate-y-1 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900"></div>
                                         </div>
                                     </div>
                                     <div>
-                                        <p className="text-lg font-bold text-slate-900 tracking-wide">{unit.tenant || "No Tenant"}</p>
-                                        <p className="text-xs text-slate-500 font-medium italic">"Unit Lease Holder"</p>
+                                        <p className="text-lg font-bold tracking-wide text-slate-900 dark:text-slate-100">{unit.tenant || "No Tenant"}</p>
+                                        <p className="text-xs font-medium italic text-slate-500 dark:text-slate-400">"Unit Lease Holder"</p>
                                     </div>
                                 </div>
-                                <button className="w-10 h-10 rounded-full flex items-center justify-center text-sky-500 hover:bg-sky-500/10 transition-colors">
+                                <button className="flex h-10 w-10 items-center justify-center rounded-full text-sky-500 transition-colors hover:bg-sky-500/10 dark:hover:bg-sky-400/10">
                                     <span className="material-icons-round text-2xl">chat_bubble_outline</span>
                                 </button>
                             </div>
@@ -2904,8 +2872,8 @@ const UnitDetailsPanel = ({
 
                         {/* Lease Status */}
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                            <div className="bg-white border border-border rounded-2xl p-6 relative overflow-hidden flex flex-col items-center shadow-sm">
-                                <h3 className="text-primary-400 text-[10px] font-bold tracking-widest uppercase mb-6 self-start w-full">
+                            <div className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-border bg-white p-6 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/75">
+                                <h3 className="mb-6 w-full self-start text-[10px] font-bold uppercase tracking-widest text-primary-400">
                                     Lease Timeline
                                 </h3>
 
@@ -2916,10 +2884,10 @@ const UnitDetailsPanel = ({
                                         <path
                                             d="M 20 100 A 80 80 0 0 1 180 100"
                                             fill="none"
-                                            stroke="#334155"
+                                            stroke="currentColor"
                                             strokeWidth="12"
                                             strokeLinecap="round"
-                                            className="opacity-30"
+                                            className="text-slate-500 opacity-30 dark:text-slate-700"
                                         />
                                         {/* Progress Arc */}
                                         <path
@@ -2956,12 +2924,12 @@ const UnitDetailsPanel = ({
                                                 daysRemaining < 0 ? 'Overdue' : daysRemaining
                                             ) : '--'}
                                         </span>
-                                        <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest -mt-1">
+                                        <span className="-mt-1 block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                                             {daysRemaining !== null && daysRemaining < 0 ? 'Days Past' : 'Days Left'}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="w-full flex justify-between text-[10px] uppercase font-bold text-slate-500 tracking-wider px-4 mt-2">
+                                <div className="mt-2 flex w-full justify-between px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     <span>{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString() : 'Start'}</span>
                                     <span>{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString() : 'End'}</span>
                                 </div>
@@ -2973,7 +2941,7 @@ const UnitDetailsPanel = ({
                         {/* Edit Form */}
                         <section className="space-y-6">
                             <div className="space-y-4">
-                                <label className="text-primary-400 text-[10px] font-bold tracking-widest uppercase block mb-4">Edit Details</label>
+                                <label className="mb-4 block text-[10px] font-bold uppercase tracking-widest text-primary-400">Edit Details</label>
 
                                 <div className="space-y-4">
                                     <div className="group relative">
@@ -2981,11 +2949,11 @@ const UnitDetailsPanel = ({
                                             type="text"
                                             value={unit.name}
                                             onChange={(e) => onUpdate({ name: e.target.value })}
-                                            className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                            className="peer block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 transition-all placeholder-transparent focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             placeholder="Unit Name"
                                             id="unitName"
                                         />
-                                        <label htmlFor="unitName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                        <label htmlFor="unitName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary dark:peer-placeholder-shown:text-slate-400">
                                             Name
                                         </label>
                                     </div>
@@ -2995,7 +2963,7 @@ const UnitDetailsPanel = ({
                                             <select
                                                 value={unit.type}
                                                 onChange={(e) => onUpdate({ type: e.target.value as Unit["type"] })}
-                                                className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
+                                                className="block w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 transition-all focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             >
                                                 <option value="Studio">Studio</option>
                                                 <option value="1BR">1 Bedroom</option>
@@ -3020,10 +2988,10 @@ const UnitDetailsPanel = ({
                                                         key={s.id}
                                                         type="button"
                                                         onClick={(e) => { e.preventDefault(); onUpdate({ status: s.id as Unit["status"] }); }}
-                                                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${unit.status === s.id ? s.bg + ' ring-1 ring-primary/20 shadow-lg scale-[1.02]' : 'border-slate-300 bg-slate-100 hover:bg-slate-200'}`}
+                                                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${unit.status === s.id ? s.bg + ' ring-1 ring-primary/20 shadow-lg scale-[1.02]' : 'border-slate-300 bg-slate-100 hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800'}`}
                                                     >
                                                         <span className={`material-icons-round text-xl ${unit.status === s.id ? s.color : 'text-slate-500'}`}>{s.icon}</span>
-                                                        <span className={`text-xs font-bold ${unit.status === s.id ? 'text-slate-900' : 'text-slate-500'}`}>{s.label}</span>
+                                                        <span className={`text-xs font-bold ${unit.status === s.id ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}>{s.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -3036,11 +3004,11 @@ const UnitDetailsPanel = ({
                                                 type="text"
                                                 value={unit.tenant || ''}
                                                 onChange={(e) => onUpdate({ tenant: e.target.value })}
-                                                className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
+                                                className="peer block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 transition-all placeholder-transparent focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                                 placeholder="Tenant Name"
                                                 id="tenantName"
                                             />
-                                            <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
+                                            <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary dark:peer-placeholder-shown:text-slate-400">
                                                 Tenant Name
                                             </label>
                                         </div>

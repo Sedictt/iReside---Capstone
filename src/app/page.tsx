@@ -545,6 +545,7 @@ export default function ScrollyTellingLandingPage() {
 
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 font-sans overflow-x-hidden">
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <style dangerouslySetInnerHTML={{__html: `
                     .ripple-background { position: absolute; inset: 0; background: transparent; overflow: hidden; z-index: -1; }
@@ -569,11 +570,19 @@ export default function ScrollyTellingLandingPage() {
 
             <nav 
                 ref={navRef}
+                aria-label="Primary Navigation"
                 className="fixed top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-2xl"
             >
                 <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
-                    <div className="flex items-center gap-4 group cursor-pointer" onClick={() => gsap.to(window, { scrollTo: 0, duration: 1, ease: "power2.inOut" })}>
-                        <Logo className="h-8 md:h-10 w-auto transition-transform group-hover:scale-105" />
+                    <div 
+                        className="flex items-center gap-4 group cursor-pointer" 
+                        onClick={() => gsap.to(window, { scrollTo: 0, duration: 1, ease: "power2.inOut" })}
+                        role="button"
+                        aria-label="iReside Home - Scroll to top"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') { gsap.to(window, { scrollTo: 0, duration: 1, ease: "power2.inOut" }); } }}
+                    >
+                        <Logo className="h-8 md:h-10 w-auto transition-transform group-hover:scale-105" aria-hidden="true" />
                         <div className="flex flex-col border-l border-border/50 pl-4">
                             <span className="text-[9px] md:text-[10px] font-extrabold uppercase tracking-[0.25em] text-primary leading-tight">Landlord Access</span>
                         </div>
@@ -607,13 +616,14 @@ export default function ScrollyTellingLandingPage() {
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <section className="relative min-h-[100svh] flex flex-col items-center justify-center px-6 pt-24 pb-20 z-10">
-                <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }} className="max-w-[70rem] mx-auto text-center w-full">
-                    <h1 className="text-[3.5rem] sm:text-6xl md:text-[6.5rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] mb-6 flex flex-col items-center">
-                        <Logo variant="primary" className="h-[0.8em] w-[3em] mb-2" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark">For Rental Ops.</span>
-                    </h1>
+            <main id="main-content">
+                {/* Hero Section */}
+                <section className="relative min-h-[100svh] flex flex-col items-center justify-center px-6 pt-24 pb-20 z-10" aria-labelledby="hero-title">
+                    <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }} className="max-w-[70rem] mx-auto text-center w-full">
+                        <h1 id="hero-title" className="text-[3.5rem] sm:text-6xl md:text-[6.5rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] mb-6 flex flex-col items-center">
+                            <Logo variant="primary" className="h-[0.8em] w-[3em] mb-2" aria-label="iReside" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark">For Rental Ops.</span>
+                        </h1>
                     <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium mb-8">Run your rentals with less friction, stronger security, and predictable cash flow.</p>
                     <TransitionLink href="/apply-landlord" className="group relative inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.3)]">
                         Request Access <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
@@ -707,9 +717,17 @@ export default function ScrollyTellingLandingPage() {
                             </div>
                         </div>
                         <div className="relative flex justify-center">
-                            <div className="iris-mascot relative z-20"><video autoPlay loop muted playsInline className="w-[min(88vw,32rem)] h-auto drop-shadow-2xl">
-                                <source src="https://assets.masko.ai/d223fc/homey-8511/happy-wave-a656528d.webm" type="video/webm" /><source src="https://assets.masko.ai/d223fc/homey-8511/happy-wave-6358cae0.mov" type='video/mp4; codecs="hvc1"' />
-                            </video></div>
+                            <div className="iris-mascot relative z-20">
+                                <video 
+                                    autoPlay loop muted playsInline 
+                                    className="w-[min(88vw,32rem)] h-auto drop-shadow-2xl"
+                                    title="iRis AI mascot waving happily"
+                                    aria-label="3D animated mascot iRis waving friendly to the user"
+                                >
+                                    <source src="https://assets.masko.ai/d223fc/homey-8511/happy-wave-a656528d.webm" type="video/webm" />
+                                    <source src="https://assets.masko.ai/d223fc/homey-8511/happy-wave-6358cae0.mov" type='video/mp4; codecs="hvc1"' />
+                                </video>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -797,6 +815,7 @@ export default function ScrollyTellingLandingPage() {
                 {/* Particle Glow */}
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity" />
             </button>
+            </main>
         </div>
     );
 }
