@@ -3027,7 +3027,7 @@ const UnitDetailsPanel = ({
                         </div>
                         <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
                             <span className="material-icons-round text-[16px] text-cyan-400">aspect_ratio</span>
-                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 tracking-wide uppercase">{unitAreaSqm} MÂ²</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 tracking-wide uppercase">{unitAreaSqm} m²</span>
                         </div>
                     </div>
                 </div>
@@ -3339,27 +3339,50 @@ const UnitNotesPanel = ({
     value: string;
     onChange: (nextValue: string) => void;
 }) => {
+    const noteLength = value.trim().length;
+
     return (
-        <div className={`shrink-0 border-l border-border bg-card/95 transition-[width] duration-200 ${isOpen ? "w-[300px]" : "w-[44px]"}`}>
+        <div className={`shrink-0 border-l border-border bg-card/95 transition-[width] duration-300 ${isOpen ? "w-[320px]" : "w-[52px]"}`}>
             <div className="flex h-full">
                 <button
                     type="button"
                     onClick={onToggle}
-                    className="flex w-[44px] items-center justify-center border-r border-border text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                    className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-slate-100 to-slate-200 text-slate-600 transition-colors hover:from-slate-200 hover:to-slate-300 dark:from-slate-900 dark:to-slate-950 dark:text-slate-300 dark:hover:from-slate-800 dark:hover:to-slate-900"
                     title={isOpen ? "Collapse notes" : "Open notes"}
                 >
-                    <span className="material-icons-round text-lg">{isOpen ? "chevron_right" : "sticky_note_2"}</span>
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="material-icons-round text-lg">{isOpen ? "chevron_right" : "sticky_note_2"}</span>
+                        {!isOpen && (
+                            <span className="rotate-180 text-[10px] font-bold uppercase tracking-[0.2em] [writing-mode:vertical-rl]">Notes</span>
+                        )}
+                    </div>
                 </button>
                 {isOpen && (
-                    <div className="flex min-w-0 flex-1 flex-col p-4">
-                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary-400">Unit Notes</h3>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Private note for this unit. Autosaves locally.</p>
+                    <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-100/80 p-4 dark:from-slate-900 dark:to-slate-950/90">
+                        <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-primary-400">
+                                        <span className="material-icons-round text-base">sticky_note_2</span>
+                                        Unit Notes
+                                    </h3>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Private note for this unit. Autosaves locally.</p>
+                                </div>
+                                <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                    Auto
+                                </span>
+                            </div>
+                        </div>
                         <textarea
                             value={value}
                             onChange={(event) => onChange(event.target.value)}
                             placeholder="Add reminders, follow-ups, or move-in prep details..."
-                            className="mt-3 h-full min-h-[220px] resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            className="mt-3 h-full min-h-[220px] resize-none rounded-2xl border border-slate-300 bg-white/95 px-4 py-4 text-sm leading-relaxed text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                         />
+                        <div className="mt-2 flex items-center justify-between px-1">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Tip: Use short action-oriented notes.</p>
+                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{noteLength} chars</p>
+                        </div>
                     </div>
                 )}
             </div>
