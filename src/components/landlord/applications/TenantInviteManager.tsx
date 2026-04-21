@@ -279,8 +279,8 @@ export function TenantInviteManager({
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                        <QrCode className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Invite-Based Intake</span>
+                        <Link2 className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
                     </div>
                     <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
                         Private Links & QR Codes

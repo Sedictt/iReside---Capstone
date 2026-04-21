@@ -38,24 +38,14 @@ export interface MaintenanceRequest {
     images: string[];
 }
 
-type MaintenanceMetrics = {
-    actionRequired: number;
-    inProgress: number;
-    scheduled: number;
-    resolvedThisMonth: number;
-};
+
 
 export function MaintenanceDashboard() {
     const [filter, setFilter] = useState<"All" | Status>("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
-    const [metrics, setMetrics] = useState<MaintenanceMetrics>({
-        actionRequired: 0,
-        inProgress: 0,
-        scheduled: 0,
-        resolvedThisMonth: 0,
-    });
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -78,28 +68,24 @@ export function MaintenanceDashboard() {
 
                 const payload = (await response.json()) as {
                     requests?: MaintenanceRequest[];
-                    metrics?: MaintenanceMetrics;
                 };
 
-                setRequests(Array.isArray(payload.requests) ? payload.requests : []);
-                if (payload.metrics) {
-                    setMetrics(payload.metrics);
+                if (!controller.signal.aborted) {
+                    setRequests(Array.isArray(payload.requests) ? payload.requests : []);
                 }
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {
                     return;
                 }
 
-                setError("Unable to load maintenance requests right now.");
-                setRequests([]);
-                setMetrics({
-                    actionRequired: 0,
-                    inProgress: 0,
-                    scheduled: 0,
-                    resolvedThisMonth: 0,
-                });
+                if (!controller.signal.aborted) {
+                    setError("Unable to load maintenance requests right now.");
+                    setRequests([]);
+                }
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         };
 
@@ -144,41 +130,7 @@ export function MaintenanceDashboard() {
                 </button>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Action Required"
-                    value={loading ? "..." : metrics.actionRequired.toLocaleString()}
-                    subtitle="Pending requests"
-                    icon={<AlertTriangle className="h-5 w-5 text-red-500" />}
-                    glowColor="rgba(239,68,68,1)"
-                    borderColor="border-red-500/20"
-                />
-                <StatCard
-                    title="In Progress"
-                    value={loading ? "..." : metrics.inProgress.toLocaleString()}
-                    subtitle="Active work orders"
-                    icon={<Hammer className="h-5 w-5 text-amber-500" />}
-                    glowColor="rgba(245,158,11,1)"
-                    borderColor="border-amber-500/20"
-                />
-                <StatCard
-                    title="Scheduled"
-                    value={loading ? "..." : metrics.scheduled.toLocaleString()}
-                    subtitle="Upcoming visits"
-                    icon={<Clock className="h-5 w-5 text-cyan-500" />}
-                    glowColor="rgba(6,182,212,1)"
-                    borderColor="border-cyan-500/20"
-                />
-                <StatCard
-                    title="Resolved"
-                    value={loading ? "..." : metrics.resolvedThisMonth.toLocaleString()}
-                    subtitle="Completed this month"
-                    icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                    glowColor="rgba(16,185,129,1)"
-                    borderColor="border-emerald-500/20"
-                />
-            </div>
+
 
             {/* Main Content Area */}
             <div className="rounded-3xl bg-card border border-border flex flex-col pt-2 shadow-sm">
@@ -221,8 +173,10 @@ export function MaintenanceDashboard() {
                 {/* Grid Format Request List */}
                 <div className="p-6">
                     {loading ? (
-                        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
-                            Loading maintenance requests...
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                                <MaintenanceCardSkeleton key={i} />
+                            ))}
                         </div>
                     ) : error ? (
                         <div className="rounded-2xl border border-red-500/20 bg-red-50/50 dark:bg-red-500/5 p-6 text-sm text-red-600 dark:text-red-300 shadow-sm">
@@ -265,33 +219,7 @@ export function MaintenanceDashboard() {
     );
 }
 
-function StatCard({ title, value, subtitle, icon, glowColor, borderColor }: any) {
-    return (
-        <div
-            className={cn(
-                "relative overflow-hidden p-6 rounded-3xl bg-card border shadow-sm transition-all duration-300 group hover:-translate-y-1 hover:shadow-md",
-                borderColor
-            )}
-        >
-            <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] dark:group-hover:opacity-[0.08] transition-opacity duration-500 pointer-events-none"
-                style={{ background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)` }}
-            />
-            <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{title}</h3>
-                    <div className="p-2 rounded-xl bg-muted border border-border">
-                        {icon}
-                    </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                    <span className="text-4xl font-black text-foreground tracking-tighter">{value}</span>
-                    <span className="text-sm font-medium text-muted-foreground">{subtitle}</span>
-                </div>
-            </div>
-        </div>
-    );
-}
+
 
 function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, onClick?: () => void }) {
     const isCritical = request.priority === "Critical";
@@ -423,5 +351,43 @@ function StatusBadge({ status }: { status: Status }) {
         )}>
             {status}
         </span>
+    );
+}
+
+
+
+function MaintenanceCardSkeleton() {
+    return (
+        <div className="relative flex flex-col bg-card/60 border border-border rounded-2xl overflow-hidden shadow-sm h-[400px]">
+            {/* Neutral Shimmer Layer */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/30 to-transparent -translate-x-full animate-shimmer" style={{ animationDuration: '2.5s' }} />
+            </div>
+            
+            <div className="h-44 w-full bg-muted animate-pulse" />
+            
+            <div className="p-4 flex flex-col flex-1 space-y-4">
+                <div className="flex justify-between">
+                    <div className="h-3 w-16 bg-muted rounded animate-pulse" />
+                </div>
+                
+                <div className="space-y-2">
+                    <div className="h-5 w-full bg-muted rounded-lg animate-pulse" />
+                    <div className="h-5 w-2/3 bg-muted rounded-lg animate-pulse" />
+                </div>
+
+                <div className="flex gap-2">
+                    <div className="h-6 w-20 bg-muted rounded-md animate-pulse" />
+                    <div className="h-6 w-16 bg-muted rounded-md animate-pulse" />
+                </div>
+
+                <div className="flex-1" />
+
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                    <div className="h-9 w-24 bg-muted rounded-xl animate-pulse" />
+                </div>
+            </div>
+        </div>
     );
 }

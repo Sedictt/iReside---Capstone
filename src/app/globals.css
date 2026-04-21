@@ -268,3 +268,12 @@ input[type="number"] {
 .state-layer:hover::before { opacity: 0.08; }
 .state-layer:focus-visible::before { opacity: 0.12; }
 .state-layer:active::before { opacity: 0.12; }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}

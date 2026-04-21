@@ -26,6 +26,7 @@ import {
     TrendingUp,
     Users,
     Plus,
+    QrCode,
     ClipboardList,
     Loader2,
     Pencil,
@@ -400,6 +401,7 @@ export function RentApplications() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [documentLoading, setDocumentLoading] = useState(true);
     const [showMoreFilters, setShowMoreFilters] = useState(false);
+    const [showInviteTools, setShowInviteTools] = useState(false);
 
     useEffect(() => {
         if (previewUrl) setDocumentLoading(true);
@@ -438,23 +440,33 @@ export function RentApplications() {
                 }
 
                 const payload = (await response.json()) as { applications?: RentApplication[] };
-                setApplications(Array.isArray(payload.applications) ? payload.applications : []);
-                setDataFetched(true);
+                if (!controller.signal.aborted) {
+                    setApplications(Array.isArray(payload.applications) ? payload.applications : []);
+                    setDataFetched(true);
+                }
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {
                     return;
                 }
 
-                setError("Unable to load applications right now.");
-                setApplications([]);
+                if (!controller.signal.aborted) {
+                    setError("Unable to load applications right now.");
+                    setApplications([]);
+                }
             } finally {
-                // Ensure skeleton shows for minimum 400ms for smooth UX
-                const elapsed = Date.now() - startTime;
-                const minLoadingTime = 400;
-                if (elapsed < minLoadingTime) {
-                    setTimeout(() => setLoading(false), minLoadingTime - elapsed);
-                } else {
-                    setLoading(false);
+                if (!controller.signal.aborted) {
+                    // Ensure skeleton shows for minimum 400ms for smooth UX
+                    const elapsed = Date.now() - startTime;
+                    const minLoadingTime = 400;
+                    if (elapsed < minLoadingTime) {
+                        setTimeout(() => {
+                            if (!controller.signal.aborted) {
+                                setLoading(false);
+                            }
+                        }, minLoadingTime - elapsed);
+                    } else {
+                        setLoading(false);
+                    }
                 }
             }
         };
@@ -999,23 +1011,27 @@ export function RentApplications() {
                         Create, manage, and track tenant inquiries and applications.
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowTenantApplicationModal(true)}
-                    className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black tracking-tight text-primary-foreground shadow-[0_14px_32px_-20px_rgba(var(--primary-rgb),0.65)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
-                >
-                    <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <Plus className="h-5 w-5 relative z-10" />
-                    <span className="relative z-10">New Application</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowTenantApplicationModal(true)}
+                        className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black tracking-tight text-primary-foreground shadow-[0_14px_32px_-20px_rgba(var(--primary-rgb),0.65)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
+                    >
+                        <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                        <Plus className="h-5 w-5 relative z-10" />
+                        <span className="relative z-10">New Application</span>
+                    </button>
+
+                    <button
+                        onClick={() => setShowInviteTools(true)}
+                        className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl border border-border bg-card px-6 py-3 text-sm font-black tracking-tight transition-all hover:bg-muted active:scale-95"
+                    >
+                        <QrCode className="h-5 w-5" />
+                        <span>Invite Manager</span>
+                    </button>
+                </div>
             </div>
 
-            <TenantInviteManager
-                availableUnits={availableUnits}
-                invites={tenantInvites}
-                onRefresh={() => {
-                    void loadInvites();
-                }}
-            />
+
 
             {/* KPI Stats Toggle */}
             <div className="flex items-center gap-2">
@@ -2340,6 +2356,7 @@ export function RentApplications() {
                 )}
             </AnimatePresence>
 
+            {/* Countersign Lease Modal */}
             <AnimatePresence>
                 {showCountersignModal && selectedApp?.lease && (
                     <>
@@ -2410,6 +2427,51 @@ export function RentApplications() {
                                 >
                                     {countersignState.loading ? "Submitting..." : "Confirm Countersignature"}
                                 </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Invite Manager Modal */}
+            <AnimatePresence>
+                {showInviteTools && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowInviteTools(false)}
+                            className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed inset-0 z-[130] flex items-center justify-center p-4 py-8"
+                        >
+                            <div className="relative h-full max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[2.5rem] border border-white/10 bg-background custom-scrollbar shadow-2xl">
+                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-8 py-6 backdrop-blur-md">
+                                    <div>
+                                        <h3 className="text-xl font-black tracking-tighter text-foreground px-1">Invite Manager</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Generate and manage intake links</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowInviteTools(false)}
+                                        className="rounded-xl bg-background p-2.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </button>
+                                </div>
+                                <div className="p-4 md:p-8">
+                                    <TenantInviteManager
+                                        availableUnits={availableUnits}
+                                        invites={tenantInvites}
+                                        onRefresh={() => {
+                                            void loadInvites();
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </motion.div>
                     </>
