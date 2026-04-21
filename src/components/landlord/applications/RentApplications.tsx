@@ -11,7 +11,9 @@ import {
     Clock,
     CheckCircle2,
     XCircle,
+    ChevronDown,
     Eye,
+    MapPin,
     Calendar,
     Banknote,
     Mail,
@@ -24,10 +26,13 @@ import {
     TrendingUp,
     Users,
     Plus,
+    QrCode,
     ClipboardList,
     Loader2,
     Pencil,
     Wallet,
+    Save,
+    Sparkles,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
 import { WalkInApplicationModal } from "./WalkInApplicationModal";
@@ -223,40 +228,40 @@ const resolveImage = (value: string | null | undefined) => {
 };
 
 // ─── Status Config ────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bgColor: string; borderColor: string; icon: React.ElementType }> = {
+const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; bgColor: string; borderColor: string; darkColor?: string; darkBgColor?: string; darkBorderColor?: string; icon: React.ElementType }> = {
     pending: {
         label: "Pending Review",
         color: "text-amber-700 dark:text-amber-400",
-        bgColor: "bg-amber-500/10",
-        borderColor: "border-amber-500/20",
+        bgColor: "bg-amber-500/10 dark:bg-amber-500/20",
+        borderColor: "border-amber-500/20 dark:border-amber-500/30",
         icon: Clock,
     },
     reviewing: {
         label: "Under Review",
         color: "text-blue-700 dark:text-blue-400",
-        bgColor: "bg-blue-500/10",
-        borderColor: "border-blue-500/20",
+        bgColor: "bg-blue-500/10 dark:bg-blue-500/20",
+        borderColor: "border-blue-500/20 dark:border-blue-500/30",
         icon: Eye,
     },
     payment_pending: {
         label: "Payment Pending",
         color: "text-violet-700 dark:text-violet-300",
-        bgColor: "bg-violet-500/10",
-        borderColor: "border-violet-500/20",
+        bgColor: "bg-violet-500/10 dark:bg-violet-500/20",
+        borderColor: "border-violet-500/20 dark:border-violet-500/30",
         icon: Wallet,
     },
     approved: {
         label: "Approved",
         color: "text-emerald-700 dark:text-emerald-400",
-        bgColor: "bg-emerald-500/10",
-        borderColor: "border-emerald-500/20",
+        bgColor: "bg-emerald-500/10 dark:bg-emerald-500/20",
+        borderColor: "border-emerald-500/20 dark:border-emerald-500/30",
         icon: CheckCircle2,
     },
     rejected: {
         label: "Rejected",
         color: "text-red-700 dark:text-red-400",
-        bgColor: "bg-red-500/10",
-        borderColor: "border-red-500/20",
+        bgColor: "bg-red-500/10 dark:bg-red-500/20",
+        borderColor: "border-red-500/20 dark:border-red-500/30",
         icon: XCircle,
     },
     withdrawn: {
@@ -393,6 +398,15 @@ export function RentApplications() {
     const [bypassReason, setBypassReason] = useState("");
     const [bypassPassword, setBypassPassword] = useState("");
 
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [documentLoading, setDocumentLoading] = useState(true);
+    const [showMoreFilters, setShowMoreFilters] = useState(false);
+    const [showInviteTools, setShowInviteTools] = useState(false);
+
+    useEffect(() => {
+        if (previewUrl) setDocumentLoading(true);
+    }, [previewUrl]);
+
     useEffect(() => {
         setBypassReason("");
         setBypassPassword("");
@@ -426,33 +440,83 @@ export function RentApplications() {
                 }
 
                 const payload = (await response.json()) as { applications?: RentApplication[] };
-                setApplications(Array.isArray(payload.applications) ? payload.applications : []);
-                setDataFetched(true);
+                if (!controller.signal.aborted) {
+                    setApplications(Array.isArray(payload.applications) ? payload.applications : []);
+                    setDataFetched(true);
+                }
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {
                     return;
                 }
 
-                setError("Unable to load applications right now.");
-                setApplications([]);
+                if (!controller.signal.aborted) {
+                    setError("Unable to load applications right now.");
+                    setApplications([]);
+                }
             } finally {
-                // Ensure skeleton shows for minimum 400ms for smooth UX
-                const elapsed = Date.now() - startTime;
-                const minLoadingTime = 400;
-                if (elapsed < minLoadingTime) {
-                    setTimeout(() => setLoading(false), minLoadingTime - elapsed);
-                } else {
-                    setLoading(false);
+                if (!controller.signal.aborted) {
+                    // Ensure skeleton shows for minimum 400ms for smooth UX
+                    const elapsed = Date.now() - startTime;
+                    const minLoadingTime = 400;
+                    if (elapsed < minLoadingTime) {
+                        setTimeout(() => {
+                            if (!controller.signal.aborted) {
+                                setLoading(false);
+                            }
+                        }, minLoadingTime - elapsed);
+                    } else {
+                        setLoading(false);
+                    }
                 }
             }
         };
 
-        void loadApplications();
+        loadApplications();
 
         return () => {
             controller.abort();
         };
     }, [reloadKey]);
+
+    const toggleRequirement = async (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
+        const updatedChecklist = {
+            ...currentChecklist,
+            [key]: !currentChecklist[key]
+        };
+
+        // Helper to sync multiple pieces of state
+        const updateAllStates = (checklist: Record<string, boolean>) => {
+            setApplications(prev => prev.map(a => a.id === applicationId ? { ...a, complianceChecklist: checklist as RentApplication['complianceChecklist'] } : a));
+            if (selectedApp?.id === applicationId) {
+                setSelectedApp(prev => prev ? { ...prev, complianceChecklist: checklist as RentApplication['complianceChecklist'] } : null);
+            }
+        };
+
+        // 1. Optimistic UI update
+        updateAllStates(updatedChecklist);
+
+        try {
+            const res = await fetch("/api/landlord/applications/tenant-application", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    application_id: applicationId,
+                    requirements_checklist: updatedChecklist
+                })
+            });
+
+            if (!res.ok) {
+                const data = await res.json() as { error?: string };
+                throw new Error(data.error || "Failed to update requirement status");
+            }
+        } catch (error) {
+            console.error("Toggle requirement error:", error);
+            setActionError("Failed to sync requirement status. Reverting change...");
+            
+            // 2. Rollback on failure
+            updateAllStates(currentChecklist);
+        }
+    };
 
     // Load actual units (not property IDs) so walk-in submissions use a valid unit_id.
     useEffect(() => {
@@ -912,8 +976,8 @@ export function RentApplications() {
         { label: "All", value: "all", count: stats.total },
         { label: "Pending", value: "pending", count: stats.pending },
         { label: "Reviewing", value: "reviewing", count: stats.reviewing },
-        { label: "Payment Pending", value: "payment_pending", count: stats.payment_pending },
         { label: "Approved", value: "approved", count: stats.approved },
+        { label: "Payment Pending", value: "payment_pending", count: stats.payment_pending },
         { label: "Rejected", value: "rejected", count: stats.rejected },
         { label: "Withdrawn", value: "withdrawn", count: stats.withdrawn },
     ];
@@ -947,31 +1011,36 @@ export function RentApplications() {
                         Create, manage, and track tenant inquiries and applications.
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowTenantApplicationModal(true)}
-                    className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black tracking-tight text-primary-foreground shadow-[0_14px_32px_-20px_rgba(var(--primary-rgb),0.65)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
-                >
-                    <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <Plus className="h-5 w-5 relative z-10" />
-                    <span className="relative z-10">New Application</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowTenantApplicationModal(true)}
+                        className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black tracking-tight text-primary-foreground shadow-[0_14px_32px_-20px_rgba(var(--primary-rgb),0.65)] transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95"
+                    >
+                        <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                        <Plus className="h-5 w-5 relative z-10" />
+                        <span className="relative z-10">New Application</span>
+                    </button>
+
+                    <button
+                        onClick={() => setShowInviteTools(true)}
+                        className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl border border-border bg-card px-6 py-3 text-sm font-black tracking-tight transition-all hover:bg-muted active:scale-95"
+                    >
+                        <QrCode className="h-5 w-5" />
+                        <span>Invite Manager</span>
+                    </button>
+                </div>
             </div>
 
-            <TenantInviteManager
-                availableUnits={availableUnits}
-                invites={tenantInvites}
-                onRefresh={() => {
-                    void loadInvites();
-                }}
-            />
+
 
             {/* KPI Stats Toggle */}
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => setShowKpiCards(!showKpiCards)}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                    className="group flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
                 >
-                    {showKpiCards ? "Hide" : "Show"} Stats
+                    <div className={cn("h-1.5 w-1.5 rounded-full transition-all duration-500", showKpiCards ? "bg-primary animate-pulse" : "bg-muted-foreground")} />
+                    {showKpiCards ? "Hide" : "Show"} Metrics
                 </button>
             </div>
 
@@ -1015,44 +1084,113 @@ export function RentApplications() {
             {/* Main Application Container */}
             <div className="flex flex-col rounded-3xl border border-border bg-card/95 pt-2 shadow-sm">
 
-                {/* Advanced Command Toolbar */}
-                <div className="sticky top-0 z-30 flex flex-col items-start justify-between gap-4 rounded-t-3xl border-b border-border bg-card/90 p-6 backdrop-blur-xl sm:flex-row sm:items-center">
-                    <div className="no-scrollbar flex w-full overflow-x-auto rounded-xl border border-border bg-background p-1.5 sm:w-auto">
-                        {filterTabs.map((tab) => (
+                {/* Unified Command Toolbar */}
+                <div className="flex flex-col items-center justify-between gap-4 rounded-t-3xl border-b border-border bg-card/90 p-4 md:p-6 backdrop-blur-xl xl:flex-row">
+                    <div className="flex items-center gap-2 rounded-2xl border border-border bg-background/50 p-1.5 w-full xl:w-fit overflow-hidden">
+                        <div className="no-scrollbar flex overflow-x-auto">
+                            <div className="flex items-center gap-1">
+                                {filterTabs.slice(0, 4).map((tab) => (
+                                    <button
+                                        key={tab.value}
+                                        onClick={() => { setActiveFilter(tab.value); setShowMoreFilters(false); }}
+                                        className={cn(
+                                            "group relative px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2",
+                                            activeFilter === tab.value
+                                                ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+                                                : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                                        )}
+                                    >
+                                        {tab.label}
+                                        <span className={cn(
+                                            "px-1.5 py-0.5 rounded-lg text-[9px] font-black leading-none transition-all duration-300",
+                                            activeFilter === tab.value 
+                                                ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(var(--primary-rgb),0.4)]" 
+                                                : "bg-background border border-border text-muted-foreground group-hover:border-primary/30 group-hover:text-primary"
+                                        )}>
+                                            {tab.count}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="h-6 w-[1px] bg-border/60 mx-1 hidden sm:block" />
+
+                        <div className="relative shrink-0">
                             <button
-                                key={tab.value}
-                                onClick={() => setActiveFilter(tab.value)}
+                                onClick={() => setShowMoreFilters(!showMoreFilters)}
                                 className={cn(
-                                    "px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2",
-                                    activeFilter === tab.value
-                                        ? "border border-border bg-card text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                    "group relative px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-2",
+                                    filterTabs.slice(4).some(t => t.value === activeFilter)
+                                        ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                                        : "text-muted-foreground hover:bg-muted/40 hover:text-foreground border border-transparent"
                                 )}
                             >
-                                {tab.label}
-                                <span className={cn(
-                                    "px-1.5 py-0.5 rounded text-[10px] font-black leading-none",
-                                    activeFilter === tab.value ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                                )}>
-                                    {tab.count}
-                                </span>
+                                More
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showMoreFilters && "rotate-180")} />
+                                {filterTabs.slice(4).some(t => t.value === activeFilter) && (
+                                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                )}
                             </button>
-                        ))}
+
+                            <AnimatePresence>
+                                {showMoreFilters && (
+                                    <>
+                                        <div className="fixed inset-0 z-[60]" onClick={() => setShowMoreFilters(false)} />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            className="absolute right-0 mt-2 z-[70] min-w-[200px] overflow-hidden rounded-2xl border border-border bg-card/98 p-1.5 shadow-2xl backdrop-blur-xl"
+                                        >
+                                            <div className="p-2 mb-1">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Secondary Statuses</p>
+                                            </div>
+                                            {filterTabs.slice(4).map((tab) => (
+                                                <button
+                                                    key={tab.value}
+                                                    onClick={() => {
+                                                        setActiveFilter(tab.value);
+                                                        setShowMoreFilters(false);
+                                                    }}
+                                                    className={cn(
+                                                        "flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all",
+                                                        activeFilter === tab.value
+                                                            ? "bg-primary/10 text-primary"
+                                                            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                                    )}
+                                                >
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
+                                                    <span className={cn(
+                                                        "px-1.5 py-0.5 rounded-md text-[9px] font-black",
+                                                        activeFilter === tab.value ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        {tab.count}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="relative group flex-1 sm:w-64">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                    <div className="flex items-center gap-2 w-full xl:w-auto xl:flex-1 xl:justify-end">
+                        <div className="relative group flex-1 xl:max-w-xs">
+                            <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                             <input
                                 type="text"
-                                placeholder="Search applicant, property..."
+                                placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                className="w-full rounded-2xl border border-border bg-background/50 h-11 pl-10 pr-4 text-[10px] font-black uppercase tracking-widest text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all shadow-sm group-hover:border-primary/20"
                             />
                         </div>
-                        <button className="rounded-xl border border-border bg-background p-2.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground">
-                            <Filter className="w-5 h-5" />
+                        
+                        <button className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 shrink-0">
+                            <Filter className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Advanced</span>
                         </button>
                     </div>
                 </div>
@@ -1124,13 +1262,13 @@ export function RentApplications() {
                                                         </div>
 
                                                         {/* Name & Occupation */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <h3 className="mb-1 truncate text-base font-bold text-foreground transition-colors group-hover:text-primary">
+                                                        <div className="flex-[2] min-w-0">
+                                                            <h3 className="mb-0.5 text-lg font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
                                                                 {app.applicant.name}
                                                             </h3>
-                                                            <p className="flex items-center gap-1.5 truncate text-xs font-medium text-muted-foreground">
+                                                            <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
                                                                 <Briefcase className="w-3 h-3 shrink-0" />
-                                                                {app.applicant.occupation || "Not provided"}
+                                                                {app.applicant.occupation || "Unspecified Occupation"}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -1157,27 +1295,16 @@ export function RentApplications() {
                                                         </span>
                                                     </div>
 
-                                                    {/* Credit Score */}
-                                                    <div className="hidden min-w-[100px] flex-col items-center rounded-xl border border-border bg-muted/20 px-4 py-2 xl:flex">
-                                                        <span className="mb-1 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Credit</span>
-                                                        <span className={cn("text-xl font-black leading-none", getCreditScoreColor(app.applicant.creditScore))}>
-                                                            {app.applicant.creditScore ?? "N/A"}
-                                                        </span>
-                                                        <span className="mt-1 text-[9px] font-bold text-muted-foreground">
-                                                            {getCreditScoreLabel(app.applicant.creditScore)}
-                                                        </span>
-                                                    </div>
-
                                                     {/* Status Badge */}
                                                     <div className="flex items-center gap-3 min-w-[140px]">
                                                         <span className={cn(
-                                                            "px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-sm",
+                                                            "px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 backdrop-blur-md shadow-sm transition-all duration-300",
                                                             statusConfig.bgColor,
                                                             statusConfig.borderColor,
                                                             statusConfig.color,
-                                                            app.status === "pending" ? "border-amber-400 bg-amber-500 text-black" :
-                                                                app.status === "approved" ? "border-emerald-400/50 bg-emerald-500/90 text-black" :
-                                                                    app.status === "withdrawn" ? "border-slate-200 bg-slate-100 text-slate-700 dark:border-white/20 dark:bg-white/10 dark:text-neutral-200" : ""
+                                                            app.status === "pending" && "border-amber-400 bg-amber-500 text-black dark:border-amber-400/30 dark:bg-amber-500/20 dark:text-amber-400",
+                                                            app.status === "approved" && "border-emerald-400/50 bg-emerald-500/90 text-black dark:border-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-400",
+                                                            app.status === "withdrawn" && "border-slate-200 bg-slate-100 text-slate-700 dark:border-white/20 dark:bg-white/10 dark:text-neutral-200"
                                                         )}>
                                                             <StatusIcon className="w-3 h-3" />
                                                             {statusConfig.label}
@@ -1185,16 +1312,15 @@ export function RentApplications() {
                                                     </div>
 
                                                     {/* Action Button */}
-                                                    <button className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-black text-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary">
-                                                        <Eye className="w-3.5 h-3.5" />
+                                                    <button className="group/btn flex shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-xs font-black uppercase tracking-widest text-foreground shadow-sm transition-all hover:scale-[1.02] hover:border-primary/40 hover:bg-primary/5 hover:text-primary active:scale-95">
+                                                        <Eye className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
                                                         <span className="hidden sm:inline">Review</span>
+                                                        <ArrowRight className="w-4 h-4 -ml-1 opacity-0 -translate-x-2 transition-all duration-300 group-hover/btn:opacity-100 group-hover/btn:translate-x-0" />
                                                     </button>
                                                 </div>
 
-                                                {/* Hover Indicator */}
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                    <ArrowRight className="w-5 h-5 text-primary animate-pulse" />
-                                                </div>
+                                                {/* Hover Glow Effect */}
+                                                <div className="absolute inset-y-0 right-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </motion.div>
                                         );
                                     })}
@@ -1253,45 +1379,68 @@ export function RentApplications() {
 
                             <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
                                 {/* Panel Header */}
-                            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card/92 px-6 py-4 shadow-sm backdrop-blur-3xl">
-                                <div className="flex items-center gap-3">
-                                    <span className="rounded-md border border-border bg-background px-2 py-1 font-mono text-xs font-bold text-muted-foreground">{selectedApp.id}</span>
-                                    <h2 className="text-lg font-black tracking-tight text-foreground">Application Dossier</h2>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {!isEditing ? (
-                                        <button
-                                            onClick={() => openEdit(selectedApp)}
-                                            className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-black text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                                        >
-                                            <Pencil className="h-3.5 w-3.5" />
-                                            Edit
-                                        </button>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={cancelEdit}
-                                                disabled={savingEdit}
-                                                className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-black text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={saveEdit}
-                                                disabled={savingEdit}
-                                                className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-60"
-                                            >
-                                                {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                                                {savingEdit ? "Saving..." : "Save"}
-                                            </button>
+                            <div className="sticky top-0 z-50 border-b border-border bg-card/95 px-8 pt-8 pb-6 shadow-sm backdrop-blur-3xl">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2.5 rounded-full border border-border bg-background/50 px-3 py-1 text-muted-foreground transition-colors hover:border-primary/20 hover:text-foreground">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                            <span className="font-mono text-[9px] font-black tracking-[0.2em] uppercase leading-none">{selectedApp.id}</span>
                                         </div>
-                                    )}
-                                        <button
-                                            onClick={() => { setSelectedApp(null); setActionError(null); cancelEdit(); }}
-                                            className="rounded-full border border-border bg-background p-2 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500"
-                                        >
-                                        <X className="h-4 w-4" />
+                                        <div className="flex items-center gap-2 rounded-full border border-border bg-background/50 px-3 py-1 text-muted-foreground">
+                                            <Clock className="w-3 h-3 text-primary/60" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+                                                Created: {formatDate(selectedApp.submittedDate)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => { setSelectedApp(null); setActionError(null); cancelEdit(); }}
+                                        className="group h-10 w-10 flex items-center justify-center rounded-full border border-border bg-background transition-all hover:scale-110 hover:border-red-500/30 hover:bg-red-500/5"
+                                    >
+                                        <X className="w-5 h-5 text-muted-foreground group-hover:text-red-500 group-hover:rotate-90 transition-all duration-300" />
                                     </button>
+                                </div>
+
+                                <div className="flex items-end justify-between gap-6">
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.3em]">
+                                            <div className="h-px w-6 bg-primary/30" />
+                                            Property Management
+                                        </div>
+                                        <h2 className="text-4xl font-black tracking-tighter text-foreground leading-tight">
+                                            Application <span className="text-muted-foreground/40">Dossier</span>
+                                        </h2>
+                                    </div>
+
+                                    <div className="flex shrink-0 items-center gap-3">
+                                        {!isEditing ? (
+                                            <button
+                                                onClick={() => openEdit(selectedApp)}
+                                                className="group flex h-12 items-center gap-2.5 rounded-xl border border-border bg-background px-6 text-xs font-black uppercase tracking-widest text-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
+                                            >
+                                                <Pencil className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                                Edit Record
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={cancelEdit}
+                                                    disabled={savingEdit}
+                                                    className="h-12 rounded-xl border border-border bg-background px-6 text-xs font-black uppercase tracking-widest text-muted-foreground transition-all hover:bg-muted active:scale-95"
+                                                >
+                                                    Discard
+                                                </button>
+                                                <button
+                                                    onClick={saveEdit}
+                                                    disabled={savingEdit}
+                                                    className="flex h-12 items-center gap-2.5 rounded-xl bg-primary px-8 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-lg transition-all hover:scale-[1.02] hover:shadow-primary/20 active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                                    Commit Changes
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -1316,8 +1465,8 @@ export function RentApplications() {
                                                 <span className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-lg text-sm font-bold shadow-sm backdrop-blur-md">
                                                     {selectedApp.unitNumber}
                                                 </span>
-                                                {selectedApp.source === "invite_link" && (
-                                                    <span className="ml-3 inline-flex rounded-lg border border-blue-400/20 bg-blue-500/15 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-blue-200">
+                                                 {selectedApp.source === "invite_link" && (
+                                                    <span className="ml-3 inline-flex rounded-lg border border-blue-400/20 bg-blue-500/15 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-blue-100 dark:text-blue-200">
                                                         Invite submission
                                                     </span>
                                                 )}
@@ -1520,47 +1669,124 @@ export function RentApplications() {
                                     </div>
                                 </div>
 
-                                {/* Requirements Roadmap Checklist */}
-                                <div className="space-y-4 border-t border-border pt-4">
+                                 {/* Requirements Roadmap Checklist */}
+                                 <div className="space-y-6 border-t border-border pt-8">
                                     <div className="flex items-center justify-between px-2">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Requirements Roadmap</h4>
-                                        <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 tracking-widest">MANDATORY</span>
+                                        <div className="space-y-1">
+                                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Compliance Protocol</h4>
+                                            <p className="text-xl font-black tracking-tight text-foreground">Requirements Roadmap</p>
+                                        </div>
+                                        <span className="text-[9px] font-black text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 tracking-widest uppercase">Mandatory</span>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-2">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {[
-                                            { key: 'valid_id', label: '1. Valid Identification', desc: 'Any govt-issued ID (Name match is mandatory)' },
-                                            { key: 'proof_of_income', label: '2. Source of Income', desc: 'COE, Payslip, or Contract Verification' },
-                                            { key: 'application_form', label: '3. Completed App Form', desc: 'Employment & Emergency Contact Details' },
-                                            { key: 'move_in_payment', label: '4. Move-in Payments', desc: 'Advance + security deposit invoices must be landlord-confirmed' },
-                                        ].map((req) => {
+                                            { key: 'valid_id', label: 'Valid Identification', desc: 'Govt-issued ID verify' },
+                                            { key: 'income_verified', label: 'Source of Income', desc: 'COE or Payslip check' },
+                                            { key: 'application_completed', label: 'Application Form', desc: 'Full details completed' },
+                                            { key: 'payment_received', label: 'Move-in Payments', desc: 'Landlord confirmation' },
+                                        ].map((req, idx) => {
                                             const checklist = selectedApp.complianceChecklist as Record<string, boolean> | null | undefined;
                                             const isDone = checklist?.[req.key] === true;
                                             return (
-                                                <div key={req.key} className={cn(
-                                                    "flex items-center gap-4 p-3 rounded-2xl border transition-all duration-300 group",
-                                                    isDone ? "bg-emerald-500/5 border-emerald-500/20" : "bg-background border-border opacity-60"
-                                                )}>
-                                                    <div className={cn(
-                                                        "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-500",
-                                                        isDone ? "bg-emerald-500 border-emerald-400 text-black shadow-[0_0_12px_rgba(16,185,129,0.3)]" : "bg-card border-border text-muted-foreground"
-                                                    )}>
-                                                        {isDone ? <CheckCircle2 className="h-5 w-5" /> : <Shield className="h-4 w-4" />}
-                                                    </div>
-                                                    <div>
-                                                        <p className={cn("text-xs font-black tracking-tight", isDone ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground")}>{req.label}</p>
-                                                        <p className="mt-0.5 text-[10px] font-bold leading-tight text-slate-500 dark:text-neutral-600">{req.desc}</p>
-                                                    </div>
-                                                    {isDone && (
-                                                        <div className="ml-auto h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                <button 
+                                                    key={req.key}
+                                                    disabled={isEditing}
+                                                    onClick={() => toggleRequirement(selectedApp.id, selectedApp.complianceChecklist as Record<string, boolean> || {}, req.key)}
+                                                    className={cn(
+                                                        "group relative flex flex-col items-start gap-4 rounded-2xl border p-5 transition-all duration-300",
+                                                        isDone 
+                                                            ? "bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40" 
+                                                            : "bg-card border-border hover:border-primary/20",
+                                                        !isEditing && "hover:-translate-y-1 active:scale-95"
                                                     )}
-                                                </div>
+                                                >
+                                                    <div className="flex w-full items-center justify-between pointer-events-none">
+                                                        <div className={cn(
+                                                            "h-10 w-10 flex items-center justify-center rounded-xl transition-all duration-500",
+                                                            isDone ? "bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-muted text-muted-foreground"
+                                                        )}>
+                                                            {isDone ? <CheckCircle2 className="w-5 h-5" /> : <span className="font-black text-xs">{idx + 1}</span>}
+                                                        </div>
+                                                        <div className={cn(
+                                                            "rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-widest transition-opacity duration-300",
+                                                            isDone ? "bg-emerald-500/20 text-emerald-600 opacity-100" : "opacity-0"
+                                                        )}>
+                                                            Verified
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-left pointer-events-none">
+                                                        <p className={cn("text-[13px] font-black tracking-tight", isDone ? "text-emerald-700 dark:text-emerald-400" : "text-foreground")}>
+                                                            {req.label}
+                                                        </p>
+                                                        <p className="text-[11px] font-medium text-muted-foreground/80 leading-relaxed mt-0.5">{req.desc}</p>
+                                                    </div>
+                                                </button>
                                             );
                                         })}
                                     </div>
-                                </div>
 
-                                {/* Financial Underwriting Grid */}
+                                    {/* Continuation Workflow Center */}
+                                    <div className="mt-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-8 backdrop-blur-md overflow-hidden relative">
+                                        <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none">
+                                            <Sparkles className="w-32 h-32 text-primary" />
+                                        </div>
+                                        
+                                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                                            <div className="max-w-md">
+                                                <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[8px] mb-3">
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                                    Transaction Continuity
+                                                </div>
+                                                <h4 className="text-3xl font-black tracking-tighter text-foreground leading-tight">
+                                                    {selectedApp.status === "pending" ? "Resume Application" : 
+                                                     selectedApp.status === "reviewing" ? "Final Decision" : 
+                                                     "Transaction Audit"}
+                                                </h4>
+                                                <p className="text-sm font-medium text-muted-foreground/70 mt-3 leading-relaxed">
+                                                    {selectedApp.status === "pending" 
+                                                        ? "Essential requirements are still pending verification. Complete the checklist above to move this applicant into the formal review stage."
+                                                        : selectedApp.status === "reviewing"
+                                                        ? "Internal verification is complete. You can now finalize the approval process which will automatically generate the legal lease documents."
+                                                        : "Workflow complete. Historical compliance records and transaction details are locked for auditing purposes."}
+                                                </p>
+                                            </div>
+                                            
+                                            <div className="flex flex-col gap-3 shrink-0 min-w-[220px]">
+                                                {selectedApp.status === "pending" && (
+                                                    <button 
+                                                        disabled={Object.values(selectedApp.complianceChecklist as Record<string, boolean> || {}).filter(v => v).length < 3 || updatingStatusId === selectedApp.id}
+                                                        onClick={() => updateApplicationStatus(selectedApp.id, "reviewing")}
+                                                        className="flex items-center justify-center gap-3 rounded-xl bg-primary px-8 py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] hover:bg-primary/90 active:scale-95 disabled:grayscale disabled:opacity-50"
+                                                    >
+                                                        {updatingStatusId === selectedApp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Move to Review <ArrowRight className="w-4 h-4" /></>}
+                                                    </button>
+                                                )}
+                                                {selectedApp.status === "reviewing" && (
+                                                    <button 
+                                                        disabled={updatingStatusId === selectedApp.id}
+                                                        onClick={() => openApprovalModal(selectedApp)}
+                                                        className="flex items-center justify-center gap-3 rounded-xl bg-emerald-600 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-500/20 transition-all hover:scale-[1.02] hover:bg-emerald-500 active:scale-95 disabled:opacity-50"
+                                                    >
+                                                        {updatingStatusId === selectedApp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Approve & Sign <CheckCircle2 className="w-4 h-4" /></>}
+                                                    </button>
+                                                )}
+                                                {(selectedApp.status === "pending" || selectedApp.status === "reviewing") && (
+                                                    <button 
+                                                        disabled={updatingStatusId === selectedApp.id}
+                                                        onClick={() => updateApplicationStatus(selectedApp.id, "rejected")}
+                                                        className="rounded-xl border border-red-500/20 bg-red-500/5 px-8 py-4 text-xs font-black uppercase tracking-widest text-red-600 transition-all hover:bg-red-500/10 hover:text-red-500 disabled:opacity-50"
+                                                    >
+                                                        Decline Application
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+
+
+                                 {/* Financial Underwriting Grid */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="group relative overflow-hidden rounded-3xl border border-border bg-background/70 p-5 transition-colors hover:border-emerald-500/30">
                                         <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -1594,26 +1820,31 @@ export function RentApplications() {
                                         Supporting Documents
                                         <span className="rounded-full bg-muted px-2 py-0.5 text-foreground">{selectedApp.documents.length} Files</span>
                                     </h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {selectedApp.documents.length === 0 ? (
-                                            <div className="col-span-full rounded-2xl border border-dashed border-border bg-muted/20 p-4 text-center text-xs font-semibold text-muted-foreground">
-                                                No documents uploaded.
-                                            </div>
+                                            <p className="text-[10px] font-medium text-muted-foreground italic px-2">No documents uploaded</p>
                                         ) : (
-                                            selectedApp.documents.map((doc) => (
-                                                <div
-                                                    key={doc}
-                                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-border bg-background/70 p-3 shadow-sm transition-all hover:border-primary/50 hover:bg-card"
+                                            selectedApp.documents.map((doc, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setPreviewUrl(doc)}
+                                                    className="group flex cursor-pointer items-center justify-between rounded-2xl border border-border bg-background/50 p-4 shadow-sm transition-all hover:border-primary/50 hover:bg-card hover:shadow-md active:scale-95"
                                                 >
                                                     <div className="flex items-center gap-3 overflow-hidden">
-                                                        <div className="shrink-0 rounded-xl border border-border bg-card p-2 transition-colors group-hover:border-primary/30">
-                                                            <FileText className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                                                        <div className="shrink-0 rounded-xl border border-border bg-card p-2.5 transition-colors group-hover:border-primary/30 group-hover:bg-primary/5">
+                                                            <FileText className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
                                                         </div>
-                                                        <span className="truncate text-xs font-bold text-foreground transition-colors group-hover:text-primary">
-                                                            {formatDocumentLabel(doc)}
-                                                        </span>
+                                                        <div className="flex flex-col items-start overflow-hidden">
+                                                            <span className="truncate text-[11px] font-black text-foreground transition-colors group-hover:text-primary">
+                                                                {formatDocumentLabel(doc)}
+                                                            </span>
+                                                            <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">Supporting File</span>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Eye className="w-3.5 h-3.5 text-primary" />
+                                                    </div>
+                                                </button>
                                             ))
                                         )}
                                     </div>
@@ -1955,6 +2186,88 @@ export function RentApplications() {
                 }}
             />
 
+            <AnimatePresence>
+                {previewUrl && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-12">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setPreviewUrl(null)}
+                            className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-8 py-6 backdrop-blur-md">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                        Document Inspection
+                                    </div>
+                                    <h3 className="text-xl font-black tracking-tighter text-white">
+                                        {formatDocumentLabel(previewUrl)}
+                                    </h3>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <a 
+                                        href={previewUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="hidden md:flex h-12 items-center gap-2 rounded-xl bg-white/10 px-6 text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-white/20 active:scale-95"
+                                    >
+                                        <Plus className="w-4 h-4 rotate-45" /> Open in New Tab
+                                    </a>
+                                    <button
+                                        onClick={() => setPreviewUrl(null)}
+                                        className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:bg-red-500 hover:text-white active:scale-95"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="relative flex-1 bg-neutral-900/50 p-2 md:p-6 overflow-hidden">
+                                {documentLoading && (
+                                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-card">
+                                        <div className="w-1/2 aspect-[3/4] max-h-[70%] rounded-2xl bg-neutral-800 animate-pulse flex items-center justify-center">
+                                            <Loader2 className="w-8 h-8 text-neutral-600 animate-spin" />
+                                        </div>
+                                        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600">Retrieving Document...</p>
+                                    </div>
+                                )}
+                                
+                                {previewUrl.toLowerCase().endsWith(".pdf") ? (
+                                    <iframe 
+                                        src={`${previewUrl}#toolbar=0`} 
+                                        className={cn(
+                                            "h-full w-full rounded-2xl border-0 bg-white transition-opacity duration-500",
+                                            documentLoading ? "opacity-0" : "opacity-100"
+                                        )}
+                                        onLoad={() => setDocumentLoading(false)}
+                                        title="Document Preview"
+                                    />
+                                ) : (
+                                    <div className="flex h-full w-full items-center justify-center overflow-auto custom-scrollbar">
+                                        <img 
+                                            src={previewUrl} 
+                                            alt="Document Preview" 
+                                            onLoad={() => setDocumentLoading(false)}
+                                            className={cn(
+                                                "max-h-full max-w-full rounded-xl object-contain shadow-2xl transition-all duration-700",
+                                                documentLoading ? "opacity-0 scale-95 blur-xl" : "opacity-100 scale-100 blur-0"
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Tenant Credentials Modal */}
             <AnimatePresence>
                 {tenantCredentials && (
@@ -2043,6 +2356,7 @@ export function RentApplications() {
                 )}
             </AnimatePresence>
 
+            {/* Countersign Lease Modal */}
             <AnimatePresence>
                 {showCountersignModal && selectedApp?.lease && (
                     <>
@@ -2113,6 +2427,51 @@ export function RentApplications() {
                                 >
                                     {countersignState.loading ? "Submitting..." : "Confirm Countersignature"}
                                 </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Invite Manager Modal */}
+            <AnimatePresence>
+                {showInviteTools && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowInviteTools(false)}
+                            className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed inset-0 z-[130] flex items-center justify-center p-4 py-8"
+                        >
+                            <div className="relative h-full max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[2.5rem] border border-white/10 bg-background custom-scrollbar shadow-2xl">
+                                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-8 py-6 backdrop-blur-md">
+                                    <div>
+                                        <h3 className="text-xl font-black tracking-tighter text-foreground px-1">Invite Manager</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Generate and manage intake links</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowInviteTools(false)}
+                                        className="rounded-xl bg-background p-2.5 text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </button>
+                                </div>
+                                <div className="p-4 md:p-8">
+                                    <TenantInviteManager
+                                        availableUnits={availableUnits}
+                                        invites={tenantInvites}
+                                        onRefresh={() => {
+                                            void loadInvites();
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </motion.div>
                     </>

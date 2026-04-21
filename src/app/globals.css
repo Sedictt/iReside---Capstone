@@ -222,3 +222,58 @@ input[type="number"] {
 .custom-scrollbar-premium::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Accessibility UI Improvements */
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -5rem;
+  left: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 700;
+  z-index: 10000;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 10px 30px -10px rgba(109, 152, 56, 0.5);
+  transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skip-link:focus-visible {
+  top: 0;
+}
+
+/* State Layers (M3 Principles) */
+.state-layer {
+  position: relative;
+  overflow: hidden;
+}
+
+.state-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.state-layer:hover::before { opacity: 0.08; }
+.state-layer:focus-visible::before { opacity: 0.12; }
+.state-layer:active::before { opacity: 0.12; }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
