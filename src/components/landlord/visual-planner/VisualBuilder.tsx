@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
-import { UnitListingWizard } from "./UnitListingWizard";
 import { Logo } from "@/components/ui/Logo";
 
 export interface Unit {
@@ -97,6 +97,22 @@ interface SidebarBlockGhost {
     isValid: boolean;
 }
 
+type QuickActionType = "start-maintenance" | "mark-vacant" | "mark-occupied";
+
+interface QuickActionGuardResult {
+    allowed: boolean;
+    requiresConfirmation: boolean;
+    nextStatus?: Unit["status"];
+    reason?: string;
+    confirmMessage?: string;
+}
+
+interface TenantActionMenuState {
+    isOpen: boolean;
+}
+
+type UnitNotesState = Record<string, string>;
+
 const INITIAL_UNITS: Unit[] = [
     {
         id: "101",
@@ -154,6 +170,7 @@ const INITIAL_UNITS: Unit[] = [
 const LEGEND_VISIBILITY_STORAGE_KEY = "ireside.visualPlanner.legendVisible";
 const FLOOR_LAYOUTS_STORAGE_KEY = "ireside.visualPlanner.floorLayouts";
 const ACTIVE_FLOOR_STORAGE_KEY = "ireside.visualPlanner.activeFloor";
+const UNIT_NOTES_STORAGE_KEY = "ireside.visualPlanner.unitNotes";
 const EMPTY_FLOOR_LAYOUT: FloorLayout = { units: [], corridors: [], structures: [] };
 const DEFAULT_ACTIVE_FLOOR = "floor1";
 const DEFAULT_FLOOR_LAYOUTS: Record<FloorId, FloorLayout> = {
@@ -178,6 +195,51 @@ const getFloorDisplayLabel = (floorId: FloorId, customName?: string) => {
 };
 
 const formatFloorWatermark = (floorId: FloorId, customName?: string) => getFloorDisplayLabel(floorId, customName).toUpperCase();
+
+const QUICK_ACTIONS_BY_STATUS: Record<Unit["status"], QuickActionType[]> = {
+    occupied: ["start-maintenance", "mark-vacant"],
+    neardue: ["start-maintenance", "mark-vacant"],
+    vacant: ["mark-occupied", "start-maintenance"],
+    maintenance: ["mark-vacant", "mark-occupied"],
+};
+
+const QUICK_ACTION_META: Record<QuickActionType, { label: string; icon: string }> = {
+    "start-maintenance": { label: "Start maintenance", icon: "build" },
+    "mark-vacant": { label: "Mark vacant", icon: "vpn_key" },
+    "mark-occupied": { label: "Mark occupied", icon: "check_circle" },
+};
+
+const evaluateQuickAction = (
+    currentStatus: Unit["status"],
+    action: QuickActionType
+): QuickActionGuardResult => {
+    const validActions = QUICK_ACTIONS_BY_STATUS[currentStatus] ?? [];
+    if (!validActions.includes(action)) {
+        return {
+            allowed: false,
+            requiresConfirmation: false,
+            reason: `Action is not allowed while unit is ${currentStatus}.`,
+        };
+    }
+
+    if (action === "start-maintenance") {
+        return { allowed: true, requiresConfirmation: false, nextStatus: "maintenance" };
+    }
+
+    if (action === "mark-occupied") {
+        return { allowed: true, requiresConfirmation: false, nextStatus: "occupied" };
+    }
+
+    const isHighRiskVacancyTransition = currentStatus === "occupied" || currentStatus === "neardue";
+    return {
+        allowed: true,
+        requiresConfirmation: isHighRiskVacancyTransition,
+        nextStatus: "vacant",
+        confirmMessage: isHighRiskVacancyTransition
+            ? "This unit is currently active. Marking it vacant can disrupt tracking. Continue?"
+            : undefined,
+    };
+};
 
 export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean } = {}) {
     const GRID_SIZE = 20;
@@ -223,10 +285,34 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(DEFAULT_FLOOR_LAYOUTS);
     const [hasHydratedFloorState, setHasHydratedFloorState] = useState(false);
     const [isRenamingFloor, setIsRenamingFloor] = useState(false);
+    const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
+    const [unitNotes, setUnitNotes] = useState<UnitNotesState>({});
 
     useEffect(() => {
         setHasMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const raw = window.localStorage.getItem(UNIT_NOTES_STORAGE_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw) as UnitNotesState;
+            if (parsed && typeof parsed === "object") {
+                setUnitNotes(parsed);
+            }
+        } catch {
+            // Ignore malformed note payloads.
+        }
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const timeoutId = window.setTimeout(() => {
+            window.localStorage.setItem(UNIT_NOTES_STORAGE_KEY, JSON.stringify(unitNotes));
+        }, 250);
+        return () => window.clearTimeout(timeoutId);
+    }, [unitNotes]);
     const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
     const trashRef = useRef<HTMLDivElement>(null);
@@ -315,6 +401,12 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         historyIndexRef.current = newHistory.length - 1;
         setUndoAvailable(historyIndexRef.current > 0);
     }, [units, corridors, structures]);
+
+    useEffect(() => {
+        if (selectedItem?.kind !== "unit") {
+            setIsNotesPanelOpen(false);
+        }
+    }, [selectedItem]);
 
     const performUndo = useCallback(() => {
         if (historyIndexRef.current <= 0) return;
@@ -1471,6 +1563,10 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const activeFloorItemCount = activeFloorLayout
         ? activeFloorLayout.units.length + activeFloorLayout.corridors.length + activeFloorLayout.structures.length
         : 0;
+    const selectedUnit = selectedItem?.kind === "unit"
+        ? units.find((unit) => unit.id === selectedItem.id) ?? null
+        : null;
+    const selectedUnitNote = selectedUnit ? (unitNotes[selectedUnit.id] ?? "") : "";
 
     return (
         <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30${readOnly ? ' pointer-events-auto' : ''}`}>
@@ -2714,18 +2810,21 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                 {/* Sidebar */}
                 {!readOnly && (
                     <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-slate-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
-                        {selectedItem?.kind === "unit" ? (
+                        {selectedUnit ? (
                             <UnitDetailsPanel
-                                unit={units.find(u => u.id === selectedItem.id)!}
+                                key={selectedUnit.id}
+                                unit={selectedUnit}
                                 onUpdate={(updates) => {
-                                    setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, ...updates } : u));
+                                    setUnits(prev => prev.map(u => u.id === selectedUnit.id ? { ...u, ...updates } : u));
                                 }}
                                 onDelete={() => {
-                                    deleteCanvasItem({ kind: "unit", id: selectedItem.id });
+                                    deleteCanvasItem({ kind: "unit", id: selectedUnit.id });
                                     setSelectedItem(null);
                                     triggerDeleteToast();
                                 }}
                                 onClose={() => setSelectedItem(null)}
+                                notesOpen={isNotesPanelOpen}
+                                onToggleNotes={() => setIsNotesPanelOpen((current) => !current)}
                             />
                         ) : (
                             <SidebarBlockLibrary
@@ -2736,6 +2835,16 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         )}
                     </aside>
                 )}
+                {!readOnly && selectedUnit && (
+                    <UnitNotesPanel
+                        isOpen={isNotesPanelOpen}
+                        onToggle={() => setIsNotesPanelOpen((current) => !current)}
+                        value={selectedUnitNote}
+                        onChange={(nextValue) => {
+                            setUnitNotes((current) => ({ ...current, [selectedUnit.id]: nextValue }));
+                        }}
+                    />
+                )}
             </div>
         </div>
     );
@@ -2745,15 +2854,29 @@ const UnitDetailsPanel = ({
     unit,
     onUpdate,
     onDelete,
-    onClose
+    onClose,
+    notesOpen,
+    onToggleNotes,
 }: {
     unit: Unit;
     onUpdate: (updates: Partial<Unit>) => void;
     onDelete: () => void;
     onClose: () => void;
+    notesOpen: boolean;
+    onToggleNotes: () => void;
 }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [isListingWizardOpen, setIsListingWizardOpen] = useState(false);
+    const [tenantActionMenu, setTenantActionMenu] = useState<TenantActionMenuState>({ isOpen: false });
+    const [quickActionError, setQuickActionError] = useState<string | null>(null);
+    const [pendingQuickAction, setPendingQuickAction] = useState<QuickActionType | null>(null);
+    const [nowMs, setNowMs] = useState(() => new Date().getTime());
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setNowMs(new Date().getTime());
+        }, 60_000);
+        return () => window.clearInterval(intervalId);
+    }, []);
 
     const unitAreaSqftByType: Record<Unit["type"], number> = {
         Studio: 400,
@@ -2765,10 +2888,10 @@ const UnitDetailsPanel = ({
 
     // Status configuration for consistent styling
     const statusConfig = {
-        occupied: { color: 'text-blue-600', label: 'Occupied', icon: 'check_circle' },
-        vacant: { color: 'text-emerald-600', label: 'Available Now', icon: 'vpn_key' },
-        maintenance: { color: 'text-rose-600', label: 'Maintenance', icon: 'build' },
-        neardue: { color: 'text-amber-600', label: 'Near Due', icon: 'warning' }
+        occupied: { color: 'text-blue-600 dark:text-blue-300', label: 'Occupied', icon: 'check_circle' },
+        vacant: { color: 'text-emerald-600 dark:text-emerald-300', label: 'Available Now', icon: 'vpn_key' },
+        maintenance: { color: 'text-rose-600 dark:text-rose-300', label: 'Maintenance', icon: 'build' },
+        neardue: { color: 'text-amber-600 dark:text-amber-300', label: 'Near Due', icon: 'warning' }
     };
 
     const currentStatus = statusConfig[unit.status] || statusConfig.vacant;
@@ -2777,280 +2900,401 @@ const UnitDetailsPanel = ({
     const getDaysRemaining = () => {
         if (!unit.leaseEnd) return null;
         const end = new Date(unit.leaseEnd).getTime();
-        const now = Date.now();
-        const diff = end - now;
+        const diff = end - nowMs;
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
         return days;
     };
 
     const daysRemaining = getDaysRemaining();
     const unitLayoutLabel = unit.type === '1BR'
-        ? '1 Bed • 1 Bath'
+        ? '1 Bed - 1 Bath'
         : unit.type === '2BR'
-            ? '2 Bed • 2 Bath'
+            ? '2 Bed - 2 Bath'
             : unit.type === '3BR'
-                ? '3 Bed • 2.5 Bath'
-                : 'Studio • 1 Bath';
+                ? '3 Bed - 2.5 Bath'
+                : 'Studio - 1 Bath';
+    const leaseHeadline = daysRemaining === null
+        ? "No lease date"
+        : daysRemaining < 0
+            ? `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) === 1 ? "" : "s"}`
+            : `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`;
+    const leaseMilestoneText = daysRemaining === null
+        ? "Set lease end date to track countdown."
+        : daysRemaining <= 7
+            ? "Milestone: lease action needed this week."
+            : daysRemaining <= 30
+                ? "Milestone: schedule tenant follow-up this month."
+                : "Milestone: healthy lease runway.";
+    const maintenanceOpenedDate = (() => {
+        if (!unit.leaseEnd) return null;
+        const parsed = new Date(unit.leaseEnd);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    })();
+    const quickActions = QUICK_ACTIONS_BY_STATUS[unit.status] ?? [];
+    const canViewTenantProfile = Boolean(unit.tenant && unit.tenant.trim().length > 0);
+    const tenantProfileHref = `/landlord/tenants?unitId=${encodeURIComponent(unit.id)}&tenant=${encodeURIComponent(unit.tenant || "")}`;
+
+    const executeQuickAction = (action: QuickActionType) => {
+        const guard = evaluateQuickAction(unit.status, action);
+        if (!guard.allowed || !guard.nextStatus) {
+            setQuickActionError(guard.reason || "This action is currently unavailable.");
+            return;
+        }
+
+        setQuickActionError(null);
+        onUpdate({ status: guard.nextStatus });
+    };
+
+    const handleQuickAction = (action: QuickActionType) => {
+        const guard = evaluateQuickAction(unit.status, action);
+        if (!guard.allowed) {
+            setQuickActionError(guard.reason || "This action is currently unavailable.");
+            return;
+        }
+
+        if (guard.requiresConfirmation) {
+            setPendingQuickAction(action);
+            return;
+        }
+
+        executeQuickAction(action);
+    };
 
     return (
-        <div className="flex flex-col h-full bg-card border-l border-border shadow-2xl overflow-hidden relative font-sans text-slate-800">
+        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-slate-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
+            {/* Glossy Overlay for that Glass look */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
 
             {/* Hero Header Section */}
-            <div className="relative h-64 w-full shrink-0 group overflow-hidden">
+            <div className="relative h-72 w-full shrink-0 group overflow-hidden">
                 {/* Background Image / Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-sky-500/10 z-0"></div>
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-70 z-0 grayscale-[0.05] transition-transform duration-700 group-hover:scale-105"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-slate-500/10 to-sky-500/20 z-0"></div>
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-60 z-0 grayscale-[0.2] transition-transform duration-1000 group-hover:scale-110"></div>
 
-                {/* Overlay Gradients */}
-                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent z-10"></div>
-                <div className="absolute inset-0 bg-white/10 z-10"></div>
+                {/* Depth Gradients */}
+                <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-50 via-slate-50/40 to-transparent dark:from-[#0a0a0a] dark:via-[#0a0a0a]/60 dark:to-transparent"></div>
+                <div className="absolute inset-0 z-10 bg-white/5 opacity-50 dark:bg-black/20"></div>
 
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-6 right-6 z-20 w-8 h-8 rounded-full bg-white/70 hover:bg-white backdrop-blur-md flex items-center justify-center text-slate-600 hover:text-slate-900 border border-white/60 transition-all"
-                >
-                    <span className="material-icons-round text-lg">close</span>
-                </button>
+                {/* Top Actions */}
+                <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={onToggleNotes}
+                        className={`flex h-9 items-center justify-center rounded-full border px-4 text-[11px] font-bold tracking-tight transition-all shadow-lg backdrop-blur-md ${
+                            notesOpen
+                                ? "border-primary/50 bg-primary/20 text-primary shadow-primary/20"
+                                : "border-white/40 bg-white/20 text-slate-900 shadow-black/5 hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-100 dark:hover:bg-black/60"
+                        }`}
+                    >
+                        <span className="material-icons-round mr-1.5 text-sm">sticky_note_2</span>
+                        VIEW NOTES
+                    </motion.button>
+                    <motion.button
+                        whileHover={{ scale: 1.05, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={onClose}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-slate-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-100 dark:hover:bg-black/60"
+                    >
+                        <span className="material-icons-round text-lg">close</span>
+                    </motion.button>
+                </div>
 
-                {/* Bottom Content */}
-                <div className="absolute bottom-6 left-6 right-6 z-20">
-                    <h1 className="text-[2.6rem] leading-none font-bold text-slate-900 tracking-tight drop-shadow-sm mb-4">{unit.name}</h1>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
-                            <span className="material-icons-round text-[14px] text-primary-300">king_bed</span>
-                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{unitLayoutLabel}</span>
+                {/* Hero Info Overlay */}
+                <div className="absolute bottom-8 left-8 right-8 z-20">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-1 flex items-center gap-2"
+                    >
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary dark:text-primary-400">UNIT {unit.id}</span>
+                        <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{unit.type}</span>
+                    </motion.div>
+                    
+                    <h1 className="mb-4 text-[3.2rem] font-black leading-[0.9] tracking-tighter text-slate-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] dark:text-white dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
+                        {unit.name}
+                    </h1>
+
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
+                            <span className="material-icons-round text-[16px] text-primary/70">king_bed</span>
+                            <span className="text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-100 uppercase">{unitLayoutLabel}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
-                            <span className={`material-icons-round text-[14px] drop-shadow-md ${currentStatus.color}`}>event_available</span>
-                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{currentStatus.label}</span>
+                        <div className={`flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40`}>
+                            <div className={`h-2 w-2 rounded-full animate-pulse ${unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'}`} />
+                            <span className="text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-100 uppercase">{currentStatus.label}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md shadow-sm">
-                            <span className="material-icons-round text-[14px] text-cyan-300 drop-shadow-md">aspect_ratio</span>
-                            <span className="text-xs font-semibold text-slate-800 tracking-wide">{unitAreaSqm} m²</span>
+                        <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
+                            <span className="material-icons-round text-[16px] text-cyan-400">aspect_ratio</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 tracking-wide uppercase">{unitAreaSqm} m²</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-0 mb-24 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
-
-                {!isEditing ? (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-
-                        {/* Public Listing Action */}
-                        <div className="bg-gradient-to-br from-primary/10 to-white border border-border rounded-2xl p-5 relative overflow-hidden group hover:border-primary/20 transition-colors shadow-sm">
-                            <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
-                            <div className="flex items-center justify-between relative z-10 gap-2">
-                                <div>
-                                    <div className="flex items-center gap-1.5 mb-1">
-                                        <span className="material-icons-round text-[16px] text-primary">storefront</span>
-                                        <h3 className="text-slate-900 font-bold text-sm">Unit Listing</h3>
-                                    </div>
-                                        <p className="text-slate-500 text-[10px] leading-relaxed mt-1">
-                                        Open listing wizard to publish this unit.
-                                    </p>
-                                </div>
-                                <button 
-                                    onClick={() => setIsListingWizardOpen(true)}
-                                    className="bg-primary hover:bg-primary/90 text-white rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary/20 active:scale-95 shrink-0"
+            {/* Main Content Area */}
+            <div className="relative z-0 flex-1 space-y-6 overflow-y-auto px-8 pt-8 pb-36 custom-scrollbar">
+                {!isEditing && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-8"
+                    >
+                        {/* Tenant Spotlight Card */}
+                        <section className="relative">
+                            <div className="mb-4 flex items-center justify-between px-1">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RESIDENT PROFILE</h3>
+                                {unit.status === 'occupied' && (
+                                    <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-black uppercase text-primary">Lease Holder</div>
+                                )}
+                            </div>
+                            
+                            <motion.div 
+                                className="relative overflow-visible"
+                                initial={false}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setTenantActionMenu((current) => ({ isOpen: !current.isOpen }))}
+                                    className="group relative flex w-full flex-col rounded-3xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-slate-900/60 dark:hover:bg-slate-900"
                                 >
-                                    <span className="material-icons-round text-[16px]">rocket_launch</span>
-                                    List Unit
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Wizard */}
-                        <UnitListingWizard 
-                            isOpen={isListingWizardOpen} 
-                            onClose={() => setIsListingWizardOpen(false)} 
-                            unit={unit} 
-                        />
-
-                        {/* Tenant Section */}
-                        <div className="mt-4">
-                            <h3 className="text-slate-500 text-[10px] font-bold tracking-[0.2em] uppercase mb-4 pl-1">
-                                Current Tenant
-                            </h3>
-                            <div className="flex items-center justify-between group px-1">
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                            <div className="w-12 h-12 rounded-full p-0.5 border-2 border-sky-500 relative">
-                                            <div className="w-full h-full rounded-full bg-slate-100 overflow-hidden">
-                                                <img
-                                                    src="https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"
-                                                    alt="Tenant"
-                                                    className="w-full h-full object-cover"
-                                                />
+                                    <div className="flex items-center gap-5">
+                                        <div className="relative">
+                                            <div className="relative h-16 w-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
+                                                <div className="h-full w-full overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800">
+                                                    <img
+                                                        src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
+                                                        alt="Tenant"
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                </div>
+                                                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
                                             </div>
-                                            {/* Status Dot */}
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full translate-x-1 translate-y-1"></div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
+                                            <div className="mt-1 flex items-center gap-2">
+                                                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
+                                                <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                                <span className="text-[11px] font-bold text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
+                                            <span className="material-icons-round text-xl">more_vert</span>
                                         </div>
                                     </div>
-                                    <div>
-                                        <p className="text-lg font-bold text-slate-900 tracking-wide">{unit.tenant || "No Tenant"}</p>
-                                        <p className="text-xs text-slate-500 font-medium italic">"Unit Lease Holder"</p>
-                                    </div>
-                                </div>
-                                <button className="w-10 h-10 rounded-full flex items-center justify-center text-sky-500 hover:bg-sky-500/10 transition-colors">
-                                    <span className="material-icons-round text-2xl">chat_bubble_outline</span>
                                 </button>
-                            </div>
-
-
-                        </div>
-
-                        {/* Lease Status */}
-                        {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                            <div className="bg-white border border-border rounded-2xl p-6 relative overflow-hidden flex flex-col items-center shadow-sm">
-                                <h3 className="text-primary-400 text-[10px] font-bold tracking-widest uppercase mb-6 self-start w-full">
-                                    Lease Timeline
-                                </h3>
-
-                                <div className="relative w-56 h-28 mb-2 overflow-hidden">
-                                    {/* Meter Gauge */}
-                                    <svg className="w-full h-full transform rotate-0" viewBox="0 0 200 100">
-                                        {/* Background Arc */}
-                                        <path
-                                            d="M 20 100 A 80 80 0 0 1 180 100"
-                                            fill="none"
-                                            stroke="#334155"
-                                            strokeWidth="12"
-                                            strokeLinecap="round"
-                                            className="opacity-30"
-                                        />
-                                        {/* Progress Arc */}
-                                        <path
-                                            d="M 20 100 A 80 80 0 0 1 180 100"
-                                            fill="none"
-                                            stroke="url(#gradient)"
-                                            strokeWidth="12"
-                                            strokeLinecap="round"
-                                            strokeDasharray="251.2"
-                                            strokeDashoffset={251.2 - ((() => {
-                                                if (!unit.leaseStart || !unit.leaseEnd) return 0;
-                                                const start = new Date(unit.leaseStart).getTime();
-                                                const end = new Date(unit.leaseEnd).getTime();
-                                                const now = Date.now();
-                                                const total = end - start;
-                                                const elapsed = now - start;
-                                                const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
-                                                return (percent / 100) * 251.2;
-                                            })())}
-                                            className="transition-all duration-1000 ease-out"
-                                        />
-                                        <defs>
-                                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                <stop offset="0%" stopColor="#d4b996" />
-                                                <stop offset="100%" stopColor="#a89070" />
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-
-                                    {/* Center Content */}
-                                    <div className="absolute inset-x-0 bottom-0 text-center">
-                                        <span className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#d4b996] to-white`}>
-                                            {daysRemaining !== null ? (
-                                                daysRemaining < 0 ? 'Overdue' : daysRemaining
-                                            ) : '--'}
-                                        </span>
-                                        <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest -mt-1">
-                                            {daysRemaining !== null && daysRemaining < 0 ? 'Days Past' : 'Days Left'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="w-full flex justify-between text-[10px] uppercase font-bold text-slate-500 tracking-wider px-4 mt-2">
-                                    <span>{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString() : 'Start'}</span>
-                                    <span>{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString() : 'End'}</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                        {/* Edit Form */}
-                        <section className="space-y-6">
-                            <div className="space-y-4">
-                                <label className="text-primary-400 text-[10px] font-bold tracking-widest uppercase block mb-4">Edit Details</label>
-
-                                <div className="space-y-4">
-                                    <div className="group relative">
-                                        <input
-                                            type="text"
-                                            value={unit.name}
-                                            onChange={(e) => onUpdate({ name: e.target.value })}
-                                            className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
-                                            placeholder="Unit Name"
-                                            id="unitName"
-                                        />
-                                        <label htmlFor="unitName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
-                                            Name
-                                        </label>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div className="group relative">
-                                            <select
-                                                value={unit.type}
-                                                onChange={(e) => onUpdate({ type: e.target.value as Unit["type"] })}
-                                                className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none"
+                                
+                                <AnimatePresence>
+                                    {tenantActionMenu.isOpen && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 top-[90px] z-50 w-64 rounded-[28px] border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
+                                        >
+                                            <Link
+                                                href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
+                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
                                             >
-                                                <option value="Studio">Studio</option>
-                                                <option value="1BR">1 Bedroom</option>
-                                                <option value="2BR">2 Bedroom</option>
-                                                <option value="3BR">3 Bedroom</option>
-                                            </select>
-                                            <label className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary">
-                                                Type
-                                            </label>
-                                        </div>
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                                    <span className="material-icons-round text-base">chat_bubble</span>
+                                                </div>
+                                                Message Resident
+                                            </Link>
+                                            {canViewTenantProfile ? (
+                                                <Link
+                                                    href={tenantProfileHref}
+                                                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
+                                                >
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                                        <span className="material-icons-round text-base">person</span>
+                                                    </div>
+                                                    Access Portfolio
+                                                </Link>
+                                            ) : (
+                                                <div
+                                                    title="No tenant identity available for this unit yet."
+                                                    className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-400 dark:text-slate-600"
+                                                >
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-300 dark:bg-white/5">
+                                                        <span className="material-icons-round text-base">person_off</span>
+                                                    </div>
+                                                    Access Portfolio
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        </section>
 
-                                        <div className="group relative">
-                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-3 pl-1">Unit Status</label>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                {[
-                                                    { id: 'vacant', label: 'Vacant', icon: 'vpn_key', color: 'text-emerald-700', bg: 'bg-emerald-200/70 border-emerald-500/45' },
-                                                    { id: 'occupied', label: 'Occupied', icon: 'check_circle', color: 'text-blue-700', bg: 'bg-blue-200/70 border-blue-500/45' },
-                                                    { id: 'neardue', label: 'Near Due', icon: 'warning', color: 'text-amber-700', bg: 'bg-amber-200/75 border-amber-500/45' },
-                                                    { id: 'maintenance', label: 'Maint.', icon: 'build', color: 'text-rose-700', bg: 'bg-rose-200/70 border-rose-500/45' }
-                                                ].map((s) => (
-                                                    <button
-                                                        key={s.id}
-                                                        type="button"
-                                                        onClick={(e) => { e.preventDefault(); onUpdate({ status: s.id as Unit["status"] }); }}
-                                                        className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${unit.status === s.id ? s.bg + ' ring-1 ring-primary/20 shadow-lg scale-[1.02]' : 'border-slate-300 bg-slate-100 hover:bg-slate-200'}`}
-                                                    >
-                                                        <span className={`material-icons-round text-xl ${unit.status === s.id ? s.color : 'text-slate-500'}`}>{s.icon}</span>
-                                                        <span className={`text-xs font-bold ${unit.status === s.id ? 'text-slate-900' : 'text-slate-500'}`}>{s.label}</span>
-                                                    </button>
-                                                ))}
+                        {/* Operational Context Cards */}
+                        <div className="grid grid-cols-1 gap-6">
+                            {/* Maintenance Blocker (Critical Alert Style) */}
+                            {unit.status === "maintenance" && (
+                                <motion.div 
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    className="group relative overflow-hidden rounded-[32px] border border-rose-500/30 bg-rose-50 p-6 shadow-xl shadow-rose-500/5 dark:bg-rose-950/20"
+                                >
+                                    <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
+                                    <div className="flex items-start gap-5">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
+                                            <span className="material-icons-round animate-pulse text-2xl">warning</span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">Critical Blocker</h3>
+                                            <p className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white">{unit.details?.trim() || "Unspecified Issue"}</p>
+                                            <div className="mt-3 flex items-center gap-2">
+                                                <span className="text-[11px] font-bold text-rose-500/80">Reported {maintenanceOpenedDate ? maintenanceOpenedDate.toLocaleDateString() : "recently"}</span>
+                                                <div className="h-1 w-1 rounded-full bg-rose-300 dark:bg-rose-700" />
+                                                <span className="text-[11px] font-bold text-rose-500/80">Status: Active</span>
                                             </div>
                                         </div>
                                     </div>
+                                </motion.div>
+                            )}
 
-                                    {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                                        <div className="group relative mt-6 animate-in slide-in-from-top-2 fade-in duration-300">
-                                            <input
-                                                type="text"
-                                                value={unit.tenant || ''}
-                                                onChange={(e) => onUpdate({ tenant: e.target.value })}
-                                                className="block w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary transition-all peer placeholder-transparent"
-                                                placeholder="Tenant Name"
-                                                id="tenantName"
-                                            />
-                                            <label htmlFor="tenantName" className="absolute left-4 -top-2.5 bg-card px-2 text-[10px] font-bold text-primary transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3 peer-focus:-top-2.5 peer-focus:text-[10px] peer-focus:text-primary">
-                                                Tenant Name
-                                            </label>
+                            {/* Lease Analytics & Timeline */}
+                            {(unit.status === 'occupied' || unit.status === 'neardue') && (
+                                <div className="group relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/20 dark:border-white/5 dark:bg-slate-900/40 dark:shadow-none">
+                                    <h3 className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">LEASE ANALYTICS</h3>
+                                    
+                                    <div className="flex flex-col items-center">
+                                        <div className="relative h-44 w-72">
+                                            <svg className="h-full w-full" viewBox="0 0 200 100">
+                                                <path
+                                                    d="M 20 100 A 80 80 0 0 1 180 100"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="10"
+                                                    strokeLinecap="round"
+                                                    className="text-slate-100 dark:text-white/5"
+                                                />
+                                                <motion.path
+                                                    initial={{ strokeDashoffset: 251.2 }}
+                                                    animate={{ strokeDashoffset: 251.2 - ((() => {
+                                                        if (!unit.leaseStart || !unit.leaseEnd) return 0;
+                                                        const start = new Date(unit.leaseStart).getTime();
+                                                        const end = new Date(unit.leaseEnd).getTime();
+                                                        const total = end - start;
+                                                        const elapsed = nowMs - start;
+                                                        const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+                                                        return (percent / 100) * 251.2;
+                                                    })()) }}
+                                                    d="M 20 100 A 80 80 0 0 1 180 100"
+                                                    fill="none"
+                                                    stroke="url(#leaseGradient)"
+                                                    strokeWidth="10"
+                                                    strokeLinecap="round"
+                                                    strokeDasharray="251.2"
+                                                    transition={{ duration: 1.5, ease: "easeOut" }}
+                                                />
+                                                <defs>
+                                                    <linearGradient id="leaseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                        <stop offset="0%" stopColor="#4f46e5" />
+                                                        <stop offset="100%" stopColor="#c026d3" />
+                                                    </linearGradient>
+                                                </defs>
+                                            </svg>
+                                            
+                                            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
+                                                <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+                                                    {daysRemaining !== null ? `${Math.abs(daysRemaining)}` : "--"}
+                                                </p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                                    DAYS {daysRemaining && daysRemaining < 0 ? "OVERDUE" : "REMAINING"}
+                                                </p>
+                                            </div>
                                         </div>
-                                    )}
+
+                                        <div className="mt-8 flex w-full items-center justify-between gap-4">
+                                            <div className="flex-1 space-y-1">
+                                                <p className="text-[10px] font-bold text-slate-400">Lease Commenced</p>
+                                                <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                            </div>
+                                            <div className="h-8 w-px bg-slate-100 dark:bg-white/5" />
+                                            <div className="flex-1 text-right space-y-1">
+                                                <p className="text-[10px] font-bold text-slate-400">Renewal Window</p>
+                                                <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6 w-full rounded-2xl bg-slate-50 p-4 dark:bg-black/20">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-800">
+                                                    <span className="material-icons-round text-sm text-primary">insights</span>
+                                                </div>
+                                                <p className="text-[11px] font-bold leading-tight text-slate-600 dark:text-slate-400">
+                                                    {leaseMilestoneText}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
+                        </div>
+
+                        {/* Command Center Quick Actions */}
+                        <section className="rounded-[32px] border border-slate-200 bg-slate-900 p-6 shadow-2xl dark:border-white/5">
+                            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">COMMAND CENTER</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                {quickActions.map((action) => (
+                                    <motion.button
+                                        key={action}
+                                        whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.15)" }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="button"
+                                        onClick={() => handleQuickAction(action)}
+                                        className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/10 p-4 text-[11px] font-black text-white transition-all hover:shadow-xl hover:shadow-black/20"
+                                    >
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                                            <span className="material-icons-round text-xl">{QUICK_ACTION_META[action].icon}</span>
+                                        </div>
+                                        {QUICK_ACTION_META[action].label.toUpperCase()}
+                                    </motion.button>
+                                ))}
                             </div>
+                            {quickActionError && (
+                                <p className="mt-3 text-xs font-semibold text-rose-300">{quickActionError}</p>
+                            )}
                         </section>
-                    </div>
+                    </motion.div>
                 )}
             </div>
+
+            {pendingQuickAction && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 p-6">
+                    <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Confirm Status Change</h4>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                            {evaluateQuickAction(unit.status, pendingQuickAction).confirmMessage || "Are you sure you want to continue?"}
+                        </p>
+                        <div className="mt-4 flex items-center justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPendingQuickAction(null)}
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const action = pendingQuickAction;
+                                    setPendingQuickAction(null);
+                                    executeQuickAction(action);
+                                }}
+                                className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-500"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Footer */}
             {isEditing ? (
@@ -3083,6 +3327,68 @@ const UnitDetailsPanel = ({
 };
 
 /* End of Details Panel */
+
+const UnitNotesPanel = ({
+    isOpen,
+    onToggle,
+    value,
+    onChange,
+}: {
+    isOpen: boolean;
+    onToggle: () => void;
+    value: string;
+    onChange: (nextValue: string) => void;
+}) => {
+    const noteLength = value.trim().length;
+
+    return (
+        <div className={`shrink-0 border-l border-border bg-card/95 transition-[width] duration-300 ${isOpen ? "w-[320px]" : "w-[52px]"}`}>
+            <div className="flex h-full">
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-slate-100 to-slate-200 text-slate-600 transition-colors hover:from-slate-200 hover:to-slate-300 dark:from-slate-900 dark:to-slate-950 dark:text-slate-300 dark:hover:from-slate-800 dark:hover:to-slate-900"
+                    title={isOpen ? "Collapse notes" : "Open notes"}
+                >
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="material-icons-round text-lg">{isOpen ? "chevron_right" : "sticky_note_2"}</span>
+                        {!isOpen && (
+                            <span className="rotate-180 text-[10px] font-bold uppercase tracking-[0.2em] [writing-mode:vertical-rl]">Notes</span>
+                        )}
+                    </div>
+                </button>
+                {isOpen && (
+                    <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-100/80 p-4 dark:from-slate-900 dark:to-slate-950/90">
+                        <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <h3 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-primary-400">
+                                        <span className="material-icons-round text-base">sticky_note_2</span>
+                                        Unit Notes
+                                    </h3>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Private note for this unit. Autosaves locally.</p>
+                                </div>
+                                <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                    Auto
+                                </span>
+                            </div>
+                        </div>
+                        <textarea
+                            value={value}
+                            onChange={(event) => onChange(event.target.value)}
+                            placeholder="Add reminders, follow-ups, or move-in prep details..."
+                            className="mt-3 h-full min-h-[220px] resize-none rounded-2xl border border-slate-300 bg-white/95 px-4 py-4 text-sm leading-relaxed text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        />
+                        <div className="mt-2 flex items-center justify-between px-1">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Tip: Use short action-oriented notes.</p>
+                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{noteLength} chars</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 /* Extracted Sidebar Library Component for cleaner main render */
 const SidebarBlockLibrary = ({

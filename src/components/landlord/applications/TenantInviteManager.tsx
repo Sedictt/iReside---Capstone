@@ -279,8 +279,8 @@ export function TenantInviteManager({
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-2xl">
                     <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1">
-                        <QrCode className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Invite-Based Intake</span>
+                        <Link2 className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Private Share Links</span>
                     </div>
                     <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl text-balance">
                         Private Links & QR Codes
@@ -457,25 +457,25 @@ export function TenantInviteManager({
                     )}
 
                     {showPaymentPreview && (
-                        <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
-                            <p className="text-xs font-bold uppercase tracking-wider text-amber-200">
+                        <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
                                 Estimated Move-in Payment Preview
                             </p>
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-amber-100/70">Advance Rent</p>
-                                    <p className="mt-1 text-lg font-black text-amber-50">
+                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/60 dark:text-amber-100/50">Advance Rent</p>
+                                    <p className="mt-1 text-lg font-black text-amber-700 dark:text-amber-50">
                                         PHP {currentPaymentPreview.advanceAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
-                                <div className="rounded-xl border border-white/10 bg-black/10 p-3">
-                                    <p className="text-[10px] uppercase tracking-widest text-amber-100/70">Security Deposit</p>
-                                    <p className="mt-1 text-lg font-black text-amber-50">
+                                <div className="rounded-xl border border-amber-200/50 bg-amber-50/50 dark:border-white/5 dark:bg-black/20 p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/60 dark:text-amber-100/50">Security Deposit</p>
+                                    <p className="mt-1 text-lg font-black text-amber-700 dark:text-amber-50">
                                         PHP {currentPaymentPreview.securityDepositAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </p>
                                 </div>
                             </div>
-                            <p className="mt-3 text-[11px] text-amber-100/80">{currentPaymentPreview.disclaimer}</p>
+                            <p className="mt-3 text-[11px] font-medium text-amber-800/70 dark:text-amber-100/60 leading-relaxed">{currentPaymentPreview.disclaimer}</p>
                         </div>
                     )}
 

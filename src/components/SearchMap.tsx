@@ -146,6 +146,7 @@ export default function SearchMap({
                 className="h-full w-full z-0"
                 zoomControl={false}
                 style={{ background: '#f8fafc', minHeight: '100%' }}
+                aria-label="Interactive Property Search Map"
             >
                 <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -156,11 +157,11 @@ export default function SearchMap({
                 <MapUpdater center={viewCenter || center} />
 
                 {/* Search Result Marker */}
-                <Marker position={center} icon={createSearchIcon()} />
+                <Marker position={center} icon={createSearchIcon()} title="Search location" />
 
                 {/* User Current Location Marker */}
                 {location && (
-                    <Marker position={location} icon={createLocationIcon()} />
+                    <Marker position={location} icon={createLocationIcon()} title="Your current location" />
                 )}
 
                 {/* Search Radius Circle */}
@@ -183,6 +184,8 @@ export default function SearchMap({
                             key={p.id}
                             position={[p.lat, p.lng]}
                             icon={createCustomIcon(p.price, isSelected)}
+                            title={`${p.name} - ${p.price}`}
+                            alt={`Property marker for ${p.name}`}
                             eventHandlers={{
                                 click: () => onMarkerClick(p),
                             }}
@@ -198,12 +201,12 @@ export default function SearchMap({
                         offset={[0, -60]}
                         autoPanPadding={[50, 50]}
                     >
-                        <div className="w-[320px] bg-card rounded-xl overflow-hidden shadow-2xl border border-neutral-800 font-sans p-0 m-0 cursor-default select-none group">
+                        <div className="w-[320px] bg-card rounded-xl overflow-hidden shadow-2xl border border-neutral-800 font-sans p-0 m-0 cursor-default select-none group" role="dialog" aria-modal="true" aria-labelledby="popup-title">
                             {/* Image Section */}
                             <div className="relative h-44 w-full overflow-hidden">
                                 <Image
                                     src={selectedProperty.images[0]}
-                                    alt={selectedProperty.name}
+                                    alt={`Exterior of ${selectedProperty.name}`}
                                     fill
                                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
@@ -216,6 +219,8 @@ export default function SearchMap({
                                         e.stopPropagation();
                                         onLike(selectedProperty.id);
                                     }}
+                                    aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
+                                    title={isLiked ? "Remove from favorites" : "Add to favorites"}
                                     className={cn(
                                         "absolute top-3 left-3 h-8 w-8 rounded-full backdrop-blur-md border flex items-center justify-center transition-all z-20",
                                         isLiked
@@ -223,7 +228,7 @@ export default function SearchMap({
                                             : "bg-black/30 border-white/20 text-white hover:bg-black/50"
                                     )}
                                 >
-                                    <Heart className={cn("h-4 w-4 transition-colors", isLiked ? "fill-current" : "group-hover:scale-110")} />
+                                    <Heart className={cn("h-4 w-4 transition-colors", isLiked ? "fill-current" : "group-hover:scale-110")} aria-hidden="true" />
                                 </button>
 
                                 {selectedProperty.isNew && (
@@ -236,9 +241,9 @@ export default function SearchMap({
                             {/* Content Section */}
                             <div className="p-5 bg-card text-white relative -mt-6">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-lg text-white leading-tight pr-4">{selectedProperty.name}</h3>
+                                    <h3 id="popup-title" className="font-bold text-lg text-white leading-tight pr-4">{selectedProperty.name}</h3>
                                     <div className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                                        <Star className="h-3 w-3 fill-current" /> 4.8
+                                        <Star className="h-3 w-3 fill-current" aria-hidden="true" /> 4.8
                                     </div>
                                 </div>
 
@@ -254,6 +259,7 @@ export default function SearchMap({
                                             e.stopPropagation();
                                             onDetailsClick(selectedProperty);
                                         }}
+                                        aria-label={`View full details for ${selectedProperty.name}`}
                                         className="bg-primary hover:bg-primary-dark text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-all shadow-lg shadow-primary/20 active:scale-[0.98] hover:shadow-primary/30"
                                     >
                                         Details

@@ -75,16 +75,22 @@ export default function TenantsPage() {
                 }
 
                 const payload = (await response.json()) as { tenants?: Tenant[] };
-                setTenants(Array.isArray(payload.tenants) ? payload.tenants : []);
+                if (!controller.signal.aborted) {
+                    setTenants(Array.isArray(payload.tenants) ? payload.tenants : []);
+                }
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {
                     return;
                 }
 
-                setError("Unable to load tenants right now.");
-                setTenants([]);
+                if (!controller.signal.aborted) {
+                    setError("Unable to load tenants right now.");
+                    setTenants([]);
+                }
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         };
 
@@ -183,25 +189,33 @@ export default function TenantsPage() {
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <div key={i} className="flex min-h-[320px] animate-pulse flex-col justify-between rounded-3xl border border-border bg-card/95 p-6 shadow-sm">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="h-6 w-16 rounded-md bg-muted" />
-                                <div className="h-6 w-20 rounded-full bg-muted" />
+                        <div key={i} className="relative flex flex-col justify-between rounded-[2rem] border border-border bg-card/60 p-6 shadow-sm overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/40 to-transparent -translate-x-full animate-shimmer" />
+                            
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="h-6 w-16 rounded-lg bg-muted animate-pulse" />
+                                <div className="h-7 w-24 rounded-full bg-muted/60 animate-pulse" />
                             </div>
-                            <div className="flex flex-col items-center flex-1 mt-2">
-                                <div className="mb-4 h-20 w-20 rounded-full bg-muted" />
-                                <div className="mb-2 h-5 w-32 rounded bg-muted" />
-                                <div className="h-3 w-40 rounded bg-muted/70" />
+
+                            <div className="flex flex-col items-center text-center mb-8">
+                                <div className="mb-4 h-24 w-24 rounded-full bg-muted animate-pulse" />
+                                <div className="mb-2 h-6 w-40 rounded-xl bg-muted animate-pulse" />
+                                <div className="h-4 w-48 rounded-lg bg-muted/50 animate-pulse" />
+                                
+                                <div className="mt-6 h-10 w-full rounded-full bg-muted/40 animate-pulse" />
                             </div>
-                            <div className="mt-6 flex items-end justify-between border-t border-border pt-6">
-                                <div className="space-y-2">
-                                    <div className="h-3 w-16 rounded bg-muted/70" />
-                                    <div className="h-5 w-20 rounded bg-muted" />
+
+                            <div className="mb-6 flex flex-col gap-3 border-t border-border pt-6">
+                                <div className="h-12 w-full rounded-2xl bg-muted/30 animate-pulse" />
+                                <div className="h-12 w-full rounded-2xl bg-muted/30 animate-pulse" />
+                            </div>
+
+                            <div className="mt-auto flex items-center justify-between border-t border-border pt-6">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-10 w-10 rounded-xl bg-muted/40 animate-pulse" />
+                                    <div className="h-10 w-10 rounded-xl bg-muted/40 animate-pulse" />
                                 </div>
-                                <div className="flex gap-2">
-                                    <div className="h-8 w-8 rounded-full bg-muted/70" />
-                                    <div className="h-8 w-8 rounded-full bg-muted/70" />
-                                </div>
+                                <div className="h-10 w-24 rounded-xl bg-muted/50 animate-pulse" />
                             </div>
                         </div>
                     ))}

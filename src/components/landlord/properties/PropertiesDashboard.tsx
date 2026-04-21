@@ -131,12 +131,9 @@ export function PropertiesDashboard() {
     }, [properties, searchQuery, activeTab]);
 
     return (
-        <div className="min-h-screen space-y-8 pb-12 text-foreground">
+        <div className="min-h-screen space-y-8 px-3 pb-12 pt-6 text-foreground sm:px-4 lg:px-5 xl:px-6">
             {/* Command Center / Header */}
             <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-muted/35 p-8 shadow-sm">
-                {/* Abstract Background Elements */}
-                <div className="absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/2 translate-x-1/3 rounded-full bg-primary/18 blur-[120px] opacity-50 dark:bg-primary/20" />
-                <div className="absolute bottom-0 left-0 h-[300px] w-[300px] translate-y-1/2 -translate-x-1/2 rounded-full bg-sky-500/15 blur-[100px] opacity-40 dark:bg-blue-500/20 dark:opacity-30" />
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -258,184 +255,199 @@ export function PropertiesDashboard() {
                     const occupancyPercent = Math.round(occupancyRatio * 100);
 
                     return (
-                    <div key={property.id} className="group relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm transition-all duration-500 hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] dark:hover:border-white/10">
-                        {/* Ambient Glow */}
-                        <div className={cn("pointer-events-none absolute left-0 top-0 h-32 w-full bg-gradient-to-b opacity-25 transition-opacity duration-500 group-hover:opacity-45", style.color)} />
+                        <div key={property.id} className="group relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm transition-all duration-500 hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] dark:hover:border-white/10">
+                            {/* Ambient Glow */}
+                            <div className={cn("pointer-events-none absolute left-0 top-0 h-32 w-full bg-gradient-to-b opacity-25 transition-opacity duration-500 group-hover:opacity-45", style.color)} />
 
-                        <div className="flex flex-col lg:flex-row relative z-10">
-                            {/* Left Image Section */}
-                            <div className="lg:w-[380px] shrink-0 min-h-[200px] h-[240px] lg:h-auto relative overflow-hidden">
-                                <Image
-                                    src={property.image}
-                                    alt={property.name}
-                                    fill
-                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/58 via-slate-900/20 to-transparent lg:bg-gradient-to-r lg:from-slate-900/64 lg:via-slate-900/26 lg:to-transparent dark:from-black/80 dark:via-black/60" />
-
-                                <div className="absolute top-6 left-6">
-                                    <div className={cn(
-                                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border",
-                                        property.status === "Performing" || property.status === "Stable"
-                                            ? "border-emerald-400/25 bg-emerald-500/18 text-emerald-50 dark:text-emerald-200"
-                                            : "border-amber-400/25 bg-amber-500/18 text-amber-50 dark:text-amber-200"
-                                    )}>
-                                        <span className={cn(
-                                            "w-1.5 h-1.5 rounded-full animate-pulse",
-                                            property.status === "Performing" || property.status === "Stable" ? "bg-emerald-200 dark:bg-emerald-400" : "bg-amber-200 dark:bg-amber-400"
-                                        )} />
-                                        {property.status}
-                                    </div>
+                            <div className="flex flex-col lg:flex-row relative z-10 w-full">
+                                {/* Left Image Section */}
+                                <div className="lg:w-[320px] 2xl:w-[380px] shrink-0 min-h-[200px] h-[240px] lg:h-auto relative overflow-hidden">
+                                    <Image
+                                        src={property.image}
+                                        alt={property.name}
+                                        fill
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent lg:hidden" />
                                 </div>
 
-                                <div className="absolute bottom-6 left-6 pr-6">
-                                    <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{property.name}</h3>
-                                    <div className="flex items-center gap-1.5 text-sm text-slate-200/90">
-                                        <MapPin className="h-4 w-4" />
-                                        <span>{property.address}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right Content Section */}
-                            <div className="flex-1 p-6 lg:p-8 flex items-center">
-                                {/* Operational Metrics & Activities */}
-                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 w-full">
-                                    <div className="flex flex-wrap items-center gap-6 lg:gap-8">
-                                        {/* Occupancy Mini-Visual */}
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative w-14 h-14">
-                                                <svg className="w-full h-full transform -rotate-90">
-                                                    <circle cx="28" cy="28" r="24" fill="transparent" stroke="rgba(148,163,184,0.22)" strokeWidth="4" />
-                                                    <circle
-                                                        cx="28" cy="28" r="24"
-                                                        fill="transparent"
-                                                        stroke="currentColor"
-                                                        className="text-primary"
-                                                        strokeWidth="4"
-                                                        strokeDasharray="150"
-                                                        strokeDashoffset={150 - (150 * occupancyRatio)}
-                                                        strokeLinecap="round"
-                                                    />
-                                                </svg>
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-background/95 text-primary shadow-[0_10px_20px_-16px_rgba(15,23,42,0.55)] dark:border-white/10 dark:bg-neutral-950/90">
-                                                        <Users className="h-5 w-5 text-primary" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-muted-foreground">Occupancy</p>
-                                                <p className="text-lg font-bold text-foreground">
-                                                    {property.metrics.occupied}
-                                                    <span className="ml-1 text-sm font-normal text-muted-foreground">/ {property.metrics.total} Units</span>
-                                                </p>
-                                                <p className="mt-1 text-xs font-medium text-primary">{occupancyPercent}% occupied</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="hidden h-12 w-px bg-border sm:block" />
-
-                                        {/* Maintenance Status */}
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn("w-14 h-14 rounded-full flex items-center justify-center", style.bgIcon)}>
-                                                <Wrench className={cn("h-6 w-6", style.iconColor)} />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-muted-foreground">Maintenance</p>
-                                                <p className={cn(
-                                                    "text-lg font-bold",
-                                                    property.metrics.maintenance > 3 ? "text-amber-600 dark:text-amber-400" : "text-foreground"
+                                {/* Right Content Section */}
+                                <div className="flex-1 p-6 lg:p-8 flex flex-col justify-between">
+                                    {/* Header: Name, Address & Status */}
+                                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="text-2xl font-bold text-foreground leading-tight">{property.name}</h3>
+                                                <div className={cn(
+                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border whitespace-nowrap",
+                                                    property.status === "Performing" || property.status === "Stable"
+                                                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                        : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
                                                 )}>
-                                                    {property.metrics.maintenance}
-                                                    <span className="ml-1 text-sm font-normal text-muted-foreground">Active Requests</span>
-                                                </p>
+                                                    <span className={cn(
+                                                        "w-1.5 h-1.5 rounded-full animate-pulse",
+                                                        property.status === "Performing" || property.status === "Stable" ? "bg-emerald-500" : "bg-amber-500"
+                                                    )} />
+                                                    {property.status}
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
+                                                <MapPin className="h-3.5 w-3.5" />
+                                                <span>{property.address}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-3 w-full lg:w-auto self-end lg:self-auto">
-                                        <button 
-                                            onClick={() => setExpandedStatsId(expandedStatsId === property.id ? null : property.id)}
-                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 font-bold text-primary transition-colors hover:bg-primary/15 lg:h-12 lg:flex-none"
-                                        >
-                                            <TrendingUp className="h-4 w-4" />
-                                            {expandedStatsId === property.id ? "Hide Stats" : "View Stats"}
-                                        </button>
-                                        <button 
-                                            onClick={() => setHubModalId(property.id)}
-                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-background px-6 font-medium text-foreground transition-colors hover:bg-muted lg:h-12 lg:flex-none"
-                                        >
-                                            <Settings className="h-4 w-4" />
-                                            Manage Hub
-                                        </button>
+                                    {/* Operational Metrics & Activities */}
+                                    <div className="flex w-full flex-col justify-between gap-8 lg:flex-row lg:items-center">
+                                        <div className="flex flex-wrap items-center gap-6 lg:gap-10">
+                                            {/* Occupancy Mini-Visual */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative w-14 h-14">
+                                                    <svg className="w-full h-full transform -rotate-90">
+                                                        <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" className="text-muted/15" strokeWidth="4" />
+                                                        <circle
+                                                            cx="28" cy="28" r="24"
+                                                            fill="transparent"
+                                                            stroke="currentColor"
+                                                            className="text-primary"
+                                                            strokeWidth="4"
+                                                            strokeDasharray="150"
+                                                            strokeDashoffset={150 - (150 * occupancyRatio)}
+                                                            strokeLinecap="round"
+                                                        />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border/80 bg-background/95 text-primary shadow-sm dark:border-white/10 dark:bg-neutral-950/90">
+                                                            <Users className="h-5 w-5 text-primary" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Occupancy</p>
+                                                    <div className="flex items-baseline gap-1.5">
+                                                        <span className="text-xl font-black text-foreground">{property.metrics.occupied}</span>
+                                                        <span className="text-xs font-medium text-muted-foreground">/ {property.metrics.total} Units</span>
+                                                    </div>
+                                                    <p className={cn(
+                                                        "text-[10px] font-bold uppercase tracking-tight",
+                                                        occupancyPercent > 80 ? "text-emerald-500" : "text-amber-500"
+                                                    )}>{occupancyPercent}% occupied</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="hidden h-10 w-px bg-border/60 sm:block" />
+
+                                            {/* Maintenance Status */}
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn(
+                                                    "w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors",
+                                                    property.metrics.maintenance > 0 
+                                                        ? "border-amber-500/20 bg-amber-500/5 text-amber-500" 
+                                                        : "border-border bg-muted/30 text-muted-foreground"
+                                                )}>
+                                                    <Wrench className="h-6 w-6" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Maintenance</p>
+                                                    <p className={cn(
+                                                        "text-xl font-black",
+                                                        property.metrics.maintenance > 3 ? "text-amber-600 dark:text-amber-400" : "text-foreground"
+                                                    )}>
+                                                        {property.metrics.maintenance}
+                                                        <span className="ml-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">Active</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-3 w-full lg:w-auto">
+                                            <button 
+                                                onClick={() => setExpandedStatsId(expandedStatsId === property.id ? null : property.id)}
+                                                className={cn(
+                                                    "flex-1 lg:flex-none h-12 px-6 flex items-center justify-center gap-2 rounded-xl font-bold transition-all",
+                                                    expandedStatsId === property.id
+                                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                                        : "bg-primary/10 text-primary hover:bg-primary/15"
+                                                )}
+                                            >
+                                                <TrendingUp className="h-4 w-4" />
+                                                <span>Stats</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => setHubModalId(property.id)}
+                                                className="flex-1 lg:flex-none h-12 px-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-background font-bold text-foreground transition-all hover:bg-muted"
+                                            >
+                                                <Settings className="h-4 w-4" />
+                                                <span>Manage</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Collapsible Stats Panel */}
+                            <AnimatePresence>
+                                {expandedStatsId === property.id && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                                        className="overflow-hidden border-t border-border"
+                                    >
+                                        <div className="grid grid-cols-1 gap-8 bg-muted/20 p-6 lg:grid-cols-3 lg:p-8">
+                                            {/* Financial Highlights */}
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-4">
+                                                        <Wallet className="h-4 w-4 text-muted-foreground" />
+                                                        <h4 className="text-sm font-medium text-muted-foreground">Financial Highlights</h4>
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-end justify-between border-b border-border pb-4">
+                                                            <div>
+                                                                <p className="mb-1 text-xs text-muted-foreground">Net Operating Income (NOI)</p>
+                                                                <p className="text-xl font-bold text-foreground">{property.noi}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                                                                <TrendingUp className="h-3 w-3" /> +12% y/y
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-end justify-between border-b border-border pb-4">
+                                                            <div>
+                                                                <p className="mb-1 text-xs text-muted-foreground">Estimated Valuation</p>
+                                                                <p className="text-xl font-bold text-foreground">{property.valuation}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-end">
+                                                            <div>
+                                                                <p className="mb-1 text-xs text-muted-foreground">Capitalization Rate</p>
+                                                                <p className="text-xl font-bold text-foreground">{property.capRate}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Revenue Chart */}
+                                            <div className="lg:col-span-2">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <Zap className="h-4 w-4 text-muted-foreground" />
+                                                        <h4 className="text-sm font-medium text-muted-foreground">Revenue Trend (YTD)</h4>
+                                                    </div>
+                                                </div>
+                                                <div className="h-[300px] w-full rounded-xl border border-border bg-background/75 p-4">
+                                                    <RevenueChart />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-
-                        {/* Collapsible Stats Panel */}
-                        <AnimatePresence>
-                            {expandedStatsId === property.id && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                    className="overflow-hidden border-t border-border"
-                                >
-                                    <div className="grid grid-cols-1 gap-8 bg-muted/20 p-6 lg:grid-cols-3 lg:p-8">
-                                        {/* Financial Highlights */}
-                                        <div className="space-y-6">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <Wallet className="h-4 w-4 text-muted-foreground" />
-                                                    <h4 className="text-sm font-medium text-muted-foreground">Financial Highlights</h4>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <div className="flex items-end justify-between border-b border-border pb-4">
-                                                        <div>
-                                                            <p className="mb-1 text-xs text-muted-foreground">Net Operating Income (NOI)</p>
-                                                            <p className="text-xl font-bold text-foreground">{property.noi}</p>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                                                            <TrendingUp className="h-3 w-3" /> +12% y/y
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-end justify-between border-b border-border pb-4">
-                                                        <div>
-                                                            <p className="mb-1 text-xs text-muted-foreground">Estimated Valuation</p>
-                                                            <p className="text-xl font-bold text-foreground">{property.valuation}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between items-end">
-                                                        <div>
-                                                            <p className="mb-1 text-xs text-muted-foreground">Capitalization Rate</p>
-                                                            <p className="text-xl font-bold text-foreground">{property.capRate}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Revenue Chart */}
-                                        <div className="lg:col-span-2">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <Zap className="h-4 w-4 text-muted-foreground" />
-                                                    <h4 className="text-sm font-medium text-muted-foreground">Revenue Trend (YTD)</h4>
-                                                </div>
-                                            </div>
-                                            <div className="h-[300px] w-full rounded-xl border border-border bg-background/75 p-4">
-                                                <RevenueChart />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
                     );
                 })}
 
@@ -503,12 +515,6 @@ export function PropertiesDashboard() {
                                         <span className="text-sm font-medium text-foreground">Unit Map</span>
                                     </Link>
 
-                                    <Link href={`/landlord/listings?propertyId=${activeProperty.id}`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="w-12 h-12 bg-violet-500/20 text-violet-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                            <Megaphone className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-sm font-medium text-foreground">Create Listing</span>
-                                    </Link>
 
                                     <Link href="/landlord/tenants" className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
                                         <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
