@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Search,
     MoreVertical,
@@ -29,6 +31,10 @@ import {
     Check,
     CheckCheck,
     Clock3,
+    Copy,
+    Flag,
+    ChevronDown,
+    ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -50,6 +56,7 @@ import {
     type MessageUserSearchResult,
     type PaymentHistoryEntry,
 } from "@/lib/messages/client";
+import { redactMessageForSend } from "@/lib/messages/redaction-client";
 
 type ContactItem = {
     id: string;
@@ -93,6 +100,94 @@ type UiMessage = {
     description?: string;
     status?: OutboundStatus;
     isPhishing?: boolean;
+    redactionCategory?: "none" | "credentials" | "profanity" | "phishing" | "spam";
+    disclosureAllowed?: boolean;
+};
+
+const redactionStrength = (message: UiMessage) => {
+    const text = (message.redactedContent ?? message.content ?? "").toString();
+    return (text.match(/\*{5}/g) ?? []).length;
+};
+
+const redactionCategoryRank = (category: UiMessage["redactionCategory"]) => {
+    switch (category) {
+        case "phishing":
+            return 4;
+        case "spam":
+            return 3;
+        case "profanity":
+            return 2;
+        case "credentials":
+            return 1;
+        default:
+            return 0;
+    }
+};
+
+const resolveStrictCategory = (
+    previous?: UiMessage["redactionCategory"],
+    incoming?: UiMessage["redactionCategory"]
+): UiMessage["redactionCategory"] => {
+    const prev = previous ?? "none";
+    const next = incoming ?? "none";
+    return redactionCategoryRank(prev) >= redactionCategoryRank(next) ? prev : next;
+};
+
+const resolveDisclosureAllowed = (
+    category: UiMessage["redactionCategory"],
+    previous?: boolean,
+    incoming?: boolean
+) => {
+    if (category !== "credentials") {
+        return false;
+    }
+    const prev = typeof previous === "boolean" ? previous : true;
+    const next = typeof incoming === "boolean" ? incoming : true;
+    return prev && next;
+};
+
+const mergeCensorshipState = (incoming: UiMessage, previous?: UiMessage): UiMessage => {
+    if (!previous) {
+        return incoming;
+    }
+
+    const strictCategory = resolveStrictCategory(previous.redactionCategory, incoming.redactionCategory);
+    const strictDisclosureAllowed = resolveDisclosureAllowed(
+        strictCategory,
+        previous.disclosureAllowed,
+        incoming.disclosureAllowed
+    );
+
+    if (!incoming.isRedacted && previous.isRedacted) {
+        return {
+            ...incoming,
+            isRedacted: true,
+            redactedContent: previous.redactedContent ?? incoming.redactedContent ?? incoming.content,
+            isPhishing: previous.isPhishing || incoming.isPhishing,
+            redactionCategory: strictCategory,
+            disclosureAllowed: strictDisclosureAllowed,
+        };
+    }
+
+    if (incoming.isRedacted && previous.isRedacted) {
+        const incomingScore = redactionStrength(incoming);
+        const previousScore = redactionStrength(previous);
+        if (previousScore > incomingScore) {
+            return {
+                ...incoming,
+                redactedContent: previous.redactedContent ?? incoming.redactedContent,
+                isPhishing: previous.isPhishing || incoming.isPhishing,
+                redactionCategory: strictCategory,
+                disclosureAllowed: strictDisclosureAllowed,
+            };
+        }
+    }
+
+    return {
+        ...incoming,
+        redactionCategory: strictCategory,
+        disclosureAllowed: strictDisclosureAllowed,
+    };
 };
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
@@ -276,11 +371,17 @@ export default function MessagesPage() {
     const [showReportWizard, setShowReportWizard] = useState(false);
     const [reportCategory, setReportCategory] = useState("spam");
     const [reportDetails, setReportDetails] = useState("");
+    const [reportExactMessage, setReportExactMessage] = useState("");
+    const [reportMessageId, setReportMessageId] = useState("");
+    const [reportScreenshots, setReportScreenshots] = useState<File[]>([]);
+    const [openMessageMenuId, setOpenMessageMenuId] = useState<string | null>(null);
+    const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
     const [reportWizardError, setReportWizardError] = useState<string | null>(null);
     const [showModerationModal, setShowModerationModal] = useState(false);
     const [moderationMessage, setModerationMessage] = useState("");
     const [showChatRulesModal, setShowChatRulesModal] = useState(false);
+    const [showSecurityWarning, setShowSecurityWarning] = useState(true);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -288,6 +389,8 @@ export default function MessagesPage() {
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const messagesScrollRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const reportFileInputRef = useRef<HTMLInputElement | null>(null);
+    const copiedMessageTimeoutRef = useRef<number | null>(null);
     const dragDepthRef = useRef(0);
     const messagesCacheRef = useRef<Map<string, UiMessage[]>>(new Map());
     const paymentHistoryCacheRef = useRef<Map<string, { payments: PaymentHistoryEntry[]; totalPaid: number }>>(new Map());
@@ -625,16 +728,17 @@ export default function MessagesPage() {
         setIsSubmittingReport(true);
 
         try {
+            const formData = new FormData();
+            formData.append("conversationId", activeConversationId);
+            formData.append("category", reportCategory);
+            formData.append("details", reportDetails);
+            formData.append("exactMessage", reportExactMessage);
+            formData.append("reportedMessageId", reportMessageId);
+            reportScreenshots.forEach((screenshot) => formData.append("screenshots", screenshot));
+
             const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/reports`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    conversationId: activeConversationId,
-                    category: reportCategory,
-                    details: reportDetails,
-                }),
+                body: formData,
             });
 
             const payload = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -645,13 +749,38 @@ export default function MessagesPage() {
             setShowReportWizard(false);
             setReportCategory("spam");
             setReportDetails("");
+            setReportExactMessage("");
+            setReportMessageId("");
+            setReportScreenshots([]);
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to submit report.";
             setReportWizardError(message);
         } finally {
             setIsSubmittingReport(false);
         }
-    }, [activeContact?.participantUserId, activeConversationId, reportCategory, reportDetails]);
+    }, [activeContact?.participantUserId, activeConversationId, reportCategory, reportDetails, reportExactMessage, reportMessageId, reportScreenshots]);
+
+    const openReportWizard = useCallback(() => {
+        setReportWizardError(null);
+        setReportMessageId("");
+        setShowReportWizard(true);
+    }, []);
+
+    const handleCopyMessageId = useCallback(async (messageId: string) => {
+        try {
+            await navigator.clipboard.writeText(messageId);
+            setCopiedMessageId(messageId);
+            setOpenMessageMenuId(null);
+            if (copiedMessageTimeoutRef.current) {
+                clearTimeout(copiedMessageTimeoutRef.current);
+            }
+            copiedMessageTimeoutRef.current = window.setTimeout(() => {
+                setCopiedMessageId((current) => (current === messageId ? null : current));
+            }, 1500);
+        } catch {
+            setMessagesError(`Unable to copy message ID automatically. Please copy manually: ${messageId}`);
+        }
+    }, []);
 
     const handleLandlordQuickAction = useCallback((actionKey: QuickAction["key"]) => {
         switch (actionKey) {
@@ -688,8 +817,7 @@ export default function MessagesPage() {
                 setPendingConfirmAction("archive");
                 break;
             case "report-user":
-                setReportWizardError(null);
-                setShowReportWizard(true);
+                openReportWizard();
                 break;
             case "block-contact":
                 setPendingConfirmAction("block");
@@ -697,7 +825,15 @@ export default function MessagesPage() {
             default:
                 break;
         }
-    }, [activeContact?.participantUserId, router]);
+    }, [activeContact?.participantUserId, openReportWizard, router]);
+
+    useEffect(() => {
+        return () => {
+            if (copiedMessageTimeoutRef.current) {
+                clearTimeout(copiedMessageTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const mapMessageToUi = (message: ConversationMessage): UiMessage => {
         const metadata = (message.metadata && typeof message.metadata === "object")
@@ -708,6 +844,26 @@ export default function MessagesPage() {
         const redactedContent = typeof metadata?.redactedContent === "string" ? metadata.redactedContent : message.content;
         const isRedacted = Boolean(metadata?.isRedacted);
         const isConfirmedDisclosed = metadata?.isConfirmedDisclosed === true;
+        const isPhishing = Boolean(metadata?.isPhishing);
+        const explicitCategory =
+            metadata?.redactionCategory === "credentials" ||
+            metadata?.redactionCategory === "profanity" ||
+            metadata?.redactionCategory === "phishing" ||
+            metadata?.redactionCategory === "spam" ||
+            metadata?.redactionCategory === "none"
+                ? metadata.redactionCategory
+                : undefined;
+        const metadataDisclosureAllowed = typeof metadata?.disclosureAllowed === "boolean" ? metadata.disclosureAllowed : undefined;
+        const redactionCategory = explicitCategory
+            ?? (isPhishing
+                ? "phishing"
+                : isRedacted
+                    ? (metadataDisclosureAllowed ? "credentials" : "profanity")
+                    : "none");
+        const disclosureAllowed =
+            typeof metadata?.disclosureAllowed === "boolean"
+                ? metadata.disclosureAllowed
+                : redactionCategory === "credentials";
         const fileUrl = typeof metadata?.fileUrl === "string" ? metadata.fileUrl : undefined;
         const fileName = typeof metadata?.fileName === "string" ? metadata.fileName : undefined;
         const filePath = typeof metadata?.filePath === "string" ? metadata.filePath : undefined;
@@ -732,6 +888,9 @@ export default function MessagesPage() {
             filePath,
             fileMimeType,
             fileSize,
+            isPhishing,
+            redactionCategory,
+            disclosureAllowed,
             status: isOwn ? (message.readAt ? "seen" : "delivered") : undefined,
         };
     };
@@ -829,13 +988,17 @@ export default function MessagesPage() {
 
         if (activeConversationIdRef.current === conversationId) {
             setMessagesState((prev) => {
+                const previousById = new Map(prev.map((message) => [message.id, message]));
+                const stabilized = mapped.map((serverMessage) =>
+                    mergeCensorshipState(serverMessage, previousById.get(serverMessage.id))
+                );
                 const optimistic = prev.filter(
                     (msg) =>
                         msg.type === "landlord" &&
                         (msg.status === "sending" || msg.status === "sent") &&
-                        !mapped.some((serverMessage) => serverMessage.id === msg.id)
+                        !stabilized.some((serverMessage) => serverMessage.id === msg.id)
                 );
-                return [...mapped, ...optimistic];
+                return [...stabilized, ...optimistic];
             });
         }
 
@@ -883,28 +1046,6 @@ export default function MessagesPage() {
         } finally {
             setIsDownloading(false);
         }
-    };
-
-    const fallbackRedact = (text: string) => {
-        let redacted = text;
-        const token = '*****';
-        const patterns: RegExp[] = [
-            /\b(?:password|passcode|pin|otp|cvv|cvc|gcash|bank\s?account|account\s?number|routing\s?number)\b\s*(?:is|:|=)?\s*([A-Za-z0-9!@#$%^&*()_+\-=]{3,})/gi,
-            /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
-            /\b09\d{9}\b/g,
-            /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
-        ];
-
-        for (const pattern of patterns) {
-            redacted = redacted.replace(pattern, token);
-        }
-
-        redacted = redacted.replace(/(\*{5}\s*){2,}/g, token + ' ').trim();
-
-        return {
-            isSensitive: redacted !== text,
-            redactedMessage: redacted,
-        };
     };
 
     const clearPendingAttachment = () => {
@@ -979,38 +1120,21 @@ export default function MessagesPage() {
                 },
             ]);
 
-            let isSensitive = false;
-            let redactedMessage = textMessage;
-
-            try {
-                const response = await fetch('/api/iris/redact', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: textMessage }),
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    isSensitive = !!data.isSensitive;
-                    redactedMessage = typeof data.redactedMessage === 'string' ? data.redactedMessage : textMessage;
-                } else {
-                    const fallback = fallbackRedact(textMessage);
-                    isSensitive = fallback.isSensitive;
-                    redactedMessage = fallback.redactedMessage;
-                }
-            } catch {
-                const fallback = fallbackRedact(textMessage);
-                isSensitive = fallback.isSensitive;
-                redactedMessage = fallback.redactedMessage;
-            }
+            const moderation = await redactMessageForSend(textMessage);
+            const isSensitive = moderation.isSensitive;
+            const redactedMessage = moderation.redactedMessage;
+            const isPhishing = moderation.isPhishing;
+            const redactionCategory = moderation.redactionCategory;
+            const disclosureAllowed = moderation.disclosureAllowed;
 
             try {
                 const created = await sendConversationMessage(activeConversationId, textMessage, {
                     isRedacted: isSensitive,
                     redactedContent: redactedMessage,
                     isConfirmedDisclosed: false,
+                    isPhishing,
+                    redactionCategory,
+                    disclosureAllowed,
                 });
 
                 setMessagesState((prev) =>
@@ -1025,6 +1149,9 @@ export default function MessagesPage() {
                                 createdAt: created.createdAt,
                                 messageType: created.type,
                                 isRedacted: isSensitive,
+                                isPhishing,
+                                redactionCategory,
+                                disclosureAllowed,
                                 isConfirmedDisclosed: false,
                                 status: "sent",
                             }
@@ -1314,7 +1441,7 @@ export default function MessagesPage() {
 
     const confirmDisclose = (id: string) => {
         setMessagesState(prev => prev.map(m =>
-            m.id === id ? { ...m, isConfirmedDisclosed: true } : m
+            m.id === id && m.disclosureAllowed ? { ...m, isConfirmedDisclosed: true } : m
         ));
     };
 
@@ -1392,6 +1519,12 @@ export default function MessagesPage() {
             return;
         }
 
+        if (!user?.id) {
+            // Wait for user to load so mapMessageToUi can correctly determine if user sent it.
+            setIsMessagesLoading(true);
+            return;
+        }
+
         const cached = messagesCacheRef.current.get(activeConversationId);
         if (cached) {
             setMessagesState(cached);
@@ -1415,7 +1548,7 @@ export default function MessagesPage() {
         return () => {
             cancelled = true;
         };
-    }, [activeConversationId]);
+    }, [activeConversationId, user?.id]);
 
     useEffect(() => {
         if (!activeConversationId) return;
@@ -1553,23 +1686,8 @@ export default function MessagesPage() {
         }
     };
 
-    const shouldShowLoadingOverlay =
-        isSidebarLoading ||
-        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
-
     return (
-        <div className="flex h-full w-full gap-6 overflow-hidden bg-background p-6 text-foreground animate-in fade-in duration-700">
-            {shouldShowLoadingOverlay && (
-                <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/45 backdrop-blur-sm dark:bg-black/75">
-                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card/95 px-8 py-6 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.32)] dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-2xl">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary dark:border-neutral-600" aria-hidden="true" />
-                        <div>
-                            <p className="text-sm font-semibold text-foreground dark:text-white">Loading conversation...</p>
-                            <p className="mt-1 text-xs text-muted-foreground dark:text-neutral-400">Preparing your messages.</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+        <div className="flex h-full w-full gap-6 overflow-hidden bg-surface-0 p-6 text-high animate-in fade-in duration-700">
 
             {isGlobalFileDrag && (
                 <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/35 backdrop-blur-sm dark:bg-black/60">
@@ -1586,27 +1704,30 @@ export default function MessagesPage() {
             )}
 
             {/* Sidebar Contact List */}
-            <div className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-sm dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-2xl lg:w-96">
+            <div className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface-1 shadow-sm dark:shadow-2xl lg:w-96">
                 {/* Header */}
-                <div className="flex shrink-0 flex-col gap-4 border-b border-border p-6 dark:border-white/5">
+                <div className="flex shrink-0 flex-col gap-4 border-b border-divider p-6">
                     <div className="flex items-center gap-3">
                         <Link
                             href="/landlord/dashboard"
-                            className="rounded-xl border border-border bg-background/80 p-2 transition-colors hover:bg-muted dark:border-white/10 dark:bg-neutral-800 dark:hover:bg-white/10"
+                            className="rounded-xl border border-divider bg-surface-2 p-2 transition-colors hover:bg-surface-3"
                             title="Back to Dashboard"
                         >
-                            <ArrowLeft className="h-4 w-4 text-muted-foreground dark:text-neutral-300" />
+                            <ArrowLeft className="h-4 w-4 text-medium" />
                         </Link>
-                        <h2 className="mt-0.5 text-xl font-bold leading-none text-foreground dark:text-white">Messages</h2>
+                        <div className="flex flex-1 items-center justify-between">
+                            <h2 className="mt-0.5 text-xl font-bold leading-none text-high">Messages</h2>
+                            <ThemeToggle variant="sidebar" className="h-9 w-9" />
+                        </div>
                     </div>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground dark:text-neutral-500" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-medium" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search users to message..."
-                            className="w-full rounded-xl border border-border bg-background/80 py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:outline-none dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500"
+                            className="w-full rounded-xl border border-divider bg-surface-2 py-2 pl-10 pr-4 text-sm text-high placeholder:text-disabled transition-all focus:border-primary focus:bg-surface-2 focus:outline-none"
                         />
 
                         {searchQuery.trim().length >= 2 && (
@@ -1660,7 +1781,7 @@ export default function MessagesPage() {
                     {isSidebarLoading ? (
                         <div className="space-y-2" aria-live="polite" aria-busy="true">
                             {Array.from({ length: 6 }).map((_, index) => (
-                                <div key={`sidebar-skeleton-${index}`} className="flex w-full animate-pulse items-center gap-3 rounded-2xl border border-border bg-muted/25 p-3 dark:border-white/5 dark:bg-white/[0.02]">
+                                <div key={`sidebar-skeleton-${index}`} className="flex w-full animate-pulse items-center gap-3 rounded-2xl border border-divider bg-surface-2/20 p-3">
                                     <div className="h-12 w-12 rounded-full bg-muted dark:bg-neutral-700/70" />
                                     <div className="flex-1 min-w-0 space-y-2">
                                         <div className="h-3.5 w-1/2 rounded bg-muted dark:bg-neutral-700/70" />
@@ -1703,23 +1824,32 @@ export default function MessagesPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-card via-background to-background shadow-sm dark:border-white/5 dark:from-neutral-900/40 dark:via-[#0a0a0a] dark:to-[#0a0a0a] dark:shadow-2xl">
+            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-divider bg-surface-0 shadow-sm dark:shadow-2xl">
                 {/* Chat Header */}
-                <div className="z-10 flex h-20 shrink-0 items-center justify-between border-b border-border bg-card/80 px-6 backdrop-blur-md dark:border-white/5 dark:bg-neutral-900/20">
+                <div className="z-10 flex h-20 shrink-0 items-center justify-between border-b border-divider bg-surface-1/80 px-6 backdrop-blur-md dark:backdrop-blur-none">
                     <div className="flex items-center gap-4">
                         <img src={displayContact.avatar} alt={displayContact.name} className="h-10 w-10 rounded-full border border-border object-cover dark:border-white/10" />
                         <div>
-                            <h3 className="text-base font-bold text-foreground dark:text-white">{displayContact.name}</h3>
+                            <h3 className="text-base font-bold text-high">{displayContact.name}</h3>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-muted-foreground dark:text-neutral-400">{displayContact.unit}</span>
+                                <span className="text-xs font-medium text-medium">{displayContact.unit}</span>
 
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
 
-                        <button className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-400 dark:hover:bg-white/5 dark:hover:text-white">
+                        <button className="rounded-lg p-2 text-medium transition-colors hover:bg-surface-2 hover:text-high">
                             <Search className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={openReportWizard}
+                            disabled={!activeContact?.participantUserId}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-xs font-bold text-red-400 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Report User"
+                        >
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            <span>Report</span>
                         </button>
                         <button
                             onClick={() => {
@@ -1767,11 +1897,12 @@ export default function MessagesPage() {
                 <div
                     ref={messagesScrollRef}
                     onScroll={updateShouldStickToBottom}
+                    onClick={() => setOpenMessageMenuId(null)}
                     className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full"
                 >
                     <div className="w-full max-w-4xl p-6 space-y-6">
                         <div className="text-center py-4">
-                            <span className="rounded-full border border-border bg-card px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground shadow-sm dark:border-white/5 dark:bg-neutral-900 dark:text-neutral-500">
+                            <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled shadow-sm">
                                 Conversation Started • February 1, 2026
                             </span>
                         </div>
@@ -1783,13 +1914,13 @@ export default function MessagesPage() {
 
                                     return (
                                         <div key={`message-skeleton-${index}`} className={cn("flex items-end gap-3 w-full", isMe ? "justify-end" : "justify-start")}>
-                                            {!isMe && <div className="w-8 h-8 rounded-full bg-neutral-700/70 animate-pulse shrink-0" />}
+                                            {!isMe && <div className="w-8 h-8 rounded-full bg-surface-2 animate-pulse shrink-0" />}
                                             <div
                                                 className={cn(
                                                     "animate-pulse border",
                                                     isMe
                                                         ? "h-14 w-[45%] max-w-sm rounded-3xl rounded-br-sm bg-primary/25 border-primary/20"
-                                                        : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm border-border bg-muted/60 dark:border-white/5 dark:bg-neutral-800"
+                                                        : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm border-divider bg-surface-2/40"
                                                 )}
                                             />
                                         </div>
@@ -1803,7 +1934,7 @@ export default function MessagesPage() {
                                 return (
                                     <div key={msg.id} className="flex justify-center max-w-4xl mx-auto my-6 px-4">
                                         {msg.systemType === "payment_submitted" ? (
-                                            <div className="flex flex-col gap-0 bg-neutral-900 overflow-hidden border border-primary/30 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-primary/10 max-w-sm w-full transition-all hover:border-primary/50 hover:shadow-primary/20 group pb-4">
+                                            <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-primary/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-primary/50 group pb-4">
                                                 {/* Header Gradient */}
                                                 <div className="bg-gradient-to-r from-primary/80 to-primary p-5 relative overflow-hidden h-24 flex items-center shrink-0">
                                                     <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
@@ -1820,9 +1951,9 @@ export default function MessagesPage() {
 
                                                 {/* Details Section */}
                                                 <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
-                                                    <div className="flex justify-between items-center bg-black/30 rounded-2xl p-4 border border-white/5">
+                                                    <div className="flex justify-between items-center bg-surface-2 rounded-2xl p-4 border border-divider">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold mb-1">Amount Paid</span>
+                                                            <span className="text-[10px] uppercase tracking-wider text-medium font-bold mb-1">Amount Paid</span>
                                                             <span className="text-2xl font-black text-primary">₱{msg.paymentAmount}</span>
                                                         </div>
                                                         <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
@@ -1830,14 +1961,14 @@ export default function MessagesPage() {
                                                         </div>
                                                     </div>
 
-                                                    <p className="text-xs text-neutral-400 leading-relaxed bg-neutral-800/30 p-3 rounded-xl border border-white/5">
+                                                    <p className="text-xs text-medium leading-relaxed bg-surface-2/50 p-3 rounded-xl border border-divider">
                                                         {msg.content}
                                                     </p>
 
                                                     {msg.receiptImg && (
                                                         <div className="flex flex-col gap-2 mt-1">
-                                                            <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold ml-1">Proof of Payment</span>
-                                                            <div className="rounded-2xl overflow-hidden border border-white/10 relative cursor-pointer shadow-inner">
+                                                            <span className="text-[10px] uppercase tracking-wider text-medium font-bold ml-1">Proof of Payment</span>
+                                                            <div className="rounded-2xl overflow-hidden border border-divider relative cursor-pointer shadow-inner">
                                                                 <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-10 group/img">
                                                                     <div className="bg-white/10 border border-white/20 p-2 rounded-full transform scale-95 group-hover/img:scale-100 transition-all">
                                                                         <Search className="w-5 h-5 text-white" />
@@ -1860,22 +1991,22 @@ export default function MessagesPage() {
                                                 </div>
                                             </div>
                                         ) : msg.systemType === "invoice" ? (
-                                            <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-neutral-900 border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+                                            <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-surface-1 border border-divider rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
                                                 {/* Invoice Watermark Header */}
-                                                <div className="bg-gradient-to-br from-neutral-800 to-neutral-900 p-6 border-b border-white/5 relative overflow-hidden">
+                                                <div className="bg-surface-2 p-6 border-b border-divider relative overflow-hidden">
                                                     <div className="absolute top-0 right-0 p-4 opacity-5">
                                                         <Receipt size={120} className="-rotate-12" />
                                                     </div>
                                                     <div className="relative z-10 flex justify-between items-start">
                                                         <div>
                                                             <Logo theme="dark" className="h-6 w-auto mb-1" />
-                                                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Digital Payment Invoice</p>
+                                                            <p className="text-[10px] text-medium font-bold uppercase tracking-widest">Digital Payment Invoice</p>
                                                         </div>
                                                         <div className="text-right">
                                                             <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
                                                                 Status: Paid
                                                             </span>
-                                                            <p className="text-[10px] text-neutral-400 mt-2 font-medium">{msg.invoiceId}</p>
+                                                            <p className="text-[10px] text-medium mt-2 font-medium">{msg.invoiceId}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1884,27 +2015,27 @@ export default function MessagesPage() {
                                                 <div className="p-6 space-y-6">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div>
-                                                            <p className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">Billed To</p>
-                                                            <p className="text-sm font-bold text-white leading-tight">{msg.tenantName}</p>
-                                                            <p className="text-[11px] text-neutral-400 mt-0.5">{msg.unit}</p>
+                                                            <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Billed To</p>
+                                                            <p className="text-sm font-bold text-high leading-tight">{msg.tenantName}</p>
+                                                            <p className="text-[11px] text-medium mt-0.5">{msg.unit}</p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">Date Issued</p>
-                                                            <p className="text-sm font-bold text-white leading-tight">{msg.date}</p>
+                                                            <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Date Issued</p>
+                                                            <p className="text-sm font-bold text-high leading-tight">{msg.date}</p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
-                                                        <div className="p-3 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider px-1">Description</span>
-                                                            <span className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider px-1">Amount</span>
+                                                    <div className="bg-surface-2/40 rounded-2xl border border-divider overflow-hidden">
+                                                        <div className="p-3 border-b border-divider bg-surface-2/20 flex items-center justify-between">
+                                                            <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Description</span>
+                                                            <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Amount</span>
                                                         </div>
                                                         <div className="p-4 flex items-center justify-between">
-                                                            <p className="text-xs text-neutral-300 font-medium">{msg.description}</p>
-                                                            <p className="text-sm font-black text-white">₱{msg.amount}</p>
+                                                            <p className="text-xs text-high font-medium">{msg.description}</p>
+                                                            <p className="text-sm font-black text-high">₱{msg.amount}</p>
                                                         </div>
-                                                        <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-white/5">
-                                                            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Total Paid</span>
+                                                        <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-divider">
+                                                            <span className="text-[10px] text-medium font-bold uppercase tracking-widest">Total Paid</span>
                                                             <span className="text-lg font-black text-primary">₱{msg.amount}</span>
                                                         </div>
                                                     </div>
@@ -1914,31 +2045,31 @@ export default function MessagesPage() {
                                                             disabled={isDownloading}
                                                             onClick={() => handleDownloadImage(`invoice-${msg.id}`, `Invoice-${msg.invoiceId}`)}
                                                             className={cn(
-                                                                "flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-2xl text-[11px] font-bold transition-all border border-white/5 flex items-center justify-center gap-2 group",
+                                                                "flex-1 bg-surface-2 hover:bg-surface-3 text-high py-3 rounded-2xl text-[11px] font-bold transition-all border border-divider flex items-center justify-center gap-2 group",
                                                                 isDownloading && "opacity-50 cursor-not-allowed"
                                                             )}
                                                         >
-                                                            <Download className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-colors" />
+                                                            <Download className="w-3.5 h-3.5 text-medium group-hover:text-high transition-colors" />
                                                             {isDownloading ? "Generating..." : "Download Image"}
                                                         </button>
-                                                        <button className="w-12 h-12 bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center rounded-2xl transition-all border border-white/5">
+                                                        <button className="w-12 h-12 bg-surface-2 hover:bg-surface-3 text-medium hover:text-high flex items-center justify-center rounded-2xl transition-all border border-divider">
                                                             <ShieldCheck className="w-5 h-5" />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                <div className="px-6 py-3 bg-neutral-900 border-t border-white/5 text-center">
-                                                    <p className="text-[9px] text-neutral-600 font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
+                                                <div className="px-6 py-3 bg-surface-1 border-t border-divider text-center">
+                                                    <p className="text-[9px] text-disabled font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-3 bg-neutral-900/60 border border-white/5 backdrop-blur-sm px-5 py-3 rounded-2xl shadow-sm text-center">
-                                                <div className="bg-black/50 p-2 rounded-full border border-white/5 shrink-0">
+                                            <div className="flex items-center gap-3 bg-surface-1 border border-divider px-5 py-3 rounded-2xl shadow-sm text-center">
+                                                <div className="bg-surface-2 p-2 rounded-full border border-divider shrink-0">
                                                     {renderSystemIcon(msg.systemType || '')}
                                                 </div>
                                                 <div className="text-left flex flex-col justify-center">
-                                                    <p className="text-xs text-neutral-300 font-medium leading-relaxed">{msg.content}</p>
-                                                    <p className="text-[9px] text-neutral-500 mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
+                                                    <p className="text-xs text-high font-medium leading-relaxed">{msg.content}</p>
+                                                    <p className="text-[9px] text-medium mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
                                                 </div>
                                             </div>
                                         )}
@@ -1951,7 +2082,7 @@ export default function MessagesPage() {
                             const hasFileAttachment = Boolean(msg.fileUrl && !msg.fileMimeType?.startsWith("image/"));
 
                             return (
-                                <div key={msg.id} className={cn("flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
+                                <div key={msg.id} className={cn("group/message flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
                                     <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                                         {!isMe && (
                                             <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
@@ -1959,9 +2090,9 @@ export default function MessagesPage() {
                                         <div className={cn(
                                             "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
                                             isMe
-                                                ? "rounded-3xl rounded-br-sm bg-primary/75 font-medium text-black dark:bg-primary"
-                                                : "rounded-3xl rounded-bl-sm border border-border bg-card text-foreground dark:border-white/5 dark:bg-neutral-800 dark:text-white",
-                                            hasFileAttachment && "px-0 py-0 bg-transparent border-none shadow-none"
+                                                ? "rounded-3xl rounded-br-sm bg-primary font-black uppercase tracking-widest text-[11px] text-black shadow-primary/20"
+                                                : "rounded-3xl rounded-bl-sm border border-divider bg-surface-1 text-high",
+                                            (hasImageAttachment || hasFileAttachment) && "px-0 py-0 bg-transparent border-none shadow-none"
                                         )}>
                                             {hasImageAttachment && (
                                                 <button
@@ -1993,20 +2124,52 @@ export default function MessagesPage() {
 
                                             {!msg.fileUrl && (
                                                 <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                                                    {msg.isRedacted && !msg.isConfirmedDisclosed
+                                                    {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed)
                                                         ? prettifyRedactedText(msg.redactedContent || msg.content)
                                                         : msg.content
                                                     }
                                                 </div>
                                             )}
                                         </div>
+                                        <div className="relative shrink-0 self-start">
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    setOpenMessageMenuId((current) => (current === msg.id ? null : msg.id));
+                                                }}
+                                                className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover/message:opacity-100 focus:opacity-100"
+                                                aria-label="Message actions"
+                                            >
+                                                <MoreVertical className="h-4 w-4" />
+                                            </button>
+                                            {openMessageMenuId === msg.id && (
+                                                <div
+                                                    className={cn(
+                                                        "absolute z-20 mt-1 min-w-[150px] rounded-xl border border-border bg-card p-1 shadow-xl",
+                                                        isMe ? "right-0" : "left-0"
+                                                    )}
+                                                    onClick={(event) => event.stopPropagation()}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void handleCopyMessageId(msg.id)}
+                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                                                    >
+                                                        <Copy className="h-3.5 w-3.5" />
+                                                        Copy message ID
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <div className={cn("flex items-center gap-1 px-2 text-[10px]", isMe ? "text-muted-foreground dark:text-neutral-500" : "text-muted-foreground/80 dark:text-neutral-600")}>
+                                    <div className={cn("flex items-center gap-1 px-2 text-[10px]", isMe ? "text-medium" : "text-medium/80")}>
                                         {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
+                                        {copiedMessageId === msg.id && <span className="text-emerald-500 font-semibold">ID copied</span>}
                                     </div>
 
-                                    {msg.isRedacted && !msg.isConfirmedDisclosed && (
+                                    {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed) && (
                                         <div className="w-full flex justify-center mt-2 mb-4">
                                             <div className={cn(
                                                 "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
@@ -2015,24 +2178,30 @@ export default function MessagesPage() {
                                                     : "border-amber-500/20 bg-card/90 text-muted-foreground shadow-amber-500/5 dark:bg-neutral-900/60 dark:text-neutral-300"
                                             )}>
                                                 <div className="flex items-center justify-center gap-1.5 mb-2">
-                                                    <AlertTriangle className={cn("w-4 h-4", msg.isPhishing ? "text-red-500" : "text-amber-500")} />
-                                                    <strong className={cn("text-xs", msg.isPhishing ? "text-red-500" : "text-amber-500")}>
-                                                        {msg.isPhishing ? "Malicious Content Detected" : "Iris AI Intercepted"}
+                                                    <AlertTriangle className={cn("w-4 h-4", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")} />
+                                                    <strong className={cn("text-xs", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")}>
+                                                        {msg.isPhishing || msg.redactionCategory === "spam" ? "Malicious Content Detected" : "Iris AI Intercepted"}
                                                     </strong>
                                                 </div>
                                                 <p className="leading-relaxed opacity-90 text-muted-foreground dark:text-neutral-400">
-                                                    {msg.isPhishing 
+                                                    {msg.isPhishing
                                                         ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
-                                                        : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
+                                                        : msg.redactionCategory === "spam"
+                                                            ? "This message matches spam/scam patterns and has been blocked from normal disclosure."
+                                                        : msg.redactionCategory === "profanity"
+                                                            ? "This message contains prohibited profanity and remains permanently censored."
+                                                            : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
                                                 </p>
-                                                <div className="mt-4 flex items-center justify-center">
-                                                    <button
-                                                        onClick={() => confirmDisclose(msg.id)}
-                                                        className="px-6 py-2 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-105 font-bold rounded-xl transition-all w-fit"
-                                                    >
-                                                        Confirm & Disclose
-                                                    </button>
-                                                </div>
+                                                {msg.disclosureAllowed && (
+                                                    <div className="mt-4 flex items-center justify-center">
+                                                        <button
+                                                            onClick={() => confirmDisclose(msg.id)}
+                                                            className="px-6 py-2 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-105 font-bold rounded-xl transition-all w-fit"
+                                                        >
+                                                            Confirm & Disclose
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -2060,28 +2229,47 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Input Area */}
-                <div className="flex w-full shrink-0 justify-center border-t border-border bg-card/80 p-4 dark:border-white/5 dark:bg-neutral-900/50 md:p-6">
-                    <div className="w-full max-w-4xl flex flex-col gap-3">
-                        {/* Security Announcement Banner */}
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shrink-0 mb-1">
-                            <div className="flex items-center gap-3">
-                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                                <span className="text-xs font-medium text-amber-400/90 hidden sm:inline">
-                                    <strong className="text-amber-500 mr-1">Security Warning:</strong>
-                                    Never share sensitive credentials or passwords. Admins will NEVER ask for this.
-                                </span>
-                                <span className="text-xs font-medium text-amber-400/90 sm:hidden">
-                                    Keep credentials private.
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => setShowChatRulesModal(true)}
-                                className="text-[10px] md:text-xs shrink-0 font-bold px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors whitespace-nowrap"
+                <div className="relative flex w-full shrink-0 justify-center border-t border-divider bg-surface-1/80">
+                    <AnimatePresence>
+                        {showSecurityWarning && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="pointer-events-none absolute left-1/2 -top-14 z-20 w-full max-w-4xl -translate-x-1/2 px-4 md:px-0"
                             >
-                                Chat Rules
-                            </button>
-                        </div>
-
+                                <div className="pointer-events-auto bg-background/80 dark:bg-black/60 backdrop-blur-xl border border-amber-500/30 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] pr-2">
+                                    <div className="flex items-center gap-3">
+                                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                                        <span className="text-xs font-medium text-amber-700 dark:text-amber-300 hidden sm:inline">
+                                            <strong className="text-amber-500 dark:text-amber-400 mr-1">Security Warning:</strong>
+                                            Never share sensitive credentials or passwords. Admins will NEVER ask for this.
+                                        </span>
+                                        <span className="text-xs font-medium text-amber-700 dark:text-amber-300 sm:hidden">
+                                            Keep credentials private.
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => setShowChatRulesModal(true)}
+                                            className="text-[10px] md:text-xs shrink-0 font-bold px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors whitespace-nowrap"
+                                        >
+                                            Rules
+                                        </button>
+                                        <button
+                                            onClick={() => setShowSecurityWarning(false)}
+                                            className="p-1.5 rounded-lg text-amber-600/50 hover:text-amber-600 hover:bg-amber-500/10 transition-colors"
+                                            aria-label="Dismiss warning"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    <div className="w-full max-w-4xl flex flex-col gap-3 p-4 md:p-6">
                         {pendingAttachment && (
                             <div className="relative w-36 rounded-2xl border border-border bg-card/80 p-2 dark:border-white/10 dark:bg-black/30">
                                 <button
@@ -2111,7 +2299,7 @@ export default function MessagesPage() {
                             onDragLeave={handleComposerDragLeave}
                             onDrop={handleComposerDrop}
                             className={cn(
-                                "flex items-end gap-3 rounded-3xl border border-border bg-background/85 p-2 pl-4 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary dark:border-white/10 dark:bg-black/40",
+                                "flex items-end gap-3 rounded-[2rem] border border-border bg-background/85 p-2 pl-5 transition-all focus-within:border-primary/50 focus-within:shadow-[0_0_0_4px_rgba(var(--primary-rgb),0.15)] focus-within:ring-0 dark:border-white/10 dark:bg-black/40",
                                 isComposerDragOver && "border-primary/80 bg-primary/10"
                             )}
                         >
@@ -2126,7 +2314,7 @@ export default function MessagesPage() {
                                 onChange={(e) => handleMessageInputChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Type a message..."
-                                className="custom-scrollbar max-h-32 w-full resize-none border-none bg-transparent py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none dark:text-white dark:placeholder:text-neutral-500"
+                                className="custom-scrollbar max-h-32 w-full resize-none bg-transparent py-3 text-sm text-foreground placeholder:text-muted-foreground border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none dark:text-white dark:placeholder:text-neutral-500"
                                 rows={1}
                             />
                             <div className="flex items-center gap-1 shrink-0 pb-1">
@@ -2623,7 +2811,7 @@ export default function MessagesPage() {
                             <div className="space-y-2">
                                 <h5 className="text-sm font-bold uppercase tracking-wider text-foreground dark:text-white">2. Prohibited Content</h5>
                                 <p className="text-sm leading-relaxed text-muted-foreground dark:text-neutral-300">
-                                    You may not send spam, unauthorized advertisements, explicit media, or any illegal content. Our AI moderation system actively intercepts and blocks such content.
+                                    You may not send spam, unauthorized advertisements, explicit media, or any illegal content. Our moderation system actively intercepts and blocks such content.
                                 </p>
                             </div>
                             <div className="space-y-2">
@@ -2652,60 +2840,182 @@ export default function MessagesPage() {
             )}
 
             {showReportWizard && (
-                <div className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm dark:bg-black/80">
-                    <div className="w-full max-w-lg space-y-4 rounded-2xl border border-border bg-card p-6 shadow-[0_24px_60px_-30px_rgba(15,23,42,0.32)] dark:border-white/10 dark:bg-neutral-900 dark:shadow-2xl">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-lg font-bold text-foreground dark:text-white">Report User</h4>
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-md animate-in fade-in duration-300 dark:bg-black/80">
+                    <div className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_28px_70px_-36px_rgba(15,23,42,0.4)] animate-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-neutral-900 dark:shadow-2xl">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-border bg-red-500/5 p-6 dark:border-white/5 dark:bg-red-500/10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20">
+                                    <Flag className="w-6 h-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-black text-foreground dark:text-white">Report User</h4>
+                                    <p className="text-xs text-muted-foreground dark:text-neutral-500">Your report is anonymous and helps us keep iReside safe.</p>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => setShowReportWizard(false)}
-                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+                                className="rounded-xl p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
+                        <div className="p-8 space-y-6">
+                            {/* Category Selection */}
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-red-500" />
+                                    Reason for Report
+                                </label>
+                                <div className="relative group">
+                                    <select
+                                        value={reportCategory}
+                                        onChange={(event) => setReportCategory(event.target.value)}
+                                        className="w-full appearance-none rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-bold text-foreground transition-all focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                    >
+                                        <option value="spam">Spam</option>
+                                        <option value="profanity">Inappropriate Language</option>
+                                        <option value="harassment">Harassment</option>
+                                        <option value="scam_or_fraud">Scam or Fraud</option>
+                                        <option value="impersonation">Impersonation</option>
+                                        <option value="other">Other Violation</option>
+                                    </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-red-500 transition-colors">
+                                        <ChevronDown className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground dark:text-neutral-500">Category</label>
-                            <select
-                                value={reportCategory}
-                                onChange={(event) => setReportCategory(event.target.value)}
-                                className="w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm text-foreground dark:border-white/10 dark:bg-black/40 dark:text-white"
-                            >
-                                <option value="spam">Spam</option>
-                                <option value="harassment">Harassment</option>
-                                <option value="scam_or_fraud">Scam or Fraud</option>
-                                <option value="impersonation">Impersonation</option>
-                                <option value="other">Other</option>
-                            </select>
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-red-500" />
+                                    Reported Message
+                                </label>
+                                <input
+                                    type="text"
+                                    value={reportMessageId}
+                                    onChange={(event) => setReportMessageId(event.target.value)}
+                                    placeholder="Paste message ID here (optional)"
+                                    className="w-full rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 transition-all focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                />
+                                <p className="text-[11px] text-muted-foreground/80">
+                                    Hover any message, click the menu, then choose <strong>Copy message ID</strong>.
+                                </p>
+                                {reportMessageId && (
+                                    <p className="text-[11px] font-mono text-muted-foreground/80">
+                                        Message ID: {reportMessageId}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Exact Message (Conditional) */}
+                            {reportCategory === "profanity" && (
+                                <div className="space-y-3 animate-in slide-in-from-top-2 duration-200">
+                                    <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                        <span className="h-1 w-3 rounded-full bg-amber-500" />
+                                        Evidence
+                                    </label>
+                                    <textarea
+                                        value={reportExactMessage}
+                                        onChange={(event) => setReportExactMessage(event.target.value)}
+                                        rows={2}
+                                        placeholder="Paste the problematic message here..."
+                                        className="w-full resize-none rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 transition-all focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Screenshot Evidence */}
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-blue-500" />
+                                    Screenshot Proof
+                                </label>
+                                <input
+                                    ref={reportFileInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp,image/gif"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(event) => {
+                                        const selected = Array.from(event.target.files ?? []);
+                                        if (selected.length === 0) return;
+                                        const merged = [...reportScreenshots, ...selected].slice(0, 4);
+                                        setReportScreenshots(merged);
+                                        event.currentTarget.value = "";
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => reportFileInputRef.current?.click()}
+                                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted dark:border-white/10 dark:bg-black/20 dark:text-white dark:hover:bg-white/10"
+                                >
+                                    <Paperclip className="h-4 w-4" />
+                                    Attach Screenshots
+                                </button>
+                                {reportScreenshots.length > 0 && (
+                                    <div className="space-y-1">
+                                        {reportScreenshots.map((file, index) => (
+                                            <div key={`${file.name}-${index}`} className="flex items-center justify-between rounded-lg border border-border bg-background/40 px-3 py-2 text-xs text-muted-foreground dark:border-white/10 dark:bg-black/20 dark:text-neutral-300">
+                                                <span className="truncate pr-2">{file.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReportScreenshots((previous) => previous.filter((_, i) => i !== index))}
+                                                    className="rounded px-2 py-1 text-red-500 hover:bg-red-500/10"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Details */}
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-primary" />
+                                    Additional Context
+                                </label>
+                                <textarea
+                                    value={reportDetails}
+                                    onChange={(event) => setReportDetails(event.target.value)}
+                                    rows={4}
+                                    placeholder="Tell us more about what happened..."
+                                    className="w-full resize-none rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 transition-all focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                />
+                            </div>
+
+                            {reportWizardError && (
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {reportWizardError}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground dark:text-neutral-500">What happened?</label>
-                            <textarea
-                                value={reportDetails}
-                                onChange={(event) => setReportDetails(event.target.value)}
-                                rows={5}
-                                placeholder="Describe the issue with enough detail for moderation review."
-                                className="w-full resize-none rounded-xl border border-border bg-background/80 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground dark:border-white/10 dark:bg-black/40 dark:text-white dark:placeholder:text-neutral-500"
-                            />
-                        </div>
-
-                        {reportWizardError && <p className="text-xs text-red-400">{reportWizardError}</p>}
-
-                        <div className="flex items-center justify-end gap-2 pt-2">
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 border-t border-border bg-muted/30 p-6 dark:border-white/5 dark:bg-black/20">
                             <button
                                 onClick={() => setShowReportWizard(false)}
                                 disabled={isSubmittingReport}
-                                className="rounded-lg border border-border px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50 dark:border-white/10 dark:text-neutral-300 dark:hover:bg-white/5 dark:hover:text-white"
+                                className="px-6 py-3 text-sm font-bold text-muted-foreground hover:text-foreground transition-all hover:bg-muted rounded-xl dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/5"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => void submitUserReport()}
-                                disabled={isSubmittingReport || reportDetails.trim().length < 10}
-                                className="px-3 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-500/90 disabled:opacity-50"
+                                disabled={
+                                    isSubmittingReport ||
+                                    (reportCategory === "profanity" &&
+                                        reportExactMessage.trim().length < 3 &&
+                                        !reportMessageId)
+                                }
+                                className="group relative flex items-center gap-2 overflow-hidden px-8 py-3 bg-red-500 text-white font-black text-sm rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 shadow-[0_10px_25px_-10px_rgba(239,44,44,0.4)]"
                             >
-                                {isSubmittingReport ? "Submitting..." : "Submit Report"}
+                                <span className="relative z-10">{isSubmittingReport ? "Sending Report..." : "Submit Report"}</span>
+                                {!isSubmittingReport && <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
                             </button>
                         </div>
                     </div>

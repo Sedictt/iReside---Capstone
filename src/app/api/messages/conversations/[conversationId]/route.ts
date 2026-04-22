@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
+import { redactWithAiOrFallback } from "@/lib/messages/redaction-service";
 import type { Json, MessageType } from "@/types/database";
 
 const DEFAULT_FILES_BUCKET = "message-files";
@@ -12,6 +13,9 @@ type MessageBody = {
     type?: MessageType;
     metadata?: Json | null;
 };
+
+const isJsonObject = (value: Json | null | undefined): value is Record<string, Json> =>
+    Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
 export async function GET(
     request: Request,
@@ -143,6 +147,34 @@ export async function POST(
             return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
         }
 
+        const baseMetadata = isJsonObject(body.metadata) ? { ...body.metadata } : {};
+        const enforcedMetadata =
+            messageType === "text"
+                ? (async () => {
+                      const moderation = await redactWithAiOrFallback(content);
+                      if (moderation.redactionCategory === "profanity") {
+                          throw new Error("Message blocked due to profanity policy violation.");
+                      }
+                      if (moderation.redactionCategory === "phishing") {
+                          throw new Error("Message blocked due to phishing policy violation.");
+                      }
+                      if (moderation.redactionCategory === "spam") {
+                          throw new Error("Message blocked due to spam policy violation.");
+                      }
+                      return {
+                          ...baseMetadata,
+                          isRedacted: moderation.isSensitive,
+                          redactedContent: moderation.redactedMessage,
+                          isConfirmedDisclosed: false,
+                          isPhishing: moderation.isPhishing,
+                          redactionCategory: moderation.redactionCategory,
+                          disclosureAllowed: moderation.disclosureAllowed,
+                          moderationSource: moderation.source,
+                      } as Json;
+                  })()
+                : body.metadata ?? null;
+        const resolvedMetadata = messageType === "text" ? await enforcedMetadata : enforcedMetadata;
+
         const { data: inserted, error: insertError } = await supabase
             .from("messages")
             .insert({
@@ -150,7 +182,7 @@ export async function POST(
                 sender_id: user.id,
                 type: messageType,
                 content,
-                metadata: body.metadata ?? null,
+                metadata: resolvedMetadata,
             })
             .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
             .single();
@@ -175,6 +207,10 @@ export async function POST(
             { status: 201 }
         );
     } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        if (message.includes("policy violation")) {
+            return NextResponse.json({ error: message }, { status: 422 });
+        }
         console.error("Failed to send conversation message:", error);
         return NextResponse.json({ error: "Failed to send message." }, { status: 500 });
     }

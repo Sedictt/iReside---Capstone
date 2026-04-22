@@ -1,4 +1,4 @@
-import { X, CreditCard, Search, CheckCircle2 } from "lucide-react";
+import { X, CreditCard, Search, CheckCircle2, Sparkles, ChevronRight, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
@@ -20,17 +20,40 @@ interface PaymentListItem {
 }
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
+const CATEGORY_COPY: Record<"Overdue" | "Near Due" | "Paid", { title: string; description: string; filterLabel: string; emptyState: string }> = {
+    Overdue: {
+        title: "Past Due Rent",
+        description: "Unpaid invoices past their due date.",
+        filterLabel: "overdue",
+        emptyState: "No overdue rent found",
+    },
+    "Near Due": {
+        title: "Due in Next 7 Days",
+        description: "Pending invoices due within one week.",
+        filterLabel: "due soon",
+        emptyState: "No invoices due this week",
+    },
+    Paid: {
+        title: "Recently Paid Rent",
+        description: "Most recent rent payments already received.",
+        filterLabel: "paid",
+        emptyState: "No recent payments found",
+    },
+};
 
 export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: PaymentModalProps) {
     const [confirmedPayments, setConfirmedPayments] = useState<string[]>([]);
+    const [selectedActionPayment, setSelectedActionPayment] = useState<PaymentListItem | null>(null);
+    const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
     if (!category) return null;
 
     const payments = paymentsByCategory[category] || [];
+    const categoryCopy = CATEGORY_COPY[category];
 
-    const handleConfirm = (e: React.MouseEvent, paymentId: string) => {
-        e.stopPropagation();
+    const handleConfirm = (paymentId: string) => {
         setConfirmedPayments(prev => [...prev, paymentId]);
+        setSelectedActionPayment(null);
     };
 
     const getStatusStyles = () => {
@@ -58,112 +81,190 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 h-screen w-screen bg-black/60 backdrop-blur-sm z-[100] transition-opacity"
+                        className="fixed inset-0 h-screen w-screen bg-black/80 backdrop-blur-md z-[100] transition-opacity"
                     />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="fixed left-1/2 top-[45%] z-[101] flex max-h-[85vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl dark:border-white/10 dark:bg-[#0a0a0a]"
+                        className="fixed left-1/2 top-1/2 z-[101] flex max-h-[90vh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-[0_40px_100px_rgba(0,0,0,0.7)]"
                     >
                         {/* Header */}
-                        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/50 p-6 dark:border-white/5 dark:bg-neutral-900/50">
-                            <div className="flex items-center gap-4">
-                                <div className="rounded-2xl bg-muted p-3 dark:bg-white/5">
+                        <div className="flex shrink-0 items-center justify-between border-b border-white/5 bg-neutral-900/50 p-8 backdrop-blur-xl">
+                            <div className="flex items-center gap-5">
+                                <div className="rounded-2xl bg-white/5 p-4 border border-white/5">
                                     <CreditCard className="h-6 w-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h2 className="flex items-center gap-2 text-xl font-bold text-foreground dark:text-white">
-                                        {category} Payments
-                                        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground dark:bg-white/10 dark:text-neutral-300">
+                                    <h2 className="flex items-center gap-3 text-2xl font-black text-white">
+                                        {categoryCopy.title}
+                                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary border border-primary/20">
                                             {payments.length}
                                         </span>
                                     </h2>
-                                    <p className="mt-1 text-xs text-muted-foreground">Detailed list of all {category.toLowerCase()} transactions.</p>
+                                    <p className="mt-1 text-xs font-medium text-muted-foreground">{categoryCopy.description}</p>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white">
+                            <button 
+                                onClick={onClose} 
+                                className="group flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-white/5 text-muted-foreground transition-all hover:bg-white/10 hover:text-white hover:rotate-90"
+                            >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        {/* Search Bar */}
-                        <div className="shrink-0 border-b border-border p-6 dark:border-white/5">
-                            <div className="relative">
-                                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        {/* Search Bar - Premium Glass */}
+                        <div className="shrink-0 border-b border-white/5 p-8 bg-white/[0.02]">
+                            <div className="relative group">
+                                <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder={`Search ${category.toLowerCase()} payments...`}
-                                    className="w-full rounded-xl border border-border bg-background py-3 pl-12 pr-4 text-sm text-foreground placeholder:text-muted-foreground transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-white/10 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500"
+                                    placeholder={`Filter ${categoryCopy.filterLabel} entries...`}
+                                    className="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-14 pr-6 text-sm text-white placeholder:text-neutral-500 transition-all focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]"
                                 />
                             </div>
                         </div>
 
-                        {/* List */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+                        {/* List Area */}
+                        <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar-premium bg-gradient-to-b from-transparent to-black/20">
                             {payments.length === 0 ? (
-                                <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 dark:border-white/10 dark:bg-black/20">
-                                    <p className="text-sm font-semibold text-foreground dark:text-neutral-200">No {category.toLowerCase()} payments found.</p>
-                                    <p className="mt-1 text-xs text-muted-foreground">New payment records will appear here once available.</p>
+                                <div className="rounded-[2.5rem] border border-dashed border-white/10 bg-white/5 p-16 text-center backdrop-blur-sm">
+                                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{categoryCopy.emptyState}</p>
                                 </div>
                             ) : (
                                 payments.map((payment) => (
-                                    <div key={payment.id} className="group flex cursor-pointer items-center justify-between rounded-2xl border border-transparent bg-muted/20 p-4 transition-all hover:border-border hover:bg-muted/50 dark:bg-white/[0.02] dark:hover:border-white/5 dark:hover:bg-white/[0.04]">
-                                        <div className="flex items-center gap-4">
+                                    <div 
+                                        key={payment.id} 
+                                        onClick={() => setSelectedActionPayment(payment)}
+                                        className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-[1.75rem] border border-white/5 bg-white/[0.03] p-5 transition-all hover:bg-white/[0.06] hover:ring-1 hover:ring-primary/20 active:scale-[0.98]"
+                                    >
+                                        <div className="flex items-center gap-5 relative z-10">
                                             <div className="relative">
-                                                <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-12 w-12 rounded-full border-2 border-background object-cover transition-transform duration-300 group-hover:scale-105" />
+                                                <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-14 w-14 rounded-full border-2 border-background object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110" />
                                                 <div className={cn(
-                                                    "absolute -bottom-0 -right-0 h-3.5 w-3.5 rounded-full border-2 border-background",
-                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : getDotColor()
+                                                    "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background shadow-lg",
+                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "bg-emerald-500" : getDotColor()
                                                 )} />
                                             </div>
-                                            <div>
-                                                <h4 className="text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{payment.tenant}</h4>
-                                                <p className="text-xs font-medium text-muted-foreground dark:text-neutral-400">{payment.unit}</p>
+                                            <div className="min-w-0">
+                                                <h4 className="text-base font-black text-white transition-colors group-hover:text-primary truncate">{payment.tenant}</h4>
+                                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{payment.unit}</p>
                                             </div>
                                         </div>
-                                        <div className="text-right flex flex-col items-end relative overflow-hidden min-w-[120px]">
-                                            <h4 className={cn(
-                                                "mb-0.5 text-sm font-bold text-foreground transition-all dark:text-white",
-                                                !confirmedPayments.includes(payment.id) && category !== "Paid" && "group-hover:opacity-0"
-                                            )}>₱{payment.amount.toLocaleString()}</h4>
-                                            <div className={cn(
-                                                "flex items-center justify-end gap-1.5 mt-1 transition-all",
-                                                !confirmedPayments.includes(payment.id) && category !== "Paid" && "group-hover:opacity-0"
-                                            )}>
+                                        
+                                        <div className="text-right flex flex-col items-end relative z-10">
+                                            <h4 className="mb-1 text-base font-black text-white tracking-tight">PHP {payment.amount.toLocaleString()}</h4>
+                                            <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest">
                                                 <span className={cn(
-                                                    "text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border",
-                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : getStatusStyles()
+                                                    "px-2 py-0.5 rounded-full border border-white/5 bg-white/5",
+                                                    confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-500" : getStatusStyles().split(' ')[0]
                                                 )}>
-                                                    {confirmedPayments.includes(payment.id) ? "Paid" : category}
+                                                    {confirmedPayments.includes(payment.id) ? "Acknowledged" : category}
                                                 </span>
-                                                <span className="text-[10px] font-medium text-muted-foreground">{payment.date}</span>
+                                                <span className="text-muted-foreground/60">{payment.date}</span>
                                             </div>
-
-                                            {/* Hover Confirm Button */}
-                                            {category !== "Paid" && !confirmedPayments.includes(payment.id) && (
-                                                <button
-                                                    onClick={(e) => handleConfirm(e, payment.id)}
-                                                    className="absolute inset-y-0 right-0 flex translate-x-4 items-center gap-2 rounded-xl bg-primary px-4 py-1.5 text-[10px] font-black uppercase tracking-tighter text-primary-foreground opacity-0 transition-all whitespace-nowrap group-hover:translate-x-0 group-hover:opacity-100 active:scale-95"
-                                                >
-                                                    <CreditCard className="w-3.5 h-3.5" />
-                                                    Confirm Payment
-                                                </button>
-                                            )}
-
-                                            {/* Success State */}
-                                            {confirmedPayments.includes(payment.id) && (
-                                                <div className="absolute inset-y-0 right-0 flex items-center text-emerald-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-right-2 duration-300">
-                                                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                                                    Invoice Sent
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 ))
                             )}
                         </div>
                     </motion.div>
+
+                    {/* Secondary Action Popout (Higher Z-Index) */}
+                    <AnimatePresence>
+                        {selectedActionPayment && (
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 bg-black/90 backdrop-blur-md"
+                                    onClick={() => {
+                                        setSelectedActionPayment(null);
+                                        setIsConfirmingAction(false);
+                                    }}
+                                />
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    className="relative z-10 w-full max-w-sm overflow-hidden rounded-[2.5rem] border border-white/10 bg-neutral-900 shadow-[0_50px_100px_rgba(0,0,0,0.8)]"
+                                >
+                                    {!isConfirmingAction ? (
+                                        <>
+                                            <div className="p-8 text-center pt-10">
+                                                <div className="relative mx-auto mb-6 h-24 w-24">
+                                                    <img 
+                                                        src={selectedActionPayment.avatar || FALLBACK_AVATAR} 
+                                                        alt={selectedActionPayment.tenant} 
+                                                        className="h-full w-full rounded-full border-4 border-primary/20 object-cover shadow-2xl shadow-primary/10"
+                                                    />
+                                                    <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />
+                                                </div>
+                                                <h3 className="text-2xl font-black text-white">{selectedActionPayment.tenant}</h3>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1">{selectedActionPayment.unit}</p>
+                                                
+                                                <div className="mt-8 flex flex-col gap-2 rounded-3xl bg-white/[0.02] p-6 border border-white/5">
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
+                                                    <h4 className="text-4xl font-black text-white tracking-tighter">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-3 p-8 pt-0">
+                                                <button 
+                                                    onClick={() => setIsConfirmingAction(true)}
+                                                    className="group flex items-center justify-between rounded-2xl bg-primary px-6 py-5 shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_rgba(var(--primary-rgb),0.4)] active:scale-95"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+                                                            <CheckCircle2 className="h-5 w-5 text-white" />
+                                                        </div>
+                                                        <span className="text-sm font-black uppercase tracking-tight text-white">Record Settlement</span>
+                                                    </div>
+                                                    <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-1" />
+                                                </button>
+
+                                                <button 
+                                                    onClick={() => setSelectedActionPayment(null)}
+                                                    className="flex items-center justify-center rounded-2xl border border-white/5 bg-white/5 py-4 text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
+                                                >
+                                                    Dismiss
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-8 text-center pt-10 animate-in slide-in-from-right-4 duration-300">
+                                            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                                                <AlertTriangle className="h-10 w-10" />
+                                            </div>
+                                            <h3 className="text-2xl font-black text-white tracking-tight">Double Check</h3>
+                                            
+                                            <div className="mt-6 rounded-[1.5rem] border border-primary/20 bg-primary/5 p-6">
+                                                <p className="text-xs font-bold leading-relaxed text-primary/80">
+                                                    Make sure that the tenants has already paid their rent. Seek proof of payment for gcash payments.
+                                                </p>
+                                            </div>
+
+                                            <div className="mt-10 flex flex-col gap-3">
+                                                <button 
+                                                    onClick={() => handleConfirm(selectedActionPayment.id)}
+                                                    className="w-full rounded-2xl bg-primary py-5 text-sm font-black uppercase tracking-widest text-white shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] active:scale-95"
+                                                >
+                                                    Confirm Record
+                                                </button>
+                                                <button 
+                                                    onClick={() => setIsConfirmingAction(false)}
+                                                    className="w-full rounded-2xl border border-white/5 bg-white/5 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
+                                                >
+                                                    Go Back
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
                 </>
             )}
         </AnimatePresence>

@@ -9,7 +9,11 @@ import {
     MessageSquareMore,
     ShieldCheck,
     Wrench,
+    Clock,
+    Activity
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/messages/client";
 
 type MaintenanceRequestItem = {
@@ -46,12 +50,13 @@ type ActionItem = {
 type ActionSummary = {
     label: string;
     value: number;
+    icon: LucideIcon;
 };
 
 const toneClasses: Record<ActionItem["tone"], string> = {
-    critical: "border-red-500/20 bg-red-500/8 text-red-600 dark:text-red-300",
-    high: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-    medium: "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    critical: "border-red-500/25 bg-red-500/12 text-red-400",
+    high: "border-amber-500/25 bg-amber-500/12 text-amber-400",
+    medium: "border-primary/25 bg-primary/12 text-primary",
 };
 
 const kindIcon = {
@@ -62,16 +67,17 @@ const kindIcon = {
 } satisfies Record<ActionItem["kind"], typeof Wrench>;
 
 const statusLabel: Record<TenantItem["onboardingStatus"], string> = {
-    pending: "Pending",
-    in_progress: "In progress",
-    completed: "Completed",
-    not_started: "Not started",
+    pending: "Pending Approval",
+    in_progress: "In Progress",
+    completed: "Verified",
+    not_started: "Kickstart Needed",
 };
 
 const formatDateLabel = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
+        year: "numeric"
     });
 
 const getDaysUntil = (iso: string) => {
@@ -160,11 +166,11 @@ export function ActionRequired() {
             .forEach((request) => {
                 nextActions.push({
                     id: `maintenance-${request.id}`,
-                    title: request.priority === "Critical" ? "Critical maintenance request" : "Maintenance request awaiting action",
-                    detail: `${request.tenant} reported ${request.title} in ${request.property} • ${request.unit}`,
-                    meta: request.reportedAt,
+                    title: request.priority === "Critical" ? "Critical Repair Required" : "Maintenance Feedback Loop",
+                    detail: `${request.tenant}: ${request.title} at ${request.property}`,
+                    meta: `Reported ${formatDateLabel(request.reportedAt)}`,
                     href: "/landlord/maintenance",
-                    cta: "Review request",
+                    cta: "Dispatch Tech",
                     tone: request.priority === "Critical" ? "critical" : request.priority === "High" ? "high" : "medium",
                     kind: "maintenance",
                 });
@@ -179,11 +185,11 @@ export function ActionRequired() {
             .forEach(({ tenant, daysUntil }) => {
                 nextActions.push({
                     id: `lease-${tenant.id}`,
-                    title: daysUntil <= 7 ? "Lease ending this week" : "Lease renewal coming up",
-                    detail: `${tenant.name} in ${tenant.property} • ${tenant.unit}`,
-                    meta: `${daysUntil <= 0 ? "Ends today" : `${daysUntil} day${daysUntil === 1 ? "" : "s"} left`} • ${formatDateLabel(tenant.leaseEnd as string)}`,
+                    title: daysUntil <= 7 ? "Urgent Lease Expiry" : "Lease Renewal Window",
+                    detail: `${tenant.name} in ${tenant.unit} (${tenant.property})`,
+                    meta: daysUntil <= 0 ? "Expired today" : `${daysUntil} days remaining`,
                     href: "/landlord/tenants",
-                    cta: "Open tenant",
+                    cta: "Send Renewal",
                     tone: daysUntil <= 7 ? "high" : "medium",
                     kind: "lease",
                 });
@@ -195,11 +201,11 @@ export function ActionRequired() {
             .forEach((tenant) => {
                 nextActions.push({
                     id: `onboarding-${tenant.id}`,
-                    title: "Tenant onboarding incomplete",
-                    detail: `${tenant.name} still needs onboarding attention for ${tenant.unit}`,
-                    meta: statusLabel[tenant.onboardingStatus],
+                    title: "Pending Resident Verification",
+                    detail: `${tenant.name} is stuck at ${statusLabel[tenant.onboardingStatus]} stage.`,
+                    meta: "Onboarding Bottleneck",
                     href: "/landlord/tenants",
-                    cta: "Follow up",
+                    cta: "Verify Docs",
                     tone: tenant.onboardingStatus === "in_progress" ? "medium" : "high",
                     kind: "onboarding",
                 });
@@ -212,11 +218,11 @@ export function ActionRequired() {
                 const other = conversation.otherParticipants[0];
                 nextActions.push({
                     id: `message-${conversation.id}`,
-                    title: "Unread tenant message",
-                    detail: `${other?.fullName ?? "Conversation"}: ${conversation.lastMessage?.content ?? "New message"}`,
-                    meta: `${conversation.unreadCount} unread`,
+                    title: "Incoming Inquiries",
+                    detail: `${other?.fullName ?? "Resident"}: "${conversation.lastMessage?.content?.slice(0, 40)}..."`,
+                    meta: `${conversation.unreadCount} unread responses`,
                     href: "/landlord/messages",
-                    cta: "Reply",
+                    cta: "Enter Chat",
                     tone: "medium",
                     kind: "message",
                 });
@@ -233,14 +239,17 @@ export function ActionRequired() {
             {
                 label: "Maintenance",
                 value: maintenance.filter((request) => request.status !== "Resolved").length,
+                icon: Activity
             },
             {
                 label: "Unread Messages",
                 value: conversations.filter((conversation) => conversation.unreadCount > 0).length,
+                icon: MessageSquareMore
             },
             {
-                label: "Onboarding",
+                label: "Move-In Tasks",
                 value: tenants.filter((tenant) => tenant.onboardingStatus !== "completed").length,
+                icon: Clock
             },
         ];
 
@@ -248,83 +257,96 @@ export function ActionRequired() {
     }, [conversations, maintenance, tenants]);
 
     return (
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-3">
-                    <div className="rounded-2xl border border-primary/20 bg-primary/10 p-3">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
+        <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+            <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                        <Activity className="h-7 w-7" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-foreground">Action Required</h2>
-                        <p className="text-sm text-muted-foreground">
-                            Prioritized landlord tasks from operations, leases, onboarding, and messages.
+                        <h2 className="text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
+                        <p className="text-sm font-medium text-muted-foreground/80">
+                            Things to follow up now: maintenance, lease renewals, and tenant messages.
                         </p>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2 overflow-x-auto pb-1 pr-1 sm:justify-end">
                     {summaries.map((summary) => (
-                        <div key={summary.label} className="rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
-                            {summary.label}: <span className="text-foreground">{summary.value}</span>
+                        <div key={summary.label} className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-bold transition-all hover:bg-card">
+                            <summary.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="text-muted-foreground">{summary.label}:</span>
+                            <span className="text-foreground">{summary.value}</span>
                         </div>
                     ))}
                 </div>
             </div>
 
             {loading ? (
-                <div className="grid gap-3">
-                    {[1, 2, 3, 4].map((item) => (
-                        <div key={item} className="animate-pulse rounded-2xl border border-border bg-muted/30 p-4">
-                            <div className="mb-3 h-4 w-40 rounded bg-muted" />
-                            <div className="mb-2 h-3 w-full rounded bg-muted/80" />
-                            <div className="h-3 w-32 rounded bg-muted/80" />
+                <div className="grid gap-4">
+                    {[1, 2, 3].map((item) => (
+                        <div key={item} className="animate-pulse rounded-[1.5rem] border border-white/10 bg-card/70 p-6">
+                            <div className="flex gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-muted/40" />
+                                <div className="flex-1 space-y-3">
+                                    <div className="h-4 w-1/4 rounded bg-muted/40" />
+                                    <div className="h-3 w-3/4 rounded bg-muted/40" />
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
             ) : error ? (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4">
-                    <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+                <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-center">
+                    <p className="text-sm font-bold text-red-500">{error}</p>
                 </div>
             ) : actions.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-8 text-center">
-                    <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        <ShieldCheck className="h-7 w-7" />
+                <div className="rounded-[2.5rem] border border-dashed border-white/10 bg-card/70 p-12 text-center backdrop-blur-sm">
+                    <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/12 text-primary">
+                        <ShieldCheck className="h-10 w-10" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">You’re all caught up</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        No urgent landlord actions are waiting right now.
+                    <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
+                    <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto">
+                        No urgent tasks right now. Everything that needs action is already handled.
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                     {actions.map((action) => {
                         const Icon = kindIcon[action.kind];
 
                         return (
-                            <div key={action.id} className="flex flex-col gap-4 rounded-2xl border border-border bg-background/70 p-4 transition-colors hover:bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex items-start gap-3">
-                                    <div className={`rounded-xl border p-2.5 ${toneClasses[action.tone]}`}>
-                                        <Icon className="h-4 w-4" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="mb-1 flex flex-wrap items-center gap-2">
-                                            <h3 className="text-sm font-bold text-foreground">{action.title}</h3>
-                                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${toneClasses[action.tone]}`}>
-                                                {action.tone}
-                                            </span>
+                            <div key={action.id} className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-card/70 p-5 transition-all hover:bg-card">
+                                <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between relative z-10">
+                                    <div className="flex items-start gap-4">
+                                        <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110", toneClasses[action.tone])}>
+                                            <Icon className="h-5 w-5" />
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{action.detail}</p>
-                                        <p className="mt-1 text-xs font-medium text-muted-foreground">{action.meta}</p>
+                                        <div className="min-w-0">
+                                            <div className="mb-1.5 flex flex-wrap items-center gap-3">
+                                                <h3 className="text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">{action.title}</h3>
+                                                <span className={cn("rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", toneClasses[action.tone])}>
+                                                    {action.tone}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm font-medium text-muted-foreground leading-relaxed">{action.detail}</p>
+                                            <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                                <Clock className="h-3 w-3" />
+                                                {action.meta}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <Link
-                                    href={action.href}
-                                    className="inline-flex items-center gap-2 self-start rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted sm:self-center"
-                                >
-                                    {action.cta}
-                                    <ArrowRight className="h-4 w-4" />
-                                </Link>
+                                    <Link
+                                        href={action.href}
+                                        className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
+                                    >
+                                        {action.cta}
+                                        <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                                    </Link>
+                                </div>
+                                {/* Subtle decorative streak */}
+                                <div className={cn("absolute bottom-0 left-6 right-6 h-[2px] opacity-0 transition-opacity group-hover:opacity-30", toneClasses[action.tone])} />
                             </div>
                         );
                     })}

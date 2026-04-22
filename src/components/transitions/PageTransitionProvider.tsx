@@ -61,6 +61,7 @@ export function PageTransitionProvider({ children }: PropsWithChildren) {
     const pathname = usePathname();
     const overlayRef = useRef<HTMLDivElement>(null);
     const pendingPathRef = useRef<string | null>(null);
+    const transitionFromPathRef = useRef<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
 
     const getBlocks = useCallback(() => {
@@ -129,24 +130,29 @@ export function PageTransitionProvider({ children }: PropsWithChildren) {
     const navigateWithTransition = useCallback(
         async (href: string) => {
             if (isTransitioning) return;
+            transitionFromPathRef.current = pathname;
             pendingPathRef.current = href.split(/[?#]/)[0] || href;
             setIsTransitioning(true);
             await cover();
             router.push(href);
         },
-        [cover, isTransitioning, router]
+        [cover, isTransitioning, pathname, router]
     );
 
     useEffect(() => {
         if (!isTransitioning) return;
         const pendingPath = pendingPathRef.current;
-        if (pendingPath && pathname !== pendingPath) return;
+        const transitionFromPath = transitionFromPathRef.current;
+        const reachedPendingPath = Boolean(pendingPath && pathname === pendingPath);
+        const movedAwayFromSource = Boolean(transitionFromPath && pathname !== transitionFromPath);
+        if (!reachedPendingPath && !movedAwayFromSource) return;
 
         let rafB = 0;
         const rafA = requestAnimationFrame(() => {
             rafB = requestAnimationFrame(() => {
                 reveal();
                 pendingPathRef.current = null;
+                transitionFromPathRef.current = null;
                 setIsTransitioning(false);
             });
         });

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, Wrench, Map, QrCode, UserPlus } from "lucide-react";
+import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 
@@ -136,170 +136,197 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "group relative h-48 min-h-[192px] w-full shrink-0 overflow-visible rounded-3xl border border-border shadow-lg shadow-slate-200/60 md:h-64 md:min-h-[256px] dark:shadow-2xl dark:shadow-black/30",
+                "group relative min-h-[480px] w-full shrink-0 overflow-visible rounded-[2.5rem] border border-white/10 bg-card/40 shadow-2xl shadow-black/30 transition-all duration-500",
                 className
             )}>
-            {/* Background Image */}
-            <div className="absolute inset-0 overflow-hidden rounded-3xl">
+            {/* Background Layer */}
+            <div className="absolute inset-0 overflow-hidden rounded-[2.5rem]">
                 <img
                     src={image}
                     alt="Dashboard Banner"
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 dark:opacity-40"
                 />
-                {/* Gradient Overlay - Left heavy for text, right subtle for clock */}
-                <div className="absolute inset-0 bg-gradient-to-r from-white via-white/88 via-60% to-white/20 dark:from-[#0a0a0a] dark:via-[#0a0a0a]/80 dark:to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/75 via-white/10 to-transparent dark:from-[#0a0a0a] dark:via-transparent dark:to-transparent" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.95),transparent_30%)] dark:bg-none" />
+                
+                {/* Noise Texture Overlay */}
+                <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+                {/* Progressive Gradients */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/20" />
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/95 to-transparent" />
+                
+                {/* Decorative Spotlight */}
+                <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-white/5 blur-[80px] pointer-events-none" />
             </div>
 
-            {/* Top Right Header Actions */}
-            <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
-                {/* Search Bar */}
+            {/* Header Actions */}
+            <div className="absolute top-8 right-8 z-20 flex items-center gap-4">
+                {/* Search Bar - Premium Glassmorphism */}
                 <div className="relative group hidden sm:block">
-                    <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-slate-700 dark:text-neutral-300 dark:group-focus-within:text-white" />
+                    <Search className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                     <input
                         type="text"
-                        placeholder="Search..."
-                        className="w-full rounded-full border border-white/70 bg-white/80 py-2 pl-10 pr-4 text-sm text-slate-800 shadow-md shadow-slate-200/50 backdrop-blur-md transition-all placeholder:text-slate-400 hover:bg-white md:w-56 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-white/10 dark:bg-black/40 dark:text-white dark:shadow-emerald-900/10 dark:placeholder:text-white/40 dark:hover:bg-black/60"
+                        placeholder="Search properties, tenants..."
+                        className="w-64 rounded-2xl border border-white/10 bg-card/60 py-2.5 pl-11 pr-4 text-sm text-foreground backdrop-blur-xl transition-all placeholder:text-muted-foreground/60 hover:bg-card focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                 </div>
-
-                {/* Profile Widget */}
-                <ProfileWidget />
 
                 {/* Notifications */}
                 <div className="relative">
                     <button
                         onClick={() => setIsNotificationsOpen((current) => !current)}
-                        className="group relative rounded-full border border-white/70 bg-white/80 p-2.5 shadow-md shadow-slate-200/50 backdrop-blur-md transition-colors hover:bg-white dark:border-white/5 dark:bg-black/20 dark:shadow-none dark:hover:bg-black/40"
+                        className="group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card active:scale-95"
                     >
-                        <Bell className="h-5 w-5 text-slate-500 transition-colors group-hover:text-slate-900 dark:text-white/70 dark:group-hover:text-white" />
+                        <Bell className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
-                            <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-black/60">
+                            <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-black text-primary-foreground shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]">
                                 {unreadCount > 9 ? "9+" : unreadCount}
                             </span>
                         )}
                     </button>
 
                     {isNotificationsOpen && (
-                        <div className="absolute right-0 z-50 mt-3 w-[320px] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-neutral-900/95">
-                            <div className="flex items-center justify-between border-b border-border px-4 py-3 dark:border-white/10">
-                                <p className="text-sm font-bold text-foreground dark:text-white">Notifications</p>
-                                <p className="text-xs text-muted-foreground">{unreadCount} unread</p>
+                        <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] border border-white/10 bg-card shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+                            <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
+                                <p className="text-sm font-black uppercase tracking-widest text-foreground">Notifications</p>
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
                             </div>
 
-                            <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                            <div className="max-h-[360px] overflow-y-auto custom-scrollbar-premium">
                                 {notificationsLoading ? (
-                                    <div className="px-4 py-3 space-y-4">
+                                    <div className="px-6 py-4 space-y-4">
                                         {[1, 2, 3].map((i) => (
-                                            <div key={i} className="flex items-start justify-between gap-3 border-b border-border pb-3 last:border-0 last:pb-0 animate-pulse dark:border-white/5">
-                                                <div className="space-y-2 w-full">
-                                                    <div className="h-4 w-3/4 rounded bg-muted" />
-                                                    <div className="h-3 w-full rounded bg-muted/80" />
-                                                    <div className="h-3 w-5/6 rounded bg-muted/80" />
-                                                    <div className="mt-2 h-2 w-16 rounded bg-muted/80" />
-                                                </div>
+                                            <div key={i} className="space-y-2 animate-pulse">
+                                                <div className="h-4 w-3/4 rounded bg-muted/40" />
+                                                <div className="h-3 w-full rounded bg-muted/40" />
+                                                <div className="h-2 w-16 rounded bg-muted/40 mt-2" />
                                             </div>
                                         ))}
                                     </div>
                                 ) : notificationsError ? (
-                                    <div className="px-4 py-6">
-                                        <p className="text-sm text-red-600 dark:text-red-300">{notificationsError}</p>
+                                    <div className="px-6 py-8 text-center text-red-400">
+                                        <p className="text-sm">{notificationsError}</p>
                                     </div>
                                 ) : notifications.length === 0 ? (
-                                    <div className="px-4 py-6">
-                                        <p className="text-sm text-muted-foreground">No notifications yet.</p>
+                                    <div className="px-6 py-12 text-center text-muted-foreground">
+                                        <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                                        <p className="text-sm font-medium">All caught up!</p>
                                     </div>
                                 ) : (
                                     notifications.map((notification) => (
-                                        <div key={notification.id} className="border-b border-border px-4 py-3 transition-colors hover:bg-muted/60 last:border-b-0 dark:border-white/5 dark:hover:bg-white/5">
-                                            <div className="flex items-start justify-between gap-3">
+                                        <div key={notification.id} className="group/item relative px-6 py-4 transition-all hover:bg-white/3">
+                                            <div className="flex items-start justify-between gap-4">
                                                 <div>
-                                                    <p className="text-sm font-semibold text-foreground dark:text-white">{notification.title}</p>
-                                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground dark:text-neutral-300">{notification.message}</p>
-                                                    <p className="mt-2 text-[11px] text-muted-foreground">{formatTimeAgo(notification.createdAt)}</p>
+                                                    <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors">{notification.title}</p>
+                                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{notification.message}</p>
+                                                    <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.createdAt)}</p>
                                                 </div>
                                                 {!notification.read && (
-                                                    <span className="mt-1 h-2.5 w-2.5 rounded-full bg-lime-500" />
+                                                    <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
                                                 )}
                                             </div>
                                         </div>
                                     ))
                                 )}
                             </div>
+                            <div className="border-t border-white/5 p-3">
+                                <button className="w-full rounded-xl py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground">
+                                    Clear all notifications
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
+
+                {/* Profile Widget */}
+                <div className="flex items-center gap-3 border-l border-white/10 pl-4">
+                    <ProfileWidget />
+                </div>
             </div>
 
-            {/* Content Container */}
-            <div className="absolute inset-0 z-10 flex items-center justify-between px-8 md:px-12">
-                {/* Left Side - Welcome & Info */}
-                <div className="flex flex-col justify-center h-full max-w-2xl mt-8 md:mt-0">
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 md:text-5xl dark:text-white dark:drop-shadow-lg">
-                        {title}
-                    </h1>
-                    <p className="max-w-xl text-sm font-medium text-slate-600 md:text-lg dark:text-neutral-300 dark:drop-shadow-md">
-                        {displaySubtitle}
-                    </p>
-
-                    {/* Date Badge */}
-                    <div className="mb-4 mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/70 bg-white/80 px-3 py-1.5 backdrop-blur-md dark:border-white/10 dark:bg-white/10">
-                        <span className="w-2 h-2 rounded-full bg-gradient-to-r from-lime-500 to-emerald-600 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                        <span className="text-xs font-medium tracking-wide text-slate-700 dark:text-white">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {/* Main Content Area */}
+            <div className="absolute inset-0 z-10 flex items-center justify-between px-8 md:px-14">
+                <div className="flex flex-col justify-center max-w-2xl py-12">
+                    {/* Badge */}
+                    <div className="mb-6 flex items-center gap-2.5 w-fit rounded-full border border-white/10 bg-card/60 px-4 py-1.5 backdrop-blur-xl">
+                        <div className="relative">
+                            <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                            <div className="absolute inset-0 h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </span>
                     </div>
 
-                    {/* Quick Access Links */}
-                    <div className="flex flex-wrap items-center gap-3 mt-2">
+                    <h1 className="mb-4 text-4xl font-black tracking-tight text-foreground md:text-6xl leading-[1.1]">
+                        {title}
+                        <span className="text-primary prose-invert">.</span>
+                    </h1>
+                    
+                    <p className="max-w-lg text-base font-medium text-muted-foreground md:text-xl leading-relaxed">
+                        {displaySubtitle}
+                    </p>
+
+                    {/* Navigation Actions */}
+                    <div className="flex flex-wrap items-center gap-4 mt-10">
                         {onNewWalkIn ? (
                             <button 
                                 onClick={onNewWalkIn}
-                                className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-primary-foreground shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.45)] active:scale-95"
+                                className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95"
                             >
-                                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
-                                <span className="text-sm font-black tracking-tight relative z-10">New Application</span>
+                                <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                <UserPlus className="w-5 h-5 font-black relative z-10" />
+                                <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                             </button>
                         ) : (
-                            <Link href="/landlord/applications?action=tenant-application" className="group relative flex cursor-pointer items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-primary-foreground shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(var(--primary-rgb),0.45)] active:scale-95">
-                                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                <UserPlus className="w-4.5 h-4.5 font-black relative z-10" />
-                                <span className="text-sm font-black tracking-tight relative z-10">New Application</span>
+                            <Link href="/landlord/applications?action=tenant-application" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95">
+                                <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                <UserPlus className="w-5 h-5 font-black relative z-10" />
+                                <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                             </Link>
                         )}
-                        {onCreateInvite && (
-                            <button
-                                onClick={onCreateInvite}
-                                className="group flex items-center gap-2 rounded-xl border border-white/70 bg-white/75 px-4 py-2 text-slate-700 backdrop-blur-sm transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+                        
+                        <div className="flex items-center gap-2">
+                            {onCreateInvite && (
+                                <button
+                                    onClick={onCreateInvite}
+                                    title="Create Invite link"
+                                    className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
+                                >
+                                    <QrCode className="w-5 h-5 text-primary" />
+                                </button>
+                            )}
+                            <Link 
+                                href="/landlord/maintenance" 
+                                title="Maintenance Queue"
+                                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                             >
-                                <QrCode className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                                <span className="text-sm font-medium">Invite Link</span>
-                            </button>
-                        )}
-                        <Link href="/landlord/maintenance" className="group flex items-center gap-2 rounded-xl border border-white/70 bg-white/75 px-4 py-2 text-slate-700 backdrop-blur-sm transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
-                            <Wrench className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium">Maintenance</span>
-                        </Link>
-                        <Link href="/landlord/unit-map" className="group flex items-center gap-2 rounded-xl border border-white/70 bg-white/75 px-4 py-2 text-slate-700 backdrop-blur-sm transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10">
-                            <Map className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium">Unit Map</span>
-                        </Link>
+                                <Wrench className="w-5 h-5 text-amber-500" />
+                            </Link>
+                            <Link 
+                                href="/landlord/unit-map" 
+                                title="Unit Map"
+                                className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
+                            >
+                                <Map className="w-5 h-5 text-rose-500" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                {/* Right Side - Real-Clock */}
+                {/* Right Side - Digital Clock */}
                 {time && (
-                    <div className="hidden lg:flex flex-col items-end justify-center text-right mt-12 self-center">
-                        <div className="font-mono text-6xl font-bold tracking-tighter text-slate-900 tabular-nums dark:text-white dark:drop-shadow-2xl">
-                            {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).split(' ')[0]}
-                            <span className="ml-2 text-2xl font-sans font-medium tracking-normal text-slate-500 dark:text-neutral-400">
+                    <div className="hidden lg:flex flex-col items-end mt-16 self-center">
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-mono text-7xl font-black tracking-tighter text-foreground tabular-nums">
+                                {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            </span>
+                            <span className="text-2xl font-black uppercase tracking-[0.2em] text-primary">
                                 {time.toLocaleTimeString('en-US', { hour12: true }).split(' ')[1]}
                             </span>
                         </div>
-                        <div className="mt-1 text-sm font-medium uppercase tracking-widest text-slate-500 dark:text-neutral-400">
-                            Local Time
+                        <div className="mt-2 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/60">
+                            Local Operation Time
                         </div>
                     </div>
                 )}

@@ -101,12 +101,18 @@ export function PropertiesDashboard() {
                     throw new Error(payload.error || "Failed to load properties.");
                 }
 
-                setProperties(payload.properties ?? []);
+                if (!controller.signal.aborted) {
+                    setProperties(payload.properties ?? []);
+                }
             } catch (error) {
                 if ((error as Error).name === "AbortError") return;
-                setLoadError(error instanceof Error ? error.message : "Failed to load properties.");
+                if (!controller.signal.aborted) {
+                    setLoadError(error instanceof Error ? error.message : "Failed to load properties.");
+                }
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
 
@@ -200,37 +206,8 @@ export function PropertiesDashboard() {
             <div className="space-y-6">
                 {isLoading && (
                     <div className="space-y-6">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="animate-pulse flex min-h-[240px] flex-col overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm lg:flex-row">
-                                <div className="flex h-[240px] flex-col justify-between bg-muted/35 p-6 lg:h-auto lg:w-[380px]">
-                                    <div className="h-6 w-24 rounded-full bg-muted" />
-                                    <div className="space-y-3">
-                                        <div className="h-8 w-48 rounded bg-muted" />
-                                        <div className="h-4 w-64 rounded bg-muted/70" />
-                                    </div>
-                                </div>
-                                <div className="flex-1 p-6 lg:p-8 flex items-center">
-                                    <div className="w-full flex flex-col lg:flex-row justify-between gap-8">
-                                        <div className="flex flex-wrap gap-8">
-                                            <div className="flex gap-4 items-center">
-                                                <div className="h-14 w-14 rounded-full bg-muted/70"></div>
-                                                <div className="space-y-2">
-                                                    <div className="h-4 w-20 rounded bg-muted"></div>
-                                                    <div className="h-5 w-24 rounded bg-muted/70"></div>
-                                                </div>
-                                            </div>
-                                            <div className="py-2 space-y-2">
-                                                <div className="h-4 w-20 rounded bg-muted"></div>
-                                                <div className="h-5 w-24 rounded bg-muted/70"></div>
-                                            </div>
-                                            <div className="py-2 space-y-2">
-                                                <div className="h-4 w-20 rounded bg-muted"></div>
-                                                <div className="h-5 w-24 rounded bg-muted/70"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        {[1, 2, 3, 4].map((i) => (
+                            <PropertySkeleton key={i} />
                         ))}
                     </div>
                 )}
@@ -535,6 +512,61 @@ export function PropertiesDashboard() {
                     );
                 })()}
             </AnimatePresence>
+        </div>
+    );
+}
+
+function PropertySkeleton() {
+    return (
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm flex flex-col lg:flex-row group">
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/30 to-transparent -translate-x-full animate-shimmer" style={{ animationDuration: '2.5s' }} />
+            </div>
+
+            {/* Left Image Section Skeleton */}
+            <div className="lg:w-[320px] 2xl:w-[380px] shrink-0 h-[240px] lg:h-auto bg-muted animate-pulse" />
+
+            {/* Content Section Skeleton */}
+            <div className="flex-1 p-6 lg:p-8 flex flex-col justify-between relative z-10">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-48 rounded-xl bg-muted animate-pulse" />
+                            <div className="h-6 w-24 rounded-full bg-muted/60 animate-pulse" />
+                        </div>
+                        <div className="h-4 w-64 rounded-md bg-muted/50 animate-pulse" />
+                    </div>
+                </div>
+
+                <div className="flex w-full flex-col justify-between gap-8 lg:flex-row lg:items-center">
+                    <div className="flex flex-wrap items-center gap-8 lg:gap-12">
+                        {/* Occupancy Skeleton */}
+                        <div className="flex items-center gap-4">
+                            <div className="h-14 w-14 rounded-full bg-muted animate-pulse" />
+                            <div className="space-y-2">
+                                <div className="h-3 w-16 rounded bg-muted/50 animate-pulse" />
+                                <div className="h-5 w-24 rounded bg-muted animate-pulse" />
+                                <div className="h-3 w-20 rounded bg-muted/40 animate-pulse" />
+                            </div>
+                        </div>
+
+                        {/* Maintenance Skeleton */}
+                        <div className="flex items-center gap-4">
+                            <div className="h-14 w-14 rounded-2xl bg-muted animate-pulse" />
+                            <div className="space-y-2">
+                                <div className="h-3 w-16 rounded bg-muted/50 animate-pulse" />
+                                <div className="h-5 w-24 rounded bg-muted animate-pulse" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full lg:w-auto">
+                        <div className="h-12 w-28 rounded-xl bg-muted/80 animate-pulse" />
+                        <div className="h-12 w-28 rounded-xl bg-muted/80 animate-pulse" />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

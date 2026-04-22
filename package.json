@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "moderation:candidates": "node scripts/messages/generate-profanity-candidates.mjs public/dataset/val.csv output/profanity-candidates.json",
+    "moderation:spam-candidates": "node scripts/messages/generate-spam-candidates.mjs public/dataset/spam.csv output/spam-candidates.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

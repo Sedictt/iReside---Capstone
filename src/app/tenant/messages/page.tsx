@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Search,
     MoreVertical,
@@ -29,6 +31,10 @@ import {
     Check,
     CheckCheck,
     Clock3,
+    Copy,
+    Flag,
+    ChevronDown,
+    ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -52,6 +58,7 @@ import {
     type MessageUserSearchResult,
     type PaymentHistoryEntry,
 } from "@/lib/messages/client";
+import { redactMessageForSend } from "@/lib/messages/redaction-client";
 
 type ContactItem = {
     id: string;
@@ -96,6 +103,94 @@ type UiMessage = {
     description?: string;
     status?: OutboundStatus;
     isPhishing?: boolean;
+    redactionCategory?: "none" | "credentials" | "profanity" | "phishing" | "spam";
+    disclosureAllowed?: boolean;
+};
+
+const redactionStrength = (message: UiMessage) => {
+    const text = (message.redactedContent ?? message.content ?? "").toString();
+    return (text.match(/\*{5}/g) ?? []).length;
+};
+
+const redactionCategoryRank = (category: UiMessage["redactionCategory"]) => {
+    switch (category) {
+        case "phishing":
+            return 4;
+        case "spam":
+            return 3;
+        case "profanity":
+            return 2;
+        case "credentials":
+            return 1;
+        default:
+            return 0;
+    }
+};
+
+const resolveStrictCategory = (
+    previous?: UiMessage["redactionCategory"],
+    incoming?: UiMessage["redactionCategory"]
+): UiMessage["redactionCategory"] => {
+    const prev = previous ?? "none";
+    const next = incoming ?? "none";
+    return redactionCategoryRank(prev) >= redactionCategoryRank(next) ? prev : next;
+};
+
+const resolveDisclosureAllowed = (
+    category: UiMessage["redactionCategory"],
+    previous?: boolean,
+    incoming?: boolean
+) => {
+    if (category !== "credentials") {
+        return false;
+    }
+    const prev = typeof previous === "boolean" ? previous : true;
+    const next = typeof incoming === "boolean" ? incoming : true;
+    return prev && next;
+};
+
+const mergeCensorshipState = (incoming: UiMessage, previous?: UiMessage): UiMessage => {
+    if (!previous) {
+        return incoming;
+    }
+
+    const strictCategory = resolveStrictCategory(previous.redactionCategory, incoming.redactionCategory);
+    const strictDisclosureAllowed = resolveDisclosureAllowed(
+        strictCategory,
+        previous.disclosureAllowed,
+        incoming.disclosureAllowed
+    );
+
+    if (!incoming.isRedacted && previous.isRedacted) {
+        return {
+            ...incoming,
+            isRedacted: true,
+            redactedContent: previous.redactedContent ?? incoming.redactedContent ?? incoming.content,
+            isPhishing: previous.isPhishing || incoming.isPhishing,
+            redactionCategory: strictCategory,
+            disclosureAllowed: strictDisclosureAllowed,
+        };
+    }
+
+    if (incoming.isRedacted && previous.isRedacted) {
+        const incomingScore = redactionStrength(incoming);
+        const previousScore = redactionStrength(previous);
+        if (previousScore > incomingScore) {
+            return {
+                ...incoming,
+                redactedContent: previous.redactedContent ?? incoming.redactedContent,
+                isPhishing: previous.isPhishing || incoming.isPhishing,
+                redactionCategory: strictCategory,
+                disclosureAllowed: strictDisclosureAllowed,
+            };
+        }
+    }
+
+    return {
+        ...incoming,
+        redactionCategory: strictCategory,
+        disclosureAllowed: strictDisclosureAllowed,
+    };
 };
 
 const IRIS_CONTACT: ContactItem = {
@@ -294,17 +389,25 @@ export default function TenantMessagesPage() {
     const [showReportWizard, setShowReportWizard] = useState(false);
     const [reportCategory, setReportCategory] = useState("spam");
     const [reportDetails, setReportDetails] = useState("");
+    const [reportExactMessage, setReportExactMessage] = useState("");
+    const [reportMessageId, setReportMessageId] = useState("");
+    const [reportScreenshots, setReportScreenshots] = useState<File[]>([]);
+    const [openMessageMenuId, setOpenMessageMenuId] = useState<string | null>(null);
+    const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
     const [isSubmittingReport, setIsSubmittingReport] = useState(false);
     const [reportWizardError, setReportWizardError] = useState<string | null>(null);
     const [showModerationModal, setShowModerationModal] = useState(false);
     const [moderationMessage, setModerationMessage] = useState("");
     const [showChatRulesModal, setShowChatRulesModal] = useState(false);
+    const [showSecurityWarning, setShowSecurityWarning] = useState(true);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
     const remoteTypingTimeoutRef = useRef<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const reportFileInputRef = useRef<HTMLInputElement | null>(null);
+    const copiedMessageTimeoutRef = useRef<number | null>(null);
     const dragDepthRef = useRef(0);
     const messagesCacheRef = useRef<Map<string, UiMessage[]>>(new Map());
     const paymentHistoryCacheRef = useRef<Map<string, { payments: PaymentHistoryEntry[]; totalPaid: number }>>(new Map());
@@ -332,13 +435,12 @@ export default function TenantMessagesPage() {
             return;
         }
 
-        // Use ref to compare without causing re-run
         if (conversationFromUrl === activeConversationIdRef.current) {
             return;
         }
 
         setActiveConversationId(conversationFromUrl);
-    }, [conversationFromUrl, contacts]); // Removed activeConversationId to prevent override loop
+    }, [conversationFromUrl, contacts]);
 
     useEffect(() => {
         if (panelFromUrl !== "files") {
@@ -618,16 +720,17 @@ export default function TenantMessagesPage() {
         setIsSubmittingReport(true);
 
         try {
+            const formData = new FormData();
+            formData.append("conversationId", activeConversationId);
+            formData.append("category", reportCategory);
+            formData.append("details", reportDetails);
+            formData.append("exactMessage", reportExactMessage);
+            formData.append("reportedMessageId", reportMessageId);
+            reportScreenshots.forEach((screenshot) => formData.append("screenshots", screenshot));
+
             const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/reports`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    conversationId: activeConversationId,
-                    category: reportCategory,
-                    details: reportDetails,
-                }),
+                body: formData,
             });
 
             const payload = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -638,13 +741,38 @@ export default function TenantMessagesPage() {
             setShowReportWizard(false);
             setReportCategory("spam");
             setReportDetails("");
+            setReportExactMessage("");
+            setReportMessageId("");
+            setReportScreenshots([]);
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to submit report.";
             setReportWizardError(message);
         } finally {
             setIsSubmittingReport(false);
         }
-    }, [activeContact.participantUserId, activeConversationId, reportCategory, reportDetails]);
+    }, [activeContact.participantUserId, activeConversationId, reportCategory, reportDetails, reportExactMessage, reportMessageId, reportScreenshots]);
+
+    const openReportWizard = useCallback(() => {
+        setReportWizardError(null);
+        setReportMessageId("");
+        setShowReportWizard(true);
+    }, []);
+
+    const handleCopyMessageId = useCallback(async (messageId: string) => {
+        try {
+            await navigator.clipboard.writeText(messageId);
+            setCopiedMessageId(messageId);
+            setOpenMessageMenuId(null);
+            if (copiedMessageTimeoutRef.current) {
+                clearTimeout(copiedMessageTimeoutRef.current);
+            }
+            copiedMessageTimeoutRef.current = window.setTimeout(() => {
+                setCopiedMessageId((current) => (current === messageId ? null : current));
+            }, 1500);
+        } catch {
+            setMessagesError(`Unable to copy message ID automatically. Please copy manually: ${messageId}`);
+        }
+    }, []);
 
     const handleTenantQuickAction = useCallback((actionKey: QuickAction["key"]) => {
         switch (actionKey) {
@@ -680,8 +808,7 @@ export default function TenantMessagesPage() {
                 setPendingConfirmAction("archive");
                 break;
             case "report-user":
-                setReportWizardError(null);
-                setShowReportWizard(true);
+                openReportWizard();
                 break;
             case "block-contact":
                 setPendingConfirmAction("block");
@@ -689,7 +816,15 @@ export default function TenantMessagesPage() {
             default:
                 break;
         }
-    }, [activeContact.participantUserId, router]);
+    }, [activeContact.participantUserId, openReportWizard, router]);
+
+    useEffect(() => {
+        return () => {
+            if (copiedMessageTimeoutRef.current) {
+                clearTimeout(copiedMessageTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const mapMessageToUi = (message: ConversationMessage): UiMessage => {
         const metadata = (message.metadata && typeof message.metadata === "object")
@@ -700,6 +835,26 @@ export default function TenantMessagesPage() {
         const redactedContent = typeof metadata?.redactedContent === "string" ? metadata.redactedContent : message.content;
         const isRedacted = Boolean(metadata?.isRedacted);
         const isConfirmedDisclosed = metadata?.isConfirmedDisclosed === true;
+        const isPhishing = Boolean(metadata?.isPhishing);
+        const explicitCategory =
+            metadata?.redactionCategory === "credentials" ||
+            metadata?.redactionCategory === "profanity" ||
+            metadata?.redactionCategory === "phishing" ||
+            metadata?.redactionCategory === "spam" ||
+            metadata?.redactionCategory === "none"
+                ? metadata.redactionCategory
+                : undefined;
+        const metadataDisclosureAllowed = typeof metadata?.disclosureAllowed === "boolean" ? metadata.disclosureAllowed : undefined;
+        const redactionCategory = explicitCategory
+            ?? (isPhishing
+                ? "phishing"
+                : isRedacted
+                    ? (metadataDisclosureAllowed ? "credentials" : "profanity")
+                    : "none");
+        const disclosureAllowed =
+            typeof metadata?.disclosureAllowed === "boolean"
+                ? metadata.disclosureAllowed
+                : redactionCategory === "credentials";
         const fileUrl = typeof metadata?.fileUrl === "string" ? metadata.fileUrl : undefined;
         const fileName = typeof metadata?.fileName === "string" ? metadata.fileName : undefined;
         const filePath = typeof metadata?.filePath === "string" ? metadata.filePath : undefined;
@@ -724,6 +879,9 @@ export default function TenantMessagesPage() {
             filePath,
             fileMimeType,
             fileSize,
+            isPhishing,
+            redactionCategory,
+            disclosureAllowed,
             status: isOwn ? (message.readAt ? "seen" : "delivered") : undefined,
         };
     };
@@ -821,13 +979,17 @@ export default function TenantMessagesPage() {
 
         if (activeConversationIdRef.current === conversationId) {
             setMessagesState((prev) => {
+                const previousById = new Map(prev.map((message) => [message.id, message]));
+                const stabilized = mapped.map((serverMessage) =>
+                    mergeCensorshipState(serverMessage, previousById.get(serverMessage.id))
+                );
                 const optimistic = prev.filter(
                     (msg) =>
                         msg.type === "tenant" &&
                         (msg.status === "sending" || msg.status === "sent") &&
-                        !mapped.some((serverMessage) => serverMessage.id === msg.id)
+                        !stabilized.some((serverMessage) => serverMessage.id === msg.id)
                 );
-                return [...mapped, ...optimistic];
+                return [...stabilized, ...optimistic];
             });
         }
 
@@ -874,28 +1036,6 @@ export default function TenantMessagesPage() {
         } finally {
             setIsDownloading(false);
         }
-    };
-
-    const fallbackRedact = (text: string) => {
-        let redacted = text;
-        const token = '*****';
-        const patterns: RegExp[] = [
-            /\b(?:password|passcode|pin|otp|cvv|cvc|gcash|bank\s?account|account\s?number|routing\s?number)\b\s*(?:is|:|=)?\s*([A-Za-z0-9!@#$%^&*()_+\-=]{3,})/gi,
-            /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
-            /\b09\d{9}\b/g,
-            /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
-        ];
-
-        for (const pattern of patterns) {
-            redacted = redacted.replace(pattern, token);
-        }
-
-        redacted = redacted.replace(/(\*{5}\s*){2,}/g, token + ' ').trim();
-
-        return {
-            isSensitive: redacted !== text,
-            redactedMessage: redacted,
-        };
     };
 
     const clearPendingAttachment = () => {
@@ -968,34 +1108,12 @@ export default function TenantMessagesPage() {
                 },
             ]);
 
-            let isSensitive = false;
-            let isPhishing = false;
-            let redactedMessage = textMessage;
-
-            try {
-                const response = await fetch('/api/iris/redact', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: textMessage }),
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    isSensitive = !!data.isSensitive;
-                    isPhishing = !!data.isPhishing;
-                    redactedMessage = typeof data.redactedMessage === 'string' ? data.redactedMessage : textMessage;
-                } else {
-                    const fallback = fallbackRedact(textMessage);
-                    isSensitive = fallback.isSensitive;
-                    redactedMessage = fallback.redactedMessage;
-                }
-            } catch {
-                const fallback = fallbackRedact(textMessage);
-                isSensitive = fallback.isSensitive;
-                redactedMessage = fallback.redactedMessage;
-            }
+            const moderation = await redactMessageForSend(textMessage);
+            const isSensitive = moderation.isSensitive;
+            const isPhishing = moderation.isPhishing;
+            const redactedMessage = moderation.redactedMessage;
+            const redactionCategory = moderation.redactionCategory;
+            const disclosureAllowed = moderation.disclosureAllowed;
 
             try {
                 const created = await sendConversationMessage(activeConversationId, textMessage, {
@@ -1003,6 +1121,8 @@ export default function TenantMessagesPage() {
                     redactedContent: redactedMessage,
                     isConfirmedDisclosed: false,
                     isPhishing,
+                    redactionCategory,
+                    disclosureAllowed,
                 });
 
                 setMessagesState((prev) =>
@@ -1018,6 +1138,8 @@ export default function TenantMessagesPage() {
                                 messageType: created.type,
                                 isRedacted: isSensitive,
                                 isPhishing: isPhishing,
+                                redactionCategory,
+                                disclosureAllowed,
                                 isConfirmedDisclosed: false,
                                 status: "sent",
                             }
@@ -1307,7 +1429,7 @@ export default function TenantMessagesPage() {
 
     const confirmDisclose = (id: string) => {
         setMessagesState(prev => prev.map(m =>
-            m.id === id ? { ...m, isConfirmedDisclosed: true } : m
+            m.id === id && m.disclosureAllowed ? { ...m, isConfirmedDisclosed: true } : m
         ));
     };
 
@@ -1345,6 +1467,11 @@ export default function TenantMessagesPage() {
             return;
         }
 
+        if (!user?.id) {
+            setIsMessagesLoading(true);
+            return;
+        }
+
         const cached = messagesCacheRef.current.get(activeConversationId);
         if (cached) {
             setMessagesState(cached);
@@ -1368,7 +1495,7 @@ export default function TenantMessagesPage() {
         return () => {
             cancelled = true;
         };
-    }, [activeConversationId]);
+    }, [activeConversationId, user?.id]);
 
     useEffect(() => {
         if (!activeConversationId || activeConversationId === "iris") return;
@@ -1503,97 +1630,80 @@ export default function TenantMessagesPage() {
         }
     };
 
-    const shouldShowLoadingOverlay =
-        isSidebarLoading ||
-        (Boolean(conversationFromUrl) && activeConversationId !== conversationFromUrl);
-
     return (
-        <div className="flex h-full w-full overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative bg-[radial-gradient(circle_at_top_left,_rgba(173,200,125,0.16),_transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,247,242,0.96))] text-foreground dark:bg-[radial-gradient(circle_at_top_left,_rgba(109,152,56,0.14),_transparent_28%),linear-gradient(180deg,rgba(10,10,10,0.98),rgba(23,23,23,0.96))]">
+        <div className="flex h-full w-full overflow-hidden p-6 gap-6 animate-in fade-in duration-700 relative bg-surface-0 text-high">
             <MessagesTour />
-            {shouldShowLoadingOverlay && (
-                <div className="fixed inset-0 z-[90] flex items-center justify-center bg-background/70 backdrop-blur-sm">
-                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-card/95 px-8 py-6 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-600 border-t-primary" aria-hidden="true" />
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Loading conversation...</p>
-                            <p className="mt-1 text-xs text-muted-foreground">Preparing your messages.</p>
-                        </div>
-                    </div>
-                </div>
-            )}
 
+            {/* Global File Drag Overlay */}
             {isGlobalFileDrag && (
-                <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-background/60 backdrop-blur-sm">
-                    <div className="rounded-3xl border border-primary/25 bg-card/95 px-10 py-8 shadow-[0_30px_80px_-35px_rgba(90,122,52,0.35)] text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
-                            <Paperclip className="h-6 w-6 text-primary" />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/20 backdrop-blur-md pointer-events-none">
+                    <div className="flex flex-col items-center gap-4 rounded-3xl border-4 border-dashed border-primary bg-surface-1/90 px-12 py-10 text-center shadow-2xl scale-110 animate-in zoom-in-95">
+                        <div className="h-20 w-20 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Paperclip className="h-10 w-10 text-primary animate-bounce" />
                         </div>
-                        <p className="text-lg font-bold text-foreground">
-                            {activeConversationId === "iris" ? "File sharing unavailable in Iris chat" : "Drop here to upload"}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">Release to add this file to the composer</p>
+                        <div>
+                            <h3 className="text-2xl font-black text-primary uppercase tracking-widest">Release to Upload</h3>
+                            <p className="text-sm font-bold text-medium mt-1">Share files instantly with your contact</p>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Sidebar Contact List */}
-            <div
-                className="w-80 lg:w-96 rounded-2xl border border-border bg-card/95 flex flex-col shrink-0 h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.25)] backdrop-blur-xl"
-                data-tour-id="tour-messages-sidebar"
-            >
+            {/* Sidebar */}
+            <div className="flex flex-col w-80 lg:w-96 shrink-0 bg-surface-1 border border-divider rounded-2xl overflow-hidden shadow-xl" data-tour-id="tour-messages-sidebar">
                 {/* Header */}
-                <div className="p-6 border-b border-border shrink-0 flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href="/tenant/dashboard"
-                            className="bg-background hover:bg-muted p-2 rounded-xl border border-border transition-colors"
-                            title="Back to Dashboard"
-                        >
-                            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-                        </Link>
-                        <h2 className="text-xl font-bold text-foreground leading-none mt-0.5">Messages</h2>
+                <div className="p-6 space-y-4 shrink-0">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
+                                <Logo theme="dark" className="h-6 w-auto" />
+                            </div>
+                            <h2 className="text-xl font-black tracking-tighter text-high">MESSAGES</h2>
+                        </div>
+                        <ThemeToggle variant="sidebar" className="h-9 w-9" />
                     </div>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+
+                    <div className="relative group">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-disabled group-focus-within:text-primary transition-colors" />
                         <input
                             type="text"
+                            placeholder="Search messages..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search users to message..."
-                            className="w-full bg-background/80 border border-border rounded-xl py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:bg-background transition-all"
+                            className="w-full bg-surface-1 border border-divider rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium placeholder:text-disabled focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
                         />
-
-                        {searchQuery.trim().length >= 2 && (
-                            <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 max-h-64 overflow-y-auto rounded-xl border border-border bg-popover/95 p-1 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.28)] backdrop-blur">
-                                {isSearchingUsers && (
-                                    <div className="px-3 py-2 text-xs text-muted-foreground">Searching users...</div>
-                                )}
-                                {!isSearchingUsers && userSearchError && (
-                                    <div className="px-3 py-2 text-xs text-red-600">{userSearchError}</div>
-                                )}
-                                {!isSearchingUsers && !userSearchError && userSearchResults.length === 0 && (
-                                    <div className="px-3 py-2 text-xs text-muted-foreground">No matching users found.</div>
-                                )}
-                                {!isSearchingUsers && !userSearchError && userSearchResults.map((result) => (
-                                    <button
-                                        key={result.id}
-                                        onClick={() => handleStartConversation(result.id)}
-                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
-                                    >
-                                        <img
-                                            src={result.avatarUrl || FALLBACK_AVATAR}
-                                            alt={result.fullName}
-                                            className="h-8 w-8 rounded-full border border-border object-cover"
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <div className="truncate text-sm font-semibold text-foreground">{result.fullName}</div>
-                                            <div className="truncate text-[11px] text-muted-foreground">{result.role} • {result.email}</div>
-                                        </div>
-                                    </button>
-                                ))}
+                        {isSearchingUsers && (
+                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                                <div className="h-3 w-3 animate-spin rounded-full border border-divider border-t-primary" />
                             </div>
                         )}
                     </div>
+
+                    {userSearchResults.length > 0 && (
+                        <div className="absolute left-6 right-6 z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-divider bg-surface-1 p-2 shadow-2xl animate-in fade-in slide-in-from-top-2">
+                            {userSearchResults.map((result) => (
+                                <button
+                                    key={result.id}
+                                    onClick={() => handleStartConversation(result.id)}
+                                    className="flex w-full items-center gap-3 rounded-lg p-2 transition-colors hover:bg-surface-2 text-left"
+                                >
+                                    <img src={result.avatarUrl || FALLBACK_AVATAR} className="h-8 w-8 rounded-full border border-divider" alt="" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-bold text-high truncate">{result.fullName}</p>
+                                        <p className="text-[10px] text-disabled capitalize">{result.role}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {userSearchError && (
+                        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-[10px] text-red-600 font-bold">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            <span>{userSearchError}</span>
+                        </div>
+                    )}
+
                     {conversationsError && (
                         <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-700">
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
@@ -1673,7 +1783,7 @@ export default function TenantMessagesPage() {
                 <TenantIrisChat />
             ) : (
                 <>
-                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-border bg-[radial-gradient(circle_at_top,_rgba(173,200,125,0.14),_transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,243,0.96))] overflow-hidden shadow-[0_30px_80px_-35px_rgba(15,23,42,0.3)] dark:border-white/5 dark:bg-[radial-gradient(circle_at_top,_rgba(109,152,56,0.12),_transparent_26%),linear-gradient(180deg,rgba(23,23,23,0.98),rgba(10,10,10,0.96))] dark:shadow-[0_30px_80px_-35px_rgba(0,0,0,0.65)]" data-tour-id="tour-messages-chat">
+                    <div className="flex-1 flex flex-col min-w-0 h-full rounded-2xl border border-divider bg-surface-0 overflow-hidden shadow-2xl" data-tour-id="tour-messages-chat">
                         {/* Chat Header */}
                         <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/90 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
@@ -1682,14 +1792,21 @@ export default function TenantMessagesPage() {
                                     <h3 className="font-bold text-foreground text-base">{activeContact.name}</h3>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground font-medium">{activeContact.unit}</span>
-
                                     </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
-
                                 <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
                                     <Search className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={openReportWizard}
+                                    disabled={!activeContact.participantUserId}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                    title="Report User"
+                                >
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                    <span>Report</span>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -1734,10 +1851,13 @@ export default function TenantMessagesPage() {
                         )}
 
                         {/* Messages List */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full">
+                        <div
+                            className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full"
+                            onClick={() => setOpenMessageMenuId(null)}
+                        >
                             <div className="w-full max-w-4xl p-6 space-y-6">
                                 <div className="text-center py-4">
-                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-background/90 px-4 py-1.5 rounded-full border border-border shadow-sm">
+                                    <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled shadow-sm">
                                         Conversation Started â€¢ February 1, 2026
                                     </span>
                                 </div>
@@ -1749,13 +1869,13 @@ export default function TenantMessagesPage() {
 
                                             return (
                                                 <div key={`message-skeleton-${index}`} className={cn("flex items-end gap-3 w-full", isMe ? "justify-end" : "justify-start")}>
-                                                    {!isMe && <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse shrink-0" />}
+                                                    {!isMe && <div className="w-8 h-8 rounded-full bg-surface-2 animate-pulse shrink-0" />}
                                                     <div
                                                         className={cn(
                                                             "animate-pulse border",
                                                             isMe
-                                                                ? "h-14 w-[45%] max-w-sm rounded-3xl rounded-br-sm bg-primary/25 border-primary/20"
-                                                                : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm bg-card border-border"
+                                                                ? "h-14 w-[45%] max-w-sm rounded-3xl rounded-br-sm bg-primary/20 border-primary/20"
+                                                                : "h-16 w-[55%] max-w-md rounded-3xl rounded-bl-sm border-divider bg-surface-2/40"
                                                         )}
                                                     />
                                                 </div>
@@ -1769,11 +1889,11 @@ export default function TenantMessagesPage() {
                                         return (
                                             <div key={msg.id} className="flex justify-center max-w-4xl mx-auto my-6 px-4">
                                                 {msg.systemType === "payment_submitted" ? (
-                                                    <div className="flex flex-col gap-0 bg-card overflow-hidden border border-primary/20 rounded-3xl shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)] max-w-sm w-full transition-all hover:border-primary/35 group pb-4">
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-primary/20 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-primary/35 group pb-4">
                                                         <div className="bg-gradient-to-r from-primary/80 to-primary p-5 relative overflow-hidden h-24 flex items-center shrink-0">
                                                             <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
                                                             <div className="relative z-10 flex items-center gap-3">
-                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-divider">
                                                                     <Receipt className="h-6 w-6 text-black" />
                                                                 </div>
                                                                 <div className="text-left flex flex-col justify-center text-black">
@@ -1785,9 +1905,9 @@ export default function TenantMessagesPage() {
 
                                                         {/* Details Section */}
                                                         <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
-                                                            <div className="flex justify-between items-center bg-muted/40 rounded-2xl p-4 border border-border">
+                                                            <div className="flex justify-between items-center bg-surface-2 rounded-2xl p-4 border border-divider">
                                                                 <div className="flex flex-col">
-                                                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Amount Paid</span>
+                                                                    <span className="text-[10px] uppercase tracking-wider text-medium font-bold mb-1">Amount Paid</span>
                                                                     <span className="text-2xl font-black text-primary">â‚±{msg.paymentAmount}</span>
                                                                 </div>
                                                                 <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
@@ -1795,13 +1915,13 @@ export default function TenantMessagesPage() {
                                                                 </div>
                                                             </div>
 
-                                                            <p className="text-xs text-muted-foreground leading-relaxed bg-muted/40 p-3 rounded-xl border border-border">
+                                                            <p className="text-xs text-medium leading-relaxed bg-surface-2/50 p-3 rounded-xl border border-divider">
                                                                 {msg.content}
                                                             </p>
 
                                                             {msg.receiptImg && (
                                                                 <div className="flex flex-col gap-2 mt-1">
-                                                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold ml-1">Proof of Payment</span>
+                                                                    <span className="text-[10px] uppercase tracking-wider text-medium font-bold ml-1">Proof of Payment</span>
                                                                     <div className="rounded-2xl overflow-hidden border border-border relative cursor-pointer shadow-inner">
                                                                         <img src={msg.receiptImg} alt="Receipt" className="w-full h-32 object-cover opacity-90 transition-opacity" />
                                                                     </div>
@@ -1810,22 +1930,22 @@ export default function TenantMessagesPage() {
                                                         </div>
                                                     </div>
                                                 ) : msg.systemType === "invoice" ? (
-                                                    <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-card border border-border rounded-3xl overflow-hidden shadow-[0_30px_70px_-35px_rgba(15,23,42,0.35)] animate-in zoom-in-95 duration-500">
+                                                    <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-surface-1 border border-divider rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
                                                         {/* Invoice Watermark Header */}
-                                                        <div className="bg-gradient-to-br from-muted/70 to-card p-6 border-b border-border relative overflow-hidden">
+                                                        <div className="bg-surface-2 p-6 border-b border-divider relative overflow-hidden">
                                                             <div className="absolute top-0 right-0 p-4 opacity-5">
                                                                 <Receipt size={120} className="-rotate-12" />
                                                             </div>
                                                             <div className="relative z-10 flex justify-between items-start">
                                                                 <div>
                                                                     <Logo theme="dark" className="h-6 w-auto mb-1" />
-                                                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Digital Payment Invoice</p>
+                                                                    <p className="text-[10px] text-medium font-bold uppercase tracking-widest">Digital Payment Invoice</p>
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
                                                                         Status: Paid
                                                                     </span>
-                                                                    <p className="text-[10px] text-muted-foreground mt-2 font-medium">{msg.invoiceId}</p>
+                                                                    <p className="text-[10px] text-medium mt-2 font-medium">{msg.invoiceId}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1834,27 +1954,27 @@ export default function TenantMessagesPage() {
                                                         <div className="p-6 space-y-6">
                                                             <div className="grid grid-cols-2 gap-4">
                                                                 <div>
-                                                                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Billed To</p>
-                                                                    <p className="text-sm font-bold text-foreground leading-tight">{msg.tenantName}</p>
-                                                                    <p className="text-[11px] text-muted-foreground mt-0.5">{msg.unit}</p>
+                                                                    <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Billed To</p>
+                                                                    <p className="text-sm font-bold text-high leading-tight">{msg.tenantName}</p>
+                                                                    <p className="text-[11px] text-medium mt-0.5">{msg.unit}</p>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Date Issued</p>
-                                                                    <p className="text-sm font-bold text-foreground leading-tight">{msg.date}</p>
+                                                                    <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Date Issued</p>
+                                                                    <p className="text-sm font-bold text-high leading-tight">{msg.date}</p>
                                                                 </div>
                                                             </div>
 
-                                                            <div className="bg-background/80 rounded-2xl border border-border overflow-hidden">
-                                                                <div className="p-3 border-b border-border bg-muted/30 flex items-center justify-between">
-                                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider px-1">Description</span>
-                                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider px-1">Amount</span>
+                                                            <div className="bg-surface-2/40 rounded-2xl border border-divider overflow-hidden">
+                                                                <div className="p-3 border-b border-divider bg-surface-2/20 flex items-center justify-between">
+                                                                    <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Description</span>
+                                                                    <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Amount</span>
                                                                 </div>
                                                                 <div className="p-4 flex items-center justify-between">
-                                                                    <p className="text-xs text-foreground font-medium">{msg.description}</p>
-                                                                    <p className="text-sm font-black text-foreground">â‚±{msg.amount}</p>
+                                                                    <p className="text-xs text-high font-medium">{msg.description}</p>
+                                                                    <p className="text-sm font-black text-high">â‚±{msg.amount}</p>
                                                                 </div>
-                                                                <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-border">
-                                                                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Total Paid</span>
+                                                                <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-divider">
+                                                                    <span className="text-[10px] text-medium font-bold uppercase tracking-widest">Total Paid</span>
                                                                     <span className="text-lg font-black text-primary">â‚±{msg.amount}</span>
                                                                 </div>
                                                             </div>
@@ -1864,31 +1984,31 @@ export default function TenantMessagesPage() {
                                                                     disabled={isDownloading}
                                                                     onClick={() => handleDownloadImage(`invoice-${msg.id}`, `Invoice-${msg.invoiceId}`)}
                                                                     className={cn(
-                                                                        "flex-1 bg-muted/50 hover:bg-muted text-foreground py-3 rounded-2xl text-[11px] font-bold transition-all border border-border flex items-center justify-center gap-2 group",
+                                                                        "flex-1 bg-surface-2 hover:bg-surface-3 text-high py-3 rounded-2xl text-[11px] font-bold transition-all border border-divider flex items-center justify-center gap-2 group",
                                                                         isDownloading && "opacity-50 cursor-not-allowed"
                                                                     )}
                                                                 >
-                                                                    <Download className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                                                    <Download className="w-3.5 h-3.5 text-medium group-hover:text-high transition-colors" />
                                                                     {isDownloading ? "Generating..." : "Download Image"}
                                                                 </button>
-                                                                <button className="w-12 h-12 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center rounded-2xl transition-all border border-border">
+                                                                <button className="w-12 h-12 bg-surface-2 hover:bg-surface-3 text-medium hover:text-high flex items-center justify-center rounded-2xl transition-all border border-divider">
                                                                     <ShieldCheck className="w-5 h-5" />
                                                                 </button>
                                                             </div>
                                                         </div>
 
-                                                        <div className="px-6 py-3 bg-muted/40 border-t border-border text-center">
-                                                            <p className="text-[9px] text-muted-foreground font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
+                                                        <div className="px-6 py-3 bg-surface-1 border-t border-divider text-center">
+                                                            <p className="text-[9px] text-disabled font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-3 bg-card/90 border border-border backdrop-blur-sm px-5 py-3 rounded-2xl shadow-sm text-center">
-                                                        <div className="bg-background/90 p-2 rounded-full border border-border shrink-0">
+                                                    <div className="flex items-center gap-3 bg-surface-1 border border-divider px-5 py-3 rounded-2xl shadow-sm text-center">
+                                                        <div className="bg-surface-2 p-2 rounded-full border border-divider shrink-0">
                                                             {renderSystemIcon(msg.systemType || '')}
                                                         </div>
                                                         <div className="text-left flex flex-col justify-center">
-                                                            <p className="text-xs text-foreground font-medium leading-relaxed">{msg.content}</p>
-                                                            <p className="text-[9px] text-muted-foreground mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
+                                                            <p className="text-xs text-high font-medium leading-relaxed">{msg.content}</p>
+                                                            <p className="text-[9px] text-medium mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1901,7 +2021,7 @@ export default function TenantMessagesPage() {
                                     const hasFileAttachment = Boolean(msg.fileUrl && !msg.fileMimeType?.startsWith("image/"));
 
                                     return (
-                                        <div key={msg.id} className={cn("flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
+                                        <div key={msg.id} className={cn("group/message flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
                                             <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                                                 {!isMe && (
                                                     <img src={activeContact.avatar} className="w-8 h-8 rounded-full border border-border shrink-0" alt="avatar" />
@@ -1909,9 +2029,9 @@ export default function TenantMessagesPage() {
                                                 <div className={cn(
                                                     "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
                                                     isMe
-                                                        ? "bg-primary text-black rounded-3xl rounded-br-sm font-medium border border-primary mr-2"
-                                                        : "bg-card text-foreground rounded-3xl rounded-bl-sm border border-border",
-                                                    hasFileAttachment && "px-0 py-0 bg-transparent border-none shadow-none mr-0"
+                                                        ? "bg-primary text-black rounded-3xl rounded-br-sm font-black uppercase tracking-widest text-[11px] shadow-primary/20 mr-2"
+                                                        : "bg-surface-1 text-high rounded-3xl rounded-bl-sm border border-divider",
+                                                    (hasImageAttachment || hasFileAttachment) && "px-0 py-0 bg-transparent border-none shadow-none mr-0"
                                                 )}>
                                                     {hasImageAttachment && (
                                                         <button
@@ -1943,10 +2063,41 @@ export default function TenantMessagesPage() {
 
                                                     {!msg.fileUrl && (
                                                         <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                                                            {msg.isRedacted && !msg.isConfirmedDisclosed
+                                                            {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed)
                                                                 ? prettifyRedactedText(msg.redactedContent || msg.content)
                                                                 : msg.content
                                                             }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="relative shrink-0 self-start">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setOpenMessageMenuId((current) => (current === msg.id ? null : msg.id));
+                                                        }}
+                                                        className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover/message:opacity-100 focus:opacity-100"
+                                                        aria-label="Message actions"
+                                                    >
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </button>
+                                                    {openMessageMenuId === msg.id && (
+                                                        <div
+                                                            className={cn(
+                                                                "absolute z-20 mt-1 min-w-[150px] rounded-xl border border-border bg-card p-1 shadow-xl",
+                                                                isMe ? "right-0" : "left-0"
+                                                            )}
+                                                            onClick={(event) => event.stopPropagation()}
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => void handleCopyMessageId(msg.id)}
+                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                                                            >
+                                                                <Copy className="h-3.5 w-3.5" />
+                                                                Copy message ID
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1954,9 +2105,10 @@ export default function TenantMessagesPage() {
 
                                             <div className={cn("px-2 text-[10px] flex items-center gap-1", isMe ? "text-muted-foreground" : "text-slate-500 dark:text-neutral-400")}>
                                                 {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
+                                                {copiedMessageId === msg.id && <span className="text-emerald-500 font-semibold">ID copied</span>}
                                             </div>
 
-                                            {msg.isRedacted && !msg.isConfirmedDisclosed && (
+                                            {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed) && (
                                                 <div className="w-full flex justify-center mt-2 mb-4">
                                                     <div className={cn(
                                                         "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
@@ -1965,24 +2117,30 @@ export default function TenantMessagesPage() {
                                                             : "text-amber-950 bg-amber-50 border-amber-200 shadow-amber-500/5 dark:text-amber-100 dark:bg-amber-500/10 dark:border-amber-500/30 dark:shadow-amber-500/10"
                                                     )}>
                                                         <div className="flex items-center justify-center gap-1.5 mb-2">
-                                                            <AlertTriangle className={cn("w-4 h-4", msg.isPhishing ? "text-red-500" : "text-amber-500")} />
-                                                            <strong className={cn("text-xs", msg.isPhishing ? "text-red-500" : "text-amber-500")}>
-                                                                {msg.isPhishing ? "Malicious Content Detected" : "Iris AI Intercepted"}
+                                                            <AlertTriangle className={cn("w-4 h-4", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")} />
+                                                            <strong className={cn("text-xs", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")}>
+                                                                {msg.isPhishing || msg.redactionCategory === "spam" ? "Malicious Content Detected" : "Iris AI Intercepted"}
                                                             </strong>
                                                         </div>
                                                         <p className="leading-relaxed opacity-90 text-current">
-                                                            {msg.isPhishing 
+                                                            {msg.isPhishing
                                                                 ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
-                                                                : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
+                                                                : msg.redactionCategory === "spam"
+                                                                    ? "This message matches spam/scam patterns and has been blocked from normal disclosure."
+                                                                : msg.redactionCategory === "profanity"
+                                                                    ? "This message contains prohibited profanity and remains permanently censored."
+                                                                    : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
                                                         </p>
-                                                        <div className="mt-4 flex items-center justify-center">
-                                                            <button
-                                                                onClick={() => confirmDisclose(msg.id)}
-                                                                className="px-6 py-2 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-105 font-bold rounded-xl transition-all w-fit"
-                                                            >
-                                                                Confirm & Disclose
-                                                            </button>
-                                                        </div>
+                                                        {msg.disclosureAllowed && (
+                                                            <div className="mt-4 flex items-center justify-center">
+                                                                <button
+                                                                    onClick={() => confirmDisclose(msg.id)}
+                                                                    className="px-6 py-2 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-105 font-bold rounded-xl transition-all w-fit"
+                                                                >
+                                                                    Confirm & Disclose
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -2010,28 +2168,47 @@ export default function TenantMessagesPage() {
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-4 md:p-6 bg-card/85 border-t border-border shrink-0 flex justify-center w-full" data-tour-id="tour-messages-input">
-                            <div className="w-full max-w-4xl flex flex-col gap-3">
-                                {/* Security Announcement Banner */}
-                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shrink-0 mb-1">
-                                    <div className="flex items-center gap-3">
-                                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                                        <span className="text-xs font-medium text-amber-700 dark:text-amber-200 hidden sm:inline">
-                                            <strong className="text-amber-500 mr-1">Security Warning:</strong>
-                                            Never share sensitive credentials or passwords. Admins will NEVER ask for this.
-                                        </span>
-                                        <span className="text-xs font-medium text-amber-700 dark:text-amber-200 sm:hidden">
-                                            Keep credentials private.
-                                        </span>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowChatRulesModal(true)}
-                                        className="text-[10px] md:text-xs shrink-0 font-bold px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 transition-colors whitespace-nowrap"
+                        <div className="relative bg-card/85 border-t border-border shrink-0 flex justify-center w-full" data-tour-id="tour-messages-input">
+                            <AnimatePresence>
+                                {showSecurityWarning && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="pointer-events-none absolute left-1/2 -top-14 z-20 w-full max-w-4xl -translate-x-1/2 px-4 md:px-0"
                                     >
-                                        Chat Rules
-                                    </button>
-                                </div>
-
+                                        <div className="pointer-events-auto bg-background/80 dark:bg-black/60 backdrop-blur-xl border border-amber-500/30 rounded-xl px-4 py-2 flex items-center justify-between gap-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] pr-2">
+                                            <div className="flex items-center gap-3">
+                                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                                                <span className="text-xs font-medium text-amber-700 dark:text-amber-300 hidden sm:inline">
+                                                    <strong className="text-amber-500 dark:text-amber-400 mr-1">Security Warning:</strong>
+                                                    Never share sensitive credentials or passwords. Admins will NEVER ask for this.
+                                                </span>
+                                                <span className="text-xs font-medium text-amber-700 dark:text-amber-300 sm:hidden">
+                                                    Keep credentials private.
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => setShowChatRulesModal(true)}
+                                                    className="text-[10px] md:text-xs shrink-0 font-bold px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors whitespace-nowrap"
+                                                >
+                                                    Rules
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowSecurityWarning(false)}
+                                                    className="p-1.5 rounded-lg text-amber-600/50 hover:text-amber-600 hover:bg-amber-500/10 transition-colors"
+                                                    aria-label="Dismiss warning"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            <div className="w-full max-w-4xl flex flex-col gap-3 p-4 md:p-6">
                                 {pendingAttachment && (
                                     <div className="relative w-36 rounded-2xl border border-border bg-background/90 p-2 shadow-sm">
                                         <button
@@ -2076,7 +2253,7 @@ export default function TenantMessagesPage() {
                                         onChange={(e) => handleMessageInputChange(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Type your message..."
-                                        className="w-full bg-transparent border-none focus:outline-none text-sm text-foreground placeholder:text-muted-foreground resize-none max-h-32 py-2.5 custom-scrollbar"
+                                        className="custom-scrollbar max-h-32 w-full resize-none rounded-2xl bg-transparent py-2.5 text-sm text-foreground placeholder:text-muted-foreground !border-0 !shadow-none !ring-0 focus:!border-0 focus:!shadow-none focus:!ring-0 focus:outline-none focus-visible:!ring-0 focus-visible:outline-none"
                                         rows={1}
                                     />
                                     <div className="flex items-center gap-1 shrink-0 pb-1">
@@ -2125,7 +2302,7 @@ export default function TenantMessagesPage() {
 
                     {/* Right Info Sidebar (Slide out panel) - TENANT FOCUSED */}
                     {showInfoSidebar && (
-                        <div className="w-72 shrink-0 rounded-2xl border border-border bg-card/90 flex flex-col h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.3)] animate-in slide-in-from-right-8 duration-300 backdrop-blur-xl">
+                        <div className="w-72 shrink-0 rounded-2xl border border-border bg-card/90 flex flex-col h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)] animate-in slide-in-from-right-8 duration-300 backdrop-blur-xl">
                             <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/95">
                                 <h3 className="font-bold text-foreground">
                                     {activeRelationshipStatus === "tenant_landlord"
@@ -2256,7 +2433,7 @@ export default function TenantMessagesPage() {
 
                     {/* Shared Files Sidebar (Slide out panel) */}
                     {showFilesSidebar && (
-                        <div className="w-80 shrink-0 rounded-2xl border border-border bg-card/90 flex flex-col h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.3)] animate-in slide-in-from-right-8 duration-300 backdrop-blur-xl">
+                        <div className="w-80 shrink-0 rounded-2xl border border-border bg-card/90 flex flex-col h-full overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)] animate-in slide-in-from-right-8 duration-300 backdrop-blur-xl">
                             {/* Header */}
                             <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/95 relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
@@ -2549,52 +2726,52 @@ export default function TenantMessagesPage() {
             )}
 
             {showChatRulesModal && (
-                <div className="fixed inset-0 z-[100] bg-background/75 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card overflow-hidden shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)] animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10 shrink-0">
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-md animate-in fade-in duration-300 dark:bg-black/80">
+                    <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_28px_70px_-36px_rgba(15,23,42,0.4)] animate-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-neutral-900 dark:shadow-2xl">
+                        <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-border bg-card p-6 dark:border-white/5 dark:bg-neutral-900">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500">
                                     <ShieldCheck className="w-5 h-5" />
                                 </div>
-                                <h4 className="text-xl font-black text-foreground">Chat Rules & Policy</h4>
+                                <h4 className="text-xl font-black text-foreground dark:text-white">Chat Rules & Policy</h4>
                             </div>
                             <button
                                 onClick={() => setShowChatRulesModal(false)}
-                                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar text-left">
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">1. Professional Conduct</h5>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                <h5 className="text-sm font-bold uppercase tracking-wider text-foreground dark:text-white">1. Professional Conduct</h5>
+                                <p className="text-sm leading-relaxed text-muted-foreground dark:text-neutral-300">
                                     All communications must remain professional, respectful, and courteous. Hate speech, discrimination, harassment, and severe profanity are strictly prohibited.
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">2. Prohibited Content</h5>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    You may not send spam, unauthorized advertisements, explicit media, or any illegal content. Our AI moderation system actively intercepts and blocks such content.
+                                <h5 className="text-sm font-bold uppercase tracking-wider text-foreground dark:text-white">2. Prohibited Content</h5>
+                                <p className="text-sm leading-relaxed text-muted-foreground dark:text-neutral-300">
+                                    You may not send spam, unauthorized advertisements, explicit media, or any illegal content. Our moderation system actively intercepts and blocks such content.
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">3. Platform Safety</h5>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                <h5 className="text-sm font-bold uppercase tracking-wider text-foreground dark:text-white">3. Platform Safety</h5>
+                                <p className="text-sm leading-relaxed text-muted-foreground dark:text-neutral-300">
                                     Do not attempt to bypass platform processes. Sharing external payment links, requesting off-platform security deposits, or phishing for sensitive credentials (passwords, bank details) is forbidden.
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <h5 className="text-sm font-bold text-foreground uppercase tracking-wider">4. Reporting Violations</h5>
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    If you encounter a user violating these rules, please use the "Report User" feature. Repeated violations will result in permanent suspension of the offending account.
+                                <h5 className="text-sm font-bold uppercase tracking-wider text-foreground dark:text-white">4. Reporting Violations</h5>
+                                <p className="text-sm leading-relaxed text-muted-foreground dark:text-neutral-300">
+                                    If you encounter a user violating these rules, please use the &quot;Report User&quot; feature. Repeated violations will result in permanent suspension of the offending account.
                                 </p>
                             </div>
                         </div>
-                        <div className="p-6 bg-card border-t border-border shrink-0 flex justify-end">
+                        <div className="flex shrink-0 justify-end border-t border-border bg-card/80 p-6 dark:border-white/5 dark:bg-[#0a0a0a]">
                             <button
                                 onClick={() => setShowChatRulesModal(false)}
-                                className="px-6 py-2.5 rounded-xl bg-muted text-foreground font-bold hover:bg-muted/80 transition-all focus:outline-none"
+                                className="rounded-xl bg-card px-6 py-2.5 font-bold text-foreground transition-all focus:outline-none hover:bg-muted dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
                             >
                                 Close
                             </button>
@@ -2604,60 +2781,183 @@ export default function TenantMessagesPage() {
             )}
 
             {showReportWizard && (
-                <div className="fixed inset-0 z-[95] bg-background/75 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 space-y-4 shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)]">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-lg font-bold text-foreground">Report User</h4>
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-md animate-in fade-in duration-300 dark:bg-black/80">
+                    <div className="w-full max-w-lg overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_28px_70px_-36px_rgba(15,23,42,0.4)] animate-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-neutral-900 dark:shadow-2xl">
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-border bg-red-500/5 p-6 dark:border-white/5 dark:bg-red-500/10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20">
+                                    <Flag className="w-6 h-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xl font-black text-foreground dark:text-white">Report User</h4>
+                                    <p className="text-xs text-muted-foreground dark:text-neutral-500">Your report is anonymous and helps us keep iReside safe.</p>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => setShowReportWizard(false)}
-                                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+                                className="rounded-xl p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="w-6 h-6" />
                             </button>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Category</label>
-                            <select
-                                value={reportCategory}
-                                onChange={(event) => setReportCategory(event.target.value)}
-                                className="w-full rounded-xl bg-background border border-border text-sm text-foreground px-3 py-2"
-                            >
-                                <option value="spam">Spam</option>
-                                <option value="harassment">Harassment</option>
-                                <option value="scam_or_fraud">Scam or Fraud</option>
-                                <option value="impersonation">Impersonation</option>
-                                <option value="other">Other</option>
-                            </select>
+                        <div className="p-8 space-y-6">
+                            {/* Category Selection */}
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-red-500" />
+                                    Reason for Report
+                                </label>
+                                <div className="relative group">
+                                    <select
+                                        value={reportCategory}
+                                        onChange={(event) => setReportCategory(event.target.value)}
+                                        className="w-full appearance-none rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-bold text-foreground transition-all focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                    >
+                                        <option value="spam">Spam</option>
+                                        <option value="profanity">Inappropriate Language</option>
+                                        <option value="harassment">Harassment</option>
+                                        <option value="scam_or_fraud">Scam or Fraud</option>
+                                        <option value="impersonation">Impersonation</option>
+                                        <option value="other">Other Violation</option>
+                                    </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-red-500 transition-colors">
+                                        <ChevronDown className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-red-500" />
+                                    Reported Message
+                                </label>
+                                <input
+                                    type="text"
+                                    value={reportMessageId}
+                                    onChange={(event) => setReportMessageId(event.target.value)}
+                                    placeholder="Paste message ID here (optional)"
+                                    className="w-full rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 transition-all focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                />
+                                <p className="text-[11px] text-muted-foreground/80">
+                                    Hover any message, click the menu, then choose <strong>Copy message ID</strong>.
+                                </p>
+                                {reportMessageId && (
+                                    <p className="text-[11px] font-mono text-muted-foreground/80">
+                                        Message ID: {reportMessageId}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Exact Message (Conditional) */}
+                            {reportCategory === "profanity" && (
+                                <div className="space-y-3 animate-in slide-in-from-top-2 duration-200">
+                                    <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                        <span className="h-1 w-3 rounded-full bg-amber-500" />
+                                        Evidence
+                                    </label>
+                                    <textarea
+                                        value={reportExactMessage}
+                                        onChange={(event) => setReportExactMessage(event.target.value)}
+                                        rows={2}
+                                        placeholder="Paste the problematic message here..."
+                                        className="w-full resize-none rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 transition-all focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Screenshot Evidence */}
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-blue-500" />
+                                    Screenshot Proof
+                                </label>
+                                <input
+                                    ref={reportFileInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp,image/gif"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(event) => {
+                                        const selected = Array.from(event.target.files ?? []);
+                                        if (selected.length === 0) return;
+                                        const merged = [...reportScreenshots, ...selected].slice(0, 4);
+                                        setReportScreenshots(merged);
+                                        event.currentTarget.value = "";
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => reportFileInputRef.current?.click()}
+                                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/60 px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted dark:border-white/10 dark:bg-black/20 dark:text-white dark:hover:bg-white/10"
+                                >
+                                    <Paperclip className="h-4 w-4" />
+                                    Attach Screenshots
+                                </button>
+                                {reportScreenshots.length > 0 && (
+                                    <div className="space-y-1">
+                                        {reportScreenshots.map((file, index) => (
+                                            <div key={`${file.name}-${index}`} className="flex items-center justify-between rounded-lg border border-border bg-background/40 px-3 py-2 text-xs text-muted-foreground dark:border-white/10 dark:bg-black/20 dark:text-neutral-300">
+                                                <span className="truncate pr-2">{file.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReportScreenshots((previous) => previous.filter((_, i) => i !== index))}
+                                                    className="rounded px-2 py-1 text-red-500 hover:bg-red-500/10"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Details */}
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 dark:text-neutral-500">
+                                    <span className="h-1 w-3 rounded-full bg-primary" />
+                                    Additional Context
+                                </label>
+                                <textarea
+                                    value={reportDetails}
+                                    onChange={(event) => setReportDetails(event.target.value)}
+                                    rows={4}
+                                    placeholder="Tell us more about what happened..."
+                                    className="w-full resize-none rounded-2xl border border-border bg-background/50 px-5 py-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 transition-all focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none dark:border-white/10 dark:bg-black/20 dark:text-white"
+                                />
+                            </div>
+
+                            {reportWizardError && (
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {reportWizardError}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">What happened?</label>
-                            <textarea
-                                value={reportDetails}
-                                onChange={(event) => setReportDetails(event.target.value)}
-                                rows={5}
-                                placeholder="Describe the issue with enough detail for moderation review."
-                                className="w-full rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground px-3 py-2 resize-none"
-                            />
-                        </div>
-
-                        {reportWizardError && <p className="text-xs text-red-600">{reportWizardError}</p>}
-
-                        <div className="flex items-center justify-end gap-2 pt-2">
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 border-t border-border bg-muted/30 p-6 dark:border-white/5 dark:bg-black/20">
                             <button
                                 onClick={() => setShowReportWizard(false)}
                                 disabled={isSubmittingReport}
-                                className="px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50"
+                                className="px-6 py-3 text-sm font-bold text-muted-foreground hover:text-foreground transition-all hover:bg-muted rounded-xl dark:text-neutral-400 dark:hover:text-white dark:hover:bg-white/5"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => void submitUserReport()}
-                                disabled={isSubmittingReport || reportDetails.trim().length < 10}
-                                className="px-3 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-500/90 disabled:opacity-50"
+                                disabled={
+                                    isSubmittingReport ||
+                                    (reportCategory === "profanity" &&
+                                        reportExactMessage.trim().length < 3 &&
+                                        !reportMessageId)
+                                }
+                                className="group relative flex items-center gap-2 overflow-hidden px-8 py-3 bg-red-500 text-white font-black text-sm rounded-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 shadow-[0_10px_25px_-10px_rgba(239,44,44,0.4)]"
                             >
-                                {isSubmittingReport ? "Submitting..." : "Submit Report"}
+                                <span className="relative z-10">{isSubmittingReport ? "Sending Report..." : "Submit Report"}</span>
+                                {!isSubmittingReport && <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />}
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
                             </button>
                         </div>
                     </div>
