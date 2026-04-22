@@ -12,6 +12,23 @@ export interface ThemeToggleProps extends React.ButtonHTMLAttributes<HTMLButtonE
 
 export function ThemeToggle({ variant = "default", dataTourId, className, ...props }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div 
+        className={cn(
+          "h-10 w-10 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/[0.02]",
+          variant === "sidebar" && "border-transparent bg-transparent",
+          className
+        )}
+      />
+    )
+  }
 
   return (
     <button

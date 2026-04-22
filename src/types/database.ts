@@ -1176,6 +1176,13 @@ export interface Database {
                     priority: MaintenancePriority
                     category: string | null
                     images: string[]
+                    self_repair_requested: boolean
+                    self_repair_decision: 'pending' | 'approved' | 'rejected' | null
+                    repair_method: 'landlord' | 'third_party' | 'self_repair' | null
+                    third_party_name: string | null
+                    photo_requested: boolean
+                    tenant_repair_status: 'not_started' | 'personnel_arrived' | 'repairing' | 'done' | null
+                    tenant_provided_photos: string[]
                     resolved_at: string | null
                     created_at: string
                     updated_at: string
@@ -1191,6 +1198,13 @@ export interface Database {
                     priority?: MaintenancePriority
                     category?: string | null
                     images?: string[]
+                    self_repair_requested?: boolean
+                    self_repair_decision?: 'pending' | 'approved' | 'rejected' | null
+                    repair_method?: 'landlord' | 'third_party' | 'self_repair' | null
+                    third_party_name?: string | null
+                    photo_requested?: boolean
+                    tenant_repair_status?: 'not_started' | 'personnel_arrived' | 'repairing' | 'done' | null
+                    tenant_provided_photos?: string[]
                     resolved_at?: string | null
                     created_at?: string
                     updated_at?: string
@@ -1205,6 +1219,13 @@ export interface Database {
                     priority?: MaintenancePriority
                     category?: string | null
                     images?: string[]
+                    self_repair_requested?: boolean
+                    self_repair_decision?: 'pending' | 'approved' | 'rejected' | null
+                    repair_method?: 'landlord' | 'third_party' | 'self_repair' | null
+                    third_party_name?: string | null
+                    photo_requested?: boolean
+                    tenant_repair_status?: 'not_started' | 'personnel_arrived' | 'repairing' | 'done' | null
+                    tenant_provided_photos?: string[]
                     resolved_at?: string | null
                     updated_at?: string
                 }

@@ -19,12 +19,15 @@ import {
     Sparkles,
     AlertCircle,
     ArrowRight,
-    Phone
+    Phone,
+    CheckCircle2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
@@ -138,11 +141,27 @@ const buildOverdueLabel = (value: string) => {
 };
 
 export default function TenantDashboard() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const [showBanner, setShowBanner] = useState(true);
+    const [showMaintenanceSuccess, setShowMaintenanceSuccess] = useState(false);
     const [isLeaseModalOpen, setIsLeaseModalOpen] = useState(false);
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [dashboardError, setDashboardError] = useState<string | null>(null);
     const [dashboardLoading, setDashboardLoading] = useState(true);
+
+    useEffect(() => {
+        if (searchParams.get("maintenance") === "success") {
+            setShowMaintenanceSuccess(true);
+            const timer = setTimeout(() => {
+                setShowMaintenanceSuccess(false);
+                const newParams = new URLSearchParams(searchParams.toString());
+                newParams.delete("maintenance");
+                router.replace(`/tenant/dashboard?${newParams.toString()}`);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams, router]);
 
     useEffect(() => {
         let isMounted = true;
@@ -320,6 +339,32 @@ export default function TenantDashboard() {
             <DashboardTour />
 
             <div className="space-y-6 relative z-10 text-foreground">
+                <AnimatePresence>
+                    {showMaintenanceSuccess && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20, height: 0 }}
+                            animate={{ opacity: 1, y: 0, height: "auto" }}
+                            exit={{ opacity: 0, y: -20, height: 0 }}
+                            className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between gap-4 overflow-hidden"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-emerald-500 rounded-lg">
+                                    <CheckCircle2 className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-emerald-600 dark:text-emerald-400">Request Submitted!</p>
+                                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/70">We've notified your landlord and will keep you updated on the progress.</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setShowMaintenanceSuccess(false)}
+                                className="p-1 hover:bg-emerald-500/10 rounded-full transition-colors"
+                            >
+                                <X className="w-4 h-4 text-emerald-600" />
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Hero Banner */}
                 <div 

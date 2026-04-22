@@ -18,8 +18,7 @@ type MaintenanceRequestItem = {
     thirdPartyName?: string | null;
     property: string;
     unit: string;
-    tenant: string;
-    tenantAvatar: string | null;
+    landlord: string;
     priority: MaintenancePriorityLabel;
     status: MaintenanceStatusLabel;
     reportedAt: string;
@@ -27,33 +26,23 @@ type MaintenanceRequestItem = {
     scheduledFor?: string | null;
     images: string[];
 };
-
-type MaintenanceMetrics = {
-    actionRequired: number;
-    inProgress: number;
-    scheduled: number;
-    resolvedThisMonth: number;
-};
-
-const FALLBACK_AVATAR =
-    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 const LEGACY_SELF_REPAIR_PREFIX = "[TENANT REQUESTED SELF-REPAIR PERMISSION]";
 const SELF_REPAIR_CATEGORY_TOKEN = "self_repair_requested";
 
 const isNonEmptyString = (value: unknown): value is string =>
     typeof value === "string" && value.trim().length > 0;
 
-const extractSelfRepairDetails = (description: string, category: string | null | undefined) => {
+const parseSelfRepairDetails = (description: string, category: string | null | undefined) => {
     let cleanedDescription = description;
     let selfRepairRequested = false;
 
     if (isNonEmptyString(category)) {
-        const normalizedTokens = category
+        const tokens = category
             .split("|")
             .map((token) => token.trim().toLowerCase())
             .filter(Boolean);
 
-        if (normalizedTokens.includes(SELF_REPAIR_CATEGORY_TOKEN)) {
+        if (tokens.includes(SELF_REPAIR_CATEGORY_TOKEN)) {
             selfRepairRequested = true;
         }
     }
@@ -67,6 +56,23 @@ const extractSelfRepairDetails = (description: string, category: string | null |
         cleanedDescription,
         selfRepairRequested,
     };
+};
+
+const encodeCategory = (category: string | undefined, selfRepairRequested: boolean) => {
+    const baseCategory = (category ?? "general").trim() || "general";
+    if (!selfRepairRequested) {
+        return baseCategory;
+    }
+
+    const tokens = new Set(
+        baseCategory
+            .split("|")
+            .map((token) => token.trim().toLowerCase())
+            .filter(Boolean)
+    );
+    tokens.add(SELF_REPAIR_CATEGORY_TOKEN);
+
+    return Array.from(tokens).join("|");
 };
 
 const resolveStatus = (status: MaintenanceStatus | null | undefined): MaintenanceStatusLabel => {
@@ -142,9 +148,9 @@ export async function GET() {
     const { data: requestRows, error: requestsError } = await supabase
         .from("maintenance_requests")
         .select(
-            "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at"
+            "id, unit_id, landlord_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at"
         )
-        .eq("landlord_id", user.id)
+        .eq("tenant_id", user.id)
         .order("created_at", { ascending: false });
 
     if (requestsError) {
@@ -152,38 +158,28 @@ export async function GET() {
     }
 
     if (!requestRows || requestRows.length === 0) {
-        return NextResponse.json({
-            requests: [] satisfies MaintenanceRequestItem[],
-            metrics: {
-                actionRequired: 0,
-                inProgress: 0,
-                scheduled: 0,
-                resolvedThisMonth: 0,
-            } satisfies MaintenanceMetrics,
-        });
+        return NextResponse.json({ requests: [] });
     }
 
-    const tenantIds = Array.from(
-        new Set(requestRows.map((row) => row.tenant_id).filter((value): value is string => Boolean(value)))
+    const landlordIds = Array.from(
+        new Set(requestRows.map((row) => row.landlord_id).filter((value): value is string => Boolean(value)))
     );
     const unitIds = Array.from(
         new Set(requestRows.map((row) => row.unit_id).filter((value): value is string => Boolean(value)))
     );
 
-    const { data: tenantRows, error: tenantsError } =
-        tenantIds.length > 0
-            ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", tenantIds)
+    const { data: landlordRows, error: landlordsError } =
+        landlordIds.length > 0
+            ? await supabase.from("profiles").select("id, full_name").in("id", landlordIds)
             : { data: [], error: null };
-
-    if (tenantsError) {
-        return NextResponse.json({ error: "Failed to load tenant profiles." }, { status: 500 });
+    if (landlordsError) {
+        return NextResponse.json({ error: "Failed to load landlord profiles." }, { status: 500 });
     }
 
     const { data: unitRows, error: unitsError } =
         unitIds.length > 0
             ? await supabase.from("units").select("id, name, property_id").in("id", unitIds)
             : { data: [], error: null };
-
     if (unitsError) {
         return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
     }
@@ -196,29 +192,19 @@ export async function GET() {
         propertyIds.length > 0
             ? await supabase.from("properties").select("id, name").in("id", propertyIds)
             : { data: [], error: null };
-
     if (propertiesError) {
         return NextResponse.json({ error: "Failed to load properties." }, { status: 500 });
     }
 
-    const tenantMap = new Map((tenantRows ?? []).map((row) => [row.id, row]));
+    const landlordMap = new Map((landlordRows ?? []).map((row) => [row.id, row]));
     const unitMap = new Map((unitRows ?? []).map((row) => [row.id, row]));
     const propertyMap = new Map((propertyRows ?? []).map((row) => [row.id, row]));
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    let actionRequired = 0;
-    let inProgress = 0;
-    let resolvedThisMonth = 0;
-
     const requests: MaintenanceRequestItem[] = requestRows.map((row) => {
-        const tenant = tenantMap.get(row.tenant_id);
+        const landlord = landlordMap.get(row.landlord_id);
         const unit = unitMap.get(row.unit_id);
         const property = unit ? propertyMap.get(unit.property_id) : null;
-        const status = resolveStatus(row.status);
-        const priority = resolvePriority(row.priority);
-        const { cleanedDescription, selfRepairRequested } = extractSelfRepairDetails(row.description, row.category);
+        const { cleanedDescription, selfRepairRequested } = parseSelfRepairDetails(row.description, row.category);
         const dbSelfRepairDecision = row.self_repair_decision as "pending" | "approved" | "rejected" | null;
         const dbRepairMethod = row.repair_method as "landlord" | "third_party" | "self_repair" | null;
         const dbTenantRepairStatus = row.tenant_repair_status as
@@ -227,19 +213,6 @@ export async function GET() {
             | "repairing"
             | "done"
             | null;
-
-        if (status === "Pending") {
-            actionRequired += 1;
-        } else if (status === "In Progress" || status === "Assigned") {
-            inProgress += 1;
-        }
-
-        if (row.resolved_at) {
-            const resolvedAt = new Date(row.resolved_at);
-            if (!Number.isNaN(resolvedAt.getTime()) && resolvedAt >= monthStart) {
-                resolvedThisMonth += 1;
-            }
-        }
 
         return {
             id: row.id,
@@ -256,33 +229,85 @@ export async function GET() {
             thirdPartyName: isNonEmptyString(row.third_party_name) ? row.third_party_name : null,
             property: property?.name ?? "Property",
             unit: unit?.name ?? "Unit",
-            tenant: tenant?.full_name ?? "Unknown tenant",
-            tenantAvatar: isNonEmptyString(tenant?.avatar_url) ? tenant.avatar_url : FALLBACK_AVATAR,
-            priority,
-            status,
+            landlord: landlord?.full_name ?? "Landlord",
+            priority: resolvePriority(row.priority),
+            status: resolveStatus(row.status),
             reportedAt: formatRelativeDate(row.created_at),
-            images: Array.isArray(row.images) ? row.images.filter(isNonEmptyString) : [],
+            images: Array.isArray(row.images) ? row.images : [],
         };
     });
 
-    return NextResponse.json({
-        requests,
-        metrics: {
-            actionRequired,
-            inProgress,
-            scheduled: 0,
-            resolvedThisMonth,
-        },
-    });
+    return NextResponse.json({ requests });
 }
 
-type LandlordMaintenancePatchBody = {
+export async function POST(request: Request) {
+    const supabase = await createClient();
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { title, description, priority, category, images, fixItMyself } = body;
+
+    if (!title || !description) {
+        return NextResponse.json({ error: "Title and description are required." }, { status: 400 });
+    }
+
+    // Find the tenant's active lease to get unit_id and landlord_id
+    const { data: lease, error: leaseError } = await supabase
+        .from("leases")
+        .select("unit_id, landlord_id")
+        .eq("tenant_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+    if (leaseError || !lease) {
+        return NextResponse.json(
+            { error: "No active lease found. You must have an active lease to create maintenance requests." },
+            { status: 400 }
+        );
+    }
+
+    const { data: newRequest, error: createError } = await supabase
+        .from("maintenance_requests")
+        .insert({
+            tenant_id: user.id,
+            unit_id: lease.unit_id,
+            landlord_id: lease.landlord_id,
+            title,
+            description,
+            priority: (priority as MaintenancePriority) || "medium",
+            category: encodeCategory(category, Boolean(fixItMyself)),
+            images: images || [],
+            self_repair_requested: Boolean(fixItMyself),
+            self_repair_decision: fixItMyself ? "pending" : null,
+            photo_requested: false,
+            tenant_repair_status: null,
+            tenant_provided_photos: [],
+            repair_method: null,
+            third_party_name: null,
+            status: "open" as MaintenanceStatus,
+        })
+        .select()
+        .single();
+
+    if (createError) {
+        console.error("Failed to create maintenance request:", createError);
+        return NextResponse.json({ error: "Failed to create maintenance request." }, { status: 500 });
+    }
+
+    return NextResponse.json({ request: newRequest });
+}
+
+type TenantMaintenancePatchBody = {
     requestId?: string;
-    status?: MaintenanceStatus;
-    selfRepairDecision?: "pending" | "approved" | "rejected" | null;
-    repairMethod?: "landlord" | "third_party" | "self_repair" | null;
-    thirdPartyName?: string | null;
-    photoRequested?: boolean;
+    tenantRepairStatus?: "not_started" | "personnel_arrived" | "repairing" | "done";
+    tenantProvidedPhotos?: string[];
 };
 
 export async function PATCH(request: Request) {
@@ -296,31 +321,19 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await request.json()) as LandlordMaintenancePatchBody;
+    const body = (await request.json()) as TenantMaintenancePatchBody;
     if (!isNonEmptyString(body.requestId)) {
         return NextResponse.json({ error: "Request ID is required." }, { status: 400 });
     }
 
     const updates: Record<string, unknown> = {};
-    if (body.status) {
-        updates.status = body.status;
-        updates.resolved_at = body.status === "resolved" || body.status === "closed" ? new Date().toISOString() : null;
+    if (body.tenantRepairStatus) {
+        updates.tenant_repair_status = body.tenantRepairStatus;
+        updates.status = "in_progress";
     }
 
-    if (body.selfRepairDecision !== undefined) {
-        updates.self_repair_decision = body.selfRepairDecision;
-    }
-
-    if (body.repairMethod !== undefined) {
-        updates.repair_method = body.repairMethod;
-    }
-
-    if (body.thirdPartyName !== undefined) {
-        updates.third_party_name = isNonEmptyString(body.thirdPartyName) ? body.thirdPartyName.trim() : null;
-    }
-
-    if (body.photoRequested !== undefined) {
-        updates.photo_requested = body.photoRequested;
+    if (Array.isArray(body.tenantProvidedPhotos)) {
+        updates.tenant_provided_photos = body.tenantProvidedPhotos.filter(isNonEmptyString);
     }
 
     if (Object.keys(updates).length === 0) {
@@ -331,7 +344,7 @@ export async function PATCH(request: Request) {
         .from("maintenance_requests")
         .update(updates)
         .eq("id", body.requestId)
-        .eq("landlord_id", user.id);
+        .eq("tenant_id", user.id);
 
     if (updateError) {
         return NextResponse.json({ error: "Failed to update maintenance request." }, { status: 500 });
@@ -343,14 +356,14 @@ export async function PATCH(request: Request) {
             "id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, created_at"
         )
         .eq("id", body.requestId)
-        .eq("landlord_id", user.id)
+        .eq("tenant_id", user.id)
         .maybeSingle();
 
     if (refreshedError || !refreshedRequest) {
         return NextResponse.json({ success: true });
     }
 
-    const { cleanedDescription, selfRepairRequested } = extractSelfRepairDetails(
+    const { cleanedDescription, selfRepairRequested } = parseSelfRepairDetails(
         refreshedRequest.description,
         refreshedRequest.category
     );
@@ -372,7 +385,9 @@ export async function PATCH(request: Request) {
             status: resolveStatus(refreshedRequest.status),
             priority: resolvePriority(refreshedRequest.priority),
             reportedAt: formatRelativeDate(refreshedRequest.created_at),
-            images: Array.isArray(refreshedRequest.images) ? refreshedRequest.images.filter(isNonEmptyString) : [],
+            images: Array.isArray(refreshedRequest.images)
+                ? refreshedRequest.images.filter(isNonEmptyString)
+                : [],
         },
     });
 }
