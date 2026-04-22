@@ -38,6 +38,7 @@ export function Logo({ variant = "primary", theme = "adaptive", className }: Log
                     src={paths.light}
                     alt={`iReside ${variant} logo`}
                     fill
+                    sizes="(max-width: 768px) 160px, 240px"
                     className={cn("object-contain", theme === "adaptive" && "dark:hidden")}
                 />
             )}
@@ -46,6 +47,7 @@ export function Logo({ variant = "primary", theme = "adaptive", className }: Log
                     src={paths.dark}
                     alt={`iReside ${variant} logo`}
                     fill
+                    sizes="(max-width: 768px) 160px, 240px"
                     className={cn("object-contain", theme === "adaptive" ? "hidden dark:block" : "block")}
                 />
             )}

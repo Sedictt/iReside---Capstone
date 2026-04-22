@@ -16,6 +16,7 @@ import {
     MessageSquare,
     Map,
     Home,
+    Wrench,
     Menu,
     X,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const NAV_SECTIONS = [
         items: [
             { label: "Leases", href: "/tenant/lease", icon: FileText },
             { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
+            { label: "Maintenance", href: "/tenant/maintenance", icon: Wrench },
             { label: "Payments", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
         ],
