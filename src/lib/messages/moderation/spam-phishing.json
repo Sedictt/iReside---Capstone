@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "updatedAt": "2026-04-22",
+  "tokens": [
+    "jackpot",
+    "lottery",
+    "prize",
+    "reward",
+    "subscription",
+    "winner",
+    "winners",
+    "won"
+  ],
+  "phrases": [
+    "claim code",
+    "click the link",
+    "confirm by replying",
+    "free entry",
+    "free membership",
+    "limited time offer",
+    "selected to receive",
+    "text to receive",
+    "urgent claim",
+    "update to the latest",
+    "valued network customer",
+    "win cash",
+    "winner as a valued",
+    "you have won"
+  ],
+  "allowlist": [
+    "prize announcement for residents",
+    "reward points summary",
+    "winner of monthly raffle"
+  ]
+}

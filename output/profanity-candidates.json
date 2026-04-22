@@ -1,0 +1,930 @@
+{
+  "generatedAt": "2026-04-21T15:06:08.322Z",
+  "totalRows": 2778,
+  "labelCounts": {
+    "clean": 1604,
+    "offensive": 1174
+  },
+  "tokenCandidates": [
+    {
+      "term": "galit",
+      "positiveCount": 13,
+      "negativeCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "marcos",
+      "positiveCount": 9,
+      "negativeCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "fake",
+      "positiveCount": 8,
+      "negativeCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "namang",
+      "positiveCount": 16,
+      "negativeCount": 1,
+      "confidence": 8.5
+    },
+    {
+      "term": "jusko",
+      "positiveCount": 7,
+      "negativeCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "kang",
+      "positiveCount": 41,
+      "negativeCount": 5,
+      "confidence": 7
+    },
+    {
+      "term": "block",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mong",
+      "positiveCount": 33,
+      "negativeCount": 4,
+      "confidence": 6.8
+    },
+    {
+      "term": "kayong",
+      "positiveCount": 23,
+      "negativeCount": 3,
+      "confidence": 6
+    },
+    {
+      "term": "deserve",
+      "positiveCount": 11,
+      "negativeCount": 1,
+      "confidence": 6
+    },
+    {
+      "term": "tao",
+      "positiveCount": 24,
+      "negativeCount": 4,
+      "confidence": 5
+    },
+    {
+      "term": "mamatay",
+      "positiveCount": 9,
+      "negativeCount": 1,
+      "confidence": 5
+    },
+    {
+      "term": "kayo",
+      "positiveCount": 131,
+      "negativeCount": 33,
+      "confidence": 3.88
+    },
+    {
+      "term": "pldt",
+      "positiveCount": 10,
+      "negativeCount": 2,
+      "confidence": 3.67
+    },
+    {
+      "term": "babae",
+      "positiveCount": 6,
+      "negativeCount": 1,
+      "confidence": 3.5
+    },
+    {
+      "term": "niyang",
+      "positiveCount": 6,
+      "negativeCount": 1,
+      "confidence": 3.5
+    },
+    {
+      "term": "kulang",
+      "positiveCount": 9,
+      "negativeCount": 2,
+      "confidence": 3.33
+    },
+    {
+      "term": "mukha",
+      "positiveCount": 23,
+      "negativeCount": 7,
+      "confidence": 3
+    },
+    {
+      "term": "panget",
+      "positiveCount": 11,
+      "negativeCount": 3,
+      "confidence": 3
+    },
+    {
+      "term": "sayo",
+      "positiveCount": 45,
+      "negativeCount": 16,
+      "confidence": 2.71
+    },
+    {
+      "term": "kupal",
+      "positiveCount": 153,
+      "negativeCount": 58,
+      "confidence": 2.61
+    },
+    {
+      "term": "hayop",
+      "positiveCount": 17,
+      "negativeCount": 6,
+      "confidence": 2.57
+    },
+    {
+      "term": "niyong",
+      "positiveCount": 14,
+      "negativeCount": 5,
+      "confidence": 2.5
+    },
+    {
+      "term": "masyado",
+      "positiveCount": 9,
+      "negativeCount": 3,
+      "confidence": 2.5
+    },
+    {
+      "term": "inyo",
+      "positiveCount": 11,
+      "negativeCount": 4,
+      "confidence": 2.4
+    },
+    {
+      "term": "mga",
+      "positiveCount": 190,
+      "negativeCount": 79,
+      "confidence": 2.39
+    },
+    {
+      "term": "pakyu",
+      "positiveCount": 148,
+      "negativeCount": 63,
+      "confidence": 2.33
+    },
+    {
+      "term": "nila",
+      "positiveCount": 27,
+      "negativeCount": 11,
+      "confidence": 2.33
+    },
+    {
+      "term": "anak",
+      "positiveCount": 6,
+      "negativeCount": 2,
+      "confidence": 2.33
+    },
+    {
+      "term": "mang",
+      "positiveCount": 6,
+      "negativeCount": 2,
+      "confidence": 2.33
+    },
+    {
+      "term": "sya",
+      "positiveCount": 6,
+      "negativeCount": 2,
+      "confidence": 2.33
+    },
+    {
+      "term": "unit",
+      "positiveCount": 6,
+      "negativeCount": 2,
+      "confidence": 2.33
+    },
+    {
+      "term": "ginawa",
+      "positiveCount": 10,
+      "negativeCount": 4,
+      "confidence": 2.2
+    },
+    {
+      "term": "bobo",
+      "positiveCount": 161,
+      "negativeCount": 77,
+      "confidence": 2.08
+    },
+    {
+      "term": "niyo",
+      "positiveCount": 95,
+      "negativeCount": 48,
+      "confidence": 1.96
+    },
+    {
+      "term": "man",
+      "positiveCount": 12,
+      "negativeCount": 6,
+      "confidence": 1.86
+    },
+    {
+      "term": "bahala",
+      "positiveCount": 8,
+      "negativeCount": 4,
+      "confidence": 1.8
+    },
+    {
+      "term": "kapatid",
+      "positiveCount": 8,
+      "negativeCount": 4,
+      "confidence": 1.8
+    }
+  ],
+  "phraseCandidates": [
+    {
+      "term": "pakyu kayo",
+      "positiveCount": 18,
+      "negativeCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "mga punyeta",
+      "positiveCount": 12,
+      "negativeCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "punyeta kayo",
+      "positiveCount": 9,
+      "negativeCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "wala kang",
+      "positiveCount": 9,
+      "negativeCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "kayo mga",
+      "positiveCount": 8,
+      "negativeCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "mga ulol",
+      "positiveCount": 8,
+      "negativeCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "talaga mga",
+      "positiveCount": 8,
+      "negativeCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "mga putangina",
+      "positiveCount": 7,
+      "negativeCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "putangina niyo",
+      "positiveCount": 13,
+      "negativeCount": 1,
+      "confidence": 7
+    },
+    {
+      "term": "kupal ang",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "kupal naman",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mga marcos",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mga tanga",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mukha kang",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "pakyu tangina",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "tangina pakyu",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "ulol tangina",
+      "positiveCount": 6,
+      "negativeCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "tangina niyo",
+      "positiveCount": 18,
+      "negativeCount": 2,
+      "confidence": 6.33
+    },
+    {
+      "term": "kupal talaga",
+      "positiveCount": 11,
+      "negativeCount": 1,
+      "confidence": 6
+    },
+    {
+      "term": "fake news",
+      "positiveCount": 5,
+      "negativeCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "galit galit",
+      "positiveCount": 5,
+      "negativeCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "kulang kulang",
+      "positiveCount": 5,
+      "negativeCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "kung may",
+      "positiveCount": 5,
+      "negativeCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mga puta",
+      "positiveCount": 5,
+      "negativeCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "tangina mga",
+      "positiveCount": 5,
+      "negativeCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mga bobo",
+      "positiveCount": 10,
+      "negativeCount": 1,
+      "confidence": 5.5
+    },
+    {
+      "term": "akala naman",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ayusin niyo",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "bobo ang",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "bobo niyo",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "kahit kailan",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "kasi mga",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "kayo lahat",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "mga yan",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "nga bobo",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "niyo talaga",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "niyo yung",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "pakyu kayong",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "pakyu kung",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "pakyu ulol",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "putangina mong",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "sino man",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "tangina gago",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "yung kupal",
+      "positiveCount": 4,
+      "negativeCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "kayong lahat",
+      "positiveCount": 8,
+      "negativeCount": 1,
+      "confidence": 4.5
+    },
+    {
+      "term": "niyo mga",
+      "positiveCount": 8,
+      "negativeCount": 1,
+      "confidence": 4.5
+    },
+    {
+      "term": "pakshet kayo",
+      "positiveCount": 16,
+      "negativeCount": 3,
+      "confidence": 4.25
+    },
+    {
+      "term": "bobo kayo",
+      "positiveCount": 7,
+      "negativeCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "bwiset talaga",
+      "positiveCount": 7,
+      "negativeCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "mga tao",
+      "positiveCount": 7,
+      "negativeCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "ano tanga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "bahala diyan",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "bobo siya",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "deserve yan",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "faves niyo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "gago kang",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "gago tarantado",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "gago ulol",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "hay nako",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "hindi kasi",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "hindi kayo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "idol niyo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kami ibang",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kang tanga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kapal mukha",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kasi may",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kayo ang",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kayo nga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kayong mga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kung hindi",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kupal tao",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "kupal yan",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "lahat mga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "lakas loob",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "lang kayo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "masarap ulam",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "may bobo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "mong kupal",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "nalang mag",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "nga ang",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "nga tangina",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "niyo yan",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "pakyu gago",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "parang bobo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "punyeta talaga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "putangina ano",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "sayo kupal",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "skusta clee",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "sobrang kupal",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "talaga pakyu",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "tangina bobo",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "tatanga tanga",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "tuwang tuwa",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "walang utak",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "yan dapat",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "yung ibang",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "yung tao",
+      "positiveCount": 3,
+      "negativeCount": 0,
+      "confidence": 4
+    },
+    {
+      "term": "gago talaga",
+      "positiveCount": 6,
+      "negativeCount": 1,
+      "confidence": 3.5
+    },
+    {
+      "term": "putangina niyong",
+      "positiveCount": 6,
+      "negativeCount": 1,
+      "confidence": 3.5
+    },
+    {
+      "term": "kung sino",
+      "positiveCount": 9,
+      "negativeCount": 2,
+      "confidence": 3.33
+    },
+    {
+      "term": "ang mga",
+      "positiveCount": 12,
+      "negativeCount": 3,
+      "confidence": 3.25
+    },
+    {
+      "term": "mga pakshet",
+      "positiveCount": 12,
+      "negativeCount": 3,
+      "confidence": 3.25
+    },
+    {
+      "term": "niyong lahat",
+      "positiveCount": 8,
+      "negativeCount": 2,
+      "confidence": 3
+    },
+    {
+      "term": "puta kayo",
+      "positiveCount": 5,
+      "negativeCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "tarantado kayo",
+      "positiveCount": 5,
+      "negativeCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "tarantado yung",
+      "positiveCount": 5,
+      "negativeCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "mga kupal",
+      "positiveCount": 15,
+      "negativeCount": 5,
+      "confidence": 2.67
+    },
+    {
+      "term": "ang panget",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "gago pakyu",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "kupal kupal",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "napaka bobo",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "pakyu din",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "talaga kayo",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "tanga bobo",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "wag kang",
+      "positiveCount": 4,
+      "negativeCount": 1,
+      "confidence": 2.5
+    }
+  ]
+}

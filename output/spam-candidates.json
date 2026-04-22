@@ -1,0 +1,5190 @@
+{
+  "generatedAt": "2026-04-21T16:11:03.636Z",
+  "totalRows": 5572,
+  "labelCounts": {
+    "ham": 4825,
+    "spam": 747
+  },
+  "tokenCandidates": [
+    {
+      "term": "claim",
+      "spamCount": 108,
+      "hamCount": 0,
+      "confidence": 109
+    },
+    {
+      "term": "prize",
+      "spamCount": 84,
+      "hamCount": 0,
+      "confidence": 85
+    },
+    {
+      "term": "won",
+      "spamCount": 73,
+      "hamCount": 0,
+      "confidence": 74
+    },
+    {
+      "term": "150p",
+      "spamCount": 71,
+      "hamCount": 0,
+      "confidence": 72
+    },
+    {
+      "term": "guaranteed",
+      "spamCount": 50,
+      "hamCount": 0,
+      "confidence": 51
+    },
+    {
+      "term": "500",
+      "spamCount": 44,
+      "hamCount": 0,
+      "confidence": 45
+    },
+    {
+      "term": "tone",
+      "spamCount": 41,
+      "hamCount": 0,
+      "confidence": 42
+    },
+    {
+      "term": "1000",
+      "spamCount": 39,
+      "hamCount": 0,
+      "confidence": 40
+    },
+    {
+      "term": "awarded",
+      "spamCount": 38,
+      "hamCount": 0,
+      "confidence": 39
+    },
+    {
+      "term": "150ppm",
+      "spamCount": 34,
+      "hamCount": 0,
+      "confidence": 35
+    },
+    {
+      "term": "www",
+      "spamCount": 98,
+      "hamCount": 2,
+      "confidence": 33
+    },
+    {
+      "term": "ringtone",
+      "spamCount": 29,
+      "hamCount": 0,
+      "confidence": 30
+    },
+    {
+      "term": "000",
+      "spamCount": 27,
+      "hamCount": 0,
+      "confidence": 28
+    },
+    {
+      "term": "collection",
+      "spamCount": 26,
+      "hamCount": 0,
+      "confidence": 27
+    },
+    {
+      "term": "5000",
+      "spamCount": 25,
+      "hamCount": 0,
+      "confidence": 26
+    },
+    {
+      "term": "mob",
+      "spamCount": 24,
+      "hamCount": 0,
+      "confidence": 25
+    },
+    {
+      "term": "valid",
+      "spamCount": 24,
+      "hamCount": 0,
+      "confidence": 25
+    },
+    {
+      "term": "weekly",
+      "spamCount": 24,
+      "hamCount": 0,
+      "confidence": 25
+    },
+    {
+      "term": "10p",
+      "spamCount": 23,
+      "hamCount": 0,
+      "confidence": 24
+    },
+    {
+      "term": "800",
+      "spamCount": 22,
+      "hamCount": 0,
+      "confidence": 23
+    },
+    {
+      "term": "bonus",
+      "spamCount": 21,
+      "hamCount": 0,
+      "confidence": 22
+    },
+    {
+      "term": "entry",
+      "spamCount": 21,
+      "hamCount": 0,
+      "confidence": 22
+    },
+    {
+      "term": "http",
+      "spamCount": 21,
+      "hamCount": 0,
+      "confidence": 22
+    },
+    {
+      "term": "sae",
+      "spamCount": 21,
+      "hamCount": 0,
+      "confidence": 22
+    },
+    {
+      "term": "tones",
+      "spamCount": 21,
+      "hamCount": 0,
+      "confidence": 22
+    },
+    {
+      "term": "vouchers",
+      "spamCount": 20,
+      "hamCount": 0,
+      "confidence": 21
+    },
+    {
+      "term": "100",
+      "spamCount": 39,
+      "hamCount": 1,
+      "confidence": 20
+    },
+    {
+      "term": "750",
+      "spamCount": 19,
+      "hamCount": 0,
+      "confidence": 20
+    },
+    {
+      "term": "86688",
+      "spamCount": 19,
+      "hamCount": 0,
+      "confidence": 20
+    },
+    {
+      "term": "150",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "250",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "c's",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "land",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "unsubscribe",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "12hrs",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "dating",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "expires",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "poly",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "08000930705",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "8007",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "identifier",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "ltd",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "mobileupd8",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "pobox",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "winner",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "08000839402",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "2lands",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "camcorder",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "operator",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "quiz",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "suite342",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "code",
+      "spamCount": 30,
+      "hamCount": 1,
+      "confidence": 15.5
+    },
+    {
+      "term": "freemsg",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "wkly",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "0800",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "2003",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "87066",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "opt",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "txts",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "200",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "call2optout",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "complimentary",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "ipod",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "mobiles",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "national",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "rental",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "un-redeemed",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "nokia",
+      "spamCount": 49,
+      "hamCount": 3,
+      "confidence": 12.5
+    },
+    {
+      "term": "2000",
+      "spamCount": 24,
+      "hamCount": 1,
+      "confidence": 12.5
+    },
+    {
+      "term": "350",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "charged",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "std",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "w1j6hl",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "service",
+      "spamCount": 54,
+      "hamCount": 4,
+      "confidence": 11
+    },
+    {
+      "term": "landline",
+      "spamCount": 32,
+      "hamCount": 2,
+      "confidence": 11
+    },
+    {
+      "term": "admirer",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "custcare",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "getzed",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "ldn",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "ntt",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "representative",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "reveal",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "txt",
+      "spamCount": 152,
+      "hamCount": 13,
+      "confidence": 10.93
+    },
+    {
+      "term": "delivery",
+      "spamCount": 20,
+      "hamCount": 1,
+      "confidence": 10.5
+    },
+    {
+      "term": "apply",
+      "spamCount": 30,
+      "hamCount": 2,
+      "confidence": 10.33
+    },
+    {
+      "term": "video",
+      "spamCount": 29,
+      "hamCount": 2,
+      "confidence": 10
+    },
+    {
+      "term": "await",
+      "spamCount": 19,
+      "hamCount": 1,
+      "confidence": 10
+    },
+    {
+      "term": "award",
+      "spamCount": 19,
+      "hamCount": 1,
+      "confidence": 10
+    },
+    {
+      "term": "private",
+      "spamCount": 18,
+      "hamCount": 1,
+      "confidence": 9.5
+    },
+    {
+      "term": "services",
+      "spamCount": 17,
+      "hamCount": 1,
+      "confidence": 9
+    },
+    {
+      "term": "latest",
+      "spamCount": 34,
+      "hamCount": 3,
+      "confidence": 8.75
+    },
+    {
+      "term": "club",
+      "spamCount": 16,
+      "hamCount": 1,
+      "confidence": 8.5
+    },
+    {
+      "term": "statement",
+      "spamCount": 16,
+      "hamCount": 1,
+      "confidence": 8.5
+    },
+    {
+      "term": "camera",
+      "spamCount": 31,
+      "hamCount": 3,
+      "confidence": 8
+    },
+    {
+      "term": "games",
+      "spamCount": 15,
+      "hamCount": 1,
+      "confidence": 8
+    },
+    {
+      "term": "voucher",
+      "spamCount": 15,
+      "hamCount": 1,
+      "confidence": 8
+    },
+    {
+      "term": "urgent",
+      "spamCount": 62,
+      "hamCount": 7,
+      "confidence": 7.88
+    },
+    {
+      "term": "win",
+      "spamCount": 62,
+      "hamCount": 7,
+      "confidence": 7.88
+    },
+    {
+      "term": "attempt",
+      "spamCount": 22,
+      "hamCount": 2,
+      "confidence": 7.67
+    },
+    {
+      "term": "rate",
+      "spamCount": 22,
+      "hamCount": 2,
+      "confidence": 7.67
+    },
+    {
+      "term": "congratulations",
+      "spamCount": 14,
+      "hamCount": 1,
+      "confidence": 7.5
+    },
+    {
+      "term": "content",
+      "spamCount": 13,
+      "hamCount": 1,
+      "confidence": 7
+    },
+    {
+      "term": "mobile",
+      "spamCount": 109,
+      "hamCount": 15,
+      "confidence": 6.88
+    },
+    {
+      "term": "orange",
+      "spamCount": 26,
+      "hamCount": 3,
+      "confidence": 6.75
+    },
+    {
+      "term": "draw",
+      "spamCount": 39,
+      "hamCount": 5,
+      "confidence": 6.67
+    },
+    {
+      "term": "caller",
+      "spamCount": 12,
+      "hamCount": 1,
+      "confidence": 6.5
+    },
+    {
+      "term": "offers",
+      "spamCount": 12,
+      "hamCount": 1,
+      "confidence": 6.5
+    },
+    {
+      "term": "phones",
+      "spamCount": 12,
+      "hamCount": 1,
+      "confidence": 6.5
+    },
+    {
+      "term": "pounds",
+      "spamCount": 17,
+      "hamCount": 2,
+      "confidence": 6
+    },
+    {
+      "term": "final",
+      "spamCount": 16,
+      "hamCount": 2,
+      "confidence": 5.67
+    },
+    {
+      "term": "txting",
+      "spamCount": 10,
+      "hamCount": 1,
+      "confidence": 5.5
+    },
+    {
+      "term": "shows",
+      "spamCount": 31,
+      "hamCount": 5,
+      "confidence": 5.33
+    },
+    {
+      "term": "network",
+      "spamCount": 25,
+      "hamCount": 4,
+      "confidence": 5.2
+    },
+    {
+      "term": "selected",
+      "spamCount": 25,
+      "hamCount": 4,
+      "confidence": 5.2
+    },
+    {
+      "term": "box",
+      "spamCount": 30,
+      "hamCount": 5,
+      "confidence": 5.17
+    },
+    {
+      "term": "customer",
+      "spamCount": 49,
+      "hamCount": 9,
+      "confidence": 5
+    },
+    {
+      "term": "receive",
+      "spamCount": 29,
+      "hamCount": 5,
+      "confidence": 5
+    },
+    {
+      "term": "music",
+      "spamCount": 19,
+      "hamCount": 3,
+      "confidence": 5
+    },
+    {
+      "term": "info",
+      "spamCount": 14,
+      "hamCount": 2,
+      "confidence": 5
+    },
+    {
+      "term": "cash",
+      "spamCount": 61,
+      "hamCount": 12,
+      "confidence": 4.77
+    },
+    {
+      "term": "mates",
+      "spamCount": 13,
+      "hamCount": 2,
+      "confidence": 4.67
+    },
+    {
+      "term": "line",
+      "spamCount": 35,
+      "hamCount": 7,
+      "confidence": 4.5
+    },
+    {
+      "term": "contact",
+      "spamCount": 56,
+      "hamCount": 12,
+      "confidence": 4.38
+    },
+    {
+      "term": "row",
+      "spamCount": 16,
+      "hamCount": 3,
+      "confidence": 4.25
+    },
+    {
+      "term": "offer",
+      "spamCount": 27,
+      "hamCount": 6,
+      "confidence": 4
+    },
+    {
+      "term": "collect",
+      "spamCount": 23,
+      "hamCount": 5,
+      "confidence": 4
+    },
+    {
+      "term": "motorola",
+      "spamCount": 11,
+      "hamCount": 2,
+      "confidence": 4
+    },
+    {
+      "term": "sex",
+      "spamCount": 11,
+      "hamCount": 2,
+      "confidence": 4
+    },
+    {
+      "term": "valued",
+      "spamCount": 11,
+      "hamCount": 2,
+      "confidence": 4
+    },
+    {
+      "term": "colour",
+      "spamCount": 18,
+      "hamCount": 4,
+      "confidence": 3.8
+    },
+    {
+      "term": "auction",
+      "spamCount": 10,
+      "hamCount": 2,
+      "confidence": 3.67
+    },
+    {
+      "term": "comp",
+      "spamCount": 10,
+      "hamCount": 2,
+      "confidence": 3.67
+    },
+    {
+      "term": "direct",
+      "spamCount": 10,
+      "hamCount": 2,
+      "confidence": 3.67
+    },
+    {
+      "term": "todays",
+      "spamCount": 17,
+      "hamCount": 4,
+      "confidence": 3.6
+    },
+    {
+      "term": "per",
+      "spamCount": 45,
+      "hamCount": 12,
+      "confidence": 3.54
+    },
+    {
+      "term": "com",
+      "spamCount": 54,
+      "hamCount": 15,
+      "confidence": 3.44
+    },
+    {
+      "term": "points",
+      "spamCount": 16,
+      "hamCount": 4,
+      "confidence": 3.4
+    },
+    {
+      "term": "player",
+      "spamCount": 12,
+      "hamCount": 3,
+      "confidence": 3.25
+    },
+    {
+      "term": "tried",
+      "spamCount": 17,
+      "hamCount": 5,
+      "confidence": 3
+    },
+    {
+      "term": "free",
+      "spamCount": 169,
+      "hamCount": 58,
+      "confidence": 2.88
+    },
+    {
+      "term": "mins",
+      "spamCount": 36,
+      "hamCount": 12,
+      "confidence": 2.85
+    },
+    {
+      "term": "cost",
+      "spamCount": 30,
+      "hamCount": 10,
+      "confidence": 2.82
+    },
+    {
+      "term": "worth",
+      "spamCount": 13,
+      "hamCount": 4,
+      "confidence": 2.8
+    },
+    {
+      "term": "currently",
+      "spamCount": 10,
+      "hamCount": 3,
+      "confidence": 2.75
+    },
+    {
+      "term": "stop",
+      "spamCount": 99,
+      "hamCount": 36,
+      "confidence": 2.7
+    },
+    {
+      "term": "update",
+      "spamCount": 15,
+      "hamCount": 5,
+      "confidence": 2.67
+    },
+    {
+      "term": "anytime",
+      "spamCount": 12,
+      "hamCount": 4,
+      "confidence": 2.6
+    },
+    {
+      "term": "gift",
+      "spamCount": 17,
+      "hamCount": 6,
+      "confidence": 2.57
+    },
+    {
+      "term": "chat",
+      "spamCount": 37,
+      "hamCount": 14,
+      "confidence": 2.53
+    },
+    {
+      "term": "top",
+      "spamCount": 16,
+      "hamCount": 6,
+      "confidence": 2.43
+    },
+    {
+      "term": "double",
+      "spamCount": 13,
+      "hamCount": 5,
+      "confidence": 2.33
+    },
+    {
+      "term": "xmas",
+      "spamCount": 15,
+      "hamCount": 6,
+      "confidence": 2.29
+    },
+    {
+      "term": "reply",
+      "spamCount": 93,
+      "hamCount": 41,
+      "confidence": 2.24
+    },
+    {
+      "term": "thinks",
+      "spamCount": 10,
+      "hamCount": 4,
+      "confidence": 2.2
+    },
+    {
+      "term": "welcome",
+      "spamCount": 10,
+      "hamCount": 4,
+      "confidence": 2.2
+    },
+    {
+      "term": "1st",
+      "spamCount": 25,
+      "hamCount": 11,
+      "confidence": 2.17
+    },
+    {
+      "term": "chance",
+      "spamCount": 27,
+      "hamCount": 12,
+      "confidence": 2.15
+    },
+    {
+      "term": "holiday",
+      "spamCount": 32,
+      "hamCount": 15,
+      "confidence": 2.06
+    },
+    {
+      "term": "texts",
+      "spamCount": 19,
+      "hamCount": 9,
+      "confidence": 2
+    },
+    {
+      "term": "price",
+      "spamCount": 17,
+      "hamCount": 8,
+      "confidence": 2
+    },
+    {
+      "term": "hot",
+      "spamCount": 15,
+      "hamCount": 7,
+      "confidence": 2
+    }
+  ],
+  "phraseCandidates": [
+    {
+      "term": "have won",
+      "spamCount": 54,
+      "hamCount": 0,
+      "confidence": 55
+    },
+    {
+      "term": "your mobile",
+      "spamCount": 50,
+      "hamCount": 0,
+      "confidence": 51
+    },
+    {
+      "term": "1000 cash",
+      "spamCount": 23,
+      "hamCount": 0,
+      "confidence": 24
+    },
+    {
+      "term": "guaranteed call",
+      "spamCount": 23,
+      "hamCount": 0,
+      "confidence": 24
+    },
+    {
+      "term": "prize guaranteed",
+      "spamCount": 22,
+      "hamCount": 0,
+      "confidence": 23
+    },
+    {
+      "term": "send stop",
+      "spamCount": 20,
+      "hamCount": 0,
+      "confidence": 21
+    },
+    {
+      "term": "urgent your",
+      "spamCount": 20,
+      "hamCount": 0,
+      "confidence": 21
+    },
+    {
+      "term": "await collection",
+      "spamCount": 19,
+      "hamCount": 0,
+      "confidence": 20
+    },
+    {
+      "term": "selected receive",
+      "spamCount": 19,
+      "hamCount": 0,
+      "confidence": 20
+    },
+    {
+      "term": "from land",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "land line",
+      "spamCount": 18,
+      "hamCount": 0,
+      "confidence": 19
+    },
+    {
+      "term": "chance win",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "prize claim",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "valid 12hrs",
+      "spamCount": 17,
+      "hamCount": 0,
+      "confidence": 18
+    },
+    {
+      "term": "12hrs only",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "150p msg",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "account statement",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "call mobileupd8",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "free entry",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "identifier code",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "private your",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "statement for",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "txt stop",
+      "spamCount": 16,
+      "hamCount": 0,
+      "confidence": 17
+    },
+    {
+      "term": "2lands row",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "dating service",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "draw shows",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "reply call",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "suite342 2lands",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "trying contact",
+      "spamCount": 15,
+      "hamCount": 0,
+      "confidence": 16
+    },
+    {
+      "term": "2000 prize",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "2nd attempt",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "attempt contact",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "just txt",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "line claim",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "shows that",
+      "spamCount": 14,
+      "hamCount": 0,
+      "confidence": 15
+    },
+    {
+      "term": "2003 account",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "call 08000930705",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "claim call",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "txt nokia",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "won guaranteed",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "your 2003",
+      "spamCount": 13,
+      "hamCount": 0,
+      "confidence": 14
+    },
+    {
+      "term": "800 un-redeemed",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "caller prize",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "camcorder reply",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "claim code",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "double mins",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "guaranteed 1000",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "half price",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "http www",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "opt out",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "our dating",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "points call",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "shows 800",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "tried contact",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "un-redeemed points",
+      "spamCount": 12,
+      "hamCount": 0,
+      "confidence": 13
+    },
+    {
+      "term": "1st week",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "are selected",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "bonus caller",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "call our",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "collection sae",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "line rental",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "now send",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "our customer",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "per min",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "reply stop",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "row w1j6hl",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "this our",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "urgent are",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "won the",
+      "spamCount": 11,
+      "hamCount": 0,
+      "confidence": 12
+    },
+    {
+      "term": "any network",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "anytime any",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "awarded with",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "c's apply",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "cash await",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "chat 86688",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "claim your",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "customer services",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "free text",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "have secret",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "holiday 5000",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "live operator",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "music 87066",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "national rate",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "network mins",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "new video",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "only 150p",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "prize this",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "reveal who",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "sae box",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "secret admirer",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "service representative",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "speak live",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "want new",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "who call",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "who thinks",
+      "spamCount": 10,
+      "hamCount": 0,
+      "confidence": 11
+    },
+    {
+      "term": "contact you",
+      "spamCount": 20,
+      "hamCount": 1,
+      "confidence": 10.5
+    },
+    {
+      "term": "every week",
+      "spamCount": 19,
+      "hamCount": 1,
+      "confidence": 10
+    },
+    {
+      "term": "000 cash",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "08000839402 call2optout",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "10p min",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "500 pounds",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "750 anytime",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "are awarded",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "been awarded",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "collect your",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "contact have",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "contact todays",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "draw txt",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "every txt",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "landline your",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "mob every",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "mobileupd8 08000839402",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "nokia tone",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "number has",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "only 150ppm",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "stop texts",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "take part",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "text stop",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "todays draw",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "tone mob",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "txt music",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "win 100",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "www getzed",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "www ldew",
+      "spamCount": 9,
+      "hamCount": 0,
+      "confidence": 10
+    },
+    {
+      "term": "for free",
+      "spamCount": 18,
+      "hamCount": 1,
+      "confidence": 9.5
+    },
+    {
+      "term": "out who",
+      "spamCount": 18,
+      "hamCount": 1,
+      "confidence": 9.5
+    },
+    {
+      "term": "100 weekly",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "10p per",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "3030 valid",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "350 award",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "5000 prize",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "admirer who",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "been specially",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "call 08712460324",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "call free",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "camera phones",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "cash 2000",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "claim 3030",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "claim easy",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "contact with",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "digital camera",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "for chance",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "for delivery",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "free camcorder",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "gift vouchers",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "latest colour",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "looking make",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "ltd box",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "make contact",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "new nokia",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "numbers ending",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "offers mobile",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "only 10p",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "operator claim",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "prize call",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "receive 350",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "specially selected",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "text yes",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "texts call",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "they reveal",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "thinks special-call",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "tone reply",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "txt word",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "u-find out",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "video phone",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "who looking",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "who they",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "with u-find",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "yours call",
+      "spamCount": 8,
+      "hamCount": 0,
+      "confidence": 9
+    },
+    {
+      "term": "the word",
+      "spamCount": 16,
+      "hamCount": 1,
+      "confidence": 8.5
+    },
+    {
+      "term": "had your",
+      "spamCount": 15,
+      "hamCount": 1,
+      "confidence": 8
+    },
+    {
+      "term": "just call",
+      "spamCount": 15,
+      "hamCount": 1,
+      "confidence": 8
+    },
+    {
+      "term": "the 2nd",
+      "spamCount": 15,
+      "hamCount": 1,
+      "confidence": 8
+    },
+    {
+      "term": "000 bonus",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "1327 croydon",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "150 worth",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "20p per",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "5000 cash",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "5wb 0870",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "85023 now",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "award call",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "box 1327",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "cash-balance currently",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "cash-in now",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "claim 150",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "congratulations awarded",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "costa del",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "cr9 5wb",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "croydon cr9",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "currently 500",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "del sol",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "delivery tomorrow",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "get txting",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "holiday 000",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "just 20p",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "log onto",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "maximize cash-in",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "min ntt",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "mobile for",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "no1 nokia",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "ntt ltd",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "our final",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "per minute",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "per msg",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "pobox 36504",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "price line",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "reply our",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "shopping spree",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "sol holiday",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "tell mates",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "tenerife holiday",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "this weeks",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "txt chat",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "txt the",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "update the",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "urgent please",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "w1j6hl ldn",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "week no1",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "weekly draw",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "will charged",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "with 2000",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "won 000",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "worth discount",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "your free",
+      "spamCount": 7,
+      "hamCount": 0,
+      "confidence": 8
+    },
+    {
+      "term": "from landline",
+      "spamCount": 21,
+      "hamCount": 2,
+      "confidence": 7.33
+    },
+    {
+      "term": "08000930705 for",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "08707509020 just",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "09050090044 now",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "100 free",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "250 cash",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "2nd time",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "36504 w45wq",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "40gb ipod",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "500 free",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "5000 await",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "800 prize",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "86021 now",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "86688 now",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "86688 only",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "900 prize",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "awarded sipix",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "call 09050090044",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "camera call",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "cash 5000",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "cash every",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "chat now",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "collection call",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "colour camera",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "cost max10mins",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "customer you",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "dear voucher",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "delivery within",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "discount vouchers",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "easy just",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "entitled update",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "fantasies call",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "final attempt",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "for only",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "for shows",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "friend reply",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "frnd 62468",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "getzed pobox",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "have tried",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "important information",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "inviting you",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "landline delivery",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "latest camera",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "latest motorola",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "lucky day",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mates www",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "min stop",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mobile 11mths",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mobile update",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "mobile will",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "more info",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "msg rcvd",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "nokia 86021",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "norm150p tone",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "now 08707509020",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "now savamob",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "now toclaim",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "onto http",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "orange tariffs",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "our 100",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "our offer",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "out why",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "per week",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "plus free",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "pobox334 stockport",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "pounds maximize",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "rate call",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "receive 1000",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "ringtone order",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "service announcement",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "sipix digital",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "sk38xh cost",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "stockport sk38xh",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "stop frnd",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "stop send",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "t's c's",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "time have",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "toclaim sae",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "urawinner com",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "voucher holder",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "w45wq norm150p",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "weekly comp",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "why log",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "with stop",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "won 800",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "www sms",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "www urawinner",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "you win",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "your complimentary",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "your costa",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "your mob",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "your ringtone",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "your tone",
+      "spamCount": 6,
+      "hamCount": 0,
+      "confidence": 7
+    },
+    {
+      "term": "customer service",
+      "spamCount": 17,
+      "hamCount": 2,
+      "confidence": 6
+    },
+    {
+      "term": "0870 national",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "08712300220 quoting",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "150p tone",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "1st tone",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "3510i colour",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "500 gift",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "60p min",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "87066 tncs",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "all free",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "any mobile",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "are winner",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "arrive please",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "attempt reach",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "auction take",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "awarded 500",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "awarded either",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "been invited",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "been selected",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "c's www",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "call 08712300220",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "call customer",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "camera phone",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "chance claim",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "charge help",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "charged should",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "claim this",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "colour phone",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "computer has",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "comuk net",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "congrats mobile",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "contacted our",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "cost 10p",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "cost 150ppm",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "credits pls",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "draw 100",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "entry 100",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "entry into",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "etc all",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "extra charge",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "fantastic surprise",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "free auction",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "free bluetooth",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "free minutes",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "free msg",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "free ringtone",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "free texts",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "games dload",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "get when",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "gift voucher",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "good luck",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "handset 750",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "have important",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "help call",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "her friend",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "her www",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "holder claim",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "hot live",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "immediately there",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "invited xchat",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "ip4 5we",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "ipod mp3",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "java games",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "last weekends",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "latest nokia",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "live fantasies",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "match please",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mates play",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "member offers",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "message waiting",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mins half",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mins unlimited",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "minute bt-national-rate",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "minutes any",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "miss out",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mobile 100",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mobile content",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "mobile videophones",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "music noline",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "net login",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "network operator",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "nokia 3510i",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "nokia 8007",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "noline rentl",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "not arrive",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "now 150p",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "now reply",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "now suite342",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "now videochat",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "our 2nd",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "our free",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "part send",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "phones free",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "play java",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "quoting claim",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "rate c's",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "rates apply",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "reach you",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "reply for",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "savamob member",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "send nokia",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "sent direct",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "should your",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "sony dvd",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "standard rates",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "std txt",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "stop end",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "stop extra",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "sunshine quiz",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "surprise awaiting",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "text credits",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "text messages",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "the official",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "the uk's",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "there urgent",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "tncs www",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "today your",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "todays voda",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "tone free",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "tone not",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "txt rate",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "u've been",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "unlimited text",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "unsubscribe with",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "update free",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "update now",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "urgent call",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "urgent message",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "video handset",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "videochat wid",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "videophones yours",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "visit www",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "voda numbers",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "was awarded",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "weekends draw",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "will revealed",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "win 200",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "win 250",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "win our",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "with free",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "won nokia",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "www comuk",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "yes 85023",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "you won",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "your lucky",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "your prize",
+      "spamCount": 5,
+      "hamCount": 0,
+      "confidence": 6
+    },
+    {
+      "term": "the latest",
+      "spamCount": 16,
+      "hamCount": 2,
+      "confidence": 5.67
+    },
+    {
+      "term": "free for",
+      "spamCount": 10,
+      "hamCount": 1,
+      "confidence": 5.5
+    },
+    {
+      "term": "are trying",
+      "spamCount": 14,
+      "hamCount": 2,
+      "confidence": 5
+    },
+    {
+      "term": "000 prize",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "0800 542",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "0808 145",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "08702840625 comuk",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "09061221066 fromm",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "100 000",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "100 gift",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "100 wkly",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "1000 prize",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "11mths you",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "145 4742",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "150p min",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "150p msgrcvdhg",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "2004 account",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "250 weekly",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "3gbp network",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "3qxj9 unsubscribe",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "4742 between",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "500 prize",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "7250i this",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "750 pound",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "786 unredeemed",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "8007 for",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "8007 get",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "81151 get",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "82277 tyrone",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "88039 skilgme",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "9am-11pm you",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ansr 82277",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "any purpose",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "are being",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "are entitled",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "are guaranteed",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "asked our",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "awaiting you",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "back help'",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "best tones",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "between 10am-7pm",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "between 9am-11pm",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "box39822 w111wx",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "bx420 ip4",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "call 09061221066",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "call freephone",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "camera mobile",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "camera you",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "cant guess",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "cash holiday",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "claim prize",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "collect 83355",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "colour flag",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "contact txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "cost 150p",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "cup final",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "customer loyalty",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "day find",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "december only",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "dogging network",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "double txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "dvd player",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "easy call",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "either 500",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ending with",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "eng stop",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "flag 84199",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "flag yer",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "flights inc",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "for any",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "for polys",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "for terms",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "forwarded from",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "free 0800",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "free 08002986906",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "free camera",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "free get",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "freephone 0800",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "freephone 0808",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "friends 150p",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "fromm landline",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "gay chat",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "get laid",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "get txtin",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "get yours",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "goto www",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "guaranteed the",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "has asked",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "have match",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "help 08702840625",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "holiday flights",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ibiza holiday",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "important customer",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "inc speak",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "inclusive text",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "into our",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "just 60p",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "just reply",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "know has",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "know which",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "largest dogging",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "latest news",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ldew com",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ldew com1win150ppmx3age16",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "locations sent",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "login 3qxj9",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "loyalty offer",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "mins 150",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "mins double",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "mobile from",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "mobile savamob",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "mobile was",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "motorola sonyericsson",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "msg 08718720201",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "msg free",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "msgrcvdhg suite342",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "new message",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "news and",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "nokia 7250i",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "now claim",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "now www",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "offer ends",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "offer the",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "only had",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "only txtauction",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "only www",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "operator rates",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "optout txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "orange line",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "order reference",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "original best",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "our 250",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "our computer",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "phone 40gb",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "phone now",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "picked you",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "player 500",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "player know",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "pobox84 m263uz",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "points claim",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "poly ringtone",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "pound prize",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "price orange",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "prize txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "quiz wkly",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "rates app",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "rentl bx420",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "reply 4info",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "representative freephone",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ringtone colour",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "ringtones the",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "row w1jhl",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "sae pobox334",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "savamob pobox84",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "send chat",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "service and",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "service contact",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "services for",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "shows 786",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "sms services",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "someone know",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "sonyericsson nokia",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "spree every",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "start 81151",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "starting now",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "starts saturday",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "stop 87239",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "stop box39822",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "stop stop",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "stop txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "store 88039",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "tell friends",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "tenants welcome",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "text free",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "text tone",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "the 750",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "the original",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "then every",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "today text",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "tone flag",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "tone txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "tones 3gbp",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "top sony",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "txt ansr",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "txt eng",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "txt pod",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "txtauction txt",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "txtin now",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "unsub stop",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "urgent this",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "user today",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "video camera",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "voucher call",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "vouchers free",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "vouchers today",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "want real",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "week starting",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "weeks offer",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "which country",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "wid mates",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "win top",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "wkly comp",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "wkly draw",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "wkly win",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "won 1000",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "won 2000",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "word collect",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "word start",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "www ringtones",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "xchat this",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "xmas prize",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "yer mobile",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "your 2004",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "your inclusive",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "yours now",
+      "spamCount": 4,
+      "hamCount": 0,
+      "confidence": 5
+    },
+    {
+      "term": "week just",
+      "spamCount": 13,
+      "hamCount": 2,
+      "confidence": 4.67
+    },
+    {
+      "term": "join the",
+      "spamCount": 8,
+      "hamCount": 1,
+      "confidence": 4.5
+    },
+    {
+      "term": "please call",
+      "spamCount": 46,
+      "hamCount": 10,
+      "confidence": 4.27
+    },
+    {
+      "term": "mobile number",
+      "spamCount": 11,
+      "hamCount": 2,
+      "confidence": 4
+    },
+    {
+      "term": "for 1st",
+      "spamCount": 7,
+      "hamCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "from only",
+      "spamCount": 7,
+      "hamCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "text back",
+      "spamCount": 7,
+      "hamCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "the mobile",
+      "spamCount": 7,
+      "hamCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "txting and",
+      "spamCount": 7,
+      "hamCount": 1,
+      "confidence": 4
+    },
+    {
+      "term": "call now",
+      "spamCount": 20,
+      "hamCount": 5,
+      "confidence": 3.5
+    },
+    {
+      "term": "call from",
+      "spamCount": 13,
+      "hamCount": 3,
+      "confidence": 3.5
+    },
+    {
+      "term": "now all",
+      "spamCount": 6,
+      "hamCount": 1,
+      "confidence": 3.5
+    },
+    {
+      "term": "have new",
+      "spamCount": 9,
+      "hamCount": 2,
+      "confidence": 3.33
+    },
+    {
+      "term": "just text",
+      "spamCount": 8,
+      "hamCount": 2,
+      "confidence": 3
+    },
+    {
+      "term": "mp3 player",
+      "spamCount": 5,
+      "hamCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "now txt",
+      "spamCount": 5,
+      "hamCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "this what",
+      "spamCount": 5,
+      "hamCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "you her",
+      "spamCount": 5,
+      "hamCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "you last",
+      "spamCount": 5,
+      "hamCount": 1,
+      "confidence": 3
+    },
+    {
+      "term": "brand new",
+      "spamCount": 4,
+      "hamCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "nokia phone",
+      "spamCount": 4,
+      "hamCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "pls goto",
+      "spamCount": 4,
+      "hamCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "this your",
+      "spamCount": 4,
+      "hamCount": 1,
+      "confidence": 2.5
+    },
+    {
+      "term": "yes for",
+      "spamCount": 4,
+      "hamCount": 1,
+      "confidence": 2.5
+    }
+  ]
+}
