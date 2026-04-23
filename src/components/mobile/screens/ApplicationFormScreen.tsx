@@ -54,7 +54,6 @@ export default function ApplicationFormScreen() {
         refName: "",
         refRelation: "",
         refPhone: "",
-        refPhone: "",
         additionalNotes: "",
         // Documents (simulated)
         idDocument: null,

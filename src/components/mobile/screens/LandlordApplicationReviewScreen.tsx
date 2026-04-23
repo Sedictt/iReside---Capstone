@@ -1,11 +1,5 @@
 "use client";
 
-import { ArrowLeft, Check, X, Building2, MapPin, Download, FileText, Briefcase, ChevronRight } from "lucide-react";
-import { useNavigation } from "../navigation";
-import styles from "./LandlordApplicationsScreen.module.css";
-
-"use client";
-
 import { useState } from "react";
 import { 
   ArrowLeft, 
@@ -166,4 +160,3 @@ export default function LandlordApplicationReviewScreen() {
     </div>
   );
 }
-
