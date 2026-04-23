@@ -46,10 +46,10 @@ export type ScreenName =
     | "notifications"
     | "irisChat"
     | "communityFeed"
-    | "photoGallery",
+    | "photoGallery"
     // Phase 9
-    | "landlordWalkInApp",
-    | "moveInChecklist",
+    | "landlordWalkInApp"
+    | "moveInChecklist"
     | "revenueDashboard";
 
 // ─── Tab Names ─────────────────────────────────────────────
@@ -76,8 +76,6 @@ export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
     activity:   "landlordApplications",
     chat:       "landlordChat",
     profile:    "landlordProfile",
-};
-
 };
 
 // ─── Navigation Context Type ───────────────────────────────

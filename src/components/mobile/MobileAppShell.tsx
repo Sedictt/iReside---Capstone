@@ -80,9 +80,6 @@ const LANDLORD_TABS: TabConfig[] = [
     { id: "chat",       label: "Chat",       icon: MessageSquare },
     { id: "profile",    label: "Profile",    icon: User },
 ];
-
-];
-
 // ─── Screens that should NOT show the tab bar ──────────────
 const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "splash",
