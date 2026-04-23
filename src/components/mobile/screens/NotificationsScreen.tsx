@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, Bell, CreditCard, Wrench, MessageSquare, ClipboardCheck, Info, BellOff } from "lucide-react";
+import { useGlobalNotification } from "../NotificationContext";
 import { useNavigation } from "../navigation";
 import styles from "./NotificationsScreen.module.css";
 
@@ -60,6 +61,7 @@ export let MOCK_NOTIFICATIONS: Notification[] = [
 
 export default function NotificationsScreen() {
     const { goBack, navigate, role } = useNavigation();
+    const { showNotification } = useGlobalNotification();
     const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
     const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
 
@@ -148,6 +150,29 @@ export default function NotificationsScreen() {
 
             {/* Scroll Area */}
             <div className={styles.scrollArea}>
+                {/* Simulation Trigger */}
+                <button 
+                   onClick={() => showNotification({
+                       title: "New Maintenance Alert",
+                       message: "The repairman is on the way to Unit 4B. Please ensure access is provided.",
+                       type: "success"
+                   })}
+                   style={{
+                       width: '100%',
+                       padding: '12px',
+                       background: 'rgba(109, 152, 56, 0.1)',
+                       border: '1px dashed #6d9838',
+                       borderRadius: '16px',
+                       color: '#6d9838',
+                       fontSize: '13px',
+                       fontWeight: 800,
+                       marginBottom: '20px',
+                       cursor: 'pointer'
+                   }}
+                >
+                    ⚡ Simulate Push Notification
+                </button>
+
                 {filteredNotifications.length > 0 ? (
                     filteredNotifications.map((n) => (
                         <div 

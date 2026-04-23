@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Bell, Smartphone, Mail, Moon } from "lucide-react";
 import { useNavigation } from "../navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useGlobalNotification } from "../NotificationContext";
 import styles from "./TenantSettingsScreen.module.css";
 
 // ─── Custom Toggle Component ─────────────────────────────
@@ -21,6 +22,7 @@ function Toggle({ isOn, onToggle }: { isOn: boolean; onToggle: () => void }) {
 // ─── Main Component ──────────────────────────────────────
 export default function TenantSettingsScreen() {
     const { goBack, setRole, navigate } = useNavigation();
+    const { showNotification } = useGlobalNotification();
 
     // Settings State
     const [form, setForm] = useState({
@@ -145,6 +147,28 @@ export default function TenantSettingsScreen() {
                                 isOn={toggles.smsAlerts}
                                 onToggle={() => handleToggle("smsAlerts")}
                             />
+                        </div>
+                        <div className={styles.listItem}>
+                            <button
+                                style={{
+                                    width: '100%',
+                                    background: 'rgba(109, 152, 56, 0.1)',
+                                    border: '1px dashed #6d9838',
+                                    borderRadius: '10px',
+                                    padding: '10px',
+                                    color: '#6d9838',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => showNotification({
+                                    title: "New Message from Landlord",
+                                    message: "Hi Juan! Your maintenance request for Unit 12A has been updated.",
+                                    type: "info"
+                                })}
+                            >
+                                Trigger Test Notification
+                            </button>
                         </div>
                     </div>
                 </div>
