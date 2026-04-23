@@ -81,11 +81,15 @@ export type InvoiceListItem = {
     dueDate: string;
     issuedDate: string;
     status: ReturnType<typeof getInvoiceStatus>;
+    workflowStatus: Payment["workflow_status"];
     type: string;
     proofStatus: "none" | "submitted" | "confirmed";
     paymentMethod: string | null;
     itemCount: number;
     hasReceipt: boolean;
+    amountTag: Payment["amount_tag"] | null;
+    reviewAction: Payment["review_action"] | null;
+    inPersonIntentExpiresAt: string | null;
 };
 
 export type InvoiceReadingDetail = Pick<
@@ -109,6 +113,7 @@ export type InvoiceDetail = {
     id: string;
     invoiceNumber: string;
     status: ReturnType<typeof getInvoiceStatus>;
+    workflowStatus: Payment["workflow_status"];
     tenant: Profile | null;
     landlord: Profile | null;
     property: Property | null;
@@ -131,6 +136,11 @@ export type InvoiceDetail = {
     paymentProofUrl: string | null;
     paymentNote: string | null;
     receiptNumber: string | null;
+    amountTag: Payment["amount_tag"] | null;
+    reviewAction: Payment["review_action"] | null;
+    rejectionReason: string | null;
+    intentMethod: Payment["intent_method"] | null;
+    inPersonIntentExpiresAt: string | null;
     landlordConfirmed: boolean;
     lineItems: PaymentItem[];
     readings: InvoiceReadingDetail[];
@@ -192,6 +202,14 @@ const PAYMENT_RELATION_SELECT = `
     payment_note,
     reminder_sent_at,
     receipt_number,
+    workflow_status,
+    intent_method,
+    amount_tag,
+    review_action,
+    in_person_intent_expires_at,
+    rejection_reason,
+    last_action_at,
+    last_action_by,
     metadata,
     created_at,
     updated_at,
@@ -358,6 +376,7 @@ function buildInvoiceListItem(
     const items = (payment.payment_items ?? []).toSorted((a, b) => a.sort_order - b.sort_order);
     const status = getInvoiceStatus({
         status: payment.status,
+        workflowStatus: payment.workflow_status,
         dueDate: payment.due_date,
         balanceRemaining: payment.balance_remaining,
     });
@@ -379,11 +398,15 @@ function buildInvoiceListItem(
         dueDate: payment.due_date,
         issuedDate: payment.created_at,
         status,
+        workflowStatus: payment.workflow_status,
         type: paymentTypeLabel(items, payment.description),
         proofStatus,
         paymentMethod: payment.method,
         itemCount: items.length + readings.length,
         hasReceipt: receipts.length > 0,
+        amountTag: payment.amount_tag,
+        reviewAction: payment.review_action,
+        inPersonIntentExpiresAt: payment.in_person_intent_expires_at,
     };
 }
 
@@ -409,13 +432,22 @@ export async function listLandlordInvoices(supabase: AppSupabaseClient, landlord
 
     const metrics = invoices.reduce(
         (acc, invoice) => {
-            if (invoice.status === "pending" || invoice.status === "processing" || invoice.status === "overdue") {
+            if (
+                invoice.status === "pending" ||
+                invoice.status === "processing" ||
+                invoice.status === "overdue" ||
+                invoice.status === "reminder_sent" ||
+                invoice.status === "intent_submitted" ||
+                invoice.status === "under_review" ||
+                invoice.status === "awaiting_in_person" ||
+                invoice.status === "confirmed"
+            ) {
                 acc.totalOutstanding += invoice.balanceRemaining;
             }
             if (invoice.status === "overdue") {
                 acc.overdueAmount += invoice.balanceRemaining;
             }
-            if (invoice.status === "paid") {
+            if (invoice.status === "paid" || invoice.status === "receipted") {
                 acc.collectedLast30Days += invoice.amount;
             }
             acc.totalInvoices += 1;
@@ -465,6 +497,7 @@ export async function getInvoiceDetailForActor(
     const lateFeeAmount = Number(payment.late_fee_amount ?? terms.lateFeeAmount ?? 0);
     const status = getInvoiceStatus({
         status: payment.status,
+        workflowStatus: payment.workflow_status,
         dueDate: payment.due_date,
         balanceRemaining: payment.balance_remaining,
     });
@@ -473,6 +506,7 @@ export async function getInvoiceDetailForActor(
         id: payment.id,
         invoiceNumber: payment.invoice_number ?? makeInvoiceNumber(payment.id, payment.billing_cycle ?? payment.due_date),
         status,
+        workflowStatus: payment.workflow_status,
         tenant: payment.tenant ?? null,
         landlord: payment.landlord ?? null,
         property: payment.lease?.unit?.property ?? null,
@@ -495,6 +529,11 @@ export async function getInvoiceDetailForActor(
         paymentProofUrl: payment.payment_proof_url,
         paymentNote: payment.payment_note,
         receiptNumber: payment.receipt_number,
+        amountTag: payment.amount_tag,
+        reviewAction: payment.review_action,
+        rejectionReason: payment.rejection_reason,
+        intentMethod: payment.intent_method,
+        inPersonIntentExpiresAt: payment.in_person_intent_expires_at,
         landlordConfirmed: payment.landlord_confirmed,
         lineItems: items,
         readings: readingMap.get(payment.id) ?? [],
@@ -527,7 +566,14 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
     }));
 
     const actionable = mapped.filter((payment) =>
-        payment.status === "pending" || payment.status === "processing" || payment.status === "overdue",
+        payment.status === "pending" ||
+        payment.status === "processing" ||
+        payment.status === "overdue" ||
+        payment.status === "reminder_sent" ||
+        payment.status === "intent_submitted" ||
+        payment.status === "under_review" ||
+        payment.status === "awaiting_in_person" ||
+        payment.status === "confirmed",
     );
     const nextPayment = actionable[0] ?? null;
     const history = mapped.filter((payment) => payment.id !== nextPayment?.id);
@@ -623,28 +669,37 @@ export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordI
 
 export async function upsertPaymentReceipt(
     supabase: AppSupabaseClient,
-    payment: Pick<Payment, "id" | "landlord_id" | "tenant_id" | "paid_amount" | "amount" | "receipt_number">,
+    payment: Pick<Payment, "id" | "landlord_id" | "tenant_id" | "paid_amount" | "amount" | "receipt_number" | "method">,
     issuedBy: string,
     notes?: string | null,
+    amountBreakdown?: Record<string, unknown>,
 ) {
+    const existing = await supabase
+        .from("payment_receipts")
+        .select("*")
+        .eq("payment_id", payment.id)
+        .maybeSingle();
+
+    if (existing.error) throw existing.error;
+    if (existing.data) return existing.data;
+
     const issuedAt = new Date().toISOString();
     const receiptNumber = payment.receipt_number ?? makeReceiptNumber(payment.id, issuedAt);
 
     const { data, error } = await supabase
         .from("payment_receipts")
-        .upsert(
-            {
-                payment_id: payment.id,
-                landlord_id: payment.landlord_id,
-                tenant_id: payment.tenant_id,
-                receipt_number: receiptNumber,
-                amount: Number(payment.paid_amount || payment.amount),
-                issued_at: issuedAt,
-                issued_by: issuedBy,
-                notes: notes ?? null,
-            },
-            { onConflict: "receipt_number" },
-        )
+        .insert({
+            payment_id: payment.id,
+            landlord_id: payment.landlord_id,
+            tenant_id: payment.tenant_id,
+            receipt_number: receiptNumber,
+            amount: Number(payment.paid_amount || payment.amount),
+            issued_at: issuedAt,
+            issued_by: issuedBy,
+            notes: notes ?? null,
+            method: payment.method ?? null,
+            amount_breakdown: amountBreakdown ?? {},
+        })
         .select("*")
         .single();
 

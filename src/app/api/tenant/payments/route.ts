@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 
+import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getTenantPaymentOverview } from "@/lib/billing/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
     const {
         data: { user },
         error: userError,
@@ -15,6 +18,7 @@ export async function GET() {
     }
 
     try {
+        await expireInPersonIntents(adminClient, user.id, { tenantId: user.id });
         const overview = await getTenantPaymentOverview(supabase, user.id);
         return NextResponse.json(overview);
     } catch (error) {

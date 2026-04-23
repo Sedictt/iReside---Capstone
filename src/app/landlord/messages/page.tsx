@@ -17,6 +17,8 @@ import {
     FileText,
     AlertTriangle,
     Receipt,
+    HandCoins,
+    MapPin,
     Wallet,
     Image as ImageIcon,
     X,
@@ -55,8 +57,10 @@ import {
     type ConversationSummary,
     type MessageUserSearchResult,
     type PaymentHistoryEntry,
-} from "@/lib/messages/client";
-import { redactMessageForSend } from "@/lib/messages/redaction-client";
+} from "../../../lib/messages/client";
+import { CashPaymentInterface } from "../../../components/landlord/CashPaymentInterface";
+import { InvoiceModal } from "../../../components/landlord/invoices/InvoiceModal";
+import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 
 type ContactItem = {
     id: string;
@@ -98,6 +102,11 @@ type UiMessage = {
     amount?: string;
     date?: string;
     description?: string;
+    workflowStatus?: string;
+    expiresAt?: string;
+    landlordTransactionPath?: string;
+    paymentId?: string;
+    invoiceNumber?: string;
     status?: OutboundStatus;
     isPhishing?: boolean;
     redactionCategory?: "none" | "credentials" | "profanity" | "phishing" | "spam";
@@ -382,6 +391,9 @@ export default function MessagesPage() {
     const [moderationMessage, setModerationMessage] = useState("");
     const [showChatRulesModal, setShowChatRulesModal] = useState(false);
     const [showSecurityWarning, setShowSecurityWarning] = useState(true);
+    const [activeF2FPayment, setActiveF2FPayment] = useState<UiMessage | null>(null);
+    const [isF2FInterfaceOpen, setIsF2FInterfaceOpen] = useState(false);
+    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const typingStopTimeoutRef = useRef<number | null>(null);
@@ -395,6 +407,8 @@ export default function MessagesPage() {
     const messagesCacheRef = useRef<Map<string, UiMessage[]>>(new Map());
     const paymentHistoryCacheRef = useRef<Map<string, { payments: PaymentHistoryEntry[]; totalPaid: number }>>(new Map());
     const activeConversationIdRef = useRef<string | null>(conversationFromUrl);
+    const conversationFromUrlRef = useRef<string | null>(conversationFromUrl);
+    const previousConversationFromUrlRef = useRef<string | null>(conversationFromUrl);
     const shouldStickToBottomRef = useRef(true);
     const shouldScrollOnConversationOpenRef = useRef(true);
 
@@ -411,11 +425,24 @@ export default function MessagesPage() {
     }, [activeConversationId]);
 
     useEffect(() => {
+        conversationFromUrlRef.current = conversationFromUrl;
+    }, [conversationFromUrl]);
+
+    useEffect(() => {
         shouldStickToBottomRef.current = true;
         shouldScrollOnConversationOpenRef.current = true;
     }, [activeConversationId]);
 
     useEffect(() => {
+        const previousConversationFromUrl = previousConversationFromUrlRef.current;
+        previousConversationFromUrlRef.current = conversationFromUrl;
+
+        // Only sync URL -> state when the URL actually changed (e.g. back/forward),
+        // not when local state is in-flight and about to update the URL.
+        if (previousConversationFromUrl === conversationFromUrl) {
+            return;
+        }
+
         if (!conversationFromUrl || conversationFromUrl === activeConversationId) {
             return;
         }
@@ -515,11 +542,11 @@ export default function MessagesPage() {
             setIsSidebarLoading(false);
 
             setActiveConversationId((current) => {
-                if (conversationFromUrl && cachedConversations.some((contact) => contact.id === conversationFromUrl)) {
-                    return conversationFromUrl;
-                }
                 if (current && cachedConversations.some((contact) => contact.id === current)) {
                     return current;
+                }
+                if (conversationFromUrl && cachedConversations.some((contact) => contact.id === conversationFromUrl)) {
+                    return conversationFromUrl;
                 }
                 return cachedConversations[0]?.id ?? null;
             });
@@ -847,10 +874,10 @@ export default function MessagesPage() {
         const isPhishing = Boolean(metadata?.isPhishing);
         const explicitCategory =
             metadata?.redactionCategory === "credentials" ||
-            metadata?.redactionCategory === "profanity" ||
-            metadata?.redactionCategory === "phishing" ||
-            metadata?.redactionCategory === "spam" ||
-            metadata?.redactionCategory === "none"
+                metadata?.redactionCategory === "profanity" ||
+                metadata?.redactionCategory === "phishing" ||
+                metadata?.redactionCategory === "spam" ||
+                metadata?.redactionCategory === "none"
                 ? metadata.redactionCategory
                 : undefined;
         const metadataDisclosureAllowed = typeof metadata?.disclosureAllowed === "boolean" ? metadata.disclosureAllowed : undefined;
@@ -870,17 +897,43 @@ export default function MessagesPage() {
         const fileMimeType = typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
         const fileSize = typeof metadata?.fileSize === "number" ? metadata.fileSize : undefined;
 
+        const systemType = typeof metadata?.systemType === "string"
+            ? metadata.systemType
+            : (typeof metadata?.event === "string" ? metadata.event : undefined);
+
+        const workflowStatus = typeof metadata?.workflowStatus === "string"
+            ? metadata.workflowStatus
+            : (typeof metadata?.event === "string" ? metadata.event : undefined);
+
+        let content = message.content;
+        if (message.type === "system") {
+            if (systemType === "awaiting_in_person") {
+                content = "A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.";
+            } else if (systemType === "reminder_sent") {
+                content = "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.";
+            } else if (systemType === "in_person_intent_expired") {
+                content = "The face-to-face payment request has expired. The invoice status has been reverted to pending.";
+            } else if (systemType === "landlord_review") {
+                if (workflowStatus === "rejected") {
+                    const reason = typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : "No reason provided.";
+                    content = `The payment request has been rejected. Reason: ${reason}`;
+                } else if (workflowStatus === "confirmed" || workflowStatus === "receipted") {
+                    content = "The payment has been confirmed.";
+                }
+            }
+        }
+
         return {
             id: message.id,
-            type: isOwn ? "landlord" : "tenant",
+            type: message.type === "system" ? "system" : (isOwn ? "landlord" : "tenant"),
             messageType: message.type,
-            content: message.content,
+            content,
             redactedContent,
             timestamp: new Date(message.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
             createdAt: message.createdAt,
             isRedacted,
             isConfirmedDisclosed,
-            systemType: typeof metadata?.systemType === "string" ? metadata.systemType : undefined,
+            systemType,
             paymentAmount: typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined,
             receiptImg: typeof metadata?.receiptImg === "string" ? metadata.receiptImg : undefined,
             fileUrl,
@@ -892,6 +945,18 @@ export default function MessagesPage() {
             redactionCategory,
             disclosureAllowed,
             status: isOwn ? (message.readAt ? "seen" : "delivered") : undefined,
+            workflowStatus,
+            expiresAt: typeof metadata?.expiresAt === "string" ? metadata.expiresAt : undefined,
+            landlordTransactionPath: typeof metadata?.landlordTransactionPath === "string" ? metadata.landlordTransactionPath : undefined,
+            paymentId: typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined,
+            invoiceId: typeof metadata?.invoiceId === "string"
+                ? metadata.invoiceId
+                : (typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined),
+            invoiceNumber: typeof metadata?.invoiceNumber === "string" ? metadata.invoiceNumber : undefined,
+            tenantName: typeof metadata?.tenantName === "string" ? metadata.tenantName : undefined,
+            unit: typeof metadata?.unit === "string" ? metadata.unit : undefined,
+            amount: typeof metadata?.amount === "string" ? metadata.amount : (typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined),
+            description: typeof metadata?.description === "string" ? metadata.description : undefined,
         };
     };
 
@@ -956,11 +1021,12 @@ export default function MessagesPage() {
             }
 
             setActiveConversationId((current) => {
-                if (conversationFromUrl && mapped.some((contact) => contact.id === conversationFromUrl)) {
-                    return conversationFromUrl;
-                }
                 if (current && mapped.some((contact) => contact.id === current)) {
                     return current;
+                }
+                const conversationFromUrlValue = conversationFromUrlRef.current;
+                if (conversationFromUrlValue && mapped.some((contact) => contact.id === conversationFromUrlValue)) {
+                    return conversationFromUrlValue;
                 }
                 return mapped[0]?.id ?? null;
             });
@@ -1015,6 +1081,12 @@ export default function MessagesPage() {
             .replace(/\[REDACTED\]/g, '*****')
             .replace(/(\*{5}\s*){2,}/g, '***** ')
             .trim();
+    };
+
+    const handleConfirmF2FPayment = async (paymentId: string) => {
+        // Instead of API call, open the InvoiceModal for structured review
+        setIsF2FInterfaceOpen(false);
+        setSelectedInvoiceId(paymentId);
     };
 
     const handleDownloadImage = async (elementId: string, filename: string) => {
@@ -1445,43 +1517,13 @@ export default function MessagesPage() {
         ));
     };
 
-    const handleConfirmPayment = (id: string, amount?: string) => {
-        const timestamp = new Date().toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    const handleConfirmPayment = (invoiceId?: string | null) => {
+        if (!invoiceId) {
+            setMessagesError("Unable to open invoice review. Missing invoice reference.");
+            return;
+        }
 
-        setMessagesState(prev => {
-            const updated = prev.map(m =>
-                m.id === id ? {
-                    ...m,
-                    systemType: "payment",
-                    content: `${displayContact.name} successfully paid ₱${amount || "13,000"} for Rent (February). Receipt ID: #PAY-${Math.floor(Math.random() * 10000)}.`
-                } : m
-            );
-
-            const invoiceId = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-            const invoiceMessage: UiMessage = {
-                id: `inv_${Date.now()}`,
-                type: "system",
-                messageType: "system",
-                systemType: "invoice",
-                invoiceId: invoiceId,
-                tenantName: displayContact.name,
-                unit: displayContact.unit,
-                amount: amount || "13,000",
-                date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                description: "Monthly Rent - February 2026",
-                content: "Official Electronic Invoice Generated",
-                timestamp: timestamp,
-                createdAt: new Date().toISOString(),
-            };
-
-            return [...updated, invoiceMessage];
-        });
+        setSelectedInvoiceId(invoiceId);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -1679,6 +1721,8 @@ export default function MessagesPage() {
             case 'payment_submitted': return <FileText className="h-4 w-4 text-primary" />;
             case 'payment': return <CheckCircle2 className="h-4 w-4 text-primary" />;
             case 'invoice': return <Receipt className="h-4 w-4 text-emerald-500" />;
+            case 'reminder_sent': return <Bell className="h-4 w-4 text-amber-500" />;
+            case 'awaiting_in_person': return <HandCoins className="h-4 w-4 text-amber-500" />;
             case 'maintenance': return <Wrench className="h-4 w-4 text-amber-500" />;
             case 'maintenance_resolved': return <CheckCircle2 className="h-4 w-4 text-blue-500" />;
             case 'lease': return <FileText className="h-4 w-4 text-purple-500" />;
@@ -1900,7 +1944,7 @@ export default function MessagesPage() {
                     onClick={() => setOpenMessageMenuId(null)}
                     className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full"
                 >
-                    <div className="w-full max-w-4xl p-6 space-y-6">
+                    <div className="w-full max-w-4xl p-6 pb-12 space-y-6">
                         <div className="text-center py-4">
                             <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled shadow-sm">
                                 Conversation Started • February 1, 2026
@@ -1929,302 +1973,435 @@ export default function MessagesPage() {
                             </div>
                         ) : (
                             <>
-                        {messagesState.map((msg) => {
-                            if (msg.type === "system") {
-                                return (
-                                    <div key={msg.id} className="flex justify-center max-w-4xl mx-auto my-6 px-4">
-                                        {msg.systemType === "payment_submitted" ? (
-                                            <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-primary/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-primary/50 group pb-4">
-                                                {/* Header Gradient */}
-                                                <div className="bg-gradient-to-r from-primary/80 to-primary p-5 relative overflow-hidden h-24 flex items-center shrink-0">
-                                                    <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
-                                                    <div className="relative z-10 flex items-center gap-3">
-                                                        <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
-                                                            <Receipt className="h-6 w-6 text-black" />
-                                                        </div>
-                                                        <div className="text-left flex flex-col justify-center text-black">
-                                                            <p className="text-lg font-bold leading-tight">Payment Received</p>
-                                                            <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">{msg.timestamp}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Details Section */}
-                                                <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
-                                                    <div className="flex justify-between items-center bg-surface-2 rounded-2xl p-4 border border-divider">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[10px] uppercase tracking-wider text-medium font-bold mb-1">Amount Paid</span>
-                                                            <span className="text-2xl font-black text-primary">₱{msg.paymentAmount}</span>
-                                                        </div>
-                                                        <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
-                                                            <Wallet className="h-4 w-4 text-primary" />
-                                                        </div>
-                                                    </div>
-
-                                                    <p className="text-xs text-medium leading-relaxed bg-surface-2/50 p-3 rounded-xl border border-divider">
-                                                        {msg.content}
-                                                    </p>
-
-                                                    {msg.receiptImg && (
-                                                        <div className="flex flex-col gap-2 mt-1">
-                                                            <span className="text-[10px] uppercase tracking-wider text-medium font-bold ml-1">Proof of Payment</span>
-                                                            <div className="rounded-2xl overflow-hidden border border-divider relative cursor-pointer shadow-inner">
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-10 group/img">
-                                                                    <div className="bg-white/10 border border-white/20 p-2 rounded-full transform scale-95 group-hover/img:scale-100 transition-all">
-                                                                        <Search className="w-5 h-5 text-white" />
-                                                                    </div>
+                                {messagesState.map((msg) => {
+                                    if (msg.type === "system") {
+                                        return (
+                                            <div key={msg.id} className="flex justify-center max-w-4xl mx-auto my-6 px-4">
+                                                {msg.systemType === "payment_submitted" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-primary/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-primary/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-primary/80 to-primary p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <Receipt className="h-6 w-6 text-black" />
                                                                 </div>
-                                                                <img src={msg.receiptImg} alt="Receipt" className="w-full h-32 object-cover opacity-90 transition-opacity" />
+                                                                <div className="text-left flex flex-col justify-center text-black">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Received</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">{msg.timestamp}</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    )}
-                                                </div>
 
-                                                {/* Action Button */}
-                                                <div className="px-5 mt-2">
-                                                    <button
-                                                        onClick={() => handleConfirmPayment(msg.id, msg.paymentAmount)}
-                                                        className="w-full bg-primary hover:bg-primary/90 text-black py-3 rounded-xl text-sm font-bold transition-all hover:shadow-[0_0_20px_rgba(200,255,0,0.15)] transform hover:-translate-y-0.5"
-                                                    >
-                                                        Verify  & Confirm Payment
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : msg.systemType === "invoice" ? (
-                                            <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-surface-1 border border-divider rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
-                                                {/* Invoice Watermark Header */}
-                                                <div className="bg-surface-2 p-6 border-b border-divider relative overflow-hidden">
-                                                    <div className="absolute top-0 right-0 p-4 opacity-5">
-                                                        <Receipt size={120} className="-rotate-12" />
-                                                    </div>
-                                                    <div className="relative z-10 flex justify-between items-start">
-                                                        <div>
-                                                            <Logo theme="dark" className="h-6 w-auto mb-1" />
-                                                            <p className="text-[10px] text-medium font-bold uppercase tracking-widest">Digital Payment Invoice</p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
-                                                                Status: Paid
-                                                            </span>
-                                                            <p className="text-[10px] text-medium mt-2 font-medium">{msg.invoiceId}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="flex justify-between items-center bg-surface-2 rounded-2xl p-4 border border-divider">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] uppercase tracking-wider text-medium font-bold mb-1">Amount Paid</span>
+                                                                    <span className="text-2xl font-black text-primary">₱{msg.paymentAmount}</span>
+                                                                </div>
+                                                                <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
+                                                                    <Wallet className="h-4 w-4 text-primary" />
+                                                                </div>
+                                                            </div>
 
-                                                {/* Invoice Content */}
-                                                <div className="p-6 space-y-6">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div>
-                                                            <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Billed To</p>
-                                                            <p className="text-sm font-bold text-high leading-tight">{msg.tenantName}</p>
-                                                            <p className="text-[11px] text-medium mt-0.5">{msg.unit}</p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Date Issued</p>
-                                                            <p className="text-sm font-bold text-high leading-tight">{msg.date}</p>
-                                                        </div>
-                                                    </div>
+                                                            <p className="text-xs text-medium leading-relaxed bg-surface-2/50 p-3 rounded-xl border border-divider">
+                                                                {msg.content}
+                                                            </p>
 
-                                                    <div className="bg-surface-2/40 rounded-2xl border border-divider overflow-hidden">
-                                                        <div className="p-3 border-b border-divider bg-surface-2/20 flex items-center justify-between">
-                                                            <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Description</span>
-                                                            <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Amount</span>
-                                                        </div>
-                                                        <div className="p-4 flex items-center justify-between">
-                                                            <p className="text-xs text-high font-medium">{msg.description}</p>
-                                                            <p className="text-sm font-black text-high">₱{msg.amount}</p>
-                                                        </div>
-                                                        <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-divider">
-                                                            <span className="text-[10px] text-medium font-bold uppercase tracking-widest">Total Paid</span>
-                                                            <span className="text-lg font-black text-primary">₱{msg.amount}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-3">
-                                                        <button
-                                                            disabled={isDownloading}
-                                                            onClick={() => handleDownloadImage(`invoice-${msg.id}`, `Invoice-${msg.invoiceId}`)}
-                                                            className={cn(
-                                                                "flex-1 bg-surface-2 hover:bg-surface-3 text-high py-3 rounded-2xl text-[11px] font-bold transition-all border border-divider flex items-center justify-center gap-2 group",
-                                                                isDownloading && "opacity-50 cursor-not-allowed"
+                                                            {msg.receiptImg && (
+                                                                <div className="flex flex-col gap-2 mt-1">
+                                                                    <span className="text-[10px] uppercase tracking-wider text-medium font-bold ml-1">Proof of Payment</span>
+                                                                    <div className="rounded-2xl overflow-hidden border border-divider relative cursor-pointer shadow-inner">
+                                                                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-10 group/img">
+                                                                            <div className="bg-white/10 border border-white/20 p-2 rounded-full transform scale-95 group-hover/img:scale-100 transition-all">
+                                                                                <Search className="w-5 h-5 text-white" />
+                                                                            </div>
+                                                                        </div>
+                                                                        <img src={msg.receiptImg} alt="Receipt" className="w-full h-32 object-cover opacity-90 transition-opacity" />
+                                                                    </div>
+                                                                </div>
                                                             )}
-                                                        >
-                                                            <Download className="w-3.5 h-3.5 text-medium group-hover:text-high transition-colors" />
-                                                            {isDownloading ? "Generating..." : "Download Image"}
-                                                        </button>
-                                                        <button className="w-12 h-12 bg-surface-2 hover:bg-surface-3 text-medium hover:text-high flex items-center justify-center rounded-2xl transition-all border border-divider">
-                                                            <ShieldCheck className="w-5 h-5" />
-                                                        </button>
+                                                        </div>
+
+                                                        {/* Action Button */}
+                                                        <div className="px-5 mt-2">
+                                                            <button
+                                                                onClick={() => handleConfirmPayment(msg.invoiceId ?? msg.paymentId)}
+                                                                className="w-full bg-primary hover:bg-primary/90 text-black py-3 rounded-xl text-sm font-bold transition-all hover:shadow-[0_0_20px_rgba(200,255,0,0.15)] transform hover:-translate-y-0.5"
+                                                            >
+                                                                Verify  & Confirm Payment
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                ) : msg.systemType === "invoice" ? (
+                                                    <div id={`invoice-${msg.id}`} className="flex flex-col w-full max-w-md bg-surface-1 border border-divider rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-500">
+                                                        {/* Invoice Watermark Header */}
+                                                        <div className="bg-surface-2 p-6 border-b border-divider relative overflow-hidden">
+                                                            <div className="absolute top-0 right-0 p-4 opacity-5">
+                                                                <Receipt size={120} className="-rotate-12" />
+                                                            </div>
+                                                            <div className="relative z-10 flex justify-between items-start">
+                                                                <div>
+                                                                    <Logo theme="dark" className="h-8 w-auto mb-1" />
+                                                                    <p className="text-[10px] text-medium font-bold uppercase tracking-widest">Digital Payment Invoice</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase tracking-wider">
+                                                                        Status: Paid
+                                                                    </span>
+                                                                    <p className="text-[10px] text-medium mt-2 font-medium">{msg.invoiceId}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-                                                <div className="px-6 py-3 bg-surface-1 border-t border-divider text-center">
-                                                    <p className="text-[9px] text-disabled font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 bg-surface-1 border border-divider px-5 py-3 rounded-2xl shadow-sm text-center">
-                                                <div className="bg-surface-2 p-2 rounded-full border border-divider shrink-0">
-                                                    {renderSystemIcon(msg.systemType || '')}
-                                                </div>
-                                                <div className="text-left flex flex-col justify-center">
-                                                    <p className="text-xs text-high font-medium leading-relaxed">{msg.content}</p>
-                                                    <p className="text-[9px] text-medium mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            }
+                                                        {/* Invoice Content */}
+                                                        <div className="p-6 space-y-6">
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Billed To</p>
+                                                                    <p className="text-sm font-bold text-high leading-tight">{msg.tenantName}</p>
+                                                                    <p className="text-[11px] text-medium mt-0.5">{msg.unit}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="text-[9px] text-medium uppercase font-bold tracking-wider mb-1">Date Issued</p>
+                                                                    <p className="text-sm font-bold text-high leading-tight">{msg.date}</p>
+                                                                </div>
+                                                            </div>
 
-                            const isMe = msg.type === "landlord";
-                            const hasImageAttachment = Boolean(msg.fileUrl && msg.fileMimeType?.startsWith("image/"));
-                            const hasFileAttachment = Boolean(msg.fileUrl && !msg.fileMimeType?.startsWith("image/"));
+                                                            <div className="bg-surface-2/40 rounded-2xl border border-divider overflow-hidden">
+                                                                <div className="p-3 border-b border-divider bg-surface-2/20 flex items-center justify-between">
+                                                                    <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Description</span>
+                                                                    <span className="text-[9px] text-medium uppercase font-bold tracking-wider px-1">Amount</span>
+                                                                </div>
+                                                                <div className="p-4 flex items-center justify-between">
+                                                                    <p className="text-xs text-high font-medium">{msg.description}</p>
+                                                                    <p className="text-sm font-black text-high">₱{msg.amount}</p>
+                                                                </div>
+                                                                <div className="px-4 py-3 bg-primary/5 flex items-center justify-between border-t border-divider">
+                                                                    <span className="text-[10px] text-medium font-bold uppercase tracking-widest">Total Paid</span>
+                                                                    <span className="text-lg font-black text-primary">₱{msg.amount}</span>
+                                                                </div>
+                                                            </div>
 
-                            return (
-                                <div key={msg.id} className={cn("group/message flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
-                                    <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
-                                        {!isMe && (
-                                            <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
-                                        )}
-                                        <div className={cn(
-                                            "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
-                                            isMe
-                                                ? "rounded-3xl rounded-br-sm bg-primary font-black uppercase tracking-widest text-[11px] text-black shadow-primary/20"
-                                                : "rounded-3xl rounded-bl-sm border border-divider bg-surface-1 text-high",
-                                            (hasImageAttachment || hasFileAttachment) && "px-0 py-0 bg-transparent border-none shadow-none"
-                                        )}>
-                                            {hasImageAttachment && (
-                                                <button
-                                                    onClick={() => setPreviewImageUrl(msg.fileUrl || null)}
-                                                    className="mb-2 block w-full overflow-hidden rounded-2xl border border-border bg-muted/40 dark:border-white/10 dark:bg-black/40"
-                                                >
-                                                    <img src={msg.fileUrl} alt={msg.fileName || "Shared image"} className="w-full max-h-64 object-contain" />
-                                                </button>
-                                            )}
+                                                            <div className="flex items-center gap-3">
+                                                                <button
+                                                                    disabled={isDownloading}
+                                                                    onClick={() => handleDownloadImage(`invoice-${msg.id}`, `Invoice-${msg.invoiceId}`)}
+                                                                    className={cn(
+                                                                        "flex-1 bg-surface-2 hover:bg-surface-3 text-high py-3 rounded-2xl text-[11px] font-bold transition-all border border-divider flex items-center justify-center gap-2 group",
+                                                                        isDownloading && "opacity-50 cursor-not-allowed"
+                                                                    )}
+                                                                >
+                                                                    <Download className="w-3.5 h-3.5 text-medium group-hover:text-high transition-colors" />
+                                                                    {isDownloading ? "Generating..." : "Download Image"}
+                                                                </button>
+                                                                <button className="w-12 h-12 bg-surface-2 hover:bg-surface-3 text-medium hover:text-high flex items-center justify-center rounded-2xl transition-all border border-divider">
+                                                                    <ShieldCheck className="w-5 h-5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
 
-                                            {hasFileAttachment && (
-                                                <a
-                                                    href={msg.fileUrl}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="mb-2 flex items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 dark:border-white/10 dark:bg-neutral-900/80"
-                                                >
-                                                    <div className="p-2 rounded-lg bg-white/10">
-                                                        <File className="w-4 h-4 text-foreground dark:text-neutral-100" />
+                                                        <div className="px-6 py-3 bg-surface-1 border-t border-divider text-center">
+                                                            <p className="text-[9px] text-disabled font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
+                                                        </div>
                                                     </div>
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-xs font-bold text-foreground dark:text-neutral-100">{msg.fileName || msg.content}</p>
-                                                        <p className="text-[10px] text-muted-foreground dark:text-neutral-400">
-                                                            {formatFileSize(msg.fileSize ?? 0)}
-                                                        </p>
+                                                ) : msg.workflowStatus === "awaiting_in_person" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-amber-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-amber-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-amber-500/80 to-amber-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <HandCoins className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">In-Person Payment</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Awaiting Confirmation</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed">
+                                                                    {msg.content}
+                                                                </p>
+                                                                {msg.expiresAt && (
+                                                                    <div className="flex items-center gap-2 text-[10px] text-amber-500 font-bold uppercase tracking-wider">
+                                                                        <Clock3 className="w-3 h-3" />
+                                                                        <span>Expires: {new Date(msg.expiresAt).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Action Button */}
+                                                        <div className="px-5 mt-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setActiveF2FPayment(msg);
+                                                                    setIsF2FInterfaceOpen(true);
+                                                                }}
+                                                                className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 shadow-lg shadow-amber-500/20"
+                                                            >
+                                                                <HandCoins className="w-4 h-4" />
+                                                                Open Cash Payment Interface
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </a>
-                                            )}
+                                                ) : (msg.workflowStatus === "confirmed" || msg.workflowStatus === "receipted") ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-emerald-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-emerald-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-emerald-500/80 to-emerald-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <CheckCircle2 className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Confirmed</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Successfully Processed</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-                                            {!msg.fileUrl && (
-                                                <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
-                                                    {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed)
-                                                        ? prettifyRedactedText(msg.redactedContent || msg.content)
-                                                        : msg.content
-                                                    }
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="relative shrink-0 self-start">
-                                            <button
-                                                type="button"
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    setOpenMessageMenuId((current) => (current === msg.id ? null : msg.id));
-                                                }}
-                                                className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover/message:opacity-100 focus:opacity-100"
-                                                aria-label="Message actions"
-                                            >
-                                                <MoreVertical className="h-4 w-4" />
-                                            </button>
-                                            {openMessageMenuId === msg.id && (
-                                                <div
-                                                    className={cn(
-                                                        "absolute z-20 mt-1 min-w-[150px] rounded-xl border border-border bg-card p-1 shadow-xl",
-                                                        isMe ? "right-0" : "left-0"
-                                                    )}
-                                                    onClick={(event) => event.stopPropagation()}
-                                                >
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => void handleCopyMessageId(msg.id)}
-                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-                                                    >
-                                                        <Copy className="h-3.5 w-3.5" />
-                                                        Copy message ID
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed">
+                                                                    {msg.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : msg.workflowStatus === "rejected" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-red-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-red-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-red-500/80 to-red-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <AlertTriangle className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Rejected</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Action Required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-                                    <div className={cn("flex items-center gap-1 px-2 text-[10px]", isMe ? "text-medium" : "text-medium/80")}>
-                                        {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
-                                        {copiedMessageId === msg.id && <span className="text-emerald-500 font-semibold">ID copied</span>}
-                                    </div>
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed">
+                                                                    {msg.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : msg.systemType === "reminder_sent" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-amber-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-amber-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-amber-500/80 to-amber-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <Bell className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Reminder</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Action Required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
 
-                                    {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed) && (
-                                        <div className="w-full flex justify-center mt-2 mb-4">
-                                            <div className={cn(
-                                                "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
-                                                msg.isPhishing 
-                                                    ? "border-red-500/40 bg-red-500/10 text-red-700 shadow-red-500/10 dark:bg-red-900/40 dark:text-red-300" 
-                                                    : "border-amber-500/20 bg-card/90 text-muted-foreground shadow-amber-500/5 dark:bg-neutral-900/60 dark:text-neutral-300"
-                                            )}>
-                                                <div className="flex items-center justify-center gap-1.5 mb-2">
-                                                    <AlertTriangle className={cn("w-4 h-4", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")} />
-                                                    <strong className={cn("text-xs", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")}>
-                                                        {msg.isPhishing || msg.redactionCategory === "spam" ? "Malicious Content Detected" : "Iris AI Intercepted"}
-                                                    </strong>
-                                                </div>
-                                                <p className="leading-relaxed opacity-90 text-muted-foreground dark:text-neutral-400">
-                                                    {msg.isPhishing
-                                                        ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
-                                                        : msg.redactionCategory === "spam"
-                                                            ? "This message matches spam/scam patterns and has been blocked from normal disclosure."
-                                                        : msg.redactionCategory === "profanity"
-                                                            ? "This message contains prohibited profanity and remains permanently censored."
-                                                            : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
-                                                </p>
-                                                {msg.disclosureAllowed && (
-                                                    <div className="mt-4 flex items-center justify-center">
-                                                        <button
-                                                            onClick={() => confirmDisclose(msg.id)}
-                                                            className="px-6 py-2 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-105 font-bold rounded-xl transition-all w-fit"
-                                                        >
-                                                            Confirm & Disclose
-                                                        </button>
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed italic">
+                                                                    "{msg.content}"
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-divider rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-primary/30 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-surface-2 to-surface-3 p-5 relative overflow-hidden h-20 flex items-center shrink-0 border-b border-divider">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-primary/5 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-surface-1 p-2 rounded-xl border border-divider shadow-sm">
+                                                                    {renderSystemIcon(msg.systemType || '')}
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center">
+                                                                    <p className="text-sm font-bold leading-tight text-high">System Notification</p>
+                                                                    <p className="text-[9px] font-bold tracking-wide uppercase text-medium opacity-70">{msg.timestamp}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-4">
+                                                            <p className="text-xs text-high font-medium leading-relaxed bg-surface-2/30 p-3 rounded-xl border border-divider">
+                                                                {msg.content}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                        );
+                                    }
 
-                        {isOtherUserTyping && (
-                            <div className="flex items-end gap-3 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
-                                <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
-                                <div className="rounded-3xl rounded-bl-sm border border-border bg-card px-4 py-3 text-foreground shadow-lg dark:border-white/5 dark:bg-neutral-800 dark:text-white">
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
-                                        <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
-                                        <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce" />
+                                    const isMe = msg.type === "landlord";
+                                    const hasImageAttachment = Boolean(msg.fileUrl && msg.fileMimeType?.startsWith("image/"));
+                                    const hasFileAttachment = Boolean(msg.fileUrl && !msg.fileMimeType?.startsWith("image/"));
+
+                                    return (
+                                        <div key={msg.id} className={cn("group/message flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
+                                            <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
+                                                {!isMe && (
+                                                    <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
+                                                )}
+                                                <div className={cn(
+                                                    "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
+                                                    isMe
+                                                        ? "rounded-3xl rounded-br-sm bg-primary font-black uppercase tracking-widest text-[11px] text-black shadow-primary/20"
+                                                        : "rounded-3xl rounded-bl-sm border border-divider bg-surface-1 text-high",
+                                                    (hasImageAttachment || hasFileAttachment) && "px-0 py-0 bg-transparent border-none shadow-none"
+                                                )}>
+                                                    {hasImageAttachment && (
+                                                        <button
+                                                            onClick={() => setPreviewImageUrl(msg.fileUrl || null)}
+                                                            className="mb-2 block w-full overflow-hidden rounded-2xl border border-border bg-muted/40 dark:border-white/10 dark:bg-black/40"
+                                                        >
+                                                            <img src={msg.fileUrl} alt={msg.fileName || "Shared image"} className="w-full max-h-64 object-contain" />
+                                                        </button>
+                                                    )}
+
+                                                    {hasFileAttachment && (
+                                                        <a
+                                                            href={msg.fileUrl}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="mb-2 flex items-center gap-3 rounded-2xl border border-border bg-card/95 p-3 dark:border-white/10 dark:bg-neutral-900/80"
+                                                        >
+                                                            <div className="p-2 rounded-lg bg-white/10">
+                                                                <File className="w-4 h-4 text-foreground dark:text-neutral-100" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="truncate text-xs font-bold text-foreground dark:text-neutral-100">{msg.fileName || msg.content}</p>
+                                                                <p className="text-[10px] text-muted-foreground dark:text-neutral-400">
+                                                                    {formatFileSize(msg.fileSize ?? 0)}
+                                                                </p>
+                                                            </div>
+                                                        </a>
+                                                    )}
+
+                                                    {!msg.fileUrl && (
+                                                        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                                                            {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed)
+                                                                ? prettifyRedactedText(msg.redactedContent || msg.content)
+                                                                : msg.content
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="relative shrink-0 self-start">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setOpenMessageMenuId((current) => (current === msg.id ? null : msg.id));
+                                                        }}
+                                                        className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover/message:opacity-100 focus:opacity-100"
+                                                        aria-label="Message actions"
+                                                    >
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </button>
+                                                    {openMessageMenuId === msg.id && (
+                                                        <div
+                                                            className={cn(
+                                                                "absolute z-20 mt-1 min-w-[150px] rounded-xl border border-border bg-card p-1 shadow-xl",
+                                                                isMe ? "right-0" : "left-0"
+                                                            )}
+                                                            onClick={(event) => event.stopPropagation()}
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => void handleCopyMessageId(msg.id)}
+                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                                                            >
+                                                                <Copy className="h-3.5 w-3.5" />
+                                                                Copy message ID
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className={cn("flex items-center gap-1 px-2 text-[10px]", isMe ? "text-medium" : "text-medium/80")}>
+                                                {isMe ? renderOutgoingStatus(msg.status, msg.timestamp) : <span>{msg.timestamp}</span>}
+                                                {copiedMessageId === msg.id && <span className="text-emerald-500 font-semibold">ID copied</span>}
+                                            </div>
+
+                                            {msg.isRedacted && (!msg.isConfirmedDisclosed || !msg.disclosureAllowed) && (
+                                                <div className="w-full flex justify-center mt-2 mb-4">
+                                                    <div className={cn(
+                                                        "max-w-[75%] sm:max-w-[60%] text-[11px] p-4 rounded-3xl border backdrop-blur-md shadow-lg text-center",
+                                                        msg.isPhishing
+                                                            ? "border-red-500/40 bg-red-500/10 text-red-700 shadow-red-500/10 dark:bg-red-900/40 dark:text-red-300"
+                                                            : "border-amber-500/20 bg-card/90 text-muted-foreground shadow-amber-500/5 dark:bg-neutral-900/60 dark:text-neutral-300"
+                                                    )}>
+                                                        <div className="flex items-center justify-center gap-1.5 mb-2">
+                                                            <AlertTriangle className={cn("w-4 h-4", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")} />
+                                                            <strong className={cn("text-xs", msg.isPhishing || msg.redactionCategory === "spam" ? "text-red-500" : "text-amber-500")}>
+                                                                {msg.isPhishing || msg.redactionCategory === "spam" ? "Malicious Content Detected" : "Iris AI Intercepted"}
+                                                            </strong>
+                                                        </div>
+                                                        <p className="leading-relaxed opacity-90 text-muted-foreground dark:text-neutral-400">
+                                                            {msg.isPhishing
+                                                                ? "Warning: This message has been flagged for phishing. It may be attempting to steal your credentials or lead you to a fraudulent site."
+                                                                : msg.redactionCategory === "spam"
+                                                                    ? "This message matches spam/scam patterns and has been blocked from normal disclosure."
+                                                                    : msg.redactionCategory === "profanity"
+                                                                        ? "This message contains prohibited profanity and remains permanently censored."
+                                                                        : "This message contains sensitive credentials. If you proceed to disclose this, iReside will not be held accountable for any resulting damages (see Terms & Conditions)."}
+                                                        </p>
+                                                        {msg.disclosureAllowed && (
+                                                            <div className="mt-4 flex items-center justify-center">
+                                                                <button
+                                                                    onClick={() => confirmDisclose(msg.id)}
+                                                                    className="px-6 py-2 bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-105 font-bold rounded-xl transition-all w-fit"
+                                                                >
+                                                                    Confirm & Disclose
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                {isOtherUserTyping && (
+                                    <div className="flex items-end gap-3 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
+                                        <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
+                                        <div className="rounded-3xl rounded-bl-sm border border-border bg-card px-4 py-3 text-foreground shadow-lg dark:border-white/5 dark:bg-neutral-800 dark:text-white">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
+                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.1s]" />
+                                                <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                )}
                             </>
                         )}
 
-                        <div ref={messagesEndRef} />
+                        <div ref={messagesEndRef} className="h-10 md:h-4" />
                     </div>
                 </div>
 
@@ -2232,7 +2409,7 @@ export default function MessagesPage() {
                 <div className="relative flex w-full shrink-0 justify-center border-t border-divider bg-surface-1/80">
                     <AnimatePresence>
                         {showSecurityWarning && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -2262,14 +2439,14 @@ export default function MessagesPage() {
                                             className="p-1.5 rounded-lg text-amber-600/50 hover:text-amber-600 hover:bg-amber-500/10 transition-colors"
                                             aria-label="Dismiss warning"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                                         </button>
                                     </div>
                                 </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
-                    <div className="w-full max-w-4xl flex flex-col gap-3 p-4 md:p-6">
+                    <div className="w-full max-w-4xl flex flex-col gap-2 p-3 md:p-4">
                         {pendingAttachment && (
                             <div className="relative w-36 rounded-2xl border border-border bg-card/80 p-2 dark:border-white/10 dark:bg-black/30">
                                 <button
@@ -2299,7 +2476,7 @@ export default function MessagesPage() {
                             onDragLeave={handleComposerDragLeave}
                             onDrop={handleComposerDrop}
                             className={cn(
-                                "flex items-end gap-3 rounded-[2rem] border border-border bg-background/85 p-2 pl-5 transition-all focus-within:border-primary/50 focus-within:shadow-[0_0_0_4px_rgba(var(--primary-rgb),0.15)] focus-within:ring-0 dark:border-white/10 dark:bg-black/40",
+                                "flex items-end gap-2.5 rounded-[1.75rem] border border-border bg-background/85 p-1.5 pl-4 transition-all focus-within:border-primary/50 focus-within:shadow-[0_0_0_4px_rgba(var(--primary-rgb),0.15)] focus-within:ring-0 dark:border-white/10 dark:bg-black/40",
                                 isComposerDragOver && "border-primary/80 bg-primary/10"
                             )}
                         >
@@ -2314,21 +2491,21 @@ export default function MessagesPage() {
                                 onChange={(e) => handleMessageInputChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Type a message..."
-                                className="custom-scrollbar max-h-32 w-full resize-none bg-transparent py-3 text-sm text-foreground placeholder:text-muted-foreground border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none dark:text-white dark:placeholder:text-neutral-500"
+                                className="custom-scrollbar max-h-32 w-full resize-none bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none dark:text-white dark:placeholder:text-neutral-500"
                                 rows={1}
                             />
-                            <div className="flex items-center gap-1 shrink-0 pb-1">
+                            <div className="flex items-center gap-1 shrink-0">
                                 <button
                                     onClick={handleFilePickerOpen}
                                     disabled={isUploadingFile || !activeConversationId}
-                                    className="rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
+                                    className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-white"
                                 >
                                     <Paperclip className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={handleSendMessage}
                                     disabled={!messageInput.trim() && !pendingAttachment}
-                                    className="p-2 bg-primary text-black hover:bg-primary/90 hover:scale-105 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    className="p-1.5 bg-primary text-black hover:bg-primary/90 hover:scale-105 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                                 >
                                     <Send className="w-5 h-5" />
                                 </button>
@@ -2342,18 +2519,6 @@ export default function MessagesPage() {
                                 />
                             </div>
                         )}
-                        <div className="flex items-center justify-between px-2">
-                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground dark:text-neutral-500">
-                                <ShieldCheck className="w-3 h-3" /> Secure connection
-                            </span>
-                            <span className="text-[10px] text-muted-foreground dark:text-neutral-500">
-                                {isUploadingFile
-                                    ? `Uploading file... ${uploadProgress ?? 0}%`
-                                    : isComposerDragOver
-                                        ? "Drop file to upload"
-                                        : "Press Enter to send, Shift + Enter for new line"}
-                            </span>
-                        </div>
                         {fileUploadError && (
                             <p className="text-[11px] text-red-400 px-2">{fileUploadError}</p>
                         )}
@@ -3042,6 +3207,34 @@ export default function MessagesPage() {
                     />
                 </div>
             )}
+            <CashPaymentInterface
+                isOpen={isF2FInterfaceOpen}
+                onClose={() => {
+                    setIsF2FInterfaceOpen(false);
+                    setActiveF2FPayment(null);
+                }}
+                onConfirm={handleConfirmF2FPayment}
+                payment={activeF2FPayment ? {
+                    id: activeF2FPayment.paymentId || activeF2FPayment.id,
+                    tenantName: activeF2FPayment.tenantName || "Tenant",
+                    unit: activeF2FPayment.unit || "Unit",
+                    amount: activeF2FPayment.amount || "0",
+                    invoiceNumber: activeF2FPayment.invoiceNumber || "INV-???",
+                    description: activeF2FPayment.description || "In-person payment"
+                } : null}
+            />
+
+            <InvoiceModal
+                invoiceId={selectedInvoiceId}
+                onClose={() => setSelectedInvoiceId(null)}
+                onUpdated={async () => {
+                    if (activeConversationId) {
+                        await refreshMessages(activeConversationId);
+                        await refreshConversations();
+                    }
+                }}
+            />
         </div>
     );
 }
+

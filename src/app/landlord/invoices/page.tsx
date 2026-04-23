@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CalendarDays, FileText, Loader2, Plus, Search, X } from "lucide-react";
+import { CalendarDays, FileText, Loader2, Plus, Search, X, Filter } from "lucide-react";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
@@ -16,6 +16,9 @@ export default function InvoicesPage() {
   const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filterMethod, setFilterMethod] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<"generate" | "reading" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -64,10 +67,35 @@ export default function InvoicesPage() {
     void loadData();
   }, [loadData]);
 
-  const filteredInvoices = useMemo(
-    () => invoices.filter((invoice) => `${invoice.invoiceNumber} ${invoice.tenant} ${invoice.property} ${invoice.unit}`.toLowerCase().includes(search.toLowerCase())),
-    [invoices, search],
-  );
+  const processedInvoices = useMemo(() => {
+    let result = invoices.filter((invoice) =>
+      `${invoice.invoiceNumber} ${invoice.tenant} ${invoice.property} ${invoice.unit}`.toLowerCase().includes(search.toLowerCase()),
+    );
+
+    if (filterMethod !== "all") {
+      result = result.filter((i) => {
+        if (filterMethod === "gcash") return i.paymentMethod === "gcash";
+        if (filterMethod === "in_person") return i.paymentMethod === "in_person" || i.paymentMethod === "cash" || i.workflowStatus === "awaiting_in_person";
+        return true;
+      });
+    }
+
+    if (filterStatus !== "all") {
+      result = result.filter((i) => i.status === filterStatus || i.workflowStatus === filterStatus);
+    }
+
+    result.sort((a, b) => {
+      if (sortBy === "newest") return new Date(b.issuedDate).getTime() - new Date(a.issuedDate).getTime();
+      if (sortBy === "oldest") return new Date(a.issuedDate).getTime() - new Date(b.issuedDate).getTime();
+      if (sortBy === "tenant_az") return a.tenant.localeCompare(b.tenant);
+      if (sortBy === "tenant_za") return b.tenant.localeCompare(a.tenant);
+      if (sortBy === "highest_amount") return b.amount - a.amount;
+      if (sortBy === "lowest_amount") return a.amount - b.amount;
+      return 0;
+    });
+
+    return result;
+  }, [invoices, search, filterMethod, filterStatus, sortBy]);
 
   const selectedGeneratorLease = useMemo(
     () => workspace?.activeLeases.find((lease) => lease.id === generatorForm.leaseId) ?? null,
@@ -204,26 +232,68 @@ export default function InvoicesPage() {
       {message && <div className="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">{message}</div>}
 
       <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl">
-        <div className="mb-8 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Ledger</p>
-            <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Issued invoices</h2>
+        <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Ledger</p>
+              <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Issued invoices</h2>
+            </div>
+            <div className="relative w-full md:max-w-xs">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." className="w-full rounded-full border border-border/50 bg-background/80 py-3 pl-11 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm" />
+            </div>
           </div>
-          <div className="relative w-full md:max-w-xs">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search records..." className="w-full rounded-full border border-border/50 bg-background/80 py-3 pl-11 pr-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-primary/10 hover:bg-background shadow-sm" />
+          
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-background/40 p-3">
+            <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-r border-border/50 pr-4">
+              <Filter className="h-4 w-4" /> Filters
+            </div>
+            
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
+              <option value="all">All Statuses</option>
+              <optgroup label="Actionable">
+                <option value="pending">Pending</option>
+                <option value="under_review">Under Review</option>
+                <option value="intent_submitted">Intent Submitted</option>
+                <option value="awaiting_in_person">Awaiting In-Person</option>
+              </optgroup>
+              <optgroup label="Completed">
+                <option value="paid">Paid</option>
+                <option value="receipted">Receipted</option>
+                <option value="confirmed">Confirmed</option>
+              </optgroup>
+              <optgroup label="Issues">
+                <option value="overdue">Overdue</option>
+                <option value="rejected">Rejected</option>
+              </optgroup>
+            </select>
+
+            <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
+              <option value="all">All Payment Methods</option>
+              <option value="gcash">GCash</option>
+              <option value="in_person">Face-to-Face / Cash</option>
+            </select>
+
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="ml-auto rounded-full border border-border/50 bg-card px-4 py-2 text-xs font-medium text-foreground outline-none transition-all hover:border-border focus:border-primary/50">
+              <option value="newest">Sort: Newest First</option>
+              <option value="oldest">Sort: Oldest First</option>
+              <option value="tenant_az">Sort: Tenant (A-Z)</option>
+              <option value="tenant_za">Sort: Tenant (Z-A)</option>
+              <option value="highest_amount">Sort: Highest Amount</option>
+              <option value="lowest_amount">Sort: Lowest Amount</option>
+            </select>
           </div>
         </div>
 
         <div className="custom-scrollbar space-y-5 overflow-y-auto pr-2">
           {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" /><p className="text-sm font-bold uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
-          {!loading && filteredInvoices.map((invoice) => (
+          {!loading && processedInvoices.map((invoice) => (
             <button key={invoice.id} onClick={() => setSelectedInvoiceId(invoice.id)} className="group w-full rounded-[2rem] border border-border/50 bg-background/80 p-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.01] hover:border-primary/30 hover:bg-card hover:shadow-md md:p-8">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-base font-black text-foreground">{invoice.invoiceNumber}</p>
-                    <span className={cn("rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm", invoice.status === "paid" ? "border-emerald-500/20 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : invoice.status === "overdue" ? "border-rose-500/20 bg-rose-500/15 text-rose-600 dark:text-rose-400" : invoice.status === "processing" ? "border-amber-500/20 bg-amber-500/15 text-amber-600 dark:text-amber-400" : "border-border bg-muted text-muted-foreground")}>{invoice.status}</span>
+                    <span className={cn("rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm", invoice.status === "paid" || invoice.status === "receipted" ? "border-emerald-500/20 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : invoice.status === "overdue" || invoice.status === "rejected" ? "border-rose-500/20 bg-rose-500/15 text-rose-600 dark:text-rose-400" : invoice.status === "processing" || invoice.status === "under_review" || invoice.status === "intent_submitted" ? "border-amber-500/20 bg-amber-500/15 text-amber-600 dark:text-amber-400" : invoice.status === "awaiting_in_person" ? "border-cyan-500/20 bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" : "border-border bg-muted text-muted-foreground")}>{invoice.workflowStatus ?? invoice.status}</span>
                     {invoice.proofStatus === "submitted" && <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 shadow-sm dark:text-blue-400"><span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />proof in review</span>}
                   </div>
                   <p className="mt-2 text-sm font-medium text-muted-foreground">{invoice.tenant} <span className="mx-1 text-border">-</span> {invoice.property} <span className="mx-1 text-border">-</span> {invoice.unit}</p>
@@ -236,7 +306,7 @@ export default function InvoicesPage() {
               </div>
             </button>
           ))}
-          {!loading && filteredInvoices.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">No matching invoices found.</div>}
+          {!loading && processedInvoices.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">No matching invoices found.</div>}
         </div>
       </div>
 

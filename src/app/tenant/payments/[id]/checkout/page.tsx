@@ -196,6 +196,7 @@ export default function CheckoutPage() {
     const [receipt, setReceipt] = useState<File | null>(null);
     const [partialAmount, setPartialAmount] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [inPersonTriggered, setInPersonTriggered] = useState(false);
     const isFaceToFacePreview = searchParams.get("preview") === "face_to_face";
 
     useEffect(() => {
@@ -237,6 +238,7 @@ export default function CheckoutPage() {
 
     const submitPayment = async () => {
         if (!invoice) return;
+        if (method !== "gcash") return;
         setSubmitting(true);
         try {
             if (isFaceToFacePreview) {
@@ -258,6 +260,40 @@ export default function CheckoutPage() {
             });
             if (!response.ok) throw new Error();
             setSubmitted(true);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const triggerInPersonIntent = async () => {
+        if (!invoice) return;
+        setSubmitting(true);
+        try {
+            if (isFaceToFacePreview) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                setInPersonTriggered(true);
+                return;
+            }
+
+            const response = await fetch(`/api/tenant/payments/${invoice.id}/intent`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ note }),
+            });
+            if (!response.ok) throw new Error();
+            const payload = await response.json();
+            setInvoice((current) =>
+                current
+                    ? {
+                          ...current,
+                          workflowStatus: "awaiting_in_person",
+                          inPersonIntentExpiresAt: payload.expiresAt ?? current.inPersonIntentExpiresAt,
+                      }
+                    : current,
+            );
+            setInPersonTriggered(true);
         } finally {
             setSubmitting(false);
         }
@@ -351,7 +387,25 @@ export default function CheckoutPage() {
                 ) : (
                     <div className="relative z-10 mt-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-6 shadow-inner">
                         <div className="flex items-center gap-3 text-sm font-black text-foreground"><CreditCard className="h-5 w-5 text-primary" />Cash payment instructions</div>
-                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground font-medium">Bring the exact amount to your landlord or building manager. Submitting here marks the invoice as &quot;in review&quot; until they confirm receipt.</p>
+                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground font-medium">Bring the exact amount to your landlord or building manager, then trigger the in-person intent so the landlord can confirm receipt.</p>
+                        {invoice.inPersonIntentExpiresAt && (
+                            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-primary">
+                                Intent expires: {formatDateLong(invoice.inPersonIntentExpiresAt)}
+                            </p>
+                        )}
+                        {inPersonTriggered && (
+                            <p className="mt-3 text-sm font-semibold text-emerald-400">
+                                In-person intent submitted. Waiting for landlord confirmation.
+                            </p>
+                        )}
+                        <button
+                            onClick={triggerInPersonIntent}
+                            disabled={submitting}
+                            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+                        >
+                            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+                            Trigger In-Person Payment
+                        </button>
                     </div>
                 )}
 
@@ -360,10 +414,12 @@ export default function CheckoutPage() {
                     <textarea rows={3} value={note} onChange={(event) => setNote(event.target.value)} className="w-full rounded-2xl border border-border/50 bg-background/80 px-5 py-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 hover:bg-background" placeholder="Optional note for the landlord..." />
                 </label>
 
-                <button onClick={submitPayment} disabled={submitting || (method === "gcash" && !receipt)} className={cn("relative z-10 group mt-8 inline-flex w-full items-center justify-center gap-2.5 rounded-full px-6 py-4 text-sm font-bold transition-all shadow-lg", submitting || (method === "gcash" && !receipt) ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" : "bg-gradient-to-r from-primary to-blue-600 text-primary-foreground hover:scale-[1.02] hover:shadow-primary/20 active:scale-95")}>
+                {method === "gcash" && (
+                    <button onClick={submitPayment} disabled={submitting || !receipt || !referenceNumber.trim()} className={cn("relative z-10 group mt-8 inline-flex w-full items-center justify-center gap-2.5 rounded-full px-6 py-4 text-sm font-bold transition-all shadow-lg", submitting || !receipt || !referenceNumber.trim() ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" : "bg-gradient-to-r from-primary to-blue-600 text-primary-foreground hover:scale-[1.02] hover:shadow-primary/20 active:scale-95")}>
                     {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5 transition-transform group-hover:scale-110" />}
                     Confirm & Submit Payment
-                </button>
+                    </button>
+                )}
             </section>
 
             <section className="rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl flex flex-col h-fit">

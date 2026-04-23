@@ -17,6 +17,8 @@ import {
     FileText,
     AlertTriangle,
     Receipt,
+    HandCoins,
+    MapPin,
     Wallet,
     X,
     History,
@@ -24,6 +26,7 @@ import {
     Zap,
     CreditCard,
     Home,
+    Bell,
     AlertCircle,
     ImageIcon,
     Folder,
@@ -105,6 +108,9 @@ type UiMessage = {
     isPhishing?: boolean;
     redactionCategory?: "none" | "credentials" | "profanity" | "phishing" | "spam";
     disclosureAllowed?: boolean;
+    workflowStatus?: string;
+    expiresAt?: string;
+    landlordTransactionPath?: string;
 };
 
 const redactionStrength = (message: UiMessage) => {
@@ -861,17 +867,43 @@ export default function TenantMessagesPage() {
         const fileMimeType = typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
         const fileSize = typeof metadata?.fileSize === "number" ? metadata.fileSize : undefined;
 
+        const systemType = typeof metadata?.systemType === "string" 
+            ? metadata.systemType 
+            : (typeof metadata?.event === "string" ? metadata.event : undefined);
+
+        const workflowStatus = typeof metadata?.workflowStatus === "string" 
+            ? metadata.workflowStatus 
+            : (typeof metadata?.event === "string" ? metadata.event : undefined);
+
+        let content = message.content;
+        if (message.type === "system") {
+            if (systemType === "awaiting_in_person") {
+                content = "A face-to-face cash payment has been initiated. The landlord can now verify and confirm the receipt of funds using the interface below.";
+            } else if (systemType === "reminder_sent") {
+                content = "A payment reminder has been sent for this invoice. You can settle it quickly using the button below.";
+            } else if (systemType === "in_person_intent_expired") {
+                content = "The face-to-face payment request has expired. The invoice status has been reverted to pending.";
+            } else if (systemType === "landlord_review") {
+                if (workflowStatus === "rejected") {
+                    const reason = typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : "No reason provided.";
+                    content = `The payment request has been rejected. Reason: ${reason}`;
+                } else if (workflowStatus === "confirmed" || workflowStatus === "receipted") {
+                    content = "The payment has been confirmed.";
+                }
+            }
+        }
+
         return {
             id: message.id,
-            type: isOwn ? "tenant" : "landlord",
+            type: message.type === "system" ? "system" : (isOwn ? "tenant" : "landlord"),
             messageType: message.type,
-            content: message.content,
+            content,
             redactedContent,
             timestamp: new Date(message.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
             createdAt: message.createdAt,
             isRedacted,
             isConfirmedDisclosed,
-            systemType: typeof metadata?.systemType === "string" ? metadata.systemType : undefined,
+            systemType,
             paymentAmount: typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined,
             receiptImg: typeof metadata?.receiptImg === "string" ? metadata.receiptImg : undefined,
             fileUrl,
@@ -883,6 +915,15 @@ export default function TenantMessagesPage() {
             redactionCategory,
             disclosureAllowed,
             status: isOwn ? (message.readAt ? "seen" : "delivered") : undefined,
+            workflowStatus,
+            expiresAt: typeof metadata?.expiresAt === "string" ? metadata.expiresAt : undefined,
+            landlordTransactionPath: typeof metadata?.landlordTransactionPath === "string" ? metadata.landlordTransactionPath : undefined,
+            invoiceId: typeof metadata?.invoiceId === "string" ? metadata.invoiceId : (typeof metadata?.receiptNumber === "string" ? metadata.receiptNumber : undefined),
+            tenantName: typeof metadata?.tenantName === "string" ? metadata.tenantName : undefined,
+            unit: typeof metadata?.unitName === "string" ? metadata.unitName : undefined,
+            amount: typeof metadata?.amount === "string" ? metadata.amount : (typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined),
+            date: typeof metadata?.date === "string" ? metadata.date : undefined,
+            description: typeof metadata?.description === "string" ? metadata.description : undefined,
         };
     };
 
@@ -1623,6 +1664,8 @@ export default function TenantMessagesPage() {
             case 'payment_submitted': return <FileText className="h-4 w-4 text-primary" />;
             case 'payment': return <CheckCircle2 className="h-4 w-4 text-primary" />;
             case 'invoice': return <Receipt className="h-4 w-4 text-emerald-500" />;
+            case 'reminder_sent': return <Bell className="h-4 w-4 text-amber-500" />;
+            case 'awaiting_in_person': return <HandCoins className="h-4 w-4 text-amber-500" />;
             case 'maintenance': return <Wrench className="h-4 w-4 text-amber-500" />;
             case 'maintenance_resolved': return <CheckCircle2 className="h-4 w-4 text-blue-500" />;
             case 'lease': return <FileText className="h-4 w-4 text-purple-500" />;
@@ -1855,7 +1898,7 @@ export default function TenantMessagesPage() {
                             className="flex-1 overflow-y-auto custom-scrollbar relative flex justify-center w-full"
                             onClick={() => setOpenMessageMenuId(null)}
                         >
-                            <div className="w-full max-w-4xl p-6 space-y-6">
+                            <div className="w-full max-w-4xl p-6 pb-12 space-y-6">
                                 <div className="text-center py-4">
                                     <span className="rounded-full border border-divider bg-surface-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-disabled shadow-sm">
                                         Conversation Started â€¢ February 1, 2026
@@ -1938,7 +1981,7 @@ export default function TenantMessagesPage() {
                                                             </div>
                                                             <div className="relative z-10 flex justify-between items-start">
                                                                 <div>
-                                                                    <Logo theme="dark" className="h-6 w-auto mb-1" />
+                                                                    <Logo theme="dark" className="h-8 w-auto mb-1" />
                                                                     <p className="text-[10px] text-medium font-bold uppercase tracking-widest">Digital Payment Invoice</p>
                                                                 </div>
                                                                 <div className="text-right">
@@ -2001,14 +2044,155 @@ export default function TenantMessagesPage() {
                                                             <p className="text-[9px] text-disabled font-medium tracking-wide">Securely generated by iReside Iris Intelligence System</p>
                                                         </div>
                                                     </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-3 bg-surface-1 border border-divider px-5 py-3 rounded-2xl shadow-sm text-center">
-                                                        <div className="bg-surface-2 p-2 rounded-full border border-divider shrink-0">
-                                                            {renderSystemIcon(msg.systemType || '')}
+                                                ) : msg.workflowStatus === "awaiting_in_person" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-amber-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-amber-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-amber-500/80 to-amber-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <HandCoins className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">In-Person Payment</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Awaiting Landlord</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-left flex flex-col justify-center">
-                                                            <p className="text-xs text-high font-medium leading-relaxed">{msg.content}</p>
-                                                            <p className="text-[9px] text-medium mt-0.5 tracking-wider uppercase">{msg.timestamp}</p>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed">
+                                                                    {msg.content}
+                                                                </p>
+                                                                {msg.expiresAt && (
+                                                                    <div className="flex items-center gap-2 text-[10px] text-amber-500 font-bold uppercase tracking-wider">
+                                                                        <Clock3 className="w-3 h-3" />
+                                                                        <span>Deadline: {new Date(msg.expiresAt).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Action Button */}
+                                                        <div className="px-5 mt-2">
+                                                            <Link
+                                                                href="/tenant/payments"
+                                                                className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 shadow-lg shadow-amber-500/20"
+                                                            >
+                                                                <CreditCard className="w-4 h-4" />
+                                                                View My Payments
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                ) : (msg.workflowStatus === "confirmed" || msg.workflowStatus === "receipted") ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-emerald-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-emerald-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-emerald-500/80 to-emerald-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <CheckCircle2 className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Confirmed</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Successfully Processed</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed">
+                                                                    {msg.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : msg.workflowStatus === "rejected" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-red-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-red-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-red-500/80 to-red-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <AlertTriangle className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Rejected</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Action Required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed">
+                                                                    {msg.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : msg.systemType === "reminder_sent" ? (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-amber-500/30 rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-amber-500/50 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-amber-500/80 to-amber-600 p-5 relative overflow-hidden h-24 flex items-center shrink-0">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-white/20 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md shadow-sm border border-white/10">
+                                                                    <Bell className="h-6 w-6 text-white" />
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center text-white">
+                                                                    <p className="text-lg font-bold leading-tight">Payment Reminder</p>
+                                                                    <p className="text-[10px] font-bold tracking-wide uppercase opacity-70">Action Required</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
+                                                            <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
+                                                                <p className="text-xs text-high font-medium leading-relaxed italic">
+                                                                    "{msg.content}"
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Action Button */}
+                                                        <div className="px-5 mt-2">
+                                                            <Link
+                                                                href="/tenant/payments"
+                                                                className="w-full bg-primary hover:bg-primary/90 text-black py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 shadow-lg shadow-primary/20"
+                                                            >
+                                                                <CreditCard className="w-4 h-4" />
+                                                                Pay Now
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col gap-0 bg-surface-1 overflow-hidden border border-divider rounded-3xl shadow-2xl max-w-sm w-full transition-all hover:border-primary/30 group pb-4">
+                                                        {/* Header Gradient */}
+                                                        <div className="bg-gradient-to-r from-surface-2 to-surface-3 p-5 relative overflow-hidden h-20 flex items-center shrink-0 border-b border-divider">
+                                                            <div className="absolute top-0 right-0 -mt-4 -mr-4 bg-primary/5 w-24 h-24 rounded-full blur-2xl"></div>
+                                                            <div className="relative z-10 flex items-center gap-3">
+                                                                <div className="bg-surface-1 p-2 rounded-xl border border-divider shadow-sm">
+                                                                    {renderSystemIcon(msg.systemType || '')}
+                                                                </div>
+                                                                <div className="text-left flex flex-col justify-center">
+                                                                    <p className="text-sm font-bold leading-tight text-high">System Notification</p>
+                                                                    <p className="text-[9px] font-bold tracking-wide uppercase text-medium opacity-70">{msg.timestamp}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details Section */}
+                                                        <div className="px-5 pt-4">
+                                                            <p className="text-xs text-high font-medium leading-relaxed bg-surface-2/30 p-3 rounded-xl border border-divider">
+                                                                {msg.content}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -2163,7 +2347,7 @@ export default function TenantMessagesPage() {
                                 </>
                                 )}
 
-                                <div ref={messagesEndRef} />
+                                <div ref={messagesEndRef} className="h-10 md:h-14" />
                             </div>
                         </div>
 
@@ -2208,7 +2392,7 @@ export default function TenantMessagesPage() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                            <div className="w-full max-w-4xl flex flex-col gap-3 p-4 md:p-6">
+                            <div className="w-full max-w-4xl flex flex-col gap-2 p-3 md:p-4">
                                 {pendingAttachment && (
                                     <div className="relative w-36 rounded-2xl border border-border bg-background/90 p-2 shadow-sm">
                                         <button
@@ -2238,7 +2422,7 @@ export default function TenantMessagesPage() {
                                     onDragLeave={handleComposerDragLeave}
                                     onDrop={handleComposerDrop}
                                     className={cn(
-                                        "flex items-end gap-3 rounded-3xl bg-background/95 border border-border p-2 pl-4 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all shadow-sm",
+                                        "flex items-end gap-2 rounded-3xl bg-background/95 border border-border p-1.5 pl-3.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all shadow-sm",
                                         isComposerDragOver && "border-primary/80 bg-primary/10"
                                     )}
                                 >
@@ -2253,21 +2437,21 @@ export default function TenantMessagesPage() {
                                         onChange={(e) => handleMessageInputChange(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         placeholder="Type your message..."
-                                        className="custom-scrollbar max-h-32 w-full resize-none rounded-2xl bg-transparent py-2.5 text-sm text-foreground placeholder:text-muted-foreground !border-0 !shadow-none !ring-0 focus:!border-0 focus:!shadow-none focus:!ring-0 focus:outline-none focus-visible:!ring-0 focus-visible:outline-none"
+                                        className="custom-scrollbar max-h-32 w-full resize-none rounded-2xl bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground !border-0 !shadow-none !ring-0 focus:!border-0 focus:!shadow-none focus:!ring-0 focus:outline-none focus-visible:!ring-0 focus-visible:outline-none"
                                         rows={1}
                                     />
-                                    <div className="flex items-center gap-1 shrink-0 pb-1">
+                                    <div className="flex items-center gap-1 shrink-0">
                                         <button
                                             onClick={handleFilePickerOpen}
                                             disabled={isUploadingFile || activeConversationId === "iris"}
-                                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                             <Paperclip className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={handleSendMessage}
                                             disabled={!messageInput.trim() && !pendingAttachment}
-                                            className="p-2 bg-primary text-black hover:bg-primary/90 hover:scale-105 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                            className="p-1.5 bg-primary text-black hover:bg-primary/90 hover:scale-105 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                                         >
                                             <Send className="w-5 h-5" />
                                         </button>
@@ -2281,18 +2465,6 @@ export default function TenantMessagesPage() {
                                         />
                                     </div>
                                 )}
-                                <div className="flex items-center justify-between px-2">
-                                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                        <ShieldCheck className="w-3 h-3" /> Secure connection
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground">
-                                        {isUploadingFile
-                                            ? `Uploading file... ${uploadProgress ?? 0}%`
-                                            : isComposerDragOver
-                                                ? "Drop file to upload"
-                                                : "Press Enter to send, Shift + Enter for new line"}
-                                    </span>
-                                </div>
                                 {fileUploadError && (
                                     <p className="text-[11px] text-red-600 px-2">{fileUploadError}</p>
                                 )}

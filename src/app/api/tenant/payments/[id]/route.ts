@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { getInvoiceDetailForActor } from "@/lib/billing/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
@@ -10,6 +12,7 @@ type RouteContext = {
 export async function GET(_: Request, context: RouteContext) {
     const { id } = await context.params;
     const supabase = await createClient();
+    const adminClient = createAdminClient();
     const {
         data: { user },
         error: userError,
@@ -20,6 +23,7 @@ export async function GET(_: Request, context: RouteContext) {
     }
 
     try {
+        await expireInPersonIntents(adminClient, user.id, { tenantId: user.id, paymentId: id });
         const invoice = await getInvoiceDetailForActor(supabase, id, { tenantId: user.id });
 
         if (!invoice) {
