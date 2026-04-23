@@ -35,6 +35,7 @@ import IrisChatScreen from "./screens/IrisChatScreen";
 import CommunityFeedScreen from "./screens/CommunityFeedScreen";
 import PhotoGalleryScreen from "./screens/PhotoGalleryScreen";
 import LandlordWalkInAppScreen from "./screens/LandlordWalkInAppScreen";
+import LeaseSigningScreen from "./screens/LeaseSigningScreen";
 import {
     Home,
     Search,
@@ -226,6 +227,7 @@ function ScreenRouter() {
         communityFeed: CommunityFeedScreen,
         photoGallery: PhotoGalleryScreen,
         landlordWalkInApp: LandlordWalkInAppScreen,
+        leaseSigning: LeaseSigningScreen,
         // Screens will be registered here as they're built
     };
 

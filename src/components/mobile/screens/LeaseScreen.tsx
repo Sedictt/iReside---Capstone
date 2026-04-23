@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LeaseScreen.module.css";
+import LeaseSigningScreen from "./LeaseSigningScreen";
 
 // ─── Types and Data ─────────────────────────────────────────
 type LeaseStatus = "active" | "pending" | "expired";
@@ -63,6 +64,21 @@ const MOCK_LEASES: Lease[] = [
         landlord: {
             name: "Maria Reyes",
             phone: "+63 918 888 7777",
+        },
+    },
+    {
+        id: "lease3",
+        propertyName: "Metro Studio B",
+        unitName: "Unit 205",
+        address: "Quezon City, Manila",
+        status: "pending",
+        startDate: "May 1, 2026",
+        endDate: "Apr 30, 2027",
+        rentAmount: "₱18,500",
+        deposit: "₱37,000",
+        landlord: {
+            name: "Roberto Santos",
+            phone: "+63 915 222 3333",
         },
     },
 ];
@@ -291,6 +307,16 @@ function LeaseDetailsScreen({
                     </div>
                     <Download size={20} className={styles.docDownload} />
                 </button>
+
+                {/* Sign Lease Button (Conditional) */}
+                {lease.status === "pending" && (
+                    <button 
+                        className={styles.signCTA}
+                        onClick={() => navigate("leaseSigning", { leaseId: lease.id })}
+                    >
+                        Sign Lease Agreement
+                    </button>
+                )}
             </div>
         </div>
     );

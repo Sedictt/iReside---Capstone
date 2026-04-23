@@ -401,3 +401,25 @@
     color: #525252;
     line-height: 1.5;
 }
+
+/* ─── Sign CTA ────────────────────────────────────────── */
+.signCTA {
+    width: 100%;
+    height: 56px;
+    border-radius: 16px;
+    background: #6d9838;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 800;
+    margin-top: 24px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(109, 152, 56, 0.3);
+    transition: all 0.2s ease;
+}
+
+.signCTA:active {
+    transform: scale(0.96);
+    background: #5a7e2f;
+}
+
