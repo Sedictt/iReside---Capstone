@@ -86,9 +86,16 @@ export default function LandlordHomeScreen() {
 
       <div className={styles.scrollArea}>
         {/* Revenue Widget */}
-        <div className={styles.revenueWidget}>
-          <div className={styles.revenueLabel}>
-            Expected Revenue <TrendingUp size={14} />
+        <div 
+          className={styles.revenueWidget}
+          onClick={() => navigate("revenueDashboard")}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className={styles.revenueHeaderRow}>
+            <div className={styles.revenueLabel}>
+              Expected Revenue <TrendingUp size={14} />
+            </div>
+            <ChevronRight size={18} color="#525252" />
           </div>
           <div className={styles.revenueAmount}>{REVENUE_DATA.totalExpected}</div>
 

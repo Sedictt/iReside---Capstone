@@ -36,6 +36,8 @@ import CommunityFeedScreen from "./screens/CommunityFeedScreen";
 import PhotoGalleryScreen from "./screens/PhotoGalleryScreen";
 import LandlordWalkInAppScreen from "./screens/LandlordWalkInAppScreen";
 import LeaseSigningScreen from "./screens/LeaseSigningScreen";
+import MoveInChecklistScreen from "./screens/MoveInChecklistScreen";
+import RevenueDashboardScreen from "./screens/RevenueDashboardScreen";
 import {
     Home,
     Search,
@@ -109,6 +111,8 @@ const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "landlordInvoiceDetail",
     "landlordMaintenanceDetail",
     "landlordWalkInApp",
+    "moveInChecklist",
+    "revenueDashboard",
 ];
 
 // ─── Status Bar ────────────────────────────────────────────
@@ -228,6 +232,8 @@ function ScreenRouter() {
         photoGallery: PhotoGalleryScreen,
         landlordWalkInApp: LandlordWalkInAppScreen,
         leaseSigning: LeaseSigningScreen,
+        moveInChecklist: MoveInChecklistScreen,
+        revenueDashboard: RevenueDashboardScreen,
         // Screens will be registered here as they're built
     };
 

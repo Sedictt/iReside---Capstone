@@ -1,0 +1,239 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: #0a0a0a;
+    z-index: 10;
+}
+
+.backBtn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #141414;
+    border: 1px solid #262626;
+    color: #a3a3a3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.headerTitle {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-right: 38px;
+}
+
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 24px 100px;
+}
+
+.stepTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.stepSub {
+    font-size: 13px;
+    color: #737373;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* ─── Category Section ─────────────────────────────────── */
+.categorySection {
+    margin-bottom: 32px;
+}
+
+.categoryHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.categoryTitle {
+    font-size: 14px;
+    font-weight: 800;
+    color: #6d9838;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ─── Checklist Item ───────────────────────────────────── */
+.checkItem {
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.itemHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.itemName {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fafafa;
+}
+
+.photoBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    color: #737373;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photoBtnActive {
+    background: rgba(109, 152, 56, 0.1);
+    color: #6d9838;
+    border-color: rgba(109, 152, 56, 0.3);
+}
+
+.statusToggle {
+    display: flex;
+    background: #0a0a0a;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.statusOption {
+    flex: 1;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border: none;
+    background: none;
+    color: #525252;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.statusOptionActive {
+    background: #262626;
+    color: #fafafa;
+}
+
+/* Specific Status Colors */
+.statusOptionActive[data-status="Excellent"] { background: #6d9838; color: #fff; }
+.statusOptionActive[data-status="Needs Repair"] { background: #ef4444; color: #fff; }
+
+.notesInput {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 10px;
+    color: #e5e5e5;
+    font-size: 12px;
+    margin-top: 12px;
+    font-family: inherit;
+    outline: none;
+}
+
+.notesInput:focus {
+    border-color: #262626;
+}
+
+/* ─── Footer ────────────────────────────────────────────── */
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 24px 32px;
+    background: linear-gradient(0deg, #0a0a0a 80%, rgba(10, 10, 10, 0));
+    z-index: 20;
+}
+
+.submitBtn {
+    width: 100%;
+    height: 54px;
+    border-radius: 16px;
+    background: #6d9838;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 16px rgba(109, 152, 56, 0.2);
+}
+
+/* ─── Success Animation ────────────────────────────────── */
+.successOverlay {
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+}
+
+.successIcon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(109, 152, 56, 0.1);
+    color: #6d9838;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.successTitle {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fafafa;
+    margin-bottom: 8px;
+}
+
+.successSub {
+    font-size: 14px;
+    color: #525252;
+    line-height: 1.5;
+}

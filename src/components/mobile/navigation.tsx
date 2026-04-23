@@ -52,7 +52,9 @@ export type ScreenName =
     | "adminLandlords"
     | "adminSettings"
     // Phase 9
-    | "landlordWalkInApp";
+    | "landlordWalkInApp"
+    | "moveInChecklist"
+    | "revenueDashboard";
 
 // ─── Tab Names ─────────────────────────────────────────────
 export type TenantTab = "home" | "community" | "activity" | "chat" | "profile";

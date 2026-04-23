@@ -317,6 +317,16 @@ function LeaseDetailsScreen({
                         Sign Lease Agreement
                     </button>
                 )}
+
+                {/* Move-in Checklist Button (Conditional) */}
+                {lease.status === "active" && (
+                    <button 
+                        className={styles.moveInCTA}
+                        onClick={() => navigate("moveInChecklist", { leaseId: lease.id })}
+                    >
+                        Perform Move-in Checklist
+                    </button>
+                )}
             </div>
         </div>
     );

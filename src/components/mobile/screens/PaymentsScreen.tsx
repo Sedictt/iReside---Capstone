@@ -23,10 +23,19 @@ interface Payment {
     title: string;
     dueDate: string;
     amount: string;
-    status: "pending" | "completed";
+    status: "pending" | "completed" | "overdue";
+    lateFee?: string;
 }
 
 const UPCOMING_PAYMENTS: Payment[] = [
+    {
+        id: "p0",
+        title: "February Utilities",
+        dueDate: "OVERDUE (Feb 5)",
+        amount: "₱850",
+        status: "overdue",
+        lateFee: "₱50",
+    },
     {
         id: "p1",
         title: "March Rent",
@@ -85,8 +94,8 @@ export default function PaymentsScreen() {
                 {/* Balance Card */}
                 <div className={styles.balanceCard}>
                     <span className={styles.balanceLabel}>Total Balance Due</span>
-                    <span className={styles.balanceAmount}>₱15,450</span>
-                    <span className={styles.balanceDue}>Due in 3 Days</span>
+                    <span className={styles.balanceAmount}>₱16,300</span>
+                    <span className={styles.balanceDue}>Overdue Invoices Detected</span>
 
                     {UPCOMING_PAYMENTS.length > 0 && (
                         <button
@@ -139,12 +148,13 @@ export default function PaymentsScreen() {
                         {displayedPayments.map((payment) => (
                             <div key={payment.id} className={styles.invoiceItem}>
                                 <div
-                                    className={`${styles.invoiceIcon} ${payment.status === "pending"
-                                            ? styles.invoiceIconPending
-                                            : styles.invoiceIconCompleted
-                                        }`}
+                                    className={`${styles.invoiceIcon} ${
+                                        payment.status === "pending" ? styles.invoiceIconPending : 
+                                        payment.status === "overdue" ? styles.invoiceIconOverdue : 
+                                        styles.invoiceIconCompleted
+                                    }`}
                                 >
-                                    {payment.status === "pending" ? <Clock /> : <CheckCircle2 />}
+                                    {payment.status === "pending" || payment.status === "overdue" ? <Clock /> : <CheckCircle2 />}
                                 </div>
 
                                 <div className={styles.invoiceDetails}>
@@ -155,10 +165,11 @@ export default function PaymentsScreen() {
                                 <div className={styles.invoiceRight}>
                                     <span className={styles.invoiceAmount}>{payment.amount}</span>
                                     <span
-                                        className={`${styles.statusBadge} ${payment.status === "pending"
-                                                ? styles.statusPending
-                                                : styles.statusCompleted
-                                            }`}
+                                        className={`${styles.statusBadge} ${
+                                            payment.status === "pending" ? styles.statusPending : 
+                                            payment.status === "overdue" ? styles.statusOverdue : 
+                                            styles.statusCompleted
+                                        }`}
                                     >
                                         {payment.status}
                                     </span>
@@ -186,14 +197,22 @@ export default function PaymentsScreen() {
                         {/* Breakdown */}
                         <div className={styles.paymentBreakdown}>
                             {UPCOMING_PAYMENTS.map(p => (
-                                <div key={p.id} className={styles.breakdownRow}>
-                                    <span className={styles.breakdownLabel}>{p.title}</span>
-                                    <span className={styles.breakdownValue}>{p.amount}</span>
+                                <div key={p.id} className={styles.breakdownItemBlock}>
+                                    <div className={styles.breakdownRow}>
+                                        <span className={styles.breakdownLabel}>{p.title}</span>
+                                        <span className={styles.breakdownValue}>{p.amount}</span>
+                                    </div>
+                                    {p.lateFee && (
+                                        <div className={styles.breakdownRow} style={{ marginTop: '-4px' }}>
+                                            <span className={styles.lateFeeLabel}>+ Auto Late Fee</span>
+                                            <span className={styles.lateFeeValue}>{p.lateFee}</span>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             <div className={styles.breakdownTotal}>
                                 <span className={styles.breakdownLabel}>Total Amount</span>
-                                <span className={styles.breakdownValue}>₱15,450.00</span>
+                                <span className={styles.breakdownValue}>₱16,300.00</span>
                             </div>
                         </div>
 
