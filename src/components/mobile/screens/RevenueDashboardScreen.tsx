@@ -1,16 +1,12 @@
 "use client";
 
-import { 
-    ChevronLeft, 
-    TrendingUp, 
-    TrendingDown, 
-    DollarSign, 
-    PieChart, 
     Activity,
     ArrowUpRight,
     Building2,
     Calendar,
-    ArrowRight
+    ArrowRight,
+    FileDown,
+    CheckCircle2
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./RevenueDashboardScreen.module.css";
@@ -58,6 +54,16 @@ function RevenueChart() {
 
 export default function RevenueDashboardScreen() {
     const { goBack } = useNavigation();
+    const [generating, setGenerating] = useState(false);
+    const [downloadReady, setDownloadReady] = useState(false);
+
+    const handleGenerateReport = () => {
+        setGenerating(true);
+        setTimeout(() => {
+            setGenerating(false);
+            setDownloadReady(true);
+        }, 3000);
+    };
 
     return (
         <div className={styles.container}>
@@ -147,12 +153,28 @@ export default function RevenueDashboardScreen() {
                 </div>
 
                 {/* Secondary CTA */}
-                <button className={styles.anaCard} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}>
+                <button 
+                    className={styles.anaCard} 
+                    style={{ 
+                        width: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        marginTop: '12px',
+                        cursor: generating ? 'default' : 'pointer',
+                        opacity: generating ? 0.7 : 1,
+                        background: downloadReady ? 'rgba(109, 152, 56, 0.1)' : '#141414',
+                        borderColor: downloadReady ? '#6d9838' : '#1e1e1e'
+                    }}
+                    onClick={downloadReady ? undefined : handleGenerateReport}
+                >
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <Calendar size={18} color="#737373" />
-                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#fafafa' }}>Generate Tax Report</span>
+                        {generating ? <Activity className={styles.spin} size={18} color="#6d9838" /> : downloadReady ? <CheckCircle2 size={18} color="#6d9838" /> : <Calendar size={18} color="#737373" />}
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: downloadReady ? '#6d9838' : '#fafafa' }}>
+                            {generating ? "Calculating ledger..." : downloadReady ? "Report Ready: Tax_2026.pdf" : "Generate Tax Report"}
+                        </span>
                     </div>
-                    <ArrowRight size={18} color="#525252" />
+                    {downloadReady ? <FileDown size={18} color="#6d9838" /> : <ArrowRight size={18} color="#525252" />}
                 </button>
             </div>
         </div>

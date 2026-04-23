@@ -13,6 +13,7 @@ import {
     CheckCircle2,
     X,
     ChevronRight,
+    FileDown
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./PaymentsScreen.module.css";
@@ -131,6 +132,16 @@ export default function PaymentsScreen() {
                         History
                     </button>
                 </div>
+
+                {/* History Header Action */}
+                {activeTab === "history" && (
+                    <div className={styles.historyActions} style={{ marginBottom: '12px', display: 'flex', justifyContent: 'flex-end', paddingRight: '4px' }}>
+                        <button className={styles.textActionButton} onClick={() => alert("Generating CSV Export...")}>
+                            <FileDown size={14} /> Export History
+                        </button>
+                    </div>
+                )}
+
 
                 {/* Payments List */}
                 {displayedPayments.length === 0 ? (

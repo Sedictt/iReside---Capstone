@@ -237,3 +237,13 @@
     font-size: 10px;
     color: #6d9838;
 }
+
+.spin {
+    animation: rotate 1.5s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
