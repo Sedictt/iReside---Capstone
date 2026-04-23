@@ -4,18 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserInConversation, getProfilePreviewMap } from "@/lib/messages/engine";
 import type { Database, PaymentMethod, PaymentStatus } from "@/types/database";
 
-type PaymentHistoryRow = {
-    id: string;
-    amount: number;
-    status: PaymentStatus;
-    method: PaymentMethod | null;
-    description: string | null;
-    due_date: string;
-    paid_at: string | null;
-    landlord_confirmed: boolean;
-    created_at: string;
-};
-
 type PaymentHistoryEntry = {
     id: string;
     amount: number;
@@ -36,12 +24,24 @@ const METHOD_LABELS: Record<PaymentMethod, string> = {
     cash: "Cash",
 };
 
-const buildStatusLabel = (status: PaymentStatus, landlordConfirmed: boolean) => {
+const buildStatusLabel = (
+    status: PaymentStatus,
+    workflowStatus: Database["public"]["Enums"]["payment_workflow_status"],
+    landlordConfirmed: boolean,
+) => {
+    if (workflowStatus === "reminder_sent") return "Reminder Sent";
+    if (workflowStatus === "intent_submitted") return "Intent Submitted";
+    if (workflowStatus === "under_review") return "Under Review";
+    if (workflowStatus === "awaiting_in_person") return "Awaiting In-Person";
+    if (workflowStatus === "confirmed") return "Confirmed";
+    if (workflowStatus === "rejected") return "Rejected";
+    if (workflowStatus === "receipted") return "Receipted";
+
+    if (status === "processing") {
+        return "Under Review";
+    }
     if (status === "completed") {
         return landlordConfirmed ? "Paid" : "Pending Verification";
-    }
-    if (status === "processing") {
-        return "Processing";
     }
     if (status === "failed") {
         return "Failed";
@@ -52,7 +52,13 @@ const buildStatusLabel = (status: PaymentStatus, landlordConfirmed: boolean) => 
     return "Pending";
 };
 
-const buildStatusTone = (status: PaymentStatus, landlordConfirmed: boolean): PaymentHistoryEntry["statusTone"] => {
+const buildStatusTone = (
+    status: PaymentStatus,
+    workflowStatus: Database["public"]["Enums"]["payment_workflow_status"],
+    landlordConfirmed: boolean,
+): PaymentHistoryEntry["statusTone"] => {
+    if (workflowStatus === "rejected") return "failed";
+    if (workflowStatus === "receipted" || workflowStatus === "confirmed") return "paid";
     if (status === "completed" && landlordConfirmed) {
         return "paid";
     }
@@ -152,7 +158,7 @@ export async function GET(
 
         const participants = participantIds
             .map((id) => profileMap.get(id))
-            .filter((profile): profile is any => Boolean(profile));
+            .flatMap((profile) => (profile ? [profile] : []));
 
         const tenant = participants.find((profile) => profile.role === "tenant") ?? null;
         const landlord = participants.find((profile) => profile.role === "landlord") ?? null;
@@ -167,7 +173,7 @@ export async function GET(
 
         const { data: payments, error: paymentsError } = await supabase
             .from("payments")
-            .select("id, amount, status, method, description, due_date, paid_at, landlord_confirmed, created_at")
+            .select("id, amount, status, workflow_status, method, description, due_date, paid_at, landlord_confirmed, created_at")
             .eq("tenant_id", tenant.id)
             .eq("landlord_id", landlord.id)
             .order("due_date", { ascending: false })
@@ -183,8 +189,16 @@ export async function GET(
             return {
                 id: payment.id,
                 amount: Number(payment.amount ?? 0),
-                statusLabel: buildStatusLabel(payment.status, Boolean(payment.landlord_confirmed)),
-                statusTone: buildStatusTone(payment.status, Boolean(payment.landlord_confirmed)),
+                statusLabel: buildStatusLabel(
+                    payment.status,
+                    payment.workflow_status,
+                    Boolean(payment.landlord_confirmed),
+                ),
+                statusTone: buildStatusTone(
+                    payment.status,
+                    payment.workflow_status,
+                    Boolean(payment.landlord_confirmed),
+                ),
                 methodLabel: payment.method ? METHOD_LABELS[payment.method] ?? "Manual" : "Manual",
                 typeLabel: deriveTypeLabel(payment.description),
                 monthLabel: formatMonthLabel(eventDate),

@@ -20,8 +20,10 @@ export function InvoiceModal({
 }) {
     const [invoice, setInvoice] = useState<InvoiceDetail>(null);
     const [loading, setLoading] = useState(false);
-    const [actionLoading, setActionLoading] = useState<"confirm" | "reject" | "remind" | null>(null);
+    const [actionLoading, setActionLoading] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
     const [reviewNote, setReviewNote] = useState("");
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [nonExactAction, setNonExactAction] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
 
     useEffect(() => {
         if (!invoiceId) return;
@@ -49,16 +51,25 @@ export function InvoiceModal({
 
     if (!invoiceId) return null;
 
-    const runAction = async (action: "confirm" | "reject" | "remind") => {
+    const runAction = async (action: "confirm" | "confirm_received" | "reject" | "request_completion" | "remind") => {
         setActionLoading(action);
         try {
             const endpoint = action === "remind" ? "reminder" : "review";
+            const amountTag = invoice?.amountTag ?? "exact";
             const response = await fetch(`/api/landlord/invoices/${invoiceId}/${endpoint}`, {
                 method: "POST",
                 headers: action === "remind" ? undefined : { "Content-Type": "application/json" },
                 body: action === "remind" ? undefined : JSON.stringify({
-                    decision: action === "confirm" ? "confirm" : "reject",
+                    action,
                     note: reviewNote || undefined,
+                    amountTag,
+                    nonExactAction: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
+                        ? nonExactAction
+                        : undefined,
+                    rejectionReason:
+                        action === "reject" || action === "request_completion" || nonExactAction === "reject" || nonExactAction === "request_completion"
+                            ? rejectionReason || undefined
+                            : undefined,
                 }),
             });
             if (!response.ok) throw new Error();
@@ -85,6 +96,41 @@ export function InvoiceModal({
             label: "Processing",
             dot: "bg-amber-400"
         },
+        reminder_sent: {
+            classes: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+            label: "Reminder Sent",
+            dot: "bg-blue-400",
+        },
+        intent_submitted: {
+            classes: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+            label: "Intent Submitted",
+            dot: "bg-indigo-400",
+        },
+        under_review: {
+            classes: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+            label: "Under Review",
+            dot: "bg-amber-400",
+        },
+        awaiting_in_person: {
+            classes: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+            label: "Awaiting In-Person",
+            dot: "bg-cyan-400",
+        },
+        confirmed: {
+            classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+            label: "Confirmed",
+            dot: "bg-emerald-400",
+        },
+        rejected: {
+            classes: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+            label: "Rejected",
+            dot: "bg-rose-400",
+        },
+        receipted: {
+            classes: "bg-lime-500/10 text-lime-300 border-lime-500/20",
+            label: "Receipted",
+            dot: "bg-lime-300",
+        },
         pending: {
             classes: "bg-slate-500/10 text-slate-400 border-white/10",
             label: "Pending",
@@ -92,7 +138,7 @@ export function InvoiceModal({
         }
     };
 
-    const currentStatus = (invoice?.status as keyof typeof statusConfig) || "pending";
+    const currentStatus = ((invoice?.workflowStatus ?? invoice?.status) as keyof typeof statusConfig) || "pending";
     const statusStyle = statusConfig[currentStatus] || statusConfig.pending;
 
     const content = (
@@ -102,7 +148,7 @@ export function InvoiceModal({
             <div className="relative flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-0 shadow-[0_32px_120px_-20px_rgba(0,0,0,0.8)] animate-in fade-in zoom-in-95 duration-300">
                 
                 {/* Header Section */}
-                <div className="relative overflow-hidden border-b border-white/5 bg-surface-1/50 px-8 py-8">
+                <div className="relative shrink-0 overflow-hidden border-b border-white/5 bg-surface-1/50 px-8 py-8">
                     {/* Decorative Background Element */}
                     <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl transition-opacity animate-pulse" />
                     
@@ -155,9 +201,9 @@ export function InvoiceModal({
                     </div>
                 </div>
 
-                <div className="grid flex-1 gap-0 overflow-y-auto lg:grid-cols-[1.1fr_0.9fr] custom-scrollbar-premium">
+                <div className="grid flex-1 gap-0 overflow-hidden lg:grid-cols-[1.1fr_0.9fr]">
                     {/* Left Column: Details & Items */}
-                    <div className="space-y-8 p-8">
+                    <div className="space-y-8 p-8 overflow-y-auto custom-scrollbar-premium">
                         {loading || !invoice ? (
                             <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-text-medium">
                                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -237,8 +283,8 @@ export function InvoiceModal({
                     </div>
 
                     {/* Right Column: Actions & History */}
-                    <div className="relative border-l border-white/5 bg-surface-1/30">
-                        <div className="sticky top-0 space-y-6 p-8">
+                    <div className="relative border-l border-white/5 bg-surface-1/30 overflow-y-auto custom-scrollbar-premium">
+                        <div className="space-y-6 p-8">
                             {invoice && (
                                 <>
                                     <section className="space-y-4">
@@ -295,6 +341,23 @@ export function InvoiceModal({
                                                 className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all" 
                                                 placeholder="Enter internal notes or instructions for the tenant..." 
                                             />
+                                            <input
+                                                value={rejectionReason}
+                                                onChange={(event) => setRejectionReason(event.target.value)}
+                                                className="w-full rounded-2xl border border-white/10 bg-surface-2 px-5 py-3 text-sm text-text-high placeholder:text-text-disabled focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                                                placeholder="Required reason when rejecting or requesting completion"
+                                            />
+                                            {invoice?.amountTag && invoice.amountTag !== "exact" && (
+                                                <select
+                                                    value={nonExactAction}
+                                                    onChange={(event) => setNonExactAction(event.target.value as typeof nonExactAction)}
+                                                    className="w-full rounded-2xl border border-white/10 bg-surface-2 px-5 py-3 text-sm text-text-high outline-none transition-all focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                                                >
+                                                    <option value="accept_partial">Accept as partial</option>
+                                                    <option value="request_completion">Request completion</option>
+                                                    <option value="reject">Reject</option>
+                                                </select>
+                                            )}
                                             <div className="grid grid-cols-1 gap-3">
                                                 <ActionButton 
                                                     onClick={() => runAction("confirm")} 
@@ -303,6 +366,24 @@ export function InvoiceModal({
                                                     icon={<CheckCircle2 className="h-4 w-4" />}
                                                 >
                                                     Approve & Confirm
+                                                </ActionButton>
+                                                {invoice?.intentMethod === "in_person" && (
+                                                    <ActionButton
+                                                        onClick={() => runAction("confirm_received")}
+                                                        loading={actionLoading === "confirm_received"}
+                                                        variant="primary"
+                                                        icon={<CheckCircle2 className="h-4 w-4" />}
+                                                    >
+                                                        Confirm Received
+                                                    </ActionButton>
+                                                )}
+                                                <ActionButton
+                                                    onClick={() => runAction("request_completion")}
+                                                    loading={actionLoading === "request_completion"}
+                                                    variant="ghost"
+                                                    icon={<Clock3 className="h-4 w-4" />}
+                                                >
+                                                    Request Completion
                                                 </ActionButton>
                                                 
                                                 <div className="grid grid-cols-2 gap-3">
@@ -432,4 +513,3 @@ function ActionButton({
         </button>
     );
 }
-

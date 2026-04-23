@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { expireInPersonIntents } from "@/lib/billing/workflow";
 import { generateMonthlyInvoices, listLandlordInvoices } from "@/lib/billing/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const generateSchema = z.object({
@@ -11,6 +13,7 @@ const generateSchema = z.object({
 
 export async function GET() {
     const supabase = await createClient();
+    const adminClient = createAdminClient();
     const {
         data: { user },
         error: userError,
@@ -21,6 +24,7 @@ export async function GET() {
     }
 
     try {
+        await expireInPersonIntents(adminClient, user.id, { landlordId: user.id });
         const payload = await listLandlordInvoices(supabase, user.id);
         return NextResponse.json(payload);
     } catch (error) {

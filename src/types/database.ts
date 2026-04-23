@@ -13,6 +13,10 @@ export type UnitStatus = 'vacant' | 'occupied' | 'maintenance'
 export type LeaseStatus = 'draft' | 'pending_signature' | 'pending_tenant_signature' | 'pending_landlord_signature' | 'active' | 'expired' | 'terminated'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'gcash' | 'maya' | 'bank_transfer' | 'cash'
+export type PaymentWorkflowStatus = 'pending' | 'reminder_sent' | 'intent_submitted' | 'under_review' | 'awaiting_in_person' | 'confirmed' | 'rejected' | 'receipted'
+export type PaymentIntentMethod = 'gcash' | 'in_person'
+export type PaymentAmountTag = 'exact' | 'partial' | 'overpaid' | 'short_paid'
+export type PaymentReviewAction = 'accept_partial' | 'request_completion' | 'reject' | 'confirm_received'
 export type UtilityType = 'water' | 'electricity'
 export type UtilityBillingMode = 'included_in_rent' | 'tenant_paid'
 export type ApplicationStatus = 'pending' | 'reviewing' | 'payment_pending' | 'approved' | 'rejected' | 'withdrawn'
@@ -530,6 +534,14 @@ export interface Database {
                     payment_note: string | null
                     reminder_sent_at: string | null
                     receipt_number: string | null
+                    workflow_status: PaymentWorkflowStatus
+                    intent_method: PaymentIntentMethod | null
+                    amount_tag: PaymentAmountTag | null
+                    review_action: PaymentReviewAction | null
+                    in_person_intent_expires_at: string | null
+                    rejection_reason: string | null
+                    last_action_at: string | null
+                    last_action_by: string | null
                     metadata: Json
                     created_at: string
                     updated_at: string
@@ -564,6 +576,14 @@ export interface Database {
                     payment_note?: string | null
                     reminder_sent_at?: string | null
                     receipt_number?: string | null
+                    workflow_status?: PaymentWorkflowStatus
+                    intent_method?: PaymentIntentMethod | null
+                    amount_tag?: PaymentAmountTag | null
+                    review_action?: PaymentReviewAction | null
+                    in_person_intent_expires_at?: string | null
+                    rejection_reason?: string | null
+                    last_action_at?: string | null
+                    last_action_by?: string | null
                     metadata?: Json
                     created_at?: string
                     updated_at?: string
@@ -597,6 +617,14 @@ export interface Database {
                     payment_note?: string | null
                     reminder_sent_at?: string | null
                     receipt_number?: string | null
+                    workflow_status?: PaymentWorkflowStatus
+                    intent_method?: PaymentIntentMethod | null
+                    amount_tag?: PaymentAmountTag | null
+                    review_action?: PaymentReviewAction | null
+                    in_person_intent_expires_at?: string | null
+                    rejection_reason?: string | null
+                    last_action_at?: string | null
+                    last_action_by?: string | null
                     metadata?: Json
                     updated_at?: string
                 }
@@ -809,6 +837,8 @@ export interface Database {
                     issued_at: string
                     issued_by: string | null
                     notes: string | null
+                    method: PaymentMethod | null
+                    amount_breakdown: Json
                     metadata: Json
                     created_at: string
                 }
@@ -822,6 +852,8 @@ export interface Database {
                     issued_at?: string
                     issued_by?: string | null
                     notes?: string | null
+                    method?: PaymentMethod | null
+                    amount_breakdown?: Json
                     metadata?: Json
                     created_at?: string
                 }
@@ -834,7 +866,47 @@ export interface Database {
                     issued_at?: string
                     issued_by?: string | null
                     notes?: string | null
+                    method?: PaymentMethod | null
+                    amount_breakdown?: Json
                     metadata?: Json
+                }
+                Relationships: any[]
+            }
+            payment_workflow_audit_events: {
+                Row: {
+                    id: string
+                    payment_id: string
+                    actor_id: string | null
+                    action: string
+                    source: 'api' | 'chat_button' | 'system_expiry'
+                    idempotency_key: string | null
+                    before_state: Json
+                    after_state: Json
+                    metadata: Json
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    payment_id: string
+                    actor_id?: string | null
+                    action: string
+                    source: 'api' | 'chat_button' | 'system_expiry'
+                    idempotency_key?: string | null
+                    before_state?: Json
+                    after_state?: Json
+                    metadata?: Json
+                    created_at?: string
+                }
+                Update: {
+                    payment_id?: string
+                    actor_id?: string | null
+                    action?: string
+                    source?: 'api' | 'chat_button' | 'system_expiry'
+                    idempotency_key?: string | null
+                    before_state?: Json
+                    after_state?: Json
+                    metadata?: Json
+                    created_at?: string
                 }
                 Relationships: any[]
             }
@@ -1537,6 +1609,10 @@ export interface Database {
             lease_status: LeaseStatus
             payment_status: PaymentStatus
             payment_method: PaymentMethod
+            payment_workflow_status: PaymentWorkflowStatus
+            payment_intent_method: PaymentIntentMethod
+            payment_amount_tag: PaymentAmountTag
+            payment_review_action: PaymentReviewAction
             application_status: ApplicationStatus
             maintenance_status: MaintenanceStatus
             maintenance_priority: MaintenancePriority
@@ -1565,6 +1641,7 @@ export type LandlordPaymentDestination = Database['public']['Tables']['landlord_
 export type UtilityConfig = Database['public']['Tables']['utility_configs']['Row']
 export type UtilityReading = Database['public']['Tables']['utility_readings']['Row']
 export type PaymentReceipt = Database['public']['Tables']['payment_receipts']['Row']
+export type PaymentWorkflowAuditEvent = Database['public']['Tables']['payment_workflow_audit_events']['Row']
 export type Application = Database['public']['Tables']['applications']['Row']
 export type LandlordInquiryAction = Database['public']['Tables']['landlord_inquiry_actions']['Row']
 export type MaintenanceRequest = Database['public']['Tables']['maintenance_requests']['Row']
