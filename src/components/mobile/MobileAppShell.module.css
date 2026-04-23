@@ -65,8 +65,8 @@
 
     /* Layout */
     --m-status-bar-height: 44px;
-    --m-tab-bar-height: 64px;
-    --m-safe-bottom: 20px;
+    --m-tab-bar-height: 72px;
+    --m-safe-bottom: 24px;
 
     /* Viewport sizing */
     position: relative;
@@ -275,19 +275,26 @@
 
 .tabLabel {
     font-size: var(--m-font-size-xxs);
-    font-weight: 600;
+    font-weight: 800;
     color: var(--m-text-dim);
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
     transition: color 0.2s ease;
 }
 
-.tabItemActive .tabIcon {
+.tabItemActive .tabLabel {
     color: var(--m-primary);
 }
 
-.tabItemActive .tabLabel {
-    color: var(--m-primary);
+.tabItemActive::after {
+    content: "";
+    position: absolute;
+    bottom: 20px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--m-primary);
+    box-shadow: 0 0 8px var(--m-primary);
 }
 
 /* Active tab dot indicator */
