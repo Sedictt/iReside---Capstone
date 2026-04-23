@@ -49,8 +49,6 @@ export default function LoginScreen() {
                 setRole("tenant"); navigate("tenantHome"); return;
             } else if (testEmail === "landlord@ireside.com") {
                 setRole("landlord"); navigate("landlordHome"); return;
-            } else if (testEmail === "admin@ireside.com") {
-                setRole("admin"); navigate("adminHome"); return;
             }
         }
         // --------------------------------------
@@ -66,11 +64,9 @@ export default function LoginScreen() {
 
             // Navigate to appropriate dashboard based on user metadata role
             const userRole = data.user?.user_metadata?.role || "tenant";
-            setRole(userRole as "tenant" | "landlord" | "admin");
+            setRole(userRole as "tenant" | "landlord");
             
-            if (userRole === "admin") {
-                navigate("adminHome");
-            } else if (userRole === "landlord") {
+            if (userRole === "landlord") {
                 navigate("landlordHome");
             } else {
                 navigate("tenantHome");
@@ -82,10 +78,9 @@ export default function LoginScreen() {
         }
     };
 
-    const devBypass = (bypassRole: "tenant" | "landlord" | "admin") => {
+    const devBypass = (bypassRole: "tenant" | "landlord") => {
         setRole(bypassRole);
-        if (bypassRole === "admin") navigate("adminHome");
-        else if (bypassRole === "landlord") navigate("landlordHome");
+        if (bypassRole === "landlord") navigate("landlordHome");
         else navigate("tenantHome");
     };
 
@@ -214,7 +209,6 @@ export default function LoginScreen() {
                 <b>Test Accounts (Pass: password)</b>
                 <p>tenant@ireside.com</p>
                 <p>landlord@ireside.com</p>
-                <p>admin@ireside.com</p>
             </div>
         </div>
     );

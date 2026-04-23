@@ -20,11 +20,9 @@ export default function SplashScreen() {
                 
                 if (session && session.user) {
                     const role = session.user.user_metadata?.role || "tenant";
-                    setRole(role as "tenant" | "landlord" | "admin");
+                    setRole(role as "tenant" | "landlord");
                     
-                    if (role === "admin") {
-                        navigate("adminHome");
-                    } else if (role === "landlord") {
+                    if (role === "landlord") {
                         navigate("landlordHome");
                     } else {
                         navigate("tenantHome");
