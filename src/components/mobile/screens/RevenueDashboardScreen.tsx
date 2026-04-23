@@ -1,5 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import { 
+    ChevronLeft, 
+    TrendingUp, 
+    TrendingDown, 
+    DollarSign, 
+    PieChart, 
     Activity,
     ArrowUpRight,
     Building2,
