@@ -20,8 +20,9 @@ import styles from "./ApplicationFormScreen.module.css";
 const STEPS = [
     { id: 1, label: "Personal", icon: User },
     { id: 2, label: "Employment", icon: Briefcase },
-    { id: 3, label: "References", icon: Users },
-    { id: 4, label: "Review", icon: FileCheck },
+    { id: 3, label: "Documents", icon: FileCheck },
+    { id: 4, label: "References", icon: Users },
+    { id: 5, label: "Review", icon: CheckCircle2 },
 ];
 
 // ─── Component ─────────────────────────────────────────────
@@ -53,7 +54,11 @@ export default function ApplicationFormScreen() {
         refName: "",
         refRelation: "",
         refPhone: "",
+        refPhone: "",
         additionalNotes: "",
+        // Documents (simulated)
+        idDocument: null,
+        incomeDocument: null,
     });
 
     const updateField = (field: string, value: string) => {
@@ -61,7 +66,7 @@ export default function ApplicationFormScreen() {
     };
 
     const handleNext = () => {
-        if (currentStep < 4) setCurrentStep((s) => s + 1);
+        if (currentStep < 5) setCurrentStep((s) => s + 1);
         else if (termsAccepted) setSubmitted(true);
     };
 
@@ -226,8 +231,52 @@ export default function ApplicationFormScreen() {
                         </div>
                     </>
                 );
-
             case 3:
+                return (
+                    <>
+                        <h2 className={styles.stepTitle}>Upload Documents</h2>
+                        <p className={styles.stepSub}>
+                            Upload the required documents to verify your application.
+                        </p>
+
+                        <div className={styles.uploadBox}>
+                            <div className={styles.uploadItem}>
+                                <div className={styles.uploadInfo}>
+                                    <h4 className={styles.uploadLabel}>{form.idType}</h4>
+                                    <p className={styles.uploadSub}>Passport or Driver's License</p>
+                                </div>
+                                <button
+                                    className={`${styles.uploadBtn} ${form.idDocument ? styles.uploadBtnDone : ""}`}
+                                    onClick={() => updateField("idDocument", "id_v1.png")}
+                                >
+                                    {form.idDocument ? "Change" : "Upload"}
+                                    {form.idDocument ? <Check size={14} /> : <FileCheck size={14} />}
+                                </button>
+                            </div>
+
+                            <div className={styles.uploadItem}>
+                                <div className={styles.uploadInfo}>
+                                    <h4 className={styles.uploadLabel}>Proof of Income</h4>
+                                    <p className={styles.uploadSub}>3-month bank statement or COE</p>
+                                </div>
+                                <button
+                                    className={`${styles.uploadBtn} ${form.incomeDocument ? styles.uploadBtnDone : ""}`}
+                                    onClick={() => updateField("incomeDocument", "inc_v1.png")}
+                                >
+                                    {form.incomeDocument ? "Change" : "Upload"}
+                                    {form.incomeDocument ? <Check size={14} /> : <FileCheck size={14} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={styles.secureHint}>
+                            <FileCheck size={14} />
+                            Your documents are encrypted and only accessible by the landlord.
+                        </div>
+                    </>
+                );
+
+            case 4:
                 return (
                     <>
                         <h2 className={styles.stepTitle}>References</h2>
@@ -304,7 +353,7 @@ export default function ApplicationFormScreen() {
                     </>
                 );
 
-            case 4:
+            case 5:
                 return (
                     <>
                         <h2 className={styles.stepTitle}>Review Application</h2>
@@ -380,6 +429,27 @@ export default function ApplicationFormScreen() {
                                 <span className={styles.reviewValue}>{form.monthlyIncome}</span>
                             </div>
                         </div>
+
+                        {/* Documents Review */}
+                        <div className={styles.reviewSection}>
+                            <div className={styles.reviewSectionTitle}>
+                                <FileCheck /> Documents
+                            </div>
+                            <div className={styles.reviewRow}>
+                                <span className={styles.reviewLabel}>{form.idType}</span>
+                                <span className={`${styles.reviewValue} ${form.idDocument ? styles.statusTextDone : styles.statusTextError}`}>
+                                    {form.idDocument ? "Uploaded" : "Missing"}
+                                </span>
+                            </div>
+                            <div className={styles.reviewDivider} />
+                            <div className={styles.reviewRow}>
+                                <span className={styles.reviewLabel}>Proof of Income</span>
+                                <span className={`${styles.reviewValue} ${form.incomeDocument ? styles.statusTextDone : styles.statusTextError}`}>
+                                    {form.incomeDocument ? "Uploaded" : "Missing"}
+                                </span>
+                            </div>
+                        </div>
+
 
                         {/* References */}
                         <div className={styles.reviewSection}>
@@ -465,13 +535,13 @@ export default function ApplicationFormScreen() {
                     className={styles.nextButton}
                     onClick={handleNext}
                     style={
-                        currentStep === 4 && !termsAccepted
+                        currentStep === 5 && !termsAccepted
                             ? { opacity: 0.5, pointerEvents: "none" }
                             : {}
                     }
                 >
-                    {currentStep === 4 ? "Submit Application" : "Continue"}
-                    {currentStep === 4 ? <Check /> : <ArrowRight />}
+                    {currentStep === 5 ? "Submit Application" : "Continue"}
+                    {currentStep === 5 ? <Check /> : <ArrowRight />}
                 </button>
             </div>
         </div>

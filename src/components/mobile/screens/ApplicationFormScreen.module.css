@@ -448,3 +448,88 @@
     width: 16px;
     height: 16px;
 }
+
+/* ─── Upload Documents Step ─────────────────────────────── */
+.uploadBox {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.uploadItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #141414;
+    border: 1.5px solid #1e1e1e;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.uploadInfo {
+    flex: 1;
+}
+
+.uploadLabel {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fafafa;
+    margin-bottom: 2px;
+}
+
+.uploadSub {
+    font-size: 11px;
+    color: #525252;
+    font-weight: 500;
+}
+
+.uploadBtn {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background: #1a1a1a;
+    color: #a3a3a3;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.uploadBtnDone {
+    background: rgba(109, 152, 56, 0.1);
+    border-color: rgba(109, 152, 56, 0.2);
+    color: #6d9838;
+}
+
+.secureHint {
+    background: rgba(109, 152, 56, 0.05);
+    border: 1px solid rgba(109, 152, 56, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    color: #5a7e2f;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.secureHint svg {
+    margin-top: 1px;
+}
+
+/* Status Text Helpers */
+.statusTextDone {
+    color: #6d9838;
+}
+
+.statusTextError {
+    color: #ef4444;
+}

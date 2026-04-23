@@ -457,3 +457,146 @@
 .rejectBtn:active, .approveBtn:active {
     transform: scale(0.96);
 }
+
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #1a1a1a;
+    box-shadow: none;
+}
+
+/* Document Verification Extensions */
+.sectionHeaderRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 24px 0 12px;
+}
+
+.verifiedTag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(109, 152, 56, 0.15);
+    color: #6d9838;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 99px;
+}
+
+.docStatus.pending { color: #f59e0b; }
+.docStatus.verified { color: #6d9838; }
+.docStatus.rejected { color: #ef4444; }
+
+.actionPrompt {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6d9838;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ─── Document Viewer Modal ────────────────────────────── */
+.docViewerOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+}
+
+.docViewerContent {
+    width: 100%;
+    background: #0a0a0a;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 900;
+    color: #fafafa;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    color: #525252;
+    cursor: pointer;
+}
+
+.docPreviewPlaceholder {
+    width: 100%;
+    aspect-ratio: 4/5;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.previewGraphic {
+    text-align: center;
+    color: #333;
+}
+
+.previewGraphic p {
+    font-size: 14px;
+    font-weight: 700;
+    color: #525252;
+    margin-top: 12px;
+}
+
+.previewMeta {
+    font-size: 11px;
+    color: #333;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+}
+
+.modalRejectBtn, .modalVerifyBtn {
+    flex: 1;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.modalRejectBtn {
+    background: #1a1a1a;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.modalVerifyBtn {
+    background: #6d9838;
+    color: #fff;
+}
+
