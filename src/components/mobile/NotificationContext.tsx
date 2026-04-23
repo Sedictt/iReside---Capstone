@@ -76,7 +76,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                                 <span style={{ fontSize: '13px', fontWeight: 800, color: '#fafafa' }}>{notification.title}</span>
                                 <span style={{ fontSize: '10px', color: '#737373', fontWeight: 600 }}>now</span>
                             </div>
-                            <p style={{ fontSize: '12px', color: '#a3a3a3', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', text-overflow: 'ellipsis' }}>
+                            <p style={{ fontSize: '12px', color: '#a3a3a3', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {notification.message}
                             </p>
                         </div>
