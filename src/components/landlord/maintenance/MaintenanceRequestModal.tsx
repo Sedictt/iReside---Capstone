@@ -20,7 +20,8 @@ import {
     Zap,
     ChevronDown,
     Camera,
-    Wrench
+    Wrench,
+    Sparkles
 } from "lucide-react";
 import type { MaintenanceRequest } from "./MaintenanceDashboard";
 
@@ -350,6 +351,27 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
 
                                 <h2 className="text-3xl font-black text-foreground leading-tight tracking-tight mb-4">{request.title}</h2>
                                 <p className="text-muted-foreground text-[15px] leading-relaxed whitespace-pre-wrap break-words">{parsedDescription}</p>
+                                {(request.triageReason) && (
+                                    <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 relative overflow-hidden group/ai">
+                                        {/* Subtle background glow */}
+                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 blur-3xl rounded-full" />
+                                        
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-1.5 bg-primary/10 rounded-lg">
+                                                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                            </div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                                IRIS AI Triage
+                                            </p>
+                                        </div>
+
+                                        {request.triageReason && (
+                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                                {request.triageReason}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {selfRepairRequested && (

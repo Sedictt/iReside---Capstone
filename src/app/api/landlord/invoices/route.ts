@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const generateSchema = z.object({
     billingMonth: z.string().optional(),
-    leaseIds: z.array(z.string().uuid()).optional(),
+    leaseIds: z.array(z.string().trim().min(1)).optional(),
 });
 
 export async function GET() {
@@ -41,8 +41,18 @@ export async function POST(request: Request) {
     }
 
     try {
-        const body = generateSchema.parse(await request.json());
-        const result = await generateMonthlyInvoices(supabase, user.id, body.billingMonth, body.leaseIds);
+        const payload = await request.json();
+        const parsed = generateSchema.safeParse(payload);
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: "Invalid invoice generation payload.", details: parsed.error.flatten() },
+                { status: 400 }
+            );
+        }
+
+        const body = parsed.data;
+        const leaseIds = body.leaseIds?.map((id) => id.trim()).filter((id) => id.length > 0);
+        const result = await generateMonthlyInvoices(supabase, user.id, body.billingMonth, leaseIds);
 
         return NextResponse.json(result);
     } catch (error) {

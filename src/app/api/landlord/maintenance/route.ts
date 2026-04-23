@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
 import { createClient } from "@/lib/supabase/server";
 import type { MaintenancePriority, MaintenanceStatus } from "@/types/database";
+import {
+    buildHeuristicMaintenanceTriage,
+    computeMaintenanceTriageHash,
+    parseMaintenanceTriageBatch,
+    type MaintenanceSentiment,
+    type MaintenanceTriageInput,
+    type MaintenanceTriageResult,
+} from "@/lib/maintenance-triage";
 
 type MaintenanceStatusLabel = "Pending" | "Assigned" | "In Progress" | "Resolved";
 type MaintenancePriorityLabel = "Critical" | "High" | "Medium" | "Low";
+type MaintenanceSentimentLabel = "Distressed" | "Negative" | "Neutral" | "Positive";
 
 type MaintenanceRequestItem = {
     id: string;
@@ -26,6 +36,11 @@ type MaintenanceRequestItem = {
     assignee?: string | null;
     scheduledFor?: string | null;
     images: string[];
+    sentiment?: MaintenanceSentimentLabel;
+    triageReason?: string;
+    triageConfidence?: number;
+    triageSource?: "ai" | "heuristic" | "cache" | "database";
+    triagedAt?: string | null;
 };
 
 type MaintenanceMetrics = {
@@ -39,6 +54,12 @@ const FALLBACK_AVATAR =
     "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 const LEGACY_SELF_REPAIR_PREFIX = "[TENANT REQUESTED SELF-REPAIR PERMISSION]";
 const SELF_REPAIR_CATEGORY_TOKEN = "self_repair_requested";
+const TRIAGE_VERSION = "maintenance-triage-v1";
+
+const openai = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+});
 
 const isNonEmptyString = (value: unknown): value is string =>
     typeof value === "string" && value.trim().length > 0;
@@ -96,6 +117,34 @@ const resolvePriority = (priority: MaintenancePriority | null | undefined): Main
     }
 };
 
+const toMaintenancePriorityLabel = (priority: MaintenancePriority): MaintenancePriorityLabel => {
+    switch (priority) {
+        case "urgent":
+            return "Critical";
+        case "high":
+            return "High";
+        case "medium":
+            return "Medium";
+        case "low":
+        default:
+            return "Low";
+    }
+};
+
+const resolveSentiment = (sentiment: MaintenanceSentiment | string | null | undefined): MaintenanceSentimentLabel => {
+    switch ((sentiment ?? "").toString().trim().toLowerCase()) {
+        case "distressed":
+            return "Distressed";
+        case "negative":
+            return "Negative";
+        case "positive":
+            return "Positive";
+        case "neutral":
+        default:
+            return "Neutral";
+    }
+};
+
 const formatRelativeDate = (value: string) => {
     const date = new Date(value);
     const now = new Date();
@@ -130,6 +179,7 @@ const formatRelativeDate = (value: string) => {
 
 export async function GET() {
     const supabase = await createClient();
+    const maintenanceRequests = supabase.from("maintenance_requests") as any;
     const {
         data: { user },
         error: userError,
@@ -139,10 +189,9 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: requestRows, error: requestsError } = await supabase
-        .from("maintenance_requests")
+    const { data: requestRows, error: requestsError } = await maintenanceRequests
         .select(
-            "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at"
+            "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence, ai_triage_hash, ai_triage_version, ai_triaged_at"
         )
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false });
@@ -163,11 +212,155 @@ export async function GET() {
         });
     }
 
-    const tenantIds = Array.from(
-        new Set(requestRows.map((row) => row.tenant_id).filter((value): value is string => Boolean(value)))
+    const triageMap = new Map<string, MaintenanceTriageResult & { triagedAt: string | null }>();
+    const needsTriage: Array<{ id: string; hash: string; input: MaintenanceTriageInput }> = [];
+
+    requestRows.forEach((rawRow: any) => {
+        const row = rawRow as Record<string, unknown>;
+        const title = isNonEmptyString(row.title) ? row.title : "";
+        const description = isNonEmptyString(row.description) ? row.description : "";
+        const category = isNonEmptyString(row.category) ? row.category : null;
+        const images = Array.isArray(row.images) ? row.images.filter(isNonEmptyString) : [];
+        const input: MaintenanceTriageInput = {
+            id: String(row.id),
+            title,
+            description,
+            category,
+            selfRepairRequested: Boolean(row.self_repair_requested),
+            imageCount: images.length,
+        };
+
+        const hash = computeMaintenanceTriageHash(input);
+        const dbPriority = typeof row.ai_triage_priority === "string" ? row.ai_triage_priority : "";
+        const dbSentiment = typeof row.ai_triage_sentiment === "string" ? row.ai_triage_sentiment : "";
+        const dbReason = typeof row.ai_triage_reason === "string" ? row.ai_triage_reason.trim() : "";
+        const dbConfidence =
+            typeof row.ai_triage_confidence === "number"
+                ? row.ai_triage_confidence
+                : Number(row.ai_triage_confidence ?? 0.65);
+        const dbHash = typeof row.ai_triage_hash === "string" ? row.ai_triage_hash : "";
+        const dbVersion = typeof row.ai_triage_version === "string" ? row.ai_triage_version : "";
+        const dbTriagedAt = typeof row.ai_triaged_at === "string" ? row.ai_triaged_at : null;
+
+        const normalizedPriority =
+            dbPriority === "urgent" || dbPriority === "high" || dbPriority === "medium" || dbPriority === "low"
+                ? dbPriority
+                : null;
+        const normalizedSentiment =
+            dbSentiment === "distressed" ||
+            dbSentiment === "negative" ||
+            dbSentiment === "neutral" ||
+            dbSentiment === "positive"
+                ? dbSentiment
+                : null;
+
+        if (normalizedPriority && normalizedSentiment && dbReason && dbHash === hash && dbVersion === TRIAGE_VERSION) {
+            triageMap.set(input.id, {
+                priority: normalizedPriority,
+                sentiment: normalizedSentiment,
+                reason: dbReason,
+                confidence: Number.isFinite(dbConfidence) ? Math.max(0, Math.min(1, dbConfidence)) : 0.65,
+                source: "cache",
+                triagedAt: dbTriagedAt,
+            });
+            return;
+        }
+
+        needsTriage.push({ id: input.id, hash, input });
+    });
+
+    if (needsTriage.length > 0) {
+        const nowIso = new Date().toISOString();
+        let aiParsedResults = new Map<string, MaintenanceTriageResult>();
+
+        if (process.env.GROQ_API_KEY) {
+            try {
+                const completion = await openai.chat.completions.create({
+                    model: "llama-3.1-8b-instant",
+                    temperature: 0.2,
+                    max_tokens: 1800,
+                    messages: [
+                        {
+                            role: "system",
+                            content: [
+                                "You triage maintenance requests for landlords.",
+                                "Return strict JSON only: an array of objects.",
+                                "Each object must include: id, priority, sentiment, reason, confidence.",
+                                "Allowed priority values: urgent, high, medium, low.",
+                                "Allowed sentiment values: distressed, negative, neutral, positive.",
+                                "Confidence must be a number between 0 and 1.",
+                                "Reason must be one short sentence focused on urgency and tenant tone.",
+                            ].join("\n"),
+                        },
+                        {
+                            role: "user",
+                            content: JSON.stringify(
+                                needsTriage.map(({ input }) => ({
+                                    id: input.id,
+                                    title: input.title,
+                                    description: input.description,
+                                    category: input.category,
+                                    selfRepairRequested: input.selfRepairRequested,
+                                    imageCount: input.imageCount,
+                                }))
+                            ),
+                        },
+                    ],
+                });
+
+                const aiContent = completion.choices[0]?.message?.content ?? "";
+                aiParsedResults = parseMaintenanceTriageBatch(aiContent);
+            } catch (error) {
+                console.error("[landlord maintenance] AI triage failed:", error);
+            }
+        }
+
+        const updates = needsTriage.map(({ id, hash, input }) => {
+            const triage = aiParsedResults.get(id) ?? buildHeuristicMaintenanceTriage(input);
+            triageMap.set(id, { ...triage, triagedAt: nowIso });
+            return {
+                id,
+                ai_triage_priority: triage.priority,
+                ai_triage_sentiment: triage.sentiment,
+                ai_triage_reason: triage.reason,
+                ai_triage_confidence: triage.confidence,
+                ai_triage_hash: hash,
+                ai_triage_version: TRIAGE_VERSION,
+                ai_triaged_at: nowIso,
+            };
+        });
+
+        await Promise.allSettled(
+            updates.map((update) =>
+                maintenanceRequests
+                    .update({
+                        ai_triage_priority: update.ai_triage_priority,
+                        ai_triage_sentiment: update.ai_triage_sentiment,
+                        ai_triage_reason: update.ai_triage_reason,
+                        ai_triage_confidence: update.ai_triage_confidence,
+                        ai_triage_hash: update.ai_triage_hash,
+                        ai_triage_version: update.ai_triage_version,
+                        ai_triaged_at: update.ai_triaged_at,
+                    })
+                    .eq("id", update.id)
+                    .eq("landlord_id", user.id)
+            )
+        );
+    }
+
+    const tenantIds: string[] = Array.from(
+        new Set(
+            requestRows
+                .map((row: any) => row.tenant_id)
+                .filter((value: unknown): value is string => typeof value === "string" && value.length > 0)
+        )
     );
-    const unitIds = Array.from(
-        new Set(requestRows.map((row) => row.unit_id).filter((value): value is string => Boolean(value)))
+    const unitIds: string[] = Array.from(
+        new Set(
+            requestRows
+                .map((row: any) => row.unit_id)
+                .filter((value: unknown): value is string => typeof value === "string" && value.length > 0)
+        )
     );
 
     const { data: tenantRows, error: tenantsError } =
@@ -212,12 +405,13 @@ export async function GET() {
     let inProgress = 0;
     let resolvedThisMonth = 0;
 
-    const requests: MaintenanceRequestItem[] = requestRows.map((row) => {
+    const requests: MaintenanceRequestItem[] = requestRows.map((row: any) => {
         const tenant = tenantMap.get(row.tenant_id);
         const unit = unitMap.get(row.unit_id);
         const property = unit ? propertyMap.get(unit.property_id) : null;
         const status = resolveStatus(row.status);
-        const priority = resolvePriority(row.priority);
+        const triage = triageMap.get(row.id);
+        const priority = triage ? toMaintenancePriorityLabel(triage.priority) : resolvePriority(row.priority);
         const { cleanedDescription, selfRepairRequested } = extractSelfRepairDetails(row.description, row.category);
         const dbSelfRepairDecision = row.self_repair_decision as "pending" | "approved" | "rejected" | null;
         const dbRepairMethod = row.repair_method as "landlord" | "third_party" | "self_repair" | null;
@@ -262,6 +456,11 @@ export async function GET() {
             status,
             reportedAt: formatRelativeDate(row.created_at),
             images: Array.isArray(row.images) ? row.images.filter(isNonEmptyString) : [],
+            sentiment: triage ? resolveSentiment(triage.sentiment) : undefined,
+            triageReason: triage?.reason,
+            triageConfidence: triage?.confidence,
+            triageSource: triage?.source ?? (row.ai_triage_priority ? "database" : undefined),
+            triagedAt: triage?.triagedAt ?? (typeof row.ai_triaged_at === "string" ? row.ai_triaged_at : null),
         };
     });
 
