@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, PieChart, MessageSquare } from "lucide-react";
+import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, PieChart, MessageSquare, Twitter, Github, Linkedin, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import gsap from "gsap";
@@ -625,7 +625,7 @@ export default function ScrollyTellingLandingPage() {
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-200 via-primary to-primary-dark">For Rental Ops.</span>
                         </h1>
                     <p className="text-lg md:text-2xl text-muted-foreground max-w-2xl mx-auto font-medium mb-8">Run your rentals with less friction, stronger security, and predictable cash flow.</p>
-                    <TransitionLink href="/apply-landlord" className="group relative inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.3)]">
+                    <TransitionLink href="/signup" className="group relative inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-black text-lg transition-all hover:scale-105 shadow-[0_0_40px_rgba(109,152,56,0.3)]">
                         Request Access <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
                     </TransitionLink>
                 </motion.div>
@@ -763,7 +763,7 @@ export default function ScrollyTellingLandingPage() {
                     <div className="cta-reveal mt-20 cta-panel-wrapper border border-border bg-card p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
                         <p className="text-xl text-muted-foreground mb-10">Application review usually completes within two business days.</p>
                         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                            <TransitionLink href="/apply-landlord" className="h-20 px-12 rounded-full bg-primary text-white font-black text-xl flex items-center justify-center hover:scale-105 transition-transform">Request Access <ArrowRight className="ml-3 h-6 w-6" /></TransitionLink>
+                            <TransitionLink href="/signup" className="h-20 px-12 rounded-full bg-primary text-white font-black text-xl flex items-center justify-center hover:scale-105 transition-transform">Request Access <ArrowRight className="ml-3 h-6 w-6" /></TransitionLink>
                         </div>
                     </div>
                 </div>
@@ -815,6 +815,95 @@ export default function ScrollyTellingLandingPage() {
                 {/* Particle Glow */}
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity" />
             </button>
+            {/* Premium Footer */}
+            <footer className="relative pt-32 pb-16 px-6 border-t border-border bg-card z-20 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,152,56,0.08),transparent_60%)] pointer-events-none" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-32">
+                        <div className="flex flex-col gap-10 col-span-1 lg:col-span-1">
+                            <div className="flex flex-col gap-5">
+                                <Logo className="h-10 w-auto" />
+                                <div className="flex items-center gap-2">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500/80">Systems Operational</span>
+                                </div>
+                            </div>
+                            <p className="text-muted-foreground text-[17px] font-medium leading-relaxed">
+                                Reimagining rental operations with intelligent workflows and a calm, centered experience for modern portfolios.
+                            </p>
+                            <div className="flex items-center gap-3">
+                                {[Github, Mail].map((Icon, i) => (
+                                    <a key={i} href="#" className="h-12 w-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all group shadow-sm">
+                                        <Icon className="h-5 w-5 transition-transform group-hover:scale-110" />
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-12 lg:col-span-3">
+                            <div className="flex flex-col gap-8">
+                                <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-foreground/40">Platform Modules</h4>
+                                <ul className="flex flex-col gap-6">
+                                    {[
+                                        { name: "Portfolio Map", href: "/modules/unit-map" },
+                                        { name: "Maintenance Ops", href: "/landlord/maintenance" },
+                                        { name: "Financials", href: "/modules/financials" },
+                                        { name: "Tenant Screening", href: "/apply" }
+                                    ].map(link => (
+                                        <li key={link.name}>
+                                            <TransitionLink href={link.href} className="text-[15px] font-bold text-muted-foreground hover:text-primary transition-all flex items-center gap-3 group">
+                                                <div className="w-1.5 h-px bg-primary/30 group-hover:w-4 transition-all" />
+                                                {link.name}
+                                            </TransitionLink>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div className="flex flex-col gap-8">
+                                <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-foreground/40">Company</h4>
+                                <ul className="flex flex-col gap-6">
+                                    {[
+                                        { name: "About iReside", href: "#" },
+                                        { name: "Documentation", href: "#" },
+                                        { name: "FAQs", href: "#" },
+                                        { name: "Contact Support", href: "mailto:support@ireside.ai" }
+                                    ].map(link => (
+                                        <li key={link.name}>
+                                            <a href={link.href} className="text-[15px] font-bold text-muted-foreground hover:text-primary transition-all hover:translate-x-1 inline-block">
+                                                {link.name}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-12 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-10">
+                        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-12">
+                            <p className="text-[13px] font-bold text-muted-foreground/60">© 2026 iReside Technologies Inc.</p>
+                            <div className="flex items-center gap-8 text-[13px] font-bold text-muted-foreground/80">
+                                <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
+                                <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 px-6 py-3 rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm group cursor-default shadow-sm hover:border-primary/40 transition-colors">
+                            <div className="relative">
+                                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                                <div className="absolute inset-0 bg-primary blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Powered by iRis AI</span>
+                                <span className="text-[9px] font-extrabold text-primary/50 uppercase tracking-[0.1em]">Intelligence Engine v2.4</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
             </main>
         </div>
     );

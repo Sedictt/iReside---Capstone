@@ -4,16 +4,189 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
 
 type InvoiceDetail = NonNullable<Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>>;
 
+function buildFaceToFacePreviewInvoice(invoiceId: string): InvoiceDetail {
+    const now = new Date().toISOString();
+
+    return {
+        id: invoiceId,
+        invoiceNumber: "INV-PREVIEW-0426",
+        status: "pending",
+        tenant: {
+            id: "preview-tenant",
+            email: "tenant.preview@ireside.local",
+            full_name: "Tenant Preview",
+            role: "tenant",
+            avatar_url: null,
+            phone: "09171234567",
+            created_at: now,
+            updated_at: now,
+        },
+        landlord: {
+            id: "preview-landlord",
+            email: "landlord.preview@ireside.local",
+            full_name: "Landlord Preview",
+            role: "landlord",
+            avatar_url: null,
+            phone: "09179876543",
+            created_at: now,
+            updated_at: now,
+        },
+        property: {
+            id: "preview-property",
+            landlord_id: "preview-landlord",
+            name: "Maple Heights Residences",
+            address: "123 Mango Ave",
+            city: "Cebu City",
+            description: "Preview property record",
+            type: "apartment",
+            lat: null,
+            lng: null,
+            amenities: ["WiFi", "CCTV", "Laundry"],
+            house_rules: ["Quiet hours after 10PM"],
+            contract_template: null,
+            images: [],
+            is_featured: false,
+            created_at: now,
+            updated_at: now,
+        },
+        unit: {
+            id: "preview-unit",
+            property_id: "preview-property",
+            name: "Unit 4B",
+            floor: 4,
+            status: "occupied",
+            rent_amount: 12500,
+            sqft: 28,
+            beds: 1,
+            baths: 1,
+            created_at: now,
+            updated_at: now,
+        },
+        dueDate: "2026-05-05",
+        issuedDate: "2026-04-23",
+        billingCycle: "2026-04-01",
+        invoicePeriodStart: "2026-04-01",
+        invoicePeriodEnd: "2026-04-30",
+        subtotal: 14070,
+        totalAmount: 14070,
+        paidAmount: 0,
+        balanceRemaining: 14070,
+        lateFeeAmount: 250,
+        allowPartialPayments: true,
+        description: "Preview monthly invoice",
+        paymentMethod: null,
+        referenceNumber: null,
+        paymentSubmittedAt: null,
+        paymentProofUrl: null,
+        paymentNote: null,
+        receiptNumber: null,
+        landlordConfirmed: false,
+        lineItems: [
+            {
+                id: "preview-item-rent",
+                payment_id: invoiceId,
+                label: "Monthly rent",
+                amount: 12500,
+                category: "rent",
+                sort_order: 0,
+                utility_type: null,
+                billing_mode: null,
+                reading_id: null,
+                metadata: {},
+                created_at: now,
+            },
+            {
+                id: "preview-item-water",
+                payment_id: invoiceId,
+                label: "Water service",
+                amount: 650,
+                category: "water",
+                sort_order: 10,
+                utility_type: "water",
+                billing_mode: "tenant_paid",
+                reading_id: "preview-reading-water",
+                metadata: { usage: 13, rate: 50 },
+                created_at: now,
+            },
+            {
+                id: "preview-item-electric",
+                payment_id: invoiceId,
+                label: "Electricity service",
+                amount: 920,
+                category: "electricity",
+                sort_order: 20,
+                utility_type: "electricity",
+                billing_mode: "tenant_paid",
+                reading_id: "preview-reading-electric",
+                metadata: { usage: 46, rate: 20 },
+                created_at: now,
+            },
+        ],
+        readings: [
+            {
+                id: "preview-reading-water",
+                utility_type: "water",
+                billing_mode: "tenant_paid",
+                billing_period_start: "2026-04-01",
+                billing_period_end: "2026-04-30",
+                previous_reading: 118,
+                current_reading: 131,
+                usage: 13,
+                billed_rate: 50,
+                computed_charge: 650,
+                note: "Preview utility reading",
+                proof_image_url: null,
+                entered_at: now,
+            },
+            {
+                id: "preview-reading-electric",
+                utility_type: "electricity",
+                billing_mode: "tenant_paid",
+                billing_period_start: "2026-04-01",
+                billing_period_end: "2026-04-30",
+                previous_reading: 2452,
+                current_reading: 2498,
+                usage: 46,
+                billed_rate: 20,
+                computed_charge: 920,
+                note: "Preview utility reading",
+                proof_image_url: null,
+                entered_at: now,
+            },
+        ],
+        receipts: [],
+        paymentDestination: {
+            id: "preview-destination",
+            landlord_id: "preview-landlord",
+            provider: "gcash",
+            account_name: "Landlord Preview",
+            account_number: "09179876543",
+            qr_image_path: null,
+            qr_image_url: null,
+            is_enabled: true,
+            created_at: now,
+            updated_at: now,
+        },
+        leaseTermsSummary: {
+            dueDay: 5,
+            lateFeeAmount: 250,
+            allowPartialPayments: true,
+            utilitiesDescription: "Water and electricity billed by usage.",
+        },
+    };
+}
+
 export default function CheckoutPage() {
     const params = useParams<{ id: string }>();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -23,10 +196,19 @@ export default function CheckoutPage() {
     const [receipt, setReceipt] = useState<File | null>(null);
     const [partialAmount, setPartialAmount] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const isFaceToFacePreview = searchParams.get("preview") === "face_to_face";
 
     useEffect(() => {
         let alive = true;
         const load = async () => {
+            if (isFaceToFacePreview) {
+                if (alive) {
+                    setInvoice(buildFaceToFacePreviewInvoice(params.id));
+                    setLoading(false);
+                }
+                return;
+            }
+
             try {
                 const response = await fetch(`/api/tenant/payments/${params.id}`, { cache: "no-store" });
                 if (!response.ok) throw new Error();
@@ -40,7 +222,13 @@ export default function CheckoutPage() {
         return () => {
             alive = false;
         };
-    }, [params.id]);
+    }, [isFaceToFacePreview, params.id]);
+
+    useEffect(() => {
+        if (isFaceToFacePreview) {
+            setMethod("cash");
+        }
+    }, [isFaceToFacePreview]);
 
     const amountDue = useMemo(() => {
         if (!invoice) return 0;
@@ -51,6 +239,12 @@ export default function CheckoutPage() {
         if (!invoice) return;
         setSubmitting(true);
         try {
+            if (isFaceToFacePreview) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                setSubmitted(true);
+                return;
+            }
+
             const formData = new FormData();
             formData.append("method", method);
             formData.append("referenceNumber", referenceNumber);
@@ -100,6 +294,18 @@ export default function CheckoutPage() {
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 shadow-sm"><ShieldCheck className="h-3.5 w-3.5" />Secure checkout</div>
                 </div>
 
+                {isFaceToFacePreview && (
+                    <div className="relative z-10 mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Preview mode: Face-to-face payment</p>
+                            <Link href={`/tenant/payments/${params.id}/checkout`} className="rounded-full border border-border bg-background px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-red-500 transition-colors hover:bg-muted hover:text-red-600">
+                                Clear Preview
+                            </Link>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">This preview does not write to the database. Submitting here only shows the success state so you can validate the full flow safely.</p>
+                    </div>
+                )}
+
                 <div className="relative z-10 mb-8">
                     <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Checkout</p>
                     <h1 className="mt-2 text-4xl font-black text-foreground md:text-5xl tracking-tight">{invoice.invoiceNumber}</h1>
@@ -107,7 +313,14 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="relative z-10 grid gap-5 md:grid-cols-2">
-                    <MethodCard active={method === "gcash"} onClick={() => setMethod("gcash")} icon={<QrCode className="h-6 w-6" />} title="GCash" body="Use the landlord's saved wallet destination and upload proof." />
+                    <MethodCard
+                        active={method === "gcash"}
+                        disabled={isFaceToFacePreview}
+                        onClick={() => setMethod("gcash")}
+                        icon={<QrCode className="h-6 w-6" />}
+                        title="GCash"
+                        body={isFaceToFacePreview ? "Disabled in face-to-face preview mode." : "Use the landlord's saved wallet destination and upload proof."}
+                    />
                     <MethodCard active={method === "cash"} onClick={() => setMethod("cash")} icon={<Wallet className="h-6 w-6" />} title="Cash / in person" body="Record your intent and let the landlord confirm receipt." />
                 </div>
 
@@ -138,7 +351,7 @@ export default function CheckoutPage() {
                 ) : (
                     <div className="relative z-10 mt-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-6 shadow-inner">
                         <div className="flex items-center gap-3 text-sm font-black text-foreground"><CreditCard className="h-5 w-5 text-primary" />Cash payment instructions</div>
-                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground font-medium">Bring the exact amount to your landlord or building manager. Submitting here marks the invoice as "in review" until they confirm receipt.</p>
+                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground font-medium">Bring the exact amount to your landlord or building manager. Submitting here marks the invoice as &quot;in review&quot; until they confirm receipt.</p>
                     </div>
                 )}
 
@@ -206,18 +419,28 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function MethodCard({
     active,
     body,
+    disabled = false,
     icon,
     onClick,
     title,
 }: {
     active: boolean;
     body: string;
+    disabled?: boolean;
     icon: ReactNode;
     onClick: () => void;
     title: string;
 }) {
     return (
-        <button onClick={onClick} className={cn("relative overflow-hidden rounded-[2rem] border p-6 text-left transition-all hover:scale-[1.02]", active ? "border-primary/40 bg-primary/5 shadow-md" : "border-border/50 bg-background/60 hover:bg-background hover:border-border/80")}>
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            className={cn(
+                "relative overflow-hidden rounded-[2rem] border p-6 text-left transition-all",
+                disabled ? "cursor-not-allowed opacity-55" : "hover:scale-[1.02]",
+                active ? "border-primary/40 bg-primary/5 shadow-md" : "border-border/50 bg-background/60 hover:bg-background hover:border-border/80",
+            )}
+        >
             {active && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />}
             <div className={cn("relative z-10 mb-5 inline-flex rounded-2xl border p-3.5 transition-colors", active ? "border-primary/30 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-card text-muted-foreground")}>{icon}</div>
             <p className="relative z-10 text-xl font-black text-foreground">{title}</p>

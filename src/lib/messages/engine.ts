@@ -161,7 +161,8 @@ const resolvePartnerActionState = async (
         .in("target_user_id", uniquePartnerIds);
 
     if (error) {
-        throw new Error("Failed to load message action state.");
+        console.error("Failed to load message action state.", error);
+        return new Map<string, { archived: boolean; blocked: boolean }>();
     }
 
     const actionMap = new Map<string, { archived: boolean; blocked: boolean }>();

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, History, Loader2, QrCode, Receipt, Waves } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import type { InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
@@ -13,9 +14,78 @@ type PaymentsPayload = {
     history: InvoiceListItem[];
 };
 
+const PREVIEW_INVOICE_ID = "preview-face-to-face-invoice";
+
+function buildFaceToFacePreviewPayload(source: PaymentsPayload | null): PaymentsPayload {
+    if (source?.nextPayment) {
+        return {
+            nextPayment: {
+                ...source.nextPayment,
+                status: "pending",
+                paymentItems: source.nextPayment.paymentItems?.length
+                    ? source.nextPayment.paymentItems
+                    : [
+                        { id: "mock-rent", label: "Monthly rent", amount: 12500, category: "rent" },
+                        { id: "mock-water", label: "Water service", amount: 650, category: "water" },
+                        { id: "mock-electric", label: "Electricity service", amount: 920, category: "electricity" },
+                    ],
+            },
+            history: source.history,
+        };
+    }
+
+    return {
+        nextPayment: {
+            id: PREVIEW_INVOICE_ID,
+            invoiceNumber: "INV-PREVIEW-0426",
+            tenant: "Tenant Preview",
+            property: "Maple Heights Residences",
+            unit: "Unit 4B",
+            amount: 14070,
+            subtotal: 14070,
+            balanceRemaining: 14070,
+            dueDate: "2026-05-05",
+            issuedDate: "2026-04-23",
+            status: "pending",
+            type: "Rent + Utilities",
+            proofStatus: "none",
+            paymentMethod: null,
+            itemCount: 3,
+            hasReceipt: false,
+            paymentItems: [
+                { id: "mock-rent", label: "Monthly rent", amount: 12500, category: "rent" },
+                { id: "mock-water", label: "Water service", amount: 650, category: "water" },
+                { id: "mock-electric", label: "Electricity service", amount: 920, category: "electricity" },
+            ],
+        },
+        history: [
+            {
+                id: "preview-history-1",
+                invoiceNumber: "INV-0326-001",
+                tenant: "Tenant Preview",
+                property: "Maple Heights Residences",
+                unit: "Unit 4B",
+                amount: 13890,
+                subtotal: 13890,
+                balanceRemaining: 0,
+                dueDate: "2026-04-05",
+                issuedDate: "2026-03-28",
+                status: "paid",
+                type: "Rent + Utilities",
+                proofStatus: "confirmed",
+                paymentMethod: "gcash",
+                itemCount: 3,
+                hasReceipt: true,
+            },
+        ],
+    };
+}
+
 export default function PaymentsPage() {
+    const searchParams = useSearchParams();
     const [payload, setPayload] = useState<PaymentsPayload | null>(null);
     const [loading, setLoading] = useState(true);
+    const isFaceToFacePreview = searchParams.get("preview") === "face_to_face";
 
     useEffect(() => {
         let alive = true;
@@ -35,12 +105,20 @@ export default function PaymentsPage() {
         };
     }, []);
 
+    const effectivePayload = useMemo(
+        () => (isFaceToFacePreview ? buildFaceToFacePreviewPayload(payload) : payload),
+        [isFaceToFacePreview, payload],
+    );
+
     if (loading) {
         return <div className="flex min-h-[50vh] items-center justify-center text-foreground"><Loader2 className="mr-3 h-5 w-5 animate-spin" />Loading your payment dashboard...</div>;
     }
 
-    const nextPayment = payload?.nextPayment ?? null;
-    const history = payload?.history ?? [];
+    const nextPayment = effectivePayload?.nextPayment ?? null;
+    const history = effectivePayload?.history ?? [];
+    const checkoutHref = nextPayment
+        ? `/tenant/payments/${nextPayment.id}/checkout${isFaceToFacePreview ? "?preview=face_to_face" : ""}`
+        : "";
 
     return (
         <div className="space-y-8">
@@ -54,8 +132,24 @@ export default function PaymentsPage() {
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl leading-tight">Clear invoices, readable utilities, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">cleaner checkout</span></h1>
                     <p className="mt-4 text-base leading-relaxed text-muted-foreground max-w-xl">Review the full monthly bill, see how meter readings affect the total, and submit payment with the right landlord destination every time.</p>
+                    {!isFaceToFacePreview && (
+                        <Link href="/tenant/payments?preview=face_to_face" className="mt-5 inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-primary transition-colors hover:bg-primary/15">
+                            Preview Face-to-Face Flow
+                        </Link>
+                    )}
                 </div>
             </section>
+
+            {isFaceToFacePreview && (
+                <section className="rounded-3xl border border-primary/20 bg-primary/5 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-foreground">Preview mode is active. Checkout is preconfigured for the cash / face-to-face flow.</p>
+                        <Link href="/tenant/payments" className="rounded-full border border-border bg-background px-4 py-2 text-xs font-bold uppercase tracking-wider text-red-500 transition-colors hover:bg-muted hover:text-red-600">
+                            Clear Preview
+                        </Link>
+                    </div>
+                </section>
+            )}
 
             <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
                 <section className="rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl flex flex-col">
@@ -97,7 +191,7 @@ export default function PaymentsPage() {
                                 ))}
                             </div>
 
-                            <Link href={`/tenant/payments/${nextPayment.id}/checkout`} className="group mt-auto inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-primary to-blue-600 px-6 py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95">
+                            <Link href={checkoutHref} className="group mt-auto inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-primary to-blue-600 px-6 py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95">
                                 Continue to checkout <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </div>

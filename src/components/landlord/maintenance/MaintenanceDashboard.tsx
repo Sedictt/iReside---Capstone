@@ -13,7 +13,9 @@ import {
     Home,
     Zap,
     Image as ImageIcon,
-    ArrowUpDown
+    ArrowUpDown,
+    Sparkles,
+    Filter
 } from "lucide-react";
 import { MaintenanceRequestModal } from "./MaintenanceRequestModal";
 import Link from "next/link";
@@ -42,6 +44,11 @@ export interface MaintenanceRequest {
     tenantProvidedPhotos?: string[];
     repairMethod?: "landlord" | "third_party" | "self_repair";
     thirdPartyName?: string;
+    sentiment?: "Distressed" | "Negative" | "Neutral" | "Positive";
+    triageReason?: string;
+    triageConfidence?: number;
+    triageSource?: "ai" | "heuristic" | "cache" | "database";
+    triagedAt?: string | null;
 }
 
 export function MaintenanceDashboard() {
@@ -50,13 +57,9 @@ export function MaintenanceDashboard() {
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
     const [previewMode, setPreviewMode] = useState<string | null>(null);
-    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority">("newest");
-    const statusTabs: Array<"All" | "Pending" | "In Progress" | "Resolved"> = [
-        "All",
-        "Pending",
-        "In Progress",
-        "Resolved",
-    ];
+    const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
+    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority-desc" | "priority-asc">("newest");
+
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -173,8 +176,10 @@ export function MaintenanceDashboard() {
     const normalizedSearch = searchQuery.trim().toLowerCase();
     const filteredRequests = requests.filter((req) => {
         const matchesStatus = filter === "All" || req.status === filter;
+        const matchesPriority = priorityFilter === "All" || req.priority === priorityFilter;
+
         if (!normalizedSearch) {
-            return matchesStatus;
+            return matchesStatus && matchesPriority;
         }
 
         const haystack = [req.id, req.tenant, req.unit, req.property, req.title]
@@ -182,7 +187,7 @@ export function MaintenanceDashboard() {
             .join(" ")
             .toLowerCase();
 
-        return matchesStatus && haystack.includes(normalizedSearch);
+        return matchesStatus && matchesPriority && haystack.includes(normalizedSearch);
     });
 
     const sortedRequests = [...filteredRequests].sort((a, b) => {
@@ -192,9 +197,13 @@ export function MaintenanceDashboard() {
         if (sortBy === "oldest") {
             return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
         }
-        if (sortBy === "priority") {
+        if (sortBy === "priority-desc") {
             const priorityMap = { Critical: 3, High: 2, Medium: 1, Low: 0 };
             return priorityMap[b.priority] - priorityMap[a.priority];
+        }
+        if (sortBy === "priority-asc") {
+            const priorityMap = { Critical: 3, High: 2, Medium: 1, Low: 0 };
+            return priorityMap[a.priority] - priorityMap[b.priority];
         }
         return 0;
     });
@@ -238,10 +247,16 @@ export function MaintenanceDashboard() {
             {/* Header Section */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground mb-2 flex items-center gap-3">
-                        <Wrench className="h-8 w-8 text-primary/80" />
-                        Maintenance Operations
-                    </h1>
+                    <div className="flex items-center gap-3 mb-1">
+                        <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+                            <Wrench className="h-8 w-8 text-primary/80" />
+                            Maintenance Operations
+                        </h1>
+                        <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm animate-pulse-subtle">
+                            <Sparkles className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Smart Triage Active</span>
+                        </div>
+                    </div>
                     <p className="text-muted-foreground font-medium tracking-wide text-sm">
                         Coordinate, assign, and track property repairs in real-time.
                     </p>
@@ -255,48 +270,74 @@ export function MaintenanceDashboard() {
             {/* Main Content Area */}
             <div className="rounded-3xl bg-card border border-border flex flex-col pt-2 shadow-sm">
                 {/* Toolbar */}
-                <div className="p-6 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card rounded-t-3xl">
-                    <div className="flex bg-muted/50 p-1.5 rounded-xl border border-border overflow-x-auto w-full sm:w-auto no-scrollbar">
-                        {statusTabs.map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setFilter(tab)}
-                                className={cn(
-                                    "px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap",
-                                    filter === tab
-                                        ? "bg-background text-foreground shadow-sm dark:bg-card"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                                )}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
+                <div className="p-6 border-b border-border flex flex-col sm:flex-row items-end justify-between gap-6 bg-card rounded-t-3xl">
+                        <div className="flex flex-col gap-1.5 flex-1 w-full sm:max-w-md">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Search Requests</label>
+                            <div className="relative group">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by ID, tenant or unit..."
+                                    value={searchQuery}
+                                    onChange={(event) => setSearchQuery(event.target.value)}
+                                    className="w-full bg-background border border-border rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all shadow-sm"
+                                />
+                            </div>
+                        </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="relative group flex-1 sm:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search by ID, tenant or unit..."
-                                value={searchQuery}
-                                onChange={(event) => setSearchQuery(event.target.value)}
-                                className="w-full bg-background border border-border rounded-xl py-2.5 pl-10 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all shadow-sm"
-                            />
+                        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Status</label>
+                                <div className="relative flex items-center">
+                                    <select 
+                                        value={filter}
+                                        onChange={(e) => setFilter(e.target.value as any)}
+                                        className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[150px]"
+                                    >
+                                        <option value="All">All</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                    </select>
+                                    <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Priority</label>
+                                <div className="relative flex items-center">
+                                    <select 
+                                        value={priorityFilter}
+                                        onChange={(e) => setPriorityFilter(e.target.value as any)}
+                                        className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[150px]"
+                                    >
+                                        <option value="All">All</option>
+                                        <option value="Critical">Critical Only</option>
+                                        <option value="High">High Only</option>
+                                        <option value="Medium">Medium Only</option>
+                                        <option value="Low">Low Only</option>
+                                    </select>
+                                    <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Sort By</label>
+                                <div className="relative flex items-center">
+                                    <select 
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value as any)}
+                                        className="appearance-none h-[42px] pl-10 pr-12 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[190px]"
+                                    >
+                                        <option value="newest">Newest First</option>
+                                        <option value="oldest">Oldest First</option>
+                                        <option value="priority-desc">Priority (H-L)</option>
+                                        <option value="priority-asc">Priority (L-H)</option>
+                                    </select>
+                                    <ArrowUpDown className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+                                </div>
+                            </div>
                         </div>
-                        <div className="relative flex items-center shrink-0">
-                            <select 
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
-                                className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer"
-                            >
-                                <option value="newest">Newest</option>
-                                <option value="oldest">Oldest</option>
-                                <option value="priority">Priority</option>
-                            </select>
-                            <ArrowUpDown className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
-                        </div>
-                    </div>
                 </div>
 
                 {/* Grid Format Request List */}
@@ -327,7 +368,7 @@ export function MaintenanceDashboard() {
                                         <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                                     </div>
                                     <h3 className="text-xl font-bold text-foreground mb-2">
-                                        No {filter !== "All" ? filter.toLowerCase() : ""} requests
+                                        No {priorityFilter !== "All" ? priorityFilter.toLowerCase() : ""} {filter !== "All" ? filter.toLowerCase() : ""} requests
                                     </h3>
                                     <p className="text-muted-foreground text-sm max-w-sm">
                                         You&apos;re all caught up! Everything is running smoothly across your properties.
@@ -456,6 +497,8 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
     );
 }
 
+
+
 function PriorityBadge({ priority }: { priority: Priority }) {
     const config = {
         Critical: "bg-red-500 text-white border-red-400 shadow-sm",
@@ -469,7 +512,11 @@ function PriorityBadge({ priority }: { priority: Priority }) {
             "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
-            {priority === "Critical" && <AlertTriangle className="w-3 h-3" />}
+            {priority === "Critical" ? (
+                <AlertTriangle className="w-3 h-3" />
+            ) : (
+                <Sparkles className="w-2.5 h-2.5 opacity-70" />
+            )}
             {priority} Priority
         </span>
     );
