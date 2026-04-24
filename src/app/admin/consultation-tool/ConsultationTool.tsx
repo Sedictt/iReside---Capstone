@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import SignaturePad from 'signature_pad';
 import { PenTool, Image as ImageIcon, Save, X, Trash2, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, MousePointer2 } from 'lucide-react';
@@ -52,52 +52,6 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
-  const initialPinchDistance = useRef<number | null>(null);
-  const initialZoom = useRef<number>(1);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        initialPinchDistance.current = Math.sqrt(dx * dx + dy * dy);
-        initialZoom.current = zoom;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && initialPinchDistance.current !== null) {
-        // Prevent default browser zoom/scroll while pinching
-        if (e.cancelable) e.preventDefault();
-        
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const currentDistance = Math.sqrt(dx * dx + dy * dy);
-        
-        const scale = currentDistance / initialPinchDistance.current;
-        const newZoom = Math.min(2, Math.max(0.1, initialZoom.current * scale));
-        setZoom(newZoom);
-      }
-    };
-
-    const handleTouchEnd = () => {
-      initialPinchDistance.current = null;
-    };
-
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [zoom]);
-
   useEffect(() => {
     if (fileUrl) loadInitialFile(fileUrl);
   }, [fileUrl]);
@@ -120,8 +74,9 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
       const canvas = canvasRefs.current[idx];
       if (!canvas) return;
 
-      const cssWidth = canvas.offsetWidth;
-      const cssHeight = canvas.offsetHeight;
+      const rect = canvas.getBoundingClientRect();
+      const cssWidth = rect.width;
+      const cssHeight = rect.height;
       if (!cssWidth || !cssHeight) return;
 
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -227,12 +182,9 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
     }
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (pdfPages.length === 0) return;
-    const frame = window.requestAnimationFrame(() => {
-      pdfPages.forEach((_, idx) => syncSignaturePadCanvas(idx, true));
-    });
-    return () => window.cancelAnimationFrame(frame);
+    pdfPages.forEach((_, idx) => syncSignaturePadCanvas(idx, true));
   }, [pdfPages, zoom, syncSignaturePadCanvas]);
 
   useEffect(() => {
@@ -404,13 +356,13 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
 
           <div className="hidden md:block h-8 w-px bg-zinc-800 mx-2" />
 
-          {/* View Controls - Desktop & Tablet */}
-          <div className="hidden sm:flex items-center bg-zinc-800/50 rounded-xl p-1 gap-1">
-            <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-2 hover:bg-zinc-700 rounded-lg transition-colors">
+          {/* View Controls - Mobile/Desktop */}
+          <div className="flex items-center bg-zinc-800/50 rounded-xl p-1 gap-1">
+            <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="text-[10px] font-black w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-2 hover:bg-zinc-700 rounded-lg transition-colors">
+            <span className="text-[10px] font-black w-11 md:w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
               <ZoomIn className="w-4 h-4" />
             </button>
           </div>
@@ -526,6 +478,9 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
                     "absolute inset-0 w-full h-full z-10 signature-pad-canvas",
                     isPenActive && currentPage === idx ? "cursor-crosshair pointer-events-auto" : "pointer-events-none"
                   )}
+                  style={{
+                    touchAction: isPenActive && currentPage === idx ? 'none' : 'auto'
+                  }}
                 />
 
                 {/* Draggable Signatures */}
@@ -657,10 +612,9 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
         
-        @media (max-width: 640px) {
-          .signature-pad-canvas {
-            touch-action: none;
-          }
+        .signature-pad-canvas {
+          -webkit-user-select: none;
+          user-select: none;
         }
       `}</style>
     </div>
