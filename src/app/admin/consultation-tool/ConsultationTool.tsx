@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import SignaturePad from 'signature_pad';
 import { PenTool, Image as ImageIcon, Save, X, Trash2, FileText, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, MousePointer2 } from 'lucide-react';
@@ -48,6 +48,7 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const signaturePads = useRef<(SignaturePad | null)[]>([]);
+  const canvasSizesRef = useRef<Array<{ width: number; height: number }>>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
@@ -101,6 +102,83 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
     if (fileUrl) loadInitialFile(fileUrl);
   }, [fileUrl]);
 
+  const scaleSignatureData = useCallback(
+    (data: ReturnType<SignaturePad["toData"]>, scaleX: number, scaleY: number) =>
+      data.map((group) => ({
+        ...group,
+        points: group.points.map((point) => ({
+          ...point,
+          x: point.x * scaleX,
+          y: point.y * scaleY,
+        })),
+      })),
+    []
+  );
+
+  const syncSignaturePadCanvas = useCallback(
+    (idx: number, preserveInk = true) => {
+      const canvas = canvasRefs.current[idx];
+      if (!canvas) return;
+
+      const cssWidth = canvas.offsetWidth;
+      const cssHeight = canvas.offsetHeight;
+      if (!cssWidth || !cssHeight) return;
+
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const nextWidth = Math.round(cssWidth * ratio);
+      const nextHeight = Math.round(cssHeight * ratio);
+      const previousSize = canvasSizesRef.current[idx];
+      const previousPad = signaturePads.current[idx];
+
+      const unchanged =
+        previousPad &&
+        previousSize &&
+        previousSize.width === nextWidth &&
+        previousSize.height === nextHeight;
+
+      if (unchanged) {
+        previousPad.minWidth = penSize * 0.8;
+        previousPad.maxWidth = penSize * 2;
+        return;
+      }
+
+      let preservedData: ReturnType<SignaturePad["toData"]> | null = null;
+      if (preserveInk && previousPad && !previousPad.isEmpty()) {
+        preservedData = previousPad.toData();
+        if (previousSize && previousSize.width > 0 && previousSize.height > 0) {
+          const scaleX = nextWidth / previousSize.width;
+          const scaleY = nextHeight / previousSize.height;
+          if (scaleX !== 1 || scaleY !== 1) {
+            preservedData = scaleSignatureData(preservedData, scaleX, scaleY);
+          }
+        }
+      }
+
+      previousPad?.off();
+
+      canvas.width = nextWidth;
+      canvas.height = nextHeight;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.scale(ratio, ratio);
+
+      const pad = new SignaturePad(canvas, {
+        backgroundColor: 'rgba(255, 255, 255, 0)',
+        penColor: 'rgb(0, 0, 0)',
+        minWidth: penSize * 0.8,
+        maxWidth: penSize * 2
+      });
+      signaturePads.current[idx] = pad;
+      canvasSizesRef.current[idx] = { width: nextWidth, height: nextHeight };
+
+      if (preservedData && preservedData.length > 0) {
+        pad.fromData(preservedData);
+      }
+    },
+    [penSize, scaleSignatureData]
+  );
+
   // Handle auto-zoom for mobile on mount/load
   useEffect(() => {
     if (pdfPages.length > 0 && typeof window !== 'undefined') {
@@ -150,26 +228,24 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
   };
 
   useEffect(() => {
-    if (pdfPages.length > 0) {
-      pdfPages.forEach((_, idx) => {
-        const canvas = canvasRefs.current[idx];
-        if (canvas && !signaturePads.current[idx]) {
-          const ratio = 2;
-          canvas.width = canvas.offsetWidth * ratio;
-          canvas.height = canvas.offsetHeight * ratio;
-          canvas.getContext("2d")?.scale(ratio, ratio);
+    if (pdfPages.length === 0) return;
+    const frame = window.requestAnimationFrame(() => {
+      pdfPages.forEach((_, idx) => syncSignaturePadCanvas(idx, true));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pdfPages, zoom, syncSignaturePadCanvas]);
 
-          const pad = new SignaturePad(canvas, {
-            backgroundColor: 'rgba(255, 255, 255, 0)',
-            penColor: 'rgb(0, 0, 0)',
-            minWidth: penSize * 0.8,
-            maxWidth: penSize * 2
-          });
-          signaturePads.current[idx] = pad;
-        }
-      });
-    }
-  }, [pdfPages]);
+  useEffect(() => {
+    const handleResize = () => {
+      pdfPages.forEach((_, idx) => syncSignaturePadCanvas(idx, true));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [pdfPages, syncSignaturePadCanvas]);
+
+  useEffect(() => () => {
+    signaturePads.current.forEach((pad) => pad?.off());
+  }, []);
 
   // Update pen size for all pads
   useEffect(() => {
@@ -432,8 +508,8 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
                 key={idx}
                 ref={el => { pageRefs.current[idx] = el; }}
                 className={cn(
-                  "relative bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-transform",
-                  currentPage === idx ? "scale-100" : "scale-[0.98] opacity-80"
+                  "relative bg-white shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all",
+                  currentPage === idx ? "scale-100" : (isPenActive ? "scale-100 opacity-40" : "scale-[0.95] opacity-50")
                 )}
                 style={{ 
                   width: `${page.width * zoom}px`, 
