@@ -123,6 +123,38 @@ type ActorProfile = {
     email: string | null;
 };
 
+type ComplianceChecklist = NonNullable<ApplicationResponse["complianceChecklist"]>;
+
+const DEFAULT_COMPLIANCE_CHECKLIST: ComplianceChecklist = {
+    valid_id: false,
+    income_verified: false,
+    application_completed: false,
+    background_checked: false,
+    payment_received: false,
+    lease_signed: false,
+    inspection_done: false,
+};
+
+const buildComplianceChecklist = (
+    complianceChecklist: Record<string, boolean> | null,
+    requirementsChecklist: Record<string, boolean> | null
+): ComplianceChecklist => {
+    const merged = {
+        ...(complianceChecklist ?? {}),
+        ...(requirementsChecklist ?? {}),
+    };
+
+    return {
+        valid_id: Boolean(merged.valid_id),
+        income_verified: Boolean(merged.income_verified),
+        application_completed: Boolean(merged.application_completed),
+        background_checked: Boolean(merged.background_checked),
+        payment_received: Boolean(merged.payment_received),
+        lease_signed: Boolean(merged.lease_signed),
+        inspection_done: Boolean(merged.inspection_done),
+    };
+};
+
 type ApplicationRow = {
     id: string;
     status: ApplicationStatus;
@@ -508,7 +540,7 @@ export async function GET(request: Request) {
 
     const applications: ApplicationResponse[] = applicationRows.map((row) => {
         const applicant = row.applicant_id ? applicantMap.get(row.applicant_id) : undefined;
-        const unit = unitMap.get(row.unit_id);
+        const unit = row.unit_id ? unitMap.get(row.unit_id) : undefined;
         const property = unit ? propertyMap.get(unit.property_id) : null;
         const propertyImages = property?.images;
         const propertyImage =
@@ -566,10 +598,7 @@ export async function GET(request: Request) {
                 name: row.reference_name ?? null,
                 contact: row.reference_phone ?? null,
             },
-            complianceChecklist: {
-                ...(row.compliance_checklist as Record<string, boolean> | null ?? {}),
-                ...(row.requirements_checklist as Record<string, boolean> | null ?? {}),
-            },
+            complianceChecklist: buildComplianceChecklist(row.compliance_checklist, row.requirements_checklist),
             lease: lease
                 ? {
                       id: lease.id,

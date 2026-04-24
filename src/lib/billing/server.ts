@@ -705,7 +705,7 @@ export async function upsertPaymentReceipt(
             issued_by: issuedBy,
             notes: notes ?? null,
             method: payment.method ?? null,
-            amount_breakdown: amountBreakdown ?? {},
+            amount_breakdown: (amountBreakdown ?? {}) as Json,
         })
         .select("*")
         .single();

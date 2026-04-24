@@ -8,7 +8,7 @@ import Link from "next/link";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
 import { Logo } from "@/components/ui/Logo";
-import { useProperty } from "@/context/PropertyContext";
+import { useOptionalProperty } from "@/context/PropertyContext";
 
 export interface Unit {
     id: string;
@@ -243,7 +243,8 @@ const evaluateQuickAction = (
 };
 
 export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean } = {}) {
-    const { selectedPropertyId } = useProperty();
+    const propertyContext = useOptionalProperty();
+    const selectedPropertyId = propertyContext?.selectedPropertyId ?? "all";
     
     // Scoped storage keys to ensure each property has its own map
     const getScopedKey = (base: string) => `${base}.${selectedPropertyId}`;

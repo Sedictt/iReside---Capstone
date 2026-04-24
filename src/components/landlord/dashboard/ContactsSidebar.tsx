@@ -23,7 +23,6 @@ interface ChatUser {
     name: string;
     avatar: string;
     avatarBgColor: string | null;
-    avatarBgColor: string | null;
     lastMessage: string;
     time: string;
     unit: string;
@@ -1321,6 +1320,7 @@ type ContactCardProps = {
     name: string;
     unit: string;
     avatar: string;
+    avatarBgColor: string | null;
     status: string;
     isExpanded: boolean;
 };

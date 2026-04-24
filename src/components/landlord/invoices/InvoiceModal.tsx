@@ -759,7 +759,7 @@ function F2FActionCenter({
     reviewNote, 
     setReviewNote 
 }: {
-    invoice: InvoiceDetail;
+    invoice: InvoiceDetail | null;
     runAction: (action: any) => void;
     actionLoading: any;
     reviewNote: string;
@@ -783,7 +783,7 @@ function F2FActionCenter({
                 <div className="rounded-2xl border border-white/5 bg-surface-2 p-5 space-y-4">
                     <div className="flex items-center justify-between">
                         <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Amount to Receive</p>
-                        <p className="text-sm font-black text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                        <p className="text-sm font-black text-primary">{formatPhpCurrency(invoice?.balanceRemaining ?? 0)}</p>
                     </div>
                     <div className="h-[1px] bg-white/5" />
                     <div className="space-y-2">
