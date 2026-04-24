@@ -53,10 +53,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
     const [thirdPartyPerson, setThirdPartyPerson] = useState(() => request?.thirdPartyName ?? "");
     const [formError, setFormError] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const [processStep, setProcessStep] = useState<"pending" | "in_progress" | "completed">(() => {
+    const [processStep, setProcessStep] = useState<"pending" | "assigned" | "in_progress" | "completed">(() => {
         if (!request) return "pending";
         if (request.status === "Resolved") return "completed";
-        if (request.status === "In Progress" || request.status === "Assigned") return "in_progress";
+        if (request.status === "In Progress") return "in_progress";
+        if (request.status === "Assigned") return "assigned";
         return "pending";
     });
 
@@ -147,10 +148,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                 return;
             }
 
-            const payload: Record<string, unknown> = { status: "in_progress" };
-            const optimisticFields: Partial<MaintenanceRequest> = { status: "In Progress" };
+            const isSelfRepair = selfRepairRequested && selfRepairDecision === "allow";
+            const targetStatus = isSelfRepair ? "in_progress" : "assigned";
+            const targetStatusLabel = isSelfRepair ? "In Progress" : "Assigned";
 
-            if (selfRepairRequested && selfRepairDecision === "allow") {
+            const payload: Record<string, unknown> = { status: targetStatus };
+            const optimisticFields: Partial<MaintenanceRequest> = { status: targetStatusLabel };
+
+            if (isSelfRepair) {
                 payload.selfRepairDecision = "approved";
                 payload.repairMethod = "self_repair";
                 payload.thirdPartyName = null;
@@ -176,6 +181,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
             }
 
             const synced = await persistLandlordUpdate(payload, optimisticFields);
+            if (synced) {
+                setProcessStep(isSelfRepair ? "in_progress" : "assigned");
+            }
+        } else if (processStep === "assigned") {
+            const synced = await persistLandlordUpdate(
+                { status: "in_progress" },
+                { status: "In Progress" }
+            );
             if (synced) {
                 setProcessStep("in_progress");
             }
@@ -414,11 +427,27 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 
                                 <div className="flex items-center justify-between bg-muted/30 border border-border/50 rounded-2xl p-4">
                                     <div className="flex items-center gap-4">
-                                        <img
-                                            src={request.tenantAvatar || FALLBACK_AVATAR}
-                                            alt={request.tenant}
-                                            className="w-12 h-12 rounded-full border-2 border-background shadow-sm object-cover"
-                                        />
+                                        <div 
+                                            className="w-12 h-12 rounded-full border-2 border-background shadow-sm flex items-center justify-center overflow-hidden shrink-0"
+                                            style={{ backgroundColor: request.tenantAvatarBgColor || '#171717' }}
+                                        >
+                                            {request.tenantAvatar ? (
+                                                <img
+                                                    src={request.tenantAvatar}
+                                                    alt={request.tenant}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-sm font-bold text-white">
+                                                    {(request.tenant ?? "T")
+                                                        .split(" ")
+                                                        .filter(Boolean)
+                                                        .slice(0, 2)
+                                                        .map((part) => part[0]?.toUpperCase() ?? "")
+                                                        .join("") || "T"}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div>
                                             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tenant</span>
                                             <p className="text-base font-bold text-foreground leading-tight">{request.tenant}</p>
@@ -595,7 +624,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     "w-full sm:flex-1 px-6 py-4 rounded-2xl font-black uppercase tracking-wider text-sm transition-all shadow-sm flex items-center justify-center gap-2 group/btn relative overflow-hidden",
                                     processStep === "pending" 
                                         ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.2)] active:scale-[0.98]" 
-                                        : processStep === "in_progress"
+                                        : (processStep === "in_progress" || processStep === "assigned")
                                             ? "bg-cyan-500 hover:bg-cyan-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-[0.98]"
                                             : (processStep === "completed" && selfRepairDecision === "allow")
                                                 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 cursor-default"
@@ -608,6 +637,12 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                                     </div>
                                 )}
+                                {processStep === "assigned" && (
+                                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                        <Hammer className="w-4 h-4 animate-bounce" />
+                                        Repair On the Way
+                                    </div>
+                                )}
                                 {processStep === "in_progress" && (
                                     selfRepairDecision === "allow" ? (
                                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -616,8 +651,8 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <Hammer className="w-4 h-4 animate-bounce" />
-                                            Repair On the Way
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            Mark as Completed
                                         </div>
                                     )
                                 )}

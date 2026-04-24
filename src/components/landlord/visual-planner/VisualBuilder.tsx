@@ -8,6 +8,7 @@ import Link from "next/link";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
 import { Logo } from "@/components/ui/Logo";
+import { useProperty } from "@/context/PropertyContext";
 
 export interface Unit {
     id: string;
@@ -242,6 +243,16 @@ const evaluateQuickAction = (
 };
 
 export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean } = {}) {
+    const { selectedPropertyId } = useProperty();
+    
+    // Scoped storage keys to ensure each property has its own map
+    const getScopedKey = (base: string) => `${base}.${selectedPropertyId}`;
+    
+    const SCOPED_FLOOR_LAYOUTS_KEY = getScopedKey(FLOOR_LAYOUTS_STORAGE_KEY);
+    const SCOPED_ACTIVE_FLOOR_KEY = getScopedKey(ACTIVE_FLOOR_STORAGE_KEY);
+    const SCOPED_UNIT_NOTES_KEY = getScopedKey(UNIT_NOTES_STORAGE_KEY);
+    const SCOPED_LEGEND_VISIBILITY_KEY = getScopedKey(LEGEND_VISIBILITY_STORAGE_KEY);
+
     const GRID_SIZE = 20;
     const PAN_MARGIN = 280;
     const BLUEPRINT_MARGIN = 20;
@@ -295,24 +306,27 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     useEffect(() => {
         if (typeof window === "undefined") return;
         try {
-            const raw = window.localStorage.getItem(UNIT_NOTES_STORAGE_KEY);
-            if (!raw) return;
+            const raw = window.localStorage.getItem(SCOPED_UNIT_NOTES_KEY);
+            if (!raw) {
+                setUnitNotes({});
+                return;
+            }
             const parsed = JSON.parse(raw) as UnitNotesState;
             if (parsed && typeof parsed === "object") {
                 setUnitNotes(parsed);
             }
         } catch {
-            // Ignore malformed note payloads.
+            setUnitNotes({});
         }
-    }, []);
+    }, [SCOPED_UNIT_NOTES_KEY]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
         const timeoutId = window.setTimeout(() => {
-            window.localStorage.setItem(UNIT_NOTES_STORAGE_KEY, JSON.stringify(unitNotes));
+            window.localStorage.setItem(SCOPED_UNIT_NOTES_KEY, JSON.stringify(unitNotes));
         }, 250);
         return () => window.clearTimeout(timeoutId);
-    }, [unitNotes]);
+    }, [unitNotes, SCOPED_UNIT_NOTES_KEY]);
     const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
     const trashRef = useRef<HTMLDivElement>(null);
@@ -1126,20 +1140,22 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         setSelectedItem({ kind: "structure", id: item.id });
     };
     useEffect(() => {
-        const storedVisibility = window.localStorage.getItem(LEGEND_VISIBILITY_STORAGE_KEY);
+        const storedVisibility = window.localStorage.getItem(SCOPED_LEGEND_VISIBILITY_KEY);
         if (storedVisibility === "hidden") {
             setShowLegend(false);
+        } else {
+            setShowLegend(true);
         }
-    }, [readOnly]);
+    }, [SCOPED_LEGEND_VISIBILITY_KEY, readOnly]);
 
     useEffect(() => {
-        window.localStorage.setItem(LEGEND_VISIBILITY_STORAGE_KEY, showLegend ? "visible" : "hidden");
-    }, [showLegend]);
+        window.localStorage.setItem(SCOPED_LEGEND_VISIBILITY_KEY, showLegend ? "visible" : "hidden");
+    }, [showLegend, SCOPED_LEGEND_VISIBILITY_KEY]);
 
     useEffect(() => {
         try {
-            const storedLayoutsRaw = window.localStorage.getItem(FLOOR_LAYOUTS_STORAGE_KEY);
-            const storedActiveFloorRaw = window.localStorage.getItem(ACTIVE_FLOOR_STORAGE_KEY);
+            const storedLayoutsRaw = window.localStorage.getItem(SCOPED_FLOOR_LAYOUTS_KEY);
+            const storedActiveFloorRaw = window.localStorage.getItem(SCOPED_ACTIVE_FLOOR_KEY);
 
             const storedLayouts = storedLayoutsRaw
                 ? JSON.parse(storedLayoutsRaw) as Record<FloorId, FloorLayout>
@@ -1169,7 +1185,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         } finally {
             setHasHydratedFloorState(true);
         }
-    }, []);
+    }, [SCOPED_FLOOR_LAYOUTS_KEY, SCOPED_ACTIVE_FLOOR_KEY]);
 
     useEffect(() => {
         if (!hasHydratedFloorState || readOnly) return;
@@ -1184,9 +1200,9 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
             },
         };
 
-        window.localStorage.setItem(FLOOR_LAYOUTS_STORAGE_KEY, JSON.stringify(layoutsToPersist));
-        window.localStorage.setItem(ACTIVE_FLOOR_STORAGE_KEY, activeFloor);
-    }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures, readOnly]);
+        window.localStorage.setItem(SCOPED_FLOOR_LAYOUTS_KEY, JSON.stringify(layoutsToPersist));
+        window.localStorage.setItem(SCOPED_ACTIVE_FLOOR_KEY, activeFloor);
+    }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures, readOnly, SCOPED_FLOOR_LAYOUTS_KEY, SCOPED_ACTIVE_FLOOR_KEY]);
 
     useEffect(() => {
         if (readOnly) return;

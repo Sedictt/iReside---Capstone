@@ -20,7 +20,7 @@ export type PaymentReviewAction = 'accept_partial' | 'request_completion' | 'rej
 export type UtilityType = 'water' | 'electricity'
 export type UtilityBillingMode = 'included_in_rent' | 'tenant_paid'
 export type ApplicationStatus = 'pending' | 'reviewing' | 'payment_pending' | 'approved' | 'rejected' | 'withdrawn'
-export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
+export type MaintenanceStatus = 'open' | 'assigned' | 'in_progress' | 'resolved' | 'closed'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
 export type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
@@ -46,6 +46,9 @@ export interface Database {
                     avatar_url: string | null
                     avatar_bg_color: string | null
                     phone: string | null
+                    bio: string | null
+                    website: string | null
+                    address: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -57,6 +60,9 @@ export interface Database {
                     avatar_url?: string | null
                     avatar_bg_color?: string | null
                     phone?: string | null
+                    bio?: string | null
+                    website?: string | null
+                    address?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -68,6 +74,9 @@ export interface Database {
                     avatar_url?: string | null
                     avatar_bg_color?: string | null
                     phone?: string | null
+                    bio?: string | null
+                    website?: string | null
+                    address?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]

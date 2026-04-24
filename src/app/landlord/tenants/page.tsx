@@ -15,6 +15,7 @@ import {
     CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProperty } from "@/context/PropertyContext";
 
 type TenantStatus = "Active" | "Moving Out" | "Evicted";
 type TenantPaymentStatus = "paid" | "late" | "pending";
@@ -31,6 +32,7 @@ type Tenant = {
     email: string;
     avatar: string;
     avatarUrl: string | null;
+    avatarBgColor: string | null;
     paymentStatus: TenantPaymentStatus;
 };
 
@@ -51,6 +53,7 @@ const formatLeaseEnd = (value: string | null) => {
 };
 
 export default function TenantsPage() {
+    const { selectedPropertyId } = useProperty();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All");
     const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -65,7 +68,8 @@ export default function TenantsPage() {
             setError(null);
 
             try {
-                const response = await fetch("/api/landlord/tenants", {
+                const params = new URLSearchParams({ propertyId: selectedPropertyId });
+                const response = await fetch(`/api/landlord/tenants?${params.toString()}`, {
                     method: "GET",
                     signal: controller.signal,
                 });
@@ -99,7 +103,7 @@ export default function TenantsPage() {
         return () => {
             controller.abort();
         };
-    }, []);
+    }, [selectedPropertyId]);
 
     const filteredTenants = tenants.filter(tenant => {
         const matchesSearch = tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -243,15 +247,18 @@ export default function TenantsPage() {
                         </div>
 
                         <div className="flex flex-col items-center text-center mb-6">
-                            <div className="relative mb-4 h-24 w-24 rounded-full transition-transform group-hover:scale-[1.03]">
+                            <div 
+                                className="relative mb-4 h-24 w-24 rounded-full transition-transform group-hover:scale-[1.03] overflow-hidden flex items-center justify-center border-2 border-primary/20"
+                                style={{ backgroundColor: tenant.avatarBgColor || '#171717' }}
+                            >
                                 {tenant.avatarUrl ? (
                                     <img
                                         src={tenant.avatarUrl}
                                         alt={tenant.name}
-                                        className="h-full w-full rounded-full border-2 border-primary/20 object-cover"
+                                        className="h-full w-full object-cover"
                                     />
                                 ) : (
-                                    <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-primary/20 bg-gradient-to-tr from-primary/20 to-primary/5 text-2xl font-black text-primary">
+                                    <div className="text-2xl font-black text-white">
                                         {tenant.avatar}
                                     </div>
                                 )}

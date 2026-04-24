@@ -66,6 +66,7 @@ type PaymentRow = {
 };
 
 type MaintenanceRow = {
+    unit_id: string;
     created_at: string;
     resolved_at: string | null;
     priority: string;
@@ -351,6 +352,7 @@ export async function GET(request: Request) {
 
     const requestedEnd = searchParams.get("end");
     const requestedStart = searchParams.get("start");
+    const propertyId = searchParams.get("propertyId");
 
     const defaultEnd = startOfDay(new Date());
     const defaultStart = addDays(defaultEnd, -29);
@@ -369,22 +371,28 @@ export async function GET(request: Request) {
     const previousEnd = addDays(rangeStart, -1);
     const previousStart = addDays(previousEnd, -(spanDays - 1));
 
+    let propertiesQuery = supabase
+        .from("properties")
+        .select("id")
+        .eq("landlord_id", user.id);
+
+    if (propertyId && propertyId !== "all") {
+        propertiesQuery = propertiesQuery.eq("id", propertyId);
+    }
+
     const [leasesRes, propertiesRes, paymentsRes, maintenanceRes] = await Promise.all([
         supabase
             .from("leases")
             .select("id, unit_id, tenant_id, status, start_date, end_date, monthly_rent")
             .eq("landlord_id", user.id),
-        supabase
-            .from("properties")
-            .select("id")
-            .eq("landlord_id", user.id),
+        propertiesQuery,
         supabase
             .from("payments")
             .select("amount, status, paid_at, due_date, description, lease_id")
             .eq("landlord_id", user.id),
         supabase
             .from("maintenance_requests")
-            .select("created_at, resolved_at, priority")
+            .select("unit_id, created_at, resolved_at, priority")
             .eq("landlord_id", user.id),
     ]);
 
@@ -403,10 +411,14 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Failed to load statistics overview." }, { status: 500 });
     }
 
-    const leases = (leasesRes.data ?? []) as LeaseRow[];
     const units = (unitsData ?? []) as UnitRow[];
-    const payments = (paymentsRes.data ?? []) as PaymentRow[];
-    const maintenance = (maintenanceRes.data ?? []) as MaintenanceRow[];
+    const permittedUnitIds = new Set(units.map((unit) => unit.id));
+    const leases = ((leasesRes.data ?? []) as LeaseRow[]).filter((lease) => permittedUnitIds.has(lease.unit_id));
+    const permittedLeaseIds = new Set(leases.map((lease) => lease.id));
+    const payments = ((paymentsRes.data ?? []) as PaymentRow[]).filter((payment) => permittedLeaseIds.has(payment.lease_id));
+    const maintenance = ((maintenanceRes.data ?? []) as MaintenanceRow[]).filter((row) =>
+        permittedUnitIds.has(row.unit_id)
+    );
 
     const currentActiveLeases = activeLeaseSnapshot(leases, rangeEnd);
     const previousActiveLeases = activeLeaseSnapshot(leases, previousEnd);

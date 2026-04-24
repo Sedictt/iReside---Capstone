@@ -1,0 +1,166 @@
+'use client'
+
+import { useProperty } from '@/context/PropertyContext'
+import { cn } from '@/lib/utils'
+import { 
+    ChevronDown, 
+    Building2, 
+    Check, 
+    LayoutGrid,
+    Search
+} from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+
+export function PropertySelector() {
+    const { properties, selectedPropertyId, setSelectedPropertyId, selectedProperty, loading } = useProperty()
+    const [isOpen, setIsOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const dropdownRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    const filteredProperties = properties.filter(p => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.address.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    if (loading && properties.length === 0) {
+        return (
+            <div className="h-12 w-48 animate-pulse rounded-2xl bg-white/5" />
+        )
+    }
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={cn(
+                    "group flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-card/40 px-4 transition-all hover:bg-card/60 hover:ring-1 hover:ring-primary/20",
+                    isOpen && "bg-card/80 ring-1 ring-primary/40"
+                )}
+            >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    {selectedPropertyId === 'all' ? (
+                        <LayoutGrid className="h-4.5 w-4.5" />
+                    ) : (
+                        <Building2 className="h-4.5 w-4.5" />
+                    )}
+                </div>
+                
+                <div className="flex flex-col items-start text-left">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        Current Property
+                    </span>
+                    <span className="max-w-[120px] truncate text-sm font-black text-foreground">
+                        {selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name}
+                    </span>
+                </div>
+
+                <ChevronDown className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform duration-300",
+                    isOpen && "rotate-180"
+                )} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute left-0 top-full z-[200] mt-2 w-72 overflow-hidden rounded-[2rem] border border-white/10 bg-card/95 p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200 origin-top-left">
+                    <div className="relative mb-2 px-2 pt-2">
+                        <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
+                        <input
+                            type="text"
+                            placeholder="Search properties..."
+                            className="h-10 w-full rounded-xl border border-white/5 bg-white/5 pl-10 pr-4 text-xs font-medium focus:border-primary/20 focus:outline-none focus:ring-1 focus:ring-primary/20"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+
+                    <div className="custom-scrollbar-premium max-h-[320px] overflow-y-auto pr-1">
+                        <button
+                            onClick={() => {
+                                setSelectedPropertyId('all')
+                                setIsOpen(false)
+                            }}
+                            className={cn(
+                                "group flex w-full items-center gap-3 rounded-xl p-3 transition-all hover:bg-white/5",
+                                selectedPropertyId === 'all' && "bg-primary/5"
+                            )}
+                        >
+                            <div className={cn(
+                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                selectedPropertyId === 'all' ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground/60 group-hover:text-foreground"
+                            )}>
+                                <LayoutGrid className="h-5 w-5" />
+                            </div>
+                            <div className="flex flex-1 flex-col items-start overflow-hidden">
+                                <span className="text-sm font-black text-foreground">All Properties</span>
+                                <span className="text-[10px] font-medium text-muted-foreground/60">See every property together</span>
+                            </div>
+                            {selectedPropertyId === 'all' && (
+                                <Check className="h-4 w-4 text-primary" />
+                            )}
+                        </button>
+
+                        <div className="my-2 h-px bg-white/5" />
+
+                        <div className="px-2 py-1">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Your Properties</p>
+                        </div>
+
+                        {filteredProperties.length === 0 ? (
+                            <div className="p-8 text-center">
+                                <p className="text-xs font-medium text-muted-foreground/40 italic">No properties found</p>
+                            </div>
+                        ) : (
+                            filteredProperties.map((property) => (
+                                <button
+                                    key={property.id}
+                                    onClick={() => {
+                                        setSelectedPropertyId(property.id)
+                                        setIsOpen(false)
+                                    }}
+                                    className={cn(
+                                        "group flex w-full items-center gap-3 rounded-xl p-3 transition-all hover:bg-white/5",
+                                        selectedPropertyId === property.id && "bg-primary/5"
+                                    )}
+                                >
+                                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/10">
+                                        {property.image ? (
+                                            <img src={property.image} alt={property.name} className="h-full w-full object-cover" />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center bg-white/5 text-muted-foreground/40">
+                                                <Building2 className="h-5 w-5" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-1 flex-col items-start overflow-hidden">
+                                        <span className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
+                                            {property.name}
+                                        </span>
+                                        <span className="truncate text-[10px] font-medium text-muted-foreground/60">
+                                            {property.address}
+                                        </span>
+                                    </div>
+                                    {selectedPropertyId === property.id && (
+                                        <Check className="h-4 w-4 text-primary" />
+                                    )}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+

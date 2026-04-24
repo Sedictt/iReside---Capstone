@@ -6,11 +6,12 @@ import { Camera, User } from "lucide-react";
 
 type ProfileAvatarUploaderProps = {
     initialAvatarUrl: string | null;
+    avatarBgColor?: string | null;
     fullName: string;
     className?: string;
 };
 
-export function ProfileAvatarUploader({ initialAvatarUrl, fullName, className }: ProfileAvatarUploaderProps) {
+export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullName, className }: ProfileAvatarUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
     const [isUploading, setIsUploading] = useState(false);
@@ -59,7 +60,10 @@ export function ProfileAvatarUploader({ initialAvatarUrl, fullName, className }:
     return (
         <div className={className}>
             <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse-slow"></div>
-            <div className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl transition-colors">
+            <div 
+                className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl transition-all duration-500 flex items-center justify-center"
+                style={{ backgroundColor: avatarBgColor || '#171717' }}
+            >
                 {avatarUrl ? (
                     <Image
                         src={avatarUrl}
@@ -68,9 +72,9 @@ export function ProfileAvatarUploader({ initialAvatarUrl, fullName, className }:
                         className="object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
-                        <User size={32} className="text-neutral-500" />
-                    </div>
+                    <span className="text-2xl font-black text-white">
+                        {(fullName || "C").split(" ").filter(Boolean).slice(0, 2).map(p => p[0]?.toUpperCase()).join("")}
+                    </span>
                 )}
             </div>
 

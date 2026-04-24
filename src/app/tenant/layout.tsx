@@ -14,6 +14,7 @@ export default function TenantLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    
     const isChatPage = pathname === "/tenant/messages";
     const isOnboardingPage = pathname.startsWith("/tenant/onboarding");
     const isUnitMapPage = pathname === "/tenant/unit-map";
@@ -29,14 +30,17 @@ export default function TenantLayout({
                 storageKey="ireside-tenant-theme"
             >
                 <div className={cn(
-                    "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20",
-                    (isChatPage || isUnitMapPage) && "h-screen overflow-hidden"
+                    "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 flex overflow-hidden",
+                    (isChatPage || isUnitMapPage) && "h-screen"
                 )}>
                     {!useImmersiveLayout && <TenantSidebar />}
-                    <main className={cn(
-                        "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden",
-                        !useImmersiveLayout && "md:ml-72"
-                    )}>
+                    
+                    <main 
+                        className={cn(
+                            "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden",
+                            !useImmersiveLayout && "ml-[280px]"
+                        )}
+                    >
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={pathname}
@@ -65,3 +69,5 @@ export default function TenantLayout({
         </AuthProvider>
     );
 }
+
+

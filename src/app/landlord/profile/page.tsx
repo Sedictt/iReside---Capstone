@@ -125,7 +125,7 @@ export default async function LandlordProfilePage() {
         await Promise.all([
             supabase
                 .from('profiles')
-                .select('id, full_name, email, role, avatar_url, phone, created_at')
+                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at')
                 .eq('id', user.id)
                 .maybeSingle(),
             supabase
@@ -260,7 +260,7 @@ export default async function LandlordProfilePage() {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div className="flex items-center gap-6">
                                 <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 group/avatar cursor-pointer">
-                                    <ProfileAvatarUploader initialAvatarUrl={profileAvatarUrl} fullName={profile.full_name} />
+                                    <ProfileAvatarUploader initialAvatarUrl={profileAvatarUrl} avatarBgColor={profile.avatar_bg_color} fullName={profile.full_name} />
                                 </div>
 
                                 <div>
@@ -316,7 +316,7 @@ export default async function LandlordProfilePage() {
                                             <span className="text-[10px] font-bold tracking-widest uppercase">Verified Landlord</span>
                                         </div>
                                     </div>
-                                    <EditableBio initialBio={(profile as { bio?: string })?.bio || user.user_metadata?.bio || ''} />
+                                    <EditableBio initialBio={profile.bio || user.user_metadata?.bio || ''} />
                                 </div>
                             </div>
 

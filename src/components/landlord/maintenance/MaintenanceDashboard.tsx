@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { MaintenanceRequestModal } from "./MaintenanceRequestModal";
 import Link from "next/link";
+import { useProperty } from "@/context/PropertyContext";
 
 type Priority = "Critical" | "High" | "Medium" | "Low";
 type Status = "Pending" | "Assigned" | "In Progress" | "Resolved";
@@ -34,6 +35,7 @@ export interface MaintenanceRequest {
     unit: string;
     tenant: string;
     tenantAvatar: string | null;
+    tenantAvatarBgColor?: string | null;
     priority: Priority;
     status: Status;
     reportedAt: string;
@@ -52,12 +54,15 @@ export interface MaintenanceRequest {
 }
 
 export function MaintenanceDashboard() {
+    const { selectedPropertyId } = useProperty();
     const [filter, setFilter] = useState<"All" | Status>("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
     const [previewMode, setPreviewMode] = useState<string | null>(null);
     const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
+    type RepairMethod = "landlord" | "third_party" | "self_repair";
+    const [methodFilter, setMethodFilter] = useState<"All" | RepairMethod>("All");
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority-desc" | "priority-asc">("newest");
 
 
@@ -72,7 +77,7 @@ export function MaintenanceDashboard() {
             setError(null);
 
             try {
-                const response = await fetch("/api/landlord/maintenance", {
+                const response = await fetch(`/api/landlord/maintenance?propertyId=${selectedPropertyId}`, {
                     method: "GET",
                     signal: controller.signal,
                 });
@@ -171,15 +176,16 @@ export function MaintenanceDashboard() {
         return () => {
             controller.abort();
         };
-    }, []);
+    }, [selectedPropertyId]);
 
     const normalizedSearch = searchQuery.trim().toLowerCase();
     const filteredRequests = requests.filter((req) => {
         const matchesStatus = filter === "All" || req.status === filter;
         const matchesPriority = priorityFilter === "All" || req.priority === priorityFilter;
-
+        const matchesMethod = methodFilter === "All" || req.repairMethod === methodFilter;
+        
         if (!normalizedSearch) {
-            return matchesStatus && matchesPriority;
+            return matchesStatus && matchesPriority && matchesMethod;
         }
 
         const haystack = [req.id, req.tenant, req.unit, req.property, req.title]
@@ -187,7 +193,7 @@ export function MaintenanceDashboard() {
             .join(" ")
             .toLowerCase();
 
-        return matchesStatus && matchesPriority && haystack.includes(normalizedSearch);
+        return matchesStatus && matchesPriority && matchesMethod && haystack.includes(normalizedSearch);
     });
 
     const sortedRequests = [...filteredRequests].sort((a, b) => {
@@ -296,6 +302,7 @@ export function MaintenanceDashboard() {
                                     >
                                         <option value="All">All</option>
                                         <option value="Pending">Pending</option>
+                                        <option value="Assigned">Assigned</option>
                                         <option value="In Progress">In Progress</option>
                                         <option value="Resolved">Resolved</option>
                                     </select>
@@ -318,6 +325,23 @@ export function MaintenanceDashboard() {
                                         <option value="Low">Low Only</option>
                                     </select>
                                     <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Repair Method</label>
+                                <div className="relative flex items-center">
+                                    <select 
+                                        value={methodFilter}
+                                        onChange={(e) => setMethodFilter(e.target.value as any)}
+                                        className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[170px]"
+                                    >
+                                        <option value="All">Any</option>
+                                        <option value="self_repair">Self Repair</option>
+                                        <option value="landlord">Landlord</option>
+                                        <option value="third_party">Third Party</option>
+                                    </select>
+                                    <Wrench className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
                                 </div>
                             </div>
 

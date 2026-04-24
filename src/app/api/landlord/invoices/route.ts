@@ -11,7 +11,7 @@ const generateSchema = z.object({
     leaseIds: z.array(z.string().trim().min(1)).optional(),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
     const supabase = await createClient();
     const adminClient = createAdminClient();
     const {
@@ -23,9 +23,16 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
+
     try {
         await expireInPersonIntents(adminClient, user.id, { landlordId: user.id });
-        const payload = await listLandlordInvoices(supabase, user.id);
+        const payload = await listLandlordInvoices(
+            supabase,
+            user.id,
+            propertyId && propertyId !== "all" ? propertyId : undefined
+        );
         return NextResponse.json(payload);
     } catch (error) {
         console.error("Failed to load landlord invoices:", error);

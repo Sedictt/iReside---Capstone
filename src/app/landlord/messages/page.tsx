@@ -69,7 +69,8 @@ type ContactItem = {
     unit: string;
     unread: number;
     lastContact: string;
-    avatar: string;
+    avatarUrl: string | null;
+    initials: string;
     avatarBgColor: string | null;
     relationshipStatus: "tenant_landlord" | "prospective" | "stranger";
     hasPaymentHistory: boolean;
@@ -597,7 +598,8 @@ export default function MessagesPage() {
         unit: "",
         unread: 0,
         lastContact: "",
-        avatar: FALLBACK_AVATAR,
+        avatarUrl: null,
+        initials: "C",
         avatarBgColor: null,
         relationshipStatus: "stranger",
         hasPaymentHistory: false,
@@ -617,7 +619,13 @@ export default function MessagesPage() {
             lastContact: conversation.lastMessage
                 ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                 : "No messages yet",
-            avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            avatarUrl: other?.avatarUrl || null,
+            initials: (other?.fullName ?? "C")
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map(part => part[0]?.toUpperCase())
+                .join(""),
             avatarBgColor: other?.avatarBgColor || null,
             relationshipStatus: conversation.relationshipStatus,
             hasPaymentHistory: conversation.hasPaymentHistory,
@@ -1794,11 +1802,27 @@ export default function MessagesPage() {
                                         onClick={() => handleStartConversation(result.id)}
                                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted dark:hover:bg-white/10"
                                     >
-                                        <img
-                                            src={result.avatarUrl || FALLBACK_AVATAR}
-                                            alt={result.fullName}
-                                            className="h-8 w-8 rounded-full border border-border object-cover dark:border-white/10"
-                                        />
+                                        <div 
+                                            className="h-8 w-8 shrink-0 rounded-full border border-divider overflow-hidden flex items-center justify-center text-[10px] font-bold"
+                                            style={{ backgroundColor: result.avatarBgColor || '#171717' }}
+                                        >
+                                            {result.avatarUrl ? (
+                                                <img
+                                                    src={result.avatarUrl}
+                                                    alt={result.fullName}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-white">
+                                                    {(result.fullName ?? "C")
+                                                        .split(" ")
+                                                        .filter(Boolean)
+                                                        .slice(0, 2)
+                                                        .map(p => p[0]?.toUpperCase())
+                                                        .join("")}
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="truncate text-sm font-semibold text-foreground dark:text-white">{result.fullName}</div>
                                             <div className="truncate text-[11px] text-muted-foreground dark:text-neutral-400">{result.role} • {result.email}</div>
@@ -1850,10 +1874,14 @@ export default function MessagesPage() {
                                 >
                                     <div className="relative shrink-0">
                                         <div 
-                                            className="h-12 w-12 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                            className="h-12 w-12 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden flex items-center justify-center"
                                             style={{ backgroundColor: contact.avatarBgColor || '#171717' }}
                                         >
-                                            <img src={contact.avatar} alt={contact.name} className="h-full w-full object-cover" />
+                                            {contact.avatarUrl ? (
+                                                <img src={contact.avatarUrl} alt={contact.name} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <span className="text-sm font-bold text-white">{contact.initials}</span>
+                                            )}
                                         </div>
                                         {contact.unread > 0 && (
                                             <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-red-500 dark:border-[#0a0a0a]">
@@ -1881,10 +1909,14 @@ export default function MessagesPage() {
                 <div className="z-10 flex h-20 shrink-0 items-center justify-between border-b border-divider bg-surface-1/80 px-6 backdrop-blur-md dark:backdrop-blur-none">
                     <div className="flex items-center gap-4">
                         <div 
-                            className="h-10 w-10 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                            className="h-10 w-10 rounded-full border border-border dark:border-white/10 overflow-hidden flex items-center justify-center"
                             style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
                         >
-                            <img src={displayContact.avatar} alt={displayContact.name} className="h-full w-full object-cover" />
+                            {displayContact.avatarUrl ? (
+                                <img src={displayContact.avatarUrl} alt={displayContact.name} className="h-full w-full object-cover" />
+                            ) : (
+                                <span className="text-xs font-bold text-white">{displayContact.initials}</span>
+                            )}
                         </div>
                         <div>
                             <h3 className="text-base font-bold text-high">{displayContact.name}</h3>
@@ -2276,10 +2308,14 @@ export default function MessagesPage() {
                                             <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                                                 {!isMe && (
                                                     <div 
-                                                        className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                                        className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden flex items-center justify-center"
                                                         style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
                                                     >
-                                                        <img src={displayContact.avatar} className="h-full w-full object-cover" alt="avatar" />
+                                                        {displayContact.avatarUrl ? (
+                                                            <img src={displayContact.avatarUrl} className="h-full w-full object-cover" alt="avatar" />
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-white">{displayContact.initials}</span>
+                                                        )}
                                                     </div>
                                                 )}
                                                 <div className={cn(
@@ -2407,11 +2443,15 @@ export default function MessagesPage() {
                                 {isOtherUserTyping && (
                                     <div className="flex items-end gap-3 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
                                         <div 
-                                                        className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden"
-                                                        style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
-                                                    >
-                                                        <img src={displayContact.avatar} className="h-full w-full object-cover" alt="avatar" />
-                                                    </div>
+                                            className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden flex items-center justify-center"
+                                            style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
+                                        >
+                                            {displayContact.avatarUrl ? (
+                                                <img src={displayContact.avatarUrl} className="h-full w-full object-cover" alt="avatar" />
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-white">{displayContact.initials}</span>
+                                            )}
+                                        </div>
                                         <div className="rounded-3xl rounded-bl-sm border border-border bg-card px-4 py-3 text-foreground shadow-lg dark:border-white/5 dark:bg-neutral-800 dark:text-white">
                                             <div className="flex items-center gap-1.5">
                                                 <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />

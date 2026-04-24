@@ -56,7 +56,10 @@ const getPaymentCategory = (payment: {
     return null;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
+
     const supabase = await createClient();
     const {
         data: { user },
@@ -67,12 +70,68 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: paymentRows, error } = await supabase
+    let query = supabase
         .from("payments")
         .select("id, amount, status, due_date, paid_at, tenant_id, lease_id")
         .eq("landlord_id", user.id)
         .order("due_date", { ascending: true })
         .limit(200);
+
+    if (propertyId && propertyId !== "all") {
+        const { data: propertyRow, error: propertyError } = await supabase
+            .from("properties")
+            .select("id")
+            .eq("id", propertyId)
+            .eq("landlord_id", user.id)
+            .maybeSingle();
+
+        if (propertyError) {
+            return NextResponse.json({ error: "Failed to fetch payment overview." }, { status: 500 });
+        }
+
+        if (!propertyRow) {
+            return NextResponse.json({ payments: { Overdue: [], "Near Due": [], Paid: [] } });
+        }
+
+        const { data: propertyUnits, error: unitsByPropertyError } = await supabase
+            .from("units")
+            .select("id")
+            .eq("property_id", propertyRow.id);
+
+        if (unitsByPropertyError) {
+            return NextResponse.json({ error: "Failed to fetch payment overview." }, { status: 500 });
+        }
+
+        const propertyUnitIds = (propertyUnits ?? [])
+            .map((row) => row.id)
+            .filter((value): value is string => Boolean(value));
+
+        if (propertyUnitIds.length === 0) {
+            return NextResponse.json({ payments: { Overdue: [], "Near Due": [], Paid: [] } });
+        }
+
+        const { data: propertyLeases, error: propertyLeasesError } = await supabase
+            .from("leases")
+            .select("id")
+            .eq("landlord_id", user.id)
+            .in("unit_id", propertyUnitIds);
+
+        if (propertyLeasesError) {
+            return NextResponse.json({ error: "Failed to fetch payment overview." }, { status: 500 });
+        }
+
+        const propertyLeaseIds = (propertyLeases ?? [])
+            .map((row) => row.id)
+            .filter((value): value is string => Boolean(value));
+
+        if (propertyLeaseIds.length === 0) {
+            return NextResponse.json({ payments: { Overdue: [], "Near Due": [], Paid: [] } });
+        }
+
+        query = query.in("lease_id", propertyLeaseIds);
+    }
+
+    const { data: paymentRows, error } = await query;
 
     if (error) {
         return NextResponse.json({ error: "Failed to fetch payment overview." }, { status: 500 });

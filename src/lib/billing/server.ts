@@ -410,7 +410,11 @@ function buildInvoiceListItem(
     };
 }
 
-export async function listLandlordInvoices(supabase: AppSupabaseClient, landlordId: string) {
+export async function listLandlordInvoices(
+    supabase: AppSupabaseClient,
+    landlordId: string,
+    propertyId?: string
+) {
     const { data, error } = await supabase
         .from("payments")
         .select(PAYMENT_RELATION_SELECT)
@@ -419,7 +423,10 @@ export async function listLandlordInvoices(supabase: AppSupabaseClient, landlord
 
     if (error) throw error;
 
-    const payments = (data ?? []) as unknown as PaymentRelationRow[];
+    const allPayments = (data ?? []) as unknown as PaymentRelationRow[];
+    const payments = propertyId
+        ? allPayments.filter((payment) => payment.lease?.unit?.property_id === propertyId)
+        : allPayments;
     const paymentIds = payments.map((item) => item.id);
     const [readingMap, receiptMap] = await Promise.all([
         getReadingMap(supabase, paymentIds),

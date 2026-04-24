@@ -12,6 +12,7 @@ import { ChartSkeleton } from "@/components/landlord/dashboard/ChartSkeleton";
 import { OperationalSnapshotSkeleton } from "@/components/landlord/dashboard/OperationalSnapshotSkeleton";
 import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
 import { OperationalSnapshotCard } from "@/components/landlord/dashboard/OperationalSnapshotCard";
+import { useProperty } from "@/context/PropertyContext";
 
 type KpiItem = {
     title: string;
@@ -239,6 +240,7 @@ const getDateLabels = (start: Date, end: Date, pointsCount: number) => {
 
 export default function StatisticsPage() {
     const { profile } = useAuth();
+    const { selectedPropertyId } = useProperty();
     const [mounted, setMounted] = useState(false);
     const [showMoreKpis, setShowMoreKpis] = useState(false);
     const [selectedRange, setSelectedRange] = useState<RangeOption["id"]>("30d");
@@ -491,7 +493,12 @@ export default function StatisticsPage() {
             setStatsError(null);
 
             try {
-                const response = await fetch(`/api/landlord/statistics/overview?start=${startDate}&end=${endDate}`, {
+                const params = new URLSearchParams({
+                    start: startDate,
+                    end: endDate,
+                    propertyId: selectedPropertyId,
+                });
+                const response = await fetch(`/api/landlord/statistics/overview?${params.toString()}`, {
                     method: "GET",
                     signal: controller.signal,
                 });
@@ -518,7 +525,7 @@ export default function StatisticsPage() {
         return () => {
             controller.abort();
         };
-    }, [mounted, startDate, endDate]);
+    }, [mounted, startDate, endDate, selectedPropertyId]);
 
     useEffect(() => {
         if (!mounted) return;
@@ -678,7 +685,7 @@ export default function StatisticsPage() {
                         </div>
                         <div>
                             <h2 className="text-2xl font-black tracking-tight text-foreground">
-                                How You're Doing
+                                How You&apos;re Doing
                             </h2>
                             <p className="text-sm font-medium text-muted-foreground/80">
                                 Simplified for easy reading

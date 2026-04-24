@@ -236,7 +236,9 @@ export function LandlordSettings() {
                                                 {profile?.avatar_url ? (
                                                     <img src={profile.avatar_url} alt={profileName} className="h-full w-full object-cover" />
                                                 ) : (
-                                                    <Building2 className="h-12 w-12 text-primary" />
+                                                    <span className="text-2xl font-black text-white">
+                                                        {(profileName || "C").split(" ").filter(Boolean).slice(0, 2).map(p => p[0]?.toUpperCase()).join("")}
+                                                    </span>
                                                 )}
                                             </div>
                                             <button 

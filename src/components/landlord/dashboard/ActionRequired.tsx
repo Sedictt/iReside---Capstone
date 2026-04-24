@@ -15,6 +15,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/messages/client";
+import { useProperty } from "@/context/PropertyContext";
 
 type MaintenanceRequestItem = {
     id: string;
@@ -94,6 +95,7 @@ const getDaysUntil = (iso: string) => {
 };
 
 export function ActionRequired() {
+    const { selectedPropertyId } = useProperty();
     const [maintenance, setMaintenance] = useState<MaintenanceRequestItem[]>([]);
     const [tenants, setTenants] = useState<TenantItem[]>([]);
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -108,9 +110,10 @@ export function ActionRequired() {
             setError(null);
 
             try {
+                const params = new URLSearchParams({ propertyId: selectedPropertyId });
                 const [maintenanceRes, tenantsRes, conversationsRes] = await Promise.all([
-                    fetch("/api/landlord/maintenance", { signal: controller.signal }),
-                    fetch("/api/landlord/tenants", { signal: controller.signal }),
+                    fetch(`/api/landlord/maintenance?${params.toString()}`, { signal: controller.signal }),
+                    fetch(`/api/landlord/tenants?${params.toString()}`, { signal: controller.signal }),
                     fetch("/api/messages/conversations", { signal: controller.signal, cache: "no-store" }),
                 ]);
 
@@ -155,7 +158,7 @@ export function ActionRequired() {
         return () => {
             controller.abort();
         };
-    }, []);
+    }, [selectedPropertyId]);
 
     const { actions, summaries } = useMemo(() => {
         const nextActions: ActionItem[] = [];
