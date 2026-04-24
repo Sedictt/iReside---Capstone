@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSidebar } from "@/context/SidebarContext";
 
 export interface SidebarNavItem {
     label: string;
@@ -226,6 +225,5 @@ export function RoleSidebar({
         </aside>
     );
 }
-
 
 

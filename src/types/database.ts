@@ -1576,6 +1576,36 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            consultation_documents: {
+                Row: {
+                    id: string
+                    file_name: string
+                    file_url: string
+                    status: 'pending' | 'signed'
+                    signed_file_url: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    file_name: string
+                    file_url: string
+                    status?: 'pending' | 'signed'
+                    signed_file_url?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    file_name?: string
+                    file_url?: string
+                    status?: 'pending' | 'signed'
+                    signed_file_url?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
             lease_signing_audit: {
                 Row: {
                     id: string
@@ -1666,6 +1696,7 @@ export type MessageUserAction = Database['public']['Tables']['message_user_actio
 export type MessageUserReport = Database['public']['Tables']['message_user_reports']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
 export type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
+export type ConsultationDocument = Database['public']['Tables']['consultation_documents']['Row']
 export type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']
 
 // ---------- Joined / view types for common queries ----------

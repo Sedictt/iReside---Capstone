@@ -147,7 +147,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                 enabled: true,
                 backgroundColor: 'rgba(15, 23, 42, 0.9)',
                 titleFont: { size: 10, weight: 'bold' as const, family: 'Geist Sans' },
-                bodyFont: { size: 12, weight: 'bold', family: 'Geist Sans' },
+                bodyFont: { size: 12, weight: 'bold' as const, family: 'Geist Sans' },
                 padding: 12,
                 cornerRadius: 12,
                 displayColors: false,
@@ -160,7 +160,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                 color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)',
                 align: 'end' as const,
                 anchor: 'end' as const,
-                font: { weight: 'bold', size: 10, family: 'Geist Sans' },
+                font: { weight: 'bold' as const, size: 10, family: 'Geist Sans' },
                 formatter: (value: number) => `₱${(value / 1000).toFixed(1)}k`,
                 offset: 8,
             }
@@ -173,7 +173,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                 border: { display: false },
                 ticks: {
                     color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)',
-                    font: { size: 10, weight: 'bold', family: 'Geist Sans' },
+                    font: { size: 10, weight: 'bold' as const, family: 'Geist Sans' },
                     padding: 10,
                 }
             },
@@ -187,7 +187,7 @@ export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformance
                     color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)',
                     callback: (val: string | number) => `₱${Number(val) / 1000}k`,
                     padding: 15,
-                    font: { size: 10, weight: 'bold', family: 'Geist Sans' },
+                    font: { size: 10, weight: 'bold' as const, family: 'Geist Sans' },
                 },
                 min: 0,
                 suggestedMax: Math.max(...getCurrentData()) * 1.3,

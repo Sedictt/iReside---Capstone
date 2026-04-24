@@ -23,17 +23,24 @@ const ConsultationTool = dynamic(() => import('../../admin/consultation-tool/Con
 });
 
 export default function SignPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const rawId = params?.id;
+  const documentId = Array.isArray(rawId) ? rawId[0] : rawId;
   const [docData, setDocData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
-    fetchDocument();
-  }, [id]);
+    if (!documentId) {
+      toast.error('Invalid signing link');
+      setIsLoading(false);
+      return;
+    }
+    void fetchDocument(documentId);
+  }, [documentId]);
 
-  const fetchDocument = async () => {
+  const fetchDocument = async (id: string) => {
     const { data, error } = await supabase
       .from('consultation_documents')
       .select('*')
@@ -52,6 +59,11 @@ export default function SignPage() {
   };
 
   const handleSigned = async (signedUrl: string) => {
+    if (!documentId) {
+      toast.error('Invalid signing link');
+      return;
+    }
+
     const { error } = await supabase
       .from('consultation_documents')
       .update({
@@ -59,7 +71,7 @@ export default function SignPage() {
         signed_file_url: signedUrl,
         updated_at: new Date().toISOString()
       })
-      .eq('id', id);
+      .eq('id', documentId);
 
     if (error) {
       toast.error('Failed to update document status');

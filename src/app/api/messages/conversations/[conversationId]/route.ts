@@ -148,32 +148,30 @@ export async function POST(
         }
 
         const baseMetadata = isJsonObject(body.metadata) ? { ...body.metadata } : {};
-        const enforcedMetadata =
-            messageType === "text"
-                ? (async () => {
-                      const moderation = await redactWithAiOrFallback(content);
-                      if (moderation.redactionCategory === "profanity") {
-                          throw new Error("Message blocked due to profanity policy violation.");
-                      }
-                      if (moderation.redactionCategory === "phishing") {
-                          throw new Error("Message blocked due to phishing policy violation.");
-                      }
-                      if (moderation.redactionCategory === "spam") {
-                          throw new Error("Message blocked due to spam policy violation.");
-                      }
-                      return {
-                          ...baseMetadata,
-                          isRedacted: moderation.isSensitive,
-                          redactedContent: moderation.redactedMessage,
-                          isConfirmedDisclosed: false,
-                          isPhishing: moderation.isPhishing,
-                          redactionCategory: moderation.redactionCategory,
-                          disclosureAllowed: moderation.disclosureAllowed,
-                          moderationSource: moderation.source,
-                      } as Json;
-                  })()
-                : body.metadata ?? null;
-        const resolvedMetadata = messageType === "text" ? await enforcedMetadata : enforcedMetadata;
+        let resolvedMetadata: Json | null = body.metadata ?? null;
+
+        if (messageType === "text") {
+            const moderation = await redactWithAiOrFallback(content);
+            if (moderation.redactionCategory === "profanity") {
+                throw new Error("Message blocked due to profanity policy violation.");
+            }
+            if (moderation.redactionCategory === "phishing") {
+                throw new Error("Message blocked due to phishing policy violation.");
+            }
+            if (moderation.redactionCategory === "spam") {
+                throw new Error("Message blocked due to spam policy violation.");
+            }
+            resolvedMetadata = {
+                ...baseMetadata,
+                isRedacted: moderation.isSensitive,
+                redactedContent: moderation.redactedMessage,
+                isConfirmedDisclosed: false,
+                isPhishing: moderation.isPhishing,
+                redactionCategory: moderation.redactionCategory,
+                disclosureAllowed: moderation.disclosureAllowed,
+                moderationSource: moderation.source,
+            } as Json;
+        }
 
         const { data: inserted, error: insertError } = await supabase
             .from("messages")
