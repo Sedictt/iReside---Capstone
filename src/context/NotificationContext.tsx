@@ -1,0 +1,304 @@
+"use client";
+
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import type { Notification, NotificationType } from "@/types/database";
+
+interface NotificationContextType {
+    notifications: Notification[];
+    unreadCount: number;
+    loading: boolean;
+    error: string | null;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
+    deleteNotification: (id: string) => Promise<void>;
+    refresh: () => Promise<void>;
+    counts: {
+        applications: number;
+        maintenance: number;
+        messages: number;
+    };
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
+    const { user, profile } = useAuth();
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [counts, setCounts] = useState({
+        applications: 0,
+        maintenance: 0,
+        messages: 0,
+    });
+
+    const supabase = createClient();
+
+    const fetchCounts = useCallback(async () => {
+        if (!user || !profile) return;
+
+        try {
+            if (profile.role === "landlord") {
+                // Fetch pending applications count
+                const { count: appCount } = await supabase
+                    .from("applications")
+                    .select("*", { count: "exact", head: true })
+                    .eq("landlord_id", user.id)
+                    .eq("status", "pending");
+
+                // Fetch open/assigned maintenance requests count
+                const { count: maintCount } = await supabase
+                    .from("maintenance_requests")
+                    .select("*", { count: "exact", head: true })
+                    .eq("landlord_id", user.id)
+                    .in("status", ["open", "assigned", "in_progress"]);
+
+                // Fetch unread messages count (simplified: messages sent to user that are not read)
+                // This might need a more complex query depending on conversation participants
+                const { count: msgCount } = await supabase
+                    .from("messages")
+                    .select("*", { count: "exact", head: true })
+                    .neq("sender_id", user.id)
+                    .is("read_at", null);
+
+                setCounts({
+                    applications: appCount || 0,
+                    maintenance: maintCount || 0,
+                    messages: msgCount || 0,
+                });
+            } else if (profile.role === "tenant") {
+                 // Fetch unread messages count
+                 const { count: msgCount } = await supabase
+                    .from("messages")
+                    .select("*", { count: "exact", head: true })
+                    .neq("sender_id", user.id)
+                    .is("read_at", null);
+
+                setCounts(prev => ({
+                    ...prev,
+                    messages: msgCount || 0,
+                }));
+            }
+        } catch (err) {
+            console.error("Error fetching counts:", err);
+        }
+    }, [user, profile, supabase]);
+
+    const fetchNotifications = useCallback(async () => {
+        if (!user) return;
+
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from("notifications")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+
+            setNotifications(data || []);
+            setUnreadCount((data || []).filter(n => !n.read).length);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to fetch notifications");
+        } finally {
+            setLoading(false);
+        }
+    }, [user, supabase]);
+
+    const refresh = useCallback(async () => {
+        await Promise.all([fetchNotifications(), fetchCounts()]);
+    }, [fetchNotifications, fetchCounts]);
+
+    const markAsRead = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from("notifications")
+                .update({ read: true })
+                .eq("id", id);
+
+            if (error) throw error;
+
+            setNotifications(prev =>
+                prev.map(n => (n.id === id ? { ...n, read: true } : n))
+            );
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+            console.error("Error marking notification as read:", err);
+        }
+    };
+
+    const markAllAsRead = async () => {
+        if (!user) return;
+        try {
+            const { error } = await supabase
+                .from("notifications")
+                .update({ read: true })
+                .eq("user_id", user.id)
+                .eq("read", false);
+
+            if (error) throw error;
+
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            setUnreadCount(0);
+        } catch (err) {
+            console.error("Error marking all notifications as read:", err);
+        }
+    };
+
+    const deleteNotification = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from("notifications")
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+
+            setNotifications(prev => {
+                const filtered = prev.filter(n => n.id !== id);
+                const wasUnread = prev.find(n => n.id === id && !n.read);
+                if (wasUnread) setUnreadCount(c => Math.max(0, c - 1));
+                return filtered;
+            });
+        } catch (err) {
+            console.error("Error deleting notification:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (!user) {
+            setNotifications([]);
+            setUnreadCount(0);
+            setLoading(false);
+            return;
+        }
+
+        void refresh();
+
+        // Subscribe to notifications
+        const notificationSubscription = supabase
+            .channel(`public:notifications:user_id=eq.${user.id}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "notifications",
+                    filter: `user_id=eq.${user.id}`,
+                },
+                (payload) => {
+                    console.log("Realtime notification change:", payload);
+                    if (payload.eventType === "INSERT") {
+                        const newNotification = payload.new as Notification;
+                        setNotifications(prev => [newNotification, ...prev]);
+                        if (!newNotification.read) setUnreadCount(prev => prev + 1);
+                    } else if (payload.eventType === "UPDATE") {
+                        const updatedNotification = payload.new as Notification;
+                        setNotifications(prev =>
+                            prev.map(n => (n.id === updatedNotification.id ? updatedNotification : n))
+                        );
+                        // Recalculate unread count
+                        fetchNotifications();
+                    } else if (payload.eventType === "DELETE") {
+                        setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+                        fetchNotifications();
+                    }
+                }
+            )
+            .subscribe();
+
+        // Subscribe to applications (if landlord)
+        let applicationSubscription: any;
+        if (profile?.role === "landlord") {
+            applicationSubscription = supabase
+                .channel(`public:applications:landlord_id=eq.${user.id}`)
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "*",
+                        schema: "public",
+                        table: "applications",
+                        filter: `landlord_id=eq.${user.id}`,
+                    },
+                    () => {
+                        void fetchCounts();
+                    }
+                )
+                .subscribe();
+        }
+
+        // Subscribe to maintenance requests
+        const maintenanceSubscription = supabase
+            .channel(`public:maintenance:landlord_id=eq.${user.id}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "maintenance_requests",
+                    filter: profile?.role === "landlord" 
+                        ? `landlord_id=eq.${user.id}` 
+                        : `tenant_id=eq.${user.id}`,
+                },
+                () => {
+                    void fetchCounts();
+                }
+            )
+            .subscribe();
+
+        // Subscribe to messages
+        const messageSubscription = supabase
+            .channel(`public:messages`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "messages",
+                },
+                () => {
+                    // This is a bit broad, but messages are filtered by sender_id and read_at in fetchCounts
+                    void fetchCounts();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            void supabase.removeChannel(notificationSubscription);
+            if (applicationSubscription) void supabase.removeChannel(applicationSubscription);
+            void supabase.removeChannel(maintenanceSubscription);
+            void supabase.removeChannel(messageSubscription);
+        };
+    }, [user, profile, supabase, refresh, fetchCounts, fetchNotifications]);
+
+    return (
+        <NotificationContext.Provider
+            value={{
+                notifications,
+                unreadCount,
+                loading,
+                error,
+                markAsRead,
+                markAllAsRead,
+                deleteNotification,
+                refresh,
+                counts,
+            }}
+        >
+            {children}
+        </NotificationContext.Provider>
+    );
+}
+
+export function useNotifications() {
+    const context = useContext(NotificationContext);
+    if (context === undefined) {
+        throw new Error("useNotifications must be used within a NotificationProvider");
+    }
+    return context;
+}

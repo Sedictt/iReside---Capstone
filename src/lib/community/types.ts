@@ -21,6 +21,7 @@ export interface CommunityPost {
     updated_at: string
     author_name: string
     author_avatar: string | null
+    author_avatar_bg_color: string | null
     reactions: Record<string, number>
     userReactions: Array<{ reaction_type: string }>
     commentCount: number

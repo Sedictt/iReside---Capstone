@@ -147,6 +147,7 @@ export default function TenantCommunityHubPage() {
         authorId: string
         authorName: string
         authorAvatar: string | null
+        authorAvatarBgColor: string | null
         content: string
         parentCommentId: string | null
         createdAt: string
@@ -691,7 +692,10 @@ export default function TenantCommunityHubPage() {
                                     <Bell className="w-5 h-5" />
                                     <span className="absolute right-2.5 top-2 h-2 w-2 animate-pulse rounded-full bg-emerald-500 ring-2 ring-background dark:bg-emerald-400 dark:ring-[#121212]"></span>
                                 </button>
-                                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-foreground shadow-sm dark:border-white/20 dark:bg-muted/20 dark:text-white dark:shadow-lg">
+                                <div 
+                                    className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border text-foreground shadow-sm dark:border-white/20 dark:text-white dark:shadow-lg"
+                                    style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
+                                >
                                     {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : userInitial}
                                 </div>
                             </div>
@@ -815,7 +819,10 @@ export default function TenantCommunityHubPage() {
                                 )}
 
                                 <div className="flex items-center gap-4">
-                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-foreground shadow-inner dark:border-white/10 dark:bg-white/5 dark:text-white">
+                                    <div 
+                                        className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border text-foreground shadow-inner dark:border-white/10 dark:text-white"
+                                        style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
+                                    >
                                         {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : userInitial}
                                     </div>
                                     <div className="flex-1">
@@ -1065,7 +1072,10 @@ export default function TenantCommunityHubPage() {
                                 <article key={post.id} className="flex flex-col gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm transition-colors hover:bg-muted/20 dark:border-white/5 dark:bg-[#151515] dark:shadow-xl dark:hover:bg-[#1a1a1a] md:p-8">
                                     <header className="flex items-center justify-between">
                                         <div className="flex items-center gap-3 md:gap-4">
-                                            <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-[#e8eedd] shadow-inner dark:border-white/10 md:h-[46px] md:w-[46px]">
+                                            <div 
+                                                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/10 md:h-[46px] md:w-[46px]"
+                                                style={{ backgroundColor: post.author_avatar_bg_color || '#e8eedd' }}
+                                            >
                                                 {post.author_avatar ? (
                                                     <img src={post.author_avatar || undefined} alt={post.author_name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -1250,7 +1260,10 @@ export default function TenantCommunityHubPage() {
                                                                     key={comment.id} 
                                                                     className="flex gap-3 md:gap-4 group/comment"
                                                                 >
-                                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted shadow-inner dark:border-white/5 dark:bg-white/10 md:h-10 md:w-10">
+                                                                    <div 
+                                                                        className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/5 md:h-10 md:w-10"
+                                                                        style={{ backgroundColor: comment.authorAvatarBgColor || undefined }}
+                                                                    >
                                                                         {comment.authorAvatar ? (
                                                                             <img src={comment.authorAvatar} alt={comment.authorName} className="w-full h-full object-cover" />
                                                                         ) : (
@@ -1284,7 +1297,10 @@ export default function TenantCommunityHubPage() {
                                                     )}
 
                                                     <div className="flex gap-3 md:gap-4 items-start pt-2">
-                                                        <div className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted shadow-inner dark:border-white/5 dark:bg-white/10 md:h-10 md:w-10">
+                                                        <div 
+                                                            className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-border shadow-inner dark:border-white/5 md:h-10 md:w-10"
+                                                            style={{ backgroundColor: profile?.avatar_bg_color || undefined }}
+                                                        >
                                                             {profile?.avatar_url ? (
                                                                 <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                                                             ) : (
