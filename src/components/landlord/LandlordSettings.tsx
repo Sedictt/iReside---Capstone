@@ -37,9 +37,13 @@ import {
     Info,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
+import { useAuth } from "@/hooks/useAuth";
+import { AvatarPicker } from "@/components/profile/AvatarPicker";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 // Types
 type Section = "My Profile" | "Security" | "Privacy" | "Notifications" | "Billing" | "Data Export" | "Delete Account" | "GCash Destination" | "Water Billing" | "Electricity Billing";
@@ -112,16 +116,63 @@ function SectionHeader({ icon: Icon, title, description }: { icon: LucideIcon; t
 }
 
 export function LandlordSettings() {
+    const { profile, refreshProfile } = useAuth();
     const [activeTab, setActiveTab] = useState<Section>("My Profile");
+    const supabase = createClient();
 
     // Profile State
-    const [profileName, setProfileName] = useState("Elite Property Management Group");
-    const [profileEmail, setProfileEmail] = useState("contact@eliteproperty.ph");
-    const [profilePhone, setProfilePhone] = useState("+63 917 123 4567");
-    const [profileAddress, setProfileAddress] = useState("123 Business Avenue, Suite 400, Manila, Philippines");
-    const [profileBio, setProfileBio] = useState("Premium property management company specializing in residential and commercial properties across Metro Manila since 2015.");
-    const [profileWebsite, setProfileWebsite] = useState("https://eliteproperty.ph");
+    const [profileName, setProfileName] = useState("");
+    const [profileEmail, setProfileEmail] = useState("");
+    const [profilePhone, setProfilePhone] = useState("");
+    const [profileAddress, setProfileAddress] = useState("");
+    const [profileBio, setProfileBio] = useState("");
+    const [profileWebsite, setProfileWebsite] = useState("");
     const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+
+    // Sync profile data
+    useEffect(() => {
+        if (profile) {
+            setProfileName(profile.full_name || "");
+            setProfileEmail(profile.email || "");
+            setProfilePhone(profile.phone || "");
+            setProfileAddress(profile.address || "");
+            setProfileBio(profile.bio || "");
+            setProfileWebsite(profile.website || "");
+        }
+    }, [profile]);
+
+    const handleSaveProfile = async () => {
+        if (!profile) return;
+        
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({
+                    full_name: profileName,
+                    phone: profilePhone,
+                    address: profileAddress,
+                    bio: profileBio,
+                    website: profileWebsite
+                })
+                .eq("id", profile.id);
+
+            if (error) throw error;
+            
+            await refreshProfile();
+            toast.success("Profile updated successfully");
+        } catch (error: any) {
+            console.error("Failed to save profile:", error);
+            toast.error(error.message || "Failed to update profile");
+        }
+    };
+
+    const handleToggleEdit = async () => {
+        if (isEditingProfile) {
+            await handleSaveProfile();
+        }
+        setIsEditingProfile(!isEditingProfile);
+    };
 
     // Security State
     const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true);
@@ -178,25 +229,35 @@ export function LandlordSettings() {
                                 <div className="flex flex-col md:flex-row md:items-end justify-between -mt-12 mb-8 gap-4">
                                     <div className="flex items-end gap-5">
                                         <div className="relative group">
-                                            <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white p-3 shadow-xl ring-4 ring-[#171717]">
-                                                <Building2 className="h-12 w-12 text-primary" />
+                                            <div 
+                                                className="flex h-24 w-24 items-center justify-center rounded-2xl p-1 shadow-xl ring-4 ring-[#171717] overflow-hidden transition-colors duration-500"
+                                                style={{ backgroundColor: profile?.avatar_bg_color || "#171717" }}
+                                            >
+                                                {profile?.avatar_url ? (
+                                                    <img src={profile.avatar_url} alt={profileName} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <Building2 className="h-12 w-12 text-primary" />
+                                                )}
                                             </div>
-                                            <button className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-colors opacity-0 group-hover:opacity-100 hover:bg-primary/90">
+                                            <button 
+                                                onClick={() => setIsAvatarPickerOpen(true)}
+                                                className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-colors opacity-0 group-hover:opacity-100 hover:bg-primary/90"
+                                            >
                                                 <Camera className="h-3.5 w-3.5 text-white" />
                                             </button>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-bold text-white">{profileName}</h3>
+                                                <h3 className="text-lg font-bold text-white">{profileName || "Loading..."}</h3>
                                                 <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
                                                     <CheckCircle className="h-3 w-3" /> Verified
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-slate-400">Landlord ID: #EPG-99291</p>
+                                            <p className="text-sm text-slate-400">Landlord ID: #{profile?.id?.slice(0, 8).toUpperCase() || "..."}</p>
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => setIsEditingProfile(!isEditingProfile)}
+                                        onClick={handleToggleEdit}
                                         className={cn(
                                             "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all shadow-sm",
                                             isEditingProfile
@@ -457,7 +518,7 @@ export function LandlordSettings() {
                                         <Monitor className="h-4 w-4 text-primary" />
                                         <div>
                                             <p className="text-sm text-white">Chrome on Windows</p>
-                                            <p className="text-xs text-slate-500">Manila, Philippines · Current session</p>
+                                            <p className="text-xs text-slate-500">Manila, Philippines Â· Current session</p>
                                         </div>
                                     </div>
                                     <span className="rounded bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">Current</span>
@@ -467,7 +528,7 @@ export function LandlordSettings() {
                                         <Smartphone className="h-4 w-4 text-slate-500" />
                                         <div>
                                             <p className="text-sm text-white">Safari on iPhone</p>
-                                            <p className="text-xs text-slate-500">Manila, Philippines · 2 hours ago</p>
+                                            <p className="text-xs text-slate-500">Manila, Philippines Â· 2 hours ago</p>
                                         </div>
                                     </div>
                                     <button className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors">Revoke</button>
@@ -736,7 +797,7 @@ export function LandlordSettings() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-white">Full Data Export</p>
-                                        <p className="text-xs text-slate-500">Jan 15, 2026 · 12.4 MB</p>
+                                        <p className="text-xs text-slate-500">Jan 15, 2026 Â· 12.4 MB</p>
                                     </div>
                                 </div>
                                 <button className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80">
@@ -946,6 +1007,13 @@ export function LandlordSettings() {
                     </motion.div>
                 </AnimatePresence>
             </div>
+            
+            <AvatarPicker 
+                isOpen={isAvatarPickerOpen} 
+                onClose={() => setIsAvatarPickerOpen(false)} 
+                currentAvatarUrl={profile?.avatar_url || null} 
+                currentBgColor={profile?.avatar_bg_color || null}
+            />
         </div>
     );
 }

@@ -7,6 +7,7 @@ type ProfilePreview = {
     id: string;
     fullName: string;
     avatarUrl: string | null;
+    avatarBgColor: string | null;
     role: Database["public"]["Enums"]["user_role"];
 };
 
@@ -184,7 +185,7 @@ export const getProfilePreviewMap = async (supabase: DbClient, userIds: string[]
 
     const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, role")
+        .select("id, full_name, avatar_url, avatar_bg_color, role")
         .in("id", uniqueIds);
 
     if (error) {
@@ -198,6 +199,7 @@ export const getProfilePreviewMap = async (supabase: DbClient, userIds: string[]
                 id: row.id,
                 fullName: row.full_name,
                 avatarUrl: row.avatar_url,
+                avatarBgColor: row.avatar_bg_color,
                 role: row.role,
             },
         ])

@@ -81,12 +81,15 @@ export function ProfileWidget() {
             onMouseLeave={handleMouseLeave}
         >
             {/* Profile Avatar Button */}
-            <button className="group relative flex h-10 w-10 items-center justify-center overflow-visible rounded-full bg-gradient-to-br from-slate-200 to-slate-300 shadow-lg ring-2 ring-white/60 transition-all hover:ring-primary/50 dark:from-neutral-700 dark:to-neutral-800 dark:ring-white/10">
+            <button 
+                className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border transition-all hover:ring-2 hover:ring-primary/50 dark:border-white/10"
+                style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
+            >
                 {shouldShowAvatar ? (
                     <img
                         src={displayAvatar as string}
                         alt={displayName}
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="h-full w-full object-cover"
                         onError={() => setAvatarFailed(true)}
                     />
                 ) : (
@@ -113,12 +116,15 @@ export function ProfileWidget() {
                         {/* User Info Header */}
                         <div className="border-b border-border bg-gradient-to-br from-slate-100 to-slate-200 p-4 dark:border-white/10 dark:from-neutral-800/50 dark:to-neutral-900/50">
                             <div className="flex items-center gap-3">
-                                <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-200 to-slate-300 shadow-lg ring-2 ring-white/60 dark:from-neutral-700 dark:to-neutral-800 dark:ring-white/10">
+                                <div 
+                                    className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-border dark:border-white/10 shadow-lg"
+                                    style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
+                                >
                                     {shouldShowAvatar ? (
                                         <img
                                             src={displayAvatar as string}
                                             alt={displayName}
-                                            className="h-12 w-12 rounded-full object-cover"
+                                            className="h-full w-full object-cover"
                                             onError={() => setAvatarFailed(true)}
                                         />
                                     ) : (

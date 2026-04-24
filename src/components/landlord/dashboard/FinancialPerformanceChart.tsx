@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -31,7 +32,6 @@ export type FinancialChartWindowData = {
 };
 
 type FinancialPerformanceChartProps = {
-    simplifiedMode?: boolean;
     dataByWindow?: {
         week: FinancialChartWindowData;
         month: FinancialChartWindowData;
@@ -39,8 +39,7 @@ type FinancialPerformanceChartProps = {
     };
 };
 
-export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow }: FinancialPerformanceChartProps) {
-    void simplifiedMode;
+export function FinancialPerformanceChart({ dataByWindow }: FinancialPerformanceChartProps) {
     const [activeTab, setActiveTab] = useState<"earnings" | "expenses" | "netIncome">("earnings");
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme !== "light";
@@ -95,27 +94,42 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
                 label: "Amount",
                 data: getCurrentData(),
                 backgroundColor: (context: ScriptableContext<"bar">) => {
-                    if (!context.chart.chartArea) {
-                        return '#f97316';
-                    }
+                    if (!context.chart.chartArea) return activeTab === "expenses" ? "#ef4444" : activeTab === "netIncome" ? "#3b82f6" : "#6d9838";
                     const { ctx, chartArea: { top, bottom } } = context.chart;
                     const gradient = ctx.createLinearGradient(0, bottom, 0, top);
                     if (activeTab === "expenses") {
-                        gradient.addColorStop(0, '#b91c1c'); // Red-700
-                        gradient.addColorStop(1, '#fca5a5'); // Red-300
+                        gradient.addColorStop(0, "rgba(239, 68, 68, 0.4)");
+                        gradient.addColorStop(1, "rgba(239, 68, 68, 0.9)");
                     } else if (activeTab === "netIncome") {
-                        gradient.addColorStop(0, '#1e3a8a'); // Blue-900
-                        gradient.addColorStop(1, '#60a5fa'); // Blue-400
+                        gradient.addColorStop(0, "rgba(59, 130, 246, 0.4)");
+                        gradient.addColorStop(1, "rgba(59, 130, 246, 0.9)");
                     } else {
-                        gradient.addColorStop(0, '#5a7e2f'); // System Primary Dark (Sage)
-                        gradient.addColorStop(1, '#89b84f'); // System Primary Light (Sage)
+                        gradient.addColorStop(0, "rgba(109, 152, 56, 0.4)");
+                        gradient.addColorStop(1, "rgba(109, 152, 56, 0.9)");
                     }
                     return gradient;
                 },
-                borderRadius: 6,
+                borderRadius: 12,
                 borderSkipped: false,
-                barThickness: 40,
-                maxBarThickness: 50,
+                categoryPercentage: 0.85,
+                barPercentage: 0.9,
+                maxBarThickness: 120,
+                hoverBackgroundColor: (context: ScriptableContext<"bar">) => {
+                    if (!context.chart.chartArea) return "#ffffff";
+                    const { ctx, chartArea: { top, bottom } } = context.chart;
+                    const gradient = ctx.createLinearGradient(0, bottom, 0, top);
+                    if (activeTab === "expenses") {
+                        gradient.addColorStop(0, "rgba(239, 68, 68, 0.6)");
+                        gradient.addColorStop(1, "rgba(239, 68, 68, 1)");
+                    } else if (activeTab === "netIncome") {
+                        gradient.addColorStop(0, "rgba(59, 130, 246, 0.6)");
+                        gradient.addColorStop(1, "rgba(59, 130, 246, 1)");
+                    } else {
+                        gradient.addColorStop(0, "rgba(109, 152, 56, 0.6)");
+                        gradient.addColorStop(1, "rgba(109, 152, 56, 1)");
+                    }
+                    return gradient;
+                },
             }
         ]
     };
@@ -123,47 +137,60 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
     const options = {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+            duration: 1500,
+            easing: 'easeOutQuart' as const,
+        },
         plugins: {
             legend: { display: false },
             tooltip: {
-                enabled: false, // Disable tooltip since we're using datalabels now
+                enabled: true,
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                titleFont: { size: 10, weight: 'bold' as const, family: 'Geist Sans' },
+                bodyFont: { size: 12, weight: 'bold', family: 'Geist Sans' },
+                padding: 12,
+                cornerRadius: 12,
+                displayColors: false,
+                callbacks: {
+                    label: (context: any) => `₱${context.raw.toLocaleString()}`,
+                }
             },
             datalabels: {
-                color: isDark ? '#f8fafc' : '#334155',
+                display: (context: any) => context.chart.data.labels!.length <= 15,
+                color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.9)',
                 align: 'end' as const,
                 anchor: 'end' as const,
-                font: { weight: 'bold' as const, size: 12 },
-                formatter: (value: number) => `₱${value}`,
-                offset: 4, // Distance from the top of the bar
+                font: { weight: 'bold', size: 10, family: 'Geist Sans' },
+                formatter: (value: number) => `₱${(value / 1000).toFixed(1)}k`,
+                offset: 8,
             }
         },
         scales: {
             x: {
                 grid: {
                     display: false,
-                    drawBorder: false
                 },
+                border: { display: false },
                 ticks: {
-                    color: isDark ? '#94a3b8' : '#64748b',
-                    font: { size: 12 }
+                    color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)',
+                    font: { size: 10, weight: 'bold', family: 'Geist Sans' },
+                    padding: 10,
                 }
             },
             y: {
                 grid: {
-                    color: isDark ? 'rgba(51, 65, 85, 0.9)' : 'rgba(203, 213, 225, 0.9)',
-                    drawBorder: false,
-                    lineWidth: 1,
+                    color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.05)',
+                    tickBorderDash: [5, 5],
                 },
                 border: { display: false },
                 ticks: {
-                    color: isDark ? '#94a3b8' : '#64748b',
-                    callback: (val: string | number) => `₱${val}`,
-                    padding: 10,
-                    font: { size: 12 }
+                    color: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)',
+                    callback: (val: string | number) => `₱${Number(val) / 1000}k`,
+                    padding: 15,
+                    font: { size: 10, weight: 'bold', family: 'Geist Sans' },
                 },
                 min: 0,
-                // Give a bit more headroom for the labels
-                suggestedMax: Math.max(...getCurrentData()) * 1.2,
+                suggestedMax: Math.max(...getCurrentData()) * 1.3,
             }
         },
         interaction: {
@@ -172,78 +199,99 @@ export function FinancialPerformanceChart({ simplifiedMode = false, dataByWindow
         },
         layout: {
             padding: {
-                top: 24 // Extra padding so top labels don't get cut off
+                top: 32,
+                bottom: 8,
+                left: 8,
+                right: 8
             }
         }
     };
 
     return (
-        <div className="flex h-full w-full flex-col rounded-2xl border border-border bg-card/95 p-6 shadow-sm backdrop-blur-sm">
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="group relative flex h-full w-full flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl transition-all duration-300"
+        >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            
             {/* Header / Tabs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div className="flex items-center gap-8">
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                <div className="flex items-center gap-10">
                     <button
                         onClick={() => setActiveTab("earnings")}
                         className={cn(
-                            "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
-                            activeTab === "earnings" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
+                            activeTab === "earnings" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
                         {activeTab === "earnings" && (
-                            <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-[#6d9838] shadow-[0_0_8px_rgba(109,152,56,1)]"></span>
+                            <motion.span 
+                                layoutId="activeTabIndicator"
+                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6d9838] shadow-[0_0_12px_rgba(109,152,56,0.6)]"
+                            />
                         )}
+                        <span className={cn("h-2 w-2 rounded-full", activeTab === "earnings" ? "bg-[#6d9838] shadow-[0_0_8px_rgba(109,152,56,0.8)]" : "bg-neutral-600")} />
                         {labels.earnings}
                     </button>
                     <button
                         onClick={() => setActiveTab("expenses")}
                         className={cn(
-                            "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
-                            activeTab === "expenses" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
+                            activeTab === "expenses" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
                         {activeTab === "expenses" && (
-                            <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]"></span>
+                            <motion.span 
+                                layoutId="activeTabIndicator"
+                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]"
+                            />
                         )}
+                        <span className={cn("h-2 w-2 rounded-full", activeTab === "expenses" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "bg-neutral-600")} />
                         {labels.expenses}
                     </button>
                     <button
                         onClick={() => setActiveTab("netIncome")}
                         className={cn(
-                            "text-sm font-medium transition-all flex items-center gap-2 pb-2 relative",
-                            activeTab === "netIncome" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            "text-[10px] font-black uppercase tracking-[0.25em] transition-all flex items-center gap-3 pb-3 relative",
+                            activeTab === "netIncome" ? "text-foreground" : "text-muted-foreground/60 hover:text-foreground"
                         )}
                     >
                         {activeTab === "netIncome" && (
-                            <span className="absolute -left-3 top-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,1)]"></span>
+                            <motion.span 
+                                layoutId="activeTabIndicator"
+                                className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]"
+                            />
                         )}
+                        <span className={cn("h-2 w-2 rounded-full", activeTab === "netIncome" ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" : "bg-neutral-600")} />
                         {labels.netIncome}
                     </button>
                 </div>
 
                 {/* Timeframe Selector */}
-                <div className="relative">
+                <div className="relative group/select">
                     <select
                         value={timeWindow}
                         onChange={(e) => setTimeWindow(e.target.value as "week" | "month" | "year")}
-                        className="cursor-pointer appearance-none rounded-lg border border-border bg-background py-2 pl-4 pr-10 text-sm text-foreground transition-colors hover:bg-muted focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500"
+                        className="cursor-pointer appearance-none rounded-2xl border border-white/10 bg-card/80 py-2.5 pl-6 pr-8 text-[10px] font-black uppercase tracking-[0.15em] text-foreground transition-all hover:bg-card hover:ring-1 hover:ring-primary/20 focus:outline-none min-w-[150px]"
                     >
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="year">This Year</option>
+                        <option value="week">Weekly</option>
+                        <option value="month">Monthly</option>
+                        <option value="year">Yearly</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                        <ChevronDown className="h-4 w-4" />
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground/40 group-hover/select:text-primary transition-colors">
+                        <ChevronDown className="h-3.5 w-3.5" />
                     </div>
                 </div>
             </div>
 
             {/* Chart Area */}
-            <div className="flex-1 w-full min-h-0 relative">
+            <div className="relative flex-1 w-full min-h-0 pt-4">
                 <Bar
                     data={data}
                     options={options}
                 />
             </div>
-        </div>
+        </motion.div>
     );
 }

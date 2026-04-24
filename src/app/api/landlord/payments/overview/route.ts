@@ -10,6 +10,7 @@ type PaymentItem = {
     amount: number;
     date: string;
     avatar: string | null;
+    avatarBgColor: string | null;
     status: PaymentCategory;
 };
 
@@ -86,7 +87,7 @@ export async function GET() {
 
     const { data: tenantRows, error: tenantsError } =
         tenantIds.length > 0
-            ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", tenantIds)
+            ? await supabase.from("profiles").select("id, full_name, avatar_url, avatar_bg_color").in("id", tenantIds)
             : { data: [], error: null };
 
     if (tenantsError) {
@@ -150,6 +151,7 @@ export async function GET() {
             amount: Number(row.amount ?? 0),
             date: formatDate(category === "Paid" ? row.paid_at : row.due_date),
             avatar: tenant?.avatar_url ?? null,
+            avatarBgColor: tenant?.avatar_bg_color ?? null,
             status: category,
         });
     });

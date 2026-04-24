@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PageTransitionProvider } from "@/components/transitions/PageTransitionProvider";
 import GlobalClickSpark from "@/components/ui/ClickSparkWrapper";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,7 +50,10 @@ export default function RootLayout({
           storageKey="ireside-theme"
         >
           <PageTransitionProvider>
-            <GlobalClickSpark>{children}</GlobalClickSpark>
+            <GlobalClickSpark>
+              {children}
+              <Toaster position="top-right" richColors closeButton theme="dark" />
+            </GlobalClickSpark>
           </PageTransitionProvider>
         </ThemeProvider>
       </body>

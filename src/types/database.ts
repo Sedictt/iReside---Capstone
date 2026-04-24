@@ -44,6 +44,7 @@ export interface Database {
                     full_name: string
                     role: UserRole
                     avatar_url: string | null
+                    avatar_bg_color: string | null
                     phone: string | null
                     created_at: string
                     updated_at: string
@@ -54,6 +55,7 @@ export interface Database {
                     full_name: string
                     role: UserRole
                     avatar_url?: string | null
+                    avatar_bg_color?: string | null
                     phone?: string | null
                     created_at?: string
                     updated_at?: string
@@ -64,6 +66,7 @@ export interface Database {
                     full_name?: string
                     role?: UserRole
                     avatar_url?: string | null
+                    avatar_bg_color?: string | null
                     phone?: string | null
                     updated_at?: string
                 }

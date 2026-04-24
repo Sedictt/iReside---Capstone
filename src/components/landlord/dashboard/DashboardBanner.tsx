@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type BannerNotification = {
     id: string;
@@ -136,7 +137,7 @@ export function DashboardBanner({
     return (
         <div
             className={cn(
-                "group relative min-h-[480px] w-full shrink-0 overflow-visible rounded-[2.5rem] border border-white/10 bg-card/40 shadow-2xl shadow-black/30 transition-all duration-500",
+                "group relative min-h-[480px] w-full shrink-0 overflow-visible rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-2xl shadow-black/30 transition-all duration-500",
                 className
             )}>
             {/* Background Layer */}
@@ -167,7 +168,7 @@ export function DashboardBanner({
                     <input
                         type="text"
                         placeholder="Search properties, tenants..."
-                        className="w-64 rounded-2xl border border-white/10 bg-card/60 py-2.5 pl-11 pr-4 text-sm text-foreground backdrop-blur-xl transition-all placeholder:text-muted-foreground/60 hover:bg-card focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        className="w-64 rounded-2xl border border-white/10 bg-surface-2 py-2.5 pl-11 pr-4 text-sm text-foreground backdrop-blur-xl transition-all placeholder:text-muted-foreground/60 hover:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                 </div>
 
@@ -175,7 +176,7 @@ export function DashboardBanner({
                 <div className="relative">
                     <button
                         onClick={() => setIsNotificationsOpen((current) => !current)}
-                        className="group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card active:scale-95"
+                        className="group relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-surface-2 backdrop-blur-xl transition-all hover:bg-surface-3 active:scale-95"
                     >
                         <Bell className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground" />
                         {unreadCount > 0 && (
@@ -186,7 +187,7 @@ export function DashboardBanner({
                     </button>
 
                     {isNotificationsOpen && (
-                        <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] border border-white/10 bg-card shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="absolute right-0 z-50 mt-4 w-[340px] overflow-hidden rounded-[2rem] border border-white/10 bg-surface-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
                                 <p className="text-sm font-black uppercase tracking-widest text-foreground">Notifications</p>
                                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
@@ -196,10 +197,10 @@ export function DashboardBanner({
                                 {notificationsLoading ? (
                                     <div className="px-6 py-4 space-y-4">
                                         {[1, 2, 3].map((i) => (
-                                            <div key={i} className="space-y-2 animate-pulse">
-                                                <div className="h-4 w-3/4 rounded bg-muted/40" />
-                                                <div className="h-3 w-full rounded bg-muted/40" />
-                                                <div className="h-2 w-16 rounded bg-muted/40 mt-2" />
+                                            <div key={i} className="space-y-2">
+                                                <Skeleton className="h-4 w-3/4 rounded-full" />
+                                                <Skeleton className="h-3 w-full rounded-full opacity-60" />
+                                                <Skeleton className="h-2 w-16 rounded-full opacity-40 mt-2" />
                                             </div>
                                         ))}
                                     </div>
