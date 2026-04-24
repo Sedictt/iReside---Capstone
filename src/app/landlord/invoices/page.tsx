@@ -140,6 +140,21 @@ export default function InvoicesPage() {
     }
   }, [enabledStudioSteps, studioStep]);
 
+  const getStatusConfig = (status: string) => {
+    const configs: Record<string, { label: string; classes: string }> = {
+      pending: { label: "Awaiting Payment", classes: "border-slate-500/20 bg-slate-500/10 text-slate-500 dark:text-slate-400" },
+      under_review: { label: "Verify Payment", classes: "border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+      intent_submitted: { label: "Payment Reported", classes: "border-indigo-500/30 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
+      awaiting_in_person: { label: "Cash Collection", classes: "border-cyan-500/30 bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
+      paid: { label: "Settled", classes: "border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+      receipted: { label: "Finalized", classes: "border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+      confirmed: { label: "Confirmed", classes: "border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+      overdue: { label: "Late Payment", classes: "border-rose-500/30 bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+      rejected: { label: "Issue Found", classes: "border-rose-500/30 bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+    };
+    return configs[status] || { label: status, classes: "border-border bg-muted text-muted-foreground" };
+  };
+
   useEffect(() => {
     if (studioStep === "water" || studioStep === "electricity") {
       setReadingForm((current) => ({ ...current, utilityType: studioStep }));
@@ -289,21 +304,52 @@ export default function InvoicesPage() {
           {loading && <div className="flex flex-col items-center justify-center rounded-[2rem] border border-border/50 bg-background/50 py-16 text-muted-foreground"><Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" /><p className="text-sm font-bold uppercase tracking-widest text-foreground">Loading invoices...</p></div>}
           {!loading && processedInvoices.map((invoice) => (
             <button key={invoice.id} onClick={() => setSelectedInvoiceId(invoice.id)} className="group w-full rounded-[2rem] border border-border/50 bg-background/80 p-6 shadow-sm backdrop-blur-md transition-all hover:scale-[1.01] hover:border-primary/30 hover:bg-card hover:shadow-md md:p-8">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-base font-black text-foreground">{invoice.invoiceNumber}</p>
-                    <span className={cn("rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm", invoice.status === "paid" || invoice.status === "receipted" ? "border-emerald-500/20 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : invoice.status === "overdue" || invoice.status === "rejected" ? "border-rose-500/20 bg-rose-500/15 text-rose-600 dark:text-rose-400" : invoice.status === "processing" || invoice.status === "under_review" || invoice.status === "intent_submitted" ? "border-amber-500/20 bg-amber-500/15 text-amber-600 dark:text-amber-400" : invoice.status === "awaiting_in_person" ? "border-cyan-500/20 bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" : "border-border bg-muted text-muted-foreground")}>{invoice.workflowStatus ?? invoice.status}</span>
-                    {invoice.proofStatus === "submitted" && <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 shadow-sm dark:text-blue-400"><span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />proof in review</span>}
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-lg font-black tracking-tight text-foreground">{invoice.invoiceNumber}</p>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const config = getStatusConfig(invoice.workflowStatus ?? invoice.status);
+                          return (
+                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm", config.classes)}>
+                              <div className="mr-1.5 h-1 w-1 rounded-full bg-current animate-pulse" />
+                              {config.label}
+                            </span>
+                          );
+                        })()}
+                        {invoice.proofStatus === "submitted" && (
+                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-500 shadow-sm">
+                            <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                            Proof Attached
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold text-muted-foreground">
+                      <span className="flex items-center gap-2 hover:text-foreground transition-colors">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                        {invoice.tenant}
+                      </span>
+                      <div className="h-4 w-[1px] bg-border/40 hidden sm:block" />
+                      <span className="flex items-center gap-2">
+                        <CalendarDays className="h-3.5 w-3.5 opacity-40" />
+                        {invoice.property}
+                      </span>
+                      <div className="h-4 w-[1px] bg-border/40 hidden sm:block" />
+                      <span className="rounded-md bg-surface-2 px-2 py-0.5 text-[11px] border border-white/5">
+                        Unit {invoice.unit}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-muted-foreground">{invoice.tenant} <span className="mx-1 text-border">-</span> {invoice.property} <span className="mx-1 text-border">-</span> {invoice.unit}</p>
+                  
+                  <div className="flex flex-wrap items-center gap-8 lg:gap-12 xl:shrink-0">
+                    <LedgerMetric label="Total Payable" value={formatPhpCurrency(invoice.amount)} />
+                    <LedgerMetric label="Remaining" value={formatPhpCurrency(invoice.balanceRemaining)} highlight={invoice.balanceRemaining > 0 && invoice.status !== "paid"} />
+                    <LedgerMetric label="Due Date" value={invoice.dueDate} />
+                  </div>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-start gap-6 md:gap-8 lg:mt-0 lg:justify-end xl:shrink-0">
-                  <LedgerMetric label="Total" value={formatPhpCurrency(invoice.amount)} />
-                  <LedgerMetric label="Balance" value={formatPhpCurrency(invoice.balanceRemaining)} highlight={invoice.balanceRemaining > 0 && invoice.status !== "paid"} />
-                  <LedgerMetric label="Due" value={invoice.dueDate} />
-                </div>
-              </div>
             </button>
           ))}
           {!loading && processedInvoices.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">No matching invoices found.</div>}
@@ -495,9 +541,9 @@ function HeroStat({ label, value, highlight }: { label: string; value: string; h
 
 function LedgerMetric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex flex-col">
-      <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-1.5 whitespace-nowrap text-sm font-black lg:text-base", highlight ? "text-primary" : "text-foreground")}>{value}</p>
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
+      <p className={cn("whitespace-nowrap text-base font-black lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
     </div>
   );
 }
