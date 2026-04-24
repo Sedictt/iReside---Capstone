@@ -30,6 +30,7 @@ type MaintenanceRequestItem = {
     unit: string;
     tenant: string;
     tenantAvatar: string | null;
+    tenantAvatarBgColor: string | null;
     priority: MaintenancePriorityLabel;
     status: MaintenanceStatusLabel;
     reportedAt: string;
@@ -92,6 +93,8 @@ const extractSelfRepairDetails = (description: string, category: string | null |
 
 const resolveStatus = (status: MaintenanceStatus | null | undefined): MaintenanceStatusLabel => {
     switch (status) {
+        case "assigned":
+            return "Assigned";
         case "in_progress":
             return "In Progress";
         case "resolved":
@@ -177,7 +180,10 @@ const formatRelativeDate = (value: string) => {
     });
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
+
     const supabase = await createClient();
     const maintenanceRequests = supabase.from("maintenance_requests") as any;
     const {
@@ -189,12 +195,32 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: requestRows, error: requestsError } = await maintenanceRequests
+    let query = maintenanceRequests
         .select(
             "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, resolved_at, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence, ai_triage_hash, ai_triage_version, ai_triaged_at"
         )
-        .eq("landlord_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("landlord_id", user.id);
+
+    if (propertyId && propertyId !== "all") {
+        // Filter by propertyId by getting unit IDs for that property
+        const { data: propertyUnits } = await supabase
+            .from("units")
+            .select("id")
+            .eq("property_id", propertyId);
+        
+        const unitIds = (propertyUnits ?? []).map(u => u.id);
+        if (unitIds.length > 0) {
+            query = query.in("unit_id", unitIds);
+        } else {
+            // No units for this property, return empty
+            return NextResponse.json({
+                requests: [],
+                metrics: { actionRequired: 0, inProgress: 0, scheduled: 0, resolvedThisMonth: 0 }
+            });
+        }
+    }
+
+    const { data: requestRows, error: requestsError } = await query.order("created_at", { ascending: false });
 
     if (requestsError) {
         return NextResponse.json({ error: "Failed to load maintenance requests." }, { status: 500 });
@@ -365,7 +391,7 @@ export async function GET() {
 
     const { data: tenantRows, error: tenantsError } =
         tenantIds.length > 0
-            ? await supabase.from("profiles").select("id, full_name, avatar_url").in("id", tenantIds)
+            ? await supabase.from("profiles").select("id, full_name, avatar_url, avatar_bg_color").in("id", tenantIds)
             : { data: [], error: null };
 
     if (tenantsError) {
@@ -451,7 +477,8 @@ export async function GET() {
             property: property?.name ?? "Property",
             unit: unit?.name ?? "Unit",
             tenant: tenant?.full_name ?? "Unknown tenant",
-            tenantAvatar: isNonEmptyString(tenant?.avatar_url) ? tenant.avatar_url : FALLBACK_AVATAR,
+            tenantAvatar: isNonEmptyString(tenant?.avatar_url) ? tenant.avatar_url : null,
+            tenantAvatarBgColor: isNonEmptyString(tenant?.avatar_bg_color) ? tenant.avatar_bg_color : null,
             priority,
             status,
             reportedAt: formatRelativeDate(row.created_at),

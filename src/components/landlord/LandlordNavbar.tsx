@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
+import { ProfileWidget } from "./ProfileWidget";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/landlord/dashboard" },
@@ -52,16 +53,7 @@ export function LandlordNavbar() {
                         <p className="max-w-[150px] truncate text-sm font-medium text-foreground">{displayName}</p>
                         <p className="max-w-[150px] truncate text-xs text-muted-foreground">{profile?.email || user?.email}</p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            void signOut()
-                        }}
-                        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-red-500/15 text-red-500 ring-2 ring-border transition-colors hover:bg-red-500/25"
-                        title="Log Out"
-                    >
-                        <LogOut className="h-5 w-5" />
-                    </button>
+                    <ProfileWidget />
                 </div>
             </div>
         </nav>

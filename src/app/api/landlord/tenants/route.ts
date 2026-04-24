@@ -17,6 +17,7 @@ type TenantItem = {
     email: string;
     avatar: string;
     avatarUrl: string | null;
+    avatarBgColor: string | null;
     paymentStatus: TenantPaymentStatus;
     onboardingStatus: "pending" | "in_progress" | "completed" | "not_started";
     lastOnboardingReminderAt: string | null;
@@ -87,7 +88,7 @@ const logOptionalQueryFailure = (scope: string, error: unknown) => {
     console.warn(`[api/landlord/tenants] ${scope}`, error);
 };
 
-export async function GET() {
+export async function GET(request: Request) {
     const supabase = await createClient();
     const optionalStateClient = supabase as unknown as OptionalTenantStateClient;
     const {
@@ -99,11 +100,52 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: leaseRows, error: leasesError } = await supabase
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
+
+    let leaseQuery = supabase
         .from("leases")
         .select("id, tenant_id, unit_id, status, end_date, monthly_rent")
         .eq("landlord_id", user.id)
         .in("status", ["active", "expired", "terminated"]);
+
+    if (propertyId && propertyId !== "all") {
+        const { data: propertyRow, error: propertyError } = await supabase
+            .from("properties")
+            .select("id")
+            .eq("id", propertyId)
+            .eq("landlord_id", user.id)
+            .maybeSingle();
+
+        if (propertyError) {
+            return NextResponse.json({ error: "Failed to load tenants." }, { status: 500 });
+        }
+
+        if (!propertyRow) {
+            return NextResponse.json({ tenants: [] satisfies TenantItem[] });
+        }
+
+        const { data: propertyUnits, error: propertyUnitsError } = await supabase
+            .from("units")
+            .select("id")
+            .eq("property_id", propertyRow.id);
+
+        if (propertyUnitsError) {
+            return NextResponse.json({ error: "Failed to load tenants." }, { status: 500 });
+        }
+
+        const propertyUnitIds = (propertyUnits ?? [])
+            .map((row) => row.id)
+            .filter((value): value is string => Boolean(value));
+
+        if (propertyUnitIds.length === 0) {
+            return NextResponse.json({ tenants: [] satisfies TenantItem[] });
+        }
+
+        leaseQuery = leaseQuery.in("unit_id", propertyUnitIds);
+    }
+
+    const { data: leaseRows, error: leasesError } = await leaseQuery;
 
     if (leasesError) {
         return NextResponse.json({ error: "Failed to load tenants." }, { status: 500 });
@@ -125,7 +167,7 @@ export async function GET() {
         tenantIds.length > 0
             ? await supabase
                   .from("profiles")
-                  .select("id, full_name, email, phone, avatar_url")
+                  .select("id, full_name, email, phone, avatar_url, avatar_bg_color")
                   .in("id", tenantIds)
             : { data: [], error: null };
 
@@ -271,6 +313,7 @@ export async function GET() {
             email: isNonEmptyString(tenant?.email) ? tenant.email : "Not provided",
             avatar: initials || "NA",
             avatarUrl: tenant?.avatar_url ?? null,
+            avatarBgColor: tenant?.avatar_bg_color ?? null,
             paymentStatus,
             onboardingStatus: onboarding?.status ?? "not_started",
             lastOnboardingReminderAt: onboarding?.lastReminderSentAt ?? null,

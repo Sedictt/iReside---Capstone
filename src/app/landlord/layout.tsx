@@ -6,6 +6,7 @@ import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/context/AuthContext";
+import { PropertyProvider } from "@/context/PropertyContext";
 
 export default function LandlordLayout({
     children,
@@ -13,6 +14,7 @@ export default function LandlordLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    
     const isMessages = pathname?.startsWith("/landlord/messages");
     const isUnitMap = pathname?.startsWith("/landlord/unit-map");
     const isSettings = pathname?.startsWith("/landlord/settings");
@@ -21,14 +23,26 @@ export default function LandlordLayout({
 
     return (
         <AuthProvider>
-            <div className="flex h-screen bg-background text-foreground">
-                {showSidebar && <Sidebar />}
-                <main className={cn("flex-1 overflow-y-auto", showSidebar ? "ml-64" : "", showContactsSidebar ? "md:pr-24" : "")}>
-                    {children}
-                </main>
-                {showContactsSidebar && <ContactsSidebar />}
-                <InPersonPaymentModal />
-            </div>
+            <PropertyProvider>
+                <div className="flex h-screen bg-background text-foreground overflow-hidden">
+                    {showSidebar && <Sidebar />}
+                    
+                    <main 
+                        className={cn(
+                            "flex-1 overflow-y-auto h-full", 
+                            showSidebar ? "ml-[280px]" : "",
+                            showContactsSidebar ? "md:pr-24" : ""
+                        )}
+                    >
+                        {children}
+                    </main>
+                    
+                    {showContactsSidebar && <ContactsSidebar />}
+                    <InPersonPaymentModal />
+                </div>
+            </PropertyProvider>
         </AuthProvider>
     );
 }
+
+

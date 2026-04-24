@@ -20,6 +20,7 @@ import {
 } from "@/lib/community/actions"
 import type { CommunityPost, CommunityReactionType } from "@/lib/community/types"
 import { useAuth } from "@/hooks/useAuth"
+import { useOptionalProperty } from "@/context/PropertyContext"
 import {
     Bell,
     Bookmark,
@@ -128,6 +129,8 @@ export default function TenantCommunityHubPage() {
     const { user, profile, loading } = useAuth()
     const userRole = (user?.user_metadata?.role as string | undefined) || profile?.role || 'tenant'
     const isManagementUser = userRole === 'landlord' || userRole === 'admin'
+    const propertyContext = useOptionalProperty()
+    const shouldUseNavbarPropertySelector = isManagementUser && propertyContext !== null
     const communityHubLabel = "Community Hub"
 
     const [showRules, setShowRules] = useState(false)
@@ -160,6 +163,11 @@ export default function TenantCommunityHubPage() {
     const [managementProperties, setManagementProperties] = useState<Array<{ id: string; name: string }>>([])
     const [selectedPropertyId, setSelectedPropertyId] = useState<string>("")
     const [isPropertyDropdownOpen, setIsPropertyDropdownOpen] = useState(false)
+    const contextSelectedPropertyId = propertyContext?.selectedPropertyId ?? "all"
+    const activePropertyId =
+        shouldUseNavbarPropertySelector
+            ? (contextSelectedPropertyId === "all" ? "" : contextSelectedPropertyId)
+            : selectedPropertyId
 
     const [discussionTitle, setDiscussionTitle] = useState("")
     const [discussionBody, setDiscussionBody] = useState("")
@@ -184,7 +192,7 @@ export default function TenantCommunityHubPage() {
 
         try {
             const targetCursor = mode === "append" ? cursor || undefined : undefined
-            const propId = selectedPropertyId || undefined
+            const propId = activePropertyId || undefined
             const response = await getCurrentTenantPosts(12, targetCursor, propId)
 
             setPosts((current) => {
@@ -218,7 +226,7 @@ export default function TenantCommunityHubPage() {
 
         setLoadingModerationPosts(true)
         try {
-            const propId = selectedPropertyId || undefined
+            const propId = activePropertyId || undefined
             const response = await getPendingResidentPostsForModeration(20, propId)
             setModerationPosts(response)
         } catch (loadError) {
@@ -232,10 +240,10 @@ export default function TenantCommunityHubPage() {
         if (loading || !user?.id) return
         void loadPosts("replace")
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, user?.id, selectedPropertyId])
+    }, [loading, user?.id, activePropertyId])
 
     useEffect(() => {
-        if (loading || !user?.id || !isManagementUser) return
+        if (loading || !user?.id || !isManagementUser || shouldUseNavbarPropertySelector) return
         
         async function fetchProps() {
             try {
@@ -249,7 +257,7 @@ export default function TenantCommunityHubPage() {
             }
         }
         void fetchProps()
-    }, [loading, user?.id, isManagementUser])
+    }, [loading, user?.id, isManagementUser, shouldUseNavbarPropertySelector])
 
     useEffect(() => {
         if (loading || !user?.id) return
@@ -263,7 +271,7 @@ export default function TenantCommunityHubPage() {
             void loadPendingPosts()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, user?.id, activeTab, isManagementUser, selectedPropertyId])
+    }, [loading, user?.id, activeTab, isManagementUser, activePropertyId])
 
     const handleDiscussionSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -271,7 +279,7 @@ export default function TenantCommunityHubPage() {
 
         startSubmitDiscussion(async () => {
             try {
-                const propId = selectedPropertyId || undefined
+                const propId = activePropertyId || undefined
                 
                 if (selectedPhotos.length > 0) {
                     setUploadingPhotos(true)
@@ -595,7 +603,7 @@ export default function TenantCommunityHubPage() {
                             <p className="max-w-2xl text-base font-light text-muted-foreground md:text-lg dark:text-white/60">Stay connected with your neighbors, discover events, and join the conversation.</p>
                         </div>
 
-                        {isManagementUser && managementProperties.length > 0 && (
+                        {isManagementUser && managementProperties.length > 0 && !shouldUseNavbarPropertySelector && (
                             <div className="relative z-50 w-full max-w-sm">
                                 <button 
                                     type="button"

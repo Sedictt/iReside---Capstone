@@ -7,10 +7,12 @@ import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
+import { useProperty } from "@/context/PropertyContext";
 
 type StudioStep = "rent" | "water" | "electricity";
 
 export default function InvoicesPage() {
+  const { selectedPropertyId } = useProperty();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [metrics, setMetrics] = useState({ totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
   const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
@@ -42,8 +44,9 @@ export default function InvoicesPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      const invoiceParams = new URLSearchParams({ propertyId: selectedPropertyId });
       const [invoiceRes, workspaceRes] = await Promise.all([
-        fetch("/api/landlord/invoices", { cache: "no-store" }),
+        fetch(`/api/landlord/invoices?${invoiceParams.toString()}`, { cache: "no-store" }),
         fetch("/api/landlord/payment-settings", { cache: "no-store" }),
       ]);
       if (!invoiceRes.ok || !workspaceRes.ok) throw new Error();
@@ -61,11 +64,17 @@ export default function InvoicesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedPropertyId]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  const visibleActiveLeases = useMemo(() => {
+    const leases = workspace?.activeLeases ?? [];
+    if (selectedPropertyId === "all") return leases;
+    return leases.filter((lease) => lease.property?.id === selectedPropertyId);
+  }, [workspace, selectedPropertyId]);
 
   const processedInvoices = useMemo(() => {
     let result = invoices.filter((invoice) =>
@@ -98,8 +107,8 @@ export default function InvoicesPage() {
   }, [invoices, search, filterMethod, filterStatus, sortBy]);
 
   const selectedGeneratorLease = useMemo(
-    () => workspace?.activeLeases.find((lease) => lease.id === generatorForm.leaseId) ?? null,
-    [generatorForm.leaseId, workspace],
+    () => visibleActiveLeases.find((lease) => lease.id === generatorForm.leaseId) ?? null,
+    [generatorForm.leaseId, visibleActiveLeases],
   );
 
   const utilityStepState = useMemo(() => {
@@ -133,6 +142,20 @@ export default function InvoicesPage() {
       setReadingForm((current) => ({ ...current, leaseId: generatorForm.leaseId }));
     }
   }, [generatorForm.leaseId]);
+
+  useEffect(() => {
+    const firstVisibleLeaseId = visibleActiveLeases[0]?.id ?? "";
+    setGeneratorForm((current) =>
+      visibleActiveLeases.some((lease) => lease.id === current.leaseId)
+        ? current
+        : { ...current, leaseId: firstVisibleLeaseId },
+    );
+    setReadingForm((current) =>
+      visibleActiveLeases.some((lease) => lease.id === current.leaseId)
+        ? current
+        : { ...current, leaseId: firstVisibleLeaseId },
+    );
+  }, [visibleActiveLeases]);
 
   useEffect(() => {
     if (!enabledStudioSteps.includes(studioStep)) {
@@ -404,7 +427,7 @@ export default function InvoicesPage() {
                 <div className="space-y-6">
                   <div className="grid gap-5 md:grid-cols-2">
                     <SelectField label="Lease" value={generatorForm.leaseId} onChange={(value) => setGeneratorForm((current) => ({ ...current, leaseId: value }))}>
-                      {(workspace?.activeLeases ?? []).map((lease) => <option key={lease.id} value={lease.id}>{lease.tenant?.full_name ?? "Tenant"} - {lease.property?.name ?? "Property"} - {lease.unit?.name ?? "Unit"}</option>)}
+                      {visibleActiveLeases.map((lease) => <option key={lease.id} value={lease.id}>{lease.tenant?.full_name ?? "Tenant"} - {lease.property?.name ?? "Property"} - {lease.unit?.name ?? "Unit"}</option>)}
                     </SelectField>
                     <InputField label="Billing month" type="month" value={generatorForm.billingMonth} onChange={(value) => setGeneratorForm((current) => ({ ...current, billingMonth: value }))} />
                   </div>

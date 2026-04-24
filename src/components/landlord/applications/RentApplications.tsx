@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,6 @@ import {
     XCircle,
     ChevronDown,
     Eye,
-    MapPin,
     Calendar,
     Banknote,
     Mail,
@@ -42,6 +41,7 @@ import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge"
 import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
 import type { LeaseStatus } from "@/types/database";
 import { SignaturePad } from "./SignaturePad";
+import { useProperty } from "@/context/PropertyContext";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -60,6 +60,7 @@ interface Applicant {
     monthlyIncome: number | null;
     creditScore: number | null;
     avatar?: string | null;
+    avatarBgColor?: string | null;
 }
 
 interface RentApplication {
@@ -300,6 +301,7 @@ function getCreditScoreLabel(score: number | null) {
 
 // ─── Component ────────────────────────────────────────────────────────
 export function RentApplications() {
+    const { selectedPropertyId } = useProperty();
     const [mounted, setMounted] = useState(false);
     const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState("");
@@ -430,7 +432,8 @@ export function RentApplications() {
             setError(null);
 
             try {
-                const response = await fetch("/api/landlord/applications", {
+                const params = new URLSearchParams({ propertyId: selectedPropertyId });
+                const response = await fetch(`/api/landlord/applications?${params.toString()}`, {
                     method: "GET",
                     signal: controller.signal,
                 });
@@ -476,7 +479,7 @@ export function RentApplications() {
         return () => {
             controller.abort();
         };
-    }, [reloadKey]);
+    }, [reloadKey, selectedPropertyId]);
 
     const toggleRequirement = async (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
         const updatedChecklist = {
@@ -950,10 +953,33 @@ export function RentApplications() {
         }
     };
 
+    const scopedApplications = useMemo(() => {
+        if (selectedPropertyId === "all") return applications;
+        return applications.filter((app) => app.propertyId === selectedPropertyId);
+    }, [applications, selectedPropertyId]);
+
+    const scopedAvailableUnits = useMemo(() => {
+        if (selectedPropertyId === "all") return availableUnits;
+        return availableUnits.filter((unit) => unit.property_id === selectedPropertyId);
+    }, [availableUnits, selectedPropertyId]);
+
+    const scopedTenantInvites = useMemo(() => {
+        if (selectedPropertyId === "all") return tenantInvites;
+        return tenantInvites.filter((invite) => invite.propertyId === selectedPropertyId);
+    }, [tenantInvites, selectedPropertyId]);
+
+    useEffect(() => {
+        if (!selectedApp) return;
+        if (selectedPropertyId === "all") return;
+        if (selectedApp.propertyId !== selectedPropertyId) {
+            setSelectedApp(null);
+        }
+    }, [selectedApp, selectedPropertyId]);
+
     if (!mounted) return null;
 
     // Derived data
-    const filteredApplications = applications.filter((app) => {
+    const filteredApplications = scopedApplications.filter((app) => {
         const matchesSearch =
             app.applicant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             app.propertyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -963,13 +989,13 @@ export function RentApplications() {
     });
 
     const stats = {
-        total: applications.length,
-        pending: applications.filter((a) => a.status === "pending").length,
-        reviewing: applications.filter((a) => a.status === "reviewing").length,
-        payment_pending: applications.filter((a) => a.status === "payment_pending").length,
-        approved: applications.filter((a) => a.status === "approved").length,
-        rejected: applications.filter((a) => a.status === "rejected").length,
-        withdrawn: applications.filter((a) => a.status === "withdrawn").length,
+        total: scopedApplications.length,
+        pending: scopedApplications.filter((a) => a.status === "pending").length,
+        reviewing: scopedApplications.filter((a) => a.status === "reviewing").length,
+        payment_pending: scopedApplications.filter((a) => a.status === "payment_pending").length,
+        approved: scopedApplications.filter((a) => a.status === "approved").length,
+        rejected: scopedApplications.filter((a) => a.status === "rejected").length,
+        withdrawn: scopedApplications.filter((a) => a.status === "withdrawn").length,
     };
 
     const filterTabs: { label: string; value: ApplicationStatus | "all"; count: number }[] = [
@@ -1247,7 +1273,10 @@ export function RentApplications() {
                                                     {/* Applicant Info */}
                                                     <div className="flex items-center gap-4 flex-1 min-w-0">
                                                         {/* Avatar */}
-                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-card ring-2 ring-primary/10 shadow-sm transition-colors group-hover:ring-primary/30">
+                                                        <div 
+                                                            className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border ring-2 ring-primary/10 shadow-sm transition-colors group-hover:ring-primary/30"
+                                                            style={{ backgroundColor: app.applicant.avatarBgColor || '#171717' }}
+                                                        >
                                                             {app.applicant.avatar ? (
                                                                 <img
                                                                     src={app.applicant.avatar}
@@ -1255,8 +1284,8 @@ export function RentApplications() {
                                                                     className="h-full w-full object-cover"
                                                                 />
                                                             ) : (
-                                                                <span className="text-sm font-black text-primary">
-                                                                    {app.applicant.name.split(" ").map((n) => n[0]).join("")}
+                                                                <span className="text-sm font-black text-white">
+                                                                    {(app.applicant.name ?? "T").split(" ").filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join("") || "T"}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -1484,10 +1513,21 @@ export function RentApplications() {
                                     <h4 className="pl-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Applicant Profile</h4>
                                     <div className="flex flex-col gap-6 rounded-3xl border border-border bg-background/70 p-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-card ring-2 ring-primary/10 shadow-sm">
-                                                <span className="text-2xl font-black text-primary">
-                                                    {selectedApp.applicant.name.split(" ").map((n) => n[0]).join("")}
-                                                </span>
+                                            <div 
+                                                className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border ring-2 ring-primary/10 shadow-sm"
+                                                style={{ backgroundColor: selectedApp.applicant.avatarBgColor || '#171717' }}
+                                            >
+                                                {selectedApp.applicant.avatar ? (
+                                                    <img
+                                                        src={selectedApp.applicant.avatar}
+                                                        alt={selectedApp.applicant.name}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <span className="text-2xl font-black text-white">
+                                                        {(selectedApp.applicant.name ?? "T").split(" ").filter(Boolean).slice(0, 2).map((n) => n[0]?.toUpperCase()).join("") || "T"}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 {isEditing && editDraft ? (
@@ -2159,7 +2199,7 @@ export function RentApplications() {
             <WalkInApplicationModal
                 isOpen={showTenantApplicationModal}
                 onClose={() => setShowTenantApplicationModal(false)}
-                units={availableUnits}
+                units={scopedAvailableUnits}
                 onSuccess={() => setReloadKey((k) => k + 1)}
             />
 
@@ -2465,8 +2505,8 @@ export function RentApplications() {
                                 </div>
                                 <div className="p-4 md:p-8">
                                     <TenantInviteManager
-                                        availableUnits={availableUnits}
-                                        invites={tenantInvites}
+                                        availableUnits={scopedAvailableUnits}
+                                        invites={scopedTenantInvites}
                                         onRefresh={() => {
                                             void loadInvites();
                                         }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import {
     CreditCard,
@@ -19,6 +19,7 @@ import { WalkInApplicationModal } from "@/components/landlord/applications/WalkI
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useProperty } from "@/context/PropertyContext";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -73,6 +74,7 @@ const PAYMENT_CATEGORIES: Array<{ key: PaymentCategory; label: string; hint: str
 ];
 
 export default function LandlordDashboard() {
+    const { selectedPropertyId } = useProperty();
     const [mounted, setMounted] = useState(false);
     const [openPaymentModal, setOpenPaymentModal] = useState<"Overdue" | "Near Due" | "Paid" | null>(null);
     const [paymentsByCategory, setPaymentsByCategory] = useState<Record<PaymentCategory, PaymentListItem[]>>({
@@ -112,18 +114,24 @@ export default function LandlordDashboard() {
         qrUrl: string;
     }>>([]);
 
+    const filteredUnits = useMemo(() => {
+        if (selectedPropertyId === "all") return availableUnits;
+        return availableUnits.filter(u => u.property_id === selectedPropertyId);
+    }, [availableUnits, selectedPropertyId]);
+
+    const filteredInvites = useMemo(() => {
+        if (selectedPropertyId === "all") return tenantInvites;
+        return tenantInvites.filter(i => i.propertyId === selectedPropertyId);
+    }, [tenantInvites, selectedPropertyId]);
+
     const overdueCount = paymentsByCategory.Overdue.length;
     const nearDueCount = paymentsByCategory["Near Due"].length;
-    const openUnitsCount = availableUnits.filter((unit) => {
+    const openUnitsCount = filteredUnits.filter((unit) => {
         const normalizedStatus = (unit.status ?? "").toLowerCase();
-
-        if (!normalizedStatus) {
-            return true;
-        }
-
+        if (!normalizedStatus) return true;
         return OPEN_UNIT_STATUSES.some((status) => normalizedStatus.includes(status));
     }).length;
-    const activeInviteCount = tenantInvites.filter((invite) => {
+    const activeInviteCount = filteredInvites.filter((invite) => {
         const normalizedStatus = invite.status.toLowerCase();
         return !INACTIVE_INVITE_STATUSES.includes(normalizedStatus);
     }).length;
@@ -140,7 +148,7 @@ export default function LandlordDashboard() {
             setPaymentsError(null);
 
             try {
-                const response = await fetch("/api/landlord/payments/overview", {
+                const response = await fetch(`/api/landlord/payments/overview?propertyId=${selectedPropertyId}`, {
                     method: "GET",
                     signal: controller.signal,
                 });
@@ -174,7 +182,7 @@ export default function LandlordDashboard() {
         return () => {
             controller.abort();
         };
-    }, []);
+    }, [selectedPropertyId]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -421,7 +429,7 @@ export default function LandlordDashboard() {
             <WalkInApplicationModal 
                 isOpen={isWalkInModalOpen}
                 onClose={() => setIsWalkInModalOpen(false)}
-                units={availableUnits}
+                units={filteredUnits}
                 onSuccess={() => {}}
             />
 
@@ -455,8 +463,8 @@ export default function LandlordDashboard() {
 
                         <div className="p-8 max-h-[calc(90vh-120px)] overflow-y-auto custom-scrollbar-premium">
                             <TenantInviteManager
-                                availableUnits={availableUnits}
-                                invites={tenantInvites}
+                                availableUnits={filteredUnits}
+                                invites={filteredInvites}
                                 onRefresh={async () => {
                                     try {
                                         const response = await fetch("/api/landlord/invites");

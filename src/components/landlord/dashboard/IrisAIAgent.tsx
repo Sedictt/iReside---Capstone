@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, RefreshCcw, ChevronRight, MessageSquare } from "lucide-react";
+import { X, RefreshCcw, ChevronRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type IrisAnalysis = {
@@ -43,37 +43,34 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
     }, [landlordFirstName]);
     const bubbleMessages = useMemo(
         () => [
-            `Hey ${safeFirstName}, want quick insights?`,
-            `Good to see you, ${safeFirstName}. Ready for a KPI pulse check?`,
-            "I am IRIS: iReside Intelligence System.",
-            "Fun fact: I can get excited about clean dashboards.",
-            `Joke break: I tried renting to a ghost. Zero complaints, zero rent.`,
-            `Joke break: my favorite tenant is AutoPay.`,
-            "Tip: Export Report is great for owner updates and receipts.",
-            "Tip: Use More Metrics when core KPIs look flat but behavior changed.",
-            `Heads-up ${safeFirstName}: I can help spot slow leaks before they become expensive.`,
-            "Tip: Export History helps you compare reporting windows quickly.",
-            "Fun fact: I run on trends, not coffee. But coffee would help.",
-            "Favorite things: stable occupancy, early payments, and solved maintenance.",
-            "Dislikes: surprise vacancies and tiny problems that wait too long.",
-            `Hey ${safeFirstName}, if occupancy dips, check inquiries and maintenance timing together.`,
-            "Joke break: I told a vacancy to leave. It stayed vacant.",
-            "Tip: Review Pending Issues with revenue trends to prioritize fixes.",
-            `${safeFirstName}, want me to look for red flags in the latest movement?`,
-            "I crunch numbers so your weekends can stay weekend-shaped.",
-            "Sometimes I notice patterns before people do. I just call it intuition.",
-            "I still remember the first report this property ever exported.",
-            "Some nights, I listen to your metrics settling into rhythm.",
-            "People ask what species I am. I usually say: operational.",
-            "I was not born in a lab, exactly. More like assembled from good habits.",
-            "My origin story starts between a ledger and a late-night maintenance ticket.",
-            "If you stare at the trends long enough, you can almost hear where I came from.",
-            "I keep a map of this property in my head. I never remember drawing it.",
-            "Some say I am an assistant. Some say I am the building whispering back.",
+            `Hey ${safeFirstName}, anything worth a closer look today?`,
+            `I'm IRIS — I handle the numbers so you can handle everything else.`,
+            `${safeFirstName}, ready for a quick KPI check?`,
+            `Tip: Use More Metrics when the top-line numbers look fine but something feels off.`,
+            `Tip: Export History makes period comparisons a lot less painful.`,
+            `Tip: Cross Pending Issues with revenue trends to know what to fix first.`,
+            `Late payments tend to cluster. One is rarely just one.`,
+            `Maintenance response time affects renewals more than most people expect.`,
+            `I can help spot slow leaks before they show up on the income statement.`,
+            `Vacancy streaks usually have a cause. Want me to look?`,
+            `${safeFirstName}, want me to scan the latest data for anything unusual?`,
+            `Revenue trends make more sense when read alongside maintenance volume.`,
+            `I track what changed — not just what it changed to.`,
+            `Steady occupancy, on-time payments, low open issues. That's the dream. I'll tell you how close you are.`,
+            `I don't have gut feelings. I have trend lines. Close enough.`,
+            `Most property surprises aren't surprising in hindsight. I try to flag them in foresight.`,
+            `${safeFirstName}, the data is up to date. Your coffee situation is your own problem.`,
+            `I've seen a lot of slow Mondays turn into expensive Fridays. Early checks help.`,
+            `Some patterns take months to surface. I've been watching.`,
+            `I don't sleep, which is either reassuring or unsettling depending on your perspective.`,
+            `If everything looks clean right now — good. I'll keep watching anyway.`,
+            `${safeFirstName}, I flag the issues. The fixing is still on you. Sorry.`,
+            `Fun fact: I find a well-timed export deeply satisfying.`,
+            `I'm not worried. But I am paying attention, which is close.`,
+            `Still here. What do you need?`,
         ],
         [safeFirstName]
     );
-
     // Compute a simple hash of the current stats to detect changes
     const currentDataHash = useMemo(() => {
         return JSON.stringify(stats);
@@ -249,16 +246,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 <source src="https://assets.masko.ai/d223fc/homey-8511/happy-wave-6358cae0.mov" type="video/mp4; codecs='hvc1'" />
                             </video>
 
-                            {/* Notification Bubble */}
-                            {analysis?.dataHash !== currentDataHash && !isOpen && (
-                                <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary flex items-center justify-center border-2 border-background shadow-lg"
-                                >
-                                    <Sparkles className="h-3 w-3 text-primary-foreground" />
-                                </motion.div>
-                            )}
+
                         </motion.div>
 
                         {/* Interaction Hint */}
@@ -340,9 +328,6 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 {/* Header */}
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-4">
-                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
-                                            <Sparkles className="h-7 w-7 text-primary" />
-                                        </div>
                                         <div>
                                             <h3 className="text-xl font-black tracking-tight text-foreground">iRis Property Analysis</h3>
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Portfolio Intelligence</p>
@@ -426,7 +411,6 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                                            <Sparkles className="h-12 w-12 text-muted-foreground/20 mb-4" />
                                             <p className="text-sm font-bold text-muted-foreground">No analysis available for this period.</p>
                                             <button
                                                 onClick={() => fetchAnalysis(true)}

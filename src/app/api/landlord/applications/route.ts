@@ -15,6 +15,7 @@ type ApplicationResponse = {
         monthlyIncome: number | null;
         creditScore: number | null;
         avatar: string | null;
+        avatarBgColor: string | null;
     };
     propertyName: string;
     propertyId?: string | null;
@@ -122,6 +123,47 @@ type ActorProfile = {
     email: string | null;
 };
 
+type ApplicationRow = {
+    id: string;
+    status: ApplicationStatus;
+    message: string | null;
+    monthly_income: number | null;
+    employment_status: string | null;
+    move_in_date: string | null;
+    documents: unknown;
+    created_at: string;
+    applicant_id: string | null;
+    unit_id: string | null;
+    lease_id: string | null;
+    payment_pending_started_at: string | null;
+    payment_pending_expires_at: string | null;
+    emergency_contact_name: string | null;
+    emergency_contact_phone: string | null;
+    reference_name: string | null;
+    reference_phone: string | null;
+    compliance_checklist: Record<string, boolean> | null;
+    requirements_checklist: Record<string, boolean> | null;
+    applicant_name: string | null;
+    applicant_email: string | null;
+    applicant_phone: string | null;
+    application_source: "invite_link" | "walk_in_application" | string | null;
+};
+
+type PaymentRequestRow = {
+    id: string;
+    application_id: string;
+    requirement_type: "advance_rent" | "security_deposit";
+    amount: number;
+    due_at: string | null;
+    status: "pending" | "processing" | "completed" | "rejected" | "expired";
+    method: "gcash" | "cash" | null;
+    submitted_at: string | null;
+    reviewed_at: string | null;
+    payment_proof_url: string | null;
+    review_note: string | null;
+    bypassed: boolean;
+};
+
 const FALLBACK_PROPERTY_IMAGE =
     "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200&auto=format&fit=crop&q=80";
 
@@ -153,7 +195,7 @@ function extractMissingColumn(error: PostgrestLikeError | null | undefined) {
     return null;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     const supabase = await createClient();
     const adminClient = createAdminClient();
 
@@ -164,6 +206,44 @@ export async function GET() {
 
     if (userError || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const propertyId = searchParams.get("propertyId");
+    let scopedUnitIds: string[] | null = null;
+
+    if (propertyId && propertyId !== "all") {
+        const { data: propertyRow, error: propertyError } = await supabase
+            .from("properties")
+            .select("id")
+            .eq("id", propertyId)
+            .eq("landlord_id", user.id)
+            .maybeSingle();
+
+        if (propertyError) {
+            return NextResponse.json({ error: "Failed to load applications." }, { status: 500 });
+        }
+
+        if (!propertyRow) {
+            return NextResponse.json({ applications: [] satisfies ApplicationResponse[] });
+        }
+
+        const { data: propertyUnitRows, error: propertyUnitError } = await supabase
+            .from("units")
+            .select("id")
+            .eq("property_id", propertyRow.id);
+
+        if (propertyUnitError) {
+            return NextResponse.json({ error: "Failed to load applications." }, { status: 500 });
+        }
+
+        scopedUnitIds = (propertyUnitRows ?? [])
+            .map((row) => row.id)
+            .filter((value): value is string => Boolean(value));
+
+        if (scopedUnitIds.length === 0) {
+            return NextResponse.json({ applications: [] satisfies ApplicationResponse[] });
+        }
     }
 
     const appFields = [
@@ -197,11 +277,16 @@ export async function GET() {
     let applicationsError: PostgrestLikeError | null = null;
 
     for (let attempt = 0; attempt < 4; attempt += 1) {
-        const { data, error } = await supabase
+        let applicationsQuery = supabase
             .from("applications")
             .select(appSelect)
-            .eq("landlord_id", user.id)
-            .order("created_at", { ascending: false });
+            .eq("landlord_id", user.id);
+
+        if (scopedUnitIds) {
+            applicationsQuery = applicationsQuery.in("unit_id", scopedUnitIds);
+        }
+
+        const { data, error } = await applicationsQuery.order("created_at", { ascending: false });
 
         if (!error) {
             applicationRowsRaw = data;
@@ -235,7 +320,7 @@ export async function GET() {
     if (!applicationRowsRaw || applicationRowsRaw.length === 0) {
         return NextResponse.json({ applications: [] satisfies ApplicationResponse[] });
     }
-    const applicationRows = applicationRowsRaw as any[];
+    const applicationRows = applicationRowsRaw as ApplicationRow[];
 
     const paymentPendingRows = applicationRows.filter((row) => row.status === "payment_pending");
     if (paymentPendingRows.length > 0) {
@@ -274,7 +359,7 @@ export async function GET() {
         applicantIds.length > 0
             ? await supabase
                   .from("profiles")
-                  .select("id, full_name, email, phone, avatar_url")
+                  .select("id, full_name, email, phone, avatar_url, avatar_bg_color")
                   .in("id", applicantIds)
             : { data: [], error: null };
 
@@ -383,21 +468,8 @@ export async function GET() {
                   "id, application_id, requirement_type, amount, due_at, status, method, submitted_at, reviewed_at, payment_proof_url, review_note, bypassed"
               )
               .in("application_id", applicationIds)
-        : { data: [] as any[] };
-    const paymentRequestRows = (paymentRequestRowsRaw ?? []) as Array<{
-        id: string;
-        application_id: string;
-        requirement_type: "advance_rent" | "security_deposit";
-        amount: number;
-        due_at: string | null;
-        status: "pending" | "processing" | "completed" | "rejected" | "expired";
-        method: "gcash" | "cash" | null;
-        submitted_at: string | null;
-        reviewed_at: string | null;
-        payment_proof_url: string | null;
-        review_note: string | null;
-        bypassed: boolean;
-    }>;
+        : { data: [] as PaymentRequestRow[] };
+    const paymentRequestRows = (paymentRequestRowsRaw ?? []) as PaymentRequestRow[];
     const paymentRequestsByApplication = new Map<
         string,
         ApplicationResponse["preApprovalPayments"]
@@ -434,7 +506,7 @@ export async function GET() {
         auditByLeaseId.set(row.lease_id, current);
     });
 
-    const applications: ApplicationResponse[] = (applicationRows.map((row) => {
+    const applications: ApplicationResponse[] = applicationRows.map((row) => {
         const applicant = row.applicant_id ? applicantMap.get(row.applicant_id) : undefined;
         const unit = unitMap.get(row.unit_id);
         const property = unit ? propertyMap.get(unit.property_id) : null;
@@ -466,6 +538,7 @@ export async function GET() {
                 monthlyIncome: row.monthly_income ?? null,
                 creditScore: null,
                 avatar: applicant?.avatar_url ?? null,
+                avatarBgColor: applicant?.avatar_bg_color ?? null,
             },
             propertyName: property?.name ?? unit?.name ?? "Property",
             propertyId: property?.id ?? null,
@@ -513,7 +586,7 @@ export async function GET() {
             leaseAuditEvents: lease ? auditByLeaseId.get(lease.id) ?? [] : [],
             preApprovalPayments: paymentRequestsByApplication.get(row.id) ?? [],
         };
-    }) as any[]);
+    });
 
     return NextResponse.json({ applications });
 }
