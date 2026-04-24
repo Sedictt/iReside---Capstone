@@ -17,6 +17,7 @@ interface PaymentListItem {
     amount: number;
     date: string;
     avatar: string | null;
+    avatarBgColor?: string | null;
 }
 
 const FALLBACK_AVATAR = "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
@@ -140,7 +141,12 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     >
                                         <div className="flex items-center gap-5 relative z-10">
                                             <div className="relative">
-                                                <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-14 w-14 rounded-full border-2 border-background object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110" />
+                                                <div 
+                                                    className="h-14 w-14 rounded-full border-2 border-background overflow-hidden grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110"
+                                                    style={{ backgroundColor: payment.avatarBgColor || '#171717' }}
+                                                >
+                                                    <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-full w-full object-cover" />
+                                                </div>
                                                 <div className={cn(
                                                     "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background shadow-lg",
                                                     confirmedPayments.includes(payment.id) || category === "Paid" ? "bg-emerald-500" : getDotColor()

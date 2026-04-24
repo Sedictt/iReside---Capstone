@@ -18,6 +18,7 @@ import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -29,6 +30,7 @@ type PaymentListItem = {
     status: PaymentCategory;
     date: string;
     avatar: string | null;
+    avatarBgColor: string | null;
 };
 
 type SystemAdvisory = {
@@ -580,7 +582,12 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
         >
             <div className="flex items-center gap-4 relative z-10">
                 <div className="relative">
-                    <img src={avatar || fallbackAvatar} alt={tenant} className="h-12 w-12 rounded-full border-2 border-background object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110" />
+                    <div 
+                        className="h-12 w-12 rounded-full border-2 border-background overflow-hidden grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110"
+                        style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
+                    >
+                        <img src={avatar || fallbackAvatar} alt={tenant} className="h-full w-full object-cover" />
+                    </div>
                     <div className={cn(
                         "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-background",
                         isPaid ? "bg-emerald-500" : isNearDue ? "bg-amber-500" : "bg-red-500"

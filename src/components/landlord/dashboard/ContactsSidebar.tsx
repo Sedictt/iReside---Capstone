@@ -22,6 +22,8 @@ interface ChatUser {
     participantUserId: string | null;
     name: string;
     avatar: string;
+    avatarBgColor: string | null;
+    avatarBgColor: string | null;
     lastMessage: string;
     time: string;
     unit: string;
@@ -155,6 +157,7 @@ export function ContactsSidebar() {
             participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            avatarBgColor: other?.avatarBgColor || null,
             lastMessage: conversation.lastMessage?.content ?? "No messages yet",
             time: formatConversationTimestamp(conversation.lastMessage?.createdAt ?? conversation.updatedAt),
             unread: conversation.unreadCount > 0,
@@ -896,11 +899,16 @@ export function ContactsSidebar() {
                                         )}
                                     >
                                         <div className="relative shrink-0">
-                                            <img
-                                                src={msg.avatar}
-                                                alt={msg.name}
-                                                className="h-10 w-10 rounded-full border-2 border-background object-cover"
-                                            />
+                                            <div 
+                                                className="h-10 w-10 rounded-full border-2 border-background overflow-hidden"
+                                                style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
+                                            >
+                                                <img
+                                                    src={msg.avatar}
+                                                    alt={msg.name}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
                                             {msg.unread && (
                                                 <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-card bg-red-500 dark:border-neutral-900" />
                                             )}
@@ -946,6 +954,7 @@ export function ContactsSidebar() {
                                         name={contact.name}
                                         unit={contact.unit}
                                         avatar={contact.avatar}
+                                        avatarBgColor={contact.avatarBgColor}
                                         status={contact.relationshipStatus === "tenant_landlord" ? "Active" : contact.relationshipStatus === "prospective" ? "Prospective" : "Conversation"}
                                         isExpanded={isHovered}
                                     />
@@ -1009,7 +1018,12 @@ export function ContactsSidebar() {
                             >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
-                                        <img src={chat.avatar} alt={chat.name} className="h-8 w-8 rounded-full border border-border object-cover dark:border-white/10" />
+                                        <div 
+                                            className="h-8 w-8 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                            style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
+                                        >
+                                            <img src={chat.avatar} alt={chat.name} className="h-full w-full object-cover" />
+                                        </div>
                                         <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500 dark:border-neutral-900" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -1311,7 +1325,7 @@ type ContactCardProps = {
     isExpanded: boolean;
 };
 
-function ContactCard({ name, unit, avatar, status, isExpanded }: ContactCardProps) {
+function ContactCard({ name, unit, avatar, avatarBgColor, status, isExpanded }: ContactCardProps) {
     const isIssue = status === "Late Payment" || status === "Notice Given";
 
     return (
@@ -1320,11 +1334,16 @@ function ContactCard({ name, unit, avatar, status, isExpanded }: ContactCardProp
             isExpanded ? "p-3" : "p-1 justify-center hover:scale-110"
         )}>
             <div className="relative shrink-0">
-                <img
-                    src={avatar}
-                    alt={name}
-                    className="h-10 w-10 rounded-full border-2 border-background object-cover shadow-sm transition-transform duration-300 group-hover:scale-105"
-                />
+                <div 
+                    className="h-10 w-10 rounded-full border-2 border-background overflow-hidden shadow-sm transition-transform duration-300 group-hover:scale-105"
+                    style={{ backgroundColor: avatarBgColor || '#171717' }}
+                >
+                    <img
+                        src={avatar}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                    />
+                </div>
                 <div className={cn(
                     "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
                     isIssue ? "bg-red-500" : status === "Moving In" ? "bg-amber-500" : "bg-emerald-500"

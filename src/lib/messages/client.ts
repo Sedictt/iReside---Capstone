@@ -11,6 +11,7 @@ export type ConversationSummary = {
         id: string;
         fullName: string;
         avatarUrl: string | null;
+        avatarBgColor: string | null;
         role: "tenant" | "landlord";
     }>;
     lastMessage: {
@@ -30,6 +31,7 @@ export type ConversationMessage = {
         id: string;
         fullName: string;
         avatarUrl: string | null;
+        avatarBgColor: string | null;
         role: "tenant" | "landlord";
     } | null;
     type: "text" | "system" | "image" | "file";
@@ -153,6 +155,7 @@ export type MessageUserSearchResult = {
     fullName: string;
     email: string;
     avatarUrl: string | null;
+    avatarBgColor: string | null;
     role: "tenant" | "landlord";
 };
 

@@ -70,6 +70,7 @@ type ContactItem = {
     unread: number;
     lastContact: string;
     avatar: string;
+    avatarBgColor: string | null;
     relationshipStatus: "tenant_landlord" | "prospective" | "stranger";
     hasPaymentHistory: boolean;
     isArchived: boolean;
@@ -597,6 +598,7 @@ export default function MessagesPage() {
         unread: 0,
         lastContact: "",
         avatar: FALLBACK_AVATAR,
+        avatarBgColor: null,
         relationshipStatus: "stranger",
         hasPaymentHistory: false,
         isArchived: false,
@@ -616,6 +618,7 @@ export default function MessagesPage() {
                 ? new Date(conversation.lastMessage.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
                 : "No messages yet",
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            avatarBgColor: other?.avatarBgColor || null,
             relationshipStatus: conversation.relationshipStatus,
             hasPaymentHistory: conversation.hasPaymentHistory,
             isArchived: conversation.isArchived,
@@ -1846,7 +1849,12 @@ export default function MessagesPage() {
                                     )}
                                 >
                                     <div className="relative shrink-0">
-                                        <img src={contact.avatar} alt={contact.name} className="h-12 w-12 rounded-full border border-border object-cover dark:border-white/10" />
+                                        <div 
+                                            className="h-12 w-12 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                            style={{ backgroundColor: contact.avatarBgColor || '#171717' }}
+                                        >
+                                            <img src={contact.avatar} alt={contact.name} className="h-full w-full object-cover" />
+                                        </div>
                                         {contact.unread > 0 && (
                                             <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-red-500 dark:border-[#0a0a0a]">
                                                 <span className="text-[9px] font-bold text-white">{contact.unread}</span>
@@ -1872,7 +1880,12 @@ export default function MessagesPage() {
                 {/* Chat Header */}
                 <div className="z-10 flex h-20 shrink-0 items-center justify-between border-b border-divider bg-surface-1/80 px-6 backdrop-blur-md dark:backdrop-blur-none">
                     <div className="flex items-center gap-4">
-                        <img src={displayContact.avatar} alt={displayContact.name} className="h-10 w-10 rounded-full border border-border object-cover dark:border-white/10" />
+                        <div 
+                            className="h-10 w-10 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                            style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
+                        >
+                            <img src={displayContact.avatar} alt={displayContact.name} className="h-full w-full object-cover" />
+                        </div>
                         <div>
                             <h3 className="text-base font-bold text-high">{displayContact.name}</h3>
                             <div className="flex items-center gap-2">
@@ -2262,7 +2275,12 @@ export default function MessagesPage() {
                                         <div key={msg.id} className={cn("group/message flex flex-col w-full gap-1.5 mb-2 animate-in fade-in duration-300", isMe ? "items-end slide-in-from-right-2" : "items-start slide-in-from-left-2")}>
                                             <div className="flex items-end gap-3 w-full justify-end max-w-full" style={{ justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                                                 {!isMe && (
-                                                    <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
+                                                    <div 
+                                                        className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                                        style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
+                                                    >
+                                                        <img src={displayContact.avatar} className="h-full w-full object-cover" alt="avatar" />
+                                                    </div>
                                                 )}
                                                 <div className={cn(
                                                     "px-5 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg relative transition-all duration-500",
@@ -2388,7 +2406,12 @@ export default function MessagesPage() {
 
                                 {isOtherUserTyping && (
                                     <div className="flex items-end gap-3 w-full justify-start max-w-full animate-in fade-in slide-in-from-left-2 duration-300">
-                                        <img src={displayContact.avatar} className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10" alt="avatar" />
+                                        <div 
+                                                        className="h-8 w-8 shrink-0 rounded-full border border-border dark:border-white/10 overflow-hidden"
+                                                        style={{ backgroundColor: displayContact.avatarBgColor || '#171717' }}
+                                                    >
+                                                        <img src={displayContact.avatar} className="h-full w-full object-cover" alt="avatar" />
+                                                    </div>
                                         <div className="rounded-3xl rounded-bl-sm border border-border bg-card px-4 py-3 text-foreground shadow-lg dark:border-white/5 dark:bg-neutral-800 dark:text-white">
                                             <div className="flex items-center gap-1.5">
                                                 <span className="h-2 w-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]" />
