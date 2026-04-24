@@ -29,7 +29,7 @@ type PostRowWithRelations = {
     view_count: number | null
     created_at: string
     updated_at: string
-    profiles?: { full_name?: string | null; avatar_url?: string | null } | null
+    profiles?: { full_name?: string | null; avatar_url?: string | null; avatar_bg_color?: string | null } | null
     community_reactions?: Array<{ reaction_type: string; user_id: string }> | null
     community_comments?: Array<{ id: string }> | null
     community_poll_votes?: Array<{ option_index: number; user_id: string }> | null
@@ -68,6 +68,7 @@ function mapPost(row: PostRowWithRelations, userId: string): CommunityPost {
         updated_at: row.updated_at,
         author_name: row.profiles?.full_name || 'Unknown',
         author_avatar: row.profiles?.avatar_url || null,
+        author_avatar_bg_color: row.profiles?.avatar_bg_color || null,
         reactions,
         userReactions: (row.community_reactions || [])
             .filter(reaction => reaction.user_id === userId)
@@ -216,7 +217,7 @@ export async function getPosts(
         .from('community_posts')
         .select(`
             *,
-            profiles!author_id ( full_name, avatar_url ),
+            profiles!author_id ( full_name, avatar_url, avatar_bg_color ),
             community_reactions ( reaction_type, user_id ),
             community_comments ( id ),
             community_poll_votes ( option_index, user_id ),
@@ -284,7 +285,7 @@ export async function getCurrentCommunityPendingPosts(limit = 20): Promise<Commu
         .from('community_posts')
         .select(`
             *,
-            profiles!author_id ( full_name, avatar_url ),
+            profiles!author_id ( full_name, avatar_url, avatar_bg_color ),
             community_reactions ( reaction_type, user_id ),
             community_comments ( id ),
             community_poll_votes ( option_index, user_id ),
@@ -342,7 +343,7 @@ export async function getPendingResidentPostsForModeration(limit = 20, targetPro
         .from('community_posts')
         .select(`
             *,
-            profiles!author_id ( full_name, avatar_url ),
+            profiles!author_id ( full_name, avatar_url, avatar_bg_color ),
             community_reactions ( reaction_type, user_id ),
             community_comments ( id ),
             community_poll_votes ( option_index, user_id ),
@@ -919,7 +920,7 @@ export async function getPostComments(postId: string) {
             content,
             parent_comment_id,
             created_at,
-            profiles!author_id ( full_name, avatar_url )
+            profiles!author_id ( full_name, avatar_url, avatar_bg_color )
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true })
@@ -937,7 +938,7 @@ export async function getPostComments(postId: string) {
             content: string
             parent_comment_id: string | null
             created_at: string
-            profiles?: { full_name?: string | null; avatar_url?: string | null } | null
+            profiles?: { full_name?: string | null; avatar_url?: string | null; avatar_bg_color?: string | null } | null
         }
 
         return {
@@ -946,6 +947,7 @@ export async function getPostComments(postId: string) {
             authorId: comment.author_id,
             authorName: comment.profiles?.full_name || 'Unknown',
             authorAvatar: comment.profiles?.avatar_url || null,
+            authorAvatarBgColor: comment.profiles?.avatar_bg_color || null,
             content: comment.content,
             parentCommentId: comment.parent_comment_id,
             createdAt: comment.created_at

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/context/AuthContext";
 import { TenantProductTourOverlay } from "@/components/tenant/TenantProductTourOverlay";
 import { ThemeProvider } from "@/components/theme-provider";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 export default function TenantLayout({
     children,
@@ -22,13 +23,14 @@ export default function TenantLayout({
 
     return (
         <AuthProvider>
-            <ThemeProvider
-                attribute="class"
-                defaultTheme="light"
-                enableSystem={false}
-                disableTransitionOnChange
-                storageKey="ireside-tenant-theme"
-            >
+            <NotificationProvider>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="light"
+                    enableSystem={false}
+                    disableTransitionOnChange
+                    storageKey="ireside-tenant-theme"
+                >
                 <div className={cn(
                     "tenant-light min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 flex overflow-hidden",
                     (isChatPage || isUnitMapPage) && "h-screen"
@@ -66,8 +68,9 @@ export default function TenantLayout({
                     {!isOnboardingPage && <TenantProductTourOverlay />}
                 </div>
             </ThemeProvider>
-        </AuthProvider>
-    );
+        </NotificationProvider>
+    </AuthProvider>
+);
 }
 
 

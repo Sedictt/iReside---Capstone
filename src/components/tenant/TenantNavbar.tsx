@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useNotifications } from "@/context/NotificationContext";
 
 const NAV_SECTIONS = [
     {
@@ -49,6 +50,7 @@ export function TenantSidebar() {
     const pathname = usePathname();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const { profile, user } = useAuth();
+    const { unreadCount } = useNotifications();
     const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
     const avatarUrl =
         profile?.avatar_url ||
@@ -130,6 +132,11 @@ export function TenantSidebar() {
                         </div>
                         <button type="button" className="relative rounded-full bg-muted p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-label="Notifications">
                             <Bell className="h-4 w-4" />
+                            {unreadCount > 0 && (
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                            )}
                         </button>
                     </div>
 

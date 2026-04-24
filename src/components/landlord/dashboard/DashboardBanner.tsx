@@ -6,6 +6,7 @@ import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles } from "lucide-re
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useNotifications } from "@/context/NotificationContext";
 
 type BannerNotification = {
     id: string;
@@ -75,10 +76,14 @@ export function DashboardBanner({
 }: DashboardBannerProps) {
     const [time, setTime] = useState<Date | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-    const [notifications, setNotifications] = useState<BannerNotification[]>([]);
-    const [notificationsLoading, setNotificationsLoading] = useState(true);
-    const [notificationsError, setNotificationsError] = useState<string | null>(null);
-    const [unreadCount, setUnreadCount] = useState(0);
+    
+    const { 
+        notifications, 
+        unreadCount, 
+        loading: notificationsLoading, 
+        error: notificationsError,
+        markAllAsRead 
+    } = useNotifications();
 
     const displaySubtitle = simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle;
 
@@ -90,49 +95,9 @@ export function DashboardBanner({
         return () => clearInterval(timer);
     }, []);
 
-    useEffect(() => {
-        const controller = new AbortController();
-
-        const loadNotifications = async () => {
-            setNotificationsLoading(true);
-            setNotificationsError(null);
-
-            try {
-                const response = await fetch("/api/landlord/notifications/recent", {
-                    method: "GET",
-                    signal: controller.signal,
-                });
-
-                if (!response.ok) {
-                    throw new Error("Failed to load notifications");
-                }
-
-                const payload = (await response.json()) as {
-                    notifications?: BannerNotification[];
-                    unreadCount?: number;
-                };
-
-                setNotifications(Array.isArray(payload.notifications) ? payload.notifications : []);
-                setUnreadCount(typeof payload.unreadCount === "number" ? payload.unreadCount : 0);
-            } catch (error) {
-                if ((error as Error).name === "AbortError") {
-                    return;
-                }
-
-                setNotifications([]);
-                setUnreadCount(0);
-                setNotificationsError("Unable to load notifications.");
-            } finally {
-                setNotificationsLoading(false);
-            }
-        };
-
-        void loadNotifications();
-
-        return () => {
-            controller.abort();
-        };
-    }, []);
+    const handleClearAll = async () => {
+        await markAllAsRead();
+    };
 
     return (
         <div
@@ -220,7 +185,7 @@ export function DashboardBanner({
                                                 <div>
                                                     <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors">{notification.title}</p>
                                                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{notification.message}</p>
-                                                    <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.createdAt)}</p>
+                                                    <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
                                                 </div>
                                                 {!notification.read && (
                                                     <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
@@ -231,7 +196,10 @@ export function DashboardBanner({
                                 )}
                             </div>
                             <div className="border-t border-white/5 p-3">
-                                <button className="w-full rounded-xl py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground">
+                                <button 
+                                    onClick={handleClearAll}
+                                    className="w-full rounded-xl py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground"
+                                >
                                     Clear all notifications
                                 </button>
                             </div>

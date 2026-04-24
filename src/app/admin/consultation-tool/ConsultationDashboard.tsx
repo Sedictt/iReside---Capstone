@@ -105,20 +105,20 @@ export default function ConsultationDashboard() {
     <div className="min-h-screen bg-[#050505] text-zinc-100 p-6 md:p-12 font-sans">
       <div className="max-w-6xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div className="space-y-2">
+          <div className="space-y-2 w-full md:w-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold tracking-widest uppercase">
               Consultation Manager
             </div>
-            <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-br from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-br from-white via-zinc-200 to-zinc-500 bg-clip-text text-transparent">
               Document Dashboard
             </h1>
-            <p className="text-zinc-500 font-medium max-w-md">
+            <p className="text-zinc-500 font-medium max-w-md text-sm md:text-base">
               Prepare, track, and manage documents for your technical adviser.
             </p>
           </div>
 
-          <label className="group relative">
-            <div className="px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center gap-3 text-sm font-bold shadow-[0_0_30px_-10px_rgba(79,70,229,0.5)] cursor-pointer">
+          <label className="group relative w-full md:w-auto">
+            <div className="w-full md:px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center justify-center md:justify-start gap-3 text-sm font-bold shadow-[0_0_30px_-10px_rgba(79,70,229,0.5)] cursor-pointer">
               {isUploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus className="w-5 h-5" />}
               {isUploading ? 'Uploading...' : 'Prepare New Document'}
             </div>
