@@ -17,12 +17,15 @@ import {
     uploadConversationFile,
     type ConversationSummary,
 } from "@/lib/messages/client";
+import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 
 interface ChatUser {
     id: string;
     participantUserId: string | null;
     name: string;
+    role: BadgeRole | null;
     avatar: string;
+    avatarBgColor: string | null;
     lastMessage: string;
     time: string;
     unit: string;
@@ -156,7 +159,9 @@ export function TenantContactsSidebar() {
             id: conversation.id,
             participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
+            role: other?.role ?? null,
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
+            avatarBgColor: other?.avatarBgColor || null,
             lastMessage: conversation.lastMessage?.content ?? "No messages yet",
             time: formatConversationTimestamp(conversation.lastMessage?.createdAt ?? conversation.updatedAt),
             unread: conversation.unreadCount > 0,
@@ -911,7 +916,7 @@ export function TenantContactsSidebar() {
                                                 </h4>
                                                 <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-black">AI</span>
                                             </div>
-                                            <p className="text-xs text-slate-600 font-medium truncate">
+                                            <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium truncate">
                                                 How can I help you today?
                                             </p>
                                         </div>
@@ -928,11 +933,16 @@ export function TenantContactsSidebar() {
                                         )}
                                     >
                                         <div className="relative shrink-0">
-                                            <img
-                                                src={msg.avatar}
-                                                alt={msg.name}
-                                                className="w-10 h-10 rounded-full object-cover border-2 border-card"
-                                            />
+                                            <div
+                                                className="w-10 h-10 rounded-full overflow-hidden border-2 border-card"
+                                                style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
+                                            >
+                                                <img
+                                                    src={msg.avatar}
+                                                    alt={msg.name}
+                                                    className="w-10 h-10 object-cover"
+                                                />
+                                            </div>
                                             {msg.unread && (
                                                 <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-card" />
                                             )}
@@ -940,12 +950,15 @@ export function TenantContactsSidebar() {
                                         {isHovered && (
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between mb-0.5">
-                                                    <h4 className={cn("text-sm truncate pr-2 transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground" : "font-medium text-slate-700")}>
-                                                        {msg.name}
-                                                    </h4>
+                                                    <div className="flex min-w-0 items-center gap-2 pr-2">
+                                                        <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-slate-700 dark:text-neutral-200")}>
+                                                            {msg.name}
+                                                        </h4>
+                                                        <RoleBadge role={msg.role} />
+                                                    </div>
                                                     <span className="text-[10px] text-muted-foreground shrink-0">{msg.time}</span>
                                                 </div>
-                                                <p className={cn("text-xs truncate", msg.unread ? "text-slate-600 font-medium" : "text-muted-foreground")}>
+                                                <p className={cn("text-xs truncate", msg.unread ? "text-slate-600 dark:text-neutral-300 font-medium" : "text-muted-foreground dark:text-neutral-400")}>
                                                     {msg.lastMessage}
                                                 </p>
                                             </div>
@@ -976,8 +989,10 @@ export function TenantContactsSidebar() {
                                     <ContactCard
                                         key={contact.id}
                                         name={contact.name}
+                                        role={contact.role}
                                         unit={contact.unit}
                                         avatar={contact.avatar}
+                                        avatarBgColor={contact.avatarBgColor}
                                         status={contact.relationshipStatus === "tenant_landlord" ? "Active" : contact.relationshipStatus === "prospective" ? "Prospective" : "Conversation"}
                                         isExpanded={isHovered}
                                     />
@@ -1041,11 +1056,19 @@ export function TenantContactsSidebar() {
                             >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
-                                        <img src={chat.avatar} alt={chat.name} className="w-8 h-8 rounded-full object-cover border border-border" />
+                                        <div
+                                            className="w-8 h-8 rounded-full overflow-hidden border border-border"
+                                            style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
+                                        >
+                                            <img src={chat.avatar} alt={chat.name} className="w-8 h-8 object-cover" />
+                                        </div>
                                         <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <h4 className="text-sm font-bold text-foreground truncate hover:underline">{chat.name}</h4>
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <h4 className="text-sm font-bold text-foreground truncate hover:underline">{chat.name}</h4>
+                                            <RoleBadge role={chat.role} />
+                                        </div>
                                         {chat.isActive && (
                                             <p className="text-[10px] text-emerald-400">Active</p>
                                         )}
@@ -1342,7 +1365,17 @@ export function TenantContactsSidebar() {
     );
 }
 
-function ContactCard({ name, unit, phone, avatar, status, isExpanded }: any) {
+type ContactCardProps = {
+    name: string;
+    role: BadgeRole | null;
+    unit: string;
+    avatar: string;
+    avatarBgColor: string | null;
+    status: string;
+    isExpanded: boolean;
+};
+
+function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpanded }: ContactCardProps) {
     const isIssue = status === "Late Payment" || status === "Notice Given";
 
     return (
@@ -1351,11 +1384,16 @@ function ContactCard({ name, unit, phone, avatar, status, isExpanded }: any) {
             isExpanded ? "p-3" : "p-1 justify-center hover:scale-110"
         )}>
             <div className="relative shrink-0">
-                <img
-                    src={avatar}
-                    alt={name}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
-                />
+                <div
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
+                    style={{ backgroundColor: avatarBgColor || '#171717' }}
+                >
+                    <img
+                        src={avatar}
+                        alt={name}
+                        className="w-10 h-10 object-cover"
+                    />
+                </div>
                 <div className={cn(
                     "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
                     isIssue ? "bg-red-500" : status === "Moving In" ? "bg-amber-500" : "bg-emerald-500"
@@ -1365,7 +1403,10 @@ function ContactCard({ name, unit, phone, avatar, status, isExpanded }: any) {
             {isExpanded && (
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
+                        <div className="flex min-w-0 items-center gap-2">
+                            <h4 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
+                            <RoleBadge role={role} />
+                        </div>
                     </div>
                     <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground font-medium truncate pr-2">{unit}</p>

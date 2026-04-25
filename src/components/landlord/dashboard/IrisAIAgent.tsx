@@ -209,7 +209,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
         <>
             {/* iRis Floating Character */}
             {resolvedIsVisible && (
-                <div className="fixed bottom-[-70] left-[220px] z-[100] pointer-events-none">
+                <div className="fixed bottom-[-70] left-[250px] z-[100] pointer-events-none">
                     <motion.div
                         initial={{ x: -100, y: 100, opacity: 0, rotate: 45 }}
                         animate={{

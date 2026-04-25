@@ -16,11 +16,13 @@ import {
     uploadConversationFile,
     type ConversationSummary,
 } from "@/lib/messages/client";
+import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 
 interface ChatUser {
     id: string;
     participantUserId: string | null;
     name: string;
+    role: BadgeRole | null;
     avatar: string;
     avatarBgColor: string | null;
     lastMessage: string;
@@ -155,6 +157,7 @@ export function ContactsSidebar() {
             id: conversation.id,
             participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
+            role: other?.role ?? null,
             avatar: other?.avatarUrl || FALLBACK_AVATAR,
             avatarBgColor: other?.avatarBgColor || null,
             lastMessage: conversation.lastMessage?.content ?? "No messages yet",
@@ -915,9 +918,12 @@ export function ContactsSidebar() {
                                         {isHovered && (
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between mb-0.5">
-                                                    <h4 className={cn("pr-2 text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-foreground/80 dark:text-neutral-200")}>
-                                                        {msg.name}
-                                                    </h4>
+                                                    <div className="flex min-w-0 items-center gap-2 pr-2">
+                                                        <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-foreground/80 dark:text-neutral-200")}>
+                                                            {msg.name}
+                                                        </h4>
+                                                        <RoleBadge role={msg.role} />
+                                                    </div>
                                                     <span className="shrink-0 text-[10px] text-muted-foreground">{msg.time}</span>
                                                 </div>
                                                 <p className={cn("truncate text-xs", msg.unread ? "font-medium text-foreground/80 dark:text-neutral-300" : "text-muted-foreground")}>
@@ -951,6 +957,7 @@ export function ContactsSidebar() {
                                     <ContactCard
                                         key={contact.id}
                                         name={contact.name}
+                                        role={contact.role}
                                         unit={contact.unit}
                                         avatar={contact.avatar}
                                         avatarBgColor={contact.avatarBgColor}
@@ -1026,7 +1033,10 @@ export function ContactsSidebar() {
                                         <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500 dark:border-neutral-900" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <h4 className="truncate text-sm font-bold text-foreground hover:underline dark:text-white">{chat.name}</h4>
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <h4 className="truncate text-sm font-bold text-foreground hover:underline dark:text-white">{chat.name}</h4>
+                                            <RoleBadge role={chat.role} />
+                                        </div>
                                         {chat.isActive && (
                                             <p className="text-[10px] text-emerald-400">Active</p>
                                         )}
@@ -1318,6 +1328,7 @@ export function ContactsSidebar() {
 
 type ContactCardProps = {
     name: string;
+    role: BadgeRole | null;
     unit: string;
     avatar: string;
     avatarBgColor: string | null;
@@ -1325,7 +1336,7 @@ type ContactCardProps = {
     isExpanded: boolean;
 };
 
-function ContactCard({ name, unit, avatar, avatarBgColor, status, isExpanded }: ContactCardProps) {
+function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpanded }: ContactCardProps) {
     const isIssue = status === "Late Payment" || status === "Notice Given";
 
     return (
@@ -1353,7 +1364,10 @@ function ContactCard({ name, unit, avatar, avatarBgColor, status, isExpanded }: 
             {isExpanded && (
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
+                        <div className="flex min-w-0 items-center gap-2">
+                            <h4 className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
+                            <RoleBadge role={role} />
+                        </div>
                     </div>
                     <div className="flex items-center justify-between">
                         <p className="truncate pr-2 text-xs font-medium text-muted-foreground">{unit}</p>

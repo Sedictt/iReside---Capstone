@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/lib/supabase/client-auth";
 import { ProfileWidget } from "./ProfileWidget";
+import { RoleBadge } from "@/components/profile/RoleBadge";
 
 const NAV_ITEMS = [
     { label: "Dashboard", href: "/landlord/dashboard" },
@@ -50,7 +51,10 @@ export function LandlordNavbar() {
                 <div className="mx-2 h-8 w-px bg-border" />
                 <div className="flex items-center gap-3">
                     <div className="text-right hidden sm:block">
-                        <p className="max-w-[150px] truncate text-sm font-medium text-foreground">{displayName}</p>
+                        <div className="flex items-center justify-end gap-2">
+                            <p className="max-w-[150px] truncate text-sm font-medium text-foreground">{displayName}</p>
+                            <RoleBadge role={profile?.role ?? null} />
+                        </div>
                         <p className="max-w-[150px] truncate text-xs text-muted-foreground">{profile?.email || user?.email}</p>
                     </div>
                     <ProfileWidget />

@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { RoleBadge } from "@/components/profile/RoleBadge";
 
 function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
     const identities = user?.identities;
@@ -40,7 +41,6 @@ export function ProfileWidget() {
     const { user, profile } = useAuth();
 
     const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Landlord";
-    const displayRole = profile?.role ? `${profile.role[0].toUpperCase()}${profile.role.slice(1)}` : "Account";
     const avatarCandidates = [
         profile?.avatar_url,
         typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : null,
@@ -132,10 +132,11 @@ export function ProfileWidget() {
                                     )}
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <p className="truncate text-sm font-bold text-foreground dark:text-white">
-                                        {displayName}
-                                    </p>
-                                    <p className="truncate text-xs text-muted-foreground">{displayRole}</p>
+                                    <div className="flex min-w-0 items-center gap-2">
+                                        <p className="truncate text-sm font-bold text-foreground dark:text-white">{displayName}</p>
+                                        <RoleBadge role={profile?.role ?? null} />
+                                    </div>
+                                    <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
                                 </div>
                             </div>
                         </div>

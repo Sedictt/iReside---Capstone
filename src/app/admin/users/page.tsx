@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search, Users, UserCheck, ShieldAlert, MoreHorizontal, Mail, Calendar, Key } from "lucide-react";
 import type { UserRole } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { RoleBadge } from "@/components/profile/RoleBadge";
 
 interface UserRow {
     id: string;
@@ -148,7 +149,10 @@ export default function AdminUsersPage() {
                                                 </div>
                                             )}
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-bold text-white">{user.full_name}</p>
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <p className="truncate text-sm font-bold text-white">{user.full_name}</p>
+                                                    <RoleBadge role={user.role} />
+                                                </div>
                                                 <p className="truncate text-xs text-white/50">{user.email}</p>
                                             </div>
                                         </div>
@@ -237,7 +241,10 @@ export default function AdminUsersPage() {
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">{user.full_name}</p>
+                                                        <div className="flex min-w-0 items-center gap-2">
+                                                            <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">{user.full_name}</p>
+                                                            <RoleBadge role={user.role} />
+                                                        </div>
                                                         <div className="flex items-center gap-1.5 mt-1 text-[11px] font-medium text-white/40">
                                                             <Key className="h-3 w-3" />
                                                             <span className="truncate max-w-[120px] font-mono">{user.id.split('-')[0]}</span>

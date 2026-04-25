@@ -20,6 +20,7 @@ import { createClient } from '@/lib/supabase/server';
 
 import EditableBio from '@/components/landlord/EditableBio';
 import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
+import { RoleBadge } from '@/components/profile/RoleBadge';
 
 type LandlordProperty = {
     id: string;
@@ -266,6 +267,7 @@ export default async function LandlordProfilePage() {
                                 <div>
                                     <div className="flex items-center flex-wrap gap-3 mb-1">
                                         <h2 className="text-3xl md:text-4xl font-display text-white drop-shadow-lg">{profile.full_name}</h2>
+                                        <RoleBadge role={profile.role} />
                                         
                                         {/* Project Milestone Badges */}
                                         <div className="flex items-center gap-2.5 mt-1 relative z-50">
