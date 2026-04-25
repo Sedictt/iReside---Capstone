@@ -32,11 +32,50 @@ interface AuthContextValue extends AuthState {
     refreshProfile: () => Promise<void>
 }
 
+interface VerifiedUserResult {
+    user: User | null
+    isAuthoritativelyInvalid: boolean
+}
+
 /* ------------------------------------------------------------------ */
 /*  Context                                                            */
 /* ------------------------------------------------------------------ */
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function isAuthoritativeAuthError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false
+
+    const maybeError = error as {
+        status?: number
+        message?: string
+        code?: string
+    }
+
+    if (maybeError.status === 401 || maybeError.status === 403) return true
+
+    const haystack = `${maybeError.message ?? ''} ${maybeError.code ?? ''}`.toLowerCase()
+    if (!haystack) return false
+
+    const authoritativeSignals = [
+        'jwt expired',
+        'invalid jwt',
+        'refresh token',
+        'token has expired or is invalid',
+        'auth session missing',
+        'session not found',
+        'session from session_id claim in jwt does not exist',
+        'user from sub claim in jwt does not exist',
+        'invalid token',
+        'not authenticated',
+    ]
+
+    return authoritativeSignals.some(signal => haystack.includes(signal))
+}
 
 /* ------------------------------------------------------------------ */
 /*  Provider                                                           */
@@ -59,21 +98,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     /**
      * Fetch the *verified* user from Supabase (hits the server, not localStorage).
      * This is what Supabase recommends as the authoritative check.
-     * Silently returns null on AbortError (component unmount/navigation).
      */
-    const fetchVerifiedUser = useCallback(async () => {
+    const fetchVerifiedUser = useCallback(async (): Promise<VerifiedUserResult> => {
         try {
             const { data, error } = await supabaseRef.current.auth.getUser()
-            if (error || !data.user) return null
-            return data.user
+            if (error) {
+                return {
+                    user: null,
+                    isAuthoritativelyInvalid: isAuthoritativeAuthError(error),
+                }
+            }
+
+            if (!data.user) {
+                return {
+                    user: null,
+                    isAuthoritativelyInvalid: false,
+                }
+            }
+
+            return {
+                user: data.user,
+                isAuthoritativelyInvalid: false,
+            }
         } catch (e) {
-            // Silently ignore AbortError (request cancelled due to navigation/unmount)
-            if (e instanceof Error && e.name === 'AbortError') return null
-            // Log other unexpected errors but don't crash
+            // Ignore AbortError (request cancelled due to navigation/unmount)
+            if (e instanceof Error && e.name === 'AbortError') {
+                return {
+                    user: null,
+                    isAuthoritativelyInvalid: false,
+                }
+            }
+
             console.warn('[AuthProvider] getUser failed:', e)
-            return null
+            return {
+                user: null,
+                isAuthoritativelyInvalid: isAuthoritativeAuthError(e),
+            }
         }
     }, [])
+
+    /**
+     * Resolve the current user while being resilient to transient network failures.
+     * If verification fails for a temporary reason, we keep the local session user.
+     */
+    const resolveUserFromSession = useCallback(
+        async (session: Session): Promise<VerifiedUserResult> => {
+            const verified = await fetchVerifiedUser()
+            if (verified.user) return verified
+            if (verified.isAuthoritativelyInvalid) return verified
+
+            if (session.user) {
+                console.warn(
+                    '[AuthProvider] Temporary user verification issue; continuing with session user.'
+                )
+                return {
+                    user: session.user,
+                    isAuthoritativelyInvalid: false,
+                }
+            }
+
+            return {
+                user: null,
+                isAuthoritativelyInvalid: false,
+            }
+        },
+        [fetchVerifiedUser]
+    )
 
     /**
      * Fetch the profile row from the `profiles` table.
@@ -94,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [])
 
     /**
-     * Public method — lets any component trigger a profile re-fetch
+     * Public method - lets any component trigger a profile re-fetch
      * (e.g. after the user edits their name / avatar).
      */
     const refreshProfile = useCallback(async () => {
@@ -116,6 +206,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const supabase = supabaseRef.current
         let cancelled = false // prevent state updates after unmount
 
+        const clearAuthState = () => {
+            setState({
+                user: null,
+                profile: null,
+                session: null,
+                loading: false,
+                profileLoading: false,
+            })
+        }
+
+        const applyAuthedState = async (session: Session) => {
+            const resolved = await resolveUserFromSession(session)
+            if (cancelled) return
+
+            if (!resolved.user || resolved.isAuthoritativelyInvalid) {
+                clearAuthState()
+                return
+            }
+
+            const currentUser = resolved.user
+            const fetchedProfile = await fetchProfile(currentUser.id)
+            if (cancelled) return
+
+            setState(prev => ({
+                user: currentUser,
+                profile:
+                    fetchedProfile ?? (prev.user?.id === currentUser.id ? prev.profile : null),
+                session,
+                loading: false,
+                profileLoading: false,
+            }))
+        }
+
         const boot = async () => {
             // 1. Get the session (fast, from cookie/local-storage)
             const {
@@ -123,100 +246,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } = await supabase.auth.getSession()
 
             if (!session) {
-                // No session → definitely not logged in
-                if (!cancelled) {
-                    setState({
-                        user: null,
-                        profile: null,
-                        session: null,
-                        loading: false,
-                        profileLoading: false,
-                    })
-                }
+                if (!cancelled) clearAuthState()
                 return
             }
 
-            // 2. Verify the user server-side (authoritative)
-            const verifiedUser = await fetchVerifiedUser()
-            if (cancelled) return
-
-            if (!verifiedUser) {
-                // Token was present but invalid/expired & couldn't be refreshed
-                setState({
-                    user: null,
-                    profile: null,
-                    session: null,
-                    loading: false,
-                    profileLoading: false,
-                })
-                return
-            }
-
-            // 3. Fetch the profile — we wait for this before setting loading:false
-            //    so navbars etc. never render without data.
-            const profile = await fetchProfile(verifiedUser.id)
-            if (cancelled) return
-
-            setState({
-                user: verifiedUser,
-                profile,
-                session,
-                loading: false,
-                profileLoading: false,
-            })
+            await applyAuthedState(session)
         }
 
         boot()
 
-        // 4. Listen for auth state changes (login, logout, token refresh)
+        // 2. Listen for auth state changes (login, logout, token refresh)
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (cancelled) return
 
             if (event === 'SIGNED_OUT' || !session) {
-                setState({
-                    user: null,
-                    profile: null,
-                    session: null,
-                    loading: false,
-                    profileLoading: false,
-                })
+                clearAuthState()
                 return
             }
 
-            // For SIGNED_IN, TOKEN_REFRESHED, etc. — re-verify & re-fetch profile
-            const verifiedUser = await fetchVerifiedUser()
-            if (cancelled) return
-
-            if (!verifiedUser) {
-                setState({
-                    user: null,
-                    profile: null,
-                    session: null,
-                    loading: false,
-                    profileLoading: false,
-                })
-                return
-            }
-
-            const profile = await fetchProfile(verifiedUser.id)
-            if (cancelled) return
-
-            setState({
-                user: verifiedUser,
-                profile,
-                session,
-                loading: false,
-                profileLoading: false,
-            })
+            await applyAuthedState(session)
         })
 
         return () => {
             cancelled = true
             subscription.unsubscribe()
         }
-    }, [fetchVerifiedUser, fetchProfile])
+    }, [resolveUserFromSession, fetchProfile])
 
     /* ---------- listen for "profile-updated" custom events ---------- */
 
