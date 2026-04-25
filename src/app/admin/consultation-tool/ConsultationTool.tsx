@@ -120,7 +120,7 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
 
       const pad = new SignaturePad(canvas, {
         backgroundColor: 'rgba(255, 255, 255, 0)',
-        penColor: 'rgb(0, 0, 0)',
+        penColor: 'rgb(37, 99, 235)',
         minWidth: penSize * 0.8,
         maxWidth: penSize * 2
       });
