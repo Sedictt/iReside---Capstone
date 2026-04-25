@@ -24,6 +24,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import type { ApplicationStatus, UserRole } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { RoleBadge } from "@/components/profile/RoleBadge";
 
 type RegistrationStatus = Extract<ApplicationStatus, "pending" | "reviewing" | "approved" | "rejected" | "withdrawn">;
 type IncomingStatus = Extract<RegistrationStatus, "pending" | "reviewing">;
@@ -310,7 +311,10 @@ export default function AdminRegistrationsPage() {
                                                             <User className="h-4 w-4 text-white/50" />
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="truncate text-base font-bold text-white">{row.applicant?.full_name || "Unknown applicant"}</p>
+                                                            <div className="flex min-w-0 items-center gap-2">
+                                                                <p className="truncate text-base font-bold text-white">{row.applicant?.full_name || "Unknown applicant"}</p>
+                                                                <RoleBadge role={row.applicant?.role ?? null} />
+                                                            </div>
                                                             <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-white/40">
                                                                 <Mail className="h-3 w-3 shrink-0" />
                                                                 {row.applicant?.email || "No email"}
@@ -374,7 +378,10 @@ export default function AdminRegistrationsPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
-                                        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
+                                        <div className="mt-1 flex items-center gap-3">
+                                            <h2 className="text-2xl font-extrabold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
+                                            <RoleBadge role={selected.applicant?.role ?? null} className="text-[9px]" />
+                                        </div>
                                         <div className="mt-2 flex items-center gap-3">
                                             <span className={cn(
                                                 "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest",

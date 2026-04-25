@@ -43,6 +43,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
+import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
     createOrGetDirectConversation,
@@ -66,6 +67,7 @@ type ContactItem = {
     id: string;
     participantUserId: string | null;
     name: string;
+    role: BadgeRole | null;
     unit: string;
     unread: number;
     lastContact: string;
@@ -595,6 +597,7 @@ export default function MessagesPage() {
         id: "",
         participantUserId: null,
         name: "No conversation selected",
+        role: null,
         unit: "",
         unread: 0,
         lastContact: "",
@@ -614,6 +617,7 @@ export default function MessagesPage() {
             id: conversation.id,
             participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
+            role: other?.role ?? null,
             unit: other?.role === "tenant" ? "Tenant" : other?.role === "landlord" ? "Landlord" : "Participant",
             unread: conversation.unreadCount,
             lastContact: conversation.lastMessage
@@ -1824,7 +1828,10 @@ export default function MessagesPage() {
                                             )}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <div className="truncate text-sm font-semibold text-foreground dark:text-white">{result.fullName}</div>
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                <div className="truncate text-sm font-semibold text-foreground dark:text-white">{result.fullName}</div>
+                                                <RoleBadge role={result.role} />
+                                            </div>
                                             <div className="truncate text-[11px] text-muted-foreground dark:text-neutral-400">{result.role} • {result.email}</div>
                                         </div>
                                     </button>
@@ -1891,7 +1898,10 @@ export default function MessagesPage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <h4 className="truncate pr-2 text-sm font-bold text-foreground dark:text-white">{contact.name}</h4>
+                                            <div className="flex min-w-0 items-center gap-2 pr-2">
+                                                <h4 className="truncate text-sm font-bold text-foreground dark:text-white">{contact.name}</h4>
+                                                <RoleBadge role={contact.role} />
+                                            </div>
                                             <span className="shrink-0 text-[10px] text-muted-foreground dark:text-neutral-500">{contact.lastContact}</span>
                                         </div>
                                         <p className="truncate text-xs font-medium text-muted-foreground dark:text-neutral-400">{contact.unit}</p>
@@ -1919,7 +1929,10 @@ export default function MessagesPage() {
                             )}
                         </div>
                         <div>
-                            <h3 className="text-base font-bold text-high">{displayContact.name}</h3>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-base font-bold text-high">{displayContact.name}</h3>
+                                <RoleBadge role={displayContact.role} />
+                            </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-medium text-medium">{displayContact.unit}</span>
 

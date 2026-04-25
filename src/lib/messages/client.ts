@@ -12,7 +12,7 @@ export type ConversationSummary = {
         fullName: string;
         avatarUrl: string | null;
         avatarBgColor: string | null;
-        role: "tenant" | "landlord";
+        role: "tenant" | "landlord" | "admin";
     }>;
     lastMessage: {
         id: string;
@@ -32,7 +32,7 @@ export type ConversationMessage = {
         fullName: string;
         avatarUrl: string | null;
         avatarBgColor: string | null;
-        role: "tenant" | "landlord";
+        role: "tenant" | "landlord" | "admin";
     } | null;
     type: "text" | "system" | "image" | "file";
     content: string;
@@ -156,7 +156,7 @@ export type MessageUserSearchResult = {
     email: string;
     avatarUrl: string | null;
     avatarBgColor: string | null;
-    role: "tenant" | "landlord";
+    role: "tenant" | "landlord" | "admin";
 };
 
 const parseErrorDetail = async (response: Response) => {

@@ -45,6 +45,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 import { MessagesTour } from "@/components/tenant/MessagesTour";
+import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
@@ -67,6 +68,7 @@ type ContactItem = {
     id: string;
     participantUserId: string | null;
     name: string;
+    role: BadgeRole | null;
     unit: string;
     unread: number;
     lastContact: string;
@@ -203,6 +205,7 @@ const IRIS_CONTACT: ContactItem = {
     id: "iris",
     participantUserId: null,
     name: "iRis Assistant",
+    role: null,
     unit: "AI Concierge",
     unread: 0,
     lastContact: "Always Available",
@@ -580,6 +583,7 @@ export default function TenantMessagesPage() {
             id: conversation.id,
             participantUserId: other?.id ?? null,
             name: other?.fullName ?? "Conversation",
+            role: other?.role ?? null,
             unit: other?.role === "landlord" ? "Landlord" : other?.role === "tenant" ? "Tenant" : "Participant",
             unread: conversation.unreadCount,
             lastContact: conversation.lastMessage
@@ -1732,8 +1736,11 @@ export default function TenantMessagesPage() {
                                 >
                                     <img src={result.avatarUrl || FALLBACK_AVATAR} className="h-8 w-8 rounded-full border border-divider" alt="" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-bold text-high truncate">{result.fullName}</p>
-                                        <p className="text-[10px] text-disabled capitalize">{result.role}</p>
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <p className="text-xs font-bold text-high truncate">{result.fullName}</p>
+                                            <RoleBadge role={result.role} />
+                                        </div>
+                                        <p className="text-[10px] text-disabled">{result.role}</p>
                                     </div>
                                 </button>
                             ))}
@@ -1809,7 +1816,10 @@ export default function TenantMessagesPage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <h4 className={cn("font-bold text-sm truncate pr-2", contact.isAI ? "text-primary" : "text-foreground")}>{contact.name}</h4>
+                                            <div className="flex min-w-0 items-center gap-2 pr-2">
+                                                <h4 className={cn("font-bold text-sm truncate", contact.isAI ? "text-primary" : "text-foreground")}>{contact.name}</h4>
+                                                {!contact.isAI && <RoleBadge role={contact.role} />}
+                                            </div>
                                             <span className={cn("text-[10px] shrink-0", contact.isAI ? "text-primary uppercase tracking-widest font-bold" : "text-muted-foreground")}>{contact.lastContact}</span>
                                         </div>
                                         <p className={cn("text-xs font-medium truncate", contact.isAI ? "text-slate-600 dark:text-primary/70" : "text-muted-foreground")}>{contact.unit}</p>
@@ -1832,7 +1842,10 @@ export default function TenantMessagesPage() {
                             <div className="flex items-center gap-4">
                                 <img src={activeContact.avatar} alt={activeContact.name} className="w-10 h-10 rounded-full object-cover border border-border shadow-sm" />
                                 <div>
-                                    <h3 className="font-bold text-foreground text-base">{activeContact.name}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-bold text-foreground text-base">{activeContact.name}</h3>
+                                        {!activeContact.isAI && <RoleBadge role={activeContact.role} />}
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground font-medium">{activeContact.unit}</span>
                                     </div>
