@@ -104,24 +104,26 @@ function getAnnouncementConfig(title: string | null | undefined, content: string
 
     if (isUtility) {
         return {
-            color: "text-orange-500",
-            bg: "bg-orange-500/10",
-            border: "border-orange-500/20",
-            cardBg: "bg-gradient-to-br from-orange-500/[0.08] to-orange-500/[0.02]",
-            cardBorder: "border-orange-500/10",
+            color: "text-orange-600 dark:text-orange-400",
+            bg: "bg-orange-50 dark:bg-orange-950/40",
+            border: "border-orange-200 dark:border-orange-500/20",
+            cardBg: "bg-white dark:bg-[#1e1e1e]",
+            cardBorder: "border-orange-500/50 dark:border-orange-500/40",
+            accent: "bg-orange-500",
             badge: "UTILITY ALERT",
-            iconColor: "text-orange-500/40"
+            iconColor: "text-orange-500"
         }
     }
 
     return {
-        color: "text-emerald-500",
-        bg: "bg-emerald-500/10",
-        border: "border-emerald-500/10",
-        cardBg: "bg-gradient-to-br from-emerald-500/[0.06] to-emerald-500/[0.01]",
-        cardBorder: "border-emerald-500/10",
+        color: "text-emerald-600 dark:text-emerald-400",
+        bg: "bg-emerald-50 dark:bg-emerald-950/40",
+        border: "border-emerald-200 dark:border-emerald-500/20",
+        cardBg: "bg-white dark:bg-[#1e1e1e]",
+        cardBorder: "border-emerald-500/50 dark:border-emerald-500/40",
+        accent: "bg-emerald-500",
         badge: "MANAGEMENT NOTICE",
-        iconColor: "text-emerald-500/40"
+        iconColor: "text-emerald-500"
     }
 }
 
@@ -529,57 +531,70 @@ export default function TenantCommunityHubPage() {
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
                         type="button"
                         onClick={() => setIsAnnouncementCollapsed(false)}
-                        className="fixed right-3 top-1/2 z-[95] flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-background/90 text-muted-foreground shadow-lg backdrop-blur-xl transition-colors hover:bg-muted hover:text-foreground dark:border-white/15 dark:bg-[#121212]/90 dark:text-white/80 dark:hover:bg-[#171717] dark:hover:text-white md:right-5"
+                        className="fixed right-3 top-1/2 z-[95] flex h-14 w-14 -translate-y-1/2 cursor-pointer items-center justify-center rounded-2xl border-2 border-emerald-500/20 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:scale-105 hover:border-emerald-500/40 hover:shadow-[0_8px_30px_rgba(109,152,56,0.2)] dark:border-emerald-500/30 dark:bg-[#1e1e1e] dark:shadow-none dark:hover:border-emerald-400 md:right-6"
                         aria-label="Expand announcement"
                         title="Expand announcement"
                     >
-                        <Megaphone className="w-5 h-5" />
+                        <div className="relative">
+                            <Megaphone className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                            <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500"></span>
+                            </span>
+                        </div>
                     </motion.button>
                 )}
 
                 {topAnnouncement && announcementConfig && !isAnnouncementCollapsed && (
                     <motion.div 
                         key="expanded-banner"
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -50 }}
+                        initial={{ opacity: 0, y: -50, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -50, scale: 0.98 }}
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        className="fixed inset-x-0 top-0 z-[90] px-3 pt-2 md:px-8 md:pt-3"
+                        className="fixed inset-x-0 top-0 z-[90] px-3 pt-3 md:px-8 md:pt-4"
                         data-tour-id="tour-community-announcements"
                     >
-                        <div className="max-w-[1600px] mx-auto">
-                            <div className={`${announcementConfig.cardBg} ${announcementConfig.cardBorder} overflow-hidden rounded-2xl border shadow-lg backdrop-blur-xl md:rounded-3xl dark:shadow-2xl`}>
-                                <div className="px-4 py-3 md:px-6 md:py-4 flex items-start gap-3 md:gap-4">
-                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border ${announcementConfig.bg} ${announcementConfig.color} dark:border-white/10`}>
-                                        <Megaphone className="w-5 h-5" />
+                        <div className="mx-auto max-w-[1600px]">
+                            <div className={`${announcementConfig.cardBg} ${announcementConfig.cardBorder} relative overflow-hidden rounded-2xl border-2 shadow-[0_20px_50px_rgba(0,0,0,0.1)] md:rounded-[2rem] dark:shadow-2xl`}>
+                                <div className="flex items-center gap-4 px-5 py-4 md:px-8 md:py-6">
+                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${announcementConfig.bg} ${announcementConfig.color} shadow-sm`}>
+                                        <Megaphone className="h-6 w-6" />
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={`text-[10px] font-bold ${announcementConfig.color} ${announcementConfig.bg} px-2.5 py-1 rounded-full tracking-widest uppercase border ${announcementConfig.border}`}>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1">
+                                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${announcementConfig.color} ${announcementConfig.bg} border ${announcementConfig.border}`}>
+                                                <span className={`h-1.5 w-1.5 rounded-full ${announcementConfig.accent} animate-pulse`} />
                                                 {announcementConfig.badge}
                                             </span>
-                                            <Pin className={`w-4 h-4 ${announcementConfig.iconColor}`} />
-                                            <span className="text-xs text-muted-foreground/80 dark:text-white/35">{formatRelative(topAnnouncement.created_at)}</span>
+                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground dark:text-white/40">
+                                                <Pin className={`h-3.5 w-3.5 ${announcementConfig.iconColor} rotate-45`} />
+                                                <span>Posted {formatRelative(topAnnouncement.created_at)}</span>
+                                            </div>
                                         </div>
 
-                                        <h2 className="truncate text-sm font-semibold leading-tight text-foreground dark:text-white md:text-base">
-                                            {topAnnouncement.title || "Community Announcement"}
-                                        </h2>
-                                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground dark:text-white/60 md:line-clamp-none">
+                                        <div className="flex items-baseline gap-2">
+                                            <h2 className="truncate text-base font-bold tracking-tight text-foreground dark:text-white md:text-lg">
+                                                {topAnnouncement.title || "Community Announcement"}
+                                            </h2>
+                                        </div>
+                                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted-foreground/90 dark:text-white/60 md:line-clamp-none">
                                             {topAnnouncement.content}
                                         </p>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAnnouncementCollapsed(true)}
-                                        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border bg-background/70 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
-                                        aria-label="Close announcement"
-                                        title="Close announcement"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAnnouncementCollapsed(true)}
+                                            className="group flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-muted/50 text-muted-foreground transition-all hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:bg-white/5 dark:text-white/40 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                                            aria-label="Collapse announcement"
+                                            title="Collapse announcement"
+                                        >
+                                            <X className="h-5 w-5 transition-transform group-hover:rotate-90" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
