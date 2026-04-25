@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOptionalProperty } from "@/context/PropertyContext";
 import type { Notification, NotificationType } from "@/types/database";
 
 interface NotificationContextType {
@@ -25,6 +26,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const { user, profile } = useAuth();
+    const propertyContext = useOptionalProperty();
+    const selectedPropertyId = propertyContext?.selectedPropertyId ?? "all";
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -42,19 +45,57 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         try {
             if (profile.role === "landlord") {
+                let propertyUnitIds: string[] | null = null;
+
+                if (selectedPropertyId !== "all") {
+                    const { data: propertyUnits, error: propertyUnitsError } = await supabase
+                        .from("units")
+                        .select("id")
+                        .eq("property_id", selectedPropertyId);
+
+                    if (propertyUnitsError) {
+                        console.error("Error fetching property units for notifications:", propertyUnitsError);
+                        return;
+                    }
+
+                    propertyUnitIds = (propertyUnits ?? [])
+                        .map((unit) => unit.id)
+                        .filter((id): id is string => Boolean(id));
+                }
+
                 // Fetch pending applications count
-                const { count: appCount } = await supabase
+                let applicationsQuery = supabase
                     .from("applications")
                     .select("*", { count: "exact", head: true })
                     .eq("landlord_id", user.id)
                     .eq("status", "pending");
 
+                if (propertyUnitIds) {
+                    if (propertyUnitIds.length === 0) {
+                        applicationsQuery = applicationsQuery.eq("unit_id", "__none__");
+                    } else {
+                        applicationsQuery = applicationsQuery.in("unit_id", propertyUnitIds);
+                    }
+                }
+
+                const { count: appCount } = await applicationsQuery;
+
                 // Fetch open/assigned maintenance requests count
-                const { count: maintCount } = await supabase
+                let maintenanceQuery = supabase
                     .from("maintenance_requests")
                     .select("*", { count: "exact", head: true })
                     .eq("landlord_id", user.id)
                     .in("status", ["open", "assigned", "in_progress"]);
+
+                if (propertyUnitIds) {
+                    if (propertyUnitIds.length === 0) {
+                        maintenanceQuery = maintenanceQuery.eq("unit_id", "__none__");
+                    } else {
+                        maintenanceQuery = maintenanceQuery.in("unit_id", propertyUnitIds);
+                    }
+                }
+
+                const { count: maintCount } = await maintenanceQuery;
 
                 // Fetch unread messages count (simplified: messages sent to user that are not read)
                 // This might need a more complex query depending on conversation participants
@@ -85,7 +126,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         } catch (err) {
             console.error("Error fetching counts:", err);
         }
-    }, [user, profile, supabase]);
+    }, [user, profile, selectedPropertyId, supabase]);
 
     const fetchNotifications = useCallback(async () => {
         if (!user) return;
