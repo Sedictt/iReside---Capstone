@@ -1,0 +1,230 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+/** GET /api/landlord/unit-map?propertyId=xxx
+ *  Returns: units (with positions), floor_configs, map_decorations
+ */
+export async function GET(request: NextRequest) {
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const propertyId = request.nextUrl.searchParams.get("propertyId");
+    if (!propertyId) {
+        return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
+    }
+
+    // Verify ownership
+    const { data: property, error: propError } = await supabase
+        .from("properties")
+        .select("id, map_decorations" as any)
+        .eq("id", propertyId)
+        .eq("landlord_id", user.id)
+        .maybeSingle() as any;
+
+    if (propError || !property) {
+        return NextResponse.json({ error: "Property not found or access denied" }, { status: 404 });
+    }
+
+    // Fetch floor configs ordered by sort_order / floor_number
+    const { data: floorConfigs, error: floorError } = await (supabase
+        .from("property_floor_configs" as any)
+        .select("id, floor_number, floor_key, display_name, sort_order")
+        .eq("property_id", propertyId)
+        .order("sort_order", { ascending: true })
+        .order("floor_number", { ascending: true }) as any);
+
+    if (floorError) {
+        return NextResponse.json({ error: "Failed to fetch floor configs" }, { status: 500 });
+    }
+
+    // Fetch units with their map positions (left join via the API layer)
+    const { data: units, error: unitsError } = await supabase
+        .from("units")
+        .select("id, name, floor, status, rent_amount, beds, baths, sqft")
+        .eq("property_id", propertyId)
+        .order("created_at", { ascending: true });
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to fetch units" }, { status: 500 });
+    }
+
+    const unitIds = (units ?? []).map(u => u.id);
+    
+    let positions: Array<{
+        unit_id: string;
+        floor_key: string;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }> = [];
+
+    if (unitIds.length > 0) {
+        const { data: posData, error: posError } = await (supabase
+            .from("unit_map_positions" as any)
+            .select("unit_id, floor_key, x, y, w, h")
+            .in("unit_id", unitIds) as any);
+
+        if (posError) {
+            return NextResponse.json({ error: "Failed to fetch positions" }, { status: 500 });
+        }
+        positions = posData ?? [];
+    }
+
+    const positionsByUnitId = new Map(positions.map(p => [p.unit_id, p]));
+
+    const enrichedUnits = (units ?? []).map(unit => ({
+        ...unit,
+        position: positionsByUnitId.get(unit.id) ?? null,
+    }));
+
+    const placedCount = enrichedUnits.filter(u => u.position !== null).length;
+    const isSetupComplete = enrichedUnits.length > 0 && placedCount === enrichedUnits.length;
+
+    return NextResponse.json({
+        floorConfigs: floorConfigs ?? [],
+        units: enrichedUnits,
+        mapDecorations: property.map_decorations ?? {},
+        isSetupComplete,
+        placedCount,
+        totalUnits: enrichedUnits.length,
+    });
+}
+
+/** POST /api/landlord/unit-map
+ *  Body: { propertyId, positions: [{unitId, floorKey, x, y, w, h}], decorations? }
+ *  Upserts all positions + optionally updates decorations blob
+ */
+export async function POST(request: NextRequest) {
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json() as {
+        propertyId: string;
+        positions?: Array<{ unitId: string; floorKey: string; x: number; y: number; w: number; h: number }>;
+        decorations?: Record<string, unknown>;
+    };
+
+    const { propertyId, positions, decorations } = body;
+    if (!propertyId) {
+        return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
+    }
+
+    // Verify ownership
+    const { data: property, error: propError } = await supabase
+        .from("properties")
+        .select("id")
+        .eq("id", propertyId)
+        .eq("landlord_id", user.id)
+        .maybeSingle();
+
+    if (propError || !property) {
+        return NextResponse.json({ error: "Property not found or access denied" }, { status: 404 });
+    }
+
+    // Upsert positions
+    if (positions && positions.length > 0) {
+        const rows = positions.map(p => ({
+            unit_id: p.unitId,
+            floor_key: p.floorKey,
+            x: p.x,
+            y: p.y,
+            w: p.w,
+            h: p.h,
+            updated_at: new Date().toISOString(),
+        }));
+
+        const { error: upsertError } = await (supabase
+            .from("unit_map_positions" as any)
+            .upsert(rows, { onConflict: "unit_id" }) as any);
+
+        if (upsertError) {
+            return NextResponse.json({ error: `Failed to save positions: ${upsertError.message}` }, { status: 500 });
+        }
+
+        // Also sync units.floor based on floorKey (e.g. "floor2" → floor=2, "ground" → floor=0)
+        const floorUpdates = positions.map(p => {
+            let floorNumber = 1;
+            if (p.floorKey === "ground") floorNumber = 0;
+            else {
+                const match = /^floor(\d+)$/i.exec(p.floorKey);
+                if (match) floorNumber = parseInt(match[1], 10);
+            }
+            return { id: p.unitId, floor: floorNumber };
+        });
+
+        for (const update of floorUpdates) {
+            await supabase
+                .from("units")
+                .update({ floor: update.floor })
+                .eq("id", update.id);
+        }
+    }
+
+    // Update decorations blob if provided
+    if (decorations !== undefined) {
+        const { error: decError } = await (supabase
+            .from("properties")
+            .update({ map_decorations: decorations } as any)
+            .eq("id", propertyId)
+            .eq("landlord_id", user.id) as any);
+
+        if (decError) {
+            return NextResponse.json({ error: "Failed to save decorations" }, { status: 500 });
+        }
+    }
+
+    return NextResponse.json({ success: true });
+}
+
+/** PATCH /api/landlord/unit-map/floor-configs
+ *  Rename a floor
+ */
+export async function PATCH(request: NextRequest) {
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json() as {
+        propertyId: string;
+        floorKey: string;
+        displayName: string;
+    };
+
+    const { propertyId, floorKey, displayName } = body;
+    if (!propertyId || !floorKey) {
+        return NextResponse.json({ error: "propertyId and floorKey required" }, { status: 400 });
+    }
+
+    // Verify ownership
+    const { data: property } = await supabase
+        .from("properties")
+        .select("id")
+        .eq("id", propertyId)
+        .eq("landlord_id", user.id)
+        .maybeSingle();
+
+    if (!property) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    const { error } = await (supabase
+        .from("property_floor_configs" as any)
+        .update({ display_name: displayName || null } as any)
+        .eq("property_id", propertyId)
+        .eq("floor_key", floorKey) as any);
+
+    if (error) {
+        return NextResponse.json({ error: "Failed to update floor name" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+}

@@ -490,35 +490,42 @@ function NewAssetContent() {
     const syncUnits = async (
         supabase: ReturnType<typeof createClient>,
         propertyId: string,
-        requestedTotalUnits: string
+        requestedTotalUnits: string,
+        requestedFloorCount: string
     ) => {
         const desiredUnitCount = Math.max(1, Math.floor(Number(requestedTotalUnits) || 1));
+        const floorCount = Math.max(1, Math.floor(Number(requestedFloorCount) || 1));
 
         const { data: existingUnits, error: unitsError } = await supabase
             .from("units")
-            .select("id, status, created_at")
+            .select("id, status, floor, created_at")
             .eq("property_id", propertyId)
             .order("created_at", { ascending: true });
 
         if (unitsError) throw new Error("Failed to load existing units.");
 
         const unitCount = existingUnits?.length ?? 0;
-        if (unitCount === desiredUnitCount) return;
 
         if (desiredUnitCount > unitCount) {
-            const unitsToCreate = Array.from({ length: desiredUnitCount - unitCount }, (_, index) => ({
-                property_id: propertyId,
-                name: `Unit ${unitCount + index + 1}`,
-                floor: 1,
-                status: "vacant" as const,
-                rent_amount: 0,
-                beds: 1,
-                baths: 1,
-            }));
+            // Distribute new units across floors
+            const unitsToCreate = Array.from({ length: desiredUnitCount - unitCount }, (_, index) => {
+                const unitIndex = unitCount + index + 1;
+                // Distribute evenly: unit 1 → floor 1, wrapping around floorCount
+                const floorNumber = floorCount === 1 ? 1 : ((unitIndex - 1) % floorCount) + 1;
+                return {
+                    property_id: propertyId,
+                    name: `Unit ${unitIndex}`,
+                    floor: floorNumber,
+                    status: "vacant" as const,
+                    rent_amount: 0,
+                    beds: 1,
+                    baths: 1,
+                };
+            });
 
             const { error: insertUnitsError } = await supabase.from("units").insert(unitsToCreate);
             if (insertUnitsError) throw new Error("Failed to create additional units.");
-        } else {
+        } else if (desiredUnitCount < unitCount) {
             const unitsToRemove = unitCount - desiredUnitCount;
             const removableUnits = (existingUnits ?? []).filter((unit) => unit.status === "vacant").reverse();
 
@@ -531,6 +538,50 @@ function NewAssetContent() {
             if (deleteUnitsError) throw new Error("Failed to remove extra units.");
         }
     };
+
+    /** Sync property_floor_configs rows based on the floor count from the wizard */
+    const syncFloorConfigs = async (
+        supabase: ReturnType<typeof createClient>,
+        propertyId: string,
+        requestedFloorCount: string
+    ) => {
+        const floorCount = Math.max(1, Math.floor(Number(requestedFloorCount) || 1));
+
+        // Fetch existing floor configs
+        const { data: existing } = await (supabase
+            .from("property_floor_configs" as any)
+            .select("floor_number, floor_key")
+            .eq("property_id", propertyId) as any);
+
+        const existingKeys = new Set((existing ?? []).map((f: any) => f.floor_key));
+
+        // Build desired set: ground (0) + floor1..floorN
+        const desired: Array<{ floor_number: number; floor_key: string; sort_order: number }> = [];
+        // Always add ground floor as floor 0
+        desired.push({ floor_number: 0, floor_key: "ground", sort_order: 0 });
+        for (let i = 1; i <= floorCount; i++) {
+            desired.push({ floor_number: i, floor_key: `floor${i}`, sort_order: i });
+        }
+
+        // Insert only missing configs (never delete existing ones — they may have custom names)
+        const toInsert = desired
+            .filter(d => !existingKeys.has(d.floor_key))
+            .map(d => ({
+                property_id: propertyId,
+                floor_number: d.floor_number,
+                floor_key: d.floor_key,
+                display_name: null, // use default display name
+                sort_order: d.sort_order,
+            }));
+
+        if (toInsert.length > 0) {
+            const { error } = await (supabase
+                .from("property_floor_configs" as any)
+                .insert(toInsert) as any);
+            if (error) throw new Error(`Failed to create floor configs: ${error.message}`);
+        }
+    };
+
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
@@ -632,9 +683,12 @@ function NewAssetContent() {
                 });
             }
 
-            // Sync units
+            // Sync units and floor configs
             setSaveStage("Configuring units...");
-            await syncUnits(supabase, propertyId, formData.totalUnits);
+            await syncUnits(supabase, propertyId, formData.totalUnits, formData.floorCount);
+            setSaveStage("Configuring floors...");
+            await syncFloorConfigs(supabase, propertyId, formData.floorCount);
+
 
             // Handle media uploads if any
             let mediaSaveWarning: string | null = null;

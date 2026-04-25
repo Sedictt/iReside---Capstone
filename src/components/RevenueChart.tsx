@@ -33,14 +33,7 @@ const data = {
         {
             label: "Gross Revenue",
             data: [45000, 52000, 48000, 61000, 59000, 68000, 75000],
-            backgroundColor: (context: ScriptableContext<"bar">) => {
-                if (!context.chart.chartArea) return '#65a30d'; // Lime 500 fallback
-                const { ctx, chartArea: { top, bottom } } = context.chart;
-                const gradient = ctx.createLinearGradient(0, bottom, 0, top);
-                gradient.addColorStop(0, '#3f6212'); // Lime 700
-                gradient.addColorStop(1, '#84cc16'); // Lime 500
-                return gradient;
-            },
+            backgroundColor: '#84cc16', // Lime 500
             borderRadius: 6,
             borderSkipped: 'bottom' as const,
             barPercentage: 0.6,
@@ -49,14 +42,7 @@ const data = {
         {
             label: "Net Income",
             data: [30000, 38000, 32000, 44000, 42000, 52000, 61000],
-            backgroundColor: (context: ScriptableContext<"bar">) => {
-                if (!context.chart.chartArea) return '#10b981'; // Emerald 500 fallback
-                const { ctx, chartArea: { top, bottom } } = context.chart;
-                const gradient = ctx.createLinearGradient(0, bottom, 0, top);
-                gradient.addColorStop(0, '#047857'); // Emerald 700
-                gradient.addColorStop(1, '#10b981'); // Emerald 500
-                return gradient;
-            },
+            backgroundColor: '#10b981', // Emerald 500
             borderRadius: 6,
             borderSkipped: 'bottom' as const,
             barPercentage: 0.6,
