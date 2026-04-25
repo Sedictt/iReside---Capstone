@@ -11,7 +11,8 @@ import { Logo } from "@/components/ui/Logo";
 import { useOptionalProperty } from "@/context/PropertyContext";
 
 export interface Unit {
-    id: string;
+    id: string;       // local canvas id (same as dbId for real units)
+    dbId: string;     // real UUID from `units` table
     name: string;
     type: "Studio" | "1BR" | "2BR" | "3BR";
     status: "occupied" | "vacant" | "maintenance" | "neardue";
@@ -23,21 +24,37 @@ export interface Unit {
     details?: string;
     leaseStart?: string;
     leaseEnd?: string;
+    floor?: number;   // DB floor number
 }
 
-interface DragGhostState {
-    unitId: string;
-    kind: "unit" | "corridor" | "structure";
-    label?: string;
-    structureType?: "elevator" | "stairwell";
-    stairVariant?: Structure["variant"];
-    stairRotation?: number;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    isValid: boolean;
+/** Shape returned by GET /api/landlord/unit-map */
+interface DbUnit {
+    id: string;
+    name: string;
+    floor: number;
+    status: string;
+    rent_amount: number;
+    beds: number;
+    baths: number;
+    sqft: number | null;
+    position: {
+        unit_id: string;
+        floor_key: string;
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    } | null;
 }
+
+interface FloorConfig {
+    id: string;
+    floor_number: number;
+    floor_key: string;
+    display_name: string | null;
+    sort_order: number;
+}
+
 
 interface Corridor {
     id: string;
@@ -86,6 +103,29 @@ interface PendingDeleteState {
     source: "keyboard" | "trash";
 }
 
+interface DragPointerOffsetState {
+    kind: CanvasItemKind;
+    id: string;
+    x: number;
+    y: number;
+}
+
+interface DragGhostState {
+    kind: CanvasItemKind;
+    id: string;
+    label?: string;
+    x: number;
+    y: number;
+    rawX?: number;
+    rawY?: number;
+    w: number;
+    h: number;
+    isValid: boolean;
+    structureType?: Structure["type"];
+    stairVariant?: Structure["variant"];
+    stairRotation?: number;
+}
+
 interface SidebarBlockGhost {
     blockType: SidebarBlockType;
     unitType?: Unit["type"];
@@ -108,6 +148,7 @@ interface QuickActionGuardResult {
     confirmMessage?: string;
 }
 
+
 interface TenantActionMenuState {
     isOpen: boolean;
 }
@@ -117,6 +158,7 @@ type UnitNotesState = Record<string, string>;
 const INITIAL_UNITS: Unit[] = [
     {
         id: "101",
+        dbId: "",
         name: "Unit 101",
         type: "1BR",
         status: "occupied",
@@ -131,6 +173,7 @@ const INITIAL_UNITS: Unit[] = [
     },
     {
         id: "102",
+        dbId: "",
         name: "Unit 102",
         type: "1BR",
         status: "vacant",
@@ -142,6 +185,7 @@ const INITIAL_UNITS: Unit[] = [
     },
     {
         id: "103",
+        dbId: "",
         name: "Unit 103",
         type: "2BR",
         status: "maintenance",
@@ -154,6 +198,7 @@ const INITIAL_UNITS: Unit[] = [
     },
     {
         id: "104",
+        dbId: "",
         name: "Unit 104 (Suite)",
         type: "3BR",
         status: "neardue",
@@ -174,11 +219,46 @@ const ACTIVE_FLOOR_STORAGE_KEY = "ireside.visualPlanner.activeFloor";
 const UNIT_NOTES_STORAGE_KEY = "ireside.visualPlanner.unitNotes";
 const EMPTY_FLOOR_LAYOUT: FloorLayout = { units: [], corridors: [], structures: [] };
 const DEFAULT_ACTIVE_FLOOR = "floor1";
+// Default layouts are empty â€” real data is loaded from DB
 const DEFAULT_FLOOR_LAYOUTS: Record<FloorId, FloorLayout> = {
     ground: { units: [], corridors: [], structures: [] },
-    floor1: { units: INITIAL_UNITS, corridors: [], structures: [] },
-    floor2: { units: [], corridors: [], structures: [] },
+    floor1: { units: [], corridors: [], structures: [] },
 };
+
+/** Size in pixels for newly placed units by DB bed-count */
+const UNIT_SIZE_BY_BEDS: Record<number, { w: number; h: number }> = {
+    0: { w: 180, h: 120 }, // Studio
+    1: { w: 200, h: 140 },
+    2: { w: 220, h: 140 },
+    3: { w: 280, h: 140 },
+};
+
+/** Derive a canvas Unit type from DB beds count */
+const unitTypeFromBeds = (beds: number): Unit["type"] => {
+    if (beds === 0) return "Studio";
+    if (beds === 2) return "2BR";
+    if (beds >= 3) return "3BR";
+    return "1BR";
+};
+
+/** Convert a DbUnit (placed) into a canvas Unit */
+const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
+    const pos = dbUnit.position!;
+    const type = unitTypeFromBeds(dbUnit.beds);
+    return {
+        id: dbUnit.id,
+        dbId: dbUnit.id,
+        name: dbUnit.name,
+        type,
+        status: (dbUnit.status as Unit["status"]) ?? "vacant",
+        x: pos.x,
+        y: pos.y,
+        w: pos.w,
+        h: pos.h,
+        floor: dbUnit.floor,
+    };
+};
+
 
 const parseFloorNumber = (floorId: FloorId) => {
     const match = /^floor(\d+)$/i.exec(floorId);
@@ -279,8 +359,19 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const panPointerIdRef = useRef<number | null>(null);
     const panStartPointerRef = useRef({ x: 0, y: 0 });
     const panStartPositionRef = useRef({ x: 0, y: 0 });
-    const [units, setUnits] = useState(INITIAL_UNITS);
+    const [units, setUnits] = useState<Unit[]>([]);
     const [isMinimapDragging, setIsMinimapDragging] = useState(false);
+    // DB-driven state
+    const [dbUnits, setDbUnits] = useState<DbUnit[]>([]);
+    const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>([]);
+    const [isLoadingMap, setIsLoadingMap] = useState(false);
+    const [mapLoadError, setMapLoadError] = useState<string | null>(null);
+    const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
+    const [placedCount, setPlacedCount] = useState(0);
+    const [totalDbUnits, setTotalDbUnits] = useState(0);
+    // Unplaced units: DB units not yet on the canvas
+    const [unplacedDbUnits, setUnplacedDbUnits] = useState<DbUnit[]>([]);
+
     const [viewportSize, setViewportSize] = useState({ width: 1280, height: 900 });
     const [showOverlapToast, setShowOverlapToast] = useState(false);
     const [isPanning, setIsPanning] = useState(false);
@@ -303,6 +394,79 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     useEffect(() => {
         setHasMounted(true);
     }, []);
+    // ---------------------------------------------------------------
+    // Load real data from DB when a property is selected
+    // ---------------------------------------------------------------
+    useEffect(() => {
+        if (!selectedPropertyId || selectedPropertyId === "all") return;
+
+        const controller = new AbortController();
+        setIsLoadingMap(true);
+        setMapLoadError(null);
+
+        const load = async () => {
+            try {
+                const res = await fetch(`/api/landlord/unit-map?propertyId=${selectedPropertyId}`, {
+                    signal: controller.signal,
+                });
+                if (!res.ok) {
+                    const err = (await res.json()) as { error?: string };
+                    throw new Error(err.error ?? "Failed to load unit map");
+                }
+                const data = await res.json() as {
+                    floorConfigs: FloorConfig[];
+                    units: DbUnit[];
+                    mapDecorations: Record<string, { corridors?: Corridor[]; structures?: Structure[] }>;
+                    isSetupComplete: boolean;
+                    placedCount: number;
+                    totalUnits: number;
+                };
+
+                setDbUnits(data.units);
+                setFloorConfigs(data.floorConfigs);
+                setIsSetupComplete(data.isSetupComplete);
+                setPlacedCount(data.placedCount);
+                setTotalDbUnits(data.totalUnits);
+
+                const unplaced = data.units.filter((u: DbUnit) => u.position === null);
+                setUnplacedDbUnits(unplaced);
+
+                const newFloorLayouts: Record<FloorId, FloorLayout> = {};
+                for (const fc of data.floorConfigs) {
+                    newFloorLayouts[fc.floor_key] = {
+                        name: fc.display_name ?? undefined,
+                        units: [],
+                        corridors: (data.mapDecorations[fc.floor_key]?.corridors ?? []) as Corridor[],
+                        structures: (data.mapDecorations[fc.floor_key]?.structures ?? []) as Structure[],
+                    };
+                }
+                if (Object.keys(newFloorLayouts).length === 0) {
+                    newFloorLayouts["floor1"] = { units: [], corridors: [], structures: [] };
+                }
+                for (const dbUnit of data.units) {
+                    if (!dbUnit.position) continue;
+                    const fk = dbUnit.position.floor_key;
+                    if (!newFloorLayouts[fk]) newFloorLayouts[fk] = { units: [], corridors: [], structures: [] };
+                    newFloorLayouts[fk].units.push(dbUnitToCanvasUnit(dbUnit));
+                }
+                setFloorLayouts(newFloorLayouts);
+                const firstFloorKey = data.floorConfigs[0]?.floor_key ?? "floor1";
+                setActiveFloor(firstFloorKey);
+                setUnits(newFloorLayouts[firstFloorKey]?.units ?? []);
+                setCorridors(newFloorLayouts[firstFloorKey]?.corridors ?? []);
+                setStructures(newFloorLayouts[firstFloorKey]?.structures ?? []);
+                setHasHydratedFloorState(true);
+            } catch (err) {
+                if ((err as Error).name === "AbortError") return;
+                setMapLoadError((err as Error).message);
+            } finally {
+                if (!controller.signal.aborted) setIsLoadingMap(false);
+            }
+        };
+        void load();
+        return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedPropertyId]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -330,6 +494,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     }, [unitNotes, SCOPED_UNIT_NOTES_KEY]);
     const [editingFloorName, setEditingFloorName] = useState("");
     const scaleRef = useRef(scale);
+    const dragCaptureRef = useRef<{ scale: number } | null>(null);
+    const dragPointerOffsetRef = useRef<DragPointerOffsetState | null>(null);
     const trashRef = useRef<HTMLDivElement>(null);
     const historyRef = useRef<FloorLayout[]>([DEFAULT_FLOOR_LAYOUTS[DEFAULT_ACTIVE_FLOOR]]);
     const historyIndexRef = useRef(0);
@@ -495,16 +661,77 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
     const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
     const clampUnitAxis = (value: number, size: number, maxSize: number) => Math.max(0, Math.min(maxSize - size, value));
-    const getSnappedUnitPosition = (unit: Unit, offsetX: number, offsetY: number) => {
-        const rawX = unit.x + offsetX;
-        const rawY = unit.y + offsetY;
+    const getSnappedRectPosition = (rawX: number, rawY: number, width: number, height: number) => {
         const snappedX = snapToGrid(rawX);
         const snappedY = snapToGrid(rawY);
         return {
-            x: clampUnitAxis(snappedX, unit.w, BLUEPRINT_WIDTH),
-            y: clampUnitAxis(snappedY, unit.h, BLUEPRINT_HEIGHT),
+            x: clampUnitAxis(snappedX, width, BLUEPRINT_WIDTH),
+            y: clampUnitAxis(snappedY, height, BLUEPRINT_HEIGHT),
         };
     };
+    const getWorldPointFromClientPoint = useCallback((clientX: number, clientY: number) => {
+        const blueprint = blueprintRef.current;
+        if (!blueprint) return null;
+
+        const rect = blueprint.getBoundingClientRect();
+        // Measure the EXACT rendered scale to account for browser rounding/sub-pixels
+        const sX = rect.width / BLUEPRINT_WIDTH;
+        const sY = rect.height / BLUEPRINT_HEIGHT;
+        
+        return {
+            x: (clientX - rect.left) / sX,
+            y: (clientY - rect.top) / sY,
+        };
+    }, [BLUEPRINT_WIDTH, BLUEPRINT_HEIGHT]);
+
+    const setDragPointerAnchor = useCallback(
+        (kind: CanvasItemKind, id: string, itemX: number, itemY: number, pointerX: number, pointerY: number) => {
+            const worldPoint = getWorldPointFromClientPoint(pointerX, pointerY);
+            if (!worldPoint) {
+                dragPointerOffsetRef.current = null;
+                return;
+            }
+
+            dragPointerOffsetRef.current = {
+                kind,
+                id,
+                x: worldPoint.x - itemX,
+                y: worldPoint.y - itemY,
+            };
+        },
+        [getWorldPointFromClientPoint]
+    );
+
+    const getDraggedItemRawPosition = useCallback(
+        (
+            kind: CanvasItemKind,
+            id: string,
+            pointerX: number,
+            pointerY: number,
+            fallbackX: number,
+            fallbackY: number
+        ) => {
+            const worldPoint = getWorldPointFromClientPoint(pointerX, pointerY);
+            const dragPointerOffset = dragPointerOffsetRef.current;
+
+            if (!worldPoint || !dragPointerOffset || dragPointerOffset.kind !== kind || dragPointerOffset.id !== id) {
+                return { x: fallbackX, y: fallbackY };
+            }
+
+            return {
+                x: worldPoint.x - dragPointerOffset.x,
+                y: worldPoint.y - dragPointerOffset.y,
+            };
+        },
+        [getWorldPointFromClientPoint]
+    );
+
+    const clearDragPointerAnchor = useCallback((kind: CanvasItemKind, id: string) => {
+        const current = dragPointerOffsetRef.current;
+        if (current && current.kind === kind && current.id === id) {
+            dragPointerOffsetRef.current = null;
+        }
+    }, []);
 
     const doesOverlap = (
         movingUnit: Unit,
@@ -563,6 +790,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
         const startPointerX = e.clientX;
         const startPointerY = e.clientY;
+        const startWorldPoint = getWorldPointFromClientPoint(startPointerX, startPointerY);
         const startLeft = corridor.x;
         const startTop = corridor.y;
         const startRight = corridor.x + corridor.w;
@@ -570,8 +798,13 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         const minSize = GRID_SIZE * 2;
 
         const onPointerMove = (moveEvent: PointerEvent) => {
-            const deltaX = (moveEvent.clientX - startPointerX) / scaleRef.current;
-            const deltaY = (moveEvent.clientY - startPointerY) / scaleRef.current;
+            const moveWorldPoint = getWorldPointFromClientPoint(moveEvent.clientX, moveEvent.clientY);
+            const deltaX = moveWorldPoint && startWorldPoint
+                ? moveWorldPoint.x - startWorldPoint.x
+                : (moveEvent.clientX - startPointerX) / scaleRef.current;
+            const deltaY = moveWorldPoint && startWorldPoint
+                ? moveWorldPoint.y - startWorldPoint.y
+                : (moveEvent.clientY - startPointerY) / scaleRef.current;
 
             let left = startLeft;
             let top = startTop;
@@ -967,7 +1200,29 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
     const deleteCanvasItem = (item: SelectedCanvasItem) => {
         if (item.kind === "unit") {
+            const unitToDelete = units.find(u => u.id === item.id);
             setUnits(prev => prev.filter(unit => unit.id !== item.id));
+            
+            // If it was a DB unit, return it to unplaced list
+            if (unitToDelete?.dbId) {
+                const dbMatch = dbUnits.find(u => u.id === unitToDelete.dbId);
+                if (dbMatch) {
+                    setUnplacedDbUnits(prev => {
+                        if (prev.find(u => u.id === dbMatch.id)) return prev;
+                        return [...prev, dbMatch];
+                    });
+                    
+                    // Explicitly remove from DB position
+                    void fetch("/api/landlord/unit-map", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            propertyId: selectedPropertyId, 
+                            positions: [{ unitId: dbMatch.id, floorKey: "none", x: 0, y: 0, w: 0, h: 0 }] 
+                        }),
+                    });
+                }
+            }
         } else if (item.kind === "corridor") {
             setCorridors(prev => prev.filter(corridor => corridor.id !== item.id));
         } else {
@@ -1154,6 +1409,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     }, [showLegend, SCOPED_LEGEND_VISIBILITY_KEY]);
 
     useEffect(() => {
+        // Skip localStorage hydration when DB takes over
+        if (selectedPropertyId && selectedPropertyId !== "all") return;
         try {
             const storedLayoutsRaw = window.localStorage.getItem(SCOPED_FLOOR_LAYOUTS_KEY);
             const storedActiveFloorRaw = window.localStorage.getItem(SCOPED_ACTIVE_FLOOR_KEY);
@@ -1204,6 +1461,39 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         window.localStorage.setItem(SCOPED_FLOOR_LAYOUTS_KEY, JSON.stringify(layoutsToPersist));
         window.localStorage.setItem(SCOPED_ACTIVE_FLOOR_KEY, activeFloor);
     }, [hasHydratedFloorState, floorLayouts, activeFloor, units, corridors, structures, readOnly, SCOPED_FLOOR_LAYOUTS_KEY, SCOPED_ACTIVE_FLOOR_KEY]);
+    // ---------------------------------------------------------------
+    // Auto-save positions + decorations to DB (debounced 1.5s)
+    // ---------------------------------------------------------------
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        if (!selectedPropertyId || selectedPropertyId === "all" || !hasHydratedFloorState || readOnly) return;
+
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+            const allLayouts = {
+                ...floorLayouts,
+                [activeFloor]: { ...(floorLayouts[activeFloor] || {}), units, corridors, structures },
+            };
+            const allPositions: Array<{ unitId: string; floorKey: string; x: number; y: number; w: number; h: number }> = [];
+            const decorations: Record<string, { corridors: Corridor[]; structures: Structure[] }> = {};
+
+            for (const [floorKey, layout] of Object.entries(allLayouts)) {
+                for (const unit of layout.units) {
+                    allPositions.push({ unitId: (unit as Unit).dbId ?? unit.id, floorKey, x: unit.x, y: unit.y, w: unit.w, h: unit.h });
+                }
+                if (layout.corridors.length > 0 || layout.structures.length > 0) {
+                    decorations[floorKey] = { corridors: layout.corridors, structures: layout.structures };
+                }
+            }
+            void fetch("/api/landlord/unit-map", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ propertyId: selectedPropertyId, positions: allPositions, decorations }),
+            });
+        }, 1500);
+        return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [units, corridors, structures, activeFloor, hasHydratedFloorState, selectedPropertyId, readOnly]);
 
     useEffect(() => {
         if (readOnly) return;
@@ -1241,7 +1531,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [selectedItem, units, corridors, structures, performUndo, rotateSelectedItem, readOnly]);
 
-    const handleSidebarBlockDragStart = (blockType: SidebarBlockType) => (e: React.DragEvent<HTMLDivElement>) => {
+    const handleSidebarBlockDragStart = (blockType: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => {
         const payload = blockType === "studio"
             ? { blockType, label: "Studio", unitType: "Studio" as const, w: 180, h: 120 }
             : blockType === "1br"
@@ -1261,12 +1551,40 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         : blockType === "stair-u"
                                             ? { blockType, label: "U-Shape Stair", w: 120, h: 100, variant: "u-shape" }
                                             : { blockType, label: "Spiral Stair", w: 120, h: 120, variant: "spiral" };
-        e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify(payload));
+        e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify({ ...payload, dbUnitId }));
         e.dataTransfer.effectAllowed = "copy";
     };
 
     const handleSidebarBlockDragEnd = () => {
         setSidebarBlockGhost(null);
+    };
+
+    const handleUnplacedUnitClick = (dbUnit: DbUnit) => {
+        if (readOnly) return;
+        const w = dbUnit.beds === 0 ? 180 : dbUnit.beds === 2 ? 220 : dbUnit.beds >= 3 ? 280 : 200;
+        const h = dbUnit.beds === 0 ? 120 : 140;
+        let x = 50;
+        let y = 50;
+        const MAX_ATTEMPTS = 20;
+        for (let i = 0; i < MAX_ATTEMPTS; i++) {
+            if (!hasCollisionWithPlacedItems({ x, y, w, h })) break;
+            x += 40;
+            y += 40;
+        }
+        setUnits(prev => [
+            ...prev,
+            {
+                id: dbUnit.id,
+                dbId: dbUnit.id,
+                name: dbUnit.name,
+                type: (dbUnit.beds === 0 ? "Studio" : dbUnit.beds === 2 ? "2BR" : dbUnit.beds >= 3 ? "3BR" : "1BR") as Unit["type"],
+                status: (dbUnit.status as Unit["status"]) ?? "vacant",
+                x, y, w, h,
+                floor: dbUnit.floor,
+            },
+        ]);
+        setUnplacedDbUnits(prev => prev.filter(u => u.id !== dbUnit.id));
+        setSelectedItem({ kind: "unit", id: dbUnit.id });
     };
 
     const handleBlueprintDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -1286,9 +1604,13 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                 return;
             }
 
-            const rect = e.currentTarget.getBoundingClientRect();
-            const droppedX = (e.clientX - rect.left) / scaleRef.current;
-            const droppedY = (e.clientY - rect.top) / scaleRef.current;
+            const worldPoint = getWorldPointFromClientPoint(e.clientX, e.clientY);
+            if (!worldPoint) {
+                setSidebarBlockGhost(null);
+                return;
+            }
+            const droppedX = worldPoint.x;
+            const droppedY = worldPoint.y;
             const snappedX = snapToGrid(droppedX - parsed.w / 2);
             const snappedY = snapToGrid(droppedY - parsed.h / 2);
             const clampedX = clampUnitAxis(snappedX, parsed.w, BLUEPRINT_WIDTH);
@@ -1335,12 +1657,13 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
         e.preventDefault();
         setSidebarBlockGhost(null);
-        const parsed = JSON.parse(serialized) as { blockType?: SidebarBlockType; label?: string; unitType?: Unit["type"]; w?: number; h?: number; variant?: string };
+        const parsed = JSON.parse(serialized) as { blockType?: SidebarBlockType; label?: string; unitType?: Unit["type"]; w?: number; h?: number; variant?: string; dbUnitId?: string };
         if (!parsed.blockType || !parsed.w || !parsed.h) return;
 
-        const rect = e.currentTarget.getBoundingClientRect();
-        const droppedX = (e.clientX - rect.left) / scaleRef.current;
-        const droppedY = (e.clientY - rect.top) / scaleRef.current;
+        const worldPoint = getWorldPointFromClientPoint(e.clientX, e.clientY);
+        if (!worldPoint) return;
+        const droppedX = worldPoint.x;
+        const droppedY = worldPoint.y;
         const blockWidth = parsed.w;
         const blockHeight = parsed.h;
 
@@ -1380,6 +1703,32 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         }
 
         if (parsed.blockType === "studio" || parsed.blockType === "1br" || parsed.blockType === "2br" || parsed.blockType === "3br") {
+            // If we have a specific DB unit being placed
+            if (parsed.dbUnitId) {
+                const dbUnit = dbUnits.find(u => u.id === parsed.dbUnitId);
+                if (dbUnit) {
+                    setUnits(prev => [
+                        ...prev,
+                        {
+                            id: dbUnit.id,
+                            dbId: dbUnit.id,
+                            name: dbUnit.name,
+                            type: parsed.unitType ?? "Studio",
+                            status: (dbUnit.status as Unit["status"]) ?? "vacant",
+                            x: clampedX,
+                            y: clampedY,
+                            w: blockWidth,
+                            h: blockHeight,
+                            floor: dbUnit.floor,
+                        },
+                    ]);
+                    // Remove from unplaced list
+                    setUnplacedDbUnits(prev => prev.filter(u => u.id !== parsed.dbUnitId));
+                    return;
+                }
+            }
+
+            // Fallback: place a generic unit (only if no property selected or testing)
             setUnits(prev => {
                 const highestNumericId = prev.reduce((highest, unit) => {
                     const numeric = Number.parseInt(unit.id, 10);
@@ -1392,6 +1741,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     ...prev,
                     {
                         id: nextId,
+                        dbId: "", // Not linked yet
                         name: `Unit ${nextId}`,
                         type: parsed.unitType ?? "Studio",
                         status: "vacant",
@@ -1406,7 +1756,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
             return;
         }
 
-        const structureType: Structure["type"] = parsed.blockType === "elevator" ? "elevator" : "stairwell";
+        const structureType: "elevator" | "stairwell" = parsed.blockType === "elevator" ? "elevator" : "stairwell";
 
         setStructures(prev => ([
             ...prev,
@@ -1571,7 +1921,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
             return leftFloor.localeCompare(rightFloor);
         })
-        .map((floorId) => ({
+.map((floorId) => ({
             id: floorId,
             title: getFloorDisplayLabel(floorId, floorLayoutsWithActiveSnapshot[floorId]?.name),
             floorNumber: parseFloorNumber(floorId),
@@ -1580,6 +1930,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const activeFloorItemCount = activeFloorLayout
         ? activeFloorLayout.units.length + activeFloorLayout.corridors.length + activeFloorLayout.structures.length
         : 0;
+
     const selectedUnit = selectedItem?.kind === "unit"
         ? units.find((unit) => unit.id === selectedItem.id) ?? null
         : null;
@@ -1595,7 +1946,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     </div>
                     <div className={`mx-2 h-6 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
                     <div>
-                        <h1 className={`text-sm font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Sunset Heights Complex</h1>
+                        <h1 className={`text-sm font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
                         <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                             <span>All systems operational</span>
@@ -1609,6 +1960,12 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                     )}
                 </div>
                 <div className="flex items-center gap-3 min-w-0">
+                    {selectedPropertyId !== "all" && unplacedDbUnits.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 animate-pulse">
+                            <span className="material-icons-round text-amber-500 text-[16px]">warning</span>
+                            <span className="text-[11px] font-bold text-amber-500 uppercase tracking-tighter">{unplacedDbUnits.length} Unplaced Units</span>
+                        </div>
+                    )}
                         <div className={`${isDark ? 'bg-background-dark/90 border-slate-700 shadow-none' : 'bg-background/90 border-border shadow-sm'} p-1 rounded-xl border flex items-center backdrop-blur-sm`}>
                             <div className={`flex items-center pl-2 pr-1 border-r hidden sm:flex ${isDark ? 'border-slate-700' : 'border-border'}`} title="Current Level">
                                 <span className={`material-icons-round text-[18px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>layers</span>
@@ -1874,120 +2231,139 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                 )}
 
                                 {dragGhost && (
-                                    <div
-                                        className="absolute pointer-events-none"
-                                        style={{
-                                            left: dragGhost.x,
-                                            top: dragGhost.y,
-                                            width: dragGhost.w,
-                                            height: dragGhost.h,
-                                            zIndex: 25,
-                                        }}
-                                    >
-                                        {dragGhost.kind === "unit" ? (
-                                            <div className={`w-full h-full bg-white/85 relative shadow-sm overflow-hidden select-none rounded-[1px] border ${dragGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
-                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
-                                                <div className="absolute inset-[4px] border border-slate-300"></div>
-                                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-100 z-10 border-x-2 border-slate-400"></div>
-                                                <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-100 z-10 flex items-center justify-center border-x border-slate-400">
-                                                    <div className="w-full h-px bg-slate-300"></div>
+                                    <>
+                                        {/* Snap Target Layer (The Grid Indicator) */}
+                                        <div
+                                            className="absolute pointer-events-none"
+                                            style={{
+                                                left: dragGhost.x,
+                                                top: dragGhost.y,
+                                                width: dragGhost.w,
+                                                height: dragGhost.h,
+                                                zIndex: 25,
+                                                opacity: 0.8,
+                                            }}
+                                        >
+                                            <div className={`w-full h-full border-2 border-dashed rounded-[1px] ${dragGhost.isValid ? 'bg-emerald-500/10 border-emerald-500/40' : 'bg-red-500/10 border-red-500/40'}`} />
+                                        </div>
+
+                                        {/* Visual Pointer Layer (The Held Item) */}
+                                        <div
+                                            className="absolute pointer-events-none transition-transform duration-75"
+                                            style={{
+                                                left: dragGhost.rawX ?? dragGhost.x,
+                                                top: dragGhost.rawY ?? dragGhost.y,
+                                                width: dragGhost.w,
+                                                height: dragGhost.h,
+                                                zIndex: 40,
+                                                opacity: 0.7,
+                                            }}
+                                        >
+                                            {dragGhost.kind === "unit" ? (
+                                                <div className={`w-full h-full bg-white/85 relative shadow-sm overflow-hidden select-none rounded-[1px] border ${dragGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
+                                                    <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                    <div className="absolute inset-[4px] border border-slate-300"></div>
+                                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] bg-slate-100 z-10 border-x-2 border-slate-400"></div>
+                                                    <div className="absolute top-0 left-1/4 right-1/4 h-[6px] bg-slate-100 z-10 flex items-center justify-center border-x border-slate-400">
+                                                        <div className="w-full h-px bg-slate-300"></div>
+                                                    </div>
+                                                    <div className={`absolute inset-0 opacity-20 ${dragGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                                 </div>
-                                                <div className={`absolute inset-0 opacity-20 ${dragGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                                            </div>
-                                        ) : dragGhost.kind === "corridor" ? (
-                                            <div className={`w-full h-full border-y flex items-center justify-center rounded-[1px] ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/15 border-red-400/80'}`}>
-                                                <span className={`text-xs font-bold uppercase tracking-[0.5em] ${dragGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>{dragGhost.label ?? 'Corridor'}</span>
-                                            </div>
-                                        ) : dragGhost.structureType === "elevator" ? (
-                                            <div className={`w-full h-full border rounded-sm flex items-center justify-center ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
-                                                <div className="border-2 border-slate-400 w-full h-full m-2 flex items-center justify-center relative">
-                                                    <span className={`material-icons-round ${dragGhost.isValid ? 'text-emerald-700' : 'text-red-700'}`}>elevator</span>
+                                            ) : dragGhost.kind === "corridor" ? (
+                                                <div className={`w-full h-full border-y flex items-center justify-center rounded-[1px] ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/15 border-red-400/80'}`}>
+                                                    <span className={`text-xs font-bold uppercase tracking-[0.5em] ${dragGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>{dragGhost.label ?? 'Corridor'}</span>
                                                 </div>
-                                            </div>
-                                        ) : (
-                                            <div className={`w-full h-full border rounded-sm relative overflow-hidden ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
-                                                <div style={getRotatedArtworkStyle(dragGhost.w, dragGhost.h, dragGhost.stairRotation ?? 0)}>
-                                                    {dragGhost.stairVariant === "straight" ? (
-                                                        <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
-                                                            <div className="absolute inset-[4px] border border-slate-300"></div>
-                                                            <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
-                                                                {[...Array(12)].map((_, i) => (
-                                                                    <div key={`drag-straight-${i}`} className="w-full h-px bg-slate-400/80"></div>
-                                                                ))}
-                                                            </div>
-                                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                                <div className="h-[60%] w-px bg-slate-400 relative">
-                                                                    <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-r border-slate-300 rotate-[-45deg]"></div>
+                                            ) : dragGhost.structureType === "elevator" ? (
+                                                <div className={`w-full h-full border rounded-sm flex items-center justify-center ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
+                                                    <div className="border-2 border-slate-400 w-full h-full m-2 flex items-center justify-center relative">
+                                                        <span className={`material-icons-round ${dragGhost.isValid ? 'text-emerald-700' : 'text-red-700'}`}>elevator</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className={`w-full h-full border rounded-sm relative overflow-hidden ${dragGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
+                                                    <div style={getRotatedArtworkStyle(dragGhost.w, dragGhost.h, dragGhost.stairRotation ?? 0)}>
+                                                        {dragGhost.stairVariant === "straight" ? (
+                                                            <>
+                                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                                <div className="absolute inset-[4px] border border-slate-300"></div>
+                                                                <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
+                                                                    {[...Array(12)].map((_, i) => (
+                                                                        <div key={`drag-straight-${i}`} className="w-full h-px bg-slate-400/80"></div>
+                                                                    ))}
                                                                 </div>
-                                                            </div>
-                                                        </>
-                                                    ) : dragGhost.stairVariant === "l-shape" ? (
-                                                        <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
-                                                            <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-400"></div>
-                                                            <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 flex flex-col justify-between py-1">
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <div key={`drag-l-v-${i}`} className="w-full h-px bg-slate-400/80"></div>
+                                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                                    <div className="h-[60%] w-px bg-slate-400 relative">
+                                                                        <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-r border-slate-300 rotate-[-45deg]"></div>
+                                                                    </div>
+                                                                </div>
+                                                            </>
+                                                        ) : dragGhost.stairVariant === "l-shape" ? (
+                                                            <>
+                                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                                <div className="absolute top-0 right-0 w-1/2 h-1/2 border-b border-l border-slate-400"></div>
+                                                                <div className="absolute bottom-0 right-0 w-1/2 h-1/2 border-l border-slate-400 flex flex-col justify-between py-1">
+                                                                    {[...Array(5)].map((_, i) => (
+                                                                        <div key={`drag-l-v-${i}`} className="w-full h-px bg-slate-400/80"></div>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 flex flex-row justify-between px-1">
+                                                                    {[...Array(5)].map((_, i) => (
+                                                                        <div key={`drag-l-h-${i}`} className="h-full w-px bg-slate-400/80"></div>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
+                                                                    <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                        <path d="M 85 90 L 85 25 L 10 25" />
+                                                                        <path d="M 15 20 L 10 25 L 15 30" />
+                                                                    </svg>
+                                                                </div>
+                                                            </>
+                                                        ) : dragGhost.stairVariant === "u-shape" ? (
+                                                            <>
+                                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                                <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 bg-slate-200/60"></div>
+                                                                <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 bg-slate-500"></div>
+                                                                <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-400">
+                                                                    {[...Array(7)].map((_, i) => (
+                                                                        <div key={`drag-u-l-${i}`} className="w-full h-px bg-slate-400/80"></div>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-400">
+                                                                    {[...Array(7)].map((_, i) => (
+                                                                        <div key={`drag-u-r-${i}`} className="w-full h-px bg-slate-400/80"></div>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="absolute inset-0 pointer-events-none p-2">
+                                                                    <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                        <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
+                                                                        <path d="M 20 85 L 25 90 L 30 85" />
+                                                                    </svg>
+                                                                </div>
+                                                            </>
+                                                        ) : dragGhost.stairVariant === "spiral" ? (
+                                                            <>
+                                                                <div className="absolute inset-0 rounded-full border-[2px] border-slate-400"></div>
+                                                                <div className="absolute inset-[35%] border border-slate-400 rounded-full bg-slate-100 z-10"></div>
+                                                                {[...Array(12)].map((_, i) => (
+                                                                    <div
+                                                                        key={`drag-spiral-${i}`}
+                                                                        className="absolute inset-0 border-t border-slate-400 origin-center"
+                                                                        style={{ transform: `rotate(${i * 30}deg)` }}
+                                                                    ></div>
                                                                 ))}
-                                                            </div>
-                                                            <div className="absolute top-0 left-0 w-1/2 h-1/2 border-b border-slate-400 flex flex-row justify-between px-1">
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <div key={`drag-l-h-${i}`} className="h-full w-px bg-slate-400/80"></div>
-                                                                ))}
-                                                            </div>
-                                                            <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
-                                                                <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M 85 90 L 85 25 L 10 25" />
-                                                                    <path d="M 15 20 L 10 25 L 15 30" />
-                                                                </svg>
-                                                            </div>
-                                                        </>
-                                                    ) : dragGhost.stairVariant === "u-shape" ? (
-                                                        <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
-                                                            <div className="absolute top-0 left-0 right-0 h-[30%] border-b border-slate-400 bg-slate-200/60"></div>
-                                                            <div className="absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 bg-slate-500"></div>
-                                                            <div className="absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r border-slate-400">
-                                                                {[...Array(7)].map((_, i) => (
-                                                                    <div key={`drag-u-l-${i}`} className="w-full h-px bg-slate-400/80"></div>
-                                                                ))}
-                                                            </div>
-                                                            <div className="absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l border-slate-400">
-                                                                {[...Array(7)].map((_, i) => (
-                                                                    <div key={`drag-u-r-${i}`} className="w-full h-px bg-slate-400/80"></div>
-                                                                ))}
-                                                            </div>
-                                                            <div className="absolute inset-0 pointer-events-none p-2">
-                                                                <svg className="w-full h-full text-slate-400" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
-                                                                    <path d="M 20 85 L 25 90 L 30 85" />
-                                                                </svg>
-                                                            </div>
-                                                        </>
-                                                    ) : dragGhost.stairVariant === "spiral" ? (
-                                                        <>
-                                                            <div className="absolute inset-0 rounded-full border-[2px] border-slate-400"></div>
-                                                            <div className="absolute inset-[35%] border border-slate-400 rounded-full bg-slate-100 z-10"></div>
-                                                            {[...Array(12)].map((_, i) => (
-                                                                <div
-                                                                    key={`drag-spiral-${i}`}
-                                                                    className="absolute inset-0 border-t border-slate-400 origin-center"
-                                                                    style={{ transform: `rotate(${i * 30}deg)` }}
-                                                                ></div>
-                                                            ))}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <div className="absolute inset-0 border-[2px] border-slate-400"></div>
-                                                            <div className="absolute inset-[4px] border border-slate-300"></div>
-                                                        </>
-                                                    )}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="absolute inset-0 border-[2px] border-slate-400"></div>
+                                                                <div className="absolute inset-[4px] border border-slate-300"></div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    <div className={`absolute inset-0 opacity-20 ${dragGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                                 </div>
-                                                <div className={`absolute inset-0 opacity-20 ${dragGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
+                                    </>
                                 )}
 
                                 {/* Units */}
@@ -2001,7 +2377,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             top: corridor.y,
                                             width: corridor.w,
                                             height: corridor.h,
-                                            zIndex: draggingCorridorId === corridor.id ? 28 : 8,
+                                            opacity: draggingCorridorId === corridor.id ? 0.4 : 1,
+                                            zIndex: draggingCorridorId === corridor.id ? 35 : 8,
                                         }}
                                         drag={!readOnly && resizingCorridorId === null}
                                         dragConstraints={blueprintRef}
@@ -2010,35 +2387,58 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
                                         onPointerDown={readOnly ? undefined : () => setSelectedItem({ kind: "corridor", id: corridor.id })}
-                                        onDragStart={() => {
+                                        onDragStart={(_, info) => {
+                                            const rect = blueprintRef.current?.getBoundingClientRect();
+                                            if (rect) {
+                                                dragCaptureRef.current = { scale: rect.width / BLUEPRINT_WIDTH };
+                                            }
                                             setSelectedItem({ kind: "corridor", id: corridor.id });
                                             setDraggingCorridorId(corridor.id);
                                             setIsTrashHot(false);
+                                            setDragPointerAnchor("corridor", corridor.id, corridor.x, corridor.y, info.point.x, info.point.y);
                                             setDragGhost({
-                                                unitId: corridor.id,
+                                                id: corridor.id,
                                                 kind: "corridor",
                                                 label: corridor.label,
                                                 x: corridor.x,
                                                 y: corridor.y,
+                                                rawX: corridor.x,
+                                                rawY: corridor.y,
                                                 w: corridor.w,
                                                 h: corridor.h,
                                                 isValid: true,
                                             });
                                         }}
                                         onDrag={(_, info) => {
-                                            const worldOffsetX = info.offset.x / scaleRef.current;
-                                            const worldOffsetY = info.offset.y / scaleRef.current;
-                                            const nextX = clampUnitAxis(snapToGrid(corridor.x + worldOffsetX), corridor.w, BLUEPRINT_WIDTH);
-                                            const nextY = clampUnitAxis(snapToGrid(corridor.y + worldOffsetY), corridor.h, BLUEPRINT_HEIGHT);
-                                            updateCanvasDimensions({ kind: "corridor", id: corridor.id, x: nextX, y: nextY, w: corridor.w, h: corridor.h });
+                                            const s = dragCaptureRef.current?.scale || scaleRef.current;
+                                            const worldOffsetX = info.offset.x / s;
+                                            const worldOffsetY = info.offset.y / s;
+                                            const rawPosition = getDraggedItemRawPosition(
+                                                "corridor",
+                                                corridor.id,
+                                                info.point.x,
+                                                info.point.y,
+                                                corridor.x + worldOffsetX,
+                                                corridor.y + worldOffsetY
+                                            );
+                                            const snappedPosition = getSnappedRectPosition(
+                                                rawPosition.x,
+                                                rawPosition.y,
+                                                corridor.w,
+                                                corridor.h
+                                            );
+                                            const nextX = snappedPosition.x;
+                                            const nextY = snappedPosition.y;
                                             const hasCollision = hasCollisionWithPlacedItems({ x: nextX, y: nextY, w: corridor.w, h: corridor.h }, { kind: "corridor", id: corridor.id });
                                             updateTrashHotState(info.point.x, info.point.y);
                                             setDragGhost({
-                                                unitId: corridor.id,
+                                                id: corridor.id,
                                                 kind: "corridor",
                                                 label: corridor.label,
                                                 x: nextX,
                                                 y: nextY,
+                                                rawX: rawPosition.x,
+                                                rawY: rawPosition.y,
                                                 w: corridor.w,
                                                 h: corridor.h,
                                                 isValid: !hasCollision,
@@ -2050,14 +2450,29 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 requestDeleteItem({ kind: "corridor", id: corridor.id }, "trash");
                                                 setDragGhost(null);
                                                 setDraggingCorridorId(current => current === corridor.id ? null : current);
+                                                clearDragPointerAnchor("corridor", corridor.id);
                                                 setIsTrashHot(false);
                                                 return;
                                             }
 
-                                            const worldOffsetX = info.offset.x / scale;
-                                            const worldOffsetY = info.offset.y / scale;
-                                            const nextX = clampUnitAxis(snapToGrid(corridor.x + worldOffsetX), corridor.w, BLUEPRINT_WIDTH);
-                                            const nextY = clampUnitAxis(snapToGrid(corridor.y + worldOffsetY), corridor.h, BLUEPRINT_HEIGHT);
+                                            const worldOffsetX = info.offset.x / scaleRef.current;
+                                            const worldOffsetY = info.offset.y / scaleRef.current;
+                                            const rawPosition = getDraggedItemRawPosition(
+                                                "corridor",
+                                                corridor.id,
+                                                info.point.x,
+                                                info.point.y,
+                                                corridor.x + worldOffsetX,
+                                                corridor.y + worldOffsetY
+                                            );
+                                            const snappedPosition = getSnappedRectPosition(
+                                                rawPosition.x,
+                                                rawPosition.y,
+                                                corridor.w,
+                                                corridor.h
+                                            );
+                                            const nextX = snappedPosition.x;
+                                            const nextY = snappedPosition.y;
                                             const hasCollision = hasCollisionWithPlacedItems({ x: nextX, y: nextY, w: corridor.w, h: corridor.h }, { kind: "corridor", id: corridor.id });
 
                                             if (hasCollision) {
@@ -2071,6 +2486,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             }
                                             setDragGhost(null);
                                             setDraggingCorridorId(current => current === corridor.id ? null : current);
+                                            clearDragPointerAnchor("corridor", corridor.id);
                                             setIsTrashHot(false);
                                         }}
                                     >
@@ -2138,7 +2554,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             top: structure.y,
                                             width: structure.w,
                                             height: structure.h,
-                                            zIndex: draggingStructureId === structure.id ? 29 : 9,
+                                            opacity: draggingStructureId === structure.id ? 0.4 : 1,
+                                            zIndex: draggingStructureId === structure.id ? 35 : 9,
                                         }}
                                         drag={!readOnly}
                                         dragConstraints={blueprintRef}
@@ -2147,12 +2564,17 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
                                         onPointerDown={readOnly ? undefined : () => setSelectedItem({ kind: "structure", id: structure.id })}
-                                        onDragStart={() => {
+                                        onDragStart={(_, info) => {
+                                            const rect = blueprintRef.current?.getBoundingClientRect();
+                                            if (rect) {
+                                                dragCaptureRef.current = { scale: rect.width / BLUEPRINT_WIDTH };
+                                            }
                                             setSelectedItem({ kind: "structure", id: structure.id });
                                             setDraggingStructureId(structure.id);
                                             setIsTrashHot(false);
+                                            setDragPointerAnchor("structure", structure.id, structure.x, structure.y, info.point.x, info.point.y);
                                             setDragGhost({
-                                                unitId: structure.id,
+                                                id: structure.id,
                                                 kind: "structure",
                                                 structureType: structure.type,
                                                 stairVariant: structure.variant,
@@ -2160,21 +2582,37 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 label: structure.label,
                                                 x: structure.x,
                                                 y: structure.y,
+                                                rawX: structure.x,
+                                                rawY: structure.y,
                                                 w: structure.w,
                                                 h: structure.h,
                                                 isValid: true,
                                             });
                                         }}
                                         onDrag={(_, info) => {
-                                            const worldOffsetX = info.offset.x / scaleRef.current;
-                                            const worldOffsetY = info.offset.y / scaleRef.current;
-                                            const nextX = clampUnitAxis(snapToGrid(structure.x + worldOffsetX), structure.w, BLUEPRINT_WIDTH);
-                                            const nextY = clampUnitAxis(snapToGrid(structure.y + worldOffsetY), structure.h, BLUEPRINT_HEIGHT);
-                                            updateCanvasDimensions({ kind: "structure", id: structure.id, x: nextX, y: nextY, w: structure.w, h: structure.h });
+                                            const s = dragCaptureRef.current?.scale || scaleRef.current;
+                                            const worldOffsetX = info.offset.x / s;
+                                            const worldOffsetY = info.offset.y / s;
+                                            const rawPosition = getDraggedItemRawPosition(
+                                                "structure",
+                                                structure.id,
+                                                info.point.x,
+                                                info.point.y,
+                                                structure.x + worldOffsetX,
+                                                structure.y + worldOffsetY
+                                            );
+                                            const snappedPosition = getSnappedRectPosition(
+                                                rawPosition.x,
+                                                rawPosition.y,
+                                                structure.w,
+                                                structure.h
+                                            );
+                                            const nextX = snappedPosition.x;
+                                            const nextY = snappedPosition.y;
                                             const hasCollision = hasCollisionWithPlacedItems({ x: nextX, y: nextY, w: structure.w, h: structure.h }, { kind: "structure", id: structure.id });
                                             updateTrashHotState(info.point.x, info.point.y);
                                             setDragGhost({
-                                                unitId: structure.id,
+                                                id: structure.id,
                                                 kind: "structure",
                                                 structureType: structure.type,
                                                 stairVariant: structure.variant,
@@ -2182,6 +2620,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 label: structure.label,
                                                 x: nextX,
                                                 y: nextY,
+                                                rawX: rawPosition.x,
+                                                rawY: rawPosition.y,
                                                 w: structure.w,
                                                 h: structure.h,
                                                 isValid: !hasCollision,
@@ -2193,14 +2633,29 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 requestDeleteItem({ kind: "structure", id: structure.id }, "trash");
                                                 setDragGhost(null);
                                                 setDraggingStructureId(current => current === structure.id ? null : current);
+                                                clearDragPointerAnchor("structure", structure.id);
                                                 setIsTrashHot(false);
                                                 return;
                                             }
 
-                                            const worldOffsetX = info.offset.x / scale;
-                                            const worldOffsetY = info.offset.y / scale;
-                                            const nextX = clampUnitAxis(snapToGrid(structure.x + worldOffsetX), structure.w, BLUEPRINT_WIDTH);
-                                            const nextY = clampUnitAxis(snapToGrid(structure.y + worldOffsetY), structure.h, BLUEPRINT_HEIGHT);
+                                            const worldOffsetX = info.offset.x / scaleRef.current;
+                                            const worldOffsetY = info.offset.y / scaleRef.current;
+                                            const rawPosition = getDraggedItemRawPosition(
+                                                "structure",
+                                                structure.id,
+                                                info.point.x,
+                                                info.point.y,
+                                                structure.x + worldOffsetX,
+                                                structure.y + worldOffsetY
+                                            );
+                                            const snappedPosition = getSnappedRectPosition(
+                                                rawPosition.x,
+                                                rawPosition.y,
+                                                structure.w,
+                                                structure.h
+                                            );
+                                            const nextX = snappedPosition.x;
+                                            const nextY = snappedPosition.y;
                                             const hasCollision = hasCollisionWithPlacedItems({ x: nextX, y: nextY, w: structure.w, h: structure.h }, { kind: "structure", id: structure.id });
 
                                             if (hasCollision) {
@@ -2214,6 +2669,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             }
                                             setDragGhost(null);
                                             setDraggingStructureId(current => current === structure.id ? null : current);
+                                            clearDragPointerAnchor("structure", structure.id);
                                             setIsTrashHot(false);
                                         }}
                                     >
@@ -2352,7 +2808,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             top: unit.y,
                                             width: unit.w,
                                             height: unit.h,
-                                            zIndex: draggingUnitId === unit.id ? 30 : 10,
+                                            opacity: draggingUnitId === unit.id ? 0.4 : 1,
+                                            zIndex: draggingUnitId === unit.id ? 40 : 10,
                                         }}
                                         drag={!readOnly}
                                         dragConstraints={blueprintRef}
@@ -2368,37 +2825,59 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 setTransferSuccess(false);
                                             }
                                         } : () => setSelectedItem({ kind: "unit", id: unit.id })}
-                                        onDragStart={() => {
+                                        onDragStart={(_, info) => {
+                                            const rect = blueprintRef.current?.getBoundingClientRect();
+                                            if (rect) {
+                                                dragCaptureRef.current = { scale: rect.width / BLUEPRINT_WIDTH };
+                                            }
                                             setSelectedItem({ kind: "unit", id: unit.id });
                                             setDraggingUnitId(unit.id);
                                             setIsTrashHot(false);
+                                            setDragPointerAnchor("unit", unit.id, unit.x, unit.y, info.point.x, info.point.y);
                                             setDragGhost({
-                                                unitId: unit.id,
+                                                id: unit.id,
                                                 kind: "unit",
                                                 label: unit.name,
                                                 x: unit.x,
                                                 y: unit.y,
+                                                rawX: unit.x,
+                                                rawY: unit.y,
                                                 w: unit.w,
                                                 h: unit.h,
                                                 isValid: true,
                                             });
                                         }}
                                         onDrag={(_, info) => {
-                                            const worldOffsetX = info.offset.x / scaleRef.current;
-                                            const worldOffsetY = info.offset.y / scaleRef.current;
-                                            const snappedPosition = getSnappedUnitPosition(unit, worldOffsetX, worldOffsetY);
-                                            updateCanvasDimensions({ kind: "unit", id: unit.id, x: snappedPosition.x, y: snappedPosition.y, w: unit.w, h: unit.h });
+                                            const s = dragCaptureRef.current?.scale || scaleRef.current;
+                                            const worldOffsetX = info.offset.x / s;
+                                            const worldOffsetY = info.offset.y / s;
+                                            const rawPosition = getDraggedItemRawPosition(
+                                                "unit",
+                                                unit.id,
+                                                info.point.x,
+                                                info.point.y,
+                                                unit.x + worldOffsetX,
+                                                unit.y + worldOffsetY
+                                            );
+                                            const snappedPosition = getSnappedRectPosition(
+                                                rawPosition.x,
+                                                rawPosition.y,
+                                                unit.w,
+                                                unit.h
+                                            );
                                             const hasCollision = hasCollisionWithPlacedItems(
                                                 { x: snappedPosition.x, y: snappedPosition.y, w: unit.w, h: unit.h },
                                                 { kind: "unit", id: unit.id }
                                             );
                                             updateTrashHotState(info.point.x, info.point.y);
                                             setDragGhost({
-                                                unitId: unit.id,
+                                                id: unit.id,
                                                 kind: "unit",
                                                 label: unit.name,
                                                 x: snappedPosition.x,
                                                 y: snappedPosition.y,
+                                                rawX: rawPosition.x,
+                                                rawY: rawPosition.y,
                                                 w: unit.w,
                                                 h: unit.h,
                                                 isValid: !hasCollision,
@@ -2410,6 +2889,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                 requestDeleteItem({ kind: "unit", id: unit.id }, "trash");
                                                 setDragGhost(null);
                                                 setDraggingUnitId(current => current === unit.id ? null : current);
+                                                clearDragPointerAnchor("unit", unit.id);
                                                 setIsTrashHot(false);
                                                 return;
                                             }
@@ -2419,9 +2899,22 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                                     const currentUnit = prevUnits.find((u) => u.id === unit.id);
                                                     if (!currentUnit) return prevUnits;
 
-                                                    const worldOffsetX = info.offset.x / scale;
-                                                    const worldOffsetY = info.offset.y / scale;
-                                                    const snappedPosition = getSnappedUnitPosition(currentUnit, worldOffsetX, worldOffsetY);
+                                                    const worldOffsetX = info.offset.x / scaleRef.current;
+                                                    const worldOffsetY = info.offset.y / scaleRef.current;
+                                                    const rawPosition = getDraggedItemRawPosition(
+                                                        "unit",
+                                                        currentUnit.id,
+                                                        info.point.x,
+                                                        info.point.y,
+                                                        currentUnit.x + worldOffsetX,
+                                                        currentUnit.y + worldOffsetY
+                                                    );
+                                                    const snappedPosition = getSnappedRectPosition(
+                                                        rawPosition.x,
+                                                        rawPosition.y,
+                                                        currentUnit.w,
+                                                        currentUnit.h
+                                                    );
                                                     const hasCollision = hasCollisionWithPlacedItems(
                                                         { x: snappedPosition.x, y: snappedPosition.y, w: currentUnit.w, h: currentUnit.h },
                                                         { kind: "unit", id: currentUnit.id }
@@ -2445,6 +2938,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             });
                                             setDragGhost(null);
                                             setDraggingUnitId(current => current === unit.id ? null : current);
+                                            clearDragPointerAnchor("unit", unit.id);
                                             setIsTrashHot(false);
                                         }}
                                     >
@@ -2833,6 +3327,13 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                 unit={selectedUnit}
                                 onUpdate={(updates) => {
                                     setUnits(prev => prev.map(u => u.id === selectedUnit.id ? { ...u, ...updates } : u));
+                                    if (updates.status && (selectedUnit.dbId ?? selectedUnit.id)) {
+                                        void fetch(`/api/landlord/units/${selectedUnit.dbId ?? selectedUnit.id}/status`, {
+                                            method: "PATCH",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ status: updates.status }),
+                                        });
+                                    }
                                 }}
                                 onDelete={() => {
                                     deleteCanvasItem({ kind: "unit", id: selectedUnit.id });
@@ -2846,8 +3347,11 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         ) : (
                             <SidebarBlockLibrary
                                 onDragStart={handleSidebarBlockDragStart}
+                                onUnitClick={handleUnplacedUnitClick}
                                 styles={styles}
                                 isDark={isDark}
+                                unplacedUnits={unplacedDbUnits}
+                                isPropertyMode={selectedPropertyId !== "all"}
                             />
                         )}
                     </aside>
@@ -3044,7 +3548,7 @@ const UnitDetailsPanel = ({
                         </div>
                         <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
                             <span className="material-icons-round text-[16px] text-cyan-400">aspect_ratio</span>
-                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 tracking-wide uppercase">{unitAreaSqm} m²</span>
+                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 tracking-wide uppercase">{unitAreaSqm} mÂ²</span>
                         </div>
                     </div>
                 </div>
@@ -3410,12 +3914,18 @@ const UnitNotesPanel = ({
 /* Extracted Sidebar Library Component for cleaner main render */
 const SidebarBlockLibrary = ({
     onDragStart,
+    onUnitClick,
     styles,
-    isDark
+    isDark,
+    unplacedUnits = [],
+    isPropertyMode = false,
 }: {
-    onDragStart: (type: SidebarBlockType) => (e: React.DragEvent<HTMLDivElement>) => void;
+    onDragStart: (type: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => void;
     styles: { readonly [key: string]: string; }
     isDark: boolean;
+    unplacedUnits?: DbUnit[];
+    isPropertyMode?: boolean;
+    onUnitClick?: (unit: DbUnit) => void;
 }) => {
     const handleSidebarBlockDragEnd = () => {
         // Optional cleanup if needed inside component, but parent tracks ghost
@@ -3423,6 +3933,29 @@ const SidebarBlockLibrary = ({
 
     return (
         <div className="flex flex-col h-full">
+            {unplacedUnits.length > 0 && (
+                <div className={`shrink-0 border-b px-4 py-3 ${isDark ? 'border-slate-800 bg-amber-500/5' : 'border-amber-200 bg-amber-50'}`}>
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>Unplaced Units ({unplacedUnits.length})</p>
+                    <p className={`text-[11px] mb-2 ${isDark ? 'text-neutral-500' : 'text-slate-500'}`}>Drag these onto the canvas to place them.</p>
+                    <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
+                        {unplacedUnits.map(u => {
+                            const blockType = u.beds === 0 ? "studio" : u.beds === 2 ? "2br" : u.beds >= 3 ? "3br" : "1br";
+                            return (
+                                <div 
+                                    key={u.id} 
+                                    draggable
+                                    onDragStart={onDragStart(blockType, u.id)}
+                                    onClick={() => onUnitClick?.(u)}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold cursor-grab active:cursor-grabbing transition-all ${isDark ? 'border-amber-500/20 bg-amber-500/10 text-amber-300 hover:border-amber-400/40' : 'border-amber-300 bg-amber-100/80 text-amber-800 hover:border-amber-400'}`}
+                                >
+                                    <span className="material-icons-round text-sm">apartment</span>
+                                    {u.name}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
             <div className={`p-4 border-b ${isDark ? 'border-slate-800' : 'border-border'}`}>
                 <h2 className={`mb-4 text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Building Blocks</h2>
                 <div className="relative">
@@ -3433,11 +3966,12 @@ const SidebarBlockLibrary = ({
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
-                <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                        <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
-                        Living Units
-                    </h3>
+                {!isPropertyMode && (
+                    <div>
+                        <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                            <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
+                            Living Units
+                        </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
                             className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
@@ -3489,6 +4023,7 @@ const SidebarBlockLibrary = ({
                         </div>
                     </div>
                 </div>
+                )}
                 <div>
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                         <span className="material-icons-round text-primary text-sm">architecture</span>
@@ -3598,4 +4133,22 @@ const SidebarBlockLibrary = ({
         </div>
     );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

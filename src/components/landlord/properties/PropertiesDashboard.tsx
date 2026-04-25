@@ -51,7 +51,6 @@ const FILTER_TABS = ["All", "Performing", "Attention Required"] as const;
 const getStyleByStatus = (status: PropertyStatus) => {
     if (status === "Performing") {
         return {
-            color: "from-emerald-500/20 to-emerald-500/0",
             iconColor: "text-emerald-500",
             bgIcon: "bg-emerald-500/10",
         };
@@ -59,14 +58,12 @@ const getStyleByStatus = (status: PropertyStatus) => {
 
     if (status === "Attention Required") {
         return {
-            color: "from-amber-500/20 to-amber-500/0",
             iconColor: "text-amber-500",
             bgIcon: "bg-amber-500/10",
         };
     }
 
     return {
-        color: "from-blue-500/20 to-blue-500/0",
         iconColor: "text-blue-500",
         bgIcon: "bg-blue-500/10",
     };
@@ -139,8 +136,9 @@ export function PropertiesDashboard() {
     return (
         <div className="min-h-screen space-y-8 px-3 pb-12 pt-6 text-foreground sm:px-4 lg:px-5 xl:px-6">
             {/* Command Center / Header */}
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-muted/35 p-8 shadow-sm">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-sm">
+                {/* Top Accent Line */}
+                <div className="absolute inset-x-0 top-0 h-px bg-border" />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
@@ -233,8 +231,7 @@ export function PropertiesDashboard() {
 
                     return (
                         <div key={property.id} className="group relative overflow-hidden rounded-3xl border border-border bg-card/95 shadow-sm transition-all duration-500 hover:border-primary/20 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] dark:hover:border-white/10">
-                            {/* Ambient Glow */}
-                            <div className={cn("pointer-events-none absolute left-0 top-0 h-32 w-full bg-gradient-to-b opacity-25 transition-opacity duration-500 group-hover:opacity-45", style.color)} />
+                            {/* No Ambient Glow */}
 
                             <div className="flex flex-col lg:flex-row relative z-10 w-full">
                                 {/* Left Image Section */}
@@ -245,7 +242,7 @@ export function PropertiesDashboard() {
                                         fill
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent lg:hidden" />
+                                    {/* No Image Gradient */}
                                 </div>
 
                                 {/* Right Content Section */}
