@@ -17,6 +17,8 @@ export interface Unit {
     type: "Studio" | "1BR" | "2BR" | "3BR";
     status: "occupied" | "vacant" | "maintenance" | "neardue";
     tenant?: string;
+    tenantAvatarUrl?: string;
+    tenantAvatarBgColor?: string;
     x: number;
     y: number;
     w: number;
@@ -24,6 +26,7 @@ export interface Unit {
     details?: string;
     leaseStart?: string;
     leaseEnd?: string;
+    maintenanceDate?: string;
     floor?: number;   // DB floor number
 }
 
@@ -45,6 +48,14 @@ interface DbUnit {
         w: number;
         h: number;
     } | null;
+    tenant_name?: string;
+    tenant_avatar_url?: string;
+    tenant_avatar_bg_color?: string;
+    lease_start?: string;
+    lease_end?: string;
+    maintenance_title?: string;
+    maintenance_description?: string;
+    maintenance_created_at?: string;
 }
 
 interface FloorConfig {
@@ -72,6 +83,8 @@ interface FloorLayout {
     units: Unit[];
     corridors: Corridor[];
     structures: Structure[];
+    extraWidth?: number;
+    extraHeight?: number;
 }
 
 type CorridorResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
@@ -242,10 +255,17 @@ const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
         name: dbUnit.name,
         type,
         status: (dbUnit.status as Unit["status"]) ?? "vacant",
+        tenant: dbUnit.tenant_name,
+        tenantAvatarUrl: dbUnit.tenant_avatar_url,
+        tenantAvatarBgColor: dbUnit.tenant_avatar_bg_color,
         x: pos.x,
         y: pos.y,
         w: pos.w,
         h: pos.h,
+        details: dbUnit.maintenance_description || dbUnit.maintenance_title,
+        leaseStart: dbUnit.lease_start,
+        leaseEnd: dbUnit.lease_end,
+        maintenanceDate: dbUnit.maintenance_created_at,
         floor: dbUnit.floor,
     };
 };
@@ -1125,15 +1145,21 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         };
 
         const nextLayout = floorLayouts[nextFloor] ?? EMPTY_FLOOR_LAYOUT;
+        const nextUnits = nextLayout.units;
+        const nextCorridors = nextLayout.corridors;
+        const nextStructures = nextLayout.structures;
+        const savedExtraW = nextLayout.extraWidth ?? 0;
+        const savedExtraH = nextLayout.extraHeight ?? 0;
 
         setFloorLayouts((prev) => ({
             ...prev,
             [activeFloor]: snapshot,
         }));
 
-        setUnits(nextLayout.units);
-        setCorridors(nextLayout.corridors);
-        setStructures(nextLayout.structures);
+        setUnits(nextUnits);
+        setCorridors(nextCorridors);
+        setStructures(nextStructures);
+        setExtraDimensions({ width: savedExtraW, height: savedExtraH });
 
         setActiveFloor(nextFloor);
         setSelectedItem(null);
@@ -1155,8 +1181,6 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         }];
         historyIndexRef.current = 0;
         setUndoAvailable(false);
-
-        setExtraDimensions({ width: 0, height: 0 });
     };
 
     const createFloor = () => {
@@ -1644,6 +1668,8 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                 units,
                 corridors,
                 structures,
+                extraWidth: extraDimensions.width,
+                extraHeight: extraDimensions.height,
             },
         };
 
@@ -3551,7 +3577,12 @@ const UnitDetailsPanel = ({
                             <span className="text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-100 uppercase">{unitLayoutLabel}</span>
                         </div>
                         <div className={`flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40`}>
-                            <div className={`h-2 w-2 rounded-full animate-pulse ${unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'}`} />
+                            <div className={`h-2 w-2 rounded-full animate-pulse ${
+                                unit.status === 'occupied' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
+                                unit.status === 'vacant' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                                unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
+                                'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                            }`} />
                             <span className="text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-100 uppercase">{currentStatus.label}</span>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
@@ -3591,12 +3622,20 @@ const UnitDetailsPanel = ({
                                     <div className="flex items-center gap-5">
                                         <div className="relative">
                                             <div className="relative h-16 w-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                                <div className="h-full w-full overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800">
-                                                    <img
-                                                        src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
-                                                        alt="Tenant"
-                                                        className="h-full w-full object-cover"
-                                                    />
+                                                <div className="h-full w-full overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                                    {unit.tenantAvatarUrl ? (
+                                                        <img
+                                                            src={unit.tenantAvatarUrl}
+                                                            alt="Tenant"
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
+                                                            alt="Tenant"
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    )}
                                                 </div>
                                                 <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
                                             </div>
