@@ -14,6 +14,7 @@ import {
     Briefcase,
     FileText,
     CreditCard,
+    Wrench,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordProfileScreen.module.css";
@@ -106,11 +107,11 @@ export default function LandlordProfileScreen() {
                                 <ChevronRight />
                             </div>
                         </button>
-                        <button className={styles.menuItem}>
+                        <button className={styles.menuItem} onClick={() => navigate("landlordMaintenance")}>
                             <div className={styles.menuItemIcon}>
-                                <Briefcase />
+                                <Wrench />
                             </div>
-                            <span className={styles.menuItemLabel}>Service Providers</span>
+                            <span className={styles.menuItemLabel}>Maintenance Log</span>
                             <div className={styles.menuItemRight}>
                                 <ChevronRight />
                             </div>
