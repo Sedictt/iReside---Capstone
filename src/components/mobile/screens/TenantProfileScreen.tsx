@@ -36,24 +36,7 @@ export default function TenantProfileScreen() {
                     <p className={styles.userEmail}>juan.delacruz@gmail.com</p>
                 </div>
 
-                {/* Role Switcher */}
-                <div
-                    className={styles.roleSwitcherCard}
-                    onClick={() => setRole("landlord")}
-                >
-                    <div className={styles.roleLeft}>
-                        <div className={styles.roleIcon}>
-                            <Building2 />
-                        </div>
-                        <div className={styles.roleText}>
-                            <h3>Switch to Landlord</h3>
-                            <p>Manage properties & listings</p>
-                        </div>
-                    </div>
-                    <div className={styles.roleRight}>
-                        <ChevronRight />
-                    </div>
-                </div>
+
 
                 {/* Quick Stats */}
                 <div className={styles.statsRow}>
