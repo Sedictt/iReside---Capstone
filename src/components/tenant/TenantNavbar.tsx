@@ -26,6 +26,7 @@ import { signOut } from "@/lib/supabase/client-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useNotifications } from "@/context/NotificationContext";
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 
 const NAV_SECTIONS = [
     {
@@ -125,12 +126,23 @@ export function TenantSidebar() {
 
                 <div className="border-t border-border/70 p-4">
                     <div className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-left">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-border" style={{ backgroundColor: avatarBgColor }}>
-                            <Image src={avatarUrl} alt="Profile" fill className="object-cover" />
-                        </div>
+                        <ProfileCardTrigger 
+                            userId={user?.id || ""} 
+                            initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as any }}
+                            asChild
+                        >
+                            <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all" style={{ backgroundColor: avatarBgColor }}>
+                                <Image src={avatarUrl} alt="Profile" fill className="object-cover" />
+                            </div>
+                        </ProfileCardTrigger>
                         <div className="min-w-0 flex-1">
                             <div className="flex min-w-0 items-center gap-2">
-                                <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+                                <ProfileCardTrigger 
+                                    userId={user?.id || ""} 
+                                    initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as any }}
+                                >
+                                    <p className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
+                                </ProfileCardTrigger>
                                 <RoleBadge role={profile?.role ?? null} />
                             </div>
                             <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Tenant Account"}</p>

@@ -18,6 +18,7 @@ import {
     type ConversationSummary,
 } from "@/lib/messages/client";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
+import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 
 interface ChatUser {
     id: string;
@@ -932,28 +933,39 @@ export function TenantContactsSidebar() {
                                             isHovered ? "p-3 hover:bg-muted/60" : "p-1 justify-center hover:scale-110"
                                         )}
                                     >
-                                        <div className="relative shrink-0">
-                                            <div
-                                                className="w-10 h-10 rounded-full overflow-hidden border-2 border-card"
-                                                style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
-                                            >
-                                                <img
-                                                    src={msg.avatar}
-                                                    alt={msg.name}
-                                                    className="w-10 h-10 object-cover"
-                                                />
+                                        <ProfileCardTrigger 
+                                            userId={msg.participantUserId || ""} 
+                                            initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
+                                            asChild
+                                        >
+                                            <div className="relative shrink-0">
+                                                <div
+                                                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-card"
+                                                    style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
+                                                >
+                                                    <img
+                                                        src={msg.avatar}
+                                                        alt={msg.name}
+                                                        className="w-10 h-10 object-cover"
+                                                    />
+                                                </div>
+                                                {msg.unread && (
+                                                    <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-card" />
+                                                )}
                                             </div>
-                                            {msg.unread && (
-                                                <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-card" />
-                                            )}
-                                        </div>
+                                        </ProfileCardTrigger>
                                         {isHovered && (
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between mb-0.5">
                                                     <div className="flex min-w-0 items-center gap-2 pr-2">
-                                                        <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-slate-700 dark:text-neutral-200")}>
-                                                            {msg.name}
-                                                        </h4>
+                                                        <ProfileCardTrigger 
+                                                            userId={msg.participantUserId || ""} 
+                                                            initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
+                                                        >
+                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-slate-700 dark:text-neutral-200")}>
+                                                                {msg.name}
+                                                            </h4>
+                                                        </ProfileCardTrigger>
                                                         <RoleBadge role={msg.role} />
                                                     </div>
                                                     <span className="text-[10px] text-muted-foreground shrink-0">{msg.time}</span>

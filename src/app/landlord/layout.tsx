@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/context/AuthContext";
 import { PropertyProvider } from "@/context/PropertyContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { ProfileCardProvider } from "@/context/ProfileCardContext";
+import { ProfileCard } from "@/components/ui/ProfileCard";
 
 export default function LandlordLayout({
     children,
@@ -36,28 +38,31 @@ export default function LandlordLayout({
         <AuthProvider>
             <PropertyProvider>
                 <NotificationProvider>
-                    <div className="flex h-screen bg-background text-foreground overflow-hidden">
-                        {showSidebar && (
-                            <Sidebar 
-                                isCollapsed={isSidebarCollapsed} 
-                                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                                showCollapseToggle={isUnitMap}
-                            />
-                        )}
-                        
-                        <main 
-                            className={cn(
-                                "flex-1 overflow-y-auto h-full transition-all duration-300", 
-                                showSidebar ? (isSidebarCollapsed ? "ml-[80px]" : "ml-[280px]") : "",
-                                showContactsSidebar ? "md:pr-24" : ""
+                    <ProfileCardProvider>
+                        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+                            {showSidebar && (
+                                <Sidebar 
+                                    isCollapsed={isSidebarCollapsed} 
+                                    onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                    showCollapseToggle={isUnitMap}
+                                />
                             )}
-                        >
-                            {children}
-                        </main>
-                        
-                        {showContactsSidebar && <ContactsSidebar />}
-                        <InPersonPaymentModal />
-                    </div>
+                            
+                            <main 
+                                className={cn(
+                                    "flex-1 overflow-y-auto h-full transition-all duration-300", 
+                                    showSidebar ? (isSidebarCollapsed ? "ml-[80px]" : "ml-[280px]") : "",
+                                    showContactsSidebar ? "md:pr-24" : ""
+                                )}
+                            >
+                                {children}
+                            </main>
+                            
+                            {showContactsSidebar && <ContactsSidebar />}
+                            <InPersonPaymentModal />
+                        </div>
+                        <ProfileCard />
+                    </ProfileCardProvider>
                 </NotificationProvider>
             </PropertyProvider>
         </AuthProvider>

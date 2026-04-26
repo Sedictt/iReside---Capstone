@@ -508,9 +508,9 @@ const UnitHistoryModal = ({
     );
 };
 
-export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean } = {}) {
+export default function VisualBuilder({ readOnly = false, propertyId: externalPropertyId }: { readOnly?: boolean; propertyId?: string } = {}) {
     const propertyContext = useOptionalProperty();
-    const selectedPropertyId = propertyContext?.selectedPropertyId ?? "all";
+    const selectedPropertyId = externalPropertyId ?? propertyContext?.selectedPropertyId ?? "all";
     const selectedProperty = propertyContext?.selectedProperty;
     
     // Scoped storage keys to ensure each property has its own map
@@ -618,7 +618,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         const load = async () => {
             try {
-                const res = await fetch(`/api/landlord/unit-map?propertyId=${selectedPropertyId}`, {
+                const endpoint = readOnly 
+                    ? "/api/tenant/unit-map" 
+                    : `/api/landlord/unit-map?propertyId=${selectedPropertyId}`;
+                
+                const res = await fetch(endpoint, {
                     signal: controller.signal,
                 });
                 if (!res.ok) {
