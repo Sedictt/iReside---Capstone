@@ -150,6 +150,22 @@ export async function GET(request: NextRequest) {
         }
     }
 
+    // Fetch pending application counts for units
+    let applicationCounts: Record<string, number> = {};
+    if (unitIds.length > 0) {
+        const { data: apps, error: appsError } = await supabase
+            .from("tenant_applications")
+            .select("unit_id, id")
+            .in("unit_id", unitIds)
+            .in("status", ["pending", "reviewing"]);
+        
+        if (!appsError && apps) {
+            for (const app of apps) {
+                applicationCounts[app.unit_id] = (applicationCounts[app.unit_id] || 0) + 1;
+            }
+        }
+    }
+
     const positionsByUnitId = new Map(
         positions
             .filter((position) => isValidUnitMapPosition(position))
@@ -161,6 +177,7 @@ export async function GET(request: NextRequest) {
         position: positionsByUnitId.get(unit.id) ?? null,
         ...(leaseData[unit.id] ?? {}),
         ...(maintenanceData[unit.id] ?? {}),
+        application_count: applicationCounts[unit.id] || 0,
     }));
 
     const placedCount = enrichedUnits.filter(u => u.position !== null).length;

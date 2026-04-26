@@ -16,6 +16,8 @@ type LeaseSummary = {
     landlordName: string | null;
     landlordEmail: string | null;
     landlordPhone: string | null;
+    landlordAvatarUrl: string | null;
+    landlordAvatarBgColor: string | null;
 };
 
 type NextPayment = {
@@ -140,7 +142,7 @@ export async function GET() {
             .select(`
                 id, status, start_date, end_date, monthly_rent, security_deposit,
                 unit:units(id, name, property:properties(id, name, address, city)),
-                landlord:profiles!leases_landlord_id_fkey(full_name, email, phone)
+                landlord:profiles!leases_landlord_id_fkey(full_name, email, phone, avatar_url, avatar_bg_color)
             `)
             .eq("tenant_id", user.id)
             .order("end_date", { ascending: false })
@@ -220,6 +222,8 @@ export async function GET() {
             landlordName: landlord?.full_name ?? null,
             landlordEmail: landlord?.email ?? null,
             landlordPhone: landlord?.phone ?? null,
+            landlordAvatarUrl: landlord?.avatar_url ?? null,
+            landlordAvatarBgColor: landlord?.avatar_bg_color ?? null,
         };
     }
 

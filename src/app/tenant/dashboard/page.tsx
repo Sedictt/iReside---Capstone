@@ -48,6 +48,8 @@ type DashboardData = {
         landlordName: string | null;
         landlordEmail: string | null;
         landlordPhone: string | null;
+        landlordAvatarUrl: string | null;
+        landlordAvatarBgColor: string | null;
     } | null;
     nextPayment: {
         id: string;
@@ -903,14 +905,35 @@ export default function TenantDashboard() {
                                 ) : lease ? (
                                         <div className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.96),rgba(10,10,10,0.98))] dark:shadow-[0_18px_40px_-30px_rgba(0,0,0,0.6)]">
                                             <div className="flex items-start gap-4">
-                                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-sm ring-1 ring-primary/10">
-                                                    <span className="text-lg font-black uppercase">
-                                                        {(lease.landlordName ?? "Support team")
-                                                            .split(" ")
-                                                            .map((part) => part[0])
-                                                            .join("")
-                                                            .slice(0, 2)}
-                                                    </span>
+                                                <div 
+                                                    className={cn(
+                                                        "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ring-primary/10 overflow-hidden relative",
+                                                        !lease.landlordAvatarBgColor && "bg-primary/12"
+                                                    )}
+                                                    style={{ 
+                                                        backgroundColor: lease.landlordAvatarBgColor || undefined,
+                                                        color: lease.landlordAvatarBgColor ? 'white' : undefined
+                                                    }}
+                                                >
+                                                    {lease.landlordAvatarUrl ? (
+                                                        <Image
+                                                            src={lease.landlordAvatarUrl}
+                                                            alt={lease.landlordName ?? "Landlord"}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className={cn(
+                                                            "text-lg font-black uppercase",
+                                                            !lease.landlordAvatarBgColor && "text-primary"
+                                                        )}>
+                                                            {(lease.landlordName ?? "Support team")
+                                                                .split(" ")
+                                                                .map((part) => part[0])
+                                                                .join("")
+                                                                .slice(0, 2)}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Primary contact</p>

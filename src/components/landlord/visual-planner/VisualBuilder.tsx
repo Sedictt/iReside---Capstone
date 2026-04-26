@@ -4,11 +4,16 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
+import { toast } from "sonner";
 import Link from "next/link";
 import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
 import { Logo } from "@/components/ui/Logo";
 import { useOptionalProperty } from "@/context/PropertyContext";
+import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
+import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
+import { QrCode, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface Unit {
     id: string;       // local canvas id (same as dbId for real units)
@@ -27,7 +32,11 @@ export interface Unit {
     leaseStart?: string;
     leaseEnd?: string;
     maintenanceDate?: string;
+    maintenanceTitle?: string;
+    maintenanceDescription?: string;
+    maintenanceStatus?: string;
     floor?: number;   // DB floor number
+    applicationCount?: number;
 }
 
 /** Shape returned by GET /api/landlord/unit-map */
@@ -56,6 +65,8 @@ interface DbUnit {
     maintenance_title?: string;
     maintenance_description?: string;
     maintenance_created_at?: string;
+    maintenance_status?: string;
+    application_count?: number;
 }
 
 interface FloorConfig {
@@ -142,7 +153,7 @@ interface SidebarBlockGhost {
     isValid: boolean;
 }
 
-type QuickActionType = "start-maintenance" | "mark-vacant" | "mark-occupied";
+type QuickActionType = "start-maintenance" | "manage-maintenance" | "mark-occupied" | "view-lease" | "renew-lease" | "create-invoice" | "unit-maintenance";
 
 interface QuickActionGuardResult {
     allowed: boolean;
@@ -266,7 +277,11 @@ const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
         leaseStart: dbUnit.lease_start,
         leaseEnd: dbUnit.lease_end,
         maintenanceDate: dbUnit.maintenance_created_at,
+        maintenanceTitle: dbUnit.maintenance_title,
+        maintenanceDescription: dbUnit.maintenance_description,
+        maintenanceStatus: dbUnit.maintenance_status,
         floor: dbUnit.floor,
+        applicationCount: dbUnit.application_count,
     };
 };
 
@@ -289,22 +304,27 @@ const getFloorDisplayLabel = (floorId: FloorId, customName?: string) => {
 const formatFloorWatermark = (floorId: FloorId, customName?: string) => getFloorDisplayLabel(floorId, customName).toUpperCase();
 
 const QUICK_ACTIONS_BY_STATUS: Record<Unit["status"], QuickActionType[]> = {
-    occupied: ["start-maintenance", "mark-vacant"],
-    neardue: ["start-maintenance", "mark-vacant"],
-    vacant: ["mark-occupied", "start-maintenance"],
-    maintenance: ["mark-vacant", "mark-occupied"],
+    occupied: ["view-lease", "start-maintenance", "create-invoice", "unit-maintenance"],
+    neardue: ["renew-lease", "start-maintenance", "create-invoice", "unit-maintenance"],
+    vacant: ["mark-occupied", "start-maintenance", "create-invoice", "unit-maintenance"],
+    maintenance: ["manage-maintenance", "mark-occupied", "create-invoice", "unit-maintenance"],
 };
 
 const QUICK_ACTION_META: Record<QuickActionType, { label: string; icon: string }> = {
-    "start-maintenance": { label: "Start maintenance", icon: "build" },
-    "mark-vacant": { label: "Mark vacant", icon: "vpn_key" },
+    "start-maintenance": { label: "Start Repair", icon: "build" },
+    "manage-maintenance": { label: "Manage Repair", icon: "engineering" },
     "mark-occupied": { label: "Mark occupied", icon: "check_circle" },
+    "view-lease": { label: "View Lease", icon: "description" },
+    "renew-lease": { label: "Renew Lease", icon: "history_edu" },
+    "create-invoice": { label: "Create Invoice", icon: "receipt_long" },
+    "unit-maintenance": { label: "Service logs", icon: "add_task" },
 };
 
 const evaluateQuickAction = (
-    currentStatus: Unit["status"],
+    unit: Unit,
     action: QuickActionType
 ): QuickActionGuardResult => {
+    const currentStatus = unit.status;
     const validActions = QUICK_ACTIONS_BY_STATUS[currentStatus] ?? [];
     if (!validActions.includes(action)) {
         return {
@@ -315,27 +335,183 @@ const evaluateQuickAction = (
     }
 
     if (action === "start-maintenance") {
+        if (unit.maintenanceStatus) {
+            return { allowed: false, requiresConfirmation: false, reason: "A maintenance request is already active for this unit." };
+        }
         return { allowed: true, requiresConfirmation: false, nextStatus: "maintenance" };
+    }
+
+    if (action === "manage-maintenance") {
+        return { allowed: true, requiresConfirmation: false };
     }
 
     if (action === "mark-occupied") {
         return { allowed: true, requiresConfirmation: false, nextStatus: "occupied" };
     }
 
-    const isHighRiskVacancyTransition = currentStatus === "occupied" || currentStatus === "neardue";
-    return {
-        allowed: true,
-        requiresConfirmation: isHighRiskVacancyTransition,
-        nextStatus: "vacant",
-        confirmMessage: isHighRiskVacancyTransition
-            ? "This unit is currently active. Marking it vacant can disrupt tracking. Continue?"
-            : undefined,
-    };
+    if (action === "view-lease" || action === "renew-lease" || action === "create-invoice" || action === "unit-maintenance") {
+        return { allowed: true, requiresConfirmation: false };
+    }
+
+    return { allowed: false, requiresConfirmation: false };
+};
+
+/** Unit History Modal Component */
+const UnitHistoryModal = ({
+    isOpen,
+    onClose,
+    unit
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    unit: Unit | null;
+}) => {
+    const [activeTab, setActiveTab] = useState<"tenants" | "maintenance">("tenants");
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme === "dark";
+
+    if (!unit) return null;
+
+    // Mock data for history
+    const tenantHistory = [
+        { id: '1', name: 'James Wilson', leaseStart: '2025-01-01', leaseEnd: '2026-01-01', rent: 1200, status: 'Completed', avatarBg: 'bg-indigo-500' },
+        { id: '2', name: 'Elena Rodriguez', leaseStart: '2024-01-01', leaseEnd: '2025-01-01', rent: 1150, status: 'Completed', avatarBg: 'bg-emerald-500' },
+        { id: '3', name: 'Marcus Chen', leaseStart: '2023-01-01', leaseEnd: '2024-01-01', rent: 1100, status: 'Terminated Early', avatarBg: 'bg-rose-500' },
+    ];
+
+    const maintenanceHistory = [
+        { id: 'm1', title: 'AC Filter Replacement', date: '2026-02-15', status: 'Completed', cost: 45, description: 'Routine filter change and system cleaning.' },
+        { id: 'm2', title: 'Leaky Faucet Repair', date: '2025-11-20', status: 'Completed', cost: 80, description: 'Kitchen sink faucet replacement due to persistent drip.' },
+        { id: 'm3', title: 'Wall Repainting', date: '2025-01-05', status: 'Completed', cost: 350, description: 'Full room repainting before new tenant move-in.' },
+    ];
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-background/60 backdrop-blur-md" 
+                        onClick={onClose}
+                    />
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className={`relative w-full max-w-2xl h-[600px] flex flex-col rounded-3xl border border-border bg-card shadow-[0_24px_60px_-30px_rgba(0,0,0,0.3)] overflow-hidden`}
+                    >
+                        <div className="absolute right-6 top-6 z-10">
+                            <button onClick={onClose} className={`rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground`}>
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 pb-4">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <span className="material-icons-round text-2xl">history</span>
+                                </div>
+                                <div>
+                                    <h2 className={`text-2xl font-black tracking-tight text-foreground`}>
+                                        Unit {unit.name} History
+                                    </h2>
+                                    <p className={`text-sm font-medium text-muted-foreground`}>Full audit trail and historical logs</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-8 mb-4">
+                            <div className="flex gap-2 p-1.5 rounded-2xl bg-muted w-fit">
+                                <button 
+                                    onClick={() => setActiveTab("tenants")}
+                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "tenants" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    Tenants
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab("maintenance")}
+                                    className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "maintenance" ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    Maintenance
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar-premium">
+                            <div className="space-y-4">
+                                {activeTab === "tenants" ? (
+                                    tenantHistory.map((item) => (
+                                        <div key={item.id} className={`flex items-center gap-4 p-5 rounded-2xl border border-border bg-muted/30 transition-colors hover:bg-muted/50`}>
+                                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-[10px] font-black ${item.avatarBg}`}>
+                                                {item.name.charAt(0)}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <p className={`text-sm font-black text-foreground`}>{item.name}</p>
+                                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
+                                                        item.status === 'Completed' 
+                                                            ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                                            : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                                    }`}>
+                                                        {item.status}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">
+                                                    {new Date(item.leaseStart).toLocaleDateString()} &mdash; {new Date(item.leaseEnd).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`text-xs font-black text-foreground`}>₱{item.rent.toLocaleString()}</p>
+                                                <p className="text-[9px] font-bold text-muted-foreground">Monthly Rent</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    maintenanceHistory.map((item) => (
+                                        <div key={item.id} className={`flex items-center gap-4 p-5 rounded-2xl border border-border bg-muted/30 transition-colors hover:bg-muted/50`}>
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                                <span className="material-icons-round text-xl">engineering</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between">
+                                                    <p className={`text-sm font-black text-foreground`}>{item.title}</p>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                                        {item.status}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] font-bold text-muted-foreground mt-1">{new Date(item.date).toLocaleDateString()} &bull; {item.description}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`text-xs font-black text-foreground`}>₱{item.cost.toLocaleString()}</p>
+                                                <p className="text-[9px] font-bold text-muted-foreground">Cost</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="p-8 border-t border-border bg-muted/20">
+                            <button 
+                                onClick={onClose}
+                                className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-primary/20"
+                            >
+                                Close History View
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
 };
 
 export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean } = {}) {
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = propertyContext?.selectedPropertyId ?? "all";
+    const selectedProperty = propertyContext?.selectedProperty;
     
     // Scoped storage keys to ensure each property has its own map
     const getScopedKey = (base: string) => `${base}.${selectedPropertyId}`;
@@ -365,12 +541,17 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const minimapRef = useRef<HTMLDivElement>(null);
     const minimapDragOffsetRef = useRef({ x: 0, y: 0 });
     const overlapToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isPanningRef = useRef(false);
     const panPointerIdRef = useRef<number | null>(null);
     const panStartPointerRef = useRef({ x: 0, y: 0 });
     const panStartPositionRef = useRef({ x: 0, y: 0 });
     const [units, setUnits] = useState<Unit[]>([]);
+    const [isPropertyMenuOpen, setIsPropertyMenuOpen] = useState(false);
+    const [isHUDHidden, setIsHUDHidden] = useState(false);
+    const [isLayoutLocked, setIsLayoutLocked] = useState(false);
+    const [showHotkeys, setShowHotkeys] = useState(false);
+    const [isCanvasFullscreen, setIsCanvasFullscreen] = useState(false);
     const [isMinimapDragging, setIsMinimapDragging] = useState(false);
     // DB-driven state
     const [dbUnits, setDbUnits] = useState<DbUnit[]>([]);
@@ -402,6 +583,11 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const [isRenamingFloor, setIsRenamingFloor] = useState(false);
     const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [unitNotes, setUnitNotes] = useState<UnitNotesState>({});
+    const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [tenantInvites, setTenantInvites] = useState<any[]>([]);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     useEffect(() => {
         setHasMounted(true);
@@ -409,6 +595,20 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     // ---------------------------------------------------------------
     // Load real data from DB when a property is selected
     // ---------------------------------------------------------------
+    useEffect(() => {
+        const fetchInvites = async () => {
+            try {
+                const res = await fetch("/api/landlord/invites");
+                if (res.ok) {
+                    const data = await res.json();
+                    setTenantInvites(data.invites || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch invites:", err);
+            }
+        };
+        fetchInvites();
+    }, [refreshKey]);
     useEffect(() => {
         if (!selectedPropertyId || selectedPropertyId === "all") return;
 
@@ -496,7 +696,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         void load();
         return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedPropertyId]);
+    }, [selectedPropertyId, refreshKey]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -632,6 +832,52 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
         setStructures(previousLayout.structures);
         setUndoAvailable(historyIndexRef.current > 0);
     }, []);
+
+    const toggleFullscreen = () => {
+        setIsCanvasFullscreen(prev => !prev);
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            const key = e.key.toLowerCase();
+
+            // Fullscreen toggle (F)
+            if (key === 'f' && !e.ctrlKey && !e.metaKey) {
+                toggleFullscreen();
+            }
+            // HUD toggle (H)
+            if (key === 'h' && !e.ctrlKey && !e.metaKey) {
+                setIsHUDHidden(prev => !prev);
+            }
+            // Lock toggle (L)
+            if (key === 'l' && !e.ctrlKey && !e.metaKey) {
+                setIsLayoutLocked(prev => !prev);
+            }
+            // Hotkeys hint (?)
+            if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+                setShowHotkeys(prev => !prev);
+            }
+            // Escape to close modals/hints
+            if (e.key === 'Escape') {
+                setShowHotkeys(false);
+                if (isHUDHidden) setIsHUDHidden(false);
+                if (isCanvasFullscreen) setIsCanvasFullscreen(false);
+            }
+            // Undo (Ctrl+Z)
+            if (e.ctrlKey && key === 'z') {
+                performUndo();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isHUDHidden, isCanvasFullscreen, performUndo]);
+
+    useEffect(() => {
+        window.dispatchEvent(new CustomEvent('hide-sidebars', { detail: isCanvasFullscreen }));
+    }, [isCanvasFullscreen]);
 
     const [extraDimensions, setExtraDimensions] = useState({ width: 0, height: 0 });
 
@@ -2152,9 +2398,16 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
     const selectedUnitNote = selectedUnit ? (unitNotes[selectedUnit.id] ?? "") : "";
 
     return (
-        <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30${readOnly ? ' pointer-events-auto' : ''}`}>
+        <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
             {/* Header */}
-            <header className={`h-16 flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-slate-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}>
+            <AnimatePresence>
+                {!isCanvasFullscreen && (
+                    <motion.header 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 64, opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className={`overflow-hidden flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-slate-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
+                    >
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Logo className="h-6 w-auto" />
@@ -2285,7 +2538,9 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         </>
                     )}
                 </div>
-            </header>
+            </motion.header>
+        )}
+        </AnimatePresence>
 
             <div className="flex-1 flex overflow-hidden">
                 <main className={`flex-1 relative overflow-hidden flex flex-col ${isDark ? 'bg-background-dark' : 'bg-background'}`}>
@@ -2469,7 +2724,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             height: corridor.h,
                                             zIndex: draggingCorridorId === corridor.id ? 35 : 8,
                                         }}
-                                        drag={!readOnly && resizingCorridorId === null}
+                                        drag={!readOnly && resizingCorridorId === null && !isLayoutLocked}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
@@ -2620,7 +2875,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             height: structure.h,
                                             zIndex: draggingStructureId === structure.id ? 35 : 9,
                                         }}
-                                        drag={!readOnly}
+                                        drag={!readOnly && !isLayoutLocked}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
@@ -2842,7 +3097,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                             height: unit.h,
                                             zIndex: draggingUnitId === unit.id ? 40 : 10,
                                         }}
-                                        drag={!readOnly}
+                                        drag={!readOnly && !isLayoutLocked}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
@@ -3004,153 +3259,289 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
 
 
 
-                    {/* Controls */}
-                    <div className="absolute bottom-8 right-8 z-20 pointer-events-none">
-                        <div className="flex gap-4 items-end pointer-events-auto">
-                            {/* Minimap */}
-                            <div className={`relative hidden h-32 w-48 overflow-hidden rounded-lg shadow-xl md:block ${isDark ? 'border border-slate-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
-                                <div className="absolute inset-0 p-2">
-                                    <div
-                                        ref={minimapRef}
-                                        onPointerDown={handleMinimapPointerDown}
-                                        className={`relative h-full w-full cursor-pointer overflow-hidden rounded border ${isDark ? 'border-slate-700 bg-[#15181d]' : 'border-slate-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
-                                    >
-                                        <div
-                                            className={`absolute border ${isDark ? 'border-slate-600/70 bg-white/[0.03]' : 'border-slate-400/70 bg-white/25'}`}
-                                            style={{
-                                                top: `${(BLUEPRINT_MARGIN / WORLD_HEIGHT) * 100}%`,
-                                                left: `${(BLUEPRINT_MARGIN / WORLD_WIDTH) * 100}%`,
-                                                width: `${(BLUEPRINT_WIDTH / WORLD_WIDTH) * 100}%`,
-                                                height: `${(BLUEPRINT_HEIGHT / WORLD_HEIGHT) * 100}%`,
-                                            }}
-                                        ></div>
 
-                                        {units.map((unit) => (
-                                            <div
-                                                key={`minimap-${unit.id}`}
-                                                className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/85' :
-                                                    unit.status === 'vacant' ? 'bg-status-vacant/85' :
-                                                        unit.status === 'maintenance' ? 'bg-status-maintenance/85' : 'bg-status-due/85'
-                                                    }`}
-                                                style={{
-                                                    left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
-                                                    top: `${((BLUEPRINT_MARGIN + unit.y) / WORLD_HEIGHT) * 100}%`,
-                                                    width: `${(unit.w / WORLD_WIDTH) * 100}%`,
-                                                    height: `${(unit.h / WORLD_HEIGHT) * 100}%`,
-                                                }}
-                                            ></div>
-                                        ))}
 
-                                        {corridors.map((corridor) => (
-                                            <div
-                                                key={`minimap-corridor-${corridor.id}`}
-                                                className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-500/70' : 'bg-slate-400/70'}`}
-                                                style={{
-                                                    left: `${((BLUEPRINT_MARGIN + corridor.x) / WORLD_WIDTH) * 100}%`,
-                                                    top: `${((BLUEPRINT_MARGIN + corridor.y) / WORLD_HEIGHT) * 100}%`,
-                                                    width: `${(corridor.w / WORLD_WIDTH) * 100}%`,
-                                                    height: `${(corridor.h / WORLD_HEIGHT) * 100}%`,
-                                                }}
-                                            ></div>
-                                        ))}
-
-                                        {structures.map((structure) => (
-                                            <div
-                                                key={`minimap-structure-${structure.id}`}
-                                                className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-300/70' : 'bg-slate-500/70'}`}
-                                                style={{
-                                                    left: `${((BLUEPRINT_MARGIN + structure.x) / WORLD_WIDTH) * 100}%`,
-                                                    top: `${((BLUEPRINT_MARGIN + structure.y) / WORLD_HEIGHT) * 100}%`,
-                                                    width: `${(structure.w / WORLD_WIDTH) * 100}%`,
-                                                    height: `${(structure.h / WORLD_HEIGHT) * 100}%`,
-                                                }}
-                                            ></div>
-                                        ))}
-
-                                        <div
-                                            onPointerDown={handleMinimapViewportPointerDown}
-                                            className={`absolute cursor-move border-2 ${isDark ? 'border-primary bg-primary/20 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]' : 'border-primary/80 bg-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.7)]'}`}
-                                            style={{
-                                                left: minimapViewport.left,
-                                                top: minimapViewport.top,
-                                                width: minimapViewport.width,
-                                                height: minimapViewport.height,
-                                            }}
-                                        ></div>
+                    {/* HUD Elements */}
+                    <AnimatePresence>
+                        {!isHUDHidden && (
+                            <>
+                                {/* Top Left Stats HUD */}
+                                <motion.div 
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="absolute top-6 left-6 z-30 pointer-events-none"
+                                >
+                                    <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-slate-900/90 hover:scale-[1.02]">
+                                        <div className="flex items-center gap-4 px-2 py-1">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Live Units</span>
+                                                <span className="font-mono text-lg font-black text-white leading-none mt-1">{units.length}</span>
+                                            </div>
+                                            <div className="h-8 w-px bg-white/10" />
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Footprint</span>
+                                                <span className="font-mono text-lg font-black text-white leading-none mt-1">
+                                                    {totalArea.toLocaleString()} <span className="text-[10px] font-normal text-white/40">sqft</span>
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                </motion.div>
 
-                            <div className="flex flex-col bg-card/95 border border-border rounded-lg shadow-xl overflow-hidden backdrop-blur">
-                                <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border"><span className="material-icons-round text-lg">add</span></button>
-                                <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border"><span className="material-icons-round text-lg">remove</span></button>
-                                <button onClick={handleFit} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border"><span className="material-icons-round text-lg">aspect_ratio</span></button>
-                                {!readOnly && (
-                                    <button
-                                        onClick={handleUndo}
-                                        disabled={!undoAvailable}
-                                        className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-muted text-slate-600' : 'text-slate-300 cursor-not-allowed'}`}
-                                        title="Undo (Ctrl+Z)"
+                                {/* Integrated Bottom Dock */}
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 20 }}
+                                    className="absolute bottom-8 left-8 z-30 pointer-events-none"
+                                >
+                                    <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
+                                        <div className="flex items-center gap-8 px-6 py-1.5 whitespace-nowrap">
+                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
+                                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Available</span>
+                                            </div>
+                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
+                                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Occupied</span>
+                                            </div>
+                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
+                                                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
+                                            </div>
+                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
+                                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                                                <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Near Due</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="h-6 w-px bg-white/10 mx-1" />
+                                        
+                                        {/* Navigation Section */}
+                                        <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 bg-primary/20 rounded-full border border-primary/20">
+                                            <span className="material-icons-round text-xs text-primary animate-pulse">navigation</span>
+                                            <span className="font-mono text-[10px] font-black text-primary uppercase whitespace-nowrap">
+                                                {Math.round(position.x)}<span className="mx-1 opacity-40">/</span>{Math.round(position.y)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Controls (Legend & Minimap) */}
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className="absolute bottom-8 right-8 z-30 pointer-events-none"
+                                >
+                                    <div className="flex gap-4 items-end pointer-events-auto">
+                                        {/* Minimap */}
+                                        <div className={`relative hidden h-32 w-48 overflow-hidden rounded-lg shadow-xl md:block ${isDark ? 'border border-slate-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
+                                            <div className="absolute inset-0 p-2">
+                                                <div
+                                                    ref={minimapRef}
+                                                    onPointerDown={handleMinimapPointerDown}
+                                                    className={`relative h-full w-full cursor-pointer overflow-hidden rounded border ${isDark ? 'border-slate-700 bg-[#15181d]' : 'border-slate-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
+                                                >
+                                                    <div
+                                                        className={`absolute border ${isDark ? 'border-slate-600/70 bg-white/[0.03]' : 'border-slate-400/70 bg-white/25'}`}
+                                                        style={{
+                                                            top: `${(BLUEPRINT_MARGIN / WORLD_HEIGHT) * 100}%`,
+                                                            left: `${(BLUEPRINT_MARGIN / WORLD_WIDTH) * 100}%`,
+                                                            width: `${(BLUEPRINT_WIDTH / WORLD_WIDTH) * 100}%`,
+                                                            height: `${(BLUEPRINT_HEIGHT / WORLD_HEIGHT) * 100}%`,
+                                                        }}
+                                                    ></div>
+
+                                                    {units.map((unit) => (
+                                                        <div
+                                                            key={`minimap-${unit.id}`}
+                                                            className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/85' :
+                                                                unit.status === 'vacant' ? 'bg-status-vacant/85' :
+                                                                    unit.status === 'maintenance' ? 'bg-status-maintenance/85' : 'bg-status-due/85'
+                                                                }`}
+                                                            style={{
+                                                                left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
+                                                                top: `${((BLUEPRINT_MARGIN + unit.y) / WORLD_HEIGHT) * 100}%`,
+                                                                width: `${(unit.w / WORLD_WIDTH) * 100}%`,
+                                                                height: `${(unit.h / WORLD_HEIGHT) * 100}%`,
+                                                            }}
+                                                        ></div>
+                                                    ))}
+
+                                                    {corridors.map((corridor) => (
+                                                        <div
+                                                            key={`minimap-corridor-${corridor.id}`}
+                                                            className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-500/70' : 'bg-slate-400/70'}`}
+                                                            style={{
+                                                                left: `${((BLUEPRINT_MARGIN + corridor.x) / WORLD_WIDTH) * 100}%`,
+                                                                top: `${((BLUEPRINT_MARGIN + corridor.y) / WORLD_HEIGHT) * 100}%`,
+                                                                width: `${(corridor.w / WORLD_WIDTH) * 100}%`,
+                                                                height: `${(corridor.h / WORLD_HEIGHT) * 100}%`,
+                                                            }}
+                                                        ></div>
+                                                    ))}
+
+                                                    {structures.map((structure) => (
+                                                        <div
+                                                            key={`minimap-structure-${structure.id}`}
+                                                            className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-300/70' : 'bg-slate-500/70'}`}
+                                                            style={{
+                                                                left: `${((BLUEPRINT_MARGIN + structure.x) / WORLD_WIDTH) * 100}%`,
+                                                                top: `${((BLUEPRINT_MARGIN + structure.y) / WORLD_HEIGHT) * 100}%`,
+                                                                width: `${(structure.w / WORLD_WIDTH) * 100}%`,
+                                                                height: `${(structure.h / WORLD_HEIGHT) * 100}%`,
+                                                            }}
+                                                        ></div>
+                                                    ))}
+
+                                                    <div
+                                                        onPointerDown={handleMinimapViewportPointerDown}
+                                                        className={`absolute cursor-move border-2 ${isDark ? 'border-primary bg-primary/20 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]' : 'border-primary/80 bg-primary/15 shadow-[0_0_0_1px_rgba(255,255,255,0.7)]'}`}
+                                                        style={{
+                                                            left: minimapViewport.left,
+                                                            top: minimapViewport.top,
+                                                            width: minimapViewport.width,
+                                                            height: minimapViewport.height,
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-col bg-card/95 border border-border rounded-lg shadow-xl overflow-hidden backdrop-blur">
+                                            <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border" title="Zoom In"><span className="material-icons-round text-lg">add</span></button>
+                                            <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border" title="Zoom Out"><span className="material-icons-round text-lg">remove</span></button>
+                                            <button onClick={handleFit} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border" title="Fit to Screen"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                                            {!readOnly && (
+                                                <button
+                                                    onClick={performUndo}
+                                                    disabled={!undoAvailable}
+                                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-muted text-slate-600' : 'text-slate-300 cursor-not-allowed'}`}
+                                                    title="Undo (Ctrl+Z)"
+                                                >
+                                                    <span className="material-icons-round text-lg">undo</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Viewport System Toolbar (Always Visible) */}
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
+                        <div className="flex flex-col bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl">
+                            {!isHUDHidden && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="flex flex-col"
+                                >
+                                    <button 
+                                        onClick={() => setIsLayoutLocked(!isLayoutLocked)}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isLayoutLocked ? 'bg-amber-500 text-slate-900 shadow-lg shadow-amber-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        title={isLayoutLocked ? "Unlock Layout" : "Lock Layout (L)"}
                                     >
-                                        <span className="material-icons-round text-lg">undo</span>
+                                        <span className="material-icons-round text-xl">{isLayoutLocked ? 'lock' : 'lock_open'}</span>
                                     </button>
-                                )}
-                            </div>
+                                    <button 
+                                        onClick={toggleFullscreen}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        title="Toggle Canvas Fullscreen (F)"
+                                    >
+                                        <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
+                                    </button>
+                                    <div className="h-px bg-white/10 my-1 mx-2" />
+                                    <button 
+                                        onClick={() => setShowHotkeys(true)}
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                                        title="Hotkeys Hint (?)"
+                                    >
+                                        <span className="material-icons-round text-xl">help_outline</span>
+                                    </button>
+                                    <div className="h-px bg-white/10 my-1 mx-2" />
+                                </motion.div>
+                            )}
+                            
+                            <button 
+                                onClick={() => setIsHUDHidden(!isHUDHidden)}
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isHUDHidden ? 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                title={isHUDHidden ? "Show HUD" : "Hide HUD (H)"}
+                            >
+                                <span className="material-icons-round text-xl">{isHUDHidden ? 'visibility' : 'visibility_off'}</span>
+                            </button>
                         </div>
                     </div>
 
-                    {/* Top Left Stats HUD */}
-                    <div className="absolute top-6 left-6 z-30 pointer-events-none">
-                        <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-slate-900/90 hover:scale-[1.02]">
-                            <div className="flex items-center gap-4 px-2 py-1">
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Live Units</span>
-                                    <span className="font-mono text-lg font-black text-white leading-none mt-1">{units.length}</span>
-                                </div>
-                                <div className="h-8 w-px bg-white/10" />
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Footprint</span>
-                                    <span className="font-mono text-lg font-black text-white leading-none mt-1">
-                                        {totalArea.toLocaleString()} <span className="text-[10px] font-normal text-white/40">sqft</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Hotkeys Modal */}
+                    <AnimatePresence>
+                        {showHotkeys && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-6"
+                                onClick={() => setShowHotkeys(false)}
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.9, y: 20 }}
+                                    animate={{ scale: 1, y: 0 }}
+                                    exit={{ scale: 0.9, y: 20 }}
+                                    className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="p-8 border-b border-white/5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                                                    <span className="material-icons-round">keyboard</span>
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-black text-white tracking-tight">Command Center</h2>
+                                                    <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-0.5">Quick Access Shortcuts</p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => setShowHotkeys(false)}
+                                                className="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                                            >
+                                                <span className="material-icons-round">close</span>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                    {/* Integrated Bottom Dock */}
-                    <div className="absolute bottom-8 left-8 z-30 pointer-events-none">
-                        <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
-                            <div className="flex items-center gap-8 px-6 py-1.5 whitespace-nowrap">
-                                <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                    <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Available</span>
-                                </div>
-                                <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                                    <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Occupied</span>
-                                </div>
-                                <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
-                                    <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
-                                </div>
-                                <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                                    <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Near Due</span>
-                                </div>
-                            </div>
-                            
-                            <div className="h-6 w-px bg-white/10 mx-1" />
-                            
-                            {/* Navigation Section */}
-                            <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 bg-primary/20 rounded-full border border-primary/20">
-                                <span className="material-icons-round text-xs text-primary animate-pulse">navigation</span>
-                                <span className="font-mono text-[10px] font-black text-primary uppercase whitespace-nowrap">
-                                    {Math.round(position.x)}<span className="mx-1 opacity-40">/</span>{Math.round(position.y)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                                    <div className="p-8 grid grid-cols-1 gap-6">
+                                        <div className="space-y-4">
+                                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-1">Viewport Modes</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <HotkeyItem label="Toggle Fullscreen" shortcut="F" />
+                                                <HotkeyItem label="Toggle HUD Overlay" shortcut="H" />
+                                                <HotkeyItem label="Lock/Unlock Layout" shortcut="L" />
+                                                <HotkeyItem label="Quick Help" shortcut="?" />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] px-1">Editor Actions</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <HotkeyItem label="Undo Last Action" shortcut="Ctrl + Z" />
+                                                <HotkeyItem label="Delete Selection" shortcut="Delete / Backspace" />
+                                                <HotkeyItem label="Pan Viewport" shortcut="Hold Middle Mouse" />
+                                                <HotkeyItem label="Zoom In/Out" shortcut="Scroll Wheel" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-slate-950/50 flex justify-center">
+                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">iReside Visual Planner Engine v2.0</p>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {showOverlapToast && (
                         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-lg border border-red-500/20 bg-red-50 text-red-700 text-sm font-medium shadow-lg pointer-events-none">
@@ -3347,7 +3738,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                 </main>
 
                 {/* Sidebar */}
-                {!readOnly && (
+                {!readOnly && !isHUDHidden && (
                     <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-slate-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
                         <div className="flex flex-col h-full min-h-0">
                             <div className="min-h-0 flex-1">
@@ -3373,6 +3764,9 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                                         onClose={() => setSelectedItem(null)}
                                         notesOpen={isNotesPanelOpen}
                                         onToggleNotes={() => setIsNotesPanelOpen((current) => !current)}
+                                        onOpenWalkIn={() => setIsWalkInModalOpen(true)}
+                                        onOpenInvite={() => setIsInviteModalOpen(true)}
+                                        onOpenHistory={() => setIsHistoryModalOpen(true)}
                                     />
                                 ) : (
                                     <SidebarBlockLibrary
@@ -3390,7 +3784,7 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         </div>
                     </aside>
                 )}
-                {!readOnly && selectedUnit && (
+                {!readOnly && selectedUnit && !isHUDHidden && (
                     <UnitNotesPanel
                         isOpen={isNotesPanelOpen}
                         onToggle={() => setIsNotesPanelOpen((current) => !current)}
@@ -3400,6 +3794,69 @@ export default function VisualBuilder({ readOnly = false }: { readOnly?: boolean
                         }}
                     />
                 )}
+                
+                <WalkInApplicationModal
+                    isOpen={isWalkInModalOpen}
+                    onClose={() => setIsWalkInModalOpen(false)}
+                    selectedUnitId={selectedUnit?.dbId || selectedUnit?.id}
+                    units={dbUnits.map(u => ({
+                        id: u.id,
+                        name: u.name,
+                        rent_amount: u.rent_amount,
+                        property_id: selectedPropertyId,
+                        property_name: selectedProperty?.name || "Property"
+                    }))}
+                    onSuccess={() => {
+                        setRefreshKey(prev => prev + 1);
+                    }}
+                />
+
+                <UnitHistoryModal 
+                    isOpen={isHistoryModalOpen}
+                    onClose={() => setIsHistoryModalOpen(false)}
+                    unit={selectedUnit}
+                />
+
+                <AnimatePresence>
+                    {isInviteModalOpen && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+                                onClick={() => setIsInviteModalOpen(false)}
+                            />
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-transparent scrollbar-hide"
+                            >
+                                <div className="absolute right-6 top-6 z-[130]">
+                                    <button
+                                        onClick={() => setIsInviteModalOpen(false)}
+                                        className="rounded-full bg-white/10 p-2 text-white/50 backdrop-blur-xl transition-all hover:bg-white/20 hover:text-white"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </button>
+                                </div>
+                                <TenantInviteManager
+                                    availableUnits={dbUnits.map(u => ({
+                                        id: u.id,
+                                        name: u.name,
+                                        rent_amount: u.rent_amount,
+                                        property_id: selectedPropertyId,
+                                        property_name: selectedProperty?.name || "Property",
+                                        status: u.position ? "occupied" : "vacant" // Simplified status for manager
+                                    }))}
+                                    invites={tenantInvites}
+                                    onRefresh={() => setRefreshKey(prev => prev + 1)}
+                                />
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
@@ -3412,6 +3869,9 @@ const UnitDetailsPanel = ({
     onClose,
     notesOpen,
     onToggleNotes,
+    onOpenWalkIn,
+    onOpenInvite,
+    onOpenHistory,
 }: {
     unit: Unit;
     onUpdate: (updates: Partial<Unit>) => void;
@@ -3419,6 +3879,9 @@ const UnitDetailsPanel = ({
     onClose: () => void;
     notesOpen: boolean;
     onToggleNotes: () => void;
+    onOpenWalkIn?: () => void;
+    onOpenInvite?: () => void;
+    onOpenHistory?: () => void;
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tenantActionMenu, setTenantActionMenu] = useState<TenantActionMenuState>({ isOpen: false });
@@ -3481,16 +3944,47 @@ const UnitDetailsPanel = ({
                 ? "Milestone: schedule tenant follow-up this month."
                 : "Milestone: healthy lease runway.";
     const maintenanceOpenedDate = (() => {
-        if (!unit.leaseEnd) return null;
-        const parsed = new Date(unit.leaseEnd);
+        if (!unit.maintenanceDate) return null;
+        const parsed = new Date(unit.maintenanceDate);
         return Number.isNaN(parsed.getTime()) ? null : parsed;
     })();
-    const quickActions = QUICK_ACTIONS_BY_STATUS[unit.status] ?? [];
+    const quickActions = (QUICK_ACTIONS_BY_STATUS[unit.status] ?? []).map(action => {
+        if (action === "start-maintenance" && unit.maintenanceStatus) {
+            return "manage-maintenance" as QuickActionType;
+        }
+        return action;
+    });
     const canViewTenantProfile = Boolean(unit.tenant && unit.tenant.trim().length > 0);
     const tenantProfileHref = `/landlord/tenants?unitId=${encodeURIComponent(unit.id)}&tenant=${encodeURIComponent(unit.tenant || "")}`;
 
     const executeQuickAction = (action: QuickActionType) => {
-        const guard = evaluateQuickAction(unit.status, action);
+        const guard = evaluateQuickAction(unit, action);
+        
+        if (action === "manage-maintenance") {
+             window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
+             return;
+        }
+
+        if (action === "view-lease") {
+            window.location.href = `/landlord/leases?unitId=${unit.id}`;
+            return;
+        }
+
+        if (action === "renew-lease") {
+            window.location.href = `/landlord/leases?unitId=${unit.id}&action=renew`;
+            return;
+        }
+
+        if (action === "create-invoice") {
+            window.location.href = `/landlord/invoices?unitId=${unit.id}&action=create`;
+            return;
+        }
+
+        if (action === "unit-maintenance") {
+            window.location.href = `/landlord/maintenance?unitId=${unit.id}`;
+            return;
+        }
+
         if (!guard.allowed || !guard.nextStatus) {
             setQuickActionError(guard.reason || "This action is currently unavailable.");
             return;
@@ -3501,7 +3995,7 @@ const UnitDetailsPanel = ({
     };
 
     const handleQuickAction = (action: QuickActionType) => {
-        const guard = evaluateQuickAction(unit.status, action);
+        const guard = evaluateQuickAction(unit, action);
         if (!guard.allowed) {
             setQuickActionError(guard.reason || "This action is currently unavailable.");
             return;
@@ -3602,7 +4096,8 @@ const UnitDetailsPanel = ({
                         className="space-y-8"
                     >
                         {/* Tenant Spotlight Card */}
-                        <section className="relative">
+                        {unit.status !== 'vacant' && (
+                            <section className="relative">
                             <div className="mb-4 flex items-center justify-between px-1">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RESIDENT PROFILE</h3>
                                 {unit.status === 'occupied' && (
@@ -3697,11 +4192,50 @@ const UnitDetailsPanel = ({
                                 </AnimatePresence>
                             </motion.div>
                         </section>
+                        )}
+
+                        {unit.status === 'vacant' && onOpenWalkIn && (
+                            <div className="flex flex-col gap-4">
+                                <motion.button
+                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.1)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={onOpenWalkIn}
+                                    className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-black tracking-[0.2em] text-primary transition-all hover:border-primary/50"
+                                >
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                        <span className="material-icons-round text-2xl">person_add</span>
+                                    </div>
+                                    START WALK-IN APPLICATION
+                                </motion.button>
+
+                                <div className="group relative overflow-hidden rounded-[32px] border border-indigo-500/20 bg-indigo-500/5 p-6 shadow-xl shadow-indigo-500/5 dark:bg-indigo-950/20">
+                                    <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">INVITE RESIDENT</h3>
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
+                                            <span className="material-icons-round text-lg">qr_code_2</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] font-bold leading-relaxed text-indigo-800/70 dark:text-indigo-300/70 mb-4">
+                                        Share this unit's unique application link with prospective tenants to start their digital journey.
+                                    </p>
+                                    <div className="flex flex-col gap-2">
+                                        <button 
+                                            onClick={onOpenInvite}
+                                            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest transition-all hover:bg-indigo-600 active:scale-95 shadow-lg shadow-indigo-500/20"
+                                        >
+                                            <span className="material-icons-round text-sm">qr_code_2</span>
+                                            Generate Invite Link
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Operational Context Cards */}
                         <div className="grid grid-cols-1 gap-6">
                             {/* Maintenance Blocker (Critical Alert Style) */}
-                            {unit.status === "maintenance" && (
+                            {(unit.status === "maintenance" || unit.maintenanceStatus) && (
                                 <motion.div 
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
@@ -3710,15 +4244,20 @@ const UnitDetailsPanel = ({
                                     <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
                                     <div className="flex items-start gap-5">
                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
-                                            <span className="material-icons-round animate-pulse text-2xl">warning</span>
+                                            <span className="material-icons-round animate-pulse text-2xl">engineering</span>
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">Critical Blocker</h3>
-                                            <p className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white">{unit.details?.trim() || "Unspecified Issue"}</p>
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
+                                                <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
+                                            </div>
+                                            <p className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white line-clamp-2">
+                                                {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
+                                            </p>
                                             <div className="mt-3 flex items-center gap-2">
                                                 <span className="text-[11px] font-bold text-rose-500/80">Reported {maintenanceOpenedDate ? maintenanceOpenedDate.toLocaleDateString() : "recently"}</span>
                                                 <div className="h-1 w-1 rounded-full bg-rose-300 dark:bg-rose-700" />
-                                                <span className="text-[11px] font-bold text-rose-500/80">Status: Active</span>
+                                                <span className="text-[11px] font-bold text-rose-500/80">Status: {unit.maintenanceStatus?.toUpperCase() || "OPEN"}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -3805,6 +4344,40 @@ const UnitDetailsPanel = ({
                             )}
                         </div>
 
+                        {/* Recent Activity / Status */}
+                        <section className="space-y-4">
+                            <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RECENT ACTIVITY</h3>
+                            
+                            <div className="grid grid-cols-1 gap-3">
+                                {unit.applicationCount && unit.applicationCount > 0 ? (
+                                    <div className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                                            <span className="material-icons-round text-xl">assignment_ind</span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-black text-slate-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
+                                            <p className="text-[10px] font-bold text-slate-500">Awaiting landlord review</p>
+                                        </div>
+                                        <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-black text-primary hover:underline">VIEW ALL</Link>
+                                    </div>
+                                ) : null}
+
+                                <div 
+                                    className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                                    onClick={onOpenHistory}
+                                >
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                        <span className="material-icons-round text-xl">history</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-black text-slate-900 dark:text-white">Full Unit History</p>
+                                        <p className="text-[10px] font-bold text-slate-500">View past leases & maintenance</p>
+                                    </div>
+                                    <span className="material-icons-round text-slate-400 text-sm">chevron_right</span>
+                                </div>
+                            </div>
+                        </section>
+
                         {/* Command Center Quick Actions */}
                         <section className="rounded-[32px] border border-slate-200 bg-slate-900 p-6 shadow-2xl dark:border-white/5">
                             <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">COMMAND CENTER</h3>
@@ -3825,6 +4398,7 @@ const UnitDetailsPanel = ({
                                     </motion.button>
                                 ))}
                             </div>
+                            
                             {quickActionError && (
                                 <p className="mt-3 text-xs font-semibold text-rose-300">{quickActionError}</p>
                             )}
@@ -3838,7 +4412,7 @@ const UnitDetailsPanel = ({
                     <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
                         <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Confirm Status Change</h4>
                         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                            {evaluateQuickAction(unit.status, pendingQuickAction).confirmMessage || "Are you sure you want to continue?"}
+                            {evaluateQuickAction(unit, pendingQuickAction).confirmMessage || "Are you sure you want to continue?"}
                         </p>
                         <div className="mt-4 flex items-center justify-end gap-2">
                             <button
@@ -4210,6 +4784,13 @@ const SidebarBlockLibrary = ({
         </div>
     );
 };
+
+const HotkeyItem = ({ label, shortcut }: { label: string; shortcut: string }) => (
+    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl">
+        <span className="text-xs font-bold text-white/80">{label}</span>
+        <kbd className="px-2 py-1 rounded-md bg-white/10 border border-white/10 text-[10px] font-black text-primary font-mono shadow-sm">{shortcut}</kbd>
+    </div>
+);
 
 
 
