@@ -208,13 +208,6 @@ export default function LandlordHomeScreen() {
           })}
         </div>
 
-        {/* Recent Activity Section */}
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Recent Activity</h2>
-        </div>
-        <div className={styles.emptyState}>
-          <p>No recent activity in the last 24 hours.</p>
-        </div>
       </div>
     </div>
   );

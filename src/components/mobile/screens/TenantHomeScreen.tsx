@@ -222,36 +222,6 @@ export default function TenantHomeScreen() {
                 })}
             </div>
 
-            {/* Notifications */}
-            <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Recent Activity</h2>
-                <button
-                    className={styles.sectionLink}
-                    onClick={() => navigate("notifications")}
-                >
-                    See All
-                </button>
-            </div>
-            <div className={styles.notifList}>
-                {NOTIFICATIONS.map((notif) => {
-                    const Icon = notif.icon;
-                    const colorClass =
-                        styles[`notif${notif.color}` as keyof typeof styles];
-                    return (
-                        <div key={notif.id} className={styles.notifItem}>
-                            <div className={`${styles.notifIcon} ${colorClass}`}>
-                                <Icon />
-                            </div>
-                            <div className={styles.notifContent}>
-                                <p className={styles.notifTitle}>{notif.title}</p>
-                                <p className={styles.notifDesc}>{notif.desc}</p>
-                            </div>
-                            <span className={styles.notifTime}>{notif.time}</span>
-                        </div>
-                    );
-                })}
-            </div>
-
             {/* Announcement */}
             <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>Announcements</h2>
