@@ -172,7 +172,12 @@ export default function LandlordHomeScreen() {
         {/* Action Needed Section */}
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Action Needed</h2>
-          <span className={styles.sectionLink}>View All</span>
+          <span 
+            className={`${styles.sectionLink} clickable`}
+            onClick={() => navigate("notifications")}
+          >
+            View All
+          </span>
         </div>
         <div className={styles.actionList}>
           {ACTION_ITEMS.map((item) => {
