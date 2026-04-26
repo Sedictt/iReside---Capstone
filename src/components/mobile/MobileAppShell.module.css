@@ -260,6 +260,7 @@
     padding: 0;
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.15s ease;
+    position: relative;
 }
 
 .tabItem:active {
@@ -289,7 +290,7 @@
 .tabItemActive::after {
     content: "";
     position: absolute;
-    bottom: 20px;
+    bottom: -8px;
     width: 4px;
     height: 4px;
     border-radius: 50%;
