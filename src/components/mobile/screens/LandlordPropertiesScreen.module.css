@@ -283,7 +283,7 @@
 
 /* ─── Bottom Sheet Modal ───────────────────────────────── */
 .modalOverlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
