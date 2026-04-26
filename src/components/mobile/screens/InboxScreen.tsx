@@ -1,21 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, Users, Edit3 } from "lucide-react";
+import { MessageSquare, Users, Edit3, Bell } from "lucide-react";
 import { useNavigation } from "../navigation";
 import TenantChatScreen from "./TenantChatScreen";
 import LandlordChatScreen from "./LandlordChatScreen";
 import CommunityFeedScreen from "./CommunityFeedScreen";
+import NotificationsScreen from "./NotificationsScreen";
 import styles from "./InboxScreen.module.css";
 
-type InboxTab = "messages" | "community";
+type InboxTab = "messages" | "community" | "notifications";
 
 export default function InboxScreen() {
     const { role, screenParams } = useNavigation();
     const [activeTab, setActiveTab] = useState<InboxTab>("messages");
 
     useEffect(() => {
-        if (screenParams.tab && ["messages", "community"].includes(screenParams.tab as string)) {
+        if (screenParams.tab && ["messages", "community", "notifications"].includes(screenParams.tab as string)) {
             setActiveTab(screenParams.tab as InboxTab);
         }
     }, [screenParams.tab]);
@@ -57,6 +58,13 @@ export default function InboxScreen() {
                             <span className={styles.segmentBadge}>{communityUnread}</span>
                         )}
                     </button>
+                    <button
+                        className={`${styles.segmentButton} ${activeTab === "notifications" ? styles.segmentButtonActive : ""}`}
+                        onClick={() => setActiveTab("notifications")}
+                    >
+                        <Bell size={14} />
+                        Alerts
+                    </button>
                 </div>
             </div>
 
@@ -68,8 +76,10 @@ export default function InboxScreen() {
                     ) : (
                         <TenantChatScreen isSubView />
                     )
-                ) : (
+                ) : activeTab === "community" ? (
                     <CommunityFeedScreen isSubView />
+                ) : (
+                    <NotificationsScreen isSubView />
                 )}
             </div>
         </div>

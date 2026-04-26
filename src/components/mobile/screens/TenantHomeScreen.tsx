@@ -126,7 +126,7 @@ export default function TenantHomeScreen() {
                     </div>
                     <button
                         className={styles.notifButton}
-                        onClick={() => navigate("notifications")}
+                        onClick={() => navigate("inbox", { tab: "notifications" })}
                     >
                         <Bell />
                         {hasUnread && <div className={styles.notifBadge} />}

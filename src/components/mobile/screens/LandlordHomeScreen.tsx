@@ -177,7 +177,7 @@ export default function LandlordHomeScreen() {
           <h2 className={styles.sectionTitle}>Action Needed</h2>
           <span 
             className={`${styles.sectionLink} clickable`}
-            onClick={() => navigate("notifications")}
+            onClick={() => navigate("inbox", { tab: "notifications" })}
           >
             View All
           </span>

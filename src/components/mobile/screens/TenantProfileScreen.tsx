@@ -75,7 +75,7 @@ export default function TenantProfileScreen() {
                                 <ChevronRight />
                             </div>
                         </button>
-                        <button className={styles.menuItem}>
+                        <button className={styles.menuItem} onClick={() => navigate("inbox", { tab: "notifications" })}>
                             <div className={styles.menuItemIcon}>
                                 <Bell />
                             </div>

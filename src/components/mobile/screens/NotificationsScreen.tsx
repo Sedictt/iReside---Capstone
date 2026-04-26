@@ -59,7 +59,7 @@ export let MOCK_NOTIFICATIONS: Notification[] = [
     }
 ];
 
-export default function NotificationsScreen() {
+export default function NotificationsScreen({ isSubView = false }: { isSubView?: boolean }) {
     const { goBack, navigate, role } = useNavigation();
     const { showNotification } = useGlobalNotification();
     const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
@@ -124,20 +124,36 @@ export default function NotificationsScreen() {
     return (
         <div className={styles.container}>
             {/* Header */}
-            <div className={styles.header}>
-                <div className={styles.headerTop}>
-                    <button className={styles.backButton} onClick={goBack}>
-                        <ArrowLeft />
-                    </button>
-                    <h1 className={styles.headerTitle}>Notifications</h1>
-                    <button className={styles.markAllRead} onClick={markAllRead}>
-                        Mark all read
-                    </button>
-                </div>
+            {!isSubView && (
+                <div className={styles.header}>
+                    <div className={styles.headerTop}>
+                        <button className={styles.backButton} onClick={goBack}>
+                            <ArrowLeft />
+                        </button>
+                        <h1 className={styles.headerTitle}>Notifications</h1>
+                        <button className={styles.markAllRead} onClick={markAllRead}>
+                            Mark all read
+                        </button>
+                    </div>
 
-                {/* Tabs */}
-                <div className={styles.tabs}>
-                    <button 
+                    {/* Tabs */}
+                    <div className={styles.tabs}>
+                        <button 
+                            className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`}
+                            onClick={() => setActiveTab("all")}
+                        > All </button>
+                        <button 
+                            className={`${styles.tab} ${activeTab === "unread" ? styles.active : ""}`}
+                            onClick={() => setActiveTab("unread")}
+                        > Unread {notifications.filter(n => !n.read).length > 0 && `(${notifications.filter(n => !n.read).length})`} </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Sub-view Header (Alternative) */}
+            {isSubView && (
+                <div className={styles.tabs} style={{ padding: '0 20px 12px', borderBottom: '1px solid #1a1a1a', marginBottom: '16px' }}>
+                     <button 
                         className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`}
                         onClick={() => setActiveTab("all")}
                     > All </button>
@@ -146,7 +162,7 @@ export default function NotificationsScreen() {
                         onClick={() => setActiveTab("unread")}
                     > Unread {notifications.filter(n => !n.read).length > 0 && `(${notifications.filter(n => !n.read).length})`} </button>
                 </div>
-            </div>
+            )}
 
             {/* Scroll Area */}
             <div className={styles.scrollArea}>

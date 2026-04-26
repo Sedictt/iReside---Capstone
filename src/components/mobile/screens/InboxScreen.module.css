@@ -47,7 +47,7 @@
     border: 1px solid #1e1e1e;
     border-radius: 12px;
     padding: 4px;
-    gap: 4px;
+    gap: 2px;
 }
 
 .segmentButton {
@@ -55,15 +55,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 9px 12px;
+    gap: 4px;
+    padding: 8px 4px;
     border-radius: 9px;
     border: none;
     background: transparent;
     color: #737373;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.2px;
+    min-width: 0;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -78,11 +79,11 @@
 .segmentBadge {
     background: #6d9838;
     color: #fff;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     border-radius: 8px;
-    min-width: 18px;
-    height: 18px;
+    min-width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
