@@ -115,3 +115,17 @@ input[type="number"] {
 .animate-blink {
   animation: blink 1s step-end infinite;
 }
+
+/* Tactile Press Micro-interaction */
+button,
+a,
+.clickable {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s;
+}
+
+button:active:not(:disabled),
+a:active,
+.clickable:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}

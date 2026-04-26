@@ -15,6 +15,9 @@ import {
 import { useNavigation } from "../navigation";
 import styles from "./LandlordHomeScreen.module.css";
 import { MOCK_NOTIFICATIONS } from "./NotificationsScreen";
+import AnimatedCounter from "../ui/AnimatedCounter";
+import Skeleton from "../ui/Skeleton";
+import { useState, useEffect } from "react";
 
 // ─── Mock Data ──────────────────────────────────────────────
 const REVENUE_DATA = {
@@ -60,6 +63,14 @@ const ACTION_ITEMS = [
 export default function LandlordHomeScreen() {
   const { navigate } = useNavigation();
   const hasUnread = MOCK_NOTIFICATIONS.some(n => !n.read);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -97,19 +108,25 @@ export default function LandlordHomeScreen() {
             </div>
             <ChevronRight size={18} color="#525252" />
           </div>
-          <div className={styles.revenueAmount}>{REVENUE_DATA.totalExpected}</div>
+          <div className={styles.revenueAmount}>
+            {isLoading ? (
+                <Skeleton height="36px" width="50%" borderRadius="4px" />
+            ) : (
+                <AnimatedCounter value={145000} prefix="₱" />
+            )}
+          </div>
 
           <div className={styles.revenueStats}>
             <div className={styles.revStatBox}>
               <span className={styles.revStatLabel}>Collected</span>
               <span className={`${styles.revStatValue} ${styles.collected}`}>
-                {REVENUE_DATA.collected}
+                {isLoading ? <Skeleton height="20px" width="80px" /> : <AnimatedCounter value={110000} prefix="₱" />}
               </span>
             </div>
             <div className={styles.revStatBox}>
               <span className={styles.revStatLabel}>Pending</span>
               <span className={`${styles.revStatValue} ${styles.pending}`}>
-                {REVENUE_DATA.pending}
+                {isLoading ? <Skeleton height="20px" width="80px" /> : <AnimatedCounter value={35000} prefix="₱" />}
               </span>
             </div>
           </div>
@@ -132,7 +149,15 @@ export default function LandlordHomeScreen() {
                     <Icon size={16} />
                   </div>
                 </div>
-                <div className={styles.metricValue}>{metric.value}</div>
+                <div className={styles.metricValue}>
+                  {isLoading ? (
+                      <Skeleton height="28px" width="40px" />
+                  ) : metric.id === "units" ? (
+                      <AnimatedCounter value={parseInt(metric.value)} />
+                  ) : (
+                      metric.value
+                  )}
+                </div>
                 <div className={styles.metricLabel}>{metric.label}</div>
               </div>
             );
