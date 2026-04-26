@@ -39,6 +39,7 @@ export default function LandlordApplicationsScreen({ isSubView = false }: { isSu
   };
 
   return (
+    <div className={styles.container}>
       {/* Header — hidden when embedded in ActivityScreen */}
       {!isSubView && (
         <div className={styles.header}>
