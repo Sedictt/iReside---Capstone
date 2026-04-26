@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageSquare, Users, Edit3 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import TenantChatScreen from "./TenantChatScreen";
@@ -11,8 +11,14 @@ import styles from "./InboxScreen.module.css";
 type InboxTab = "messages" | "community";
 
 export default function InboxScreen() {
-    const { role } = useNavigation();
+    const { role, screenParams } = useNavigation();
     const [activeTab, setActiveTab] = useState<InboxTab>("messages");
+
+    useEffect(() => {
+        if (screenParams.tab && ["messages", "community"].includes(screenParams.tab as string)) {
+            setActiveTab(screenParams.tab as InboxTab);
+        }
+    }, [screenParams.tab]);
 
     // Unread counts (mock)
     const messageUnread = role === "landlord" ? 1 : 2;

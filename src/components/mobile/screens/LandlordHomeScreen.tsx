@@ -39,7 +39,8 @@ const ACTION_ITEMS = [
     desc: "Metro Studio B needs review",
     type: "warning",
     icon: Clock,
-    screen: "landlordApplications" as const,
+    screen: "activity" as const,
+    params: { tab: "applications" },
   },
   {
     id: "a2",
@@ -47,7 +48,8 @@ const ACTION_ITEMS = [
     desc: "Unit 12A Plumbing Issue",
     type: "urgent",
     icon: Wrench,
-    screen: "landlordMaintenance" as const,
+    screen: "activity" as const,
+    params: { tab: "maintenance" },
   },
   {
     id: "a3",
@@ -55,7 +57,8 @@ const ACTION_ITEMS = [
     desc: "Totaling ₱45,000",
     type: "info",
     icon: AlertCircle,
-    screen: "landlordInvoices" as const,
+    screen: "activity" as const,
+    params: { tab: "invoices" },
   },
 ];
 
@@ -188,7 +191,7 @@ export default function LandlordHomeScreen() {
               <div
                 key={item.id}
                 className={styles.actionItem}
-                onClick={() => navigate(item.screen)}
+                onClick={() => navigate(item.screen, (item as any).params)}
               >
                 <div className={`${styles.actionIcon} ${styleColor}`}>
                   <Icon size={20} />

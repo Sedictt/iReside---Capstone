@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ClipboardList, Wrench, FileText } from "lucide-react";
+import { useNavigation } from "../navigation";
 import LandlordApplicationsScreen from "./LandlordApplicationsScreen";
 import LandlordMaintenanceScreen from "./LandlordMaintenanceScreen";
 import LandlordInvoicesScreen from "./LandlordInvoicesScreen";
@@ -10,7 +11,14 @@ import styles from "./ActivityScreen.module.css";
 type ActivityTab = "applications" | "maintenance" | "invoices";
 
 export default function ActivityScreen() {
+    const { screenParams } = useNavigation();
     const [activeTab, setActiveTab] = useState<ActivityTab>("applications");
+
+    useEffect(() => {
+        if (screenParams.tab && ["applications", "maintenance", "invoices"].includes(screenParams.tab as string)) {
+            setActiveTab(screenParams.tab as ActivityTab);
+        }
+    }, [screenParams.tab]);
 
     // Mock unread/alert counts
     const pendingApplications = 2;

@@ -86,16 +86,16 @@ export default function NotificationsScreen() {
         // Route to specific areas based on role and notification type
         if (role === "landlord") {
             switch (n.type) {
-                case "payment": navigate("landlordInvoices"); break;
-                case "maintenance": navigate("landlordMaintenance"); break;
-                case "message": navigate("landlordChat"); break;
-                case "application": navigate("landlordApplications"); break;
+                case "payment": navigate("activity", { tab: "invoices" }); break;
+                case "maintenance": navigate("activity", { tab: "maintenance" }); break;
+                case "message": navigate("inbox", { tab: "messages" }); break;
+                case "application": navigate("activity", { tab: "applications" }); break;
             }
         } else {
             switch (n.type) {
                 case "payment": navigate("payments"); break;
-                case "maintenance": navigate("tenantChat"); break; // Tenants use chat for maintenance right now
-                case "message": navigate("tenantChat"); break;
+                case "maintenance": navigate("inbox", { tab: "messages" }); break;
+                case "message": navigate("inbox", { tab: "messages" }); break;
                 case "application": navigate("applicationTracker"); break;
             }
         }

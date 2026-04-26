@@ -73,7 +73,7 @@ export default function LandlordProfileScreen() {
                                 <ChevronRight />
                             </div>
                         </button>
-                        <button className={styles.menuItem} onClick={() => navigate("landlordInvoices")}>
+                        <button className={styles.menuItem} onClick={() => navigate("activity", { tab: "invoices" })}>
                             <div className={styles.menuItemIcon}>
                                 <CreditCard />
                             </div>
@@ -107,7 +107,7 @@ export default function LandlordProfileScreen() {
                                 <ChevronRight />
                             </div>
                         </button>
-                        <button className={styles.menuItem} onClick={() => navigate("landlordMaintenance")}>
+                        <button className={styles.menuItem} onClick={() => navigate("activity", { tab: "maintenance" })}>
                             <div className={styles.menuItemIcon}>
                                 <Wrench />
                             </div>
