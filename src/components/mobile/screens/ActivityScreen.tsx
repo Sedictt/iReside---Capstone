@@ -40,7 +40,7 @@ export default function ActivityScreen() {
                         onClick={() => setActiveTab("applications")}
                     >
                         <ClipboardList size={13} />
-                        Applications
+                        Apps
                         {pendingApplications > 0 && (
                             <span className={styles.segmentBadge}>{pendingApplications}</span>
                         )}
