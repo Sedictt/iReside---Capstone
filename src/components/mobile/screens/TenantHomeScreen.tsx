@@ -17,6 +17,9 @@ import {
 import { useNavigation } from "../navigation";
 import styles from "./TenantHomeScreen.module.css";
 import { MOCK_NOTIFICATIONS } from "./NotificationsScreen";
+import AnimatedCounter from "../ui/AnimatedCounter";
+import Skeleton from "../ui/Skeleton";
+import { useState, useEffect } from "react";
 
 // ─── Mock Data ─────────────────────────────────────────────
 const RENT_DATA = {
@@ -101,6 +104,15 @@ export default function TenantHomeScreen() {
                 ? "Overdue"
                 : "Due Soon";
 
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1200);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <div className={styles.container}>
             {/* Greeting */}
@@ -132,8 +144,11 @@ export default function TenantHomeScreen() {
                     </span>
                 </div>
                 <div className={styles.rentAmount}>
-                    <span className={styles.rentCurrency}>₱</span>
-                    {RENT_DATA.amount}
+                    {isLoading ? (
+                        <Skeleton height="42px" width="140px" borderRadius="8px" />
+                    ) : (
+                        <AnimatedCounter value={18500} prefix="₱" />
+                    )}
                 </div>
                 <p className={styles.rentDueDate}>
                     Due on{" "}
@@ -164,13 +179,13 @@ export default function TenantHomeScreen() {
                 <div className={styles.leaseStats}>
                     <div className={styles.leaseStat}>
                         <div className={styles.leaseStatValue}>
-                            {LEASE_DATA.daysRemaining}
+                            {isLoading ? <Skeleton height="24px" width="40px" /> : <AnimatedCounter value={LEASE_DATA.daysRemaining} />}
                         </div>
                         <div className={styles.leaseStatLabel}>Days Left</div>
                     </div>
                     <div className={styles.leaseStat}>
                         <div className={styles.leaseStatValue}>
-                            {LEASE_DATA.monthsLeft}
+                            {isLoading ? <Skeleton height="24px" width="30px" /> : <AnimatedCounter value={LEASE_DATA.monthsLeft} />}
                         </div>
                         <div className={styles.leaseStatLabel}>Months Left</div>
                     </div>
