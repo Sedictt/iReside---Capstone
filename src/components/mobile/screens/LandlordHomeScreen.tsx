@@ -139,7 +139,7 @@ export default function LandlordHomeScreen() {
             return (
               <div
                 key={metric.id}
-                className={styles.metricCard}
+                className={`${styles.metricCard} ${metric.id === "units" ? styles.metricCardClickable + " clickable" : ""}`}
                 onClick={() => {
                   if (metric.id === "units") navigate("landlordProperties");
                 }}
@@ -148,6 +148,11 @@ export default function LandlordHomeScreen() {
                   <div className={styles.metricIcon}>
                     <Icon size={16} />
                   </div>
+                  {metric.id === "units" && (
+                    <div className={styles.metricHeaderRight}>
+                      <ChevronRight size={16} />
+                    </div>
+                  )}
                 </div>
                 <div className={styles.metricValue}>
                   {isLoading ? (
