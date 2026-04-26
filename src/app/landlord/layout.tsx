@@ -4,7 +4,7 @@ import { Sidebar } from "@/components/landlord/Sidebar";
 import { InPersonPaymentModal } from "@/components/landlord/InPersonPaymentModal";
 import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/context/AuthContext";
 import { PropertyProvider } from "@/context/PropertyContext";
@@ -18,12 +18,19 @@ export default function LandlordLayout({
     const pathname = usePathname();
     
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isGlobalFullscreen, setIsGlobalFullscreen] = useState(false);
+
+    useEffect(() => {
+        const handleToggle = (e: any) => setIsGlobalFullscreen(e.detail);
+        window.addEventListener('hide-sidebars', handleToggle);
+        return () => window.removeEventListener('hide-sidebars', handleToggle);
+    }, []);
 
     const isMessages = pathname?.startsWith("/landlord/messages");
     const isUnitMap = pathname?.startsWith("/landlord/unit-map");
     const isSettings = pathname?.startsWith("/landlord/settings");
-    const showSidebar = !isMessages && !isSettings;
-    const showContactsSidebar = !isMessages && !isUnitMap && !isSettings;
+    const showSidebar = !isMessages && !isSettings && !isGlobalFullscreen;
+    const showContactsSidebar = !isMessages && !isUnitMap && !isSettings && !isGlobalFullscreen;
 
     return (
         <AuthProvider>

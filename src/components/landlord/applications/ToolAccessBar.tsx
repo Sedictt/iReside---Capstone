@@ -451,7 +451,6 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               transition={{ type: "spring", damping: 25, stiffness: 150 }}
               className="relative z-10 flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(15,23,42,0.16)] backdrop-blur-[60px]"
             >
-              <BackgroundGlow color1={TOOL_GLOWS[activeTool.key].c1} color2={TOOL_GLOWS[activeTool.key].c2} />
               <Noise />
 
               <div className="relative z-20 flex h-24 shrink-0 items-center justify-between border-b border-border bg-card/92 px-6 backdrop-blur-md sm:px-10">

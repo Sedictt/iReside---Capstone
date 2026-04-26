@@ -534,22 +534,20 @@ export function WalkInApplicationModal({
                 exit={{ opacity: 0, scale: 0.98, y: 30 }}
                 transition={{ type: "spring", damping: 25, stiffness: 150 }}
                 className={cn(
-                    "relative w-full max-w-5xl h-[85vh] flex flex-col sm:flex-row z-10",
-                    "overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(15,23,42,0.16)]",
+                    "relative w-full max-w-5xl h-[90vh] flex flex-col sm:flex-row z-10",
+                    "overflow-hidden rounded-[2.5rem] border border-border bg-card/98 shadow-[0_0_80px_rgba(0,0,0,0.4)]",
                     "backdrop-blur-[60px]"
                 )}
             >
-                <BackgroundGlow />
                 <Noise />
 
                 {/* Left Rails / Navigation */}
-                <aside className="relative z-20 hidden w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background/80 p-10 sm:flex sm:w-80 sm:border-b-0 sm:border-r">
-                    <div className="mb-14 flex flex-col items-start gap-1">
-                        <Logo theme="dark" className="h-8 w-auto mb-1" />
-                        <p className="text-primary font-black text-[9px] uppercase tracking-[0.4em] opacity-80 mt-1">MASTER PANEL</p>
+                <aside className="relative z-20 hidden w-full shrink-0 flex-col overflow-hidden border-b border-border bg-background/80 p-8 sm:flex sm:w-80 sm:border-b-0 sm:border-r">
+                    <div className="mb-8 flex flex-col items-start gap-1">
+                        <p className="text-primary font-black text-[10px] uppercase tracking-[0.4em] opacity-80">MASTER PANEL</p>
                     </div>
 
-                    <nav className="flex-1 space-y-2">
+                    <nav className="space-y-4">
                         {STEPS.map((s, i) => {
                             const isActive = i === step;
                             const isCompleted = i < step;
