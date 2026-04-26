@@ -1,6 +1,5 @@
-"use client";
-
-import { Search, MapPin, Filter, Plus } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, MapPin, Filter, Plus, X, Check } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./LandlordPropertiesScreen.module.css";
 
@@ -37,6 +36,25 @@ const PROPERTIES = [
 
 export default function LandlordPropertiesScreen() {
   const { navigate } = useNavigation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<"all" | "full" | "available">("all");
+
+  const filteredProperties = useMemo(() => {
+    return PROPERTIES.filter((prop) => {
+      const matchesSearch = 
+        prop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prop.address.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const isFull = prop.occupied === prop.units;
+      const matchesStatus = 
+        filterStatus === "all" || 
+        (filterStatus === "full" && isFull) || 
+        (filterStatus === "available" && !isFull);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, filterStatus]);
 
   return (
     <div className={styles.container}>
@@ -45,8 +63,12 @@ export default function LandlordPropertiesScreen() {
         <div className={styles.headerTop}>
           <h1 className={styles.headerTitle}>Properties</h1>
           <div className={styles.headerActions}>
-            <button className={styles.headerActionBtn}>
+            <button 
+              className={`${styles.headerActionBtn} ${filterStatus !== 'all' ? styles.activeFilter : ''}`}
+              onClick={() => setShowFilters(true)}
+            >
               <Filter size={18} />
+              {filterStatus !== 'all' && <div className={styles.filterDot} />}
             </button>
             <button 
               className={styles.headerActionBtn}
@@ -64,65 +86,123 @@ export default function LandlordPropertiesScreen() {
             type="text"
             className={styles.searchInput}
             placeholder="Search properties or addresses..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button className={styles.clearSearch} onClick={() => setSearchQuery("")}>
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Property List */}
       <div className={styles.scrollArea}>
-        {PROPERTIES.map((prop) => {
-          const occupancyRate = Math.round((prop.occupied / prop.units) * 100);
-          const isFull = occupancyRate === 100;
+        {filteredProperties.length > 0 ? (
+          filteredProperties.map((prop) => {
+            const occupancyRate = Math.round((prop.occupied / prop.units) * 100);
+            const isFull = occupancyRate === 100;
 
-          return (
-            <div
-              key={prop.id}
-              className={styles.propertyCard}
-              onClick={() =>
-                navigate("landlordPropertyDetail", { propertyId: prop.id })
-              }
-            >
-              {/* Image & Status Badge */}
-              <div className={styles.cardImageWrapper}>
-                <img src={prop.image} alt={prop.name} />
-                <div className={styles.cardImageOverlay} />
-                <div
-                  className={`${styles.statusBadge} ${
-                    isFull ? styles.full : ""
-                  }`}
-                >
-                  {isFull ? "100% Full" : `${occupancyRate}% Occupied`}
+            return (
+              <div
+                key={prop.id}
+                className={styles.propertyCard}
+                onClick={() =>
+                  navigate("landlordPropertyDetail", { propertyId: prop.id })
+                }
+              >
+                {/* Image & Status Badge */}
+                <div className={styles.cardImageWrapper}>
+                  <img src={prop.image} alt={prop.name} />
+                  <div className={styles.cardImageOverlay} />
+                  <div
+                    className={`${styles.statusBadge} ${
+                      isFull ? styles.full : ""
+                    }`}
+                  >
+                    {isFull ? "100% Full" : `${occupancyRate}% Occupied`}
+                  </div>
+                </div>
+
+                {/* Card Info */}
+                <div className={styles.cardBody}>
+                  <h2 className={styles.propertyName}>{prop.name}</h2>
+                  <div className={styles.propertyAddress}>
+                    <MapPin size={14} />
+                    {prop.address}
+                  </div>
+
+                  {/* Quick Stats Grid */}
+                  <div className={styles.statsRow}>
+                    <div className={styles.statBox}>
+                      <div className={styles.statValue}>
+                        {prop.occupied}/{prop.units}
+                      </div>
+                      <div className={styles.statLabel}>Units Rented</div>
+                    </div>
+                    <div className={styles.statBox}>
+                      <div className={`${styles.statValue} ${styles.revenueText}`}>
+                        {prop.revenue}
+                      </div>
+                      <div className={styles.statLabel}>Revenue</div>
+                    </div>
+                  </div>
                 </div>
               </div>
+            );
+          })
+        ) : (
+          <div className={styles.emptyResults}>
+            <Search size={40} />
+            <p>No properties match your search</p>
+          </div>
+        )}
+      </div>
 
-              {/* Card Info */}
-              <div className={styles.cardBody}>
-                <h2 className={styles.propertyName}>{prop.name}</h2>
-                <div className={styles.propertyAddress}>
-                  <MapPin size={14} />
-                  {prop.address}
-                </div>
+      {/* Filter Bottom Sheet */}
+      {showFilters && (
+        <div className={styles.modalOverlay} onClick={() => setShowFilters(false)}>
+          <div className={styles.modalSheet} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>Filter Properties</h2>
+              <button className={styles.closeBtn} onClick={() => setShowFilters(false)}>
+                <X size={20} />
+              </button>
+            </div>
 
-                {/* Quick Stats Grid */}
-                <div className={styles.statsRow}>
-                  <div className={styles.statBox}>
-                    <div className={styles.statValue}>
-                      {prop.occupied}/{prop.units}
-                    </div>
-                    <div className={styles.statLabel}>Units Rented</div>
-                  </div>
-                  <div className={styles.statBox}>
-                    <div className={`${styles.statValue} ${styles.revenueText}`}>
-                      {prop.revenue}
-                    </div>
-                    <div className={styles.statLabel}>Revenue</div>
-                  </div>
-                </div>
+            <div className={styles.filterSection}>
+              <h3 className={styles.filterLabel}>Occupancy Status</h3>
+              <div className={styles.filterOptions}>
+                {[
+                  { id: "all", label: "All Properties" },
+                  { id: "full", label: "100% Full" },
+                  { id: "available", label: "Has Vacancies" },
+                ].map((opt) => (
+                  <button
+                    key={opt.id}
+                    className={`${styles.filterOption} ${
+                      filterStatus === opt.id ? styles.filterOptionActive : ""
+                    }`}
+                    onClick={() => {
+                      setFilterStatus(opt.id as any);
+                    }}
+                  >
+                    {opt.label}
+                    {filterStatus === opt.id && <Check size={16} />}
+                  </button>
+                ))}
               </div>
             </div>
-          );
-        })}
-      </div>
+
+            <button 
+              className={styles.applyBtn}
+              onClick={() => setShowFilters(false)}
+            >
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
