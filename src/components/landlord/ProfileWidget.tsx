@@ -1,12 +1,13 @@
 "use client";
 
-import { Settings, User, LogOut, CreditCard } from "lucide-react";
+import { Settings, User, LogOut, CreditCard, Pencil } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 
 function readProviderAvatar(user: ReturnType<typeof useAuth>["user"]) {
     const identities = user?.identities;
@@ -116,27 +117,42 @@ export function ProfileWidget() {
                         {/* User Info Header */}
                         <div className="border-b border-border bg-gradient-to-br from-slate-100 to-slate-200 p-4 dark:border-white/10 dark:from-neutral-800/50 dark:to-neutral-900/50">
                             <div className="flex items-center gap-3">
-                                <div 
-                                    className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-border dark:border-white/10 shadow-lg"
-                                    style={{ backgroundColor: profile?.avatar_bg_color || '#171717' }}
+                                <ProfileCardTrigger 
+                                    userId={user?.id || ""} 
+                                    initialData={{ full_name: displayName, avatar_url: displayAvatar as string, role: profile?.role as any }}
+                                    asChild
                                 >
-                                    {shouldShowAvatar ? (
-                                        <img
-                                            src={displayAvatar as string}
-                                            alt={displayName}
-                                            className="h-full w-full object-cover"
-                                            onError={() => setAvatarFailed(true)}
-                                        />
-                                    ) : (
-                                        <span className="text-base font-bold text-slate-900 dark:text-white">{initials}</span>
-                                    )}
-                                </div>
-                                <div className="flex-1 overflow-hidden">
-                                    <div className="flex min-w-0 items-center gap-2">
-                                        <p className="truncate text-sm font-bold text-foreground dark:text-white">{displayName}</p>
-                                        <RoleBadge role={profile?.role ?? null} />
+                                    <div 
+                                        className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-border dark:border-white/10 shadow-sm cursor-pointer hover:ring-2 hover:ring-primary transition-all shrink-0"
+                                        style={{ backgroundColor: profile?.avatar_bg_color || '#10b981' }}
+                                    >
+                                        {shouldShowAvatar ? (
+                                            <img
+                                                src={displayAvatar as string}
+                                                alt={displayName}
+                                                className="h-full w-full object-cover"
+                                                onError={() => setAvatarFailed(true)}
+                                            />
+                                        ) : (
+                                            <span className="text-xl font-bold text-white">{initials}</span>
+                                        )}
                                     </div>
-                                    <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
+                                </ProfileCardTrigger>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <ProfileCardTrigger 
+                                                userId={user?.id || ""} 
+                                                initialData={{ full_name: displayName, avatar_url: displayAvatar as string, role: profile?.role as any }}
+                                            >
+                                                <p className="truncate text-lg font-bold text-foreground dark:text-white hover:text-primary transition-colors cursor-pointer leading-tight">{displayName}</p>
+                                            </ProfileCardTrigger>
+                                            <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Account"}</p>
+                                        </div>
+                                        <Link href="/landlord/profile" className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                                            <Pencil className="h-4 w-4" />
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>

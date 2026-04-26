@@ -29,7 +29,7 @@ export async function GET() {
     }
 
     if (!leaseData?.unit_id) {
-        return NextResponse.json({ unitMap: null });
+        return NextResponse.json({ property: null });
     }
 
     const lease = leaseData as unknown as LeaseWithUnit;
@@ -51,7 +51,7 @@ export async function GET() {
     const propertyId = currentUnitRow.property_id;
     const { data: property, error: propertyError } = await supabase
         .from("properties")
-        .select("id, name, address")
+        .select("id, name, address, map_decorations")
         .eq("id", propertyId)
         .maybeSingle();
 
@@ -59,42 +59,71 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to load property details." }, { status: 500 });
     }
 
-    const [{ data: units, error: unitsError }, { data: requests, error: requestsError }] = await Promise.all([
+    const { data: units, error: unitsError } = await supabase
+        .from("units")
+        .select("id, name, floor, status, beds, baths, sqft, rent_amount")
+        .eq("property_id", propertyId)
+        .order("floor", { ascending: true })
+        .order("name", { ascending: true });
+
+    if (unitsError) {
+        return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
+    }
+
+    const [{ data: positions, error: posError }, { data: requests, error: requestsError }, { data: floorConfigs, error: floorError }] = await Promise.all([
         supabase
-            .from("units")
-            .select("id, name, floor, status, beds, baths, sqft, rent_amount")
-            .eq("property_id", propertyId)
-            .order("floor", { ascending: true })
-            .order("name", { ascending: true }),
+            .from("unit_map_positions")
+            .select("unit_id, floor_key, x, y, w, h")
+            .in("unit_id", (units ?? []).map(u => u.id)),
         supabase
             .from("unit_transfer_requests")
             .select("id, requested_unit_id, status, reason, created_at, landlord_note")
             .eq("tenant_id", user.id)
             .eq("property_id", propertyId)
             .order("created_at", { ascending: false })
-            .limit(10)
+            .limit(10),
+        supabase
+            .from("property_floor_configs")
+            .select("id, floor_number, floor_key, display_name, sort_order")
+            .eq("property_id", propertyId)
+            .order("sort_order", { ascending: true })
     ]);
 
-    if (unitsError) {
-        return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
-    }
+    // Map positions to units
+    const positionsByUnitId = new Map(
+        (positions ?? [])
+            .filter(p => p.x !== null && p.y !== null && p.w !== null && p.h !== null)
+            .map(p => [p.unit_id, p] as const)
+    );
+
+    // Enrich units with positions
+    const unitsWithPositions = (units ?? []).map(unit => ({
+        ...unit,
+        position: positionsByUnitId.get(unit.id) ?? null
+    }));
 
     const transferTableMissing = requestsError && (requestsError as { code?: string }).code === "42P01";
     if (requestsError && !transferTableMissing) {
         return NextResponse.json({ error: "Failed to load transfer requests." }, { status: 500 });
     }
 
+    const placedCount = unitsWithPositions.filter(u => u.position !== null).length;
+    const isSetupComplete = unitsWithPositions.length > 0 && placedCount === unitsWithPositions.length;
+
     return NextResponse.json({
-        unitMap: {
-            property,
-            leaseId: lease.id,
-            landlordId: lease.landlord_id,
-            tenantId: user.id,
-            currentUnitId: currentUnitRow.id,
-            currentUnitName: currentUnitRow.name,
-            units: units ?? [],
-            transferRequests: transferTableMissing ? [] : (requests ?? [])
-        }
+        property,
+        leaseId: lease.id,
+        landlordId: lease.landlord_id,
+        tenantId: user.id,
+        currentUnitId: currentUnitRow.id,
+        currentUnitName: currentUnitRow.name,
+        units: unitsWithPositions,
+        transferRequests: transferTableMissing ? [] : (requests ?? []),
+        floorConfigs: floorConfigs ?? [],
+        mapDecorations: (property as any).map_decorations ?? {},
+        isSetupComplete,
+        placedCount,
+        totalUnits: unitsWithPositions.length
     });
 }
 

@@ -1637,6 +1637,74 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            unit_map_positions: {
+                Row: {
+                    id: string
+                    property_id: string
+                    unit_id: string
+                    floor_key: string
+                    x: number
+                    y: number
+                    w: number
+                    h: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    property_id: string
+                    unit_id: string
+                    floor_key: string
+                    x: number
+                    y: number
+                    w: number
+                    h: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    property_id?: string
+                    unit_id?: string
+                    floor_key?: string
+                    x?: number
+                    y?: number
+                    w?: number
+                    h?: number
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            property_floor_configs: {
+                Row: {
+                    id: string
+                    property_id: string
+                    floor_number: number
+                    floor_key: string
+                    display_name: string
+                    sort_order: number
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    property_id: string
+                    floor_number: number
+                    floor_key: string
+                    display_name: string
+                    sort_order?: number
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    property_id?: string
+                    floor_number?: number
+                    floor_key?: string
+                    display_name?: string
+                    sort_order?: number
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
         }
         Views: {
             [_ in never]: never

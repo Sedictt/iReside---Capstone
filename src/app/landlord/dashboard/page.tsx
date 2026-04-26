@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
 import {
     CreditCard,
@@ -11,6 +12,9 @@ import {
     ExternalLink as LinkIcon,
     ArrowUpRight,
     CheckCircle2,
+    Pencil,
+    MessageSquare,
+    FolderOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
@@ -291,7 +295,25 @@ export default function LandlordDashboard() {
     }, []);
 
     const [selectedActionPayment, setSelectedActionPayment] = useState<PaymentListItem | null>(null);
+    const [popoutPosition, setPopoutPosition] = useState<{ x: number; y: number } | null>(null);
     const [isConfirmingAction, setIsConfirmingAction] = useState(false);
+
+    const popoutStyles = useMemo(() => {
+        if (!popoutPosition) return { top: 0, left: 0 };
+        const width = 400;
+        const height = 500;
+        const GAP = 15;
+        let top = popoutPosition.y + GAP;
+        let left = popoutPosition.x - (width / 2);
+
+        if (typeof window !== 'undefined') {
+            if (left + width > window.innerWidth) left = window.innerWidth - width - 20;
+            if (left < 20) left = 20;
+            if (top + height > window.innerHeight) top = popoutPosition.y - height - GAP;
+            if (top < 20) top = 20;
+        }
+        return { top, left, width };
+    }, [popoutPosition]);
 
     if (!mounted) return null;
 
@@ -397,7 +419,10 @@ export default function LandlordDashboard() {
                                             <PaymentCard
                                                 payment={topItem}
                                                 fallbackAvatar={FALLBACK_AVATAR}
-                                                onClick={() => setSelectedActionPayment(topItem)}
+                                                onClick={(e) => {
+                                                    setSelectedActionPayment(topItem);
+                                                    setPopoutPosition({ x: e.clientX, y: e.clientY });
+                                                }}
                                             />
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-6 text-muted-foreground/40">
@@ -479,101 +504,161 @@ export default function LandlordDashboard() {
                 </div>
             )}
 
-            {/* Quick Action Popout */}
-            {selectedActionPayment && (
-                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-                    <button 
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
-                        onClick={() => {
-                            setSelectedActionPayment(null);
-                            setIsConfirmingAction(false);
-                        }}
-                    />
-                    <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-[0_40px_80px_rgba(0,0,0,0.6)] animate-in zoom-in-95 duration-300">
-                        {!isConfirmingAction ? (
-                            <>
-                                <div className="p-8 text-center">
-                                    <div className="relative mx-auto mb-6 h-20 w-20">
-                                        <img 
-                                            src={selectedActionPayment.avatar || FALLBACK_AVATAR} 
-                                            alt={selectedActionPayment.tenant} 
-                                            className="h-full w-full rounded-full border-4 border-primary/20 object-cover"
-                                        />
-                                        <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full border-4 border-card bg-emerald-500 shadow-lg" />
-                                    </div>
-                                    <h3 className="text-xl font-black text-foreground">{selectedActionPayment.tenant}</h3>
-                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{selectedActionPayment.unit}</p>
-                                    <div className="mt-4 flex flex-col gap-2">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Details</p>
-                                        <h4 className="text-3xl font-black text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
-                                    </div>
-                                </div>
+            <AnimatePresence>
+                {selectedActionPayment && (
+                    <div className="fixed inset-0 z-[150] pointer-events-none">
+                        <button 
+                            className="absolute inset-0 pointer-events-auto"
+                            onClick={() => {
+                                setSelectedActionPayment(null);
+                                setIsConfirmingAction(false);
+                            }}
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            style={popoutStyles}
+                            className={cn(
+                                "pointer-events-auto absolute z-10 w-full max-w-[400px] overflow-hidden rounded-[2.5rem] border border-border bg-card/80 backdrop-blur-2xl transition-all duration-300",
+                                "shadow-[0_8px_30px_rgb(0,0,0,0.04),0_20px_80px_rgba(0,0,0,0.08)]",
+                                "dark:bg-neutral-900/90 dark:border-white/10 dark:shadow-[0_20px_50px_rgba(109,152,56,0.15)]"
+                            )}
+                        >
+                            {!isConfirmingAction ? (
+                                <>
+                                    {/* Header Section */}
+                                    <div className="p-8 pb-4">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center gap-6">
+                                                {/* Avatar with status indicator */}
+                                                <div 
+                                                    className="relative h-20 w-20 shrink-0 rounded-full flex items-center justify-center overflow-hidden shadow-sm"
+                                                    style={{ backgroundColor: (selectedActionPayment as any).avatarBgColor || '#10b981' }}
+                                                >
+                                                    {selectedActionPayment.avatar ? (
+                                                        <img 
+                                                            src={selectedActionPayment.avatar} 
+                                                            alt={selectedActionPayment.tenant} 
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-2xl font-black text-white/90">{selectedActionPayment.tenant.charAt(0)}</span>
+                                                    )}
+                                                    <div className="absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full border-4 border-card bg-emerald-500 shadow-lg" />
+                                                </div>
 
-                                <div className="grid gap-2 p-6 pt-0">
-                                    <button 
-                                        onClick={() => setIsConfirmingAction(true)}
-                                        className="group flex items-center justify-between rounded-2xl bg-primary px-6 py-4 transition-all hover:scale-[1.02] active:scale-95"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
-                                            <span className="text-sm font-black uppercase tracking-tight text-primary-foreground">Acknowledge Payment</span>
+                                                <div className="min-w-0">
+                                                    <h2 className="text-2xl font-normal tracking-tight text-foreground truncate mb-0.5">
+                                                        {selectedActionPayment.tenant}
+                                                    </h2>
+                                                    <p className="text-base text-muted-foreground truncate uppercase tracking-widest font-bold">
+                                                        {selectedActionPayment.unit}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <button 
+                                                onClick={() => setSelectedActionPayment(null)}
+                                                className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+                                            >
+                                                <X className="h-5 w-5" />
+                                            </button>
                                         </div>
-                                        <ArrowUpRight className="h-4 w-4 text-primary-foreground/60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                                    </button>
+                                    </div>
 
-                                    <Link 
-                                        href="/landlord/messages"
-                                        className="group flex items-center justify-between rounded-2xl border border-white/10 bg-card/70 px-6 py-4 transition-all hover:bg-card hover:scale-[1.02] active:scale-95"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <LinkIcon className="h-5 w-5 text-indigo-400" />
-                                            <span className="text-sm font-black uppercase tracking-tight text-foreground">Message Tenant</span>
+                                    {/* iReside Info Section */}
+                                    <div className="px-8 pb-4 space-y-3">
+                                        <div className="rounded-2xl bg-muted/30 p-4 border border-border/50">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
+                                                <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">Overdue</span>
+                                            </div>
+                                            <h4 className="text-3xl font-black text-foreground">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                         </div>
-                                        <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                                    </Link>
 
-                                    <button 
-                                        onClick={() => setSelectedActionPayment(null)}
-                                        className="mt-2 text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 hover:text-red-400 transition-colors"
-                                    >
-                                        Cancel Action
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="p-8 text-center animate-in slide-in-from-right-4 duration-300">
-                                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-                                    <AlertTriangle className="h-10 w-10" />
-                                </div>
-                                <h3 className="text-xl font-black text-foreground">Confirm Settlement</h3>
-                                <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                                    <p className="text-xs font-bold leading-relaxed text-primary/80">
-                                        Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.
-                                    </p>
-                                </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="rounded-2xl bg-muted/20 p-4 border border-border/30">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Lease Ends</p>
+                                                <p className="text-xs font-bold text-foreground">Oct 2026</p>
+                                            </div>
+                                            <div className="rounded-2xl bg-muted/20 p-4 border border-border/30">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Tenant Status</p>
+                                                <p className="text-xs font-bold text-emerald-500">Good Standing</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <div className="mt-8 flex flex-col gap-3">
-                                    <button 
-                                        onClick={() => {
-                                            setSelectedActionPayment(null);
-                                            setIsConfirmingAction(false);
-                                        }}
-                                        className="w-full rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
-                                    >
-                                        I Confirm Payment
-                                    </button>
-                                    <button 
-                                        onClick={() => setIsConfirmingAction(false)}
-                                        className="w-full rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
-                                    >
-                                        Go Back
-                                    </button>
+                                    {/* Action Buttons Row */}
+                                    <div className="px-8 pb-6 flex items-center gap-3">
+                                        <Link 
+                                            href="/landlord/messages"
+                                            className="flex-1 flex items-center justify-center gap-3 rounded-full bg-[#D7EFFF] dark:bg-blue-500/20 py-4 px-6 text-base font-medium text-[#001D35] dark:text-blue-100 transition-all hover:bg-[#c3e6ff] active:scale-[0.98]"
+                                        >
+                                            <MessageSquare className="h-5 w-5" />
+                                            Message
+                                        </Link>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => setIsConfirmingAction(true)}
+                                                className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-600 transition-all hover:bg-emerald-500/10 active:scale-[0.92]"
+                                                title="Acknowledge Payment"
+                                            >
+                                                <CheckCircle2 className="h-6 w-6" />
+                                            </button>
+                                            <button className="flex h-[52px] w-[52px] items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-600 dark:text-neutral-400 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.92]">
+                                                <FolderOpen className="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Button */}
+                                    <div className="px-6 pb-6">
+                                        <button 
+                                            onClick={() => setSelectedActionPayment(null)}
+                                            className="w-full flex items-center justify-center gap-3 rounded-2xl bg-[#f0f4f9] dark:bg-neutral-800 px-6 py-4 text-base font-medium text-blue-700 dark:text-blue-400 transition-all hover:bg-[#e1e9f1] dark:hover:bg-neutral-700 group"
+                                        >
+                                            Open Full Profile
+                                            <ArrowUpRight className="h-5 w-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="p-8 text-center animate-in slide-in-from-right-4 duration-300">
+                                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                                        <AlertTriangle className="h-10 w-10" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-foreground">Confirm Settlement</h3>
+                                    <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                                        <p className="text-xs font-bold leading-relaxed text-primary/80">
+                                            Make sure that the tenant has already paid their rent. Seek proof of payment for GCash payments.
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-8 flex flex-col gap-3">
+                                        <button 
+                                            onClick={() => {
+                                                setSelectedActionPayment(null);
+                                                setIsConfirmingAction(false);
+                                            }}
+                                            className="w-full rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                                        >
+                                            I Confirm Payment
+                                        </button>
+                                        <button 
+                                            onClick={() => setIsConfirmingAction(false)}
+                                            className="w-full rounded-2xl border border-white/10 bg-card/70 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
+                                        >
+                                            Go Back
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </>
     );
 }
