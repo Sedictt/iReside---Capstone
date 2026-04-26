@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Failed to fetch floor configs" }, { status: 500 });
     }
 
-    // Fetch units with their map positions (left join via the API layer)
+    // Fetch units with their map positions
     const { data: units, error: unitsError } = await supabase
         .from("units")
         .select("id, name, floor, status, rent_amount, beds, baths, sqft")
@@ -92,6 +92,64 @@ export async function GET(request: NextRequest) {
         positions = posData ?? [];
     }
 
+    // Fetch active leases for units in this property (owned by the landlord)
+    let leaseData: Record<string, { tenant_name: string | null; lease_start: string | null; lease_end: string | null; tenant_avatar_url: string | null; tenant_avatar_bg_color: string | null }> = {};
+    
+    if (unitIds.length > 0) {
+        const { data: leases, error: leasesError } = await supabase
+            .from("leases")
+            .select(`
+                unit_id,
+                start_date,
+                end_date,
+                profiles!leases_tenant_id_fkey(full_name, avatar_url, avatar_bg_color)
+            `)
+            .in("unit_id", unitIds)
+            .eq("landlord_id", user.id)
+            .in("status", ["active", "pending_landlord_signature", "pending_tenant_signature"]);
+
+        if (leasesError) {
+            return NextResponse.json({ error: "Failed to fetch lease data" }, { status: 500 });
+        }
+
+        // Build lease lookup by unit_id
+        for (const lease of (leases ?? []) as any[]) {
+            leaseData[lease.unit_id] = {
+                tenant_name: lease.profiles?.full_name ?? null,
+                tenant_avatar_url: lease.profiles?.avatar_url ?? null,
+                tenant_avatar_bg_color: lease.profiles?.avatar_bg_color ?? null,
+                lease_start: lease.start_date ?? null,
+                lease_end: lease.end_date ?? null,
+            };
+        }
+    }
+
+    // Fetch maintenance requests for units in this property
+    let maintenanceData: Record<string, { maintenance_title: string | null; maintenance_description: string | null; maintenance_created_at: string | null; maintenance_status: string | null }> = {};
+    
+    if (unitIds.length > 0) {
+        const { data: maintenanceRequests, error: maintenanceError } = await supabase
+            .from("maintenance_requests")
+            .select("unit_id, title, description, status, created_at")
+            .in("unit_id", unitIds)
+            .eq("landlord_id", user.id)
+            .in("status", ["open", "assigned", "in_progress"]);
+
+        if (maintenanceError) {
+            return NextResponse.json({ error: "Failed to fetch maintenance data" }, { status: 500 });
+        }
+
+        // Build maintenance lookup by unit_id (use latest if multiple)
+        for (const request of (maintenanceRequests ?? []) as any[]) {
+            maintenanceData[request.unit_id] = {
+                maintenance_title: request.title ?? null,
+                maintenance_description: request.description ?? null,
+                maintenance_created_at: request.created_at ?? null,
+                maintenance_status: request.status ?? null,
+            };
+        }
+    }
+
     const positionsByUnitId = new Map(
         positions
             .filter((position) => isValidUnitMapPosition(position))
@@ -101,6 +159,8 @@ export async function GET(request: NextRequest) {
     const enrichedUnits = (units ?? []).map(unit => ({
         ...unit,
         position: positionsByUnitId.get(unit.id) ?? null,
+        ...(leaseData[unit.id] ?? {}),
+        ...(maintenanceData[unit.id] ?? {}),
     }));
 
     const placedCount = enrichedUnits.filter(u => u.position !== null).length;
