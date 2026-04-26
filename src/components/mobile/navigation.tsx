@@ -51,7 +51,8 @@ export type ScreenName =
     | "landlordWalkInApp"
     | "moveInChecklist"
     | "revenueDashboard"
-    | "inbox";
+    | "inbox"
+    | "activity";
 
 // ─── Tab Names ─────────────────────────────────────────────
 export type TenantTab = "home" | "activity" | "inbox" | "profile";
@@ -72,7 +73,7 @@ export const TENANT_TAB_SCREENS: Record<TenantTab, ScreenName> = {
 export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
     home:       "landlordHome",
     properties: "landlordProperties",
-    activity:   "landlordApplications",
+    activity:   "activity",
     inbox:      "inbox",
     profile:    "landlordProfile",
 };
@@ -110,6 +111,7 @@ const LANDLORD_SCREEN_TO_TAB: Partial<Record<ScreenName, LandlordTab>> = {
     landlordPropertyDetail:    "properties",
     landlordUnitDetail:        "properties",
     landlordWalkInApp:         "properties",
+    activity:                  "activity",
     landlordApplications:      "activity",
     landlordApplicationReview: "activity",
     landlordInvoices:          "activity",

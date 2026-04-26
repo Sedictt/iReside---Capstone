@@ -68,7 +68,7 @@ const CATEGORY_ICONS = {
     other: Wrench
 };
 
-export default function LandlordMaintenanceScreen() {
+export default function LandlordMaintenanceScreen({ isSubView = false }: { isSubView?: boolean }) {
     const [activeTab, setActiveTab] = useState<"all" | "pending" | "active" | "resolved">("all");
     const { navigate } = useNavigation();
 
@@ -79,51 +79,51 @@ export default function LandlordMaintenanceScreen() {
 
     return (
         <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <div className={styles.headerTop}>
-                    <h1 className={styles.headerTitle}>Maintenance</h1>
-                    <button className={styles.searchBtn} style={{ background: 'none', border: 'none', color: '#a3a3a3' }}>
-                        <Search size={20} />
-                    </button>
-                </div>
+            {/* Header — hidden when embedded in ActivityScreen */}
+            {!isSubView && (
+                <div className={styles.header}>
+                    <div className={styles.headerTop}>
+                        <h1 className={styles.headerTitle}>Maintenance</h1>
+                        <button className={styles.searchBtn} style={{ background: 'none', border: 'none', color: '#a3a3a3' }}>
+                            <Search size={20} />
+                        </button>
+                    </div>
 
-                {/* Stats Summary */}
-                <div className={styles.statsRow}>
-                    <div className={styles.statCard}>
-                        <span className={`${styles.statValue} ${styles.pending}`}>2</span>
-                        <span className={styles.statLabel}>Pending</span>
+                    {/* Stats Summary */}
+                    <div className={styles.statsRow}>
+                        <div className={styles.statCard}>
+                            <span className={`${styles.statValue} ${styles.pending}`}>2</span>
+                            <span className={styles.statLabel}>Pending</span>
+                        </div>
+                        <div className={styles.statCard}>
+                            <span className={`${styles.statValue} ${styles.active}`}>1</span>
+                            <span className={styles.statLabel}>In Progress</span>
+                        </div>
+                        <div className={styles.statCard}>
+                            <span className={`${styles.statValue} ${styles.resolved}`}>12</span>
+                            <span className={styles.statLabel}>Resolved</span>
+                        </div>
                     </div>
-                    <div className={styles.statCard}>
-                        <span className={`${styles.statValue} ${styles.active}`}>1</span>
-                        <span className={styles.statLabel}>In Progress</span>
-                    </div>
-                    <div className={styles.statCard}>
-                        <span className={`${styles.statValue} ${styles.resolved}`}>12</span>
-                        <span className={styles.statLabel}>Resolved</span>
-                    </div>
-                </div>
 
-                {/* Tabs */}
-                <div className={styles.tabs}>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("all")}
-                    > All </button>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "pending" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("pending")}
-                    > Pending </button>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "active" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("active")}
-                    > Active </button>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "resolved" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("resolved")}
-                    > Resolved </button>
+                    {/* Tabs */}
+                    <div className={styles.tabs}>
+                        <button className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`} onClick={() => setActiveTab("all")}> All </button>
+                        <button className={`${styles.tab} ${activeTab === "pending" ? styles.active : ""}`} onClick={() => setActiveTab("pending")}> Pending </button>
+                        <button className={`${styles.tab} ${activeTab === "active" ? styles.active : ""}`} onClick={() => setActiveTab("active")}> Active </button>
+                        <button className={`${styles.tab} ${activeTab === "resolved" ? styles.active : ""}`} onClick={() => setActiveTab("resolved")}> Resolved </button>
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Filter tabs when subview */}
+            {isSubView && (
+                <div className={styles.tabs} style={{ padding: '0 16px 12px', borderBottom: '1px solid #1a1a1a' }}>
+                    <button className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`} onClick={() => setActiveTab("all")}> All </button>
+                    <button className={`${styles.tab} ${activeTab === "pending" ? styles.active : ""}`} onClick={() => setActiveTab("pending")}> Pending </button>
+                    <button className={`${styles.tab} ${activeTab === "active" ? styles.active : ""}`} onClick={() => setActiveTab("active")}> Active </button>
+                    <button className={`${styles.tab} ${activeTab === "resolved" ? styles.active : ""}`} onClick={() => setActiveTab("resolved")}> Resolved </button>
+                </div>
+            )}
 
             {/* List Area */}
             <div className={styles.scrollArea}>

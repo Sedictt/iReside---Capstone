@@ -20,7 +20,7 @@ const TABS = [
   { id: "rejected", label: "Rejected" },
 ] as const;
 
-export default function LandlordApplicationsScreen() {
+export default function LandlordApplicationsScreen({ isSubView = false }: { isSubView?: boolean }) {
   const { navigate } = useNavigation();
   const [activeFilter, setActiveFilter] = useState<typeof TABS[number]["id"]>("pending");
 
@@ -39,31 +39,53 @@ export default function LandlordApplicationsScreen() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.headerTop}>
-          <h1 className={styles.headerTitle}>Applications</h1>
-          <div className={styles.headerActions}>
-            <button 
-              className={styles.addWalkInBtn}
-              onClick={() => navigate("landlordWalkInApp")}
-            >
-              <Plus size={20} />
-            </button>
-            <button className={styles.headerFilterBtn}>
-              <Filter size={20} />
-            </button>
+      {/* Header — hidden when embedded in ActivityScreen */}
+      {!isSubView && (
+        <div className={styles.header}>
+          <div className={styles.headerTop}>
+            <h1 className={styles.headerTitle}>Applications</h1>
+            <div className={styles.headerActions}>
+              <button 
+                className={styles.addWalkInBtn}
+                onClick={() => navigate("landlordWalkInApp")}
+              >
+                <Plus size={20} />
+              </button>
+              <button className={styles.headerFilterBtn}>
+                <Filter size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Tabs */}
+          <div className={styles.filterTabs}>
+            {TABS.map((tab) => {
+              const count = tab.id === "all" 
+                ? APPLICATIONS.length 
+                : APPLICATIONS.filter(a => a.status === tab.id).length;
+                
+              return (
+                <button
+                  key={tab.id}
+                  className={`${styles.tabChip} ${activeFilter === tab.id ? styles.active : ""}`}
+                  onClick={() => setActiveFilter(tab.id as typeof activeFilter)}
+                >
+                  {tab.label}
+                  <span className={styles.tabBadge}>{count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
+      )}
 
-        {/* Filter Tabs */}
-        <div className={styles.filterTabs}>
+      {/* Filter Tabs shown at top when isSubView */}
+      {isSubView && (
+        <div className={styles.filterTabs} style={{ padding: '0 16px 12px' }}>
           {TABS.map((tab) => {
             const count = tab.id === "all" 
               ? APPLICATIONS.length 
               : APPLICATIONS.filter(a => a.status === tab.id).length;
-              
             return (
               <button
                 key={tab.id}
@@ -76,7 +98,7 @@ export default function LandlordApplicationsScreen() {
             );
           })}
         </div>
-      </div>
+      )}
 
       <div className={styles.scrollArea}>
         {filteredApps.length === 0 ? (

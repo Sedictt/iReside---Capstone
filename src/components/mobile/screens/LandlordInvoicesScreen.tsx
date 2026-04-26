@@ -13,7 +13,7 @@ const INVOICES = [
     { id: "inv4", tenant: "Emilio Aguinaldo", unit: "Dalandanan Res - B", amount: "₱9,000", date: "Mar 10, 2026", status: "unpaid" },
 ];
 
-export default function LandlordInvoicesScreen() {
+export default function LandlordInvoicesScreen({ isSubView = false }: { isSubView?: boolean }) {
     const [activeTab, setActiveTab] = useState<"all" | "unpaid" | "overdue">("all");
     const { navigate } = useNavigation();
 
@@ -24,43 +24,45 @@ export default function LandlordInvoicesScreen() {
 
     return (
         <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <div className={styles.headerTop}>
-                    <h1 className={styles.headerTitle}>Invoices</h1>
-                    <button className={styles.createInvoiceBtn} onClick={() => alert("Create Invoice flow...")}>
-                        <Plus size={18} /> New
-                    </button>
-                </div>
-
-                {/* Financial Summary */}
-                <div className={styles.summaryRow}>
-                    <div className={styles.summaryCard}>
-                        <span className={styles.summaryLabel}>Collected</span>
-                        <span className={`${styles.summaryValue} ${styles.collected}`}>₱110k</span>
+            {/* Header — hidden when embedded in ActivityScreen */}
+            {!isSubView && (
+                <div className={styles.header}>
+                    <div className={styles.headerTop}>
+                        <h1 className={styles.headerTitle}>Invoices</h1>
+                        <button className={styles.createInvoiceBtn} onClick={() => alert("Create Invoice flow...")}>
+                            <Plus size={18} /> New
+                        </button>
                     </div>
-                    <div className={styles.summaryCard}>
-                        <span className={styles.summaryLabel}>Outstanding</span>
-                        <span className={`${styles.summaryValue} ${styles.overdue}`}>₱45k</span>
+
+                    {/* Financial Summary */}
+                    <div className={styles.summaryRow}>
+                        <div className={styles.summaryCard}>
+                            <span className={styles.summaryLabel}>Collected</span>
+                            <span className={`${styles.summaryValue} ${styles.collected}`}>₱110k</span>
+                        </div>
+                        <div className={styles.summaryCard}>
+                            <span className={styles.summaryLabel}>Outstanding</span>
+                            <span className={`${styles.summaryValue} ${styles.overdue}`}>₱45k</span>
+                        </div>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className={styles.tabs}>
+                        <button className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`} onClick={() => setActiveTab("all")}> All </button>
+                        <button className={`${styles.tab} ${activeTab === "unpaid" ? styles.active : ""}`} onClick={() => setActiveTab("unpaid")}> Unpaid </button>
+                        <button className={`${styles.tab} ${activeTab === "overdue" ? styles.active : ""}`} onClick={() => setActiveTab("overdue")}> Overdue </button>
                     </div>
                 </div>
+            )}
 
-                {/* Tabs */}
-                <div className={styles.tabs}>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("all")}
-                    > All </button>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "unpaid" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("unpaid")}
-                    > Unpaid </button>
-                    <button 
-                        className={`${styles.tab} ${activeTab === "overdue" ? styles.active : ""}`}
-                        onClick={() => setActiveTab("overdue")}
-                    > Overdue </button>
+            {/* Filter tabs when subview */}
+            {isSubView && (
+                <div className={styles.tabs} style={{ padding: '0 16px 12px', borderBottom: '1px solid #1a1a1a' }}>
+                    <button className={`${styles.tab} ${activeTab === "all" ? styles.active : ""}`} onClick={() => setActiveTab("all")}> All </button>
+                    <button className={`${styles.tab} ${activeTab === "unpaid" ? styles.active : ""}`} onClick={() => setActiveTab("unpaid")}> Unpaid </button>
+                    <button className={`${styles.tab} ${activeTab === "overdue" ? styles.active : ""}`} onClick={() => setActiveTab("overdue")}> Overdue </button>
                 </div>
-            </div>
+            )}
 
             {/* Scrollable List */}
             <div className={styles.scrollArea}>

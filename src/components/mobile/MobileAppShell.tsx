@@ -36,6 +36,7 @@ import LeaseSigningScreen from "./screens/LeaseSigningScreen";
 import MoveInChecklistScreen from "./screens/MoveInChecklistScreen";
 import RevenueDashboardScreen from "./screens/RevenueDashboardScreen";
 import InboxScreen from "./screens/InboxScreen";
+import ActivityScreen from "./screens/ActivityScreen";
 import {
     Home,
     Search,
@@ -222,6 +223,7 @@ function ScreenRouter() {
         moveInChecklist: MoveInChecklistScreen,
         revenueDashboard: RevenueDashboardScreen,
         inbox: InboxScreen,
+        activity: ActivityScreen,
         // Screens will be registered here as they're built
     };
 
