@@ -42,6 +42,7 @@ export type ScreenName =
     | "landlordChat"
     | "landlordProfile"
     | "landlordSettings"
+    | "addProperty"
     // Shared
     | "notifications"
     | "irisChat"

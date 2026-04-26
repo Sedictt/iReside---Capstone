@@ -37,6 +37,7 @@ import MoveInChecklistScreen from "./screens/MoveInChecklistScreen";
 import RevenueDashboardScreen from "./screens/RevenueDashboardScreen";
 import InboxScreen from "./screens/InboxScreen";
 import ActivityScreen from "./screens/ActivityScreen";
+import AddPropertyScreen from "./screens/AddPropertyScreen";
 import {
     Home,
     Search,
@@ -104,6 +105,7 @@ const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "landlordWalkInApp",
     "moveInChecklist",
     "revenueDashboard",
+    "addProperty",
 ];
 
 // ─── Status Bar ────────────────────────────────────────────
@@ -224,7 +226,7 @@ function ScreenRouter() {
         revenueDashboard: RevenueDashboardScreen,
         inbox: InboxScreen,
         activity: ActivityScreen,
-        // Screens will be registered here as they're built
+        addProperty: AddPropertyScreen,
     };
 
     const ScreenComponent = screenComponents[currentScreen];

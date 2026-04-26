@@ -83,7 +83,7 @@ export default function LandlordPropertiesScreen() {
             </button>
             <button 
               className={styles.headerActionBtn}
-              onClick={() => alert("Add New Property flow...")}
+              onClick={() => navigate("addProperty")}
             >
               <Plus size={18} />
             </button>
