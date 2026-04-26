@@ -39,6 +39,17 @@ export default function LandlordPropertiesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filterStatus, setFilterStatus] = useState<"all" | "full" | "available">("all");
+  const [tempFilterStatus, setTempFilterStatus] = useState<"all" | "full" | "available">("all");
+
+  const openFilters = () => {
+    setTempFilterStatus(filterStatus);
+    setShowFilters(true);
+  };
+
+  const applyFilters = () => {
+    setFilterStatus(tempFilterStatus);
+    setShowFilters(false);
+  };
 
   const filteredProperties = useMemo(() => {
     return PROPERTIES.filter((prop) => {
@@ -65,7 +76,7 @@ export default function LandlordPropertiesScreen() {
           <div className={styles.headerActions}>
             <button 
               className={`${styles.headerActionBtn} ${filterStatus !== 'all' ? styles.activeFilter : ''}`}
-              onClick={() => setShowFilters(true)}
+              onClick={openFilters}
             >
               <Filter size={18} />
               {filterStatus !== 'all' && <div className={styles.filterDot} />}
@@ -181,14 +192,14 @@ export default function LandlordPropertiesScreen() {
                   <button
                     key={opt.id}
                     className={`${styles.filterOption} ${
-                      filterStatus === opt.id ? styles.filterOptionActive : ""
+                      tempFilterStatus === opt.id ? styles.filterOptionActive : ""
                     }`}
                     onClick={() => {
-                      setFilterStatus(opt.id as any);
+                      setTempFilterStatus(opt.id as any);
                     }}
                   >
                     {opt.label}
-                    {filterStatus === opt.id && <Check size={16} />}
+                    {tempFilterStatus === opt.id && <Check size={16} />}
                   </button>
                 ))}
               </div>
@@ -196,7 +207,7 @@ export default function LandlordPropertiesScreen() {
 
             <button 
               className={styles.applyBtn}
-              onClick={() => setShowFilters(false)}
+              onClick={applyFilters}
             >
               Apply Filters
             </button>
