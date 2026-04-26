@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/landlord/Sidebar";
 import { InPersonPaymentModal } from "@/components/landlord/InPersonPaymentModal";
 import { ContactsSidebar } from "@/components/landlord/dashboard/ContactsSidebar";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/context/AuthContext";
 import { PropertyProvider } from "@/context/PropertyContext";
@@ -16,6 +17,8 @@ export default function LandlordLayout({
 }) {
     const pathname = usePathname();
     
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
     const isMessages = pathname?.startsWith("/landlord/messages");
     const isUnitMap = pathname?.startsWith("/landlord/unit-map");
     const isSettings = pathname?.startsWith("/landlord/settings");
@@ -27,12 +30,18 @@ export default function LandlordLayout({
             <PropertyProvider>
                 <NotificationProvider>
                     <div className="flex h-screen bg-background text-foreground overflow-hidden">
-                        {showSidebar && <Sidebar />}
+                        {showSidebar && (
+                            <Sidebar 
+                                isCollapsed={isSidebarCollapsed} 
+                                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                                showCollapseToggle={isUnitMap}
+                            />
+                        )}
                         
                         <main 
                             className={cn(
-                                "flex-1 overflow-y-auto h-full", 
-                                showSidebar ? "ml-[280px]" : "",
+                                "flex-1 overflow-y-auto h-full transition-all duration-300", 
+                                showSidebar ? (isSidebarCollapsed ? "ml-[80px]" : "ml-[280px]") : "",
                                 showContactsSidebar ? "md:pr-24" : ""
                             )}
                         >

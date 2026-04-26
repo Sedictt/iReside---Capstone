@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
-export function PropertySelector() {
+export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolean }) {
     const { properties, selectedPropertyId, setSelectedPropertyId, selectedProperty, loading } = useProperty()
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -43,11 +43,13 @@ export function PropertySelector() {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "group flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-card/40 px-4 transition-all hover:bg-card/60 hover:ring-1 hover:ring-primary/20",
+                    "group flex h-12 items-center rounded-2xl border border-white/10 bg-card/40 transition-all hover:bg-card/60 hover:ring-1 hover:ring-primary/20",
+                    isCollapsed ? "w-12 justify-center px-0" : "gap-3 px-4",
                     isOpen && "bg-card/80 ring-1 ring-primary/40"
                 )}
+                title={isCollapsed ? (selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name) : undefined}
             >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     {selectedPropertyId === 'all' ? (
                         <LayoutGrid className="h-4.5 w-4.5" />
                     ) : (
@@ -55,19 +57,23 @@ export function PropertySelector() {
                     )}
                 </div>
                 
-                <div className="flex flex-col items-start text-left">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                        Current Property
-                    </span>
-                    <span className="max-w-[120px] truncate text-sm font-black text-foreground">
-                        {selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name}
-                    </span>
-                </div>
+                {!isCollapsed && (
+                    <>
+                        <div className="flex flex-col items-start text-left">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                Current Property
+                            </span>
+                            <span className="max-w-[120px] truncate text-sm font-black text-foreground">
+                                {selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name}
+                            </span>
+                        </div>
 
-                <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-transform duration-300",
-                    isOpen && "rotate-180"
-                )} />
+                        <ChevronDown className={cn(
+                            "h-4 w-4 text-muted-foreground transition-transform duration-300",
+                            isOpen && "rotate-180"
+                        )} />
+                    </>
+                )}
             </button>
 
             {isOpen && (

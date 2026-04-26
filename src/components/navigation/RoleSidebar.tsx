@@ -43,6 +43,9 @@ interface RoleSidebarProps {
     className?: string;
     header?: React.ReactNode;
     footer?: React.ReactNode;
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
+    showCollapseToggle?: boolean;
 }
 
 export function RoleSidebar({
@@ -53,6 +56,9 @@ export function RoleSidebar({
     className,
     header,
     footer,
+    isCollapsed = false,
+    onToggleCollapse,
+    showCollapseToggle = false,
 }: RoleSidebarProps) {
     const pathname = usePathname();
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
@@ -77,12 +83,13 @@ export function RoleSidebar({
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                     "group relative flex items-center rounded-xl transition-all duration-300 ease-in-out",
-                    "justify-between px-3 py-2.5",
                     isActive
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                    nested ? "ml-4" : ""
+                    nested && !isCollapsed ? "ml-4" : "",
+                    isCollapsed ? "justify-center px-0 w-12 h-12 mx-auto mb-1" : "justify-between px-3 py-2.5"
                 )}
+                title={isCollapsed ? item.label : undefined}
             >
                 {/* Active Indicator Bar */}
                 {isActive && (
@@ -98,25 +105,30 @@ export function RoleSidebar({
                 <div className="flex items-center gap-3">
                     <item.icon 
                         className={cn(
-                            "h-5 w-5 shrink-0 transition-transform duration-300", 
+                            "transition-transform duration-300", 
+                            isCollapsed ? "h-6 w-6" : "h-5 w-5 shrink-0",
                             isActive ? "text-primary scale-110" : "text-muted-foreground group-hover:text-foreground group-hover:scale-105"
                         )} 
                         aria-hidden="true" 
                     />
-                    <span
-                        className={cn(
-                            "whitespace-nowrap text-sm tracking-tight",
-                            isActive ? "font-bold" : "font-semibold"
-                        )}
-                    >
-                        {item.label}
-                    </span>
+                    {!isCollapsed && (
+                        <span
+                            className={cn(
+                                "whitespace-nowrap text-sm tracking-tight",
+                                isActive ? "font-bold" : "font-semibold"
+                            )}
+                        >
+                            {item.label}
+                        </span>
+                    )}
                 </div>
 
-                {item.badge ? (
+                {!isCollapsed && item.badge ? (
                     <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/20">
                         {item.badge}
                     </span>
+                ) : isCollapsed && item.badge ? (
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
                 ) : null}
             </Link>
         );
@@ -125,21 +137,44 @@ export function RoleSidebar({
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 z-40 flex h-screen w-[280px] flex-col border-r border-border/40 bg-card/80 backdrop-blur-xl text-foreground shadow-sm transition-all duration-300",
+                "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border/40 bg-card/80 backdrop-blur-xl text-foreground shadow-sm transition-all duration-300",
+                isCollapsed ? "w-[80px]" : "w-[280px]",
                 className
             )}
         >
             {/* Header */}
-            <div className="flex h-20 items-center justify-between border-b border-border/40 px-6">
-                <div className="flex items-center gap-3">
-                    <Logo className="h-24 w-28" />
+            <div className={cn("flex h-20 items-center border-b border-border/40 px-6 transition-all duration-300", isCollapsed ? "justify-center" : "justify-between")}>
+                {!isCollapsed && (
+                    <div className="flex items-center gap-3">
+                        <Logo className="h-24 w-28" />
+                    </div>
+                )}
+                <div className="flex items-center gap-2">
+                    {!isCollapsed && <ThemeToggle variant="sidebar" />}
+                    {showCollapseToggle && !isCollapsed && (
+                        <button 
+                            onClick={onToggleCollapse}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                            title="Collapse sidebar"
+                        >
+                            <PanelLeftClose className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
-                <ThemeToggle variant="sidebar" />
+                {isCollapsed && (
+                    <button 
+                        onClick={onToggleCollapse}
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 transition-all active:scale-95 hover:shadow-primary/40"
+                        title="Expand sidebar"
+                    >
+                        <PanelLeftOpen className="h-6 w-6" />
+                    </button>
+                )}
             </div>
 
             {/* Header Content (Property Selector etc) */}
             {header && (
-                <div className="px-4 pb-2 pt-6">
+                <div className={cn("pb-2 pt-6 transition-all duration-300", isCollapsed ? "px-2 flex justify-center" : "px-4")}>
                     {header}
                 </div>
             )}
@@ -167,35 +202,39 @@ export function RoleSidebar({
                                 )}
 
                                 {!section.hideHeading ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleSection(section.category, fallbackExpanded)}
-                                        className={cn(
-                                            "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all",
-                                            hasActiveItem ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            {SectionIcon && (
-                                                <SectionIcon className={cn("h-4 w-4", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
+                                    isCollapsed ? (
+                                        <div className="mx-auto my-4 h-px w-8 bg-border/40" />
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleSection(section.category, fallbackExpanded)}
+                                            className={cn(
+                                                "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all",
+                                                hasActiveItem ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                                             )}
-                                            <span className="text-[11px] font-bold uppercase tracking-wider">{section.category}</span>
-                                        </div>
-                                        {isCollapsible && (
-                                            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
-                                        )}
-                                    </button>
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {SectionIcon && (
+                                                    <SectionIcon className={cn("h-4 w-4", hasActiveItem ? "text-primary" : "text-muted-foreground")} />
+                                                )}
+                                                <span className="text-[11px] font-bold uppercase tracking-wider">{section.category}</span>
+                                            </div>
+                                            {isCollapsible && (
+                                                <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", isExpanded ? "rotate-180" : "")} />
+                                            )}
+                                        </button>
+                                    )
                                 ) : null}
 
                                 <AnimatePresence initial={false}>
-                                    {isExpanded && (
+                                    {(isExpanded || isCollapsed) && (
                                         <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: "auto", opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
+                                            initial={isCollapsed ? { opacity: 1 } : { height: 0, opacity: 0 }}
+                                            animate={isCollapsed ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+                                            exit={isCollapsed ? { opacity: 1 } : { height: 0, opacity: 0 }}
                                             className="space-y-1 overflow-hidden"
                                         >
-                                            {section.items.map((item) => renderNavItem(item, !section.hideHeading))}
+                                            {section.items.map((item) => renderNavItem(item, !section.hideHeading && !isCollapsed))}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -216,10 +255,13 @@ export function RoleSidebar({
                 <button
                     type="button"
                     onClick={onLogout}
-                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                    className={cn(
+                        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:bg-red-500/10 hover:text-red-500",
+                        isCollapsed ? "w-10 h-10 justify-center mx-auto" : "w-full"
+                    )}
                 >
                     <LogOut className="h-5 w-5 shrink-0" />
-                    <span className="text-sm font-semibold">{logoutLabel}</span>
+                    {!isCollapsed && <span className="text-sm font-semibold">{logoutLabel}</span>}
                 </button>
             </div>
         </aside>
