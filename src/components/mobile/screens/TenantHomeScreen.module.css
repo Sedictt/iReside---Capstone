@@ -7,7 +7,7 @@
     flex-direction: column;
     min-height: 100%;
     background: #0a0a0a;
-    padding: 0 20px 110px;
+    padding: 0 20px 40px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -93,7 +93,7 @@
     border: 1px solid #262626;
     border-radius: 20px;
     padding: 20px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     position: relative;
     overflow: hidden;
 }
@@ -222,7 +222,7 @@
     border: 1px solid #262626;
     border-radius: 20px;
     padding: 18px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .leaseHeader {
@@ -324,7 +324,7 @@
 .quickActions {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;

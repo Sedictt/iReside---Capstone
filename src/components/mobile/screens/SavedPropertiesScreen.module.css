@@ -111,7 +111,7 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0 20px 120px;
+    padding: 0 20px 40px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
