@@ -78,8 +78,6 @@ export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
     profile:    "landlordProfile",
 };
 
-};
-
 // ─── Navigation Context Type ───────────────────────────────
 interface NavigationContextType {
     // Current state
