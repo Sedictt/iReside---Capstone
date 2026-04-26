@@ -72,7 +72,7 @@ export default function LandlordHomeScreen() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div className={styles.headerDate}>
             <Calendar />
-            {REVENUE_DATA.month} 2026
+            {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
           </div>
           <button 
             style={{ background: 'none', border: 'none', color: '#a3a3a3', position: 'relative' }}
