@@ -290,12 +290,12 @@
 .tabItemActive::after {
     content: "";
     position: absolute;
-    bottom: -8px;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
+    bottom: -6px;
+    width: 24px;
+    height: 3px;
+    border-radius: 1.5px;
     background: var(--m-primary);
-    box-shadow: 0 0 8px var(--m-primary);
+    box-shadow: 0 0 10px rgba(109, 152, 56, 0.4);
 }
 
 /* Active tab dot indicator */
