@@ -16,7 +16,7 @@ type PostCategory = "announcement" | "notice" | "update" | "general";
 interface Post {
     id: string;
     author: string;
-    authorRole: "landlord" | "tenant" | "admin";
+    authorRole: "landlord" | "tenant";
     avatar: string;
     category: PostCategory;
     title?: string;
@@ -110,7 +110,6 @@ const CATEGORY_CONFIG: Record<PostCategory, { label: string; className: string; 
 const ROLE_COLOR: Record<string, string> = {
     landlord: "#6d9838",
     tenant: "#3b82f6",
-    admin: "#ef4444",
 };
 
 // ─── Post Component ─────────────────────────────────────────
@@ -130,7 +129,7 @@ function PostCard({
     const [isHidden, setIsHidden] = useState(post.hidden ?? false);
     
     const { label, className, icon: CategoryIcon } = CATEGORY_CONFIG[post.category];
-    const canModerate = userRole === "landlord" || userRole === "admin";
+    const canModerate = userRole === "landlord";
 
     const handleLike = () => {
         setLiked((prev) => !prev);
@@ -276,7 +275,7 @@ export default function CommunityFeedScreen() {
         (p) => filter === "all" || p.category === filter
     );
 
-    const canPost = role === "landlord" || role === "admin";
+    const canPost = role === "landlord";
 
     const handlePostSuccess = (postData: any) => {
         console.log("New Post Created:", postData);
