@@ -77,6 +77,55 @@ export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
     profile:    "landlordProfile",
 };
 
+// ─── Reverse Lookup: Screen → Tab ──────────────────────────
+// Maps any screen name to the tab it belongs to, for auto-syncing the indicator
+const TENANT_SCREEN_TO_TAB: Partial<Record<ScreenName, TenantTab>> = {
+    tenantHome:          "home",
+    propertySearch:      "home",
+    propertyDetail:      "home",
+    savedProperties:     "home",
+    applicationTracker:  "activity",
+    applicationForm:     "activity",
+    applicationDetail:   "activity",
+    leaseList:           "activity",
+    leaseDetail:         "activity",
+    leaseSigning:        "activity",
+    payments:            "activity",
+    checkout:            "activity",
+    inbox:               "inbox",
+    tenantChat:          "inbox",
+    chatConversation:    "inbox",
+    communityFeed:       "inbox",
+    irisChat:            "inbox",
+    tenantProfile:       "profile",
+    tenantSettings:      "profile",
+    notifications:       "profile",
+};
+
+const LANDLORD_SCREEN_TO_TAB: Partial<Record<ScreenName, LandlordTab>> = {
+    landlordHome:              "home",
+    revenueDashboard:          "home",
+    notifications:             "home",
+    landlordProperties:        "properties",
+    landlordPropertyDetail:    "properties",
+    landlordUnitDetail:        "properties",
+    landlordWalkInApp:         "properties",
+    landlordApplications:      "activity",
+    landlordApplicationReview: "activity",
+    landlordInvoices:          "activity",
+    landlordInvoiceDetail:     "activity",
+    landlordMaintenance:       "activity",
+    landlordMaintenanceDetail: "activity",
+    moveInChecklist:           "activity",
+    inbox:                     "inbox",
+    landlordChat:              "inbox",
+    chatConversation:          "inbox",
+    communityFeed:             "inbox",
+    photoGallery:              "inbox",
+    landlordProfile:           "profile",
+    landlordSettings:          "profile",
+};
+
 // ─── Navigation Context Type ───────────────────────────────
 interface NavigationContextType {
     // Current state
@@ -107,15 +156,26 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     const [screenStack, setScreenStack] = useState<ScreenName[]>([]);
     const [screenParams, setScreenParams] = useState<Record<string, unknown>>({});
 
-    // Navigate to a screen (pushes current to stack)
+    // Navigate to a screen (pushes current to stack & auto-syncs active tab)
     const navigate = useCallback(
         (screen: ScreenName, params?: Record<string, unknown>) => {
             setScreenStack((prev) => [...prev, currentScreen]);
             setCurrentScreen(screen);
             if (params) setScreenParams(params);
             else setScreenParams({});
+
+            // Auto-sync the bottom tab indicator
+            const tabForScreen =
+                role === "tenant"
+                    ? TENANT_SCREEN_TO_TAB[screen]
+                    : role === "landlord"
+                        ? LANDLORD_SCREEN_TO_TAB[screen]
+                        : undefined;
+            if (tabForScreen) {
+                setActiveTab(tabForScreen);
+            }
         },
-        [currentScreen]
+        [currentScreen, role]
     );
 
     // Go back to previous screen
