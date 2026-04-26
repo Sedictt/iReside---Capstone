@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+type UnitMapPositionRow = {
+    unit_id: string;
+    floor_key: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+};
+
+function isValidUnitMapPosition(position: Pick<UnitMapPositionRow, "floor_key" | "x" | "y" | "w" | "h"> | null | undefined) {
+    if (!position) return false;
+
+    const floorKey = position.floor_key?.trim().toLowerCase();
+    if (!floorKey || floorKey === "none" || floorKey === "null" || floorKey === "undefined") {
+        return false;
+    }
+
+    return Number.isFinite(position.x)
+        && Number.isFinite(position.y)
+        && Number.isFinite(position.w)
+        && Number.isFinite(position.h)
+        && position.w > 0
+        && position.h > 0;
+}
+
 /** GET /api/landlord/unit-map?propertyId=xxx
  *  Returns: units (with positions), floor_configs, map_decorations
  */
@@ -53,14 +78,7 @@ export async function GET(request: NextRequest) {
 
     const unitIds = (units ?? []).map(u => u.id);
     
-    let positions: Array<{
-        unit_id: string;
-        floor_key: string;
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    }> = [];
+    let positions: UnitMapPositionRow[] = [];
 
     if (unitIds.length > 0) {
         const { data: posData, error: posError } = await (supabase
@@ -74,7 +92,11 @@ export async function GET(request: NextRequest) {
         positions = posData ?? [];
     }
 
-    const positionsByUnitId = new Map(positions.map(p => [p.unit_id, p]));
+    const positionsByUnitId = new Map(
+        positions
+            .filter((position) => isValidUnitMapPosition(position))
+            .map((position) => [position.unit_id, position] as const)
+    );
 
     const enrichedUnits = (units ?? []).map(unit => ({
         ...unit,
@@ -128,9 +150,31 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Property not found or access denied" }, { status: 404 });
     }
 
-    // Upsert positions
-    if (positions && positions.length > 0) {
-        const rows = positions.map(p => ({
+    // Upsert/delete positions
+    if (positions !== undefined) {
+        const { data: propertyUnits, error: propertyUnitsError } = await supabase
+            .from("units")
+            .select("id")
+            .eq("property_id", propertyId);
+
+        if (propertyUnitsError) {
+            return NextResponse.json({ error: "Failed to fetch property units" }, { status: 500 });
+        }
+
+        const propertyUnitIds = (propertyUnits ?? []).map((unit) => unit.id);
+        const propertyUnitIdSet = new Set(propertyUnitIds);
+        const validPositions = positions.filter((position) => (
+            propertyUnitIdSet.has(position.unitId)
+            && isValidUnitMapPosition({
+                floor_key: position.floorKey,
+                x: position.x,
+                y: position.y,
+                w: position.w,
+                h: position.h,
+            })
+        ));
+
+        const rows = validPositions.map(p => ({
             unit_id: p.unitId,
             floor_key: p.floorKey,
             x: p.x,
@@ -140,16 +184,32 @@ export async function POST(request: NextRequest) {
             updated_at: new Date().toISOString(),
         }));
 
-        const { error: upsertError } = await (supabase
-            .from("unit_map_positions" as any)
-            .upsert(rows, { onConflict: "unit_id" }) as any);
+        if (rows.length > 0) {
+            const { error: upsertError } = await (supabase
+                .from("unit_map_positions" as any)
+                .upsert(rows, { onConflict: "unit_id" }) as any);
 
-        if (upsertError) {
-            return NextResponse.json({ error: `Failed to save positions: ${upsertError.message}` }, { status: 500 });
+            if (upsertError) {
+                return NextResponse.json({ error: `Failed to save positions: ${upsertError.message}` }, { status: 500 });
+            }
+        }
+
+        const placedUnitIds = new Set(validPositions.map((position) => position.unitId));
+        const unplacedUnitIds = propertyUnitIds.filter((unitId) => !placedUnitIds.has(unitId));
+
+        if (unplacedUnitIds.length > 0) {
+            const { error: deleteError } = await (supabase
+                .from("unit_map_positions" as any)
+                .delete()
+                .in("unit_id", unplacedUnitIds) as any);
+
+            if (deleteError) {
+                return NextResponse.json({ error: `Failed to clear stale positions: ${deleteError.message}` }, { status: 500 });
+            }
         }
 
         // Also sync units.floor based on floorKey (e.g. "floor2" → floor=2, "ground" → floor=0)
-        const floorUpdates = positions.map(p => {
+        const floorUpdates = validPositions.map(p => {
             let floorNumber = 1;
             if (p.floorKey === "ground") floorNumber = 0;
             else {

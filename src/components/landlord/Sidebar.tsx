@@ -11,14 +11,23 @@ import {
     Map,
     ArrowUpRight,
     Megaphone,
-    Settings
+    Settings,
+    User
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
 import { PropertySelector } from "@/components/landlord/PropertySelector";
 import { useNotifications } from "@/context/NotificationContext";
 
-export function Sidebar() {
+export function Sidebar({
+    isCollapsed = false,
+    onToggleCollapse,
+    showCollapseToggle = false,
+}: {
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
+    showCollapseToggle?: boolean;
+}) {
     const { counts } = useNotifications();
 
     const NAV_ITEMS: SidebarNavSection[] = [
@@ -55,10 +64,11 @@ export function Sidebar() {
             ]
         },
         {
-            category: "Settings",
-            icon: Settings,
+            category: "Account",
+            icon: User,
             defaultExpanded: true,
             items: [
+                { label: "Profile", href: "/landlord/profile", icon: User },
                 { label: "Settings", href: "/landlord/settings", icon: Settings },
             ]
         },
@@ -67,10 +77,13 @@ export function Sidebar() {
     return (
         <RoleSidebar
             sections={NAV_ITEMS}
-            header={<PropertySelector />}
+            header={<PropertySelector isCollapsed={isCollapsed} />}
             onLogout={() => {
                 void signOut();
             }}
+            isCollapsed={isCollapsed}
+            onToggleCollapse={onToggleCollapse}
+            showCollapseToggle={showCollapseToggle}
         />
     );
 }
