@@ -50,11 +50,12 @@ export type ScreenName =
     // Phase 9
     | "landlordWalkInApp"
     | "moveInChecklist"
-    | "revenueDashboard";
+    | "revenueDashboard"
+    | "inbox";
 
 // ─── Tab Names ─────────────────────────────────────────────
-export type TenantTab = "home" | "community" | "activity" | "chat" | "profile";
-export type LandlordTab = "home" | "properties" | "community" | "activity" | "chat" | "profile";
+export type TenantTab = "home" | "activity" | "inbox" | "profile";
+export type LandlordTab = "home" | "properties" | "activity" | "inbox" | "profile";
 export type TabName = TenantTab | LandlordTab;
 
 // ─── User Roles ────────────────────────────────────────────
@@ -62,19 +63,17 @@ export type AppRole = "tenant" | "landlord" | null;
 
 // ─── Tab → Default Screen Mapping ─────────────────────────
 export const TENANT_TAB_SCREENS: Record<TenantTab, ScreenName> = {
-    home:      "tenantHome",
-    community: "communityFeed",
-    activity:  "applicationTracker",
-    chat:      "tenantChat",
-    profile:   "tenantProfile",
+    home:     "tenantHome",
+    activity: "applicationTracker",
+    inbox:    "inbox",
+    profile:  "tenantProfile",
 };
 
 export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
     home:       "landlordHome",
     properties: "landlordProperties",
-    community:  "communityFeed",
     activity:   "landlordApplications",
-    chat:       "landlordChat",
+    inbox:      "inbox",
     profile:    "landlordProfile",
 };
 

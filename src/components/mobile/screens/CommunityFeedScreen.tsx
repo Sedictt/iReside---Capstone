@@ -257,7 +257,7 @@ function PostCard({
 }
 
 // ─── Main Screen ────────────────────────────────────────────
-export default function CommunityFeedScreen() {
+export default function CommunityFeedScreen({ isSubView = false }: { isSubView?: boolean }) {
     const { role, navigate } = useNavigation();
     const [filter, setFilter] = useState<"all" | PostCategory>("all");
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -284,26 +284,28 @@ export default function CommunityFeedScreen() {
 
     return (
         <div className={styles.container} onClick={() => setActiveMenuId(null)}>
-            {/* Header */}
-            <div className={styles.header}>
-                <div className={styles.headerLeft}>
-                    <h1 className={styles.headerTitle}>Community</h1>
-                    <p className={styles.headerSub}>Building updates & announcements</p>
-                </div>
-                <div className={styles.headerActions}>
-                    <button className={styles.galleryBtn} onClick={() => navigate("photoGallery")}>
-                        <GalleryHorizontalEnd size={18} />
-                    </button>
-                    {canPost && (
-                        <button 
-                            className={styles.newPostBtn}
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            <Plus size={18} />
+            {/* Header — hidden when used as sub-view inside InboxScreen */}
+            {!isSubView && (
+                <div className={styles.header}>
+                    <div className={styles.headerLeft}>
+                        <h1 className={styles.headerTitle}>Community</h1>
+                        <p className={styles.headerSub}>Building updates & announcements</p>
+                    </div>
+                    <div className={styles.headerActions}>
+                        <button className={styles.galleryBtn} onClick={() => navigate("photoGallery")}>
+                            <GalleryHorizontalEnd size={18} />
                         </button>
-                    )}
+                        {canPost && (
+                            <button 
+                                className={styles.newPostBtn}
+                                onClick={() => setIsModalOpen(true)}
+                            >
+                                <Plus size={18} />
+                            </button>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Filter Pills */}
             <div className={styles.filterRow}>

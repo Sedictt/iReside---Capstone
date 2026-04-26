@@ -55,7 +55,7 @@ const CONVERSATIONS: Conversation[] = [
 ];
 
 // ─── Component ─────────────────────────────────────────────
-export default function LandlordChatScreen() {
+export default function LandlordChatScreen({ isSubView = false }: { isSubView?: boolean }) {
     const { navigate } = useNavigation();
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -91,15 +91,17 @@ export default function LandlordChatScreen() {
 
     return (
         <div className={styles.container}>
-            {/* Header */}
-            <div className={styles.header}>
-                <h1 className={styles.headerTitle}>Landlord Inbox</h1>
-                <div className={styles.headerActions}>
-                    <button className={styles.headerButton}>
-                        <Edit3 />
-                    </button>
+            {/* Header — hidden when used as sub-view inside InboxScreen */}
+            {!isSubView && (
+                <div className={styles.header}>
+                    <h1 className={styles.headerTitle}>Landlord Inbox</h1>
+                    <div className={styles.headerActions}>
+                        <button className={styles.headerButton}>
+                            <Edit3 />
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Search */}
             <div className={styles.searchBar}>

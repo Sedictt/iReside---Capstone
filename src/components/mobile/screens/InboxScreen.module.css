@@ -1,0 +1,108 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+    overflow: hidden;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 12px;
+    flex-shrink: 0;
+}
+
+.headerTitle {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -0.5px;
+}
+
+.headerButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    color: #a3a3a3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* ─── Segment Control ──────────────────────────────────── */
+.segmentContainer {
+    padding: 0 20px 16px;
+    flex-shrink: 0;
+}
+
+.segmentTrack {
+    display: flex;
+    background: #141414;
+    border: 1px solid #1e1e1e;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.segmentButton {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: #737373;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.segmentButtonActive {
+    background: #1e1e1e;
+    color: #fafafa;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.segmentBadge {
+    background: #6d9838;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 8px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+/* ─── Content Area ─────────────────────────────────────── */
+.content {
+    flex: 1;
+    overflow: hidden;
+    animation: fadeSlide 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

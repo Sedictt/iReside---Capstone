@@ -35,6 +35,7 @@ import LandlordWalkInAppScreen from "./screens/LandlordWalkInAppScreen";
 import LeaseSigningScreen from "./screens/LeaseSigningScreen";
 import MoveInChecklistScreen from "./screens/MoveInChecklistScreen";
 import RevenueDashboardScreen from "./screens/RevenueDashboardScreen";
+import InboxScreen from "./screens/InboxScreen";
 import {
     Home,
     Search,
@@ -65,19 +66,17 @@ interface TabConfig {
 }
 
 const TENANT_TABS: TabConfig[] = [
-    { id: "home",      label: "Home",      icon: Home },
-    { id: "community", label: "Community", icon: Users },
-    { id: "activity",  label: "Activity",  icon: ClipboardList },
-    { id: "chat",      label: "Chat",      icon: MessageSquare },
-    { id: "profile",   label: "Profile",   icon: User },
+    { id: "home",     label: "Home",     icon: Home },
+    { id: "activity", label: "Activity", icon: ClipboardList },
+    { id: "inbox",    label: "Inbox",    icon: MessageSquare },
+    { id: "profile",  label: "Profile",  icon: User },
 ];
 
 const LANDLORD_TABS: TabConfig[] = [
     { id: "home",       label: "Home",       icon: Home },
     { id: "properties", label: "Properties", icon: Building2 },
-    { id: "community",  label: "Community",  icon: Users },
     { id: "activity",   label: "Activity",   icon: ClipboardList },
-    { id: "chat",       label: "Chat",       icon: MessageSquare },
+    { id: "inbox",      label: "Inbox",      icon: MessageSquare },
     { id: "profile",    label: "Profile",    icon: User },
 ];
 
@@ -222,6 +221,7 @@ function ScreenRouter() {
         leaseSigning: LeaseSigningScreen,
         moveInChecklist: MoveInChecklistScreen,
         revenueDashboard: RevenueDashboardScreen,
+        inbox: InboxScreen,
         // Screens will be registered here as they're built
     };
 
