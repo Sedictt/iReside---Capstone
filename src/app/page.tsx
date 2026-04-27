@@ -11,6 +11,7 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 import ScrollToPlugin from "gsap/ScrollToPlugin";
 import { useGSAP } from "@gsap/react";
 import { TransitionLink } from "@/components/transitions/PageTransitionProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger, ScrollToPlugin, useGSAP);
@@ -148,6 +149,11 @@ export default function ScrollyTellingLandingPage() {
     const ctaSectionRef = useRef<HTMLElement>(null);
     const navRef = useRef<HTMLElement>(null);
     const backToTopRef = useRef<HTMLButtonElement>(null);
+    const { user, profile } = useAuth();
+
+    const dashboardHref = profile?.role 
+        ? `/${profile.role}/dashboard` 
+        : "/login";
 
     // 0. Smart Header Behavior
     useGSAP(() => {
@@ -609,8 +615,18 @@ export default function ScrollyTellingLandingPage() {
                         ))}
                     </div>
 
-                    <div className="flex items-center gap-4"><ThemeToggle /><TransitionLink href="/login" className="relative flex items-center gap-2 overflow-hidden group px-6 py-2.5 rounded-full border border-zinc-200 bg-muted border-border text-sm font-bold text-foreground transition-all hover:bg-muted/80 hover:border-primary/30">
-                        <span className="relative z-10 hidden md:block">Access Portal</span><span className="relative z-10 md:hidden">Login</span>
+                    <div className="flex items-center gap-4">
+                        <ThemeToggle />
+                        <TransitionLink 
+                            href={user ? dashboardHref : "/login"} 
+                            className="relative flex items-center gap-2 overflow-hidden group px-6 py-2.5 rounded-full border border-zinc-200 bg-muted border-border text-sm font-bold text-foreground transition-all hover:bg-muted/80 hover:border-primary/30"
+                        >
+                            <span className="relative z-10 hidden md:block">
+                                {user ? "Dashboard" : "Log-in"}
+                            </span>
+                            <span className="relative z-10 md:hidden">
+                                {user ? "Dashboard" : "Login"}
+                            </span>
                         <ChevronRight className="h-4 w-4 relative z-10 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                     </TransitionLink></div>
                 </div>

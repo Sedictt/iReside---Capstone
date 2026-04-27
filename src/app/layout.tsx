@@ -24,6 +24,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,20 +44,22 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={true}
-          disableTransitionOnChange
-          storageKey="ireside-theme"
-        >
-          <PageTransitionProvider>
-            <GlobalClickSpark>
-              {children}
-              <Toaster position="top-right" richColors closeButton theme="dark" />
-            </GlobalClickSpark>
-          </PageTransitionProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={true}
+            disableTransitionOnChange
+            storageKey="ireside-theme"
+          >
+            <PageTransitionProvider>
+              <GlobalClickSpark>
+                {children}
+                <Toaster position="top-right" richColors closeButton theme="dark" />
+              </GlobalClickSpark>
+            </PageTransitionProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

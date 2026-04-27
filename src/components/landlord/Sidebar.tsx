@@ -12,7 +12,9 @@ import {
     ArrowUpRight,
     Megaphone,
     Settings,
-    User
+    User,
+    LayoutGrid,
+    BarChart2
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
@@ -37,7 +39,7 @@ export function Sidebar({
             collapsible: false,
             items: [
                 { label: "Dashboard", href: "/landlord/dashboard", icon: LayoutDashboard },
-                { label: "Statistics", href: "/landlord/statistics", icon: ArrowUpRight },
+                { label: "Analytics", href: "/landlord/analytics", icon: BarChart2 },
                 { label: "Messaging", href: "/landlord/messages", icon: MessageSquare, badge: counts.messages || undefined },
                 { label: "Community Hub", href: "/landlord/community", icon: Megaphone },
             ]
@@ -50,6 +52,7 @@ export function Sidebar({
             items: [
                 { label: "Properties", href: "/landlord/properties", icon: Building2 },
                 { label: "Unit Map", href: "/landlord/unit-map", icon: Map },
+                { label: "Utility Rooms", href: "/landlord/utilities", icon: LayoutGrid },
                 { label: "Tenant Applications", href: "/landlord/applications", icon: ClipboardList, badge: counts.applications || undefined },
                 { label: "Tenants", href: "/landlord/tenants", icon: Users },
                 { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: counts.maintenance || undefined },
