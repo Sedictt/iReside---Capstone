@@ -397,7 +397,7 @@ export async function GET(request: Request) {
     ]);
 
     if (leasesRes.error || propertiesRes.error || paymentsRes.error || maintenanceRes.error) {
-        return NextResponse.json({ error: "Failed to load statistics overview." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to load analytics overview." }, { status: 500 });
     }
 
     const propertyIds = (propertiesRes.data ?? []).map((row) => row.id);
@@ -408,7 +408,7 @@ export async function GET(request: Request) {
             : { data: [], error: null };
 
     if (unitsError) {
-        return NextResponse.json({ error: "Failed to load statistics overview." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to load analytics overview." }, { status: 500 });
     }
 
     const units = (unitsData ?? []) as UnitRow[];

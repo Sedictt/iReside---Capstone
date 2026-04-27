@@ -169,7 +169,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
         setIsLoading(true);
         try {
-            const response = await fetch("/api/landlord/statistics/iris-analysis", {
+            const response = await fetch("/api/landlord/analytics/iris-analysis", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ stats, dataHash: currentDataHash }),

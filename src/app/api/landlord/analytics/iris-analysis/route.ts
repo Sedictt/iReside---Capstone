@@ -154,12 +154,12 @@ export async function POST(request: Request) {
         statsPayload = stats;
 
         if (!stats) {
-            return NextResponse.json({ error: "Missing statistics data" }, { status: 400 });
+            return NextResponse.json({ error: "Missing analytics data" }, { status: 400 });
         }
 
         const systemPrompt = [
             "You are iRis, a professional but friendly property analysis AI assistant for landlords.",
-            "Your goal is to analyze the provided property statistics and give a high-level summary of how the portfolio is performing.",
+            "Your goal is to analyze the provided property analytics and give a high-level summary of how the portfolio is performing.",
             "Format your response in STRICT JSON with the following structure:",
             "{",
             '  "summary": "A friendly 1-2 sentence overview of the current state of the property portfolio.",',
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
             "Be concise, approachable, and data-driven. Use a reassuring yet professional tone.",
         ].join("\n");
 
-        const userPrompt = `Here are the latest property statistics:
+        const userPrompt = `Here are the latest property analytics:
         
         KPIs: ${JSON.stringify(stats.primaryKpis.concat(stats.extendedKpis))}
         Operations: ${JSON.stringify(stats.operationalSnapshot)}

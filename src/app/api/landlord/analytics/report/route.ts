@@ -33,7 +33,7 @@ const escapeCsv = (value: string) => {
 
 const buildCsvReport = (payload: ReportRequestBody) => {
     const reportHeaderRows = [
-        ["Portfolio Statistics Report"],
+        ["Portfolio Analytics Report"],
         ["Generated At", payload.generatedAt ?? new Date().toLocaleString()],
         ["Selected Range", payload.range],
         ["View Mode", payload.mode],

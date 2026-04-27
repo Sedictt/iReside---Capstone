@@ -19,6 +19,7 @@ import {
     Wrench,
     Menu,
     X,
+    LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,6 +42,7 @@ const NAV_SECTIONS = [
         items: [
             { label: "Leases", href: "/tenant/lease", icon: FileText },
             { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
+            { label: "Building Amenities", href: "/tenant/utilities", icon: LayoutGrid },
             { label: "Maintenance", href: "/tenant/maintenance", icon: Wrench },
             { label: "Payments", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
@@ -59,7 +61,6 @@ export function TenantSidebar() {
         user?.user_metadata?.avatar_url ||
         "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80";
     const avatarBgColor = profile?.avatar_bg_color || "#171717";
-
     const renderNav = (compact = false) => (
         <nav className={cn("space-y-8", compact && "pt-2")}>
             {NAV_SECTIONS.map((section) => (
