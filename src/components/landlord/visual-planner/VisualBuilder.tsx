@@ -508,6 +508,411 @@ const UnitHistoryModal = ({
     );
 };
 
+/** Complaint Modal Component */
+const ComplaintModal = ({
+    isOpen,
+    onClose,
+    unit,
+    isDark
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    unit: Unit | null;
+    isDark: boolean;
+}) => {
+    const [complaintType, setComplaintType] = useState<string>("");
+    const [customComplaint, setCustomComplaint] = useState("");
+    const [attachment, setAttachment] = useState<File | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    if (!unit) return null;
+
+    const predefinedComplaints = [
+        "Noise Complain",
+        "Bad odor",
+        "Waste Complain",
+        "Maintenance Issue",
+        "Unauthorized Occupant",
+        "Please specify"
+    ];
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        // Mock submission
+        setTimeout(() => {
+            setIsSubmitting(false);
+            setIsSuccess(true);
+            setTimeout(() => {
+                onClose();
+                setIsSuccess(false);
+                setComplaintType("");
+                setCustomComplaint("");
+                setAttachment(null);
+            }, 2000);
+        }, 1500);
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-background/60 backdrop-blur-md" 
+                        onClick={onClose}
+                    />
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className={`relative w-full max-w-lg flex flex-col rounded-[2.5rem] border border-border bg-card shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden`}
+                    >
+                        <div className="absolute right-6 top-6 z-10">
+                            <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 pb-4">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500">
+                                    <span className="material-icons-round text-3xl">report_problem</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">
+                                        Submit a Complaint
+                                    </h2>
+                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Unit {unit.name}</p>
+                                </div>
+                            </div>
+
+                            {isSuccess ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col items-center justify-center py-12 px-6 text-center"
+                                >
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
+                                        <span className="material-icons-round text-5xl">check_circle</span>
+                                    </div>
+                                    <h3 className="text-xl font-black text-foreground mb-2">Complaint Received</h3>
+                                    <p className="text-muted-foreground">Thank you for your report. Our team will investigate this matter immediately.</p>
+                                </motion.div>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Nature of Complaint</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {predefinedComplaints.map((type) => (
+                                                <button
+                                                    key={type}
+                                                    type="button"
+                                                    onClick={() => setComplaintType(type)}
+                                                    className={`px-4 py-3 rounded-2xl border text-left text-xs font-bold transition-all ${
+                                                        complaintType === type 
+                                                            ? 'border-primary bg-primary/5 text-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]' 
+                                                            : 'border-border bg-muted/30 text-muted-foreground hover:border-neutral-400'
+                                                    }`}
+                                                >
+                                                    {type}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {complaintType === "Please specify" && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            className="space-y-3"
+                                        >
+                                            <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Details</label>
+                                            <textarea
+                                                required
+                                                value={customComplaint}
+                                                onChange={(e) => setCustomComplaint(e.target.value)}
+                                                placeholder="Please describe the issue in detail..."
+                                                className="w-full min-h-[120px] rounded-2xl border border-border bg-muted/20 px-5 py-4 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                                            />
+                                        </motion.div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Evidence / Photos</label>
+                                        <div 
+                                            className={`relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all p-8 flex flex-col items-center justify-center gap-3 ${
+                                                attachment ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-primary/30 hover:bg-muted/30'
+                                            }`}
+                                            onClick={() => document.getElementById('photo-upload')?.click()}
+                                        >
+                                            <input 
+                                                id="photo-upload"
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="hidden" 
+                                                onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                                            />
+                                            {attachment ? (
+                                                <>
+                                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary">
+                                                        <span className="material-icons-round text-2xl">image</span>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-sm font-black text-foreground">{attachment.name}</p>
+                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                                                            {(attachment.size / 1024 / 1024).toFixed(2)} MB &bull; Click to change
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                        <span className="material-icons-round text-2xl">add_a_photo</span>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-sm font-black text-foreground">Upload Evidence</p>
+                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">JPG, PNG up to 10MB</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting || !complaintType}
+                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="material-icons-round animate-spin">refresh</span>
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Submit Complaint
+                                                <span className="material-icons-round">send</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                        <div className="h-4 bg-rose-500/10 w-full" />
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+/** Unit Tooltip Component */
+const UnitTooltip = ({
+    unit,
+    onClose,
+    onAction,
+    isDark
+}: {
+    unit: Unit;
+    onClose: () => void;
+    onAction: (action: "transfer" | "complain") => void;
+    isDark: boolean;
+}) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            className={`absolute z-50 min-w-[220px] rounded-2xl border border-white/10 bg-[#1a1c23]/95 backdrop-blur-xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto`}
+            data-tooltip="true"
+            onPointerDown={(e) => e.stopPropagation()}
+            style={{
+                left: unit.x + unit.w / 2,
+                top: unit.y - 10,
+                transform: "translateX(-50%) translateY(-100%)"
+            }}
+        >
+            <div className="flex flex-col gap-1">
+                <div className="px-3 py-2 mb-1 border-b border-white/5">
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Unit {unit.name}</p>
+                    <p className="text-xs font-bold text-white mt-0.5">Quick Actions</p>
+                </div>
+                
+                {unit.status === 'vacant' && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAction("transfer");
+                            onClose();
+                        }}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all text-left"
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                            <span className="material-icons-round text-lg">move_down</span>
+                        </div>
+                        <div>
+                            <p className="text-xs font-black tracking-tight">Transfer Request</p>
+                            <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Move into this unit</p>
+                        </div>
+                    </button>
+                )}
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onAction("complain");
+                        onClose();
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all text-left"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400">
+                        <span className="material-icons-round text-lg">report_problem</span>
+                    </div>
+                    <div>
+                        <p className="text-xs font-black tracking-tight">Report / Complain</p>
+                        <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mt-0.5">Report an issue</p>
+                    </div>
+                </button>
+            </div>
+
+            {/* Tooltip arrow */}
+            <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1a1c23] rotate-45 border-r border-b border-white/10" />
+        </motion.div>
+    );
+};
+
+/** Transfer Request Modal Component */
+const TransferRequestModal = ({
+    isOpen,
+    onClose,
+    unit,
+    isDark,
+    onSubmit,
+    isSubmitting,
+    success,
+    error,
+    reason,
+    setReason
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    unit: Unit | null;
+    isDark: boolean;
+    onSubmit: (e: React.FormEvent) => void;
+    isSubmitting: boolean;
+    success: boolean;
+    error: string | null;
+    reason: string;
+    setReason: (val: string) => void;
+}) => {
+    if (!unit) return null;
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-background/60 backdrop-blur-md" 
+                        onClick={onClose}
+                    />
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className={`relative w-full max-w-lg flex flex-col rounded-[2.5rem] border border-border bg-card shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] overflow-hidden`}
+                    >
+                        <div className="absolute right-6 top-6 z-10">
+                            <button onClick={onClose} className="rounded-full p-2 transition-colors hover:bg-muted text-muted-foreground">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-8">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <span className="material-icons-round text-3xl">move_down</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">
+                                        Transfer Request
+                                    </h2>
+                                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Target Unit {unit.name}</p>
+                                </div>
+                            </div>
+
+                            {success ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col items-center justify-center py-12 px-6 text-center"
+                                >
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
+                                        <span className="material-icons-round text-5xl">check_circle</span>
+                                    </div>
+                                    <h3 className="text-xl font-black text-foreground mb-2">Request Submitted</h3>
+                                    <p className="text-muted-foreground">Your transfer request for Unit {unit.name} has been sent to the administration for review.</p>
+                                </motion.div>
+                            ) : (
+                                <form onSubmit={onSubmit} className="space-y-8">
+                                    <div className="p-5 rounded-2xl bg-muted/30 border border-border">
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            You are requesting to transfer your current lease to <span className="font-bold text-foreground">Unit {unit.name}</span>. This request is subject to eligibility checks and landlord approval.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Transfer Justification</label>
+                                        <textarea
+                                            required
+                                            value={reason}
+                                            onChange={(e) => setReason(e.target.value)}
+                                            placeholder="Please explain why you'd like to transfer (e.g., needing more space, preferred floor...)"
+                                            className="w-full min-h-[140px] rounded-2xl border border-border bg-muted/20 px-5 py-4 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                                        />
+                                    </div>
+
+                                    {error && (
+                                        <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500">
+                                            <span className="material-icons-round text-lg">error_outline</span>
+                                            <p className="text-xs font-bold">{error}</p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="w-full py-5 rounded-2xl bg-primary text-primary-foreground text-sm font-black uppercase tracking-[0.2em] transition-all hover:opacity-90 active:scale-[0.98] shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="material-icons-round animate-spin">refresh</span>
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Submit Request
+                                                <span className="material-icons-round">arrow_forward</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+                            )}
+                        </div>
+                        <div className="h-4 bg-primary/10 w-full" />
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 export default function VisualBuilder({ readOnly = false, propertyId: externalPropertyId }: { readOnly?: boolean; propertyId?: string } = {}) {
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = externalPropertyId ?? propertyContext?.selectedPropertyId ?? "all";
@@ -586,6 +991,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
+    const [complaintUnit, setComplaintUnit] = useState<Unit | null>(null);
+    const [tooltipUnit, setTooltipUnit] = useState<Unit | null>(null);
     const [tenantInvites, setTenantInvites] = useState<any[]>([]);
     const [refreshKey, setRefreshKey] = useState(0);
 
@@ -1483,8 +1891,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if ((e.target as HTMLElement).closest('[data-unit-card="true"]')) return;
         if ((e.target as HTMLElement).closest('[data-corridor-card="true"]')) return;
         if ((e.target as HTMLElement).closest('[data-structure-card="true"]')) return;
+        if ((e.target as HTMLElement).closest('[data-tooltip="true"]')) return;
 
         setSelectedItem(null);
+        setTooltipUnit(null);
 
         isPanningRef.current = true;
         setIsPanning(true);
@@ -3107,14 +3517,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         dragMomentum={false}
                                         dragSnapToOrigin
                                         transition={{ duration: 0 }}
-                                        onPointerDown={readOnly ? () => {
-                                            if (unit.status === 'vacant') {
-                                                setTransferModalUnit(unit);
-                                                setTransferReason("");
-                                                setTransferError(null);
-                                                setTransferSuccess(false);
-                                            }
-                                        } : () => setSelectedItem({ kind: "unit", id: unit.id })}
+                                        onPointerDown={readOnly ? () => setTooltipUnit(unit) : () => setSelectedItem({ kind: "unit", id: unit.id })}
                                         onDragStart={(event, info) => {
                                              const pointer = getClientPointFromDragEvent(event) ?? info.point;
                                              setSelectedItem({ kind: "unit", id: unit.id });
@@ -3255,6 +3658,27 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         )}
                                     </motion.div>
                                 ))}
+
+                                <AnimatePresence>
+                                    {readOnly && tooltipUnit && (
+                                        <UnitTooltip 
+                                            unit={tooltipUnit} 
+                                            onClose={() => setTooltipUnit(null)} 
+                                            isDark={isDark}
+                                            onAction={(action) => {
+                                                if (action === "transfer") {
+                                                    setTransferModalUnit(tooltipUnit);
+                                                    setTransferReason("");
+                                                    setTransferError(null);
+                                                    setTransferSuccess(false);
+                                                } else if (action === "complain") {
+                                                    setComplaintUnit(tooltipUnit);
+                                                    setIsComplaintModalOpen(true);
+                                                }
+                                            }}
+                                        />
+                                    )}
+                                </AnimatePresence>
 
                             </div>
                         </motion.div>
@@ -3639,106 +4063,25 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         </div>
                     )}
 
-                    {readOnly && transferModalUnit && (
-                        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-white/55 backdrop-blur-sm p-4 pointer-events-auto">
-                            <motion.div 
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                className="w-full max-w-md rounded-2xl border border-border bg-card shadow-xl overflow-hidden relative flex flex-col"
-                            >
-                                {/* Header */}
-                                <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-slate-50/70">
-                                    <div className="flex items-center gap-3 text-slate-800">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                            <span className="material-icons-round">move_down</span>
-                                        </div>
-                                        <h3 className="text-lg font-semibold">Unit Transfer Request</h3>
-                                    </div>
-                                    <button 
-                                        title="Close"
-                                        onClick={() => setTransferModalUnit(null)}
-                                        className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
-                                    >
-                                        <span className="material-icons-round text-xl">close</span>
-                                    </button>
-                                </div>
+                    <TransferRequestModal
+                        isOpen={!!transferModalUnit}
+                        onClose={() => setTransferModalUnit(null)}
+                        unit={transferModalUnit}
+                        isDark={isDark}
+                        onSubmit={handleTransferSubmit}
+                        isSubmitting={isSubmittingTransfer}
+                        success={transferSuccess}
+                        error={transferError}
+                        reason={transferReason}
+                        setReason={setTransferReason}
+                    />
 
-                                <div className="px-6 py-6">
-                                    <p className="text-sm text-slate-600 mb-6 leading-relaxed">
-                                        You are requesting to transfer your current lease to <span className="font-semibold text-slate-900 px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 shadow-sm">{transferModalUnit.name}</span>. This request is subject to landlord approval.
-                                    </p>
-                                    
-                                    {transferSuccess ? (
-                                        <div className="flex flex-col items-center justify-center py-6 px-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4">
-                                                <span className="material-icons-round text-2xl">check_circle</span>
-                                            </div>
-                                            <h4 className="text-emerald-800 font-semibold mb-1">Request Submitted!</h4>
-                                            <p className="text-sm text-emerald-600">Your landlord has been notified and will review your transfer request shortly.</p>
-                                        </div>
-                                    ) : (
-                                        <form onSubmit={handleTransferSubmit} className="space-y-6">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium text-slate-700 block">
-                                                    Transfer Justification <span className="text-slate-400 font-normal text-xs ml-1">(Optional)</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <textarea
-                                                        value={transferReason}
-                                                        onChange={(e) => setTransferReason(e.target.value)}
-                                                        placeholder="e.g., Needing more space for a home office..."
-                                                        className="w-full min-h-[100px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-none shadow-sm"
-                                                    />
-                                                    <div className="absolute bottom-3 right-3 text-[10px] text-slate-400">
-                                                        {transferReason.length} chars
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            {transferError && (
-                                                <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4">
-                                                    <span className="material-icons-round text-rose-500 text-lg">error_outline</span>
-                                                    <div className="flex-1">
-                                                        <h5 className="text-sm font-semibold text-rose-800 mb-0.5">Submission Failed</h5>
-                                                        <p className="text-xs text-rose-600">{transferError}</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            
-                                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setTransferModalUnit(null)}
-                                                    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    disabled={isSubmittingTransfer}
-                                                    className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                                >
-                                                    {isSubmittingTransfer ? (
-                                                        <>
-                                                            <span className="material-icons-round text-lg animate-spin cursor-not-allowed">refresh</span>
-                                                            Sending...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            Submit Request
-                                                            <span className="material-icons-round text-lg text-white/80">arrow_forward</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </form>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
+                    <ComplaintModal 
+                        isOpen={isComplaintModalOpen} 
+                        onClose={() => setIsComplaintModalOpen(false)} 
+                        unit={complaintUnit} 
+                        isDark={isDark}
+                    />
                 </main>
 
                 {/* Sidebar */}
@@ -3799,7 +4142,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     />
                 )}
                 
-                <WalkInApplicationModal
+                {selectedUnit && (
+                    <WalkInApplicationModal
                     isOpen={isWalkInModalOpen}
                     onClose={() => setIsWalkInModalOpen(false)}
                     selectedUnitId={selectedUnit?.dbId || selectedUnit?.id}
@@ -3814,6 +4158,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         setRefreshKey(prev => prev + 1);
                     }}
                 />
+                )}
 
                 <UnitHistoryModal 
                     isOpen={isHistoryModalOpen}
