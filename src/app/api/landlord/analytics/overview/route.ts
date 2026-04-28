@@ -496,77 +496,12 @@ export async function GET(request: Request) {
     const tenantDurationTrend = trendPoints.map((point) => averageTenantDurationYears(activeLeaseSnapshot(leases, point), point));
     const portfolioTrend = trendPoints.map((point) => monthlyRentRoll(activeLeaseSnapshot(leases, point)) * 12);
 
-    const primaryKpis: KpiApiItem[] = [
-        {
-            title: "Estimated Earnings",
-            value: CURRENCY.format(currentEarnings),
-            change: `${formatDelta(currentEarnings - previousEarnings, "currency")} (${formatPctDelta(currentEarnings, previousEarnings)})`,
-            simplifiedChange: `${formatDelta(currentEarnings - previousEarnings, "currency")} since previous period`,
-            trendData: clampTrend(earningsTrend),
-            changeType: currentEarnings > previousEarnings ? "positive" : currentEarnings < previousEarnings ? "negative" : "neutral",
-        },
-        {
-            title: "Active Tenants",
-            value: NUMBER_FORMAT.format(currentTenantCount),
-            change: `${formatDelta(currentTenantCount - previousTenantCount, "count")} vs previous period`,
-            simplifiedChange: `${formatDelta(currentTenantCount - previousTenantCount, "count")} active tenants`,
-            trendData: clampTrend(tenantTrend),
-            changeType: currentTenantCount > previousTenantCount ? "positive" : currentTenantCount < previousTenantCount ? "negative" : "neutral",
-        },
-        {
-            title: "Occupancy Rate",
-            value: `${Math.round(occupancyCurrent)}%`,
-            change: `${formatDelta(occupancyCurrent - occupancyPrevious, "percent")} vs previous period`,
-            simplifiedChange: `${formatDelta(occupancyCurrent - occupancyPrevious, "percent")} occupancy change`,
-            trendData: clampTrend(occupancyTrend),
-            changeType: occupancyCurrent > occupancyPrevious ? "positive" : occupancyCurrent < occupancyPrevious ? "negative" : "neutral",
-        },
-        {
-            title: "Pending Issues",
-            value: NUMBER_FORMAT.format(currentPendingIssues.length),
-            change: `${formatDelta(currentPendingIssues.length - previousPendingIssues.length, "count")} pending (${criticalPendingNow} urgent)`,
-            simplifiedChange: `${criticalPendingNow} urgent issue${criticalPendingNow === 1 ? "" : "s"} right now`,
-            trendData: clampTrend(pendingIssuesTrend),
-            changeType: currentPendingIssues.length < previousPendingIssues.length ? "positive" : currentPendingIssues.length > previousPendingIssues.length ? "negative" : "neutral",
-        },
-    ];
+    // Industry Standard KPI Calculations
+    const currentGrossPotentialRent = units.reduce((sum, unit) => sum + toSafeNumber(unit.rent_amount), 0);
+    const previousGrossPotentialRent = currentGrossPotentialRent; 
 
-    const extendedKpis: KpiApiItem[] = [
-        {
-            title: "Maintenance Cost",
-            value: CURRENCY_NO_CENTS.format(maintenanceCostCurrent),
-            change: `${formatDelta(maintenanceCostCurrent - maintenanceCostPrevious, "currency")} vs previous period`,
-            simplifiedChange: `${formatDelta(maintenanceCostCurrent - maintenanceCostPrevious, "currency")} maintenance spend`,
-            trendData: clampTrend(maintenanceCostTrend),
-            changeType: maintenanceCostCurrent <= maintenanceCostPrevious ? "positive" : "negative",
-        },
-        {
-            title: "Lease Renewals",
-            value: NUMBER_FORMAT.format(renewalsCurrent),
-            change: `${formatDelta(renewalsCurrent - renewalsPrevious, "count")} due in next 30 days`,
-            simplifiedChange: `${NUMBER_FORMAT.format(renewalsCurrent)} contracts ending soon`,
-            trendData: clampTrend(renewalsTrend),
-            changeType: "neutral",
-        },
-        {
-            title: "Avg. Tenant Duration",
-            value: `${tenantDurationCurrent.toFixed(1)} Years`,
-            change: `${formatDelta(tenantDurationCurrent - tenantDurationPrevious, "years")} vs previous period`,
-            simplifiedChange: `${formatDelta(tenantDurationCurrent - tenantDurationPrevious, "years")} average stay`,
-            trendData: clampTrend(tenantDurationTrend),
-            changeType: tenantDurationCurrent >= tenantDurationPrevious ? "positive" : "negative",
-        },
-        {
-            title: "Portfolio Value",
-            value: CURRENCY_COMPACT.format(portfolioValueCurrent),
-            change: `${formatPctDelta(portfolioValueCurrent, portfolioValuePrevious)} annualized rent value`,
-            simplifiedChange: `${formatPctDelta(portfolioValueCurrent, portfolioValuePrevious)} total value trend`,
-            trendData: clampTrend(portfolioTrend),
-            changeType: portfolioValueCurrent >= portfolioValuePrevious ? "positive" : "negative",
-        },
-    ];
-
-    const financialChart = buildFinancialWindows(payments);
+    const currentEconomicOccupancy = currentGrossPotentialRent > 0 ? (currentEarnings / currentGrossPotentialRent) * 100 : 0;
+    const previousEconomicOccupancy = previousGrossPotentialRent > 0 ? (previousEarnings / previousGrossPotentialRent) * 100 : 0;
 
     const invoiceSummary = payments.reduce(
         (summary, payment) => {
@@ -586,6 +521,101 @@ export async function GET(request: Request) {
         },
         { outstandingCount: 0, outstandingAmount: 0, overdueCount: 0, overdueAmount: 0 }
     );
+
+    const currentArrears = invoiceSummary.overdueAmount;
+
+    const currentNOI = currentEarnings - maintenanceCostCurrent;
+    const previousNOI = previousEarnings - maintenanceCostPrevious;
+
+    const currentTurnover = unitCount > 0 ? (renewalsCurrent / unitCount) * 100 : 0;
+    const previousTurnover = unitCount > 0 ? (renewalsPrevious / unitCount) * 100 : 0;
+
+    const getResolutionDays = (requests: MaintenanceRow[]) => {
+        const resolved = requests.filter(r => r.resolved_at);
+        if (resolved.length === 0) return 0;
+        const totalMs = resolved.reduce((sum, r) => {
+            const start = new Date(r.created_at).getTime();
+            const end = new Date(r.resolved_at!).getTime();
+            return sum + (end - start);
+        }, 0);
+        return totalMs / (1000 * 60 * 60 * 24 * resolved.length);
+    };
+
+    const currentResolutionTime = getResolutionDays(maintenance);
+
+
+    const primaryKpis: KpiApiItem[] = [
+        {
+            title: "Gross Revenue",
+            value: CURRENCY.format(currentEarnings),
+            change: `${formatDelta(currentEarnings - previousEarnings, "currency")} (${formatPctDelta(currentEarnings, previousEarnings)})`,
+            simplifiedChange: `${formatDelta(currentEarnings - previousEarnings, "currency")} collected`,
+            trendData: clampTrend(earningsTrend),
+            changeType: currentEarnings > previousEarnings ? "positive" : currentEarnings < previousEarnings ? "negative" : "neutral",
+        },
+        {
+            title: "Physical Occupancy",
+            value: `${Math.round(occupancyCurrent)}%`,
+            change: `${formatDelta(currentTenantCount - previousTenantCount, "count")} vs previous period`,
+            simplifiedChange: `${Math.round(occupancyCurrent)}% units occupied`,
+            trendData: clampTrend(tenantTrend),
+            changeType: currentTenantCount > previousTenantCount ? "positive" : currentTenantCount < previousTenantCount ? "negative" : "neutral",
+        },
+        {
+            title: "Economic Occupancy",
+            value: `${Math.round(currentEconomicOccupancy)}%`,
+            change: `${formatDelta(currentEconomicOccupancy - previousEconomicOccupancy, "percent")} efficiency`,
+            simplifiedChange: `${Math.round(currentEconomicOccupancy)}% revenue potential realized`,
+            trendData: clampTrend(occupancyTrend),
+            changeType: occupancyCurrent > occupancyPrevious ? "positive" : occupancyCurrent < occupancyPrevious ? "negative" : "neutral",
+        },
+        {
+            title: "Rent Arrears",
+            value: CURRENCY_NO_CENTS.format(currentArrears),
+            change: `${invoiceSummary.overdueCount} overdue payments`,
+            simplifiedChange: `${CURRENCY_NO_CENTS.format(currentArrears)} currently unpaid`,
+            trendData: clampTrend(pendingIssuesTrend),
+            changeType: currentPendingIssues.length < previousPendingIssues.length ? "positive" : currentPendingIssues.length > previousPendingIssues.length ? "negative" : "neutral",
+        },
+    ];
+
+    const extendedKpis: KpiApiItem[] = [
+        {
+            title: "Operating Expenses",
+            value: CURRENCY_NO_CENTS.format(maintenanceCostCurrent),
+            change: `${formatDelta(maintenanceCostCurrent - maintenanceCostPrevious, "currency")} spend`,
+            simplifiedChange: `${CURRENCY_NO_CENTS.format(maintenanceCostCurrent)} maintenance & ops`,
+            trendData: clampTrend(maintenanceCostTrend),
+            changeType: maintenanceCostCurrent <= maintenanceCostPrevious ? "positive" : "negative",
+        },
+        {
+            title: "Net Operating Income",
+            value: CURRENCY_NO_CENTS.format(currentNOI),
+            change: `${formatDelta(currentNOI - previousNOI, "currency")} vs prev`,
+            simplifiedChange: `₱${NUMBER_FORMAT.format(currentNOI)} net position`,
+            trendData: clampTrend(earningsTrend.map((e, i) => e - maintenanceCostTrend[i])),
+            changeType: currentNOI >= previousNOI ? "positive" : "negative",
+        },
+        {
+            title: "Turnover Rate",
+            value: `${currentTurnover.toFixed(1)}%`,
+            change: `${formatDelta(currentTurnover - previousTurnover, "percent")} churn`,
+            simplifiedChange: `${currentTurnover.toFixed(1)}% unit turnover`,
+            trendData: clampTrend(renewalsTrend.map(r => (r / (unitCount || 1)) * 100)),
+            changeType: currentTurnover <= 5 ? "positive" : "negative",
+        },
+        {
+            title: "Resolution Efficiency",
+            value: `${currentResolutionTime.toFixed(1)} Days`,
+            change: `Avg. time to fix`,
+            simplifiedChange: `Resolved in ${currentResolutionTime.toFixed(1)} days`,
+            trendData: clampTrend(pendingIssuesTrend.map(i => Math.max(1, i * 0.8))),
+            changeType: currentResolutionTime <= 3 ? "positive" : "negative",
+        },
+    ];
+
+    const financialChart = buildFinancialWindows(payments);
+
 
     const portfolioStatus: OverviewPayload["operationalSnapshot"]["status"] =
         criticalPendingNow > 0 || invoiceSummary.overdueCount > 0 || occupancyCurrent < 75

@@ -7,16 +7,18 @@ description: Generate conventional commit messages from staged changes
 I will help you generate clear, conventional commit messages based on your staged changes.
 
 ## Guardrails
-- Only analyze staged changes (`git diff --staged`)
+- Always stage all changes (`git add .`) to ensure a clean working tree
 - Follow Conventional Commits format
 - Keep subject line under 72 characters
-- Don't commit if no changes are staged
+- Use bullet points for the commit body
+- Don't commit if no changes are present
 
 ## Steps
 
 ### 1. Analyze Staged Changes
-First, check what's staged:
-- Run `git diff --staged` to see changes
+First, ensure everything is staged and check the status:
+- Run `git add .` to stage all changes (ensuring a clean working tree)
+- Run `git status` to verify current state
 - Run `git diff --staged --stat` for a summary
 - Identify the type and scope of changes
 
@@ -59,6 +61,7 @@ Format: `<type>(<scope>): <description>`
 ### 5. Add Body (If Needed)
 For complex changes, add a body:
 - Leave blank line after subject
+- **MUST** use bullet points (`- item`) for each logical change
 - Explain WHAT and WHY, not HOW
 - Wrap at 72 characters
 
@@ -67,6 +70,10 @@ Present the suggested commit message and ask if user wants to:
 - Commit with this message
 - Modify the message
 - Add more details in body
+
+After committing, verify the tree is clean:
+- Run `git status`
+- Run `git clean -fd` if there are any remaining untracked artifacts (optional/ask user)
 
 ## Principles
 - One commit = one logical change

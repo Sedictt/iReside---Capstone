@@ -45,7 +45,7 @@ export function OperationalSnapshotCard({
     return (
         <section
             className={cn(
-                "group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-1 shadow-2xl shadow-black/30 backdrop-blur-xl transition-all duration-500",
+                "group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card/60 p-1 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl transition-all duration-500",
                 className
             )}
         >

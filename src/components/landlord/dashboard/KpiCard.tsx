@@ -39,7 +39,7 @@ export function KpiCard({
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
             className={cn(
-                "group relative flex flex-col justify-between overflow-visible rounded-[2rem] border border-white/10 bg-surface-2 p-1 shadow-2xl shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:shadow-primary/5 hover:ring-1 hover:ring-primary/20", 
+                "group relative flex flex-col justify-between overflow-visible rounded-[2rem] border border-white/10 bg-surface-2 p-1 shadow-2xl shadow-black/[0.06] dark:shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:shadow-primary/5 hover:ring-1 hover:ring-primary/20", 
                 className
             )}
         >
