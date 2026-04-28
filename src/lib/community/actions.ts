@@ -381,12 +381,8 @@ export async function createDiscussionPost(input: { title: string; content: stri
     const title = input.title.trim()
     const content = input.content.trim()
 
-    if (!title) {
-        throw new Error('Discussion title is required.')
-    }
-
-    if (!content) {
-        throw new Error('Discussion content is required.')
+    if (!title && !content) {
+        throw new Error('Discussion post must have either a title or content.')
     }
 
     const supabase = (await createClient()) as any
@@ -445,7 +441,7 @@ export async function createPollPost(input: { title: string; content: string; op
         author_id: userId,
         author_role: toAuthorRole(role),
         type: 'poll',
-        title: title || 'Resident Poll',
+        title,
         content,
         metadata: { options: validOptions },
         is_moderated: !isManagementRole(role),
@@ -485,7 +481,7 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
         author_id: userId,
         author_role: toAuthorRole(role),
         type: 'photo_album',
-        title: title || 'Photo Album',
+        title,
         content,
         is_moderated: !isManagementRole(role),
         is_approved: isManagementRole(role),
@@ -542,12 +538,8 @@ export async function createAnnouncementPost(input: { title: string; content: st
     const title = input.title.trim()
     const content = input.content.trim()
 
-    if (!title) {
-        throw new Error('Announcement title is required.')
-    }
-
-    if (!content) {
-        throw new Error('Announcement content is required.')
+    if (!title && !content) {
+        throw new Error('Announcement must have some content.')
     }
 
     const supabase = (await createClient()) as any
