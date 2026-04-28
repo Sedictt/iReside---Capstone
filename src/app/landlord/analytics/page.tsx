@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart, ChevronDown, Download, Eye, EyeOff, FileText, History, TrendingUp, X } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { KpiCard } from "@/components/landlord/dashboard/KpiCard";
 import { KpiCardSkeleton } from "@/components/landlord/dashboard/KpiCardSkeleton";
 import { ChartSkeleton } from "@/components/landlord/dashboard/ChartSkeleton";
-import { OperationalSnapshotSkeleton } from "@/components/landlord/dashboard/OperationalSnapshotSkeleton";
 import { FinancialPerformanceChart, type FinancialChartWindowData } from "@/components/landlord/dashboard/FinancialPerformanceChart";
-import { OperationalSnapshotCard } from "@/components/landlord/dashboard/OperationalSnapshotCard";
 import { useProperty } from "@/context/PropertyContext";
 
 type KpiItem = {
@@ -252,8 +250,6 @@ export default function AnalyticsPage() {
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [exportFormat, setExportFormat] = useState<"csv" | "pdf">("pdf");
     const [exportHistory, setExportHistory] = useState<ExportAuditItem[]>([]);
-    const [kpiInsights, setKpiInsights] = useState<Record<string, KpiInsight>>({});
-    const [insightSource, setInsightSource] = useState<"ai" | "fallback" | null>(null);
     const [primaryKpis, setPrimaryKpis] = useState<KpiItem[]>(DEFAULT_PRIMARY_KPIS);
     const [extendedKpis, setExtendedKpis] = useState<KpiItem[]>(DEFAULT_EXTENDED_KPIS);
     const [financialChart, setFinancialChart] = useState<OverviewApiResponse["financialChart"]>(DEFAULT_FINANCIAL_CHART);
@@ -321,7 +317,7 @@ export default function AnalyticsPage() {
         });
     };
 
-    const fetchExportHistory = async (isLoadMore = false) => {
+    const fetchExportHistory = useCallback(async (isLoadMore = false) => {
         try {
             const currentOffset = isLoadMore ? historyOffset + HISTORY_LIMIT : 0;
             const params = new URLSearchParams({
@@ -347,7 +343,7 @@ export default function AnalyticsPage() {
         } catch {
             // Keep the page functional even if audit history is unavailable.
         }
-    };
+    }, [historyOffset]);
 
     const trackPdfExport = async () => {
         try {
@@ -547,7 +543,7 @@ export default function AnalyticsPage() {
         if (mounted) {
             fetchExportHistory();
         }
-    }, [mounted]);
+    }, [mounted, fetchExportHistory]);
 
     useEffect(() => {
         if (!mounted) return;
