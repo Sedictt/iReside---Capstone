@@ -30,7 +30,7 @@ interface MessageBubbleProps {
     onConfirmPayment?: (id: string) => void;
     onDownloadImage?: (id: string, name: string) => void;
     onOpenF2F?: (message: UiMessage) => void;
-    onImageClick?: (url: string) => void;
+    onImageClick?: (images: { url: string; id: string }[], index: number) => void;
     isDownloading?: boolean;
 }
 
@@ -84,7 +84,7 @@ export function MessageBubble({
                         ) : message.fileUrl ? (
                             <div 
                                 className="rounded-[2rem] overflow-hidden border border-black/10 shadow-sm max-w-[320px] bg-surface-2 cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => onImageClick?.(message.fileUrl!)}
+                                onClick={() => onImageClick?.([{ url: message.fileUrl!, id: message.id }], 0)}
                             >
                                 <img src={message.fileUrl} alt="Attachment" className="w-full h-auto object-cover max-h-[400px]" />
                             </div>
@@ -161,15 +161,17 @@ function StatusIcon({ status }: { status?: OutboundStatus }) {
     }
 }
 
-function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage[], isMe: boolean, onImageClick?: (url: string) => void }) {
+function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage[], isMe: boolean, onImageClick?: (images: { url: string; id: string }[], index: number) => void }) {
     const count = attachments.length;
+    const visibleAttachments = attachments.slice(0, 4);
+    const extraCount = count - 3;
     
     return (
         <div className={cn(
             "grid gap-1 rounded-[1.5rem] overflow-hidden border border-black/5 shadow-premium",
             count === 3 ? "grid-cols-2" : "grid-cols-2"
         )}>
-            {attachments.slice(0, 4).map((att, idx) => {
+            {visibleAttachments.map((att, idx) => {
                 const isExtra = idx === 3 && count > 4;
                 const isLarge = idx === 0 && count === 3;
                 
@@ -185,11 +187,14 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                             src={att.fileUrl} 
                             className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")} 
                             alt="" 
-                            onClick={() => onImageClick?.(att.fileUrl!)}
+                            onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), idx)}
                         />
                         {isExtra && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
-                                <span className="text-white text-xl font-black">+{count - 3}</span>
+                            <div 
+                                className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px] cursor-pointer hover:bg-black/70 transition-colors"
+                                onClick={() => onImageClick?.(attachments.map(a => ({ url: a.fileUrl!, id: a.id })), 3)}
+                            >
+                                <span className="text-white text-xl font-black">+{extraCount}</span>
                             </div>
                         )}
                     </div>

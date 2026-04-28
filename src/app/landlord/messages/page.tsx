@@ -23,6 +23,7 @@ import {
     CheckCheck,
     Clock3,
     ChevronRight,
+    ChevronLeft,
     Search,
     CreditCard
 } from "lucide-react";
@@ -283,7 +284,8 @@ export default function MessagesPage() {
         : null;
     const [isComposerDragOver, setIsComposerDragOver] = useState(false);
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
-    const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+    const [previewImages, setPreviewImages] = useState<{ url: string; id: string }[]>([]);
+    const [previewImageIndex, setPreviewImageIndex] = useState(0);
     const [pendingConfirmAction, setPendingConfirmAction] = useState<ConfirmActionType | null>(null);
     const [isSubmittingConfirmAction, setIsSubmittingConfirmAction] = useState(false);
     const [showReportWizard, setShowReportWizard] = useState(false);
@@ -1022,7 +1024,7 @@ export default function MessagesPage() {
                     onConfirmPayment={handleConfirmF2FPayment}
                     onDownloadImage={handleDownloadImage}
                     onOpenF2F={(msg) => { setActiveF2FPayment(msg as any); setIsF2FInterfaceOpen(true); }}
-                    onImageClick={(url) => setPreviewImageUrl(url)}
+                    onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
                     isDownloading={isDownloading}
                     updateShouldStickToBottom={updateShouldStickToBottom}
                     messagesScrollRef={messagesScrollRef}
@@ -1140,10 +1142,74 @@ export default function MessagesPage() {
                     </div>
                 )}
                 
-                {previewImageUrl && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[120] bg-background/90 backdrop-blur-xl flex items-center justify-center p-8" onClick={() => setPreviewImageUrl(null)}>
-                        <button onClick={() => setPreviewImageUrl(null)} className="absolute top-8 right-8 p-3 rounded-2xl border border-border bg-surface-1 text-high hover:bg-surface-2 transition-all active:scale-95"><X className="w-6 h-6" /></button>
-                        <img src={previewImageUrl} alt="Full resolution preview" className="max-w-full max-h-full object-contain rounded-3xl shadow-2xl border border-border" onClick={(event) => event.stopPropagation()} />
+                {previewImages.length > 0 && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }} 
+                        className="fixed inset-0 z-[120] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 sm:p-8"
+                        onClick={() => setPreviewImages([])}
+                    >
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setPreviewImages([]); }} 
+                            className="absolute top-6 right-6 z-10 p-3 rounded-2xl border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+
+                        {previewImages.length > 1 && (
+                            <>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setPreviewImageIndex((prev) => (prev === 0 ? previewImages.length - 1 : prev - 1)); }}
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
+                                >
+                                    <ChevronLeft className="w-8 h-8" />
+                                </button>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setPreviewImageIndex((prev) => (prev === previewImages.length - 1 ? 0 : prev + 1)); }}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
+                                >
+                                    <ChevronRight className="w-8 h-8" />
+                                </button>
+                            </>
+                        )}
+
+                        <div 
+                            className="relative max-w-full max-h-[70vh] flex items-center" 
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            <img 
+                                src={previewImages[previewImageIndex].url} 
+                                alt={`Photo ${previewImageIndex + 1} of ${previewImages.length}`} 
+                                className="max-w-[90vw] max-h-[70vh] object-contain rounded-3xl shadow-2xl border border-border" 
+                            />
+                        </div>
+
+                        {previewImages.length > 1 && (
+                            <div 
+                                className="mt-6 flex gap-2 max-w-[90vw] overflow-x-auto py-2 px-1"
+                                onClick={(event) => event.stopPropagation()}
+                            >
+                                {previewImages.map((img, idx) => (
+                                    <button
+                                        key={img.id}
+                                        onClick={() => setPreviewImageIndex(idx)}
+                                        className={cn(
+                                            "flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
+                                            idx === previewImageIndex 
+                                                ? "border-primary ring-2 ring-primary/30" 
+                                                : "border-transparent opacity-60 hover:opacity-100"
+                                        )}
+                                    >
+                                        <img 
+                                            src={img.url} 
+                                            alt={`Thumbnail ${idx + 1}`} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
