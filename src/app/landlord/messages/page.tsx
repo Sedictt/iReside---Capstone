@@ -1022,6 +1022,7 @@ export default function MessagesPage() {
                     onConfirmPayment={handleConfirmF2FPayment}
                     onDownloadImage={handleDownloadImage}
                     onOpenF2F={(msg) => { setActiveF2FPayment(msg as any); setIsF2FInterfaceOpen(true); }}
+                    onImageClick={(url) => setPreviewImageUrl(url)}
                     isDownloading={isDownloading}
                     updateShouldStickToBottom={updateShouldStickToBottom}
                     messagesScrollRef={messagesScrollRef}
