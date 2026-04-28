@@ -30,6 +30,7 @@ interface MessageBubbleProps {
     onConfirmPayment?: (id: string) => void;
     onDownloadImage?: (id: string, name: string) => void;
     onOpenF2F?: (message: UiMessage) => void;
+    onImageClick?: (url: string) => void;
     isDownloading?: boolean;
 }
 
@@ -39,6 +40,7 @@ export function MessageBubble({
     onConfirmPayment, 
     onDownloadImage, 
     onOpenF2F,
+    onImageClick,
     isDownloading 
 }: MessageBubbleProps) {
     const isSystem = message.type === "system";
@@ -77,10 +79,13 @@ export function MessageBubble({
                     >
                         {message.isAlbum && message.attachments ? (
                             <div className="w-full max-w-[400px]">
-                                <AlbumGrid attachments={message.attachments} isMe={isMe} />
+                                <AlbumGrid attachments={message.attachments} isMe={isMe} onImageClick={onImageClick} />
                             </div>
                         ) : message.fileUrl ? (
-                            <div className="rounded-[2rem] overflow-hidden border border-black/10 shadow-sm max-w-[320px] bg-surface-2">
+                            <div 
+                                className="rounded-[2rem] overflow-hidden border border-black/10 shadow-sm max-w-[320px] bg-surface-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => onImageClick?.(message.fileUrl!)}
+                            >
                                 <img src={message.fileUrl} alt="Attachment" className="w-full h-auto object-cover max-h-[400px]" />
                             </div>
                         ) : null}
@@ -156,7 +161,7 @@ function StatusIcon({ status }: { status?: OutboundStatus }) {
     }
 }
 
-function AlbumGrid({ attachments, isMe }: { attachments: UiMessage[], isMe: boolean }) {
+function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage[], isMe: boolean, onImageClick?: (url: string) => void }) {
     const count = attachments.length;
     
     return (
@@ -176,7 +181,12 @@ function AlbumGrid({ attachments, isMe }: { attachments: UiMessage[], isMe: bool
                             isLarge && "row-span-2 aspect-auto"
                         )}
                     >
-                        <img src={att.fileUrl} className="w-full h-full object-cover" alt="" />
+                        <img 
+                            src={att.fileUrl} 
+                            className={cn("w-full h-full object-cover", onImageClick && "cursor-pointer hover:opacity-90 transition-opacity")} 
+                            alt="" 
+                            onClick={() => onImageClick?.(att.fileUrl!)}
+                        />
                         {isExtra && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px]">
                                 <span className="text-white text-xl font-black">+{count - 3}</span>

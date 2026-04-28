@@ -12,6 +12,7 @@ interface MessageListProps {
     onConfirmPayment: (id: string) => void;
     onDownloadImage: (id: string, name: string) => void;
     onOpenF2F: (message: UiMessage) => void;
+    onImageClick?: (url: string) => void;
     isDownloading: boolean;
     updateShouldStickToBottom: () => void;
     messagesScrollRef: React.RefObject<HTMLDivElement | null>;
@@ -25,6 +26,7 @@ export function MessageList({
     onConfirmPayment,
     onDownloadImage,
     onOpenF2F,
+    onImageClick,
     isDownloading,
     updateShouldStickToBottom,
     messagesScrollRef,
@@ -93,6 +95,7 @@ export function MessageList({
                                 onConfirmPayment={onConfirmPayment}
                                 onDownloadImage={onDownloadImage}
                                 onOpenF2F={onOpenF2F}
+                                onImageClick={onImageClick}
                                 isDownloading={isDownloading}
                             />
                         ))}
