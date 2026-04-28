@@ -1759,7 +1759,20 @@ export interface Database {
                     tags?: string[]
                     updated_at?: string
                 }
-                Relationships: any[]
+                Relationships: [
+                    {
+                        foreignKeyName: "amenities_landlord_id_fkey"
+                        columns: ["landlord_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "amenities_property_id_fkey"
+                        columns: ["property_id"]
+                        referencedRelation: "properties"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
             amenity_bookings: {
                 Row: {
@@ -1803,7 +1816,26 @@ export interface Database {
                     notes?: string | null
                     updated_at?: string
                 }
-                Relationships: any[]
+                Relationships: [
+                    {
+                        foreignKeyName: "amenity_bookings_amenity_id_fkey"
+                        columns: ["amenity_id"]
+                        referencedRelation: "amenities"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "amenity_bookings_landlord_id_fkey"
+                        columns: ["landlord_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "amenity_bookings_tenant_id_fkey"
+                        columns: ["tenant_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
         }
         Views: {
@@ -1902,5 +1934,14 @@ export type MaintenanceRequestWithDetails = MaintenanceRequest & {
 export type ConversationWithParticipants = Conversation & {
     participants: (ConversationParticipant & { profile: Profile })[]
     last_message?: Message
+}
+
+export type AmenityWithProperty = Amenity & {
+    property: { name: string } | null
+}
+
+export type AmenityBookingWithDetails = AmenityBooking & {
+    amenity: { name: string; type: string; icon_name: string | null; property_id: string } | null
+    tenant: { full_name: string | null; email: string; avatar_url: string | null } | null
 }
 
