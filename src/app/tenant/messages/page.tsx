@@ -78,6 +78,7 @@ type ContactItem = {
     hasPaymentHistory: boolean;
     isArchived: boolean;
     isBlocked: boolean;
+    isOnline?: boolean;
 };
 
 type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";
@@ -1591,7 +1592,25 @@ export default function TenantMessagesPage() {
                     }
                 }
             )
-            .subscribe();
+            .on("presence", { event: "sync" }, () => {
+                const state = channel.presenceState();
+                const otherUserId = activeContact?.participantUserId;
+                if (!otherUserId) return;
+                
+                const isOnline = Object.values(state).flat().some((p: { userId?: string }) => p.userId === otherUserId);
+                setContacts(prev => {
+                    const current = prev.find(c => c.id === activeConversationId);
+                    if (current && current.isOnline === isOnline) return prev;
+                    return prev.map(c => 
+                        c.id === activeConversationId ? { ...c, isOnline } : c
+                    );
+                });
+            })
+            .subscribe(async (status) => {
+                if (status === "SUBSCRIBED" && user?.id) {
+                    await channel.track({ userId: user.id, onlineAt: new Date().toISOString() });
+                }
+            });
 
         activeChannelRef.current = channel;
 
@@ -1599,7 +1618,7 @@ export default function TenantMessagesPage() {
             activeChannelRef.current = null;
             supabase.removeChannel(channel);
         };
-    }, [activeConversationId, supabase, user?.id]);
+    }, [activeConversationId, supabase, user?.id, activeContact?.participantUserId]);
 
     useEffect(() => {
         if (activeConversationId === "iris") {
@@ -1848,6 +1867,18 @@ export default function TenantMessagesPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground font-medium">{activeContact.unit}</span>
+                                        <span className="h-1 w-1 rounded-full bg-border" />
+                                        {activeContact.isOnline ? (
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Online</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1.5 opacity-50">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Offline</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

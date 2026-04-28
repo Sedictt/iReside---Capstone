@@ -16,6 +16,7 @@ export type ContactItem = {
     hasPaymentHistory: boolean;
     isArchived: boolean;
     isBlocked: boolean;
+    isOnline?: boolean;
 };
 
 export type OutboundStatus = "sending" | "sent" | "delivered" | "seen" | "failed";

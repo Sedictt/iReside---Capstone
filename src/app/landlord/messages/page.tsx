@@ -1016,10 +1016,29 @@ export default function MessagesPage() {
                 setIsOtherUserTyping(Boolean(candidate.isTyping));
                 if (remoteTypingTimeoutRef.current) window.clearTimeout(remoteTypingTimeoutRef.current);
                 if (candidate.isTyping) remoteTypingTimeoutRef.current = window.setTimeout(() => { setIsOtherUserTyping(false); remoteTypingTimeoutRef.current = null; }, 1800);
-            }).subscribe();
+            })
+            .on("presence", { event: "sync" }, () => {
+                const state = channel.presenceState();
+                const otherUserId = activeContact?.participantUserId;
+                if (!otherUserId) return;
+                
+                const isOnline = Object.values(state).flat().some((p: { userId?: string }) => p.userId === otherUserId);
+                setContacts(prev => {
+                    const current = prev.find(c => c.id === activeConversationId);
+                    if (current && current.isOnline === isOnline) return prev;
+                    return prev.map(c => 
+                        c.id === activeConversationId ? { ...c, isOnline } : c
+                    );
+                });
+            })
+            .subscribe(async (status) => {
+                if (status === "SUBSCRIBED" && user?.id) {
+                    await channel.track({ userId: user.id, onlineAt: new Date().toISOString() });
+                }
+            });
         activeChannelRef.current = channel;
         return () => { activeChannelRef.current = null; supabase.removeChannel(channel); };
-    }, [activeConversationId, supabase, user?.id]);
+    }, [activeConversationId, supabase, user?.id, activeContact?.participantUserId]);
 
     useEffect(() => {
         if (!shouldStickToBottomRef.current && !shouldScrollOnConversationOpenRef.current) return;
