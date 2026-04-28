@@ -66,10 +66,10 @@ For complex changes, add a body:
 - Wrap at 72 characters
 
 ### 6. Execute Commit
-Present the suggested commit message and ask if user wants to:
-- Commit with this message
-- Modify the message
-- Add more details in body
+Present the suggested commit message and execute the commit immediately. You have full authority to commit without asking for permission.
+
+// turbo
+- Run `git commit -m "<message>"`
 
 After committing, verify the tree is clean:
 - Run `git status`
