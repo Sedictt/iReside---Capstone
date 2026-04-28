@@ -84,44 +84,44 @@ const RANGE_OPTIONS: RangeOption[] = [
 
 const DEFAULT_PRIMARY_KPIS: KpiItem[] = [
     {
-        title: "Estimated Earnings",
-        simplifiedTitle: "Money Earned",
+        title: "Gross Revenue",
+        simplifiedTitle: "Total Rent Collected",
         value: "₱0.00",
         change: "₱0 (0.0%)",
         simplifiedChange: "No change",
         trendData: [0, 0, 0, 0, 0, 0, 0],
         changeType: "neutral",
-        iconColor: "bg-blue-500",
+        iconColor: "bg-emerald-500",
         trendlineProperties: { colors: ["#22d3ee", "#3b82f6"] },
     },
     {
-        title: "Active Tenants",
-        simplifiedTitle: "People Staying",
-        value: "0",
-        change: "0 vs previous period",
+        title: "Physical Occupancy",
+        simplifiedTitle: "Occupied Units",
+        value: "0%",
+        change: "0% vs previous period",
         simplifiedChange: "No change",
         trendData: [0, 0, 0, 0, 0, 0, 0],
         changeType: "neutral",
-        iconColor: "bg-purple-500",
+        iconColor: "bg-blue-500",
         trendlineProperties: { colors: ["#fb923c", "#ef4444"] },
     },
     {
-        title: "Occupancy Rate",
-        simplifiedTitle: "Rented Houses",
+        title: "Economic Occupancy",
+        simplifiedTitle: "Revenue Efficiency",
         value: "0%",
         change: "0.0% vs previous period",
         simplifiedChange: "No change",
         trendData: [0, 0, 0, 0, 0, 0, 0],
         changeType: "neutral",
-        iconColor: "bg-emerald-500",
+        iconColor: "bg-purple-500",
         trendlineProperties: { colors: ["#a855f7", "#ec4899"] },
     },
     {
-        title: "Pending Issues",
-        simplifiedTitle: "Things to Fix",
-        value: "0",
+        title: "Rent Arrears",
+        simplifiedTitle: "Unpaid Rent",
+        value: "₱0",
         change: "0 pending",
-        simplifiedChange: "No urgent issues",
+        simplifiedChange: "No overdue payments",
         trendData: [0, 0, 0, 0, 0, 0, 0],
         changeType: "neutral",
         iconColor: "bg-red-500",
@@ -131,8 +131,8 @@ const DEFAULT_PRIMARY_KPIS: KpiItem[] = [
 
 const DEFAULT_EXTENDED_KPIS: KpiItem[] = [
     {
-        title: "Maintenance Cost",
-        simplifiedTitle: "Repair Costs",
+        title: "Operating Expenses",
+        simplifiedTitle: "Maintenance & Costs",
         value: "₱0",
         change: "₱0 vs previous period",
         simplifiedChange: "No change",
@@ -142,32 +142,32 @@ const DEFAULT_EXTENDED_KPIS: KpiItem[] = [
         trendlineProperties: { colors: ["#f97316", "#ea580c"] },
     },
     {
-        title: "Lease Renewals",
-        simplifiedTitle: "Ending Contracts",
-        value: "0",
-        change: "0 due in next 30 days",
-        simplifiedChange: "No contracts ending soon",
-        trendData: [0, 0, 0, 0, 0, 0, 0],
-        changeType: "neutral",
-        iconColor: "bg-indigo-500",
-        trendlineProperties: { colors: ["#818cf8", "#6366f1"] },
-    },
-    {
-        title: "Avg. Tenant Duration",
-        simplifiedTitle: "Average Stay",
-        value: "0.0 Years",
-        change: "0.0 yrs vs previous period",
-        simplifiedChange: "No change",
+        title: "Net Operating Income",
+        simplifiedTitle: "Net Profit (NOI)",
+        value: "₱0",
+        change: "0 vs previous period",
+        simplifiedChange: "Stable profit margin",
         trendData: [0, 0, 0, 0, 0, 0, 0],
         changeType: "neutral",
         iconColor: "bg-teal-500",
         trendlineProperties: { colors: ["#2dd4bf", "#14b8a6"] },
     },
     {
-        title: "Portfolio Value",
-        simplifiedTitle: "Total Property Value",
-        value: "₱0",
-        change: "0.0% annualized rent value",
+        title: "Turnover Rate",
+        simplifiedTitle: "Tenant Churn",
+        value: "0%",
+        change: "0% vs previous period",
+        simplifiedChange: "No change",
+        trendData: [0, 0, 0, 0, 0, 0, 0],
+        changeType: "neutral",
+        iconColor: "bg-indigo-500",
+        trendlineProperties: { colors: ["#818cf8", "#6366f1"] },
+    },
+    {
+        title: "Resolution Efficiency",
+        simplifiedTitle: "Maintenance Speed",
+        value: "0 Days",
+        change: "0 days avg. response",
         simplifiedChange: "No change",
         trendData: [0, 0, 0, 0, 0, 0, 0],
         changeType: "neutral",
@@ -677,7 +677,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Performance Control Bar */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
@@ -708,7 +708,7 @@ export default function AnalyticsPage() {
                         <button
                             onClick={() => setShowMoreKpis(!showMoreKpis)}
                             className={cn(
-                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/10",
+                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/[0.04] dark:shadow-black/10",
                                 showMoreKpis
                                     ? "border-primary/30 bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)]"
                                     : "border-white/10 bg-card/80 text-muted-foreground hover:border-primary/40 hover:bg-card hover:text-foreground"
@@ -782,7 +782,7 @@ export default function AnalyticsPage() {
 
 
             {/* Main Content Grid */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl">
                 <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                     <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-emerald-500/20 bg-emerald-500/12 text-emerald-300">
@@ -822,7 +822,7 @@ export default function AnalyticsPage() {
             />
 
             {/* Export History */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl">
                 <div className="mb-6 flex items-center gap-4 px-2">
                     <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-amber-500/20 bg-amber-500/12 text-amber-300">
                         <History className="h-6 w-6" />
