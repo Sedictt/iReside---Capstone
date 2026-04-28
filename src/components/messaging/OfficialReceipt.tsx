@@ -1,0 +1,194 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { UiMessage } from "@/components/landlord/messages/types";
+
+interface OfficialReceiptProps {
+    message: UiMessage;
+    onDownload?: (id: string, name: string) => void;
+    isDownloading?: boolean;
+    role?: "landlord" | "tenant";
+}
+
+interface InvoiceData {
+    invoiceNumber?: string;
+    issuedDate?: string;
+    landlord?: { full_name?: string };
+    property?: { name?: string };
+    tenant?: { full_name?: string };
+    unit?: { name?: string };
+    description?: string;
+    totalAmount?: number;
+    status?: string;
+}
+
+export function OfficialReceipt({ 
+    message, 
+    onDownload, 
+    isDownloading,
+    role = "landlord"
+}: OfficialReceiptProps) {
+    const [realData, setRealData] = useState<InvoiceData | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchRealInfo = async () => {
+            // Priority: invoiceId -> paymentId -> id
+            const id = message.invoiceId || message.paymentId || message.id;
+            
+            // Skip if no valid ID or if it's an optimistic local message
+            if (!id || id.startsWith('local-')) return;
+
+            setLoading(true);
+            try {
+                const endpoint = role === "landlord" 
+                    ? `/api/landlord/invoices/${id}` 
+                    : `/api/tenant/payments/${id}`;
+                
+                const res = await fetch(endpoint);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.invoice) {
+                        setRealData(data.invoice);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch real receipt info:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRealInfo();
+    }, [message.invoiceId, message.paymentId, message.id, role]);
+
+    // Use real fetched data if available, otherwise fallback to message metadata
+    // This ensures "real" information is used instead of potentially stale or hardcoded metadata
+    const displayData = {
+        invoiceId: realData?.invoiceNumber || message.invoiceId || "---",
+        date: realData?.issuedDate 
+            ? new Date(realData.issuedDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) 
+            : message.date || "---",
+        landlordName: realData?.landlord?.full_name || message.landlordName || "iReside Partner",
+        propertyName: realData?.property?.name || message.propertyName || "Managed Property",
+        tenantName: realData?.tenant?.full_name || message.tenantName || "Unknown Tenant",
+        unit: realData?.unit?.name || message.unit || "---",
+        description: realData?.description || message.description || "Rental Payment",
+        amount: realData?.totalAmount !== undefined 
+            ? new Intl.NumberFormat('en-PH').format(realData.totalAmount) 
+            : message.amount || "0",
+        status: (realData?.status || "Paid").toUpperCase()
+    };
+
+    return (
+        <div className="flex justify-center w-full my-8 px-4">
+            <motion.div 
+                id={`receipt-${message.id}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-[340px] bg-white text-slate-900 p-8 shadow-2xl border border-slate-200 font-mono relative overflow-hidden"
+            >
+                {/* Subtle paper texture effect */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                    style={{ 
+                        backgroundImage: 'radial-gradient(circle, #000 0.5px, transparent 0.5px)',
+                        backgroundSize: '100% 1.5px',
+                        backgroundRepeat: 'repeat-y'
+                    }} 
+                />
+
+                {/* Decorative cut marks at top/bottom */}
+                <div className="absolute top-0 left-0 right-0 h-1 flex justify-between px-2 overflow-hidden opacity-20">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <div key={i} className="w-2 h-2 bg-slate-900 rotate-45 -translate-y-1" />
+                    ))}
+                </div>
+
+                {/* Logo Area */}
+                <div className="text-center mb-8 relative pt-2">
+                    <h1 className="text-xl font-bold tracking-tighter mb-1">iReside</h1>
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Payment Confirmation</p>
+                    {loading && (
+                        <div className="absolute -top-1 right-0">
+                            <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                        </div>
+                    )}
+                </div>
+
+                {/* Receipt Data */}
+                <div className="space-y-3 text-[11px] relative">
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Invoice #:</span>
+                        <span className="text-right truncate max-w-[150px] font-bold">{displayData.invoiceId}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Date:</span>
+                        <span className="text-right font-bold">{displayData.date}</span>
+                    </div>
+                    
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Landlord:</span>
+                        <span className="text-right font-bold uppercase">{displayData.landlordName}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Property:</span>
+                        <span className="text-right font-bold uppercase">{displayData.propertyName}</span>
+                    </div>
+
+                    <div className="my-4 border-t border-slate-100" />
+
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Tenant:</span>
+                        <span className="text-right font-bold uppercase">{displayData.tenantName}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Unit:</span>
+                        <span className="text-right font-bold">{displayData.unit}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Description:</span>
+                        <span className="text-right font-bold">{displayData.description}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                        <span className="shrink-0 opacity-60">Status:</span>
+                        <span className="px-1.5 py-0.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-wider">
+                            {displayData.status}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Separator */}
+                <div className="my-6 border-t border-dashed border-slate-300 relative" />
+
+                {/* Totals */}
+                <div className="space-y-1 mb-8 relative">
+                    <div className="flex justify-between text-sm font-black">
+                        <span>TOTAL AMOUNT:</span>
+                        <span>₱{displayData.amount}</span>
+                    </div>
+                </div>
+
+                {/* Action / Footer */}
+                <div className="pt-4 border-t-2 border-slate-900 relative">
+                    <div id={`receipt-actions-${message.id}`} className="flex items-center justify-end">
+                        <button
+                            disabled={isDownloading}
+                            onClick={() => onDownload?.(`receipt-${message.id}`, `Receipt-${displayData.invoiceId}`)}
+                            className="text-[10px] font-black underline hover:no-underline uppercase tracking-tighter disabled:opacity-50"
+                        >
+                            {isDownloading ? "Saving..." : "Save as Photo"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Decorative cut marks at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 flex justify-between px-2 overflow-hidden opacity-20">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <div key={i} className="w-2 h-2 bg-slate-900 rotate-45 translate-y-1" />
+                    ))}
+                </div>
+            </motion.div>
+        </div>
+    );
+}

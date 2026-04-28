@@ -2169,7 +2169,7 @@ export default function TenantMessagesPage() {
                                                         <div className="px-5 pt-5 pb-2 flex flex-col gap-4">
                                                             <div className="bg-surface-2/50 rounded-2xl p-4 border border-divider flex flex-col gap-3">
                                                                 <p className="text-xs text-high font-medium leading-relaxed italic">
-                                                                    "{msg.content}"
+                                                                    {`"${msg.content}"`}
                                                                 </p>
                                                             </div>
                                                         </div>

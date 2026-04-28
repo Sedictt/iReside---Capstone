@@ -40,6 +40,8 @@ export type UiMessage = {
     filePath?: string;
     invoiceId?: string;
     tenantName?: string;
+    landlordName?: string;
+    propertyName?: string;
     unit?: string;
     amount?: string;
     date?: string;
