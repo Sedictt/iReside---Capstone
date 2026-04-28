@@ -55,10 +55,17 @@ export function ChatHeader({
                         <div className="flex items-center gap-2 text-xs font-medium text-medium">
                             <span>{contact.unit}</span>
                             <span className="h-1 w-1 rounded-full bg-disabled" />
-                            <span className="text-emerald-500 flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                Online
-                            </span>
+                            {contact.isOnline ? (
+                                <span className="text-emerald-500 flex items-center gap-1">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Online
+                                </span>
+                            ) : (
+                                <span className="text-disabled flex items-center gap-1">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-disabled" />
+                                    Offline
+                                </span>
+                            )}
                         </div>
                     )}
                 </div>
