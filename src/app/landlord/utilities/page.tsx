@@ -9,7 +9,7 @@ import {
     updateBookingStatus,
     deleteAmenity
 } from "@/lib/queries/amenities";
-import type { Amenity, AmenityBooking } from "@/types/database";
+import type { Amenity, AmenityBooking, AmenityWithProperty, AmenityBookingWithDetails } from "@/types/database";
 import { 
     Plus, 
     Search, 
@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { toast } from "sonner";
-import { PropertySelector } from "@/components/landlord/PropertySelector";
 import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";
 
 // Helper to get icon component by name
@@ -53,11 +52,8 @@ export default function LandlordUtilitiesPage() {
     const { selectedPropertyId } = useProperty();
     const [activeTab, setActiveTab] = useState<"list" | "requests" | "history">("list");
     const [searchQuery, setSearchQuery] = useState("");
-    const [amenities, setAmenities] = useState<Amenity[]>([]);
-    const [bookings, setBookings] = useState<(AmenityBooking & { 
-        amenity: { name: string; type: string; icon_name: string | null; property_id: string } | null,
-        tenant: { full_name: string | null; email: string; avatar_url: string | null } | null
-    })[]>([]);
+    const [amenities, setAmenities] = useState<AmenityWithProperty[]>([]);
+    const [bookings, setBookings] = useState<AmenityBookingWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -145,7 +141,6 @@ export default function LandlordUtilitiesPage() {
                         </section>
                         
                         <div className="flex flex-wrap gap-4">
-                            <PropertySelector />
                             <button 
                                 onClick={() => setIsAddModalOpen(true)}
                                 className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
