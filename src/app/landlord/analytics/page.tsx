@@ -45,12 +45,6 @@ type ExportAuditItem = {
     rows: ReportRow[];
 };
 
-type KpiInsight = {
-    summary: string;
-    status: string;
-    recommendation: string;
-    source?: "ai" | "fallback";
-};
 
 type OverviewApiResponse = {
     primaryKpis: Array<Pick<KpiItem, "title" | "value" | "change" | "simplifiedChange" | "trendData" | "changeType">>;
@@ -268,28 +262,6 @@ export default function AnalyticsPage() {
         return fullName.split(/\s+/)[0] ?? null;
     }, [profile?.full_name]);
 
-    const buildLocalFallbackInsight = (kpi: KpiItem): KpiInsight => {
-        const status =
-            kpi.changeType === "positive"
-                ? "This KPI is trending in a healthy direction."
-                : kpi.changeType === "negative"
-                  ? "This KPI is weakening and should be reviewed soon."
-                  : "This KPI is stable right now.";
-
-        const recommendation =
-            kpi.changeType === "positive"
-                ? "Keep using the same strategy and track what actions are causing this improvement."
-                : kpi.changeType === "negative"
-                  ? "Review recent tenant activity, maintenance timing, and pricing decisions to identify the likely cause."
-                  : "Keep monitoring this weekly and set an alert so changes are caught early.";
-
-        return {
-            summary: `${kpi.title} is currently ${kpi.value} with a recent change of ${kpi.change}.`,
-            status,
-            recommendation,
-            source: "fallback",
-        };
-    };
 
     const downloadBlob = (blob: Blob, filename: string) => {
         const url = URL.createObjectURL(blob);
@@ -609,63 +581,6 @@ export default function AnalyticsPage() {
             controller.abort();
         };
     }, [mounted, startDate, endDate, selectedPropertyId]);
-
-    useEffect(() => {
-        if (!mounted) return;
-
-        const allKpis = [...primaryKpis, ...extendedKpis];
-        const controller = new AbortController();
-
-        const fetchKpiInsights = async () => {
-            try {
-                const response = await fetch("/api/landlord/analytics/insights", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        rangeStart: startDate,
-                        rangeEnd: endDate,
-                        kpis: allKpis.map((kpi) => ({
-                            title: kpi.title,
-                            value: kpi.value,
-                            change: kpi.change,
-                            trendData: kpi.trendData,
-                            changeType: kpi.changeType,
-                        })),
-                    }),
-                    signal: controller.signal,
-                });
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch KPI insights");
-                }
-
-                const payload = (await response.json()) as {
-                    insights?: Record<string, KpiInsight>;
-                    source?: "ai" | "fallback";
-                };
-
-                const mappedInsights: Record<string, KpiInsight> = {};
-                allKpis.forEach((kpi) => {
-                    mappedInsights[kpi.title] = payload.insights?.[kpi.title] ?? buildLocalFallbackInsight(kpi);
-                });
-
-                setKpiInsights(mappedInsights);
-                setInsightSource(payload.source ?? "fallback");
-            } catch {
-                const fallback: Record<string, KpiInsight> = {};
-                allKpis.forEach((kpi) => {
-                    fallback[kpi.title] = buildLocalFallbackInsight(kpi);
-                });
-
-                setKpiInsights(fallback);
-                setInsightSource("fallback");
-            }
-        };
-
-        fetchKpiInsights();
-
-        return () => controller.abort();
-    }, [mounted, startDate, endDate, primaryKpis, extendedKpis]);
 
     useEffect(() => {
         if (!toastMessage) return;
