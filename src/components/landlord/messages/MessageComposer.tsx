@@ -1,18 +1,21 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { 
     Send, 
     Paperclip, 
     Image as ImageIcon, 
     X, 
     Zap,
-    Smile,
-    Mic
+    Smile
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PendingAttachment } from "./types";
 import { motion, AnimatePresence } from "framer-motion";
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+
 
 interface MessageComposerProps {
     messageInput: string;
@@ -22,7 +25,6 @@ interface MessageComposerProps {
     pendingAttachments: PendingAttachment[];
     removePendingAttachment: (id: string) => void;
     isUploadingFile: boolean;
-    uploadProgress: number | null;
     isOtherUserTyping: boolean;
     otherUserName?: string;
 }
@@ -35,12 +37,31 @@ export function MessageComposer({
     pendingAttachments,
     removePendingAttachment,
     isUploadingFile,
-    uploadProgress,
     isOtherUserTyping,
     otherUserName
 }: MessageComposerProps) {
+    const { resolvedTheme } = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+    const handleEmojiSelect = (emoji: { native: string }) => {
+        setMessageInput(messageInput + emoji.native);
+        textAreaRef.current?.focus();
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+                setShowEmojiPicker(false);
+            }
+        };
+        if (showEmojiPicker) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showEmojiPicker]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -134,10 +155,10 @@ export function MessageComposer({
                     )}
                 </AnimatePresence>
 
-                <div className="flex items-end gap-3 bg-surface-2 border border-divider rounded-[2rem] p-2 pl-4 pr-2 focus-within:border-primary/50 transition-all shadow-inner relative overflow-hidden">
+                <div className="flex items-end gap-3 bg-surface-2 border border-divider rounded-[2rem] p-2 pl-4 pr-2 focus-within:border-primary/40 focus-within:bg-surface-1 focus-within:ring-4 focus-within:ring-primary/10 transition-all relative overflow-visible group/composer">
                     <button 
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-2.5 rounded-full hover:bg-surface-3 transition-colors text-medium"
+                        className="p-2.5 rounded-full hover:bg-surface-3 transition-colors text-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
                         title="Attach files"
                     >
                         <ImageIcon className="h-5 w-5" />
@@ -160,19 +181,27 @@ export function MessageComposer({
                         onChange={(e) => setMessageInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={pendingAttachments.length > 0 ? "Add a caption..." : "Type a message..."}
-                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2.5 max-h-[120px] resize-none text-high placeholder:text-disabled"
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2.5 max-h-[120px] resize-none text-high placeholder:text-disabled appearance-none shadow-none"
+                        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
                         rows={1}
                     />
 
-                    <div className="flex items-center gap-1">
-                        <button className="p-2.5 rounded-full hover:bg-surface-3 transition-colors text-medium hidden sm:flex">
+                    <div className="flex items-center gap-1 relative">
+                        <button 
+                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                            className={cn(
+                                "p-2.5 rounded-full transition-colors text-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
+                                showEmojiPicker ? "bg-primary/20 text-primary" : "hover:bg-surface-3"
+                            )}
+                            title="Add emoji"
+                        >
                             <Smile className="h-5 w-5" />
                         </button>
                         <button 
                             onClick={onSendMessage}
                             disabled={(!messageInput.trim() && pendingAttachments.length === 0) || isUploadingFile}
                             className={cn(
-                                "p-2.5 rounded-full transition-all flex items-center justify-center min-w-[44px]",
+                                "p-2.5 rounded-full transition-all flex items-center justify-center min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                                 (messageInput.trim() || pendingAttachments.length > 0) && !isUploadingFile
                                     ? "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95" 
                                     : "bg-surface-3 text-disabled"
@@ -180,6 +209,26 @@ export function MessageComposer({
                         >
                             <Send className="h-5 w-5" />
                         </button>
+
+                        {showEmojiPicker && (
+                                <div
+                                    ref={emojiPickerRef}
+                                    className="absolute bottom-full right-0 mb-4 z-[100] shadow-2xl rounded-2xl overflow-hidden"
+                                >
+                                <Picker 
+                                    id="ireside-emoji-picker"
+                                    data={data} 
+                                    onEmojiSelect={handleEmojiSelect} 
+                                    theme={resolvedTheme === 'dark' ? 'dark' : 'light'}
+                                    set="native"
+                                    previewPosition="none"
+                                    skinTonePosition="none"
+                                    navPosition="bottom"
+                                    perLine={8}
+                                    maxFrequentRows={1}
+                                />
+                                </div>
+                            )}
                     </div>
                 </div>
                 

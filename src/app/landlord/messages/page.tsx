@@ -279,9 +279,6 @@ export default function MessagesPage() {
     const [pendingAttachments, setPendingAttachments] = useState<PendingAttachmentType[]>([]);
     const isUploadingFile = pendingAttachments.some(a => a.status === 'uploading');
     const [fileUploadError, setFileUploadError] = useState<string | null>(null);
-    const uploadProgress = pendingAttachments.length > 0 
-        ? Math.round(pendingAttachments.reduce((acc, a) => acc + (a.progress || 0), 0) / pendingAttachments.length) 
-        : null;
     const [isComposerDragOver, setIsComposerDragOver] = useState(false);
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
     const [previewImages, setPreviewImages] = useState<{ url: string; id: string }[]>([]);
@@ -1039,7 +1036,6 @@ export default function MessagesPage() {
                     pendingAttachments={pendingAttachments}
                     removePendingAttachment={removePendingAttachment}
                     isUploadingFile={isUploadingFile}
-                    uploadProgress={uploadProgress}
                     isOtherUserTyping={isOtherUserTyping}
                     otherUserName={displayContact.name}
                 />
