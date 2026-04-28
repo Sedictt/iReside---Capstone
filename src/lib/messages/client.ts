@@ -316,15 +316,18 @@ export const sendConversationMessage = async (
 export const uploadConversationFile = async (
     conversationId: string,
     file: File,
-    onProgress?: (percent: number) => void
+    onProgress?: (percent: number) => void,
+    noMessage = false
 ) => {
     const preparedFile = await optimizeImageForUpload(file);
     const body = new FormData();
     body.append("file", preparedFile);
 
+    const query = noMessage ? "?noMessage=true" : "";
+
     return await new Promise<UploadedConversationFile>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", `/api/messages/conversations/${conversationId}/files`, true);
+        xhr.open("POST", `/api/messages/conversations/${conversationId}/files${query}`, true);
 
         xhr.upload.onprogress = (event) => {
             if (!onProgress || !event.lengthComputable) {

@@ -70,6 +70,8 @@ export async function POST(
     }
 
     const { conversationId } = await context.params;
+    const { searchParams } = new URL(request.url);
+    const noMessage = searchParams.get("noMessage") === "true";
 
     try {
         const supabase = createAdminClient();
@@ -139,34 +141,39 @@ export async function POST(
             return NextResponse.json({ error: "Failed to create file URL." }, { status: 500 });
         }
 
-        const { data: inserted, error: insertError } = await supabase
-            .from("messages")
-            .insert({
-                conversation_id: conversationId,
-                sender_id: user.id,
-                type: messageType,
-                content: file.name,
-                metadata,
-            })
-            .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
-            .single();
+        let insertedMessage = null;
 
-        if (insertError || !inserted) {
-            return NextResponse.json({ error: "Failed to create file message." }, { status: 500 });
+        if (!noMessage) {
+            const { data: inserted, error: insertError } = await supabase
+                .from("messages")
+                .insert({
+                    conversation_id: conversationId,
+                    sender_id: user.id,
+                    type: messageType,
+                    content: file.name,
+                    metadata,
+                })
+                .select("id, conversation_id, sender_id, type, content, metadata, read_at, created_at")
+                .single();
+
+            if (insertError || !inserted) {
+                return NextResponse.json({ error: "Failed to create file message." }, { status: 500 });
+            }
+            insertedMessage = inserted;
         }
 
         return NextResponse.json(
             {
-                message: {
-                    id: inserted.id,
-                    conversationId: inserted.conversation_id,
-                    senderId: inserted.sender_id,
-                    type: inserted.type,
-                    content: inserted.content,
-                    metadata: inserted.metadata,
-                    readAt: inserted.read_at,
-                    createdAt: inserted.created_at,
-                },
+                message: insertedMessage ? {
+                    id: insertedMessage.id,
+                    conversationId: insertedMessage.conversation_id,
+                    senderId: insertedMessage.sender_id,
+                    type: insertedMessage.type,
+                    content: insertedMessage.content,
+                    metadata: insertedMessage.metadata,
+                    readAt: insertedMessage.read_at,
+                    createdAt: insertedMessage.created_at,
+                } : null,
                 file: {
                     name: file.name,
                     size: file.size,
