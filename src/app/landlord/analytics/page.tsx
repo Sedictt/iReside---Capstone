@@ -876,7 +876,7 @@ export default function AnalyticsPage() {
                             <TrendingUp className="h-6 w-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-foreground">Financial Intelligence</h2>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">Financial Performance</h2>
                             <p className="text-sm font-medium text-muted-foreground/80">Revenue streams, expenses, and operational health overview.</p>
                         </div>
                     </div>
