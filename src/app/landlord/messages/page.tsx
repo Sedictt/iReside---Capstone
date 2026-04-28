@@ -25,7 +25,10 @@ import {
     ChevronRight,
     ChevronLeft,
     Search,
-    CreditCard
+    CreditCard,
+    File,
+    Download,
+    ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -44,7 +47,7 @@ import {
     SharedFileItem,
     QuickAction
 } from "@/components/landlord/messages/types";
-import { RoleBadge } from "@/components/profile/RoleBadge";
+import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
     createOrGetDirectConversation,
@@ -260,7 +263,7 @@ export default function MessagesPage() {
     const [messageInput, setMessageInput] = useState("");
     const [showInfoSidebar, setShowInfoSidebar] = useState(false);
     const [showFilesSidebar, setShowFilesSidebar] = useState(false);
-    const [fileFilter, setFileFilter] = useState("all");
+    const [fileFilter, setFileFilter] = useState("media");
     const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
@@ -298,7 +301,84 @@ export default function MessagesPage() {
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
+    const handleDownloadFile = async (url: string, fileName: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error("Download failed:", error);
+        }
+    };
+
     const typingStopTimeoutRef = useRef<number | null>(null);
+    
+    // Format file size
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    // Derived Shared Files
+    const sharedFiles = useMemo(() => {
+        const files: SharedFileItem[] = [];
+        messagesState.forEach(msg => {
+            if (msg.fileUrl) {
+                const isMedia = /\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm)$/i.test(msg.fileUrl) || 
+                                msg.fileMimeType?.startsWith('image/') || 
+                                msg.fileMimeType?.startsWith('video/');
+                files.push({
+                    id: msg.id,
+                    url: msg.fileUrl,
+                    name: msg.fileName || "Unnamed file",
+                    size: msg.fileSize || 0,
+                    mimeType: msg.fileMimeType || "application/octet-stream",
+                    createdAt: msg.createdAt || msg.timestamp,
+                    timestampLabel: new Date(msg.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                    isMedia: Boolean(isMedia)
+                });
+            }
+            if (msg.attachments) {
+                msg.attachments.forEach(att => {
+                    if (att.fileUrl) {
+                        const isMedia = /\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm)$/i.test(att.fileUrl) || 
+                                        att.fileMimeType?.startsWith('image/') || 
+                                        att.fileMimeType?.startsWith('video/');
+                        files.push({
+                            id: att.id,
+                            url: att.fileUrl,
+                            name: att.fileName || "Unnamed file",
+                            size: att.fileSize || 0,
+                            mimeType: att.fileMimeType || "application/octet-stream",
+                            createdAt: att.createdAt || att.timestamp,
+                            timestampLabel: new Date(att.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                            isMedia: Boolean(isMedia)
+                        });
+                    }
+                });
+            }
+        });
+
+        return files
+            .filter(f => {
+                if (fileFilter === 'all') return true;
+                if (fileFilter === 'media') return f.isMedia;
+                if (fileFilter === 'files') return !f.isMedia;
+                return true;
+            })
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [messagesState, fileFilter]);
+
     const remoteTypingTimeoutRef = useRef<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const messagesScrollRef = useRef<HTMLDivElement | null>(null);
@@ -629,7 +709,7 @@ export default function MessagesPage() {
         return {
             id: message.id,
             type: message.type === "system" ? "system" : (isOwn ? "landlord" : "tenant"),
-            messageType: message.type as any,
+            messageType: message.type as "text" | "system" | "image" | "file",
             content,
             redactedContent,
             timestamp: new Date(message.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }),
@@ -660,22 +740,6 @@ export default function MessagesPage() {
             description: typeof metadata?.description === "string" ? metadata.description : undefined,
         };
     };
-
-    const sharedFiles = useMemo<SharedFileItem[]>(() => {
-        return messagesState.filter((message) => Boolean(message.fileUrl)).map((message) => {
-            const mimeType = message.fileMimeType ?? "application/octet-stream";
-            return {
-                id: message.id,
-                url: message.fileUrl as string,
-                name: message.fileName ?? message.content,
-                size: message.fileSize ?? 0,
-                mimeType,
-                createdAt: message.createdAt,
-                timestampLabel: new Date(message.createdAt).toLocaleDateString([], { month: "short", day: "numeric" }),
-                isMedia: mimeType.startsWith("image/"),
-            };
-        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }, [messagesState]);
 
     async function refreshConversations() {
         if (!user) return;
@@ -991,7 +1055,7 @@ export default function MessagesPage() {
             )}
 
             <ContactList 
-                contacts={visibleContacts as any}
+                contacts={visibleContacts}
                 activeConversationId={activeConversationId}
                 setActiveConversationId={setActiveConversationId}
                 isSidebarLoading={isSidebarLoading}
@@ -1007,7 +1071,7 @@ export default function MessagesPage() {
 
             <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[2.5rem] border border-border bg-surface-1 shadow-sm">
                 <ChatHeader 
-                    contact={displayContact as any}
+                    contact={displayContact}
                     showFilesSidebar={showFilesSidebar}
                     setShowFilesSidebar={setShowFilesSidebar}
                     showInfoSidebar={showInfoSidebar}
@@ -1016,11 +1080,11 @@ export default function MessagesPage() {
                 />
 
                 <MessageList 
-                    messages={messagesState as any}
+                    messages={messagesState}
                     isMessagesLoading={isMessagesLoading}
                     onConfirmPayment={handleConfirmF2FPayment}
                     onDownloadImage={handleDownloadImage}
-                    onOpenF2F={(msg) => { setActiveF2FPayment(msg as any); setIsF2FInterfaceOpen(true); }}
+                    onOpenF2F={(msg) => { setActiveF2FPayment(msg); setIsF2FInterfaceOpen(true); }}
                     onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
                     isDownloading={isDownloading}
                     updateShouldStickToBottom={updateShouldStickToBottom}
@@ -1056,7 +1120,7 @@ export default function MessagesPage() {
                                             {displayContact.avatarUrl ? <img src={displayContact.avatarUrl} alt={displayContact.name} className="h-full w-full object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
                                         </div>
                                         <h4 className="text-xl font-bold text-high">{displayContact.name}</h4>
-                                        <div className="mt-2"><RoleBadge role={displayContact.role as any} /></div>
+                                        <div className="mt-2"><RoleBadge role={displayContact.role as BadgeRole} /></div>
                                         <p className="mt-2 text-sm font-medium text-medium">{displayContact.unit}</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
@@ -1094,13 +1158,62 @@ export default function MessagesPage() {
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-premium">
                                     <div className="flex gap-2 mb-6 p-1 bg-surface-2 rounded-2xl">
-                                        {['all', 'media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "bg-surface-1 text-primary shadow-sm" : "text-disabled hover:text-medium")}>{f}</button>))}
+                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "bg-surface-1 text-primary shadow-sm" : "text-disabled hover:text-medium")}>{f}</button>))}
                                     </div>
-                                    <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-surface-2/30 rounded-[2rem] border border-dashed border-divider">
-                                        <div className="p-4 rounded-full bg-surface-2 mb-4"><Folder className="h-8 w-8 text-disabled" /></div>
-                                        <p className="text-sm font-bold text-medium">No files shared yet</p>
-                                        <p className="text-[10px] font-medium text-disabled mt-1">Shared documents and media will appear here</p>
-                                    </div>
+                                    
+                                    {sharedFiles.length > 0 ? (
+                                        <div className={cn(
+                                            "grid gap-3",
+                                            fileFilter === 'media' ? "grid-cols-3" : "grid-cols-1"
+                                        )}>
+                                            {sharedFiles.map((file) => (
+                                                file.isMedia && fileFilter !== 'files' ? (
+                                                    <div 
+                                                        key={file.id} 
+                                                        className="aspect-square rounded-xl overflow-hidden border border-divider bg-surface-2 relative group cursor-pointer"
+                                                        onClick={() => {
+                                                            const mediaFiles = sharedFiles.filter(f => f.isMedia).map(f => ({ url: f.url, id: f.id }));
+                                                            const index = mediaFiles.findIndex(f => f.id === file.id);
+                                                            setPreviewImages(mediaFiles);
+                                                            setPreviewImageIndex(index >= 0 ? index : 0);
+                                                        }}
+                                                    >
+                                                        <img src={file.url} className="w-full h-full object-cover" alt="" />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleDownloadFile(file.url, file.name); }}
+                                                                className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md text-white hover:bg-white/40 transition-colors"
+                                                            >
+                                                                <Download className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div key={file.id} className="flex items-center gap-3 p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group">
+                                                        <div className="p-2.5 rounded-xl bg-surface-2 text-medium group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                            <FileText className="h-5 w-5" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-bold text-high truncate">{file.name}</p>
+                                                            <p className="text-[10px] font-medium text-disabled mt-0.5">{formatFileSize(file.size)} • {file.timestampLabel}</p>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleDownloadFile(file.url, file.name)}
+                                                            className="p-2 rounded-lg text-disabled hover:text-primary hover:bg-primary/10 transition-all"
+                                                        >
+                                                            <Download className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                )
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-surface-2/30 rounded-[2rem] border border-dashed border-divider">
+                                            <div className="p-4 rounded-full bg-surface-2 mb-4"><Folder className="h-8 w-8 text-disabled" /></div>
+                                            <p className="text-sm font-bold text-medium">No files shared yet</p>
+                                            <p className="text-[10px] font-medium text-disabled mt-1">Shared documents and media will appear here</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -1213,7 +1326,14 @@ export default function MessagesPage() {
             <CashPaymentInterface 
                 isOpen={isF2FInterfaceOpen} 
                 onClose={() => setIsF2FInterfaceOpen(false)} 
-                payment={activeF2FPayment as any} 
+                payment={activeF2FPayment ? {
+                    id: activeF2FPayment.id,
+                    tenantName: activeF2FPayment.tenantName || 'Unknown Tenant',
+                    unit: activeF2FPayment.unit || 'Unknown Unit',
+                    amount: activeF2FPayment.amount || '0',
+                    invoiceNumber: activeF2FPayment.invoiceNumber || 'N/A',
+                    description: activeF2FPayment.description || ''
+                } : null} 
                 onConfirm={handleConfirmF2FPayment}
             />
 
