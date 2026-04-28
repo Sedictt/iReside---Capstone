@@ -12,7 +12,7 @@ interface MessageListProps {
     onConfirmPayment: (id: string) => void;
     onDownloadImage: (id: string, name: string) => void;
     onOpenF2F: (message: UiMessage) => void;
-    onImageClick?: (url: string) => void;
+    onImageClick?: (images: { url: string; id: string }[], index: number) => void;
     isDownloading: boolean;
     updateShouldStickToBottom: () => void;
     messagesScrollRef: React.RefObject<HTMLDivElement | null>;
