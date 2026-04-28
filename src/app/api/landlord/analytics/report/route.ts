@@ -80,7 +80,7 @@ export async function GET(request: Request) {
         format: row.format,
         range: row.report_range,
         generatedAt: row.created_at,
-        rows: (row.metadata as any)?.rows as ReportRow[] ?? [],
+        rows: (row.metadata as Record<string, unknown>)?.rows as ReportRow[] ?? [],
     }));
 
     return NextResponse.json({ history });
