@@ -1,6 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useProperty } from "@/context/PropertyContext";
+import { 
+    getAmenities, 
+    getAmenityBookings, 
+    updateBookingStatus,
+    deleteAmenity
+} from "@/lib/queries/amenities";
+import type { Amenity, AmenityBooking } from "@/types/database";
 import { 
     Plus, 
     Search, 
@@ -16,7 +25,6 @@ import {
     LayoutGrid,
     History as HistoryIcon,
     ClipboardList,
-    MoreHorizontal,
     MapPin,
     Zap,
     Filter,
@@ -25,96 +33,91 @@ import {
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { toast } from "sonner";
+import { PropertySelector } from "@/components/landlord/PropertySelector";
+import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";
 
-// Mock Data with Thumbnails
-const MOCK_UTILITIES = [
-    {
-        id: "1",
-        name: "Grand Function Hall",
-        type: "Room",
-        image: "/utilities/function_hall.png",
-        description: "Perfect for parties, seminars, and gatherings. Includes sound system and chairs.",
-        price: 500,
-        unit: "hour",
-        status: "Active",
-        capacity: 100,
-        icon: Users,
-        tags: ["Event", "Sound System"],
-    },
-    {
-        id: "2",
-        name: "Sky Pool & Lounge",
-        type: "Amenity",
-        image: "/utilities/sky_pool.png",
-        description: "Rooftop swimming pool with city view. Access limited to residents.",
-        price: 0,
-        unit: "free",
-        status: "Active",
-        capacity: 30,
-        icon: Waves,
-        tags: ["Outdoor", "Leisure"],
-    },
-    {
-        id: "3",
-        name: "Music Studio",
-        type: "Utility",
-        image: "/utilities/music_studio.png",
-        description: "Soundproof room for practice and recording. Instruments available on request.",
-        price: 200,
-        unit: "hour",
-        status: "Maintenance",
-        capacity: 5,
-        icon: Music,
-        tags: ["Studio", "Soundproof"],
-    },
-    {
-        id: "4",
-        name: "Co-working Space",
-        type: "Room",
-        image: "/utilities/coworking.png",
-        description: "Quiet area for work and study. High-speed Wi-Fi and coffee available.",
-        price: 0,
-        unit: "free",
-        status: "Active",
-        capacity: 20,
-        icon: Coffee,
-        tags: ["Workspace", "WiFi"],
+// Helper to get icon component by name
+const getIconByName = (name: string | null) => {
+    switch (name) {
+        case "Users": return Users;
+        case "Waves": return Waves;
+        case "Music": return Music;
+        case "Coffee": return Coffee;
+        default: return Zap;
     }
-];
-
-const MOCK_REQUESTS = [
-    {
-        id: "req-1",
-        utilityName: "Grand Function Hall",
-        tenantName: "John Doe",
-        date: "2024-05-15",
-        startTime: "14:00",
-        endTime: "18:00",
-        totalPrice: 2000,
-        status: "Pending",
-        requestDate: "2024-04-25",
-    },
-    {
-        id: "req-2",
-        utilityName: "Music Studio",
-        tenantName: "Alice Smith",
-        date: "2024-05-10",
-        startTime: "10:00",
-        endTime: "12:00",
-        totalPrice: 400,
-        status: "Approved",
-        requestDate: "2024-04-26",
-    }
-];
+};
 
 export default function LandlordUtilitiesPage() {
+    const { user } = useAuth();
+    const { selectedPropertyId } = useProperty();
     const [activeTab, setActiveTab] = useState<"list" | "requests" | "history">("list");
     const [searchQuery, setSearchQuery] = useState("");
+    const [amenities, setAmenities] = useState<Amenity[]>([]);
+    const [bookings, setBookings] = useState<(AmenityBooking & { 
+        amenity: { name: string; type: string; icon_name: string | null; property_id: string } | null,
+        tenant: { full_name: string | null; email: string; avatar_url: string | null } | null
+    })[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const filteredUtilities = MOCK_UTILITIES.filter(u => 
-        u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.type.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const fetchData = useCallback(async () => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            const [amenitiesData, bookingsData] = await Promise.all([
+                getAmenities(user.id),
+                getAmenityBookings(user.id)
+            ]);
+            setAmenities(amenitiesData);
+            setBookings(bookingsData);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            toast.error("Failed to load facilities and bookings");
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const handleUpdateBookingStatus = async (id: string, status: string) => {
+        try {
+            await updateBookingStatus(id, status);
+            toast.success(`Booking ${status.toLowerCase()} successfully`);
+            fetchData();
+        } catch (error) {
+            console.error("Error updating booking:", error);
+            toast.error("Failed to update booking status");
+        }
+    };
+
+    const handleDeleteAmenity = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this facility? This will also remove all associated bookings.")) return;
+        try {
+            await deleteAmenity(id);
+            toast.success("Facility deleted successfully");
+            fetchData();
+        } catch (error) {
+            console.error("Error deleting facility:", error);
+            toast.error("Failed to delete facility");
+        }
+    };
+
+    // Filter by property and search query
+    const filteredUtilities = amenities
+        .filter(u => selectedPropertyId === 'all' || u.property_id === selectedPropertyId)
+        .filter(u => 
+            u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.type.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+    const filteredBookings = bookings
+        .filter(b => selectedPropertyId === 'all' || b.amenity?.property_id === selectedPropertyId);
+
+    const pendingCount = filteredBookings.filter(b => b.status === "Pending").length;
 
     return (
         <div className="flex min-h-full w-full flex-col bg-background text-foreground">
@@ -142,11 +145,11 @@ export default function LandlordUtilitiesPage() {
                         </section>
                         
                         <div className="flex flex-wrap gap-4">
-                            <button className="group flex items-center gap-2 rounded-2xl border border-border bg-card px-6 py-4 text-sm font-bold transition-all hover:bg-muted hover:border-primary/30 active:scale-95">
-                                <HistoryIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                Audit Logs
-                            </button>
-                            <button className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95">
+                            <PropertySelector />
+                            <button 
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.05] active:scale-95"
+                            >
                                 <Plus className="h-5 w-5" />
                                 Add Facility
                             </button>
@@ -161,7 +164,7 @@ export default function LandlordUtilitiesPage() {
                     <div className="flex w-full items-center gap-2 rounded-3xl bg-muted/30 p-2 sm:w-fit border border-border/40 backdrop-blur-sm">
                         {[
                             { id: "list", label: "Inventory", icon: LayoutGrid },
-                            { id: "requests", label: "Bookings", icon: ClipboardList, badge: "8" },
+                            { id: "requests", label: "Bookings", icon: ClipboardList, badge: pendingCount > 0 ? pendingCount.toString() : undefined },
                             { id: "history", label: "History", icon: HistoryIcon },
                         ].map((tab) => (
                             <button
@@ -219,7 +222,10 @@ export default function LandlordUtilitiesPage() {
                             className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                         >
                             {/* Create New Card */}
-                            <button className="group relative flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border/50 bg-muted/10 p-8 transition-all hover:bg-primary/[0.03] hover:border-primary/30 hover:shadow-lg min-h-[340px]">
+                            <button 
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="group relative flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed border-border/50 bg-muted/10 p-8 transition-all hover:bg-primary/[0.03] hover:border-primary/30 hover:shadow-lg min-h-[340px]"
+                            >
                                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-105">
                                     <Plus className="h-8 w-8" />
                                 </div>
@@ -234,105 +240,133 @@ export default function LandlordUtilitiesPage() {
                                 </div>
                             </button>
 
-                            {filteredUtilities.map((utility, idx) => (
-                                <motion.div
-                                    key={utility.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.2)] hover:-translate-y-1 hover:border-primary/20"
-                                >
-                                    {/* Thumbnail Image */}
-                                    <div className="relative h-44 w-full overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10" />
-                                        <Image 
-                                            src={utility.image} 
-                                            alt={utility.name}
-                                            fill
-                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                        {/* Status Badge */}
-                                        <div className="absolute right-4 top-4 z-20">
-                                            <div className={cn(
-                                                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] border shadow-lg",
-                                                utility.status === "Active" 
-                                                    ? "bg-white text-emerald-600 border-emerald-100 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800" 
-                                                    : "bg-white text-amber-600 border-amber-100 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800"
-                                            )}>
-                                                <span className={cn(
-                                                    "h-1.5 w-1.5 rounded-full",
-                                                    utility.status === "Active" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
-                                                )} />
-                                                {utility.status}
-                                            </div>
-                                        </div>
-                                        {/* Type Icon */}
-                                        <div className="absolute bottom-4 left-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-primary border border-border shadow-xl dark:bg-card dark:text-primary">
-                                            <utility.icon className="h-5 w-5" />
-                                        </div>
+                            {loading ? (
+                                // Skeleton loader
+                                [...Array(3)].map((_, i) => (
+                                    <div key={i} className="h-[400px] w-full animate-pulse rounded-3xl bg-muted/50" />
+                                ))
+                            ) : filteredUtilities.length === 0 ? (
+                                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                                    <div className="mb-4 rounded-full bg-muted p-4">
+                                        <Search className="h-8 w-8 text-muted-foreground" />
                                     </div>
-
-                                    {/* Content Area */}
-                                    <div className="flex flex-1 flex-col p-5">
-                                        {/* Header: Type + Name */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                                                    <Zap className="h-3 w-3" />
-                                                    {utility.type}
-                                                </span>
-                                                {utility.tags?.slice(0, 2).map(tag => (
-                                                    <span key={tag} className="rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                                        {tag}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            <h4 className="text-xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
-                                                {utility.name}
-                                            </h4>
-                                        </div>
-
-                                        {/* Meta: Capacity + Location */}
-                                        <div className="mt-3 flex items-center gap-3 text-xs font-medium text-muted-foreground">
-                                            <span className="flex items-center gap-1.5">
-                                                <Users className="h-3.5 w-3.5 text-muted-foreground/50" />
-                                                {utility.capacity} capacity
-                                            </span>
-                                            <span className="h-1 w-1 rounded-full bg-border/60" />
-                                            <span className="flex items-center gap-1.5">
-                                                <MapPin className="h-3.5 w-3.5 text-muted-foreground/50" />
-                                                Main Wing
-                                            </span>
-                                        </div>
-
-                                        {/* Description */}
-                                        <p className="mt-3 text-sm text-muted-foreground/70 leading-relaxed line-clamp-2">
-                                            {utility.description}
-                                        </p>
-
-                                        {/* Footer: Pricing + Actions */}
-                                        <div className="mt-auto pt-5 flex items-center justify-between border-t border-border/40">
-                                            <div>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black text-foreground">
-                                                        {utility.price === 0 ? "Free" : `₱${utility.price.toLocaleString()}`}
-                                                    </span>
-                                                    {utility.price > 0 && <span className="text-xs font-semibold text-muted-foreground">/{utility.unit}</span>}
+                                    <h3 className="text-xl font-bold">No facilities found</h3>
+                                    <p className="text-muted-foreground">Try adjusting your search or add a new facility.</p>
+                                </div>
+                            ) : (
+                                filteredUtilities.map((utility, idx) => {
+                                    const IconComponent = getIconByName(utility.icon_name);
+                                    return (
+                                        <motion.div
+                                            key={utility.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-[0_18px_34px_-28px_rgba(15,23,42,0.2)] hover:-translate-y-1 hover:border-primary/20"
+                                        >
+                                            {/* Thumbnail Image */}
+                                            <div className="relative h-44 w-full overflow-hidden">
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10" />
+                                                {utility.image_url ? (
+                                                    <Image 
+                                                        src={utility.image_url} 
+                                                        alt={utility.name}
+                                                        fill
+                                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center bg-muted">
+                                                        <IconComponent className="h-12 w-12 text-muted-foreground/30" />
+                                                    </div>
+                                                )}
+                                                {/* Status Badge */}
+                                                <div className="absolute right-4 top-4 z-20">
+                                                    <div className={cn(
+                                                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] border shadow-lg",
+                                                        utility.status === "Active" 
+                                                            ? "bg-white text-emerald-600 border-emerald-100 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800" 
+                                                            : "bg-white text-amber-600 border-amber-100 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800"
+                                                    )}>
+                                                        <span className={cn(
+                                                            "h-1.5 w-1.5 rounded-full",
+                                                            utility.status === "Active" ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                                                        )} />
+                                                        {utility.status}
+                                                    </div>
+                                                </div>
+                                                {/* Type Icon */}
+                                                <div className="absolute bottom-4 left-4 z-20 flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-primary border border-border shadow-xl dark:bg-card dark:text-primary">
+                                                    <IconComponent className="h-5 w-5" />
                                                 </div>
                                             </div>
-                                            
-                                            <div className="flex items-center gap-2">
-                                                <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-all hover:bg-muted hover:text-foreground" aria-label="More options">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </button>
-                                                <button className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
-                                                    Manage
-                                                </button>
+
+                                            {/* Content Area */}
+                                            <div className="flex flex-1 flex-col p-5">
+                                                {/* Header: Type + Name */}
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                                                            <Zap className="h-3 w-3" />
+                                                            {utility.type}
+                                                        </span>
+                                                        {utility.tags?.slice(0, 2).map((tag: string) => (
+                                                            <span key={tag} className="rounded-full bg-muted/60 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    <h4 className="text-xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                                                        {utility.name}
+                                                    </h4>
+                                                </div>
+
+                                                {/* Meta: Capacity + Location */}
+                                                <div className="mt-3 flex items-center gap-3 text-xs font-medium text-muted-foreground">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Users className="h-3.5 w-3.5 text-muted-foreground/50" />
+                                                        {utility.capacity || 0} capacity
+                                                    </span>
+                                                    <span className="h-1 w-1 rounded-full bg-border/60" />
+                                                    <span className="flex items-center gap-1.5">
+                                                        <MapPin className="h-3.5 w-3.5 text-muted-foreground/50" />
+                                                        {utility.property?.name || utility.location_details || "Main Wing"}
+                                                    </span>
+                                                </div>
+
+                                                {/* Description */}
+                                                <p className="mt-3 text-sm text-muted-foreground/70 leading-relaxed line-clamp-2">
+                                                    {utility.description}
+                                                </p>
+
+                                                {/* Footer: Pricing + Actions */}
+                                                <div className="mt-auto pt-5 flex items-center justify-between border-t border-border/40">
+                                                    <div>
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className="text-2xl font-black text-foreground">
+                                                                {utility.price_per_unit === 0 ? "Free" : `₱${Number(utility.price_per_unit).toLocaleString()}`}
+                                                            </span>
+                                                            {utility.price_per_unit > 0 && <span className="text-xs font-semibold text-muted-foreground">/{utility.unit_type}</span>}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-2">
+                                                        <button 
+                                                            onClick={() => handleDeleteAmenity(utility.id)}
+                                                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500" 
+                                                            aria-label="Delete facility"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                        <button className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background transition-all hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/20">
+                                                            Manage
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
+                                        </motion.div>
+                                    );
+                                })
+                            )}
                         </motion.div>
                     )}
 
@@ -356,69 +390,92 @@ export default function LandlordUtilitiesPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/40">
-                                        {MOCK_REQUESTS.map((req) => (
-                                            <tr key={req.id} className="group hover:bg-muted/10 transition-colors">
-                                                <td className="p-8">
-                                                    <div className="flex items-center gap-5">
-                                                        <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary font-black text-lg">
-                                                            {req.tenantName.charAt(0)}
-                                                        </div>
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{req.tenantName}</span>
-                                                            <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
-                                                                <Zap className="h-3.5 w-3.5 text-primary" />
-                                                                {req.utilityName}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-8">
-                                                    <div className="flex flex-col gap-3">
-                                                        <div className="flex items-center gap-3 text-sm font-black text-foreground">
-                                                            <Calendar className="h-4 w-4 text-primary" />
-                                                            {req.date}
-                                                        </div>
-                                                        <div className="flex items-center gap-3 text-xs text-muted-foreground font-bold">
-                                                            <Clock className="h-4 w-4" />
-                                                            {req.startTime} - {req.endTime}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-8">
-                                                    <div className="flex items-center gap-2 font-black text-2xl text-foreground tracking-tighter">
-                                                        <span className="text-emerald-500 text-sm">₱</span>
-                                                        {req.totalPrice.toLocaleString()}
-                                                    </div>
-                                                </td>
-                                                <td className="p-8">
-                                                    <span className={cn(
-                                                        "inline-flex items-center rounded-2xl px-5 py-2 text-[10px] font-black uppercase tracking-widest border",
-                                                        req.status === "Pending" 
-                                                            ? "bg-amber-500/10 text-amber-600 border-amber-500/20" 
-                                                            : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                                    )}>
-                                                        {req.status}
-                                                    </span>
-                                                </td>
-                                                <td className="p-8 text-right">
-                                                    <div className="flex justify-end gap-3">
-                                                        {req.status === "Pending" && (
-                                                            <>
-                                                                <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10 active:scale-90">
-                                                                    <Check className="h-6 w-6" />
-                                                                </button>
-                                                                <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 transition-all hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10 active:scale-90">
-                                                                    <X className="h-6 w-6" />
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all hover:bg-foreground hover:text-background active:scale-90">
-                                                            <MoreVertical className="h-6 w-6" />
-                                                        </button>
+                                        {filteredBookings.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="p-20 text-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <ClipboardList className="h-12 w-12 text-muted-foreground/20" />
+                                                        <p className="text-lg font-bold text-muted-foreground">No bookings found</p>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            bookings.map((req) => (
+                                                <tr key={req.id} className="group hover:bg-muted/10 transition-colors">
+                                                    <td className="p-8">
+                                                        <div className="flex items-center gap-5">
+                                                            {req.tenant?.avatar_url ? (
+                                                                <Image src={req.tenant.avatar_url} alt="" width={56} height={56} className="rounded-[1.25rem] object-cover" />
+                                                            ) : (
+                                                                <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary font-black text-lg">
+                                                                    {req.tenant?.full_name?.charAt(0) || "T"}
+                                                                </div>
+                                                            )}
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-lg font-black text-foreground group-hover:text-primary transition-colors">{req.tenant?.full_name || "Unknown Tenant"}</span>
+                                                                <span className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+                                                                    <Zap className="h-3.5 w-3.5 text-primary" />
+                                                                    {req.amenity?.name}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-8">
+                                                        <div className="flex flex-col gap-3">
+                                                            <div className="flex items-center gap-3 text-sm font-black text-foreground">
+                                                                <Calendar className="h-4 w-4 text-primary" />
+                                                                {req.booking_date}
+                                                            </div>
+                                                            <div className="flex items-center gap-3 text-xs text-muted-foreground font-bold">
+                                                                <Clock className="h-4 w-4" />
+                                                                {req.start_time.slice(0, 5)} - {req.end_time.slice(0, 5)}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-8">
+                                                        <div className="flex items-center gap-2 font-black text-2xl text-foreground tracking-tighter">
+                                                            <span className="text-emerald-500 text-sm">₱</span>
+                                                            {Number(req.total_price).toLocaleString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-8">
+                                                        <span className={cn(
+                                                            "inline-flex items-center rounded-2xl px-5 py-2 text-[10px] font-black uppercase tracking-widest border",
+                                                            req.status === "Pending" 
+                                                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20" 
+                                                                : req.status === "Approved"
+                                                                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                                                    : "bg-red-500/10 text-red-600 border-red-500/20"
+                                                        )}>
+                                                            {req.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-8 text-right">
+                                                        <div className="flex justify-end gap-3">
+                                                            {req.status === "Pending" && (
+                                                                <>
+                                                                    <button 
+                                                                        onClick={() => handleUpdateBookingStatus(req.id, "Approved")}
+                                                                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white shadow-lg shadow-emerald-500/10 active:scale-90"
+                                                                    >
+                                                                        <Check className="h-6 w-6" />
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => handleUpdateBookingStatus(req.id, "Rejected")}
+                                                                        className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 transition-all hover:bg-red-500 hover:text-white shadow-lg shadow-red-500/10 active:scale-90"
+                                                                    >
+                                                                        <X className="h-6 w-6" />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            <button className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground transition-all hover:bg-foreground hover:text-background active:scale-90">
+                                                                <MoreVertical className="h-6 w-6" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -447,6 +504,13 @@ export default function LandlordUtilitiesPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            <AddAmenityModal 
+                isOpen={isAddModalOpen} 
+                onClose={() => setIsAddModalOpen(false)} 
+                onSuccess={fetchData}
+                landlordId={user?.id || ''}
+            />
         </div>
     );
 }

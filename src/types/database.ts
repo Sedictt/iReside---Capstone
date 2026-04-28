@@ -1705,6 +1705,106 @@ export interface Database {
                 }
                 Relationships: any[]
             }
+            amenities: {
+                Row: {
+                    id: string
+                    property_id: string
+                    landlord_id: string
+                    name: string
+                    type: string
+                    image_url: string | null
+                    description: string | null
+                    price_per_unit: number
+                    unit_type: string
+                    status: string
+                    capacity: number | null
+                    icon_name: string | null
+                    location_details: string | null
+                    tags: string[]
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    property_id: string
+                    landlord_id: string
+                    name: string
+                    type: string
+                    image_url?: string | null
+                    description?: string | null
+                    price_per_unit?: number
+                    unit_type?: string
+                    status?: string
+                    capacity?: number | null
+                    icon_name?: string | null
+                    location_details?: string | null
+                    tags?: string[]
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    property_id?: string
+                    landlord_id?: string
+                    name?: string
+                    type?: string
+                    image_url?: string | null
+                    description?: string | null
+                    price_per_unit?: number
+                    unit_type?: string
+                    status?: string
+                    capacity?: number | null
+                    icon_name?: string | null
+                    location_details?: string | null
+                    tags?: string[]
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            amenity_bookings: {
+                Row: {
+                    id: string
+                    amenity_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    booking_date: string
+                    start_time: string
+                    end_time: string
+                    total_price: number
+                    status: string
+                    notes: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    amenity_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    booking_date: string
+                    start_time: string
+                    end_time: string
+                    total_price?: number
+                    status?: string
+                    notes?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    amenity_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    booking_date?: string
+                    start_time?: string
+                    end_time?: string
+                    total_price?: number
+                    status?: string
+                    notes?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
         }
         Views: {
             [_ in never]: never
@@ -1766,6 +1866,8 @@ export type Notification = Database['public']['Tables']['notifications']['Row']
 export type SavedProperty = Database['public']['Tables']['saved_properties']['Row']
 export type ConsultationDocument = Database['public']['Tables']['consultation_documents']['Row']
 export type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']
+export type Amenity = Database['public']['Tables']['amenities']['Row']
+export type AmenityBooking = Database['public']['Tables']['amenity_bookings']['Row']
 
 // ---------- Joined / view types for common queries ----------
 export type UnitWithProperty = Unit & {
