@@ -1022,7 +1022,7 @@ export default function MessagesPage() {
                 const otherUserId = activeContact?.participantUserId;
                 if (!otherUserId) return;
                 
-                const isOnline = (Object.values(state).flat() as any[]).some((p: { userId?: string }) => p.userId === otherUserId);
+                const isOnline = (Object.values(state).flat() as unknown as { userId?: string }[]).some((p: { userId?: string }) => p.userId === otherUserId);
                 setContacts(prev => {
                     const current = prev.find(c => c.id === activeConversationId);
                     if (current && current.isOnline === isOnline) return prev;
