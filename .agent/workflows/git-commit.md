@@ -13,6 +13,7 @@ I will help you generate clear, conventional commit messages based on your stage
 - Use bullet points for the commit body
 - Don't commit if no changes are present
 - Don't commit if lint errors are present
+- Only execute this workflow when explicitly requested by the user (e.g., via `/git-commit` or direct request)
 
 ## Steps
 
