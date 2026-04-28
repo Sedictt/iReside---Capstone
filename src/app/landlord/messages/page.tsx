@@ -735,6 +735,8 @@ export default function MessagesPage() {
             invoiceId: (typeof metadata?.invoiceId === "string" ? metadata.invoiceId : (typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined)),
             invoiceNumber: typeof metadata?.invoiceNumber === "string" ? metadata.invoiceNumber : undefined,
             tenantName: typeof metadata?.tenantName === "string" ? metadata.tenantName : undefined,
+            landlordName: typeof metadata?.landlordName === "string" ? metadata.landlordName : undefined,
+            propertyName: typeof metadata?.propertyName === "string" ? metadata.propertyName : undefined,
             unit: typeof metadata?.unit === "string" ? metadata.unit : undefined,
             amount: typeof metadata?.amount === "string" ? metadata.amount : (typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined),
             description: typeof metadata?.description === "string" ? metadata.description : undefined,
@@ -790,7 +792,18 @@ export default function MessagesPage() {
             const element = document.getElementById(elementId);
             if (!element) return;
             await new Promise(resolve => setTimeout(resolve, 100));
-            const dataUrl = await domtoimage.toPng(element, { bgcolor: '#0a0a0a', height: element.offsetHeight, width: element.offsetWidth });
+            const isReceipt = elementId.startsWith('receipt-');
+            const dataUrl = await domtoimage.toPng(element, { 
+                bgcolor: isReceipt ? '#ffffff' : '#0a0a0a', 
+                height: element.offsetHeight, 
+                width: element.offsetWidth,
+                filter: (node: Node) => {
+                    if (node instanceof HTMLElement && node.id?.startsWith('receipt-actions-')) {
+                        return false;
+                    }
+                    return true;
+                }
+            });
             const link = document.createElement('a');
             link.download = `${filename}.png`;
             link.href = dataUrl;
