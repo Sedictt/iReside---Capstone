@@ -39,27 +39,28 @@ export function KpiCard({
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
             className={cn(
-                "group relative flex flex-col justify-between overflow-visible rounded-[2rem] border border-white/10 bg-surface-2 p-1 shadow-2xl shadow-black/[0.06] dark:shadow-black/20 backdrop-blur-xl transition-all duration-300 hover:shadow-primary/5 hover:ring-1 hover:ring-primary/20", 
+                "group relative flex flex-col justify-between overflow-visible rounded-[2rem] border border-border bg-card p-1 shadow-lg shadow-black/[0.04] dark:shadow-black/20 transition-all duration-300 hover:shadow-primary/10 hover:ring-2 hover:ring-primary/10", 
                 className
             )}
         >
             {/* Inner Content Container */}
-            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] bg-surface-3 p-6 flex flex-col justify-between">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative h-full w-full overflow-hidden rounded-[1.75rem] bg-muted/30 p-6 flex flex-col justify-between dark:bg-surface-2/50">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none dark:from-white/5" />
                 
                 {/* Header Content */}
                 <div className="relative z-10 w-full">
                     <div className="flex items-center gap-3 mb-5">
-                        <span className={cn("h-3 w-3 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.2)]", iconColor)}></span>
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/80">{displayTitle}</span>
+                        <span className={cn("h-2.5 w-2.5 rounded-full shadow-sm", iconColor)}></span>
+                        <span className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground">{displayTitle}</span>
                     </div>
 
-                    <h3 className="mb-2 text-4xl font-black tracking-tight text-foreground">{value}</h3>
+                    <h3 className="mb-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">{value}</h3>
 
                     <div className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                        changeType === "positive" ? "bg-emerald-500/10 text-emerald-400" :
-                            changeType === "negative" ? "bg-red-500/10 text-red-400" : "bg-muted/10 text-muted-foreground"
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide",
+                        changeType === "positive" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                        changeType === "negative" ? "bg-red-500/10 text-red-600 dark:text-red-400" : 
+                        "bg-muted text-muted-foreground"
                     )}>
                         {changeType === "positive" ? "↑" : changeType === "negative" ? "↓" : "•"}
                         {displayChange}
