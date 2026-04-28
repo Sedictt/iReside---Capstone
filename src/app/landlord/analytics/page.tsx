@@ -44,6 +44,7 @@ type ExportAuditItem = {
     format: "csv" | "pdf";
     range: string;
     generatedAt: string;
+    rows: ReportRow[];
 };
 
 type KpiInsight = {
@@ -259,6 +260,9 @@ export default function AnalyticsPage() {
     const [operationalSnapshot, setOperationalSnapshot] = useState<OverviewApiResponse["operationalSnapshot"]>(DEFAULT_OPERATIONAL_SNAPSHOT);
     const [statsLoading, setStatsLoading] = useState(false);
     const [statsError, setStatsError] = useState<string | null>(null);
+    const [historyOffset, setHistoryOffset] = useState(0);
+    const [hasMoreHistory, setHasMoreHistory] = useState(true);
+    const HISTORY_LIMIT = 5;
 
     const reportStartDate = useMemo(() => new Date(`${startDate}T00:00:00`), [startDate]);
     const reportEndDate = useMemo(() => new Date(`${endDate}T23:59:59`), [endDate]);
@@ -317,17 +321,29 @@ export default function AnalyticsPage() {
         });
     };
 
-    const fetchExportHistory = async () => {
+    const fetchExportHistory = async (isLoadMore = false) => {
         try {
-            const response = await fetch("/api/landlord/analytics/report", { method: "GET" });
-            if (!response.ok) {
-                return;
-            }
+            const currentOffset = isLoadMore ? historyOffset + HISTORY_LIMIT : 0;
+            const params = new URLSearchParams({
+                limit: HISTORY_LIMIT.toString(),
+                offset: currentOffset.toString(),
+            });
+            
+            const response = await fetch(`/api/landlord/analytics/report?${params.toString()}`, { method: "GET" });
+            if (!response.ok) return;
 
             const payload = await response.json();
-            if (Array.isArray(payload?.history)) {
-                setExportHistory(payload.history as ExportAuditItem[]);
+            const newHistory = payload.history as ExportAuditItem[];
+            
+            if (isLoadMore) {
+                setExportHistory(prev => [...prev, ...newHistory]);
+                setHistoryOffset(currentOffset);
+            } else {
+                setExportHistory(newHistory);
+                setHistoryOffset(0);
             }
+            
+            setHasMoreHistory(newHistory.length === HISTORY_LIMIT);
         } catch {
             // Keep the page functional even if audit history is unavailable.
         }
@@ -340,7 +356,7 @@ export default function AnalyticsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     format: "pdf",
-                    mode: "Standard",
+                    mode: showMoreKpis ? "Detailed" : "Simplified",
                     includeExpandedKpis: showMoreKpis,
                     range: `${startDate} to ${endDate}`,
                     rows: getReportRows(),
@@ -372,7 +388,7 @@ export default function AnalyticsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     format: "csv",
-                    mode: "Standard",
+                    mode: showMoreKpis ? "Detailed" : "Simplified",
                     includeExpandedKpis: showMoreKpis,
                     range: `${startDate} to ${endDate}`,
                     generatedAt: now.toLocaleString(),
@@ -450,6 +466,77 @@ export default function AnalyticsPage() {
         doc.save(`landlord-portfolio-analytics-${datePart}.pdf`);
         setToastMessage("PDF report exported successfully.");
         trackPdfExport();
+    };
+
+    const handleRedownload = (item: ExportAuditItem) => {
+        if (item.format === "csv") {
+            const now = new Date(item.generatedAt);
+            const reportHeaderRows = [
+                ["Portfolio Analytics Report (Redownload)"],
+                ["Original Generation", now.toLocaleString()],
+                ["Selected Range", item.range],
+                [],
+                ["Metric", "Value", "Change", "Trend Data"],
+            ];
+            const metricRows = item.rows.map((row) => [row.metric, row.value, row.change, row.trend]);
+            const csvContent = [...reportHeaderRows, ...metricRows]
+                .map((row) => row.map((cell) => {
+                    const str = String(cell ?? "");
+                    return (str.includes(",") || str.includes("\"") || str.includes("\n")) 
+                        ? `"${str.replace(/"/g, '""')}"` 
+                        : str;
+                }).join(","))
+                .join("\n");
+            
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+            const datePart = now.toISOString().split("T")[0];
+            downloadBlob(blob, `landlord-report-${datePart}.csv`);
+            setToastMessage("CSV redownloaded from history.");
+        } else {
+            // Re-use logic for PDF with saved rows
+            const now = new Date(item.generatedAt);
+            const doc = new jsPDF({ unit: "pt", format: "a4" });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 40;
+            const contentWidth = pageWidth - margin * 2;
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let y = 96;
+
+            doc.setFillColor(12, 74, 110);
+            doc.rect(0, 0, pageWidth, 74, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.text("iReside", margin, 34);
+            doc.setFontSize(12);
+            doc.text("Landlord Portfolio Report (Archive)", margin, 54);
+            doc.setTextColor(24, 24, 27);
+
+            const appendBlock = (text: string, size = 11, spacing = 16) => {
+                doc.setFontSize(size);
+                const lines = doc.splitTextToSize(text, contentWidth);
+                const nextY = y + lines.length * spacing;
+                if (nextY > pageHeight - 40) { doc.addPage(); y = 56; }
+                doc.text(lines, margin, y);
+                y += lines.length * spacing;
+            };
+
+            appendBlock("Portfolio Analytics Report (Historical)", 18, 20);
+            appendBlock(`Original: ${now.toLocaleString()}`);
+            appendBlock(`Range: ${item.range}`);
+
+            y += 6;
+            item.rows.forEach((row, index) => {
+                appendBlock(`${index + 1}. ${row.metric}`, 13, 18);
+                appendBlock(`Value: ${row.value}`);
+                appendBlock(`Change: ${row.change}`);
+                appendBlock(`Trend: ${row.trend}`);
+                y += 6;
+            });
+
+            const datePart = now.toISOString().split("T")[0];
+            doc.save(`landlord-report-${datePart}.pdf`);
+            setToastMessage("PDF redownloaded from history.");
+        }
     };
 
     useEffect(() => {
@@ -663,7 +750,7 @@ export default function AnalyticsPage() {
                             className="pointer-events-none absolute left-1/2 top-[-0.85rem] z-20 w-max max-w-[17rem] -translate-x-1/2 -translate-y-full rounded-xl border border-white/10 bg-card/95 px-3 py-2 text-[10px] font-bold tracking-wide text-foreground opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/iris-toggle:opacity-100 group-hover/iris-toggle:translate-y-[-2.75rem] group-focus-within/iris-toggle:opacity-100 group-focus-within/iris-toggle:translate-y-[-2.75rem]"
                         >
                             Toggle iRis mascot visibility on this page.
-                            <div className="absolute left-1/2 top-full h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-white/10 bg-card/95" />
+                            <div className="absolute left-1/2 top-full h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-r border-b border-border bg-card/95" />
                         </div>
                     </div>
                     <button
@@ -677,7 +764,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Performance Control Bar */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl">
+            <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
@@ -708,10 +795,10 @@ export default function AnalyticsPage() {
                         <button
                             onClick={() => setShowMoreKpis(!showMoreKpis)}
                             className={cn(
-                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-lg shadow-black/[0.04] dark:shadow-black/10",
+                                "flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all hover:scale-105 active:scale-95 shadow-sm",
                                 showMoreKpis
-                                    ? "border-primary/30 bg-primary/10 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)]"
-                                    : "border-white/10 bg-card/80 text-muted-foreground hover:border-primary/40 hover:bg-card hover:text-foreground"
+                                    ? "border-primary/40 bg-primary/10 text-primary"
+                                    : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-card hover:text-foreground"
                             )}
                         >
                             {showMoreKpis ? "Less Details" : "More Metrics"}
@@ -782,7 +869,7 @@ export default function AnalyticsPage() {
 
 
             {/* Main Content Grid */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl">
+            <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
                 <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
                     <div className="flex min-w-0 items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-emerald-500/20 bg-emerald-500/12 text-emerald-300">
@@ -822,7 +909,7 @@ export default function AnalyticsPage() {
             />
 
             {/* Export History */}
-            <section className="relative z-0 w-full rounded-[2.5rem] border border-white/10 bg-surface-1 p-8 shadow-2xl shadow-black/[0.08] dark:shadow-black/30 backdrop-blur-xl">
+            <section className="relative z-0 w-full rounded-[2.5rem] border border-border bg-card p-8 shadow-xl shadow-black/[0.04] dark:shadow-black/20">
                 <div className="mb-6 flex items-center gap-4 px-2">
                     <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-amber-500/20 bg-amber-500/12 text-amber-300">
                         <History className="h-6 w-6" />
@@ -833,28 +920,69 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
                 {exportHistory.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-[1.75rem] border border-white/10 bg-card/70 py-12 text-muted-foreground/40">
-                        <FileText className="h-8 w-8 mb-3" />
-                        <p className="text-[9px] font-black uppercase tracking-widest">No reports exported yet</p>
+                    <div className="flex flex-col items-center justify-center rounded-[1.75rem] border border-border bg-muted/20 py-12 text-muted-foreground">
+                        <FileText className="h-8 w-8 mb-3 opacity-20" />
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">No reports exported yet</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                        {exportHistory.slice(0, 5).map((item) => (
-                            <div key={item.id} className="flex flex-col gap-2 rounded-[1.75rem] border border-white/10 bg-surface-2 p-4 transition-all hover:bg-surface-3 hover:ring-1 hover:ring-primary/20">
-                                <div className="flex items-center justify-between">
-                                    <span className={cn(
-                                        "font-black text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border",
-                                        item.format.toLowerCase() === 'pdf'
-                                            ? "border-blue-500/20 bg-blue-500/10 text-blue-400"
-                                            : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                    )}>
-                                        {item.format}
-                                    </span>
-                                    <span className="text-[10px] font-bold text-muted-foreground/60">{new Date(item.generatedAt).toLocaleDateString()}</span>
+                        {exportHistory.slice(0, 10).map((item) => {
+                            const genDate = new Date(item.generatedAt);
+                            const diffDays = Math.floor((Date.now() - genDate.getTime()) / (1000 * 60 * 60 * 24));
+                            const isExpired = diffDays >= 15;
+
+                            return (
+                                <div 
+                                    key={item.id} 
+                                    className={cn(
+                                        "flex flex-col gap-3 rounded-[1.75rem] border p-5 transition-all duration-300",
+                                        isExpired 
+                                            ? "border-border bg-muted/10 opacity-60" 
+                                            : "border-border bg-muted/30 hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 dark:bg-surface-2"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className={cn(
+                                            "font-black text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border",
+                                            item.format.toLowerCase() === 'pdf'
+                                                ? "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                                : "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                        )}>
+                                            {item.format}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-muted-foreground">{genDate.toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="block truncate text-xs font-bold text-foreground">{item.range}</span>
+                                        <span className="block text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+                                            {isExpired ? "EXPIRED (15D+)" : `${15 - diffDays} days left`}
+                                        </span>
+                                    </div>
+                                    
+                                    {!isExpired && (
+                                        <button
+                                            onClick={() => handleRedownload(item)}
+                                            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-card py-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground"
+                                        >
+                                            <Download className="h-3 w-3" />
+                                            Redownload
+                                        </button>
+                                    )}
                                 </div>
-                                <span className="mt-1 truncate text-xs font-bold text-foreground">{item.range}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
+                    </div>
+                )}
+                
+                {hasMoreHistory && exportHistory.length > 0 && (
+                    <div className="mt-8 flex justify-center">
+                        <button
+                            onClick={() => fetchExportHistory(true)}
+                            className="group flex items-center gap-2 rounded-full border border-border bg-card px-8 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
+                        >
+                            Load Older Reports
+                            <ChevronDown className="h-3 w-3 transition-transform group-hover:translate-y-0.5" />
+                        </button>
                     </div>
                 )}
             </section>
@@ -867,8 +995,8 @@ export default function AnalyticsPage() {
                         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                         onClick={() => setIsExportModalOpen(false)}
                     />
-                    <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-[0_30px_60px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
-                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-card/95 px-8 py-6 backdrop-blur-xl">
+                    <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-8 py-6 backdrop-blur-xl">
                             <div className="flex items-center gap-4">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <Download className="h-6 w-6" />

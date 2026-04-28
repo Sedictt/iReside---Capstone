@@ -49,7 +49,11 @@ const buildCsvReport = (payload: ReportRequestBody) => {
         .join("\n");
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") ?? "10"), 50);
+    const offset = parseInt(searchParams.get("offset") ?? "0");
+
     const supabase = await createClient();
     const {
         data: { user },
@@ -62,20 +66,21 @@ export async function GET() {
 
     const { data, error } = await supabase
         .from("landlord_statistics_exports")
-        .select("id, format, report_range, created_at")
+        .select("id, format, report_range, created_at, metadata")
         .eq("landlord_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .range(offset, offset + limit - 1);
 
     if (error) {
         return NextResponse.json({ error: "Failed to fetch export history." }, { status: 500 });
     }
 
-    const history: ExportAuditItem[] = (data ?? []).map((row) => ({
+    const history = (data ?? []).map((row) => ({
         id: row.id,
         format: row.format,
         range: row.report_range,
         generatedAt: row.created_at,
+        rows: (row.metadata as any)?.rows as ReportRow[] ?? [],
     }));
 
     return NextResponse.json({ history });
@@ -116,6 +121,7 @@ export async function POST(request: Request) {
         row_count: payload.rows.length,
         metadata: {
             generatedAt: payload.generatedAt ?? new Date().toLocaleString(),
+            rows: payload.rows,
         },
     });
 
