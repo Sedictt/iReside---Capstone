@@ -310,6 +310,7 @@ export function WalkInApplicationModal({
     }, [selectedUnitId]);
 
     const [step, setStep] = useState(0);
+    const [paymentSubStep, setPaymentSubStep] = useState(0);
     const [selectedUnit, setSelectedUnit] = useState(selectedUnitId || "");
     const [submitting, setSubmitting] = useState(false);
     const [confirmApproval, setConfirmApproval] = useState(false);
@@ -569,7 +570,13 @@ export function WalkInApplicationModal({
 
     const handleContinue = () => {
         if (validateStep(step)) {
-            setStep(s => s + 1);
+            if (step === 4 && paymentSubStep === 0) {
+                setPaymentSubStep(1);
+            } else {
+                setStep(s => s + 1);
+                // When moving into step 4 from step 3, ensure we start at substep 0
+                if (step === 3) setPaymentSubStep(0);
+            }
         }
     };
 
@@ -779,11 +786,31 @@ export function WalkInApplicationModal({
 
                     {/* Desktop Status Bar */}
                     <div className="hidden sm:flex px-12 py-8 items-center justify-between pointer-events-none relative z-20">
-                         <div>
-                             <h1 className="text-3xl font-black tracking-tighter italic text-foreground">
-                                 {STEPS[step].label.toUpperCase()} <span className="text-primary">STEP</span>
-                             </h1>
-                             <p className="ml-1 mt-1 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Tenant Application Wizard</p>
+                         <div className="flex items-center gap-8">
+                             <div>
+                                 <h1 className="text-3xl font-black tracking-tighter italic text-foreground">
+                                     {STEPS[step].label.toUpperCase()} <span className="text-primary">STEP</span>
+                                 </h1>
+                                 <p className="ml-1 mt-1 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">Tenant Application Wizard</p>
+                             </div>
+
+                             {/* Relocated Payment Progress Indicator */}
+                             {step === 4 && (
+                                <div className="pointer-events-auto flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/40 border border-border/50 shadow-sm backdrop-blur-sm animate-in fade-in slide-in-from-left-4 duration-700">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mr-1">Ledger Page</p>
+                                    {[0, 1].map((idx) => (
+                                        <button 
+                                            key={idx}
+                                            onClick={() => setPaymentSubStep(idx)}
+                                            className={cn(
+                                                "h-1 transition-all duration-500 rounded-full",
+                                                paymentSubStep === idx ? "w-8 bg-primary" : "w-1.5 bg-border hover:bg-primary/40"
+                                            )}
+                                        />
+                                    ))}
+                                    <span className="ml-2 text-[10px] font-black text-foreground italic">{paymentSubStep + 1} / 2</span>
+                                </div>
+                             )}
                          </div>
                           <button 
                              onClick={onClose} 
@@ -1360,93 +1387,101 @@ export function WalkInApplicationModal({
                                 )}
 
                                 {step === 4 && (
-                                    <div className="space-y-10 max-w-4xl">
-                                        <div className="p-8 rounded-[2.5rem] bg-green-500/5 border border-green-500/10 text-green-200 text-xs font-bold leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(34,197,94,0.05)] backdrop-blur-sm">
-                                            <div className="shrink-0 w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center border border-green-500/20">
-                                                <DollarSign className="text-green-500" size={28} />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[11px] uppercase tracking-widest font-black text-green-500/80">Payment Collection</p>
-                                                <p className="opacity-80">Record advance rent and security deposit payments. You can mark them as pending if not yet received.</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                            {/* Advance Payment */}
-                                            <PaymentRecordForm
-                                                label="Advance Rent Payment"
-                                                amount={paymentData.advance_payment.amount}
-                                                allowAmountEdit={false}
-                                                paymentMethod={paymentData.advance_payment.method}
-                                                onMethodChange={(method) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        advance_payment: { ...paymentData.advance_payment, method },
-                                                    })
-                                                }
-                                                referenceNumber={paymentData.advance_payment.reference_number}
-                                                onReferenceChange={(ref) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        advance_payment: { ...paymentData.advance_payment, reference_number: ref },
-                                                    })
-                                                }
-                                                paidAt={paymentData.advance_payment.paid_at}
-                                                onPaidAtChange={(date) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        advance_payment: { ...paymentData.advance_payment, paid_at: date },
-                                                    })
-                                                }
-                                                status={paymentData.advance_payment.status}
-                                                onStatusChange={(status) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        advance_payment: { ...paymentData.advance_payment, status },
-                                                    })
-                                                }
-                                            />
-
-                                            {/* Security Deposit */}
-                                            <PaymentRecordForm
-                                                label="Security Deposit Payment"
-                                                amount={paymentData.security_deposit_payment.amount}
-                                                onAmountChange={(amount) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, amount },
-                                                    })
-                                                }
-                                                allowAmountEdit={true}
-                                                paymentMethod={paymentData.security_deposit_payment.method}
-                                                onMethodChange={(method) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, method },
-                                                    })
-                                                }
-                                                referenceNumber={paymentData.security_deposit_payment.reference_number}
-                                                onReferenceChange={(ref) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, reference_number: ref },
-                                                    })
-                                                }
-                                                paidAt={paymentData.security_deposit_payment.paid_at}
-                                                onPaidAtChange={(date) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, paid_at: date },
-                                                    })
-                                                }
-                                                status={paymentData.security_deposit_payment.status}
-                                                onStatusChange={(status) =>
-                                                    setPaymentData({
-                                                        ...paymentData,
-                                                        security_deposit_payment: { ...paymentData.security_deposit_payment, status },
-                                                    })
-                                                }
-                                            />
+                                    <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                                        <div className="pb-12">
+                                            <AnimatePresence mode="wait">
+                                                {paymentSubStep === 0 ? (
+                                                    <motion.div
+                                                        key="advance"
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -20 }}
+                                                        transition={{ duration: 0.4, ease: "easeOut" }}
+                                                    >
+                                                        <PaymentRecordForm
+                                                            label="Advance Rent"
+                                                            amount={paymentData.advance_payment.amount}
+                                                            allowAmountEdit={false}
+                                                            paymentMethod={paymentData.advance_payment.method}
+                                                            onMethodChange={(method) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    advance_payment: { ...paymentData.advance_payment, method },
+                                                                })
+                                                            }
+                                                            referenceNumber={paymentData.advance_payment.reference_number}
+                                                            onReferenceChange={(ref) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    advance_payment: { ...paymentData.advance_payment, reference_number: ref },
+                                                                })
+                                                            }
+                                                            paidAt={paymentData.advance_payment.paid_at}
+                                                            onPaidAtChange={(date) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    advance_payment: { ...paymentData.advance_payment, paid_at: date },
+                                                                })
+                                                            }
+                                                            status={paymentData.advance_payment.status}
+                                                            onStatusChange={(status) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    advance_payment: { ...paymentData.advance_payment, status },
+                                                                })
+                                                            }
+                                                        />
+                                                    </motion.div>
+                                                ) : (
+                                                    <motion.div
+                                                        key="security"
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -20 }}
+                                                        transition={{ duration: 0.4, ease: "easeOut" }}
+                                                    >
+                                                        <PaymentRecordForm
+                                                            label="Security Deposit"
+                                                            amount={paymentData.security_deposit_payment.amount}
+                                                            onAmountChange={(amount) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, amount },
+                                                                })
+                                                            }
+                                                            allowAmountEdit={true}
+                                                            paymentMethod={paymentData.security_deposit_payment.method}
+                                                            onMethodChange={(method) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, method },
+                                                                })
+                                                            }
+                                                            referenceNumber={paymentData.security_deposit_payment.reference_number}
+                                                            onReferenceChange={(ref) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, reference_number: ref },
+                                                                })
+                                                            }
+                                                            paidAt={paymentData.security_deposit_payment.paid_at}
+                                                            onPaidAtChange={(date) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, paid_at: date },
+                                                                })
+                                                            }
+                                                            status={paymentData.security_deposit_payment.status}
+                                                            onStatusChange={(status) =>
+                                                                setPaymentData({
+                                                                    ...paymentData,
+                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, status },
+                                                                })
+                                                            }
+                                                        />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
                                 )}
@@ -1454,34 +1489,34 @@ export function WalkInApplicationModal({
                                 {step === 5 && (
                                     <div className="space-y-10 pb-12">
                                         <CardFrame className={cn(
-                                            "!p-0 !min-h-[220px] transition-all duration-1000",
+                                            "!p-0 !min-h-[180px] transition-all duration-1000",
                                             allRequirementsMet ? "border-emerald-500/30 shadow-emerald-500/5" : "border-amber-500/30 shadow-amber-500/5"
                                         )}>
                                              <div className="absolute right-0 top-0 w-1/3 h-full overflow-hidden opacity-20 select-none pointer-events-none">
-                                                 <Fingerprint size={300} strokeWidth={1} className={cn(allRequirementsMet ? "text-emerald-500" : "text-amber-500")} />
+                                                 <Fingerprint size={240} strokeWidth={1} className={cn(allRequirementsMet ? "text-emerald-500" : "text-amber-500")} />
                                              </div>
                                              
-                                             <div className="p-10 flex flex-col sm:flex-row gap-10 items-center relative z-10">
+                                             <div className="p-8 flex flex-col sm:flex-row gap-8 items-center relative z-10">
                                                  <div className={cn(
-                                                     "shrink-0 w-24 h-24 rounded-[2.5rem] flex items-center justify-center border-4 shadow-2xl relative",
+                                                     "shrink-0 w-20 h-20 rounded-[2rem] flex items-center justify-center border-4 shadow-2xl relative",
                                                      allRequirementsMet ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-amber-500/10 border-amber-500 text-amber-500"
                                                  )}>
-                                                     {allRequirementsMet ? <CheckCircle2 size={40} strokeWidth={2.5}/> : <AlertCircle size={40} strokeWidth={2.5} />}
-                                                     <div className={cn("absolute inset-0 rounded-[2.5rem] border-inherit blur-xl opacity-35", allRequirementsMet ? "bg-emerald-500" : "bg-amber-500")} />
+                                                     {allRequirementsMet ? <CheckCircle2 size={32} strokeWidth={2.5}/> : <AlertCircle size={32} strokeWidth={2.5} />}
+                                                     <div className={cn("absolute inset-0 rounded-[2rem] border-inherit blur-xl opacity-35", allRequirementsMet ? "bg-emerald-500" : "bg-amber-500")} />
                                                  </div>
-                                                 <div className="text-center sm:text-left space-y-3">
+                                                 <div className="text-center sm:text-left space-y-2">
                                                      <div className="flex items-center gap-3 justify-center sm:justify-start">
-                                                         <span className={cn("px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.25em] border", allRequirementsMet ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400")}>
+                                                         <span className={cn("px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.25em] border", allRequirementsMet ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400")}>
                                                               {allRequirementsMet ? "Verification Threshold Met" : "Awaiting Information"}
                                                          </span>
                                                      </div>
-                                                      <h3 className="text-5xl font-black tracking-tight italic text-foreground">
+                                                      <h3 className="text-4xl font-black tracking-tight italic text-foreground leading-none">
                                                           {allRequirementsMet ? "Ready for Approval" : "Work in Progress"}
                                                       </h3>
-                                                     <p className="max-w-lg text-sm font-bold leading-relaxed text-muted-foreground">
+                                                     <p className="max-w-lg text-xs font-bold leading-relaxed text-muted-foreground">
                                                          {allRequirementsMet 
-                                                             ? "All critical verification checks have passed. Finalizing this will prepare the lease contract and mark the applicant as ready for move-in." 
-                                                             : "The application is currently being built. You can save it as a draft or proceed with manual verification if you have the documents on hand."}
+                                                             ? "All critical verification checks have passed. Finalizing this will prepare the lease contract." 
+                                                             : "The application is currently being built. You can save it as a draft or proceed with manual verification."}
                                                      </p>
                                                  </div>
                                              </div>
@@ -1572,7 +1607,16 @@ export function WalkInApplicationModal({
                         <div className="flex gap-4 w-full sm:w-auto">
                             {step > 0 && (
                                 <button
-                                    onClick={() => setStep(step - 1)}
+                                    onClick={() => {
+                                        if (step === 4 && paymentSubStep === 1) {
+                                            setPaymentSubStep(0);
+                                        } else {
+                                            const prevStep = step - 1;
+                                            setStep(prevStep);
+                                            // If going back from step 5 to step 4, start at last substep
+                                            if (prevStep === 4) setPaymentSubStep(1);
+                                        }
+                                    }}
                                     className="group relative flex h-16 items-center justify-center gap-3 overflow-hidden rounded-[1.25rem] border border-border bg-background px-10 font-black text-foreground transition-all hover:bg-muted active:scale-95"
                                 >
                                     <div className="absolute inset-0 -translate-x-[100%] bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-1000 group-hover:translate-x-[100%] dark:via-white/5" />
