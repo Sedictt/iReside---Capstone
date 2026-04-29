@@ -8,7 +8,6 @@ import {
     Calendar,
     Hammer,
     CheckCircle2,
-    Copy,
     ArrowRight,
     MessageSquare,
     ChevronLeft,
@@ -25,8 +24,6 @@ import {
 } from "lucide-react";
 import type { MaintenanceRequest } from "./MaintenanceDashboard";
 
-const FALLBACK_AVATAR =
-    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=150&q=80";
 
 type ProcessPlan = "landlord" | "third_party";
 type SelfRepairDecision = "allow" | "reject" | null;
@@ -329,73 +326,57 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                     <div className="w-full md:w-[55%] flex flex-col flex-1 min-h-0 bg-background relative">
                         <button
                             onClick={onClose}
-                            className="absolute top-6 right-6 p-2.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-full transition-colors z-20"
+                            className="absolute top-6 right-6 p-2.5 bg-muted hover:bg-muted-foreground/10 text-muted-foreground hover:text-foreground rounded-full transition-all z-20 active:scale-90"
                             aria-label="Close"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
-                        <div className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                        <div className="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto custom-scrollbar">
                             {/* Header Group */}
                             <div>
-                                <div className="mb-4 flex flex-wrap items-center gap-3 pr-12 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                                    <div className="flex items-center bg-muted rounded-lg border border-border/50 text-foreground/70 overflow-hidden">
-                                        <span className="px-2.5 py-1.5 border-r border-border/50">
-                                            ID: {request.id.split('-')[0]}
-                                        </span>
-                                        <button
-                                            onClick={async () => {
-                                                try {
-                                                    await navigator.clipboard.writeText(request.id);
-                                                } catch {}
-                                            }}
-                                            className="px-2 py-1.5 hover:bg-muted-foreground/10 hover:text-foreground transition-colors group/copy"
-                                            aria-label="Copy Full ID"
-                                            title="Copy Full ID"
-                                        >
-                                            <Copy className="w-3 h-3 group-hover/copy:scale-110 transition-transform" />
-                                        </button>
+                                <div className="mb-6 flex flex-wrap items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                                    <div className="flex items-center bg-muted/50 rounded-lg border border-border px-3 py-1.5 text-foreground/70">
+                                        ID: {request.id.split('-')[0]}
                                     </div>
-                                    <div className="flex items-center gap-1.5 bg-muted px-2.5 py-1.5 rounded-lg border border-border/50 text-foreground/70">
+                                    <div className="flex items-center gap-1.5 bg-muted/50 px-3 py-1.5 rounded-lg border border-border text-foreground/70">
                                         <Clock className="w-3.5 h-3.5" />
                                         Reported {request.reportedAt}
                                     </div>
                                 </div>
 
-                                <h2 className="text-3xl font-black text-foreground leading-tight tracking-tight mb-4">{request.title}</h2>
-                                <p className="text-muted-foreground text-[15px] leading-relaxed whitespace-pre-wrap break-words">{parsedDescription}</p>
-                                {(request.triageReason) && (
-                                    <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 relative overflow-hidden group/ai">
-                                        {/* Subtle background glow */}
-                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 blur-3xl rounded-full" />
+                                <h2 className="text-4xl font-black text-foreground leading-tight tracking-tighter mb-4">{request.title}</h2>
+                                <p className="text-muted-foreground text-base leading-relaxed whitespace-pre-wrap">{parsedDescription}</p>
+                                
+                                {request.triageReason && (
+                                    <div className="mt-8 rounded-3xl border border-primary/20 bg-primary/5 p-6 relative overflow-hidden group/ai">
+                                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/10 blur-3xl rounded-full" />
                                         
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 bg-primary/10 rounded-lg">
-                                                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="p-2 bg-primary/10 rounded-xl">
+                                                <Sparkles className="w-4 h-4 text-primary" />
                                             </div>
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                                IRIS AI Triage
+                                                IRIS AI Smart Triage
                                             </p>
                                         </div>
 
-                                        {request.triageReason && (
-                                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                                {request.triageReason}
-                                            </p>
-                                        )}
+                                        <p className="text-sm text-foreground/80 leading-relaxed font-medium">
+                                            {request.triageReason}
+                                        </p>
                                     </div>
                                 )}
                             </div>
 
                             {selfRepairRequested && (
-                                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-emerald-500/20 rounded-xl shrink-0">
-                                            <ShieldCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-emerald-500/10 rounded-2xl shrink-0">
+                                            <ShieldCheck className="h-6 w-6 text-emerald-500" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Self-Repair Requested</p>
-                                            <p className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80">
+                                            <p className="text-base font-black text-foreground">Self-Repair Requested</p>
+                                            <p className="text-sm font-medium text-muted-foreground">
                                                 {selfRepairDecision === "allow" ? "You have approved this request." : selfRepairDecision === "reject" ? "You have denied this request." : "The tenant asks to handle this repair themselves."}
                                             </p>
                                         </div>
@@ -404,13 +385,13 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button 
                                                 onClick={() => setSelfRepairDecision("allow")}
-                                                className={cn("px-4 py-2 rounded-xl text-sm font-bold transition-all border flex items-center gap-1", selfRepairDecision === "allow" ? "bg-emerald-500 text-white border-emerald-500 shadow-md" : "bg-background text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/20")}
+                                                className={cn("px-5 py-2.5 rounded-xl text-sm font-bold transition-all border", selfRepairDecision === "allow" ? "bg-emerald-500 text-white border-emerald-500 shadow-md" : "bg-background text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/10")}
                                             >
                                                 Approve
                                             </button>
                                             <button 
                                                 onClick={() => setSelfRepairDecision("reject")}
-                                                className={cn("px-4 py-2 rounded-xl text-sm font-bold transition-all border flex items-center gap-1", selfRepairDecision === "reject" ? "bg-red-500 text-white border-red-500 shadow-md" : "bg-background text-red-600 border-red-500/30 hover:bg-red-500/10")}
+                                                className={cn("px-5 py-2.5 rounded-xl text-sm font-bold transition-all border", selfRepairDecision === "reject" ? "bg-red-500 text-white border-red-500 shadow-md" : "bg-background text-red-600 border-red-500/20 hover:bg-red-500/10")}
                                             >
                                                 Deny
                                             </button>
@@ -423,50 +404,41 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
 
                             {/* Involved Parties */}
                             <div className="space-y-4">
-                                <h3 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest pl-1">Involved Parties</h3>
+                                <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">Involved Parties</h3>
                                 
-                                <div className="flex items-center justify-between bg-muted/30 border border-border/50 rounded-2xl p-4">
-                                    <div className="flex items-center gap-4">
-                                        <div 
-                                            className="w-12 h-12 rounded-full border-2 border-background shadow-sm flex items-center justify-center overflow-hidden shrink-0"
-                                            style={{ backgroundColor: request.tenantAvatarBgColor || '#171717' }}
-                                        >
-                                            {request.tenantAvatar ? (
-                                                <img
-                                                    src={request.tenantAvatar}
-                                                    alt={request.tenant}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-sm font-bold text-white">
-                                                    {(request.tenant ?? "T")
-                                                        .split(" ")
-                                                        .filter(Boolean)
-                                                        .slice(0, 2)
-                                                        .map((part) => part[0]?.toUpperCase() ?? "")
-                                                        .join("") || "T"}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tenant</span>
-                                            <p className="text-base font-bold text-foreground leading-tight">{request.tenant}</p>
-                                        </div>
+                                <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-3xl border border-border">
+                                    <div 
+                                        className="h-14 w-14 rounded-2xl overflow-hidden border border-border shrink-0 flex items-center justify-center text-lg font-black text-white"
+                                        style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
+                                    >
+                                        {request.tenantAvatar ? (
+                                            <img
+                                                src={request.tenantAvatar}
+                                                alt={request.tenant}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            request.tenant.split(' ').map(n => n[0]).join('')
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button className="p-2.5 rounded-xl bg-background border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-sm">
-                                            <MessageSquare className="w-4 h-4" />
-                                        </button>
+                                    <div className="flex-1 min-w-0">
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Primary Tenant</span>
+                                        <p className="text-lg font-black text-foreground truncate leading-tight">{request.tenant}</p>
                                     </div>
+                                    <button className="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm active:scale-90 shrink-0">
+                                        <MessageSquare className="w-5 h-5" />
+                                    </button>
                                 </div>
 
                                 {request.scheduledFor && (
-                                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
-                                        <span className="text-[10px] font-black text-primary/70 uppercase tracking-widest">Scheduled For</span>
-                                        <p className="mt-1 text-sm font-bold text-primary flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            {request.scheduledFor}
-                                        </p>
+                                    <div className="bg-amber-500/5 border border-amber-500/20 rounded-3xl p-5 flex items-center gap-4">
+                                        <div className="p-3 bg-amber-500/10 rounded-2xl">
+                                            <Calendar className="w-6 h-6 text-amber-500" />
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-black text-amber-500/70 uppercase tracking-[0.2em]">Scheduled Window</span>
+                                            <p className="text-base font-black text-foreground">{request.scheduledFor}</p>
+                                        </div>
                                     </div>
                                 )}
                             </div>

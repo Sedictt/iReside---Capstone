@@ -563,10 +563,10 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Failed to update maintenance request." }, { status: 500 });
     }
 
-    const { data: refreshedRequest, error: refreshedError } = await supabase
-        .from("maintenance_requests")
+    const { data: refreshedRequest, error: refreshedError } = await (supabase
+        .from("maintenance_requests") as any)
         .select(
-            "id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, created_at"
+            "id, unit_id, tenant_id, title, description, status, priority, category, images, self_repair_requested, self_repair_decision, photo_requested, tenant_repair_status, tenant_provided_photos, repair_method, third_party_name, created_at, ai_triage_priority, ai_triage_sentiment, ai_triage_reason, ai_triage_confidence"
         )
         .eq("id", body.requestId)
         .eq("landlord_id", user.id)
@@ -575,6 +575,19 @@ export async function PATCH(request: Request) {
     if (refreshedError || !refreshedRequest) {
         return NextResponse.json({ success: true });
     }
+
+    // Fetch associated data for the single request
+    const { data: tenant } = refreshedRequest.tenant_id 
+        ? await supabase.from("profiles").select("full_name, avatar_url, avatar_bg_color").eq("id", refreshedRequest.tenant_id).maybeSingle()
+        : { data: null };
+    
+    const { data: unit } = refreshedRequest.unit_id
+        ? await supabase.from("units").select("name, property_id").eq("id", refreshedRequest.unit_id).maybeSingle()
+        : { data: null };
+    
+    const { data: property } = unit?.property_id
+        ? await supabase.from("properties").select("name").eq("id", unit.property_id).maybeSingle()
+        : { data: null };
 
     const { cleanedDescription, selfRepairRequested } = extractSelfRepairDetails(
         refreshedRequest.description,
@@ -595,10 +608,20 @@ export async function PATCH(request: Request) {
                 : [],
             repairMethod: refreshedRequest.repair_method,
             thirdPartyName: refreshedRequest.third_party_name,
+            property: property?.name ?? "Property",
+            unit: unit?.name ?? "Unit",
+            tenant: tenant?.full_name ?? "Unknown tenant",
+            tenantAvatar: isNonEmptyString(tenant?.avatar_url) ? tenant.avatar_url : null,
+            tenantAvatarBgColor: isNonEmptyString(tenant?.avatar_bg_color) ? tenant.avatar_bg_color : null,
             status: resolveStatus(refreshedRequest.status),
             priority: resolvePriority(refreshedRequest.priority),
             reportedAt: formatRelativeDate(refreshedRequest.created_at),
             images: Array.isArray(refreshedRequest.images) ? refreshedRequest.images.filter(isNonEmptyString) : [],
+            sentiment: resolveSentiment(refreshedRequest.ai_triage_sentiment),
+            triageReason: refreshedRequest.ai_triage_reason,
+            triageConfidence: refreshedRequest.ai_triage_confidence,
+            triageSource: "database"
         },
     });
 }
+
