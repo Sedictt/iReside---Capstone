@@ -42,7 +42,7 @@ function generateTempPassword(): string {
     return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
-/** Create lease record with calculated end_date and contract template terms */
+/** Create lease record with calculated end_date and lease agreement terms */
 async function createLeaseRecord(
     supabase: any,
     data: {

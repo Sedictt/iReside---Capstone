@@ -24,7 +24,7 @@ type ToolAccessBarProps = {
 const tools = [
   {
     key: "templates",
-    label: "Contract Templates",
+    label: "Lease Agreement",
     icon: FileText,
   },
   {
@@ -282,12 +282,12 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
     return (
       <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
         <div className="mb-10 text-center sm:text-left">
-          <h4 className="text-3xl font-black tracking-tighter text-foreground">Contract Template</h4>
+          <h4 className="text-3xl font-black tracking-tighter text-foreground">Lease Agreement</h4>
           <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Terms for {propertyData.name}</p>
         </div>
         {!template ? (
           <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
-            No contract template configured yet.
+            No lease agreement configured yet.
           </div>
         ) : (
           <motion.div 
@@ -298,13 +298,13 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             <div className="w-full bg-[#fdfdfd] text-black p-8 sm:p-14 font-serif min-h-[700px] relative cursor-text">
                 {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
-                    <h1 className="text-[12rem] font-black rotate-[-45deg] select-none text-black tracking-tighter">TEMPLATE</h1>
+                    <h1 className="text-[12rem] font-black rotate-[-45deg] select-none text-black tracking-tighter uppercase">Agreement</h1>
                 </div>
 
                 <div className="relative z-10 max-w-2xl mx-auto space-y-8">
                     <div className="text-center space-y-2 border-b-2 border-neutral-300 pb-8 mb-8">
                         <h1 className="text-[1.35rem] font-bold uppercase tracking-widest text-black">{contractTitle}</h1>
-                        <p className="text-neutral-500 italic text-sm">This is the blueprint contract template for {propertyData.name}.</p>
+                        <p className="text-neutral-500 italic text-sm">This is the configured lease agreement for {propertyData.name}.</p>
                     </div>
 
                     <div className="space-y-8 text-[15px] leading-relaxed text-neutral-800">
