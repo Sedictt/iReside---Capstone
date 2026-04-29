@@ -96,10 +96,8 @@ const STEPS = [
 ];
 
 const REQUIREMENT_LABELS: Record<string, string> = {
-    valid_id: "Valid ID",
-    proof_of_income: "Proof of Income",
-    application_form: "Application Form",
-    move_in_payment: "Advance Payment",
+    valid_id: "Identity Verification",
+    proof_of_income: "Source of Income",
 };
 const ACTIVE_REQUIREMENT_KEYS = Object.keys(REQUIREMENT_LABELS);
 
@@ -113,6 +111,90 @@ const STEP_FIELD_KEYS: Record<number, FormErrorKey[]> = {
 };
 
 // ─── Sub-Components ──────────────────────────────────────────────────
+
+function ConfirmationModal({ 
+    isOpen, 
+    onClose, 
+    onConfirm, 
+    missingFields, 
+    isSubmitting 
+}: { 
+    isOpen: boolean; 
+    onClose: () => void; 
+    onConfirm: () => void; 
+    missingFields: string[]; 
+    isSubmitting: boolean;
+}) {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="relative w-full max-w-lg rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 p-8">
+                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors"><X size={24}/></button>
+                </div>
+                <div className="space-y-8">
+                    <div className="flex items-center gap-5 text-amber-500">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                            <AlertCircle size={32} />
+                        </div>
+                        <h2 className="text-3xl font-black italic tracking-tight">Final Approval</h2>
+                    </div>
+
+                    {missingFields.length > 0 ? (
+                        <div className="space-y-6">
+                            <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                                System detected that the application is not yet 100% complete. Do you want to override and approve anyway?
+                            </p>
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80">Missing Requirements:</p>
+                                <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {missingFields.map(field => (
+                                        <span key={field} className="px-3 py-1.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] font-black text-amber-500/80 uppercase tracking-wider">
+                                            {field}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                            Verification threshold met. Finalizing this will immediately allocate the asset and prepare the lease contract.
+                        </p>
+                    )}
+
+                    <div className="flex gap-4 pt-4">
+                        <button 
+                            onClick={onClose}
+                            className="flex-1 h-16 rounded-2xl border border-border bg-background font-black text-xs uppercase tracking-widest hover:bg-muted transition-all"
+                        >
+                            Back
+                        </button>
+                        <button 
+                            onClick={onConfirm}
+                            disabled={isSubmitting}
+                            className={cn(
+                                "flex-[1.5] h-16 rounded-2xl font-black text-xl uppercase tracking-tighter italic transition-all flex items-center justify-center gap-3",
+                                missingFields.length > 0 ? "bg-amber-500 text-black hover:bg-amber-400" : "bg-emerald-500 text-black hover:bg-emerald-400"
+                            )}
+                        >
+                            {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={24} />}
+                            {missingFields.length > 0 ? "Confirm Override" : "Confirm & Finish"}
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
 
 const Noise = () => null;
 
@@ -219,7 +301,12 @@ export function WalkInApplicationModal({
     const [step, setStep] = useState(0);
     const [selectedUnit, setSelectedUnit] = useState(selectedUnitId || "");
     const [submitting, setSubmitting] = useState(false);
+    const [confirmApproval, setConfirmApproval] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        setConfirmApproval(false);
+    }, [step]);
     const [formData, setFormData] = useState<WalkInFormData>({
         applicant_name: "",
         applicant_phone: "",
@@ -371,9 +458,36 @@ export function WalkInApplicationModal({
     }, []);
 
     const allRequirementsMet = useMemo(
-        () => ACTIVE_REQUIREMENT_KEYS.every((key) => Boolean(formData.requirements_checklist[key])),
-        [formData.requirements_checklist]
+        () => 
+            ACTIVE_REQUIREMENT_KEYS.every((key) => Boolean(formData.requirements_checklist[key])) &&
+            Boolean(leaseData.landlord_signature),
+        [formData.requirements_checklist, leaseData.landlord_signature]
     );
+
+    const missingFields = useMemo(() => {
+        const missing: string[] = [];
+        if (!formData.applicant_name) missing.push("Applicant Name");
+        if (!formData.applicant_phone) missing.push("Phone Number");
+        if (!formData.applicant_email) missing.push("Email Address");
+        if (!formData.move_in_date) missing.push("Move-in Date");
+        if (!formData.emergency_contact_name) missing.push("Emergency Contact Name");
+        if (!formData.emergency_contact_phone) missing.push("Emergency Contact Phone");
+        if (!formData.employment_info.occupation) missing.push("Occupation");
+        if (!formData.employment_info.employer) missing.push("Employer");
+        if (!formData.employment_info.monthly_income) missing.push("Monthly Income");
+        
+        ACTIVE_REQUIREMENT_KEYS.forEach(key => {
+            if (!formData.requirements_checklist[key]) {
+                missing.push(REQUIREMENT_LABELS[key]);
+            }
+        });
+
+        if (!leaseData.landlord_signature) missing.push("Landlord Signature");
+        if (paymentData.advance_payment.status !== 'completed') missing.push("Advance Payment");
+        if (paymentData.security_deposit_payment.status !== 'completed') missing.push("Security Deposit");
+
+        return missing;
+    }, [formData, leaseData, paymentData]);
 
     const validateStep = (currentStep: number) => {
         const errors = validateFormStep(currentStep, selectedUnit, formData, { requireUnit: !existingApplication });
@@ -439,14 +553,11 @@ export function WalkInApplicationModal({
         try {
             const endpoint = "/api/landlord/applications/tenant-application";
             const method = existingApplication ? "PATCH" : "POST";
-            const shouldWarnIncomplete =
-                !existingApplication && !asPending && step === 5 && !allRequirementsMet;
 
-            if (shouldWarnIncomplete) {
-                const ok = window.confirm(
-                    "Some requirements are still missing. Finish anyway and mark this application as Approved?"
-                );
-                if (!ok) return;
+            // Guardrail for final approval
+            if (!asPending && step === 5 && !confirmApproval) {
+                setConfirmApproval(true);
+                return;
             }
             const normalizedChecklist = Object.fromEntries(
                 ACTIVE_REQUIREMENT_KEYS.map((key) => [key, Boolean(formData.requirements_checklist[key])])
@@ -854,71 +965,95 @@ export function WalkInApplicationModal({
                                 )}
 
                                 {step === 2 && (
-                                    <div className="space-y-10">
-                                        <div className="p-8 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 text-amber-200 text-xs font-bold leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(245,158,11,0.05)] backdrop-blur-sm">
-                                            <div className="shrink-0 w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20">
-                                                <AlertCircle className="text-amber-500" size={28} />
+                                    <div className="space-y-8 max-w-4xl mx-auto">
+                                        {/* Verification Header Section - Scaled Down */}
+                                        <div className="relative group">
+                                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-primary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                                            <div className="relative p-7 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-md flex flex-col md:flex-row gap-6 items-center">
+                                                <div className="shrink-0 w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-inner">
+                                                    <ShieldCheck className="text-amber-500" size={30} strokeWidth={1.5} />
+                                                </div>
+                                                <div className="space-y-1.5 text-center md:text-left">
+                                                     <h3 className="text-base font-black uppercase tracking-[0.3em] text-amber-500/90">Verification Protocol</h3>
+                                                     <p className="text-xs font-medium text-muted-foreground leading-relaxed max-w-xl">
+                                                         Every applicant must pass through our compliance audit. Select the documents you have physically inspected and verified from the tenant.
+                                                     </p>
+                                                 </div>
                                             </div>
-                                            <div className="space-y-1">
-                                                 <p className="text-[11px] uppercase tracking-widest font-black text-amber-500/80">Requirement Checklist</p>
-                                                 <p className="opacity-80">Full approval requires all items below to be checked. Incomplete entries will be saved but marked as <span className="text-amber-400 italic underline decoration-2">Pending Review</span>.</p>
-                                             </div>
                                         </div>
 
-                                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                                 {ACTIVE_REQUIREMENT_KEYS.map((key, idx) => {
-                                                    const value = Boolean(formData.requirements_checklist[key]);
-                                                    return (
-                                                <motion.button
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: idx * 0.05 }}
-                                                    key={key}
-                                                    onClick={() => toggleRequirement(key)}
-                                                    className={cn(
-                                                        "w-full h-24 rounded-[2rem] border transition-all duration-500 flex items-center justify-between px-8 group relative overflow-hidden text-left",
+                                        {/* Requirement Buttons - Compact Layout */}
+                                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                            {ACTIVE_REQUIREMENT_KEYS.map((key, idx) => {
+                                                const value = Boolean(formData.requirements_checklist[key]);
+                                                return (
+                                                    <motion.button
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: idx * 0.1, type: "spring", damping: 20 }}
+                                                        key={key}
+                                                        onClick={() => toggleRequirement(key)}
+                                                        className={cn(
+                                                            "group relative w-full min-h-[7rem] py-4 rounded-[2rem] border transition-all duration-500 flex items-center px-8",
                                                             value 
-                                                                ? "bg-emerald-500/5 border-emerald-500/30 shadow-[0_10px_30px_rgba(16,185,129,0.1)]" 
-                                                                : "bg-card/90 border-border hover:bg-card hover:border-primary/20"
+                                                                ? "bg-emerald-500/10 border-emerald-500/30 shadow-[0_12px_32px_-8px_rgba(16,185,129,0.12)]" 
+                                                                : "bg-card/50 border-border/80 hover:bg-card hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5"
                                                         )}
                                                     >
-                                                    <div className="relative z-10 flex items-center gap-6">
-                                                        <div className={cn(
-                                                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            value ? "bg-emerald-500 text-black shadow-lg" : "bg-background text-muted-foreground"
-                                                        )}>
-                                                            {value ? <Check size={20} strokeWidth={3} /> : <FileCheck size={20} />}
-                                                        </div>
-                                                        <div>
-                                                            <p className={cn("text-base font-black tracking-tight transition-colors", value ? "text-foreground" : "text-muted-foreground")}>
-                                                                {REQUIREMENT_LABELS[key]}
-                                                            </p>
-                                                            <p className={cn("mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em]", value ? "text-emerald-700/70 dark:text-emerald-500/70" : "text-slate-500 dark:text-neutral-600")}>
-                                                                {value ? "Verified Success" : "Awaiting Audit"}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="relative z-10">
-                                                        {value ? (
-                                                            <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500 border border-emerald-500/30">
-                                                                <Check size={14} strokeWidth={4} />
+                                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
+                                                        
+                                                        <div className="relative z-10 flex items-center gap-6 w-full">
+                                                            {/* Icon Container - Fixed Sizing */}
+                                                            <div className={cn(
+                                                                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shrink-0",
+                                                                value ? "bg-emerald-500 text-black shadow-lg scale-105" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                            )}>
+                                                                {value ? <Check size={24} strokeWidth={3} /> : <Fingerprint size={24} strokeWidth={1.5} />}
                                                             </div>
-                                                        ) : (
-                                                            <div className="h-8 w-8 rounded-full border-2 border-dashed border-border transition-all duration-700 group-hover:rotate-180 group-hover:border-primary/50" />
+                                                            
+                                                            <div className="flex-1 text-left">
+                                                                <p className={cn("text-lg font-black tracking-tighter transition-colors leading-tight", value ? "text-foreground" : "text-muted-foreground")}>
+                                                                    {REQUIREMENT_LABELS[key]}
+                                                                </p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className={cn("w-1.5 h-1.5 rounded-full", value ? "bg-emerald-500 animate-pulse" : "bg-amber-400")} />
+                                                                    <p className={cn("text-[9px] font-black uppercase tracking-[0.2em] leading-none", value ? "text-emerald-500" : "text-amber-500/70")}>
+                                                                        {value ? "Audit Passed" : "Pending Verification"}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className={cn(
+                                                                "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 shrink-0",
+                                                                value ? "bg-emerald-500 text-black" : "border-2 border-dashed border-border group-hover:border-primary/50 group-hover:rotate-90"
+                                                            )}>
+                                                                {value && <Check size={12} strokeWidth={4} />}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {value && (
+                                                            <motion.div 
+                                                                layoutId={`check-glow-${key}`}
+                                                                className="absolute inset-0 bg-emerald-500/5 -z-10" 
+                                                            />
                                                         )}
-                                                    </div>
-                                                    
-                                                    {/* Background Success Effect */}
-                                                    {value && (
-                                                        <motion.div 
-                                                            layoutId={`check-bg-${key}`}
-                                                            className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.03] to-transparent -z-10" 
-                                                        />
-                                                    )}
-                                                </motion.button>
-                                            );
+                                                    </motion.button>
+                                                );
                                             })}
                                         </div>
+
+                                        {/* Footer Alert - Scaled Down */}
+                                        {!allRequirementsMet && (
+                                            <motion.div 
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="p-5 rounded-[1.5rem] bg-amber-500/5 border border-dashed border-amber-500/20 text-center"
+                                            >
+                                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500/50">
+                                                    Unchecked items will be flagged as &quot;Pending Review&quot; in the application dossier
+                                                </p>
+                                            </motion.div>
+                                        )}
                                     </div>
                                 )}
 
@@ -1244,16 +1379,16 @@ export function WalkInApplicationModal({
                                                  <div className="text-center sm:text-left space-y-3">
                                                      <div className="flex items-center gap-3 justify-center sm:justify-start">
                                                          <span className={cn("px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.25em] border", allRequirementsMet ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-amber-500/10 border-amber-500/30 text-amber-400")}>
-                                                              {allRequirementsMet ? "Ready to Move In" : "Pending Review"}
+                                                              {allRequirementsMet ? "Verification Threshold Met" : "Awaiting Information"}
                                                          </span>
                                                      </div>
                                                       <h3 className="text-5xl font-black tracking-tight italic text-foreground">
-                                                          {allRequirementsMet ? "APPROVED" : "PENDING"}
+                                                          {allRequirementsMet ? "Ready for Approval" : "Work in Progress"}
                                                       </h3>
                                                      <p className="max-w-lg text-sm font-bold leading-relaxed text-muted-foreground">
                                                          {allRequirementsMet 
-                                                             ? "Verification pass complete. Finalizing this will immediately allocate the asset and generate relevant legal documentation." 
-                                                             : "Verification threshold not met. System will store applicant data but require physical documents before asset handover."}
+                                                             ? "All critical verification checks have passed. Finalizing this will prepare the lease contract and mark the applicant as ready for move-in." 
+                                                             : "The application is currently being built. You can save it as a draft or proceed with manual verification if you have the documents on hand."}
                                                      </p>
                                                  </div>
                                              </div>
@@ -1388,7 +1523,9 @@ export function WalkInApplicationModal({
                                         <div className="absolute inset-0 bg-white/10 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500" />
                                         {submitting ? <Loader2 className="animate-spin" /> : <CheckCircle2 className="group-hover:rotate-[360deg] transition-transform duration-700" />}
                                          <span className="text-xl uppercase tracking-tighter italic relative z-10">
-                                             {allRequirementsMet ? "Finish & Approve" : "Save & Finish"}
+                                             {allRequirementsMet 
+                                                ? (confirmApproval ? "Are you sure?" : "Finish & Approve") 
+                                                : "Save & Finish"}
                                          </span>
                                     </button>
                                 </>
@@ -1397,6 +1534,16 @@ export function WalkInApplicationModal({
                     </div>
                 </div>
             </motion.div>
+
+            <AnimatePresence>
+                <ConfirmationModal 
+                    isOpen={confirmApproval}
+                    onClose={() => setConfirmApproval(false)}
+                    onConfirm={() => handleSubmit(false)}
+                    missingFields={missingFields}
+                    isSubmitting={submitting}
+                />
+            </AnimatePresence>
         </div>
     );
 }
