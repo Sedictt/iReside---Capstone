@@ -61,9 +61,7 @@ export function MaintenanceDashboard() {
     const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
     const [previewMode, setPreviewMode] = useState<string | null>(null);
     const [priorityFilter, setPriorityFilter] = useState<"All" | Priority>("All");
-    type RepairMethod = "landlord" | "third_party" | "self_repair";
-    const [methodFilter, setMethodFilter] = useState<"All" | RepairMethod>("All");
-    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority-desc" | "priority-asc">("newest");
+    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "priority-desc" | "priority-asc">("priority-desc");
 
 
     const [loading, setLoading] = useState(true);
@@ -182,10 +180,9 @@ export function MaintenanceDashboard() {
     const filteredRequests = requests.filter((req) => {
         const matchesStatus = filter === "All" || req.status === filter;
         const matchesPriority = priorityFilter === "All" || req.priority === priorityFilter;
-        const matchesMethod = methodFilter === "All" || req.repairMethod === methodFilter;
         
         if (!normalizedSearch) {
-            return matchesStatus && matchesPriority && matchesMethod;
+            return matchesStatus && matchesPriority;
         }
 
         const haystack = [req.id, req.tenant, req.unit, req.property, req.title]
@@ -193,7 +190,7 @@ export function MaintenanceDashboard() {
             .join(" ")
             .toLowerCase();
 
-        return matchesStatus && matchesPriority && matchesMethod && haystack.includes(normalizedSearch);
+        return matchesStatus && matchesPriority && haystack.includes(normalizedSearch);
     });
 
     const sortedRequests = [...filteredRequests].sort((a, b) => {
@@ -220,7 +217,7 @@ export function MaintenanceDashboard() {
     };
 
     return (
-        <div className="flex flex-col w-full bg-background text-foreground p-6 md:p-8 space-y-8 animate-in fade-in duration-700 h-full overflow-y-auto custom-scrollbar relative">
+        <div className="flex flex-col w-full bg-background text-foreground p-6 md:p-8 space-y-8 animate-in fade-in duration-700 relative">
             {previewMode && (
                 <div className="mb-2 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
                     <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
@@ -251,117 +248,92 @@ export function MaintenanceDashboard() {
             )}
 
             {/* Header Section */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <div className="flex items-center gap-3 mb-1">
+                    <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                            <Wrench className="h-8 w-8 text-primary/80" />
+                            <Wrench className="h-8 w-8 text-primary" />
                             Maintenance Operations
                         </h1>
-                        <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm animate-pulse-subtle">
+                        <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                             <Sparkles className="w-3.5 h-3.5 text-primary" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Smart Triage Active</span>
                         </div>
                     </div>
-                    <p className="text-muted-foreground font-medium tracking-wide text-sm">
-                        Coordinate, assign, and track property repairs in real-time.
+                    <p className="text-muted-foreground font-medium text-sm max-w-2xl">
+                        Coordinate, assign, and track property repairs. IRIS AI automatically prioritizes urgent requests for faster resolution.
                     </p>
                 </div>
-                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl font-bold hover:bg-primary/90 shadow-sm transition-all active:scale-95">
+                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-3xl font-black uppercase tracking-wider text-xs hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 shrink-0">
                     <Plus className="h-5 w-5" />
                     New Work Order
                 </button>
             </div>
 
             {/* Main Content Area */}
-            <div className="rounded-3xl bg-card border border-border flex flex-col pt-2 shadow-sm">
+            <div className="rounded-[2rem] bg-card border border-border flex flex-col shadow-sm">
                 {/* Toolbar */}
-                <div className="p-6 border-b border-border flex flex-col sm:flex-row items-end justify-between gap-6 bg-card rounded-t-3xl">
-                        <div className="flex flex-col gap-1.5 flex-1 w-full sm:max-w-md">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Search Requests</label>
+                <div className="p-6 border-b border-border bg-muted/20">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div className="flex-1 w-full max-w-md">
                             <div className="relative group">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder="Search by ID, tenant or unit..."
+                                    placeholder="Search by ID, tenant, unit or title..."
                                     value={searchQuery}
                                     onChange={(event) => setSearchQuery(event.target.value)}
-                                    className="w-full bg-background border border-border rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all shadow-sm"
+                                    className="w-full bg-background border border-border rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all shadow-sm"
                                 />
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-                            <div className="flex flex-col gap-1.5 shrink-0">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Status</label>
-                                <div className="relative flex items-center">
-                                    <select 
-                                        value={filter}
-                                        onChange={(e) => setFilter(e.target.value as any)}
-                                        className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[150px]"
-                                    >
-                                        <option value="All">All</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Assigned">Assigned</option>
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="Resolved">Resolved</option>
-                                    </select>
-                                    <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
-                                </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
+                                <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+                                <select 
+                                    value={filter}
+                                    onChange={(e) => setFilter(e.target.value as any)}
+                                    className="bg-transparent text-xs font-bold text-foreground outline-none cursor-pointer min-w-[100px]"
+                                >
+                                    <option value="All">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Assigned">Assigned</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Resolved">Resolved</option>
+                                </select>
                             </div>
 
-                            <div className="flex flex-col gap-1.5 shrink-0">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Priority</label>
-                                <div className="relative flex items-center">
-                                    <select 
-                                        value={priorityFilter}
-                                        onChange={(e) => setPriorityFilter(e.target.value as any)}
-                                        className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[150px]"
-                                    >
-                                        <option value="All">All</option>
-                                        <option value="Critical">Critical Only</option>
-                                        <option value="High">High Only</option>
-                                        <option value="Medium">Medium Only</option>
-                                        <option value="Low">Low Only</option>
-                                    </select>
-                                    <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
-                                </div>
+                            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
+                                <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
+                                <select 
+                                    value={priorityFilter}
+                                    onChange={(e) => setPriorityFilter(e.target.value as any)}
+                                    className="bg-transparent text-xs font-bold text-foreground outline-none cursor-pointer min-w-[100px]"
+                                >
+                                    <option value="All">All Priority</option>
+                                    <option value="Critical">Critical Only</option>
+                                    <option value="High">High Only</option>
+                                    <option value="Medium">Medium Only</option>
+                                    <option value="Low">Low Only</option>
+                                </select>
                             </div>
 
-                            <div className="flex flex-col gap-1.5 shrink-0">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Repair Method</label>
-                                <div className="relative flex items-center">
-                                    <select 
-                                        value={methodFilter}
-                                        onChange={(e) => setMethodFilter(e.target.value as any)}
-                                        className="appearance-none h-[42px] px-10 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[170px]"
-                                    >
-                                        <option value="All">Any</option>
-                                        <option value="self_repair">Self Repair</option>
-                                        <option value="landlord">Landlord</option>
-                                        <option value="third_party">Third Party</option>
-                                    </select>
-                                    <Wrench className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5 shrink-0">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 pl-1">Sort By</label>
-                                <div className="relative flex items-center">
-                                    <select 
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value as any)}
-                                        className="appearance-none h-[42px] pl-10 pr-12 rounded-xl bg-background border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm outline-none cursor-pointer min-w-[190px]"
-                                    >
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
-                                        <option value="priority-desc">Priority (H-L)</option>
-                                        <option value="priority-asc">Priority (L-H)</option>
-                                    </select>
-                                    <ArrowUpDown className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
-                                </div>
+                            <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 py-1.5 shadow-sm">
+                                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+                                <select 
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as any)}
+                                    className="bg-transparent text-xs font-bold text-foreground outline-none cursor-pointer min-w-[150px]"
+                                >
+                                    <option value="priority-desc">Smart Triage (Priority)</option>
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="priority-asc">Priority (L-H)</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
                 </div>
 
                 {/* Grid Format Request List */}
@@ -422,10 +394,10 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
     return (
         <div
             onClick={onClick}
-            className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg"
+            className="group relative flex flex-col bg-card border border-border rounded-3xl overflow-hidden hover:border-primary/30 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-xl"
         >
             {/* Top Image Preview Area */}
-            <div className="relative h-44 w-full bg-muted border-b border-border overflow-hidden shrink-0">
+            <div className="relative h-48 w-full bg-muted border-b border-border overflow-hidden shrink-0">
                 {request.images && request.images.length > 0 ? (
                     <>
                         <img
@@ -433,24 +405,24 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                             alt={request.title}
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 dark:from-black/80 dark:via-transparent dark:to-black/40" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                         {/* Multiple Images Indicator */}
                         {request.images.length > 1 && (
-                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-md flex items-center gap-1 text-[10px] font-bold text-white border border-white/10 shadow-sm">
+                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1.5 text-[10px] font-bold text-white border border-white/10 shadow-sm">
                                 <ImageIcon className="w-3 h-3" />
                                 +{request.images.length - 1}
                             </div>
                         )}
                     </>
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted absolute inset-0">
-                        <Wrench className="w-8 h-8 text-muted-foreground/30" />
+                    <div className="w-full h-full flex items-center justify-center bg-muted/50 absolute inset-0">
+                        <Wrench className="w-10 h-10 text-muted-foreground/20" />
                     </div>
                 )}
 
                 {/* Badges on top of image */}
-                <div className="absolute top-2 left-2 flex flex-col items-start gap-1.5 z-10">
+                <div className="absolute top-3 left-3 flex flex-col items-start gap-2 z-10">
                     <StatusBadge status={request.status} tenantRepairStatus={request.tenantRepairStatus} />
                     <PriorityBadge priority={request.priority} />
                 </div>
@@ -458,65 +430,80 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
 
             {/* Glowing red accent for critical pending */}
             {isCritical && isPending && (
-                <div className="absolute top-0 inset-x-0 h-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] z-10" />
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)] z-10 animate-pulse" />
             )}
 
             {/* Content Area */}
-            <div className="p-4 flex flex-col flex-1 bg-gradient-to-b from-card via-card to-muted/5 pb-2">
+            <div className="p-6 flex flex-col flex-1 bg-card">
                 {/* Header & Meta */}
-                <div className="flex items-center justify-between mb-2 text-[10px] font-bold text-muted-foreground/60 tracking-wider uppercase shrink-0">
-                    <span className="truncate max-w-[120px]">ID: {request.id.split('-')[0]}...</span>
+                <div className="flex items-center justify-between mb-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">
+                    <span className="truncate">#{request.id.split('-')[0]}</span>
+                    <div className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3" />
+                        {request.reportedAt}
+                    </div>
                 </div>
 
                 {/* Title */}
-                <div className="mb-4 shrink-0">
-                    <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
-                        {request.title}
-                    </h3>
-                </div>
+                <h3 className="text-lg font-black text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight mb-4">
+                    {request.title}
+                </h3>
 
                 {/* Property & Unit */}
-                <div className="flex flex-col gap-2 mb-4 shrink-0">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Home className="w-3 h-3 shrink-0" />
-                        <span className="text-[10px] font-black uppercase tracking-widest truncate">
+                <div className="space-y-2 mb-6">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="p-1.5 bg-muted rounded-lg">
+                            <Home className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-xs font-bold truncate">
                             {request.property}
                         </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-primary/80">
-                        <Zap className="w-3 h-3 shrink-0" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                            {request.unit}
+                    <div className="flex items-center gap-2 text-primary">
+                        <div className="p-1.5 bg-primary/10 rounded-lg">
+                            <Zap className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider">
+                            Unit {request.unit}
                         </span>
                     </div>
                 </div>
 
-                {/* Spacer to push footer down */}
-                <div className="flex-1 min-h-[12px]" />
-
                 {/* Footer Info */}
-                <div className="flex items-center justify-between gap-4 shrink-0 pt-4 border-t border-border/50 mt-auto">
-                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 min-w-0">
-                        <Clock className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{request.reportedAt}</span>
+                <div className="flex items-center justify-between gap-4 shrink-0 pt-5 border-t border-border/50 mt-auto">
+                    <div className="flex -space-x-2 overflow-hidden">
+                        <div 
+                            className="inline-block h-8 w-8 rounded-full ring-2 ring-background flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0"
+                            style={{ backgroundColor: request.tenantAvatarBgColor || '#6d9838' }}
+                        >
+                            {request.tenantAvatar ? (
+                                <img
+                                    className="h-full w-full object-cover"
+                                    src={request.tenantAvatar}
+                                    alt={request.tenant}
+                                />
+                            ) : (
+                                request.tenant.split(' ').map(n => n[0]).join('')
+                            )}
+                        </div>
+                        <div className="flex flex-col justify-center pl-4">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Tenant</span>
+                            <span className="text-xs font-bold text-foreground truncate max-w-[100px]">{request.tenant}</span>
+                        </div>
                     </div>
+                    
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onClick?.();
                         }}
-                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-white hover:bg-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap shadow-sm group/btn active:scale-95"
+                        className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+                        aria-label="View Details"
                     >
-                        Details
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5" />
+                        <ArrowRight className="w-5 h-5" />
                     </button>
                 </div>
             </div>
-
-            {/* Pulsing effect for crucial items */}
-            {isCritical && isPending && (
-                <div className="absolute inset-0 rounded-2xl ring-2 ring-red-500/20 ring-offset-2 ring-offset-background animate-pulse pointer-events-none" />
-            )}
         </div>
     );
 }
@@ -525,10 +512,10 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
 
 function PriorityBadge({ priority }: { priority: Priority }) {
     const config = {
-        Critical: "bg-red-500 text-white border-red-400 shadow-sm",
-        High: "bg-orange-500/90 backdrop-blur-md text-white border-orange-400/50 shadow-sm",
-        Medium: "bg-blue-500/90 backdrop-blur-md text-white border-blue-400/50 shadow-sm",
-        Low: "bg-slate-200/90 dark:bg-neutral-800/90 backdrop-blur-md text-slate-700 dark:text-neutral-300 border-slate-300 dark:border-neutral-600 shadow-sm",
+        Critical: "bg-red-600 border-red-700 text-white",
+        High: "bg-amber-500 border-amber-600 text-white",
+        Medium: "bg-blue-600 border-blue-700 text-white",
+        Low: "bg-emerald-600 border-emerald-700 text-white",
     };
 
     return (
@@ -536,11 +523,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
             "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
-            {priority === "Critical" ? (
-                <AlertTriangle className="w-3 h-3" />
-            ) : (
-                <Sparkles className="w-2.5 h-2.5 opacity-70" />
-            )}
+            {priority === "Critical" && <AlertTriangle className="w-3 h-3" />}
             {priority} Priority
         </span>
     );
@@ -548,10 +531,10 @@ function PriorityBadge({ priority }: { priority: Priority }) {
 
 function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRepairStatus?: string }) {
     const config = {
-        Pending: "bg-amber-500 text-black border-amber-400 shadow-sm",
-        Assigned: "bg-cyan-500/90 backdrop-blur-md text-white border-cyan-400/50 shadow-sm",
-        "In Progress": "bg-primary text-primary-foreground border-primary/50 shadow-sm",
-        Resolved: "bg-emerald-500/90 backdrop-blur-md text-white border-emerald-400/50 shadow-sm",
+        Pending: "bg-amber-500 border-amber-600 text-white",
+        Assigned: "bg-blue-600 border-blue-700 text-white",
+        "In Progress": "bg-primary border-primary text-primary-foreground",
+        Resolved: "bg-emerald-600 border-emerald-700 text-white",
     };
 
     let displayStatus: string = status;
@@ -560,19 +543,19 @@ function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRep
     if (status === "In Progress" && tenantRepairStatus) {
         if (tenantRepairStatus === "personnel_arrived") {
             displayStatus = "Personnel Arrived";
-            customClass = "bg-cyan-500/90 backdrop-blur-md text-white border-cyan-400/50 shadow-sm";
+            customClass = "bg-blue-600 border-blue-700 text-white";
         } else if (tenantRepairStatus === "repairing") {
             displayStatus = "Repairing";
-            customClass = "bg-primary/90 backdrop-blur-md text-primary-foreground border-primary/50 shadow-sm";
+            customClass = "bg-primary border-primary text-primary-foreground";
         } else if (tenantRepairStatus === "done") {
-            displayStatus = "Done (Pending Verify)";
-            customClass = "bg-emerald-500/90 backdrop-blur-md text-white border-emerald-400/50 shadow-sm";
+            displayStatus = "Awaiting Verify";
+            customClass = "bg-emerald-600 border-emerald-700 text-white";
         }
     }
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider shadow-sm",
             customClass
         )}>
             {displayStatus}
@@ -582,7 +565,7 @@ function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRep
 
 function MaintenanceCardSkeleton() {
     return (
-        <div className="relative flex flex-col bg-card/60 border border-border rounded-2xl overflow-hidden shadow-sm h-[400px]">
+        <div className="relative flex flex-col bg-card border border-border rounded-3xl overflow-hidden shadow-sm h-[420px]">
             {/* Neutral Shimmer Layer */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/30 to-transparent -translate-x-full animate-shimmer" style={{ animationDuration: '2.5s' }} />
