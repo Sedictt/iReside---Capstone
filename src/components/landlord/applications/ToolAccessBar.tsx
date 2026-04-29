@@ -10,6 +10,24 @@ import {
   CheckCircle2,
   Building2,
   ClipboardList,
+  UserPlus,
+  Trash2,
+  VolumeX,
+  Car,
+  Lock,
+  DollarSign,
+  Wrench,
+  PartyPopper,
+  Waves,
+  Dumbbell,
+  Wifi,
+  WashingMachine,
+  Camera,
+  Leaf,
+  ArrowUpCircle,
+  DoorOpen,
+  Cloud,
+  Utensils,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Json } from "@/types/database";
@@ -182,32 +200,58 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
     if (!propertyData) return null;
 
     if (activeTool.key === "amenities") {
+      const getAmenityIcon = (name: string) => {
+        const n = name.toLowerCase();
+        if (n.includes("pool") || n.includes("swim")) return { icon: Waves, color: "text-blue-400", bg: "bg-blue-500/10" };
+        if (n.includes("gym") || n.includes("fitness")) return { icon: Dumbbell, color: "text-purple-400", bg: "bg-purple-500/10" };
+        if (n.includes("wifi") || n.includes("internet")) return { icon: Wifi, color: "text-emerald-400", bg: "bg-emerald-500/10" };
+        if (n.includes("parking")) return { icon: Car, color: "text-slate-400", bg: "bg-slate-500/10" };
+        if (n.includes("laundry")) return { icon: WashingMachine, color: "text-cyan-400", bg: "bg-cyan-500/10" };
+        if (n.includes("security")) return { icon: ShieldCheck, color: "text-orange-400", bg: "bg-orange-500/10" };
+        if (n.includes("cctv") || n.includes("camera")) return { icon: Camera, color: "text-red-400", bg: "bg-red-500/10" };
+        if (n.includes("garden") || n.includes("park") || n.includes("leaf")) return { icon: Leaf, color: "text-green-400", bg: "bg-green-500/10" };
+        if (n.includes("elevator") || n.includes("lift")) return { icon: ArrowUpCircle, color: "text-indigo-400", bg: "bg-indigo-500/10" };
+        if (n.includes("lobby") || n.includes("front")) return { icon: DoorOpen, color: "text-amber-400", bg: "bg-amber-500/10" };
+        if (n.includes("roof") || n.includes("deck")) return { icon: Cloud, color: "text-blue-400", bg: "bg-blue-500/10" };
+        if (n.includes("kitchen") || n.includes("dining")) return { icon: Utensils, color: "text-rose-400", bg: "bg-rose-500/10" };
+        return { icon: Sparkles, color: "text-primary", bg: "bg-primary/10" };
+      };
+
       return (
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
-          <div className="mb-10 text-center sm:text-left">
-            <h4 className="text-3xl font-black tracking-tighter text-foreground">Amenities</h4>
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Configuration for {propertyData.name}</p>
-          </div>
           {propertyData.amenities.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
-              No amenities configured for this property.
+            <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
+              <Sparkles className="mx-auto h-10 w-10 text-muted-foreground/20 mb-4" />
+              <p className="text-sm font-bold tracking-tight text-muted-foreground/50">No amenities configured for this property.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {propertyData.amenities.map((item, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  key={item} 
-                  className="flex items-center gap-4 rounded-2xl border border-border bg-background/70 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:bg-card"
-                >
-                  <div className="h-10 w-10 shrink-0 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                  </div>
-                  <span className="text-[15px] font-bold tracking-tight text-foreground">{item}</span>
-                </motion.div>
-              ))}
+              {propertyData.amenities.map((item, idx) => {
+                const { icon: AmenityIcon, color, bg } = getAmenityIcon(item);
+                return (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.04 }}
+                    key={item} 
+                    className="group flex items-center gap-5 rounded-2xl border border-border/40 bg-card/15 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card/40"
+                  >
+                    <div className={cn(
+                      "h-12 w-12 shrink-0 rounded-xl flex items-center justify-center border border-border/50 shadow-inner transition-all duration-500 group-hover:scale-110",
+                      bg
+                    )}>
+                      <AmenityIcon className={cn("h-6 w-6", color)} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-[15px] font-black tracking-tight text-foreground/90 leading-tight">{item}</span>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-1 h-1 rounded-full bg-primary/50" />
+                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
+                        </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -217,28 +261,34 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
     if (activeTool.key === "policies") {
       return (
         <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
-          <div className="mb-10 text-center sm:text-left">
-            <h4 className="text-3xl font-black tracking-tighter text-foreground">Property Policies</h4>
-            <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">House Rules for {propertyData.name}</p>
-          </div>
           {propertyData.house_rules.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
-              No property policies configured yet.
+            <div className="rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-20 text-center">
+              <ShieldCheck className="mx-auto h-10 w-10 text-muted-foreground/20 mb-4" />
+              <p className="text-sm font-bold tracking-tight text-muted-foreground/50">No property policies configured yet.</p>
             </div>
           ) : (
-            <div className="space-y-4 max-w-4xl max-h-full">
+            <div className="grid grid-cols-1 gap-3 max-w-5xl">
               {propertyData.house_rules.map((rule, index) => (
                 <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, type: "spring", damping: 25 }}
                   key={rule} 
-                  className="flex items-start gap-5 rounded-2xl border border-border bg-background/70 p-6 shadow-sm transition-all duration-300 hover:scale-[1.01] hover:border-blue-500/30 hover:bg-card"
+                  className="group relative rounded-2xl border border-border/40 bg-card/15 p-5 transition-all duration-300 hover:bg-card/30 hover:border-blue-500/30"
                 >
-                  <div className="h-10 w-10 shrink-0 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
-                    <span className="text-sm font-black text-blue-700 dark:text-blue-300">{index + 1}</span>
+                  <div className="flex items-center gap-6">
+                        <div className="shrink-0 flex flex-col items-center gap-1 min-w-[50px]">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
+                            <span className="text-xl font-black italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
+                        </div>
+                        <div className="w-px h-8 bg-border/40" />
+                        <div className="flex-1">
+                            <p className="text-[15px] font-bold leading-relaxed text-foreground/90 tracking-tight">{rule}</p>
+                        </div>
+                        <div className="shrink-0 px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">Binding</span>
+                        </div>
                   </div>
-                  <p className="mt-1.5 text-base font-semibold leading-relaxed text-foreground">{rule}</p>
                 </motion.div>
               ))}
             </div>
@@ -281,10 +331,6 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
 
     return (
       <div className="h-full overflow-y-auto p-6 sm:p-10 lg:p-14 relative z-10 custom-scrollbar">
-        <div className="mb-10 text-center sm:text-left">
-          <h4 className="text-3xl font-black tracking-tighter text-foreground">Lease Agreement</h4>
-          <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Terms for {propertyData.name}</p>
-        </div>
         {!template ? (
           <div className="rounded-3xl border border-dashed border-border bg-muted/20 p-12 text-center text-sm font-bold tracking-tight text-muted-foreground">
             No lease agreement configured yet.
