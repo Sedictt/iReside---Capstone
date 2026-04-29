@@ -63,7 +63,7 @@ export function Sidebar({
             icon: CreditCard,
             defaultExpanded: true,
             items: [
-                { label: "Invoices", href: "/landlord/invoices", icon: CreditCard },
+                { label: "Finance Hub", href: "/landlord/invoices", icon: CreditCard },
                 { label: "Utility Billing", href: "/landlord/utility-billing", icon: Zap },
             ]
         },

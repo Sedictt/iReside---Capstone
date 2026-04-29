@@ -142,7 +142,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                         <div className="flex items-center gap-5 relative z-10">
                                             <div className="relative">
                                                 <div 
-                                                    className="h-14 w-14 rounded-full border-2 border-background overflow-hidden grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110"
+                                                    className="h-14 w-14 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                                                     style={{ backgroundColor: payment.avatarBgColor || '#171717' }}
                                                 >
                                                     <img src={payment.avatar || FALLBACK_AVATAR} alt={payment.tenant} className="h-full w-full object-cover" />
