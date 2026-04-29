@@ -10,7 +10,12 @@ import styles from "./blueprint.module.css";
 // We are using Material Icons via the CDN link in layout.tsx, so we use standard <span> tags for icons.
 import { Logo } from "@/components/ui/Logo";
 import { useOptionalProperty } from "@/context/PropertyContext";
-import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
+import dynamic from "next/dynamic";
+
+const WalkInApplicationModal = dynamic(() => import("@/components/landlord/applications/WalkInApplicationModal").then(mod => mod.WalkInApplicationModal), {
+    ssr: false,
+});
+
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { QrCode, X } from "lucide-react";
 import { cn } from "@/lib/utils";

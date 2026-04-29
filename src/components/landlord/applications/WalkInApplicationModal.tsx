@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useMemo, type ChangeEvent, type ElementType, type InputHTMLAttributes, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import dynamic from "next/dynamic";
 import {
     X,
     User,
@@ -27,8 +30,13 @@ import {
     PenTool,
     DollarSign,
 } from "lucide-react";
+
+const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
+    ssr: false,
+    loading: () => <div className="h-[300px] w-full bg-muted/50 rounded-2xl animate-pulse flex items-center justify-center text-xs font-black uppercase tracking-widest text-muted-foreground">Loading Signer...</div>
+});
+
 import { generateLeasePdf } from "@/lib/lease-pdf";
-import { SignaturePad } from "./SignaturePad";
 import { Logo } from "@/components/ui/Logo";
 import { SigningModeSelector } from "./SigningModeSelector";
 import { PaymentRecordForm } from "./PaymentRecordForm";
@@ -56,6 +64,8 @@ interface LeaseData {
     signing_mode: "in_person" | "remote" | null;
     tenant_signature: string | null;
     landlord_signature: string | null;
+    signed_document_url: string | null;
+    signed_document_path: string | null;
 }
 
 interface PaymentData {
@@ -333,6 +343,8 @@ export function WalkInApplicationModal({
         signing_mode: null,
         tenant_signature: null,
         landlord_signature: null,
+        signed_document_url: null,
+        signed_document_path: null,
     });
 
     const [leasePdfBlob, setLeasePdfBlob] = useState<Blob | null>(null);
@@ -631,6 +643,8 @@ export function WalkInApplicationModal({
                     terms: leaseData.terms,
                     landlord_signature: leaseData.landlord_signature,
                     signing_mode: leaseData.signing_mode,
+                    signed_document_url: leaseData.signed_document_url,
+                    signed_document_path: leaseData.signed_document_path,
                 },
                 advance_payment: {
                     method: paymentData.advance_payment.method,
@@ -680,7 +694,7 @@ export function WalkInApplicationModal({
                 className="absolute inset-0 bg-black/60 backdrop-blur-xl"
             />
 
-            {currentUnit?.property_id ? <ToolAccessBar propertyId={currentUnit.property_id} /> : null}
+            {currentUnit?.property_id && step !== 3 ? <ToolAccessBar propertyId={currentUnit.property_id} /> : null}
              
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 30 }}
@@ -1227,6 +1241,7 @@ export function WalkInApplicationModal({
                                                                         onClear={() => setLeaseData({ ...leaseData, tenant_signature: null })}
                                                                         pdfBlob={leasePdfBlob}
                                                                         documentTitle={`Lease - ${currentUnit?.property_name} ${currentUnit?.name}`}
+                                                                        variant="button"
                                                                     />
                                                                 </div>
                                                             ) : (
@@ -1266,10 +1281,41 @@ export function WalkInApplicationModal({
                                                                 </div>
                                                             ) : !leaseData.landlord_signature ? (
                                                                 <SignaturePad
-                                                                    onSave={(dataUrl) => setLeaseData({ ...leaseData, landlord_signature: dataUrl })}
-                                                                    onClear={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                                    onSave={async (dataUrl, blob) => {
+                                                                        setLeaseData(prev => ({ ...prev, landlord_signature: dataUrl }));
+                                                                        
+                                                                        if (blob) {
+                                                                            try {
+                                                                                const supabase = createClient();
+                                                                                const fileName = `lease_${Date.now()}.pdf`;
+                                                                                const filePath = `signed-leases/${fileName}`;
+                                                                                
+                                                                                const { data, error: uploadError } = await supabase.storage
+                                                                                    .from('tenant-invite-documents')
+                                                                                    .upload(filePath, blob);
+                                                                                    
+                                                                                if (uploadError) throw uploadError;
+                                                                                
+                                                                                const { data: { publicUrl } } = supabase.storage
+                                                                                    .from('tenant-invite-documents')
+                                                                                    .getPublicUrl(filePath);
+                                                                                    
+                                                                                setLeaseData(prev => ({ 
+                                                                                    ...prev, 
+                                                                                    signed_document_url: publicUrl,
+                                                                                    signed_document_path: data.path
+                                                                                }));
+                                                                                toast.success("Document uploaded to secure vault");
+                                                                            } catch (err) {
+                                                                                console.error("Failed to upload signed PDF:", err);
+                                                                                toast.error("Signature saved locally, but cloud backup failed.");
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    onClear={() => setLeaseData({ ...leaseData, landlord_signature: null, signed_document_url: null, signed_document_path: null })}
                                                                     pdfBlob={leasePdfBlob}
                                                                     documentTitle={`Lease - ${currentUnit?.property_name} ${currentUnit?.name}`}
+                                                                    variant="button"
                                                                 />
                                                             ) : (
                                                                 <div className="space-y-4">

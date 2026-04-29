@@ -3,14 +3,16 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import SignaturePad from 'signature_pad';
-import { PenTool, Image as ImageIcon, Save, X, Trash2, FileText, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { PenTool, Image as ImageIcon, Save, X, Trash2, FileText, ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 // Set PDF.js worker using unpkg
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+}
 
 interface Signature {
   id: string;
@@ -32,13 +34,17 @@ interface DigitalSignerProps {
   onSigned?: (signedBlob: Blob) => Promise<void>;
   title?: string;
   isProcessingInitial?: boolean;
+  hideToolbar?: boolean;
+  hideSidebar?: boolean;
 }
 
 export function DigitalSigner({ 
   file: initialFile, 
   onSigned, 
   title = "Document Signer",
-  isProcessingInitial = false
+  isProcessingInitial = false,
+  hideToolbar = false,
+  hideSidebar = false
 }: DigitalSignerProps) {
   const [file, setFile] = useState<File | Blob | null>(null);
   const [pdfPages, setPdfPages] = useState<PdfPage[]>([]);
@@ -49,7 +55,9 @@ export function DigitalSigner({
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [penSize, setPenSize] = useState(1.5);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar);
+  const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
+  const [isToolbarHidden, setIsToolbarHidden] = useState(hideToolbar);
 
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -297,7 +305,7 @@ export function DigitalSigner({
       }
     }
     const pdfBytes = await pdfDoc.save();
-    return new Blob([pdfBytes], { type: 'application/pdf' });
+    return new Blob([pdfBytes as any], { type: 'application/pdf' });
   };
 
   const handleDownloadOnly = async () => {
@@ -345,68 +353,98 @@ export function DigitalSigner({
   return (
     <div className="h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col font-sans overflow-hidden">
       {/* Premium Sticky Toolbar */}
-      <header className="h-20 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-2xl flex items-center justify-between px-4 md:px-8 z-[100] shrink-0">
-        <div className="flex items-center gap-2 md:gap-6">
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="md:hidden p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+      {/* Premium Sticky Toolbar */}
+      <AnimatePresence>
+        {!isToolbarHidden && (
+          <motion.header 
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            exit={{ y: -100 }}
+            className="h-20 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-2xl flex items-center justify-between px-4 md:px-8 z-[100] shrink-0"
           >
-            <FileText className="w-5 h-5" />
-          </button>
-          
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex w-10 h-10 rounded-xl bg-indigo-600 items-center justify-center shadow-[0_0_20px_-5px_rgba(79,70,229,0.5)]">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-[10px] md:text-sm font-black tracking-tight uppercase truncate max-w-[120px] md:max-w-[200px]">
-                {title}
-              </h1>
-              <div className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                <span className={cn("w-1.5 h-1.5 rounded-full", isPenActive ? "bg-indigo-500 animate-pulse" : "bg-emerald-500")} />
-                <span className="hidden xs:inline">{isPenActive ? 'Drawing Mode' : 'View Mode'}</span>
-                <span className="xs:hidden">{isPenActive ? 'Draw' : 'View'}</span>
+            <div className="flex items-center gap-2 md:gap-6">
+              <button 
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="md:hidden p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <FileText className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:flex w-10 h-10 rounded-xl bg-primary items-center justify-center shadow-[0_0_20px_-5px_rgba(var(--primary-rgb),0.5)]">
+                  <FileText className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-[10px] md:text-sm font-black tracking-tight uppercase truncate max-w-[120px] md:max-w-[200px]">
+                    {title}
+                  </h1>
+                  <div className="flex items-center gap-2 text-[8px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                    <span className={cn("w-1.5 h-1.5 rounded-full", isPenActive ? "bg-primary animate-pulse" : "bg-emerald-500")} />
+                    <span className="hidden xs:inline">{isPenActive ? 'Drawing Mode' : 'View Mode'}</span>
+                    <span className="xs:hidden">{isPenActive ? 'Draw' : 'View'}</span>
+                  </div>
+                </div>
               </div>
+
+              <div className="hidden md:block h-8 w-px bg-zinc-800 mx-2" />
+
+              {/* View Controls - Mobile/Desktop */}
+              <div className="flex items-center bg-zinc-800/50 rounded-xl p-1 gap-1">
+                <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-[10px] font-black w-11 md:w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
+                <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setIsToolbarHidden(true)}
+                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 transition-all text-[10px] font-bold uppercase"
+              >
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>Focus Mode</span>
+              </button>
             </div>
-          </div>
 
-          <div className="hidden md:block h-8 w-px bg-zinc-800 mx-2" />
+            {/* Action Controls */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <button
+                onClick={handleDownloadOnly}
+                disabled={isExporting}
+                className="p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all text-xs font-bold flex items-center gap-2"
+              >
+                <Save className="w-3.5 h-3.5" /> 
+                <span className="hidden md:inline">Draft</span>
+              </button>
 
-          {/* View Controls - Mobile/Desktop */}
-          <div className="flex items-center bg-zinc-800/50 rounded-xl p-1 gap-1">
-            <button onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <span className="text-[10px] font-black w-11 md:w-12 text-center uppercase tracking-tighter">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 md:p-2 hover:bg-zinc-700 rounded-lg transition-colors">
-              <ZoomIn className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+              <div className="hidden md:block h-8 w-px bg-zinc-800 mx-1" />
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 md:gap-3">
-          <button
-            onClick={handleDownloadOnly}
-            disabled={isExporting}
-            className="p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all text-xs font-bold flex items-center gap-2"
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="px-4 py-2.5 md:px-8 md:py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-zinc-800 disabled:text-zinc-500 transition-all text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 shadow-xl"
+              >
+                {isExporting ? <div className="w-3 h-3 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                Finalize
+              </button>
+            </div>
+          </motion.header>
+        )}
+      </AnimatePresence>
+
+      {!isToolbarHidden ? (
+          null
+      ) : (
+          <button 
+            onClick={() => setIsToolbarHidden(false)}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-primary font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3 backdrop-blur-xl"
           >
-            <Save className="w-3.5 h-3.5" /> 
-            <span className="hidden md:inline">Download</span>
+            <Eye className="w-4 h-4" />
+            Restore Toolbar
           </button>
-
-          <div className="hidden md:block h-8 w-px bg-zinc-800 mx-1" />
-
-          <button
-            onClick={handleExport}
-            disabled={isExporting}
-            className="px-4 py-2.5 md:px-8 md:py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 transition-all text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 shadow-xl"
-          >
-            {isExporting ? <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-            Finalize
-          </button>
-        </div>
-      </header>
+      )}
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Thumbnails Sidebar */}
@@ -427,7 +465,7 @@ export function DigitalSigner({
                 onClick={() => scrollToPage(idx)}
                 className={cn(
                   "w-full aspect-[1/1.4] rounded-xl border-2 transition-all relative group overflow-hidden bg-white",
-                  currentPage === idx ? "border-indigo-600 shadow-2xl scale-[1.02]" : "border-zinc-800 grayscale hover:grayscale-0 hover:border-zinc-600"
+                  currentPage === idx ? "border-primary shadow-2xl scale-[1.02]" : "border-zinc-800 grayscale hover:grayscale-0 hover:border-zinc-600"
                 )}
               >
                 <img src={page.dataUrl} className="w-full h-full object-cover" alt="" />
@@ -537,62 +575,86 @@ export function DigitalSigner({
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 p-3 md:p-6 rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col md:gap-6 w-fit max-w-[calc(100vw-2rem)]"
+                className="bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 p-4 md:p-6 rounded-3xl shadow-2xl flex flex-col md:gap-6 w-fit max-w-[calc(100vw-2rem)]"
               >
-                <div className="flex flex-row md:flex-col gap-4 md:gap-6 items-center md:items-stretch">
-                  {/* Custom Rect Thickness Component */}
-                  <div className="space-y-2 md:space-y-3">
-                    <div className="hidden md:flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                      <span>Pen Weight</span>
-                      <span>{penSize}pt</span>
-                    </div>
-                    <div className="flex gap-1.5 md:gap-2">
-                      {[0.5, 1.5, 3, 5].map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setPenSize(size)}
-                          className={cn(
-                            "w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl border-2 transition-all flex items-center justify-center relative group",
-                            penSize === size ? "bg-indigo-600 border-indigo-500 shadow-lg" : "bg-zinc-800 border-zinc-700 hover:border-zinc-500"
-                          )}
-                        >
-                          <div 
-                            className="bg-current rounded-full" 
-                            style={{ width: `${size * 1.5 + 2}px`, height: `${size * 1.5 + 2}px`, color: penSize === size ? 'white' : '#71717a' }} 
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="hidden md:block h-px w-full bg-zinc-800" />
-                  <div className="md:hidden w-px h-8 bg-zinc-800" />
-
-                  <div className="flex flex-row gap-2 md:gap-3">
-                    <label className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest group">
-                      <ImageIcon className="w-4 h-4 text-zinc-400 group-hover:text-indigo-400" />
-                      <span className="hidden md:inline">Upload Signature</span>
-                      <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                    </label>
-
-                    <button 
-                      onClick={() => signaturePads.current[currentPage]?.clear()}
-                      className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-red-500/10 hover:text-red-400 text-zinc-400 transition-all flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span className="hidden md:inline">Clear</span>
+                <div className="flex items-center justify-between mb-2 md:hidden">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Pen Settings</span>
+                    <button onClick={() => setIsSettingsCollapsed(!isSettingsCollapsed)} className="p-1">
+                        {isSettingsCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
-                  </div>
                 </div>
+
+                {!isSettingsCollapsed && (
+                  <div className="flex flex-row md:flex-col gap-4 md:gap-6 items-center md:items-stretch">
+                    {/* Custom Rect Thickness Component */}
+                    <div className="space-y-2 md:space-y-3">
+                      <div className="hidden md:flex justify-between items-center text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        <span>Pen Weight</span>
+                        <button onClick={() => setIsSettingsCollapsed(true)} className="p-1 hover:text-white transition-colors">
+                            <ChevronDown size={14} />
+                        </button>
+                      </div>
+                      <div className="flex gap-1.5 md:gap-2">
+                        {[0.5, 1.5, 3, 5].map((size) => (
+                          <button
+                            key={size}
+                            onClick={() => setPenSize(size)}
+                            className={cn(
+                              "w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl border-2 transition-all flex items-center justify-center relative group",
+                              penSize === size ? "bg-primary border-primary shadow-lg" : "bg-zinc-800 border-zinc-700 hover:border-zinc-500"
+                            )}
+                          >
+                            <div 
+                              className="bg-current rounded-full" 
+                              style={{ width: `${size * 1.5 + 2}px`, height: `${size * 1.5 + 2}px`, color: penSize === size ? 'var(--primary-foreground)' : '#71717a' }} 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="hidden md:block h-px w-full bg-zinc-800" />
+                    <div className="md:hidden w-px h-8 bg-zinc-800" />
+
+                    <div className="flex flex-row gap-2 md:gap-3">
+                      <label className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-zinc-700 transition-all cursor-pointer flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest group">
+                        <ImageIcon className="w-4 h-4 text-zinc-400 group-hover:text-primary" />
+                        <span className="hidden md:inline">Upload</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                      </label>
+
+                      <button 
+                        onClick={() => signaturePads.current[currentPage]?.clear()}
+                        className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-red-500/10 hover:text-red-400 text-zinc-400 transition-all flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="hidden md:inline">Clear</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {isSettingsCollapsed && (
+                    <button 
+                        onClick={() => setIsSettingsCollapsed(false)}
+                        className="hidden md:flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest"
+                    >
+                        <ChevronUp size={14} />
+                        Settings
+                    </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
 
           <button
-            onClick={() => setIsPenActive(!isPenActive)}
+            onClick={() => {
+                setIsPenActive(!isPenActive);
+                if (!isPenActive) setIsToolbarHidden(true);
+            }}
             className={cn(
               "w-14 h-14 md:w-20 md:h-20 rounded-[1.2rem] md:rounded-[2.5rem] flex items-center justify-center transition-all shadow-2xl group",
-              isPenActive ? "bg-zinc-900 border-2 border-indigo-500 text-indigo-400" : "bg-indigo-600 text-white hover:scale-110 active:scale-95"
+              isPenActive ? "bg-zinc-900 border-2 border-primary text-primary" : "bg-primary text-primary-foreground hover:scale-110 active:scale-95"
             )}
           >
             {isPenActive ? <X className="w-6 h-6 md:w-8 md:h-8" /> : <PenTool className="w-6 h-6 md:w-8 md:h-8 group-hover:rotate-12 transition-transform" />}
@@ -607,14 +669,14 @@ export function DigitalSigner({
             className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-3xl flex flex-col items-center justify-center p-6 text-center"
           >
             <div className="relative">
-              <div className="w-24 h-24 md:w-32 md:h-32 border-2 border-indigo-500/10 rounded-full" />
-              <div className="absolute inset-0 w-24 h-24 md:w-32 md:h-32 border-t-2 border-indigo-500 rounded-full animate-spin" />
+              <div className="w-24 h-24 md:w-32 md:h-32 border-2 border-primary/10 rounded-full" />
+              <div className="absolute inset-0 w-24 h-24 md:w-32 md:h-32 border-t-2 border-primary rounded-full animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <FileText className="w-6 h-6 md:w-8 md:h-8 text-indigo-500 animate-pulse" />
+                <FileText className="w-6 h-6 md:w-8 md:h-8 text-primary animate-pulse" />
               </div>
             </div>
             <p className="text-xl md:text-2xl font-black mt-8 md:mt-12 tracking-tighter text-white uppercase italic">Processing Document</p>
-            <p className="text-zinc-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-[0.3em]">Calibrating Vector Engine</p>
+            <p className="text-zinc-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-[0.3em]">Building Signed Artifact</p>
           </motion.div>
         )}
       </AnimatePresence>

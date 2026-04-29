@@ -437,6 +437,8 @@ export interface Database {
                     landlord_signed_at: string | null
                     signing_link_token_hash: string | null
                     signature_lock_version: number
+                    signed_document_url: string | null
+                    signed_document_path: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -459,6 +461,8 @@ export interface Database {
                     landlord_signed_at?: string | null
                     signing_link_token_hash?: string | null
                     signature_lock_version?: number
+                    signed_document_url?: string | null
+                    signed_document_path?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -480,6 +484,8 @@ export interface Database {
                     landlord_signed_at?: string | null
                     signing_link_token_hash?: string | null
                     signature_lock_version?: number
+                    signed_document_url?: string | null
+                    signed_document_path?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]
