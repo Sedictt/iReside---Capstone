@@ -21,6 +21,7 @@ describe("POST /api/iris/redact", () => {
             isSensitive: boolean;
             redactedMessage: string;
             isPhishing: boolean;
+            source: string;
         };
 
         expect(response.status).toBe(200);

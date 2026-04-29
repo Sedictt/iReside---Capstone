@@ -10,8 +10,8 @@ describe("profanity candidate generator", () => {
         const rows = parseValCsv(csvText);
 
         expect(rows.length).toBeGreaterThan(2000);
-        expect(rows.every((row) => row.text.length > 0)).toBe(true);
-        expect(rows.every((row) => row.label === "0" || row.label === "1")).toBe(true);
+        expect(rows.every((row: any) => row.text.length > 0)).toBe(true);
+        expect(rows.every((row: any) => row.label === "0" || row.label === "1")).toBe(true);
     });
 
     it("generates non-empty reviewed candidates without null terms", () => {

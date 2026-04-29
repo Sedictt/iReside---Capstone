@@ -42,6 +42,7 @@ import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/lea
 import type { LeaseStatus } from "@/types/database";
 import { SignaturePad } from "./SignaturePad";
 import { useProperty } from "@/context/PropertyContext";
+import { generateLeasePdf } from "@/lib/lease-pdf";
 
 // ─── Types ────────────────────────────────────────────────────────────
 type ApplicationStatus =
@@ -354,6 +355,48 @@ export function RentApplications() {
     const [documentLoading, setDocumentLoading] = useState(true);
     const [showMoreFilters, setShowMoreFilters] = useState(false);
     const [showInviteTools, setShowInviteTools] = useState(false);
+    const [leasePdfBlob, setLeasePdfBlob] = useState<Blob | null>(null);
+
+    // Generate PDF for countersigning
+    useEffect(() => {
+        const generate = async () => {
+            if (!selectedApp || !selectedApp.lease) {
+                setLeasePdfBlob(null);
+                return;
+            }
+
+            try {
+                // Recreate the PDF. In a real app, we'd fetch the existing PDF.
+                const blob = await generateLeasePdf({
+                    id: selectedApp.lease.id,
+                    tenant: {
+                        name: selectedApp.applicant.name,
+                        email: selectedApp.applicant.email,
+                    },
+                    landlord: {
+                        name: "Property Management",
+                        email: "mgmt@ireside.com",
+                    },
+                    property: {
+                        name: selectedApp.propertyName,
+                        address: "Property Address",
+                    },
+                    unit: {
+                        name: selectedApp.unitNumber,
+                    },
+                    startDate: "2024-05-01", // Placeholder
+                    endDate: "2025-05-01", // Placeholder
+                    monthlyRent: selectedApp.monthlyRent || 0,
+                    securityDeposit: (selectedApp.monthlyRent || 0) * 2, // Placeholder
+                });
+                setLeasePdfBlob(blob);
+            } catch (err) {
+                console.error("PDF generation failed:", err);
+            }
+        };
+
+        generate();
+    }, [selectedApp]);
 
     useEffect(() => { if (previewUrl) setDocumentLoading(true); }, [previewUrl]);
 
@@ -1118,7 +1161,14 @@ export function RentApplications() {
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-black uppercase text-muted-foreground">Your Signature</p>
-                                    <SignaturePad onSave={setPendingCountersignature} onClear={() => setPendingCountersignature(null)} width={800} height={180} />
+                                    <SignaturePad 
+                                        onSave={setPendingCountersignature} 
+                                        onClear={() => setPendingCountersignature(null)} 
+                                        width={800} 
+                                        height={180} 
+                                        pdfBlob={leasePdfBlob}
+                                        documentTitle={`Lease - ${selectedApp.propertyName} ${selectedApp.unitNumber}`}
+                                    />
                                 </div>
                                 <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-black uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50">
                                     {countersignState.loading ? "Signing..." : "Complete Execution"}

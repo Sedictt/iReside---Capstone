@@ -419,7 +419,7 @@ export default function LandlordDashboard() {
                                             <PaymentCard
                                                 payment={topItem}
                                                 fallbackAvatar={FALLBACK_AVATAR}
-                                                onClick={(e) => {
+                                                onClick={(e: React.MouseEvent) => {
                                                     setSelectedActionPayment(topItem);
                                                     setPopoutPosition({ x: e.clientX, y: e.clientY });
                                                 }}
@@ -663,7 +663,7 @@ export default function LandlordDashboard() {
     );
 }
 
-function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentListItem; fallbackAvatar: string; onClick?: () => void }) {
+function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentListItem; fallbackAvatar: string; onClick?: (e: React.MouseEvent) => void }) {
     const { tenant, unit, amount, status, date, avatar } = payment;
     const isPaid = status === 'Paid';
     const isNearDue = status === 'Near Due';
