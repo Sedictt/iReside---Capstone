@@ -236,7 +236,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Invalid invite mode." }, { status: 400 });
     }
 
-    if (applicationType !== "face_to_face" && applicationType !== "online") {
+    if (applicationType !== "face_to_face" && applicationType !== "online" && applicationType !== "existing_tenant") {
         return NextResponse.json({ error: "Invalid invite application type." }, { status: 400 });
     }
 

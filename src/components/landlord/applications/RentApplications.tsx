@@ -20,7 +20,6 @@ import {
     Briefcase,
     ArrowRight,
     X,
-    Shield,
     AlertCircle,
     TrendingUp,
     Users,
@@ -67,7 +66,6 @@ interface Applicant {
     phone: string;
     occupation: string;
     monthlyIncome: number | null;
-    creditScore: number | null;
     avatar?: string | null;
     avatarBgColor?: string | null;
 }
@@ -231,29 +229,7 @@ const calculateApplicationProgress = (app: RentApplication) => {
 
 const resolveImage = (value: string | null | undefined) => value?.trim() ? value : FALLBACK_PROPERTY_IMAGE;
 
-function getCreditScoreColor(score: number | null) {
-    if (score === null || Number.isNaN(score)) return "text-slate-500";
-    if (score >= 750) return "text-emerald-500";
-    if (score >= 700) return "text-lime-500";
-    if (score >= 650) return "text-amber-500";
-    return "text-red-500";
-}
 
-function getCreditScoreDotColor(score: number | null) {
-    if (score === null || Number.isNaN(score)) return "bg-slate-400";
-    if (score >= 750) return "bg-emerald-500";
-    if (score >= 700) return "bg-lime-500";
-    if (score >= 650) return "bg-amber-500";
-    return "bg-red-500";
-}
-
-function getCreditScoreLabel(score: number | null) {
-    if (score === null || Number.isNaN(score)) return "Not provided";
-    if (score >= 750) return "Excellent";
-    if (score >= 700) return "Good";
-    if (score >= 650) return "Fair";
-    return "Poor";
-}
 
 // ─── Sub-Components ──────────────────────────────────────────────────
 
@@ -992,19 +968,28 @@ export function RentApplications() {
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{formatCurrency(selectedApp.applicant.monthlyIncome)}</p>
                                             </div>
+
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    <Shield className="h-3 w-3" /> Credit
+                                                    <Clock className="h-3 w-3" /> Application Date
                                                 </span>
-                                                <p className={cn("text-sm font-black", getCreditScoreColor(selectedApp.applicant.creditScore))}>
-                                                    {selectedApp.applicant.creditScore || "N/A"} ({getCreditScoreLabel(selectedApp.applicant.creditScore)})
-                                                </p>
+                                                <p className="text-sm font-black text-foreground">{formatDate(selectedApp.submittedDate)}</p>
                                             </div>
+
                                             <div className="space-y-1">
                                                 <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                                     <Calendar className="h-3 w-3" /> Preferred Move-in
                                                 </span>
                                                 <p className="text-sm font-black text-foreground">{formatDate(selectedApp.requestedMoveIn)}</p>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                                    <Filter className="h-3 w-3" /> Intake Source
+                                                </span>
+                                                <p className="text-sm font-black text-foreground capitalize">
+                                                    {selectedApp.source?.replace(/_/g, ' ') || "Online"}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
