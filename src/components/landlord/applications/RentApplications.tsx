@@ -34,13 +34,21 @@ import {
     Sparkles,
 } from "lucide-react";
 import { ToolAccessBar } from "./ToolAccessBar";
-import { WalkInApplicationModal } from "./WalkInApplicationModal";
-import { TenantInviteManager } from "./TenantInviteManager";
+import dynamic from "next/dynamic";
+
+const WalkInApplicationModal = dynamic(() => import("@/components/landlord/applications/WalkInApplicationModal").then(mod => mod.WalkInApplicationModal), {
+    ssr: false,
+});
+
+import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { ContractPreviewModal } from "@/components/landlord/lease/ContractPreviewModal";
 import { LeaseStatusBadge } from "@/components/landlord/leases/LeaseStatusBadge";
 import { LeaseAuditTrail, type LeaseAuditEvent } from "@/components/landlord/leases/LeaseAuditTrail";
 import type { LeaseStatus } from "@/types/database";
-import { SignaturePad } from "./SignaturePad";
+const SignaturePad = dynamic(() => import("./SignaturePad").then(mod => mod.SignaturePad), {
+    ssr: false,
+    loading: () => <div className="h-[200px] w-full bg-muted/50 rounded-2xl animate-pulse flex items-center justify-center text-xs font-black uppercase tracking-widest text-muted-foreground">Loading Signer...</div>
+});
 import { useProperty } from "@/context/PropertyContext";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 
