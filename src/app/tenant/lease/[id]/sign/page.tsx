@@ -1,79 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { LeaseHeader } from "@/components/lease/LeaseHeader";
-import { LeaseDocument } from "@/components/lease/LeaseDocument";
-import { SignatureModal } from "@/components/lease/SignatureModal";
-import { CheckCircle, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-
-// Mock Data matching the screenshot
-const MOCK_DATA = {
-    parties: {
-        landlord: "Skyline Property Management LLC",
-        tenant: "Alex J. Richardson",
-    },
-    property: {
-        unit: "Unit 402, The Beacon Towers",
-        street: "880 Mission Street",
-        city: "San Francisco",
-        zip: "CA 94103",
-    },
-    term: {
-        start: "November 1, 2024",
-        end: "October 31, 2025",
-    },
-    rent: {
-        monthly: 3200,
-        due: "1st",
-    },
-    deposit: 3200,
-};
-
-const STEPS = [
-    { id: 1, label: "Details" },
-    { id: 2, label: "Review" },
-    { id: 3, label: "Sign" },
-];
+import { generateLeasePdf } from "@/lib/lease-pdf";
+import { DigitalSigner } from "@/components/shared/DigitalSigner/DigitalSigner";
+import { CheckCircle, Loader2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LeaseSignaturePage() {
     const params = useParams();
     const id = params?.id as string;
     const router = useRouter();
 
-    const [isModalOpen, setIsModalOpen] = useState(true);
     const [signed, setSigned] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSign = async (signature: string) => {
+    // Load/Generate PDF
+    useEffect(() => {
+        const load = async () => {
+            try {
+                // In a real scenario, we'd fetch actual lease data. 
+                // For this legacy route, we'll generate it with mock data if needed, 
+                // but let's try to make it look professional.
+                const blob = await generateLeasePdf({
+                    id: `LEGACY-${id}`,
+                    tenant: { name: "Alex J. Richardson", email: "alex@example.com" },
+                    landlord: { name: "Skyline Property Management LLC", email: "mgmt@skyline.com" },
+                    property: { name: "The Beacon Towers", address: "880 Mission Street, San Francisco, CA 94103" },
+                    unit: { name: "Unit 402" },
+                    startDate: "2024-11-01",
+                    endDate: "2025-10-31",
+                    monthlyRent: 3200,
+                    securityDeposit: 3200,
+                });
+                setPdfBlob(blob);
+            } catch (err) {
+                setError("Failed to load lease document.");
+            }
+        };
+        load();
+    }, []);
+
+    const handleSigned = async (blob: Blob) => {
         setIsSubmitting(true);
-        // Simulate API call or processing
-        console.log("Processing signature:", signature);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setSigned(true);
-        setIsSubmitting(false);
-        setIsModalOpen(false);
+        try {
+            // Simulate upload
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            setSigned(true);
+        } catch (err) {
+            setError("Failed to save signature.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (signed) {
         return (
-            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-4">
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-4">
                 <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
+                    initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="bg-slate-900 p-8 rounded-2xl border border-emerald-500/20 shadow-2xl text-center max-w-md w-full"
+                    className="bg-neutral-900 p-12 rounded-[3rem] border border-emerald-500/20 shadow-2xl text-center max-w-md w-full"
                 >
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 mb-6 border border-emerald-500/20">
-                        <CheckCircle className="h-10 w-10 text-emerald-500" />
+                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/10 mb-8 border border-emerald-500/20">
+                        <CheckCircle className="h-12 w-12 text-emerald-500" />
                     </div>
-                    <h1 className="text-2xl font-bold mb-2">Lease Signed Successfully!</h1>
-                    <p className="text-slate-400 mb-8">
-                        Your lease agreement for <span className="text-white font-medium">{MOCK_DATA.property.unit}</span> has been finalized securely.
+                    <h1 className="text-3xl font-black mb-4 tracking-tight">Lease Executed</h1>
+                    <p className="text-neutral-400 mb-10 leading-relaxed">
+                        Your agreement for <span className="text-white font-bold">Unit 402, The Beacon Towers</span> has been finalized and secured.
                     </p>
                     <button
                         onClick={() => router.push('/tenant/dashboard')}
-                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-blue-500/25"
+                        className="w-full bg-primary hover:bg-primary/90 text-black font-black py-4 rounded-2xl transition-all shadow-xl shadow-primary/10 uppercase text-xs tracking-widest"
                     >
                         Go to Dashboard
                     </button>
@@ -82,52 +82,50 @@ export default function LeaseSignaturePage() {
         );
     }
 
-    return (
-        <div className="min-h-[100dvh] bg-slate-950 relative overflow-x-hidden">
-            <LeaseHeader currentStep={3} steps={STEPS} leaseId={id || "LR-9821-X"} />
-
-            <main className="container mx-auto px-4 py-8 md:py-12 pb-32">
-                <div className="flex justify-center">
-                    <LeaseDocument
-                        leaseId={id || "LR-9821-X"}
-                        parties={MOCK_DATA.parties}
-                        property={MOCK_DATA.property}
-                        term={MOCK_DATA.term}
-                        rent={MOCK_DATA.rent}
-                        deposit={MOCK_DATA.deposit}
-                    />
+    if (error) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center p-6">
+                <div className="text-center space-y-4">
+                    <p className="text-red-400 font-bold">{error}</p>
+                    <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-white underline">Retry</button>
                 </div>
-            </main>
+            </div>
+        );
+    }
 
-            {/* Floating Action Button to reopen modal if closed */}
-            {!isModalOpen && (
-                <motion.div
-                    initial={{ y: 100 }}
-                    animate={{ y: 0 }}
-                    className="fixed bottom-8 right-8 z-40"
-                >
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 px-6 py-3 rounded-full font-semibold transition-all transform hover:scale-105 flex items-center gap-2"
+    return (
+        <div className="min-h-screen bg-black">
+            <AnimatePresence>
+                {pdfBlob ? (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        className="h-screen w-screen"
                     >
-                        <span className="text-lg">✎</span> Finalize Lease
-                    </button>
-                </motion.div>
-            )}
+                        <DigitalSigner 
+                            file={pdfBlob}
+                            title="Lease Agreement - Unit 402"
+                            onSigned={handleSigned}
+                        />
+                    </motion.div>
+                ) : (
+                    <div className="h-screen w-screen flex flex-col items-center justify-center gap-6">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Preparing Secure Document</p>
+                    </div>
+                )}
+            </AnimatePresence>
 
-            <SignatureModal
-                isOpen={isModalOpen}
-                onSign={handleSign}
-                onClear={() => { }}
-                onClose={() => setIsModalOpen(false)}
-            />
-
-            {/* Loading Overlay */}
             {isSubmitting && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
-                    <div className="flex flex-col items-center gap-4 text-white">
-                        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-                        <p className="font-medium animate-pulse text-lg">Finalizing secure document...</p>
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-xl">
+                    <div className="flex flex-col items-center gap-6 text-white">
+                        <div className="relative">
+                            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="h-8 w-8 rounded-full bg-primary/20 animate-ping" />
+                            </div>
+                        </div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] animate-pulse">Encrypting & Finalizing</p>
                     </div>
                 </div>
             )}

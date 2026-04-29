@@ -147,3 +147,12 @@ export async function updateSession(request: NextRequest) {
 
     return supabaseResponse;
 }
+
+export const isAllowlistedTenantRoute = (pathname: string) =>
+    pathname.startsWith("/tenant/onboarding") || pathname.startsWith("/tenant/sign-lease/");
+
+export const isAllowlistedTenantWritePath = (pathname: string) =>
+    pathname.startsWith("/api/tenant/onboarding/") || !!pathname.match(/\/api\/tenant\/leases\/[^/]+\/sign/);
+
+export const isTenantApiWriteRequest = (request: NextRequest) =>
+    request.nextUrl.pathname.startsWith("/api/tenant/") && ["POST", "PATCH", "PUT", "DELETE"].includes(request.method);

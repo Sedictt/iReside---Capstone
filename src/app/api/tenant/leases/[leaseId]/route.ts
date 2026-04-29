@@ -38,6 +38,10 @@ export async function GET(
         landlord:profiles!leases_landlord_id_fkey (
           full_name,
           email
+        ),
+        tenant:profiles!leases_tenant_id_fkey (
+          full_name,
+          email
         )
       `)
       .eq("id", leaseId)

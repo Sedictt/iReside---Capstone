@@ -27,6 +27,7 @@ import {
     PenTool,
     DollarSign,
 } from "lucide-react";
+import { generateLeasePdf } from "@/lib/lease-pdf";
 import { SignaturePad } from "./SignaturePad";
 import { Logo } from "@/components/ui/Logo";
 import { SigningModeSelector } from "./SigningModeSelector";
@@ -334,6 +335,8 @@ export function WalkInApplicationModal({
         landlord_signature: null,
     });
 
+    const [leasePdfBlob, setLeasePdfBlob] = useState<Blob | null>(null);
+
     const [paymentData, setPaymentData] = useState<{
         advance_payment: PaymentData;
         security_deposit_payment: PaymentData;
@@ -356,6 +359,46 @@ export function WalkInApplicationModal({
 
     // Derive currentUnit from selectedUnit
     const currentUnit = units.find((u) => u.id === selectedUnit);
+
+    // Generate PDF for signing
+    useEffect(() => {
+        const generate = async () => {
+            if (!currentUnit || !leaseData.start_date || !leaseData.end_date) {
+                setLeasePdfBlob(null);
+                return;
+            }
+
+            try {
+                const blob = await generateLeasePdf({
+                    id: `WALK-${Date.now()}`,
+                    tenant: {
+                        name: formData.applicant_name || "Prospective Tenant",
+                        email: formData.applicant_email || "N/A",
+                    },
+                    landlord: {
+                        name: "Property Management", // Placeholder
+                        email: "mgmt@ireside.com", // Placeholder
+                    },
+                    property: {
+                        name: currentUnit.property_name,
+                        address: "Property Address", // Placeholder
+                    },
+                    unit: {
+                        name: currentUnit.name,
+                    },
+                    startDate: leaseData.start_date,
+                    endDate: leaseData.end_date,
+                    monthlyRent: leaseData.monthly_rent,
+                    securityDeposit: leaseData.security_deposit,
+                });
+                setLeasePdfBlob(blob);
+            } catch (err) {
+                console.error("PDF generation failed:", err);
+            }
+        };
+
+        generate();
+    }, [leaseData, formData, currentUnit]);
 
     // For create mode, preserve in-progress draft across close/reopen.
     // For edit mode, always rehydrate from the existing application payload.
@@ -1182,6 +1225,8 @@ export function WalkInApplicationModal({
                                                                     <SignaturePad
                                                                         onSave={(dataUrl) => setLeaseData({ ...leaseData, tenant_signature: dataUrl })}
                                                                         onClear={() => setLeaseData({ ...leaseData, tenant_signature: null })}
+                                                                        pdfBlob={leasePdfBlob}
+                                                                        documentTitle={`Lease - ${currentUnit?.property_name} ${currentUnit?.name}`}
                                                                     />
                                                                 </div>
                                                             ) : (
@@ -1223,6 +1268,8 @@ export function WalkInApplicationModal({
                                                                 <SignaturePad
                                                                     onSave={(dataUrl) => setLeaseData({ ...leaseData, landlord_signature: dataUrl })}
                                                                     onClear={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                                    pdfBlob={leasePdfBlob}
+                                                                    documentTitle={`Lease - ${currentUnit?.property_name} ${currentUnit?.name}`}
                                                                 />
                                                             ) : (
                                                                 <div className="space-y-4">

@@ -1,8 +1,4 @@
-/**
- * Test Suite for Login Page
- * Feature: user-authentication-login
- */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoginPage from "../page";
@@ -25,9 +21,9 @@ vi.mock("@/lib/supabase/client", () => ({
 // Test Fixtures
 // ---------------------------------------------------------------------------
 
-function mockRouter(push: vi.Mock) {
+function mockRouter(push: Mock) {
     const router = { push: push };
-    (useRouter as vi.Mock).mockReturnValue(router);
+    (useRouter as Mock).mockReturnValue(router);
     return router;
 }
 
@@ -36,13 +32,13 @@ function mockSearchParams(redirectUrl: string | null = null) {
     if (redirectUrl) {
         searchParams.set("redirect", redirectUrl);
     }
-    (useSearchParams as vi.Mock).mockReturnValue({
+    (useSearchParams as Mock).mockReturnValue({
         get: vi.fn((key: string) => searchParams.get(key)),
     });
     return searchParams;
 }
 
-function mockSupabaseClient(signInWithPassword: ReturnType<vi.Mock> = { data: null, error: null }, signInWithOAuth: ReturnType<vi.Mock> = { error: null }) {
+function mockSupabaseClient(signInWithPassword: any = { data: null, error: null }, signInWithOAuth: any = { error: null }) {
     const supabase = {
         auth: {
             signInWithPassword: vi.fn().mockResolvedValue(signInWithPassword),
@@ -56,7 +52,7 @@ function mockSupabaseClient(signInWithPassword: ReturnType<vi.Mock> = { data: nu
             })),
         })),
     };
-    (createClient as vi.Mock).mockReturnValue(supabase);
+    (createClient as Mock).mockReturnValue(supabase);
     return supabase;
 }
 
@@ -67,7 +63,7 @@ function mockSupabaseClient(signInWithPassword: ReturnType<vi.Mock> = { data: nu
 describe("LoginPage - UI and Form Validation", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockRouter(vi.fn());
+        mockRouter(vi.fn() as any);
         mockSearchParams();
         mockSupabaseClient({ data: null, error: null });
     });
@@ -123,7 +119,7 @@ describe("LoginPage - UI and Form Validation", () => {
         mockSupabaseClient({ data: null, error: null });
         // Override to never resolve
         const mockSignIn = vi.fn().mockReturnValue(new Promise(() => {}));
-        (createClient as vi.Mock).mockReturnValue({
+        (createClient as Mock).mockReturnValue({
             auth: { signInWithPassword: mockSignIn, signInWithOAuth: vi.fn() },
         });
 
@@ -154,7 +150,7 @@ describe("LoginPage - Authentication", () => {
 
     it("successfully logs in with valid credentials", async () => {
         const mockPush = vi.fn();
-        mockRouter(mockPush);
+        mockRouter(mockPush as any);
         mockSearchParams();
         mockSupabaseClient({
             data: {
@@ -181,7 +177,7 @@ describe("LoginPage - Authentication", () => {
 
     it("redirects tenant user to tenant dashboard after login", async () => {
         const mockPush = vi.fn();
-        mockRouter(mockPush);
+        mockRouter(mockPush as any);
         mockSearchParams();
         mockSupabaseClient({
             data: {
@@ -208,7 +204,7 @@ describe("LoginPage - Authentication", () => {
 
     it("redirects landlord user to landlord dashboard after login", async () => {
         const mockPush = vi.fn();
-        mockRouter(mockPush);
+        mockRouter(mockPush as any);
         mockSearchParams();
         mockSupabaseClient({
             data: {
@@ -235,7 +231,7 @@ describe("LoginPage - Authentication", () => {
 
     it("redirects admin user to admin dashboard after login", async () => {
         const mockPush = vi.fn();
-        mockRouter(mockPush);
+        mockRouter(mockPush as any);
         mockSearchParams();
         mockSupabaseClient({
             data: {
@@ -262,7 +258,7 @@ describe("LoginPage - Authentication", () => {
 
     it("respects redirect URL from query params", async () => {
         const mockPush = vi.fn();
-        mockRouter(mockPush);
+        mockRouter(mockPush as any);
         mockSearchParams("/custom/page");
         mockSupabaseClient({
             data: {
@@ -295,7 +291,7 @@ describe("LoginPage - Authentication", () => {
 describe("LoginPage - Error Handling", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockRouter(vi.fn());
+        mockRouter(vi.fn() as any);
         mockSearchParams();
     });
 
@@ -370,9 +366,10 @@ describe("LoginPage - Error Handling", () => {
 describe("LoginPage - Google OAuth", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // @ts-ignore
         delete window.location;
         window.location = { origin: "http://localhost:3000" } as any;
-        mockRouter(vi.fn());
+        mockRouter(vi.fn() as any);
         mockSearchParams();
     });
 
@@ -387,7 +384,7 @@ describe("LoginPage - Google OAuth", () => {
         fireEvent.click(googleButton);
 
         await waitFor(() => {
-            const supabase = (createClient as vi.Mock).mock.results[0].value;
+            const supabase = (createClient as Mock).mock.results[0].value;
             expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
                 provider: "google",
                 options: {
@@ -409,7 +406,7 @@ describe("LoginPage - Google OAuth", () => {
         fireEvent.click(googleButton);
 
         await waitFor(() => {
-            const supabase = (createClient as vi.Mock).mock.results[0].value;
+            const supabase = (createClient as Mock).mock.results[0].value;
             expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
                 provider: "google",
                 options: {
@@ -442,7 +439,7 @@ describe("LoginPage - Google OAuth", () => {
 describe("LoginPage - Accessibility and Navigation", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockRouter(vi.fn());
+        mockRouter(vi.fn() as any);
         mockSearchParams();
         mockSupabaseClient({ data: null, error: null });
     });
@@ -491,13 +488,13 @@ describe("LoginPage - Accessibility and Navigation", () => {
 describe("LoginPage - Integration", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockRouter(vi.fn());
+        mockRouter(vi.fn() as any);
         mockSearchParams();
     });
 
     it("handles successful login flow end-to-end", async () => {
         const mockPush = vi.fn();
-        mockRouter(mockPush);
+        mockRouter(mockPush as any);
         mockSupabaseClient({
             data: {
                 user: { user_metadata: { role: "tenant" } },
