@@ -676,7 +676,7 @@ function PaymentCard({ payment, fallbackAvatar, onClick }: { payment: PaymentLis
             <div className="flex items-center gap-4 relative z-10">
                 <div className="relative">
                     <div 
-                        className="h-12 w-12 rounded-full border-2 border-background overflow-hidden grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-110"
+                        className="h-12 w-12 rounded-full border-2 border-background overflow-hidden transition-all duration-500 group-hover:scale-110"
                         style={{ backgroundColor: (payment as any).avatarBgColor || '#171717' }}
                     >
                         <img src={avatar || fallbackAvatar} alt={tenant} className="h-full w-full object-cover" />

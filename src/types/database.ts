@@ -1843,6 +1843,64 @@ export interface Database {
                     }
                 ]
             }
+            expenses: {
+                Row: {
+                    id: string
+                    landlord_id: string
+                    property_id: string | null
+                    unit_id: string | null
+                    category: string
+                    amount: number
+                    date_incurred: string
+                    description: string
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    landlord_id: string
+                    property_id?: string | null
+                    unit_id?: string | null
+                    category: string
+                    amount: number
+                    date_incurred: string
+                    description: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    landlord_id?: string
+                    property_id?: string | null
+                    unit_id?: string | null
+                    category?: string
+                    amount?: number
+                    date_incurred?: string
+                    description?: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "expenses_landlord_id_fkey"
+                        columns: ["landlord_id"]
+                        referencedRelation: "profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "expenses_property_id_fkey"
+                        columns: ["property_id"]
+                        referencedRelation: "properties"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "expenses_unit_id_fkey"
+                        columns: ["unit_id"]
+                        referencedRelation: "units"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
         }
         Views: {
             [_ in never]: never
@@ -1906,6 +1964,7 @@ export type ConsultationDocument = Database['public']['Tables']['consultation_do
 export type LandlordStatisticsExport = Database['public']['Tables']['landlord_statistics_exports']['Row']
 export type Amenity = Database['public']['Tables']['amenities']['Row']
 export type AmenityBooking = Database['public']['Tables']['amenity_bookings']['Row']
+export type Expense = Database['public']['Tables']['expenses']['Row']
 
 // ---------- Joined / view types for common queries ----------
 export type UnitWithProperty = Unit & {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { CalendarDays, FileText, Loader2, Plus, Search, X, Filter } from "lucide-react";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
+import { RecordExpenseModal } from "@/components/landlord/invoices/RecordExpenseModal";
 import type { BillingWorkspace, InvoiceListItem } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,18 @@ import { useProperty } from "@/context/PropertyContext";
 
 type StudioStep = "rent" | "water" | "electricity";
 
+interface ExpenseItem {
+  id: string;
+  category: string;
+  amount: number;
+  date_incurred: string;
+  description: string;
+}
+
 export default function InvoicesPage() {
   const { selectedPropertyId } = useProperty();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [metrics, setMetrics] = useState({ totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
   const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -40,21 +50,28 @@ export default function InvoicesPage() {
   });
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isStudioOpen, setIsStudioOpen] = useState(false);
+  
+  // Finance Hub Tabs
+  const [activeTab, setActiveTab] = useState<"ledger" | "invoices" | "expenses">("ledger");
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const invoiceParams = new URLSearchParams({ propertyId: selectedPropertyId });
-      const [invoiceRes, workspaceRes] = await Promise.all([
+      const [invoiceRes, workspaceRes, expensesRes] = await Promise.all([
         fetch(`/api/landlord/invoices?${invoiceParams.toString()}`, { cache: "no-store" }),
         fetch("/api/landlord/payment-settings", { cache: "no-store" }),
+        fetch(`/api/landlord/expenses?${invoiceParams.toString()}`, { cache: "no-store" }),
       ]);
-      if (!invoiceRes.ok || !workspaceRes.ok) throw new Error();
+      if (!invoiceRes.ok || !workspaceRes.ok || !expensesRes.ok) throw new Error();
 
       const invoicePayload = await invoiceRes.json();
       const workspacePayload = (await workspaceRes.json()) as BillingWorkspace;
+      const expensesPayload = await expensesRes.json();
 
       setInvoices(invoicePayload.invoices ?? []);
+      setExpenses(expensesPayload.expenses ?? []);
       setMetrics(invoicePayload.metrics ?? { totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
       setWorkspace(workspacePayload);
       setGeneratorForm((current) => ({ ...current, leaseId: current.leaseId || workspacePayload.activeLeases[0]?.id || "" }));
@@ -250,26 +267,58 @@ export default function InvoicesPage() {
         <div>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
             <FileText className="h-3.5 w-3.5" />
-            Billing Operations
+            Financial Center
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Invoices</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Manage monthly rent invoices, utility add-ons, and meter readings.</p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
+        {/* Deprecated: Invoice Studio removed in favor of direct utility dashboard workflow */}
+        {/* 
         <button onClick={() => setIsStudioOpen(true)} className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95">
           <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
           Invoice Studio
         </button>
+        */}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <HeroStat label="Outstanding" value={formatPhpCurrency(metrics.totalOutstanding)} highlight="text-amber-500" />
-        <HeroStat label="Overdue" value={formatPhpCurrency(metrics.overdueAmount)} highlight="text-rose-500" />
-        <HeroStat label="Invoices" value={String(metrics.totalInvoices)} highlight="text-primary" />
+        {(() => {
+          const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+          const netCashFlow = metrics.collectedLast30Days - totalExpenses;
+          return (
+            <>
+              <HeroStat label="Net Cash Flow (30d)" value={formatPhpCurrency(netCashFlow)} highlight={netCashFlow >= 0 ? "text-emerald-500" : "text-rose-500"} />
+              <HeroStat label="Collected (30d)" value={formatPhpCurrency(metrics.collectedLast30Days)} highlight="text-primary" />
+              <HeroStat label="Total Expenses" value={formatPhpCurrency(totalExpenses)} highlight="text-amber-500" />
+            </>
+          );
+        })()}
       </div>
 
       {message && <div className="rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">{message}</div>}
 
-      <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl">
+      {/* Tabs Navigation */}
+      <div className="flex items-center gap-2 overflow-x-auto border-b border-border/50 pb-px">
+        {(["ledger", "invoices", "expenses"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={cn(
+              "px-6 py-3 text-sm font-bold uppercase tracking-wider transition-all border-b-2",
+              activeTab === tab
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+            )}
+          >
+            {tab === "ledger" && "Unified Ledger"}
+            {tab === "invoices" && "Invoices"}
+            {tab === "expenses" && "Expenses"}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "invoices" && (
+        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
         <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -378,7 +427,110 @@ export default function InvoicesPage() {
           {!loading && processedInvoices.length === 0 && <div className="rounded-[2rem] border border-border/50 bg-background/50 p-12 text-center text-sm font-medium text-muted-foreground shadow-inner">No matching invoices found.</div>}
         </div>
       </div>
+      )}
 
+      {/* Prototype: Ledger Tab */}
+      {activeTab === "ledger" && (
+        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
+          <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Overview</p>
+                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
+              </div>
+              <button className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-95">
+                Download Statement
+              </button>
+            </div>
+          </div>
+          <div className="rounded-[2rem] border border-border/50 bg-background/50 p-8 shadow-inner custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
+            {expenses.length === 0 && invoices.length === 0 ? (
+                <div className="p-12 text-center text-sm font-medium text-muted-foreground">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
+                    <FileText className="h-8 w-8" />
+                  </div>
+                  <p className="text-lg font-black text-foreground">No entries yet.</p>
+                  <p className="mt-2 max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {/* Simplified Timeline View */}
+                    {[...expenses.map(e => ({ type: 'expense' as const, date: new Date(e.date_incurred), amount: e.amount, label: e.category, desc: e.description })), ...invoices.filter(i => i.status === 'paid' || i.status === 'receipted' || i.status === 'confirmed').map(i => ({ type: 'income' as const, date: new Date(i.issuedDate), amount: i.amount, label: `Rent Payment`, desc: `Invoice ${i.invoiceNumber}` }))]
+                    .sort((a, b) => b.date.getTime() - a.date.getTime())
+                    .map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5">
+                            <div className="flex items-center gap-4">
+                                <div className={cn("flex h-10 w-10 items-center justify-center rounded-full", item.type === 'income' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
+                                    {item.type === 'income' ? <Plus className="h-5 w-5" /> : <Filter className="h-5 w-5" />}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-foreground capitalize">{item.label}</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.desc} • {item.date.toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <p className={cn("text-base font-black", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
+                                {item.type === 'income' ? '+' : '-'}{formatPhpCurrency(item.amount)}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Prototype: Expenses Tab */}
+      {activeTab === "expenses" && (
+        <div className="flex min-h-[50vh] flex-col rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4">
+          <div className="mb-6 flex shrink-0 flex-col gap-4 border-b border-border/50 pb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Outflow</p>
+                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Expense Log</h2>
+              </div>
+              <button 
+                onClick={() => setIsExpenseModalOpen(true)}
+                className="group inline-flex items-center gap-2.5 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:scale-105 hover:bg-primary/90 active:scale-95"
+              >
+                <Plus className="h-4 w-4" />
+                Record Expense
+              </button>
+            </div>
+          </div>
+          <div className="rounded-[2rem] border border-border/50 bg-background/50 p-8 shadow-inner custom-scrollbar overflow-y-auto max-h-[500px] space-y-4">
+            {expenses.length === 0 ? (
+                <div className="p-12 text-center text-sm font-medium text-muted-foreground">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
+                    <Filter className="h-8 w-8" />
+                  </div>
+                  <p className="text-lg font-black text-foreground">No expenses recorded yet.</p>
+                  <p className="mt-2 max-w-md mx-auto">Click &quot;Record Expense&quot; to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.</p>
+                </div>
+            ) : (
+                expenses.map(expense => (
+                    <div key={expense.id} className="flex items-center justify-between rounded-2xl border border-border/50 bg-card p-5 transition-all hover:bg-muted/50">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 text-rose-500">
+                                <Filter className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-foreground capitalize">{expense.category}</p>
+                                <p className="text-xs text-muted-foreground">{expense.description}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">Incurred: {new Date(expense.date_incurred).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-base font-black text-foreground">{formatPhpCurrency(expense.amount)}</p>
+                        </div>
+                    </div>
+                ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Deprecated: Invoice Studio Modal preserved but disabled in favor of Utility Billing Dashboard */}
+      {/* 
       {isStudioOpen && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
           <div className="custom-scrollbar flex max-h-[92vh] w-full max-w-2xl flex-col overflow-y-auto rounded-[2.5rem] border border-border/60 bg-card p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -547,8 +699,10 @@ export default function InvoicesPage() {
           </div>
         </div>
       )}
+      */}
 
       <InvoiceModal invoiceId={selectedInvoiceId} onClose={() => setSelectedInvoiceId(null)} onUpdated={loadData} />
+      <RecordExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} />
     </div>
   );
 }
