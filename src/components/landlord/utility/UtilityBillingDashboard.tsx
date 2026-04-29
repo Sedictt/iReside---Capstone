@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
     Zap, 
     Droplets, 
@@ -9,17 +9,16 @@ import {
     History, 
     Settings2, 
     Loader2,
-    Calendar,
     Building2,
     AlertCircle,
-    ArrowRight,
     Edit3,
     X,
     Camera,
     DollarSign,
-    Info,
     Check,
-    Plus
+    ArrowUpRight,
+    Trash2,
+    BarChart3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -47,15 +46,26 @@ type ReadingDraft = {
     };
 };
 
+type ReadingSaveRequest = {
+    leaseId: string;
+    utilityType: string;
+    billingPeriodStart: string;
+    billingPeriodEnd: string;
+    previousReading: number;
+    currentReading: number;
+    note: string;
+};
+
 export function UtilityBillingDashboard() {
     const { selectedPropertyId: globalPropertyId } = useProperty();
-    const [activeTab, setActiveTab] = useState<"readings" | "rates" | "history">("readings");
+    const [activeTab, setActiveTab] = useState<"readings" | "rates" | "payments" | "history">("readings");
     const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
-    const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+    const [selectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+    const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
     
     // Sync local property selection with global navbar selector
     useEffect(() => {
@@ -68,7 +78,7 @@ export function UtilityBillingDashboard() {
     
     const [drafts, setDrafts] = useState<ReadingDraft[]>([]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [workspaceRes, readingsRes] = await Promise.all([
@@ -140,17 +150,17 @@ export function UtilityBillingDashboard() {
 
             setDrafts(newDrafts);
         } catch (err) {
-            console.error("Fetch error:", err);
+            console.error(err);
             toast.error("Failed to load billing information");
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedMonth]);
 
     useEffect(() => {
         fetchData();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedMonth]);
+         
+    }, [fetchData]);
 
     const filteredDrafts = drafts.filter(d => {
         const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
@@ -159,8 +169,7 @@ export function UtilityBillingDashboard() {
     });
 
     const handleSaveReadings = async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const toSave: any[] = [];
+        const toSave: ReadingSaveRequest[] = [];
         const start = `${selectedMonth}-01`;
         const end = new Date(new Date(selectedMonth).getFullYear(), new Date(selectedMonth).getMonth() + 1, 0).toISOString().slice(0, 10);
 
@@ -215,11 +224,8 @@ export function UtilityBillingDashboard() {
     };
 
     const handleApplyToAll = async () => {
-        // Implementation for "Apply to All" logic
-        // This would sync the rates of the property default to all unit overrides
         toast.success("Applying property defaults to all units...");
         setIsApplyAllOpen(false);
-        // In a real app, this would hit an API to sync configs
     };
 
     const activeDraft = drafts.find(d => d.leaseId === selectedLeaseId);
@@ -227,107 +233,86 @@ export function UtilityBillingDashboard() {
     if (loading && !workspace) {
         return (
             <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
-                <p className="text-sm font-medium text-muted-foreground">Initializing billing module...</p>
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <p className="text-sm font-medium text-muted-foreground">Loading utility data...</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col space-y-8 animate-in fade-in duration-700">
-            {/* Header Section */}
-            <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-primary" />
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">Utility Billing</h1>
-                    </div>
-                    <p className="text-sm font-medium text-muted-foreground/80">
-                        Monthly meter management and consumption tracking
-                    </p>
+        <div className="flex flex-col space-y-8 pb-20 max-w-7xl mx-auto">
+            {/* Page Header */}
+            <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+                    <Building2 className="h-3 w-3" />
+                    Property Management
                 </div>
+                <h1 className="text-4xl font-black tracking-tight text-foreground">Utility Billing</h1>
+                <p className="text-sm text-muted-foreground font-medium">
+                    Centralized command for meter readings, billing strategies, and automated recovery.
+                </p>
+            </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <button 
-                        onClick={() => setIsApplyAllOpen(true)}
-                        className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-muted-foreground transition-all hover:border-primary/30 hover:text-primary"
-                    >
-                        <Settings2 className="h-4 w-4" />
-                        Apply to All
-                    </button>
-
-                    <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-sm">
-                        <div className="flex items-center gap-2 px-3">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <input 
-                                type="month" 
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="bg-transparent text-sm font-bold outline-none"
-                            />
-                        </div>
-                        <div className="h-6 w-px bg-border" />
-                        <div className="flex items-center gap-2 px-3">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <select 
-                                value={selectedPropertyId}
-                                onChange={(e) => setSelectedPropertyId(e.target.value)}
-                                className="bg-transparent text-sm font-bold outline-none"
+            {/* Navigation & Global Filters */}
+            <div className="flex flex-col gap-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/50">
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                        {[
+                            { id: "readings", label: "Meter Readings", icon: Zap },
+                            { id: "rates", label: "Billing Settings", icon: Settings2 },
+                            { id: "payments", label: "GCash Payments", icon: DollarSign },
+                            { id: "history", label: "History", icon: History }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as "readings" | "rates" | "payments" | "history")}
+                                className={cn(
+                                    "relative flex items-center gap-2.5 px-6 py-4 text-[10px] font-black uppercase tracking-[0.15em] transition-all border-b-2 whitespace-nowrap",
+                                    activeTab === tab.id 
+                                        ? "border-primary text-primary" 
+                                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                                )}
                             >
-                                <option value="all">All Properties</option>
-                                {workspace?.properties.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
-                        </div>
+                                <tab.icon className={cn("h-4 w-4", activeTab === tab.id ? "text-primary" : "text-muted-foreground/50")} />
+                                {tab.label}
+                                {activeTab === tab.id && (
+                                    <motion.div 
+                                        layoutId="activeTab"
+                                        className="absolute inset-0 bg-primary/5 -z-10"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                            </button>
+                        ))}
                     </div>
 
-                    <button 
-                        onClick={handleSaveReadings}
-                        disabled={saving}
-                        className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
-                    >
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        Commit Readings
-                    </button>
-                </div>
-            </header>
-
-            {/* Tabs */}
-            <div className="flex items-center justify-between border-b border-border">
-                <div className="flex">
-                    {[
-                        { id: "readings", label: "Meter Entry" },
-                        { id: "rates", label: "Rent Configuration" },
-                        { id: "payments", label: "Payment Methods" },
-                        { id: "history", label: "Billing History" }
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    ].map((tab: any) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={cn(
-                                "relative px-6 py-4 text-sm font-bold transition-all",
-                                activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            {tab.label}
-                            {activeTab === tab.id && (
-                                <motion.div layoutId="activeTabUnderline" className="absolute bottom-0 left-0 h-0.5 w-full bg-primary" />
-                            )}
-                        </button>
-                    ))}
+                    <div className="flex items-center gap-3 pb-4 md:pb-0">
+                        <div className="px-4 py-2 rounded-2xl bg-muted/50 border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            Latest Cycle
+                        </div>
+                    </div>
                 </div>
 
                 {activeTab === "readings" && (
-                    <div className="relative hidden md:block w-72 mb-2">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <input 
-                            placeholder="Filter by unit..." 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="h-10 w-full rounded-xl border border-border bg-card pl-10 pr-4 text-sm font-medium outline-none transition-all focus:ring-2 focus:ring-primary/10"
-                        />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <input 
+                                placeholder="Search units or tenants..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="h-11 w-full rounded-2xl border border-border bg-card pl-10 pr-4 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 shadow-sm"
+                            />
+                        </div>
+
+                        <button 
+                            onClick={handleSaveReadings}
+                            disabled={saving}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                        >
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            Save All Readings
+                        </button>
                     </div>
                 )}
             </div>
@@ -340,43 +325,116 @@ export function UtilityBillingDashboard() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="space-y-6"
+                        className="space-y-4"
                     >
-                        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/20">
-                                        <th className="px-6 py-5 text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground">Unit Identity</th>
-                                        <th className="px-6 py-5 text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground text-center bg-sky-500/5">Water Meter</th>
-                                        <th className="px-6 py-5 text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground text-center bg-amber-500/5">Elec Meter</th>
-                                        <th className="px-6 py-5 text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {filteredDrafts.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={4} className="px-6 py-24 text-center">
-                                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                                    <Building2 className="h-10 w-10 opacity-20" />
-                                                    <p className="text-sm font-medium">No units matching your selection.</p>
-                                                </div>
-                                            </td>
+                        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-border bg-muted/30 dark:bg-white/[0.02]">
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Water Readings</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">Electricity Readings</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
                                         </tr>
-                                    ) : filteredDrafts.map((draft) => (
-                                        <UnitRow 
-                                            key={draft.leaseId} 
-                                            draft={draft} 
-                                            onUpdate={(patch) => {
-                                                const newDrafts = [...drafts];
-                                                const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
-                                                newDrafts[index] = { ...newDrafts[index], ...patch };
-                                                setDrafts(newDrafts);
-                                            }}
-                                            onOpenDetail={() => setSelectedLeaseId(draft.leaseId)}
-                                        />
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {filteredDrafts.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-20 text-center">
+                                                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                                                        <Building2 className="h-12 w-12 opacity-20" />
+                                                        <p className="text-sm font-medium">No units found matching your criteria</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : filteredDrafts.map((draft) => (
+                                            <tr key={draft.leaseId} className="hover:bg-muted/5 transition-colors">
+                                                <td className="px-6 py-5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-base font-bold text-foreground">{draft.unitName}</span>
+                                                        <span className="text-xs text-muted-foreground">₱{draft.rentAmount.toLocaleString()} / month</span>
+                                                    </div>
+                                                </td>
+                                                
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center justify-center gap-4">
+                                                        <div className="text-center">
+                                                            <span className="text-[10px] block text-muted-foreground uppercase font-bold mb-0.5">Prev</span>
+                                                            <span className="font-mono text-sm text-muted-foreground/60">{draft.water.previous}</span>
+                                                        </div>
+                                                        <div className="h-8 w-px bg-border" />
+                                                        <div className="text-center">
+                                                            <span className="text-[10px] block text-sky-600 uppercase font-bold mb-0.5">Current</span>
+                                                            {draft.water.exists ? (
+                                                                <span className="font-mono text-sm font-bold text-sky-600">{draft.water.current}</span>
+                                                            ) : (
+                                                                <input 
+                                                                    type="number" 
+                                                                    value={draft.water.current}
+                                                                    placeholder="----"
+                                                                    onChange={(e) => {
+                                                                        const newDrafts = [...drafts];
+                                                                        const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+                                                                        newDrafts[index] = { ...newDrafts[index], water: { ...draft.water, current: e.target.value } };
+                                                                        setDrafts(newDrafts);
+                                                                    }}
+                                                                    className="w-16 bg-muted/30 dark:bg-white/[0.05] rounded-md border border-border px-2 py-1 text-center font-mono text-sm font-bold text-sky-600 dark:text-sky-400 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center justify-center gap-4">
+                                                        <div className="text-center">
+                                                            <span className="text-[10px] block text-muted-foreground uppercase font-bold mb-0.5">Prev</span>
+                                                            <span className="font-mono text-sm text-muted-foreground/60">{draft.electricity.previous}</span>
+                                                        </div>
+                                                        <div className="h-8 w-px bg-border" />
+                                                        <div className="text-center">
+                                                            <span className="text-[10px] block text-amber-600 uppercase font-bold mb-0.5">Current</span>
+                                                            {draft.electricity.exists ? (
+                                                                <span className="font-mono text-sm font-bold text-amber-600">{draft.electricity.current}</span>
+                                                            ) : (
+                                                                <input 
+                                                                    type="number" 
+                                                                    value={draft.electricity.current}
+                                                                    placeholder="----"
+                                                                    onChange={(e) => {
+                                                                        const newDrafts = [...drafts];
+                                                                        const index = drafts.findIndex(d => d.leaseId === draft.leaseId);
+                                                                        newDrafts[index] = { ...newDrafts[index], electricity: { ...draft.electricity, current: e.target.value } };
+                                                                        setDrafts(newDrafts);
+                                                                    }}
+                                                                    className="w-16 bg-muted/30 dark:bg-white/[0.05] rounded-md border border-border px-2 py-1 text-center font-mono text-sm font-bold text-amber-600 dark:text-amber-400 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                <td className="px-6 py-5 text-right">
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        {(draft.water.exists || draft.water.current) && (draft.electricity.exists || draft.electricity.current) && (
+                                                            <div className="h-6 w-6 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+                                                                <Check className="h-3.5 w-3.5" />
+                                                            </div>
+                                                        )}
+                                                        <button 
+                                                            onClick={() => setSelectedLeaseId(draft.leaseId)}
+                                                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-border bg-card text-muted-foreground transition-all hover:border-primary hover:text-primary hover:shadow-sm"
+                                                        >
+                                                            <Edit3 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </motion.div>
                 )}
@@ -384,9 +442,9 @@ export function UtilityBillingDashboard() {
                 {activeTab === "rates" && (
                     <motion.div 
                         key="rates"
-                        initial={{ opacity: 0, scale: 0.99 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.99 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
                     >
                         <BillingOperationsPanel propertyId={selectedPropertyId} viewMode="rates" />
                     </motion.div>
@@ -395,9 +453,9 @@ export function UtilityBillingDashboard() {
                 {activeTab === "payments" && (
                     <motion.div 
                         key="payments"
-                        initial={{ opacity: 0, scale: 0.99 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.99 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
                     >
                         <BillingOperationsPanel propertyId={selectedPropertyId} viewMode="gcash" />
                     </motion.div>
@@ -406,20 +464,128 @@ export function UtilityBillingDashboard() {
                 {activeTab === "history" && (
                     <motion.div 
                         key="history"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex flex-col items-center justify-center h-80 rounded-3xl border-2 border-dashed border-border bg-muted/10 space-y-4"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-12"
                     >
-                        <History className="h-10 w-10 text-muted-foreground/30" />
-                        <div className="text-center">
-                            <p className="text-sm font-bold text-foreground">Archive Access</p>
-                            <p className="text-xs text-muted-foreground">Historical records are being indexed.</p>
+                        {/* Hero Header */}
+                        <div className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card p-10 shadow-sm dark:bg-white/[0.01]">
+                            <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
+                                <History className="h-48 w-48 -rotate-12" />
+                            </div>
+                            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                                <div className="space-y-3">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+                                        <BarChart3 className="h-3 w-3" />
+                                        Billing Archives
+                                    </div>
+                                    <h3 className="text-3xl font-black text-foreground tracking-tight">Audit Trail & History</h3>
+                                    <p className="text-sm text-muted-foreground max-w-md leading-relaxed font-medium">
+                                        Review past billing cycles, verify consumption reports, and monitor collection recovery performance across your portfolio.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                                    <div className="relative group min-w-[300px]">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                        <input 
+                                            placeholder="Search month, year or status..."
+                                            className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-border bg-muted/20 dark:bg-white/[0.03] text-sm font-semibold outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                                        />
+                                    </div>
+                                    <button className="h-12 px-6 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-foreground/10 active:scale-95">
+                                        Export History
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4 px-2 mb-4">
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40 whitespace-nowrap">Audit Trail History</span>
+                                <div className="h-px flex-1 bg-border/40" />
+                            </div>
+
+                            <div className="space-y-3">
+                                {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
+                                    const d = new Date();
+                                    d.setDate(1);
+                                    d.setMonth(d.getMonth() - i);
+                                    const monthStr = d.toISOString().slice(0, 7);
+                                    
+                                    return (
+                                        <button 
+                                            key={monthStr}
+                                            onClick={() => setSelectedHistoryMonth(monthStr)}
+                                            className="group relative w-full grid grid-cols-1 md:grid-cols-12 items-center gap-6 p-6 rounded-[2rem] border border-border bg-card hover:border-primary/40 hover:bg-primary/[0.01] hover:shadow-xl hover:shadow-primary/5 active:scale-[0.99] text-left dark:bg-white/[0.01] transition-all"
+                                        >
+                                            {/* Date Block */}
+                                            <div className="md:col-span-2 flex md:flex-col items-center md:items-start gap-4">
+                                                <div className="h-16 w-16 flex items-center justify-center rounded-2xl bg-muted/50 border border-border group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-black uppercase leading-none text-muted-foreground group-hover:text-primary transition-colors">{d.toLocaleDateString('en-US', { month: 'short' })}</p>
+                                                        <p className="text-xl font-black mt-1 text-foreground">{d.getFullYear()}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="md:hidden h-8 w-px bg-border" />
+                                                <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-[8px] font-black uppercase tracking-[0.2em] text-emerald-600 border border-emerald-500/10 whitespace-nowrap">
+                                                    Cycle Closed
+                                                </div>
+                                            </div>
+
+                                            {/* Report Title & Metrics */}
+                                            <div className="md:col-span-6 space-y-3">
+                                                <h4 className="text-lg font-black text-foreground group-hover:text-primary transition-colors">
+                                                    {d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} Report
+                                                </h4>
+                                                <div className="flex flex-wrap gap-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                                                            <Zap className="h-3 w-3" />
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">1,240 <span className="opacity-40">kWh</span></span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
+                                                            <Droplets className="h-3 w-3" />
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">450 <span className="opacity-40">m³</span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Status & Actions */}
+                                            <div className="md:col-span-4 flex items-center justify-between md:justify-end gap-10">
+                                                 <div className="text-right space-y-2 flex-1 md:flex-initial">
+                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Collection Status</p>
+                                                     <div className="flex items-center justify-end gap-3">
+                                                         <div className="h-1.5 w-32 rounded-full bg-muted overflow-hidden">
+                                                             <div className="h-full bg-primary rounded-full w-[80%]" />
+                                                         </div>
+                                                         <span className="text-[10px] font-black text-foreground">8/10</span>
+                                                     </div>
+                                                 </div>
+                                                 <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20 transition-all">
+                                                     <ArrowUpRight className="h-5 w-5" />
+                                                 </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Unit Detail Modal (Dossier View) */}
+            {/* History Detail Modal */}
+            <HistoryDetailModal 
+                month={selectedHistoryMonth} 
+                isOpen={!!selectedHistoryMonth} 
+                onClose={() => setSelectedHistoryMonth(null)} 
+            />
+
+            {/* Unit Detail Modal */}
             <UnitDetailModal 
                 isOpen={!!selectedLeaseId} 
                 onClose={() => setSelectedLeaseId(null)}
@@ -433,47 +599,38 @@ export function UtilityBillingDashboard() {
                 }}
             />
 
-            {/* Apply to All Confirmation Lightbox */}
+            {/* Apply All Confirmation */}
             <AnimatePresence>
                 {isApplyAllOpen && (
-                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
                         <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-                            onClick={() => setIsApplyAllOpen(false)}
-                        />
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            className="relative w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-2xl"
                         >
-                            <div className="flex flex-col items-center text-center space-y-6">
-                                <div className="rounded-2xl bg-amber-500/10 p-4 text-amber-500">
-                                    <AlertCircle className="h-8 w-8" />
-                                </div>
-                                <div className="space-y-2">
-                                    <h3 className="text-xl font-black text-foreground">Global Configuration Sync</h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        This will overwrite all individual unit rates with the property default values. This action is permanent.
-                                    </p>
-                                </div>
-                                <div className="flex w-full gap-3">
-                                    <button 
-                                        onClick={() => setIsApplyAllOpen(false)}
-                                        className="flex-1 rounded-2xl border border-border py-4 text-sm font-black transition-all hover:bg-muted"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button 
-                                        onClick={handleApplyToAll}
-                                        className="flex-1 rounded-2xl bg-amber-500 py-4 text-sm font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-600"
-                                    >
-                                        Apply to All
-                                    </button>
-                                </div>
+                            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                                <AlertCircle className="h-8 w-8" />
+                            </div>
+                            <div className="space-y-2 mb-8">
+                                <h3 className="text-xl font-bold text-foreground">Apply Property Defaults?</h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    This will overwrite all individual unit settings with the property-wide default rates. This action cannot be undone.
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={() => setIsApplyAllOpen(false)}
+                                    className="flex-1 rounded-xl border border-border py-3 text-sm font-bold text-muted-foreground hover:bg-muted transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleApplyToAll}
+                                    className="flex-1 rounded-xl bg-amber-600 py-3 text-sm font-bold text-white shadow-sm hover:bg-amber-700 active:scale-95 transition-all"
+                                >
+                                    Apply to All
+                                </button>
                             </div>
                         </motion.div>
                     </div>
@@ -483,75 +640,169 @@ export function UtilityBillingDashboard() {
     );
 }
 
-function UnitRow({ draft, onUpdate, onOpenDetail }: { draft: ReadingDraft, onUpdate: (p: Partial<ReadingDraft>) => void, onOpenDetail: () => void }) {
-    const isWaterComplete = draft.water.exists || draft.water.current !== "";
-    const isElecComplete = draft.electricity.exists || draft.electricity.current !== "";
-    const isFullComplete = isWaterComplete && isElecComplete;
+function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, isOpen: boolean, onClose: () => void }) {
+    const [data, setData] = useState<{
+        unit_name?: string;
+        utility_type: string;
+        previous_reading: number;
+        current_reading: number;
+    }[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && month) {
+            const fetchHistory = async () => {
+                try {
+                    setLoading(true);
+                    const res = await fetch(`/api/landlord/utility-readings?month=${month}`);
+                    const json = await res.json();
+                    setData(json.readings || []);
+                } catch (error) {
+                    console.error("Failed to fetch history readings:", error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchHistory();
+        }
+    }, [isOpen, month]);
+
+    if (!isOpen) return null;
 
     return (
-        <tr className="group transition-colors hover:bg-muted/10">
-            <td className="px-6 py-6">
-                <div className="flex flex-col">
-                    <span className="text-sm font-black text-foreground">{draft.unitName}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">₱{draft.rentAmount.toLocaleString()}/mo</span>
-                </div>
-            </td>
-            
-            <td className="px-6 py-6 bg-sky-500/5 border-x border-border/40">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono font-bold text-sky-900/40 dark:text-sky-100/40">{draft.water.previous}</span>
-                        <ArrowRight className="h-3 w-3 text-sky-600/20" />
-                        {draft.water.exists ? (
-                            <span className="text-xs font-mono font-black text-sky-600">{draft.water.current}</span>
-                        ) : (
-                            <input 
-                                type="number" 
-                                value={draft.water.current}
-                                placeholder="..."
-                                onChange={(e) => onUpdate({ water: { ...draft.water, current: e.target.value } })}
-                                className="w-16 bg-transparent text-center text-xs font-mono font-black text-sky-600 outline-none"
-                            />
-                        )}
-                    </div>
-                </div>
-            </td>
-
-            <td className="px-6 py-6 bg-amber-500/5">
-                <div className="flex flex-col items-center gap-3">
-                    <div className="flex items-center gap-4">
-                        <span className="text-xs font-mono font-bold text-amber-900/40 dark:text-amber-100/40">{draft.electricity.previous}</span>
-                        <ArrowRight className="h-3 w-3 text-amber-600/20" />
-                        {draft.electricity.exists ? (
-                            <span className="text-xs font-mono font-black text-amber-600">{draft.electricity.current}</span>
-                        ) : (
-                            <input 
-                                type="number" 
-                                value={draft.electricity.current}
-                                placeholder="..."
-                                onChange={(e) => onUpdate({ electricity: { ...draft.electricity, current: e.target.value } })}
-                                className="w-16 bg-transparent text-center text-xs font-mono font-black text-amber-600 outline-none"
-                            />
-                        )}
-                    </div>
-                </div>
-            </td>
-
-            <td className="px-6 py-6 text-right">
-                <div className="flex items-center justify-end gap-3">
-                    <div className={cn(
-                        "h-2 w-2 rounded-full",
-                        isFullComplete ? "bg-emerald-500" : "bg-muted-foreground/30"
-                    )} />
-                    <button 
-                        onClick={onOpenDetail}
-                        className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition-all hover:border-primary/30 hover:text-primary"
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative h-full max-h-[85vh] w-full max-w-4xl overflow-hidden bg-card border border-border shadow-2xl flex flex-col rounded-[2.5rem] dark:bg-[#121212]"
                     >
-                        <Edit3 className="h-4 w-4" />
-                    </button>
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-border/50 p-8">
+                            <div>
+                                <h2 className="text-2xl font-black text-foreground">
+                                    {month ? new Date(month + "-01").toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ""} Archive
+                                </h2>
+                                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-widest mt-1">Detailed Consumption Audit</p>
+                            </div>
+                            <button 
+                                onClick={onClose} 
+                                className="h-12 w-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Retrieving archive data...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="p-8 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 transition-all hover:bg-amber-500/[0.05]">
+                                            <div className="flex items-center gap-3 text-amber-500 mb-4">
+                                                <Zap className="h-5 w-5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Total Electricity</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-black text-foreground tracking-tight">1,240</span>
+                                                <span className="text-xs font-bold text-muted-foreground uppercase">kWh</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-8 rounded-3xl bg-sky-500/[0.03] border border-sky-500/10 transition-all hover:bg-sky-500/[0.05]">
+                                            <div className="flex items-center gap-3 text-sky-500 mb-4">
+                                                <Droplets className="h-5 w-5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Total Water</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-4xl font-black text-foreground tracking-tight">450</span>
+                                                <span className="text-xs font-bold text-muted-foreground uppercase">m³</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-[2rem] border border-border overflow-hidden bg-card/50">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-muted/30 border-b border-border text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                                                    <tr>
+                                                        <th className="px-8 py-5">Unit</th>
+                                                        <th className="px-8 py-5">Utility</th>
+                                                        <th className="px-8 py-5">Previous</th>
+                                                        <th className="px-8 py-5">Current</th>
+                                                        <th className="px-8 py-5">Consumption</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-border/50">
+                                                    {data.length > 0 ? data.map((reading, idx) => (
+                                                        <tr key={idx} className="hover:bg-muted/10 transition-colors group">
+                                                            <td className="px-8 py-5 text-sm font-black text-foreground group-hover:text-primary transition-colors">{reading.unit_name || "N/A"}</td>
+                                                            <td className="px-8 py-5 capitalize text-[10px] font-bold text-muted-foreground tracking-widest">
+                                                                <div className="flex items-center gap-2.5">
+                                                                    {reading.utility_type === 'water' ? (
+                                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
+                                                                            <Droplets className="h-3 w-3" />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
+                                                                            <Zap className="h-3 w-3" />
+                                                                        </div>
+                                                                    )}
+                                                                    {reading.utility_type}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-8 py-5 text-sm font-mono text-muted-foreground">{reading.previous_reading}</td>
+                                                            <td className="px-8 py-5 text-sm font-mono font-black text-foreground">{reading.current_reading}</td>
+                                                            <td className="px-8 py-5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-mono font-black text-primary">
+                                                                        {(reading.current_reading - reading.previous_reading).toFixed(2)}
+                                                                    </span>
+                                                                    <span className="text-[10px] font-bold text-muted-foreground/40 uppercase">{reading.utility_type === 'water' ? 'm³' : 'kWh'}</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )) : (
+                                                        <tr>
+                                                            <td colSpan={5} className="px-8 py-20 text-center">
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">No records found for this cycle</p>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t border-border/50 p-8 bg-muted/5">
+                            <button 
+                                onClick={onClose}
+                                className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg active:scale-95"
+                            >
+                                Close Audit View
+                            </button>
+                        </div>
+                    </motion.div>
                 </div>
-            </td>
-        </tr>
+            )}
+        </AnimatePresence>
     );
 }
 
@@ -561,228 +812,218 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[120] flex items-center justify-end p-0 md:p-6 lg:p-10">
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-10">
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-background/60 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         onClick={onClose}
                     />
                     <motion.div 
-                        initial={{ x: "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "100%" }}
-                        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                        className="relative h-full w-full max-w-2xl overflow-hidden bg-card border-l border-border shadow-2xl flex flex-col md:rounded-[3rem] md:border"
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative h-full max-h-[85vh] w-full max-w-2xl overflow-hidden bg-card border border-border shadow-2xl flex flex-col rounded-3xl dark:bg-[#1E1E1E]"
                     >
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between border-b border-border p-8">
+                        <div className="flex items-center justify-between border-b border-border p-6 md:px-8">
                             <div className="flex items-center gap-4">
-                                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <Building2 className="h-6 w-6" />
                                 </div>
-                                <div className="space-y-0.5">
-                                    <h2 className="text-2xl font-black text-foreground">Unit Dossier</h2>
-                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Detailed Billing & Configuration</p>
+                                <div>
+                                    <h2 className="text-xl font-bold text-foreground">{draft.unitName}</h2>
+                                    <p className="text-xs text-muted-foreground">Unit Billing Profile</p>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="rounded-2xl bg-muted p-3 text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-500">
+                            <button 
+                                onClick={onClose} 
+                                className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-red-50 hover:text-white transition-all"
+                            >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
                         {/* Modal Content */}
-                        <div className="flex-1 overflow-y-auto p-8 space-y-8">
-                            {/* Summary Card */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-3xl border border-border bg-muted/20 p-6">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block">Unit Name</span>
-                                    <p className="text-xl font-black text-foreground">{draft.unitName}</p>
-                                </div>
-                                <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary mb-1 block">Monthly Rent</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-foreground">₱</span>
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="rounded-2xl border border-border bg-muted/30 p-6 transition-all hover:border-primary/30 dark:bg-white/[0.02]">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-2">Base Monthly Rent</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-xl font-bold text-muted-foreground/40">₱</span>
                                         <input 
                                             type="number" 
                                             value={draft.rentAmount}
                                             onChange={(e) => onUpdate({ rentAmount: parseFloat(e.target.value) })}
-                                            className="bg-transparent text-xl font-black text-foreground outline-none w-full"
+                                            className="bg-transparent text-2xl font-bold text-foreground outline-none w-full focus:text-primary"
                                         />
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Water Management */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-sky-500">
-                                    <Droplets className="h-5 w-5" />
-                                    <h3 className="text-sm font-black uppercase tracking-widest">Water Billing</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-[2rem] border border-sky-500/10 bg-sky-500/[0.02] p-8">
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Previous Reading</label>
-                                            <div className="flex items-center gap-3">
-                                                <input 
-                                                    type="number" 
-                                                    value={draft.water.previous}
-                                                    onChange={(e) => onUpdate({ water: { ...draft.water, previous: parseFloat(e.target.value) } })}
-                                                    className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold outline-none"
-                                                />
-                                                <button className="rounded-2xl border border-border bg-card p-3 text-muted-foreground"><Camera className="h-4 w-4" /></button>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Current Reading</label>
-                                            <div className="flex items-center gap-3">
-                                                <input 
-                                                    type="number" 
-                                                    value={draft.water.current}
-                                                    onChange={(e) => onUpdate({ water: { ...draft.water, current: e.target.value } })}
-                                                    className="w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-bold text-primary outline-none"
-                                                />
-                                                <button className="rounded-2xl bg-primary p-3 text-white"><Camera className="h-4 w-4" /></button>
-                                            </div>
-                                        </div>
+                                <div className="rounded-2xl border border-border bg-emerald-500/[0.03] p-6 flex flex-col justify-center dark:border-emerald-500/10">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500/80">Account Status</span>
                                     </div>
-                                    <div className="space-y-6">
-                                        <div className="space-y-4 text-center p-6 rounded-3xl border border-sky-500/10 bg-white dark:bg-black/20 shadow-sm">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-sky-600">Unit Water Rate</span>
-                                            <div className="relative flex items-center justify-center gap-2">
-                                                <span className="absolute left-0 text-sm font-bold text-muted-foreground/40">₱</span>
-                                                <input 
-                                                    type="number" 
-                                                    value={draft.water.rate}
-                                                    onChange={(e) => onUpdate({ water: { ...draft.water, rate: parseFloat(e.target.value) } })}
-                                                    className="w-24 bg-transparent text-center text-2xl font-black outline-none border-b-2 border-transparent focus:border-sky-500"
-                                                />
-                                                <span className="text-[10px] font-bold text-muted-foreground">/ m³</span>
-                                            </div>
-                                            <p className="text-[9px] font-medium text-muted-foreground">Custom rate for this unit</p>
-                                        </div>
-                                        <div className="flex items-center justify-between px-2">
-                                            <div className="flex items-center gap-2">
-                                                <Info className="h-3 w-3 text-sky-500" />
-                                                <span className="text-[10px] font-bold text-muted-foreground">Status</span>
-                                            </div>
-                                            <span className={cn(
-                                                "text-[10px] font-black uppercase tracking-widest",
-                                                draft.water.exists ? "text-emerald-500" : "text-amber-500"
-                                            )}>
-                                                {draft.water.exists ? "Recorded" : "Awaiting Input"}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <span className="text-lg font-bold text-foreground mt-1">Active Lease</span>
                                 </div>
                             </div>
 
-                            {/* Electricity Management */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-amber-500">
-                                    <Zap className="h-5 w-5" />
-                                    <h3 className="text-sm font-black uppercase tracking-widest">Electricity Billing</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-[2rem] border border-amber-500/10 bg-amber-500/[0.02] p-8">
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Previous Reading</label>
-                                            <div className="flex items-center gap-3">
-                                                <input 
-                                                    type="number" 
-                                                    value={draft.electricity.previous}
-                                                    onChange={(e) => onUpdate({ electricity: { ...draft.electricity, previous: parseFloat(e.target.value) } })}
-                                                    className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold outline-none"
-                                                />
-                                                <button className="rounded-2xl border border-border bg-card p-3 text-muted-foreground"><Camera className="h-4 w-4" /></button>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Current Reading</label>
-                                            <div className="flex items-center gap-3">
-                                                <input 
-                                                    type="number" 
-                                                    value={draft.electricity.current}
-                                                    onChange={(e) => onUpdate({ electricity: { ...draft.electricity, current: e.target.value } })}
-                                                    className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm font-bold text-amber-600 outline-none"
-                                                />
-                                                <button className="rounded-2xl bg-amber-500 p-3 text-white"><Camera className="h-4 w-4" /></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-6">
-                                        <div className="space-y-4 text-center p-6 rounded-3xl border border-amber-500/10 bg-white dark:bg-black/20 shadow-sm">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Unit Electricity Rate</span>
-                                            <div className="relative flex items-center justify-center gap-2">
-                                                <span className="absolute left-0 text-sm font-bold text-muted-foreground/40">₱</span>
-                                                <input 
-                                                    type="number" 
-                                                    value={draft.electricity.rate}
-                                                    onChange={(e) => onUpdate({ electricity: { ...draft.electricity, rate: parseFloat(e.target.value) } })}
-                                                    className="w-24 bg-transparent text-center text-2xl font-black outline-none border-b-2 border-transparent focus:border-amber-500"
-                                                />
-                                                <span className="text-[10px] font-bold text-muted-foreground">/ kWh</span>
-                                            </div>
-                                            <p className="text-[9px] font-medium text-muted-foreground">Custom rate for this unit</p>
-                                        </div>
-                                        <div className="flex items-center justify-between px-2">
-                                            <div className="flex items-center gap-2">
-                                                <Info className="h-3 w-3 text-amber-500" />
-                                                <span className="text-[10px] font-bold text-muted-foreground">Status</span>
-                                            </div>
-                                            <span className={cn(
-                                                "text-[10px] font-black uppercase tracking-widest",
-                                                draft.electricity.exists ? "text-emerald-500" : "text-amber-500"
-                                            )}>
-                                                {draft.electricity.exists ? "Recorded" : "Awaiting Input"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <ResourceSection 
+                                type="water"
+                                label="Water Meter"
+                                icon={Droplets}
+                                colorClass="sky"
+                                draft={draft.water}
+                                onUpdate={(patch) => onUpdate({ water: { ...draft.water, ...patch } })}
+                            />
 
-                            {/* Other Utilities / Add-ons */}
+                            <ResourceSection 
+                                type="electricity"
+                                label="Electricity Meter"
+                                icon={Zap}
+                                colorClass="amber"
+                                draft={draft.electricity}
+                                onUpdate={(patch) => onUpdate({ electricity: { ...draft.electricity, ...patch } })}
+                            />
+
+                            {/* Additional Charges */}
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-primary">
-                                    <DollarSign className="h-5 w-5" />
-                                    <h3 className="text-sm font-black uppercase tracking-widest">Other Charges</h3>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <DollarSign className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Service Add-ons</h3>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Optional Charges</span>
                                 </div>
-                                <div className="rounded-[2rem] border border-border bg-card p-6 divide-y divide-border">
-                                    <div className="flex items-center justify-between py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-primary" />
-                                            <span className="text-sm font-bold text-foreground">Internet Service</span>
-                                        </div>
-                                        <span className="text-sm font-black">₱1,500.00</span>
+                                <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm dark:bg-white/[0.01]">
+                                    <div className="divide-y divide-border">
+                                        {[
+                                            { label: "Internet Fiber", cost: 1500 },
+                                            { label: "Sanitation & Trash", cost: 150 },
+                                        ].map((service) => (
+                                            <div key={service.label} className="flex items-center justify-between group p-5 hover:bg-muted/30 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-2 w-2 rounded-full bg-primary/40" />
+                                                    <span className="text-sm font-bold text-foreground">{service.label}</span>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="font-mono text-sm font-bold text-primary">₱{service.cost.toLocaleString()}</span>
+                                                    <button className="opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="flex items-center justify-between py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-2 w-2 rounded-full bg-primary" />
-                                            <span className="text-sm font-bold text-foreground">Trash Collection</span>
-                                        </div>
-                                        <span className="text-sm font-black">₱150.00</span>
-                                    </div>
-                                    <button className="w-full mt-4 flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-border text-xs font-bold text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all">
-                                        <Plus className="h-3 w-3" /> Add Miscellaneous Charge
+                                    <button className="w-full py-4 border-t border-border bg-muted/10 text-[10px] font-bold text-muted-foreground uppercase tracking-widest hover:bg-muted hover:text-primary transition-all">
+                                        + Append Supplemental Charge
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="border-t border-border p-8 bg-muted/10">
+                        <div className="border-t border-border p-6 md:px-8 bg-muted/10">
                             <button 
                                 onClick={onClose}
-                                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-foreground text-background py-4 text-sm font-black transition-all hover:opacity-90 shadow-xl"
+                                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-95"
                             >
                                 <Check className="h-4 w-4" />
-                                Done & Close
+                                Save All Changes
                             </button>
                         </div>
                     </motion.div>
                 </div>
             )}
         </AnimatePresence>
+    );
+}
+
+function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: { 
+    type: string,
+    label: string, 
+    icon: React.ElementType, 
+    colorClass: string,
+    draft: {
+        previous: number;
+        current: string;
+        exists: boolean;
+        rate: number;
+    },
+    onUpdate: (patch: Partial<{
+        previous: number;
+        current: string;
+        exists: boolean;
+        rate: number;
+    }>) => void
+}) {
+    const isSky = colorClass === "sky";
+    const bgClass = isSky ? "bg-sky-500/[0.03] dark:border-sky-500/10" : "bg-amber-500/[0.03] dark:border-amber-500/10";
+    const borderClass = isSky ? "border-sky-200" : "border-amber-200";
+    const accentClass = isSky ? "text-sky-600 dark:text-sky-400" : "text-amber-600 dark:text-amber-400";
+
+    return (
+        <div className="space-y-4">
+            <div className={cn("flex items-center gap-2", accentClass)}>
+                <Icon className="h-5 w-5" />
+                <h3 className="text-sm font-bold uppercase tracking-wider">{label}</h3>
+            </div>
+            <div className={cn("grid grid-cols-1 md:grid-cols-5 gap-6 rounded-3xl border p-6 overflow-hidden", borderClass, bgClass)}>
+                <div className="md:col-span-3 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block pl-1">Previous</label>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="number" 
+                                    value={draft.previous}
+                                    onChange={(e) => onUpdate({ previous: parseFloat(e.target.value) })}
+                                    className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold outline-none focus:border-primary shadow-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block pl-1">Current</label>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="number" 
+                                    value={draft.current}
+                                    placeholder="Enter reading..."
+                                    onChange={(e) => onUpdate({ current: e.target.value })}
+                                    className={cn("w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-bold outline-none focus:border-primary shadow-sm", accentClass)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-card border border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-all shadow-sm">
+                            <Camera className="h-3.5 w-3.5" />
+                            Upload Photo Proof
+                        </button>
+                    </div>
+                </div>
+
+                <div className="md:col-span-2 flex flex-col justify-center">
+                    <div className={cn("text-center p-6 rounded-2xl border bg-card shadow-sm dark:bg-white/[0.02]", borderClass)}>
+                        <span className={cn("text-[10px] font-bold uppercase tracking-widest mb-2 block opacity-80", accentClass)}>Rate per Unit</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="text-lg font-bold text-muted-foreground/40">₱</span>
+                            <input 
+                                type="number" 
+                                value={draft.rate}
+                                step="0.01"
+                                onChange={(e) => onUpdate({ rate: parseFloat(e.target.value) })}
+                                className="w-20 bg-transparent text-center text-3xl font-bold tracking-tight outline-none focus:text-primary"
+                            />
+                            <span className="text-[10px] font-bold text-muted-foreground/40 mt-2">{isSky ? "/ m³" : "/ kWh"}</span>
+                        </div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mt-2">Unit Override</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
