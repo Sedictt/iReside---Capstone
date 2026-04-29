@@ -133,10 +133,10 @@ export default function LandlordUtilitiesPage() {
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Property Assets</span>
                             </div>
                             <h1 className="text-5xl font-black tracking-tight text-foreground md:text-6xl lg:text-7xl">
-                                Utility <span className="text-primary">Rooms</span>
+                                Property <span className="text-primary">Facilities</span>
                             </h1>
                             <p className="max-w-xl text-lg font-medium text-muted-foreground/80 leading-relaxed">
-                                Curate and manage premium facilities for your residents. Monitor usage, handle bookings, and maintain service quality.
+                                Manage and monitor shared amenities, equipment, and services for your residents.
                             </p>
                         </section>
                         
