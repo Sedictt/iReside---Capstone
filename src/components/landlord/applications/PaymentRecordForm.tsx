@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { PaymentMethod } from "@/types/database";
+import { DollarSign, Hash, Calendar, Wallet, CheckCircle2, Clock } from "lucide-react";
 
 interface PaymentRecordFormProps {
   label: string;
@@ -41,165 +42,149 @@ export function PaymentRecordForm({
   status,
   onStatusChange,
 }: PaymentRecordFormProps) {
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value) && value >= 0 && onAmountChange) {
-      onAmountChange(value);
-    }
-  };
-
-  const handleMethodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onMethodChange(e.target.value as PaymentMethod);
-  };
-
-  const handleReferenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onReferenceChange(e.target.value);
-  };
-
-  const handlePaidAtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onPaidAtChange(e.target.value);
-  };
-
-  const handleStatusChange = (newStatus: "pending" | "completed") => {
-    onStatusChange(newStatus);
-  };
-
   return (
-    <div className="space-y-4 p-6 rounded-2xl border border-white/[0.12] bg-white/[0.05]">
-      <h3 className="text-lg font-bold text-white">{label}</h3>
-
-      {/* Amount */}
-      <div className="space-y-2">
-        <label htmlFor="payment-amount" className="block text-sm font-medium text-neutral-300">
-          Amount
-        </label>
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">
-            ₱
-          </span>
-          <input
-            id="payment-amount"
-            type="number"
-            value={amount}
-            onChange={handleAmountChange}
-            disabled={!allowAmountEdit}
-            min="0"
-            step="0.01"
-            className={cn(
-              "w-full h-12 pl-8 pr-4 rounded-xl font-medium transition-all duration-300",
-              "bg-white/5 border border-white/10 text-white",
-              allowAmountEdit
-                ? "hover:bg-white/10 focus:bg-white/10 focus:border-primary/50 focus:outline-none"
-                : "cursor-not-allowed opacity-60"
-            )}
-          />
+    <div className="group relative flex flex-col gap-6 rounded-[2rem] border border-border bg-card/30 p-6 transition-all duration-500 hover:bg-card/50 hover:border-primary/30 shadow-sm">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between border-b border-border/40 pb-4">
+        <div className="space-y-0.5">
+          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">Ledger Entry</p>
+          <h3 className="text-lg font-black tracking-tight text-foreground">
+              {label}
+          </h3>
+        </div>
+        <div className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all",
+            status === "completed" 
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
+                : "bg-amber-500/10 border-amber-500/20 text-amber-500"
+        )}>
+            {status === "completed" ? <CheckCircle2 size={12} strokeWidth={3} /> : <Clock size={12} strokeWidth={3} />}
+            {status}
         </div>
       </div>
 
-      {/* Payment Method */}
-      <div className="space-y-2">
-        <label htmlFor="payment-method" className="block text-sm font-medium text-neutral-300">
-          Payment Method <span className="text-red-400">*</span>
-        </label>
-        <select
-          id="payment-method"
-          value={paymentMethod || ""}
-          onChange={handleMethodChange}
-          required
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        {/* Amount */}
+        <div className="space-y-2">
+          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            Amount Due
+          </label>
+          <div className="relative isolate group/input">
+            <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
+            <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground/60 transition-colors group-focus-within/input:text-primary">
+              <DollarSign size={16} strokeWidth={2} />
+            </div>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => onAmountChange?.(parseFloat(e.target.value) || 0)}
+              disabled={!allowAmountEdit}
+              placeholder="0.00"
+              className={cn(
+                "h-12 w-full bg-transparent pl-11 pr-4 text-sm font-bold tracking-tight text-foreground outline-none transition-all",
+                !allowAmountEdit && "cursor-not-allowed opacity-60"
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Method */}
+        <div className="space-y-2">
+          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            Method
+          </label>
+          <div className="relative isolate group/input">
+            <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
+            <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground/60 pointer-events-none">
+              <Wallet size={16} strokeWidth={2} />
+            </div>
+            <select
+              value={paymentMethod || ""}
+              onChange={(e) => onMethodChange(e.target.value as PaymentMethod)}
+              className="h-12 w-full appearance-none bg-transparent pl-11 pr-10 text-sm font-bold tracking-tight text-foreground outline-none cursor-pointer"
+            >
+              <option value="" disabled>Choose Method</option>
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m.value} value={m.value} className="bg-neutral-900 text-foreground">{m.label}</option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted-foreground/40">
+                <Clock size={12} className="rotate-90" />
+            </div>
+          </div>
+        </div>
+
+        {/* Reference */}
+        <div className="space-y-2">
+          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            Ref Number
+          </label>
+          <div className="relative isolate group/input">
+            <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
+            <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground/60 transition-colors group-focus-within/input:text-primary">
+              <Hash size={16} strokeWidth={2} />
+            </div>
+            <input
+              type="text"
+              value={referenceNumber}
+              onChange={(e) => onReferenceChange(e.target.value)}
+              placeholder="e.g. TRN-123"
+              className="h-12 w-full bg-transparent pl-11 pr-4 text-sm font-bold tracking-tight text-foreground outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Date */}
+        <div className="space-y-2">
+          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            Payment Date
+          </label>
+          <div className="relative isolate group/input">
+            <div className="absolute inset-0 -z-10 rounded-xl border border-border bg-background/40 transition-all duration-300 group-focus-within/input:bg-background group-focus-within/input:border-primary/50" />
+            <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground/60 pointer-events-none">
+              <Calendar size={16} strokeWidth={2} />
+            </div>
+            <input
+              type="date"
+              value={paidAt || ""}
+              onChange={(e) => onPaidAtChange(e.target.value)}
+              className="h-12 w-full bg-transparent pl-11 pr-4 text-sm font-bold tracking-tight text-foreground outline-none [color-scheme:dark]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Compact Buttons */}
+      <div className="flex gap-4 pt-2">
+        <button
+          type="button"
+          onClick={() => onStatusChange("completed")}
           className={cn(
-            "w-full h-12 px-4 rounded-xl font-medium transition-all duration-300",
-            "bg-white/5 border border-white/10 text-white",
-            "hover:bg-white/10 focus:bg-white/10 focus:border-primary/50 focus:outline-none",
-            "appearance-none cursor-pointer"
+            "flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border",
+            status === "completed"
+              ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/10"
+              : "bg-background/30 text-muted-foreground border-border hover:bg-muted"
           )}
         >
-          <option value="" disabled className="bg-neutral-900">
-            Select payment method
-          </option>
-          {PAYMENT_METHODS.map((method) => (
-            <option
-              key={method.value}
-              value={method.value}
-              className="bg-neutral-900"
-            >
-              {method.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Reference Number */}
-      <div className="space-y-2">
-        <label htmlFor="reference-number" className="block text-sm font-medium text-neutral-300">
-          Reference Number
-        </label>
-        <input
-          id="reference-number"
-          type="text"
-          value={referenceNumber}
-          onChange={handleReferenceChange}
-          placeholder="Enter reference number"
+          <CheckCircle2 size={14} strokeWidth={3} />
+          Received
+        </button>
+        <button
+          type="button"
+          onClick={() => onStatusChange("pending")}
           className={cn(
-            "w-full h-12 px-4 rounded-xl font-medium transition-all duration-300",
-            "bg-white/5 border border-white/10 text-white placeholder:text-neutral-500",
-            "hover:bg-white/10 focus:bg-white/10 focus:border-primary/50 focus:outline-none"
+            "flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border",
+            status === "pending"
+              ? "bg-amber-500 text-black border-amber-600 shadow-lg shadow-amber-500/10"
+              : "bg-background/30 text-muted-foreground border-border hover:bg-muted"
           )}
-        />
-      </div>
-
-      {/* Paid Date */}
-      <div className="space-y-2">
-        <label htmlFor="paid-date" className="block text-sm font-medium text-neutral-300">
-          Paid Date
-        </label>
-        <input
-          id="paid-date"
-          type="date"
-          value={paidAt || ""}
-          onChange={handlePaidAtChange}
-          className={cn(
-            "w-full h-12 px-4 rounded-xl font-medium transition-all duration-300",
-            "bg-white/5 border border-white/10 text-white",
-            "hover:bg-white/10 focus:bg-white/10 focus:border-primary/50 focus:outline-none",
-            "[color-scheme:dark]"
-          )}
-        />
-      </div>
-
-      {/* Status Toggle */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neutral-300">
-          Payment Status
-        </label>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => handleStatusChange("completed")}
-            className={cn(
-              "flex-1 h-12 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-300",
-              "flex items-center justify-center gap-2",
-              status === "completed"
-                ? "bg-primary text-black border border-primary/30"
-                : "bg-white/5 text-neutral-400 border border-white/10 hover:bg-white/10 hover:text-white"
-            )}
-          >
-            Completed
-          </button>
-          <button
-            type="button"
-            onClick={() => handleStatusChange("pending")}
-            className={cn(
-              "flex-1 h-12 rounded-xl font-bold text-sm uppercase tracking-wider transition-all duration-300",
-              "flex items-center justify-center gap-2",
-              status === "pending"
-                ? "bg-amber-500 text-black border border-amber-500/30"
-                : "bg-white/5 text-neutral-400 border border-white/10 hover:bg-white/10 hover:text-white"
-            )}
-          >
-            Pending
-          </button>
-        </div>
+        >
+          <Clock size={14} strokeWidth={3} />
+          Pending
+        </button>
       </div>
     </div>
   );
 }
+
+
