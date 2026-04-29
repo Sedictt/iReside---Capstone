@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "crypto";
 
 export type TenantInviteMode = "property" | "unit";
 export type TenantInviteStatus = "active" | "revoked" | "expired" | "consumed";
-export type TenantInviteApplicationType = "online" | "face_to_face";
+export type TenantInviteApplicationType = "online" | "face_to_face" | "existing_tenant";
 export type TenantInviteRequirementKey =
     | "valid_id"
     | "proof_of_income"

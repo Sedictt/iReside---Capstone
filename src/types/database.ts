@@ -31,7 +31,7 @@ export type ListingStatus = 'draft' | 'published' | 'paused'
 export type LocationType = 'city' | 'barangay' | 'street'
 export type TenantInviteMode = 'property' | 'unit'
 export type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
-export type TenantInviteApplicationType = 'online' | 'face_to_face'
+export type TenantInviteApplicationType = 'online' | 'face_to_face' | 'existing_tenant'
 export type ApplicationSource = 'walk_in_application' | 'invite_link'
 
 export interface Database {
