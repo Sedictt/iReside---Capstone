@@ -34,6 +34,12 @@ export interface Unit {
     w: number;
     h: number;
     details?: string;
+    areaSqm?: number;
+    bedrooms?: number;
+    baths?: number;
+    kitchens?: number;
+    flipX?: boolean;
+    flipY?: boolean;
     leaseStart?: string;
     leaseEnd?: string;
     maintenanceDate?: string;
@@ -107,14 +113,16 @@ type CorridorResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
 
 
-type SidebarBlockType = "studio" | "1br" | "2br" | "3br" | "corridor" | "elevator" | "stair-straight" | "stair-l" | "stair-u" | "stair-spiral";
+type SidebarBlockType = "studio" | "1br" | "2br" | "3br" | "corridor" | "elevator" | "stair-straight" | "stair-l" | "stair-u" | "stair-spiral" | "facility-function" | "facility-studio";
 type CanvasItemKind = "unit" | "corridor" | "structure";
 
 interface Structure {
     id: string;
-    type: "elevator" | "stairwell";
-    variant?: "straight" | "l-shape" | "u-shape" | "spiral";
+    type: "elevator" | "stairwell" | "facility";
+    variant?: "straight" | "l-shape" | "u-shape" | "spiral" | "function-room" | "studio";
     rotation?: number;
+    flipX?: boolean;
+    flipY?: boolean;
     label: string;
     x: number;
     y: number;
@@ -983,6 +991,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [selectedItem, setSelectedItem] = useState<SelectedCanvasItem | null>(null);
     const [pendingDelete, setPendingDelete] = useState<PendingDeleteState | null>(null);
     const [pendingClearFloor, setPendingClearFloor] = useState(false);
+    const [presetConfirm, setPresetConfirm] = useState<{ isOpen: boolean; presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded" | null }>({ isOpen: false, presetType: null });
     const [isTrashHot, setIsTrashHot] = useState(false);
     const [showDeleteToast, setShowDeleteToast] = useState(false);
     const [showLegend, setShowLegend] = useState(true);
@@ -1157,6 +1166,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [transferError, setTransferError] = useState<string | null>(null);
     const [transferSuccess, setTransferSuccess] = useState(false);
 
+    const flipSelectedItem = useCallback((axis: 'x' | 'y') => {
+        if (!selectedItem) return;
+        if (selectedItem.kind === "unit") {
+            setUnits(prev => prev.map(u => u.id === selectedItem.id ? { ...u, [axis === 'x' ? 'flipX' : 'flipY']: !u[axis === 'x' ? 'flipX' : 'flipY'] } : u));
+        } else if (selectedItem.kind === "structure") {
+            setStructures(prev => prev.map(s => s.id === selectedItem.id ? { ...s, [axis === 'x' ? 'flipX' : 'flipY']: !s[axis === 'x' ? 'flipX' : 'flipY'] } : s));
+        }
+    }, [selectedItem]);
+
     const handleTransferSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!transferModalUnit) return;
@@ -1286,11 +1304,19 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             if (e.ctrlKey && key === 'z') {
                 performUndo();
             }
+            // Flip Horizontal (X)
+            if (key === 'x' && !e.ctrlKey && !e.metaKey) {
+                flipSelectedItem('x');
+            }
+            // Flip Vertical (Y)
+            if (key === 'y' && !e.ctrlKey && !e.metaKey) {
+                flipSelectedItem('y');
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isHUDHidden, isCanvasFullscreen, performUndo]);
+    }, [isHUDHidden, isCanvasFullscreen, performUndo, flipSelectedItem]);
 
     useEffect(() => {
         window.dispatchEvent(new CustomEvent('hide-sidebars', { detail: isCanvasFullscreen }));
@@ -2430,7 +2456,11 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         ? { blockType, label: "L-Shape Stair", w: 120, h: 120, variant: "l-shape" }
                                         : blockType === "stair-u"
                                             ? { blockType, label: "U-Shape Stair", w: 120, h: 100, variant: "u-shape" }
-                                            : { blockType, label: "Spiral Stair", w: 120, h: 120, variant: "spiral" };
+                                            : blockType === "stair-spiral"
+                                                ? { blockType, label: "Spiral Stair", w: 120, h: 120, variant: "spiral" }
+                                                : blockType === "facility-function"
+                                                    ? { blockType, label: "Function Room", w: 240, h: 180, variant: "function-room" }
+                                                    : { blockType, label: "Studio Facility", w: 200, h: 160, variant: "studio" };
         e.dataTransfer.setData(SIDEBAR_BLOCK_DRAG_TYPE, JSON.stringify({ ...payload, dbUnitId }));
         e.dataTransfer.effectAllowed = "copy";
     };
@@ -2636,7 +2666,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             return;
         }
 
-        const structureType: "elevator" | "stairwell" = parsed.blockType === "elevator" ? "elevator" : "stairwell";
+        const structureType: Structure["type"] = parsed.blockType === "elevator" ? "elevator" : parsed.blockType?.includes("facility") ? "facility" : "stairwell";
 
         setStructures(prev => ([
             ...prev,
@@ -2645,13 +2675,110 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 type: structureType,
                 variant: parsed.variant as Structure["variant"],
                 rotation: 0,
-                label: parsed.label ?? (structureType === "elevator" ? "Elevator" : "Stairwell"),
+                label: parsed.label ?? (structureType === "elevator" ? "Elevator" : structureType === "facility" ? "Facility" : "Stairwell"),
                 x: clampedX,
                 y: clampedY,
                 w: blockWidth,
                 h: blockHeight,
             },
         ]));
+    };
+
+    const applyPreset = (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => {
+        if (units.length > 0 || corridors.length > 0 || structures.length > 0) {
+            setPresetConfirm({ isOpen: true, presetType });
+            return;
+        }
+        confirmApplyPreset(presetType);
+    };
+
+    const confirmApplyPreset = (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => {
+        setPresetConfirm({ isOpen: false, presetType: null });
+
+        const newUnits: Unit[] = [];
+        const newCorridors: Corridor[] = [];
+        
+        // Grab dbUnits if available or use generic IDs
+        const unplacedCopy = [...unplacedDbUnits];
+        let genericIdCounter = 100;
+        
+        const createUnit = (x: number, y: number, w: number, h: number, type: Unit["type"]): Unit => {
+            const dbUnit = unplacedCopy.shift();
+            if (dbUnit) {
+                return {
+                    id: dbUnit.id,
+                    dbId: dbUnit.id,
+                    name: dbUnit.name,
+                    type,
+                    status: (dbUnit.status as Unit["status"]) ?? "vacant",
+                    x, y, w, h,
+                    floor: dbUnit.floor,
+                };
+            }
+            
+            genericIdCounter++;
+            const newId = String(genericIdCounter);
+            return {
+                id: newId,
+                dbId: "",
+                name: `Unit ${newId}`,
+                type,
+                status: "vacant",
+                x, y, w, h
+            };
+        };
+
+        const cx = 300;
+        const cy = 200;
+
+        if (presetType === "double-loaded") {
+            newCorridors.push({ id: `corridor-${Date.now()}`, label: "Central Corridor", x: cx, y: cy + 140, w: 900, h: 80 });
+            for (let i = 0; i < 4; i++) {
+                newUnits.push(createUnit(cx + 40 + i * 220, cy, 200, 140, "1BR")); // Top row
+                newUnits.push(createUnit(cx + 40 + i * 220, cy + 220, 200, 140, "1BR")); // Bottom row
+            }
+        } else if (presetType === "u-shape") {
+            newCorridors.push({ id: `corridor-north-${Date.now()}`, label: "North Corridor", x: cx + 160, y: cy, w: 600, h: 80 });
+            newCorridors.push({ id: `corridor-west-${Date.now()}`, label: "West Wing", x: cx + 80, y: cy, w: 80, h: 460 });
+            newCorridors.push({ id: `corridor-east-${Date.now()}`, label: "East Wing", x: cx + 760, y: cy, w: 80, h: 460 });
+            
+            // Top row
+            for (let i = 0; i < 3; i++) {
+                newUnits.push(createUnit(cx + 160 + i * 200, cy - 140, 200, 140, "1BR"));
+            }
+            // West wing
+            for (let i = 0; i < 2; i++) {
+                newUnits.push(createUnit(cx - 120, cy + 100 + i * 160, 200, 140, "1BR"));
+            }
+            // East wing
+            for (let i = 0; i < 2; i++) {
+                newUnits.push(createUnit(cx + 840, cy + 100 + i * 160, 200, 140, "1BR"));
+            }
+        } else if (presetType === "l-shape") {
+            newCorridors.push({ id: `corridor-north-${Date.now()}`, label: "North Corridor", x: cx + 160, y: cy, w: 600, h: 80 });
+            newCorridors.push({ id: `corridor-west-${Date.now()}`, label: "West Wing", x: cx + 80, y: cy, w: 80, h: 460 });
+            
+            // Top row
+            for (let i = 0; i < 3; i++) {
+                newUnits.push(createUnit(cx + 160 + i * 200, cy - 140, 200, 140, "1BR"));
+            }
+            // West wing
+            for (let i = 0; i < 2; i++) {
+                newUnits.push(createUnit(cx - 120, cy + 100 + i * 160, 200, 140, "1BR"));
+            }
+        } else if (presetType === "single-loaded") {
+            newCorridors.push({ id: `corridor-${Date.now()}`, label: "Single Corridor", x: cx, y: cy + 140, w: 900, h: 80 });
+            for (let i = 0; i < 4; i++) {
+                newUnits.push(createUnit(cx + 40 + i * 220, cy, 200, 140, "1BR")); // Top row only
+            }
+        }
+
+        setUnits(newUnits);
+        setCorridors(newCorridors);
+        setStructures([]);
+        setUnplacedDbUnits(unplacedCopy);
+        
+        isUndoingRef.current = false;
     };
 
     const getViewportInMinimap = () => {
@@ -2751,15 +2878,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         };
     }, [isMinimapDragging, position, scale, viewportSize]);
 
-    const getRotatedArtworkStyle = (width: number, height: number, rotation: number): React.CSSProperties => {
+    const getRotatedArtworkStyle = (width: number, height: number, rotation: number, flipX?: boolean, flipY?: boolean): React.CSSProperties => {
         const normalizedRotation = ((rotation % 360) + 360) % 360;
         const isQuarterTurn = normalizedRotation % 180 !== 0;
+        const scaleStr = (flipX || flipY) ? ` scaleX(${flipX ? -1 : 1}) scaleY(${flipY ? -1 : 1})` : '';
 
         if (!isQuarterTurn) {
             return {
                 position: "absolute",
                 inset: 0,
-                transform: `rotate(${normalizedRotation}deg)`,
+                transform: `rotate(${normalizedRotation}deg)${scaleStr}`,
                 transformOrigin: "center",
             };
         }
@@ -2770,7 +2898,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             height: width,
             left: (width - height) / 2,
             top: (height - width) / 2,
-            transform: `rotate(${normalizedRotation}deg)`,
+            transform: `rotate(${normalizedRotation}deg)${scaleStr}`,
             transformOrigin: "center",
         };
     };
@@ -2813,6 +2941,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const selectedUnit = selectedItem?.kind === "unit"
         ? units.find((unit) => unit.id === selectedItem.id) ?? null
+        : null;
+    const selectedStructure = selectedItem?.kind === "structure"
+        ? structures.find((s) => s.id === selectedItem.id) ?? null
         : null;
     const selectedUnitNote = selectedUnit ? (unitNotes[selectedUnit.id] ?? "") : "";
 
@@ -2951,8 +3082,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 Draft
                             </button>
                             <button className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-medium shadow-lg shadow-primary/20 transition-colors">
-                                <span className="material-icons-round text-sm">publish</span>
-                                Publish Changes
+                                <span className="material-icons-round text-sm">save</span>
+                                Save Changes
                             </button>
                         </>
                     )}
@@ -3214,13 +3345,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
                                                 <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
                                                 <div className={`absolute inset-[10px] border border-dashed ${isDark ? 'border-neutral-500/80' : 'border-slate-700/80'}`}></div>
-                                            <div className={`absolute left-[10px] right-[10px] top-1/2 -translate-y-1/2 h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-500/80'}`}></div>
+                                            {corridor.h > corridor.w ? (
+                                                <div className={`absolute top-[10px] bottom-[10px] left-1/2 -translate-x-1/2 w-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-500/80'}`}></div>
+                                            ) : (
+                                                <div className={`absolute left-[10px] right-[10px] top-1/2 -translate-y-1/2 h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-500/80'}`}></div>
+                                            )}
                                             <div className="absolute inset-[8px] opacity-10"
                                                 style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '10px 10px' }}
                                             ></div>
                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
-                                            <div className="absolute inset-0 flex items-center justify-center z-20">
-                                                <span className={`text-xs font-bold uppercase tracking-[0.4em] ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>{corridor.label}</span>
+                                            <div className="absolute inset-0 flex items-center justify-center z-20 overflow-hidden">
+                                                <span className={`text-xs font-bold uppercase tracking-[0.4em] px-2 ${isDark ? 'text-slate-300' : 'text-slate-500'} ${corridor.h > corridor.w ? '-rotate-90 whitespace-nowrap' : 'whitespace-nowrap'}`}>{corridor.label}</span>
                                             </div>
 
                                             {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
@@ -3379,7 +3514,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             </div>
                                         ) : (
                                             <div className="w-full h-full relative overflow-hidden">
-                                                <div style={getRotatedArtworkStyle(structure.w, structure.h, structure.rotation ?? 0)}>
+                                                <div style={getRotatedArtworkStyle(structure.w, structure.h, structure.rotation ?? 0, structure.flipX, structure.flipY)}>
                                                     {structure.variant === "straight" ? (
                                                         /* Straight Flight */
                                                         <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
@@ -3468,6 +3603,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                                 ></div>
                                                             ))}
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500 rounded-full"></div>
+                                                        </div>
+                                                    ) : structure.type === "facility" ? (
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                            <div className={`absolute inset-[4px] border border-dashed ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                            <div className="flex flex-col items-center gap-1 z-20">
+                                                                <span className={`material-icons-round text-2xl ${isDark ? 'text-neutral-400' : 'text-slate-400'}`}>{structure.variant === "function-room" ? "meeting_room" : "fitness_center"}</span>
+                                                                <span className={`text-[10px] uppercase font-bold text-center leading-tight px-2 ${isDark ? 'text-neutral-300' : 'text-slate-500'}`}>{structure.label}</span>
+                                                            </div>
+                                                            <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                         </div>
                                                     ) : (
                                                         /* Default / Fallback */
@@ -3596,34 +3741,36 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         }}
                                     >
                                         <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none ${isDark ? 'bg-neutral-800 shadow-sm' : 'bg-white shadow-sm'}`}>
-                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                            <div className="absolute inset-0" style={{ transform: `scaleX(${unit.flipX ? -1 : 1}) scaleY(${unit.flipY ? -1 : 1})` }}>
+                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
 
-                                            <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}></div>
+                                                <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}></div>
 
-                                            <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
-                                                <div className={`h-px w-full ${isDark ? 'bg-neutral-600' : 'bg-slate-300'}`}></div>
-                                            </div>
+                                                <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
+                                                    <div className={`h-px w-full ${isDark ? 'bg-neutral-600' : 'bg-slate-300'}`}></div>
+                                                </div>
 
-                                            <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
-                                                <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
-                                            </div>
-                                            <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
-                                                <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
-                                            </div>
+                                                <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
+                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
+                                                </div>
+                                                <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
+                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
+                                                </div>
 
-                                            <div className={`absolute right-[8px] top-[8px] h-5 w-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}></div>
-                                            <div className={`absolute bottom-[8px] left-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
-                                                <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
-                                            </div>
-                                            <div className={`absolute bottom-[8px] right-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
-                                                <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
-                                            </div>
+                                                <div className={`absolute right-[8px] top-[8px] h-5 w-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}></div>
+                                                <div className={`absolute bottom-[8px] left-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
+                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
+                                                </div>
+                                                <div className={`absolute bottom-[8px] right-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
+                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
+                                                </div>
 
-                                            <div
-                                                className="absolute inset-[8px] opacity-[0.16]"
-                                                style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(rgba(148,163,184,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.45) 1px, transparent 1px)', backgroundSize: '10px 10px' }}
-                                            ></div>
+                                                <div
+                                                    className="absolute inset-[8px] opacity-[0.16]"
+                                                    style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(rgba(148,163,184,0.45) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.45) 1px, transparent 1px)', backgroundSize: '10px 10px' }}
+                                                ></div>
+                                            </div>
 
                                             <div className={`absolute inset-0 opacity-[0.18] group-hover:opacity-[0.3] transition-opacity ${unit.status === 'occupied' ? 'bg-status-occupied' :
                                                 unit.status === 'vacant' ? 'bg-status-vacant' :
@@ -3864,6 +4011,73 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         )}
                     </AnimatePresence>
 
+                    {/* Contextual Item Action HUD */}
+                    <AnimatePresence>
+                        {selectedItem && !readOnly && !isHUDHidden && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20, x: "-50%" }}
+                                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                                exit={{ opacity: 0, y: 20, x: "-50%" }}
+                                className={`absolute bottom-28 left-1/2 -translate-x-1/2 z-50 flex gap-2 rounded-2xl backdrop-blur-xl border p-2 shadow-2xl ${isDark ? 'bg-slate-900/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}
+                            >
+                                {selectedItem.kind === "corridor" ? (
+                                    <>
+                                        <div className="flex items-center gap-2 px-2 py-1">
+                                            <span className={`material-icons-round text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>edit</span>
+                                            <input
+                                                type="text"
+                                                value={corridors.find(c => c.id === selectedItem.id)?.label || ""}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setCorridors(prev => prev.map(c => c.id === selectedItem.id ? { ...c, label: val } : c));
+                                                }}
+                                                placeholder="Corridor Name"
+                                                className={`bg-transparent border-none outline-none text-xs font-bold uppercase tracking-wider w-40 ${isDark ? 'text-white' : 'text-slate-800'}`}
+                                            />
+                                        </div>
+                                        <div className="w-px h-6 bg-white/10 mx-1 my-auto" />
+                                        <button
+                                            onClick={() => rotateSelectedItem(selectedItem)}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            title="Rotate (R)"
+                                        >
+                                            <span className="material-icons-round text-lg">rotate_right</span>
+                                            Rotate <span className="text-[9px] opacity-50 ml-1">(R)</span>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => flipSelectedItem('x')}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            title="Flip Horizontal (X)"
+                                        >
+                                            <span className="material-icons-round text-lg">flip</span>
+                                            Flip H <span className="text-[9px] opacity-50 ml-1">(X)</span>
+                                        </button>
+                                        <button
+                                            onClick={() => flipSelectedItem('y')}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            title="Flip Vertical (Y)"
+                                        >
+                                            <span className="material-icons-round text-lg rotate-90">flip</span>
+                                            Flip V <span className="text-[9px] opacity-50 ml-1">(Y)</span>
+                                        </button>
+                                        <div className="w-px h-6 bg-white/10 mx-1 my-auto" />
+                                        <button
+                                            onClick={() => rotateSelectedItem(selectedItem)}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            title="Rotate (R)"
+                                        >
+                                            <span className="material-icons-round text-lg">rotate_right</span>
+                                            Rotate <span className="text-[9px] opacity-50 ml-1">(R)</span>
+                                        </button>
+                                    </>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     {/* Viewport System Toolbar (Always Visible) */}
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
                         <div className="flex flex-col bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl">
@@ -3962,8 +4176,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             <div className="grid grid-cols-2 gap-4">
                                                 <HotkeyItem label="Undo Last Action" shortcut="Ctrl + Z" />
                                                 <HotkeyItem label="Delete Selection" shortcut="Delete / Backspace" />
-                                                <HotkeyItem label="Pan Viewport" shortcut="Hold Middle Mouse" />
+                                                <HotkeyItem label="Flip Horiz / Vert" shortcut="X / Y" />
+                                                <HotkeyItem label="Rotate Item" shortcut="R" />
                                                 <HotkeyItem label="Zoom In/Out" shortcut="Scroll Wheel" />
+                                                <HotkeyItem label="Pan Viewport" shortcut="Hold Middle Mouse" />
                                             </div>
                                         </div>
                                     </div>
@@ -4068,6 +4284,43 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         </div>
                     )}
 
+                    {presetConfirm.isOpen && presetConfirm.presetType && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 backdrop-blur-md bg-black/40">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                className={`w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${isDark ? 'border-amber-500/20 bg-slate-900 shadow-amber-500/10' : 'border-amber-200 bg-white shadow-amber-500/10'}`}
+                            >
+                                <div className="p-8 pb-6">
+                                    <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
+                                        <span className="material-icons-round text-3xl">auto_awesome_mosaic</span>
+                                    </div>
+                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Apply Layout Preset?</h3>
+                                    <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        Applying a preset will clear your current floor plan on <span className="font-bold text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span> and generate a new layout.
+                                        <br/><br/>
+                                        <span className="italic text-xs opacity-80">Any placed units will be returned to your &quot;Unplaced&quot; library and automatically used to fill the preset.</span>
+                                    </p>
+                                </div>
+                                <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-slate-800 bg-slate-950/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                                    <button
+                                        onClick={() => setPresetConfirm({ isOpen: false, presetType: null })}
+                                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-white' : 'text-slate-500 hover:bg-black/5 hover:text-slate-900'}`}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => confirmApplyPreset(presetConfirm.presetType!)}
+                                        className="px-6 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-black shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all active:scale-95"
+                                    >
+                                        Apply Preset
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+
                     <TransferRequestModal
                         isOpen={!!transferModalUnit}
                         onClose={() => setTransferModalUnit(null)}
@@ -4120,6 +4373,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         onOpenInvite={() => setIsInviteModalOpen(true)}
                                         onOpenHistory={() => setIsHistoryModalOpen(true)}
                                     />
+                                ) : selectedStructure ? (
+                                    <StructureDetailsPanel
+                                        key={selectedStructure.id}
+                                        structure={selectedStructure}
+                                        onUpdate={(updates) => setStructures(prev => prev.map(s => s.id === selectedStructure.id ? { ...s, ...updates } : s))}
+                                        onDelete={() => {
+                                            deleteCanvasItem({ kind: "structure", id: selectedStructure.id });
+                                            setSelectedItem(null);
+                                            triggerDeleteToast();
+                                        }}
+                                        onClose={() => setSelectedItem(null)}
+                                    />
                                 ) : (
                                     <SidebarBlockLibrary
                                         onDragStart={handleSidebarBlockDragStart}
@@ -4130,6 +4395,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         isPropertyMode={selectedPropertyId !== "all"}
                                         setPendingClearFloor={setPendingClearFloor}
                                         activeFloorItemCount={activeFloorItemCount}
+                                        onApplyPreset={applyPreset}
                                     />
                                 )}
                             </div>
@@ -4216,6 +4482,53 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     );
 }
 
+const StructureDetailsPanel = ({
+    structure,
+    onUpdate,
+    onDelete,
+    onClose,
+}: {
+    structure: Structure;
+    onUpdate: (updates: Partial<Structure>) => void;
+    onDelete: () => void;
+    onClose: () => void;
+}) => {
+    return (
+        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-slate-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
+            <div className="relative h-48 w-full shrink-0 group overflow-hidden bg-slate-900">
+                <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
+                    <motion.button
+                        whileHover={{ scale: 1.05, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={onClose}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-slate-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-100 dark:hover:bg-black/60"
+                    >
+                        <span className="material-icons-round text-lg">close</span>
+                    </motion.button>
+                </div>
+                <div className="absolute bottom-8 left-8 right-8 z-20">
+                    <h1 className="text-[2rem] font-black leading-tight text-white capitalize">{structure.label}</h1>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        {structure.type} {structure.variant ? `• ${structure.variant}` : ''}
+                    </p>
+                </div>
+            </div>
+            <div className="relative z-0 flex-1 space-y-6 overflow-y-auto px-8 pt-8 pb-36 custom-scrollbar">
+            </div>
+            <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20">
+                <button
+                    onClick={onDelete}
+                    className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 font-bold uppercase tracking-widest text-xs rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                    <span className="material-icons-round text-sm">delete</span>
+                    Remove Structure
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const UnitDetailsPanel = ({
     unit,
     onUpdate,
@@ -4256,7 +4569,11 @@ const UnitDetailsPanel = ({
         "2BR": 950,
         "3BR": 1200,
     };
-    const unitAreaSqm = Math.round(unitAreaSqftByType[unit.type] * 0.092903);
+    const unitAreaSqm = unit.areaSqm ?? Math.round(unitAreaSqftByType[unit.type] * 0.092903);
+
+    const beds = unit.bedrooms !== undefined ? unit.bedrooms : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 3 : 0);
+    const baths = unit.baths !== undefined ? unit.baths : (unit.type === '1BR' ? 1 : unit.type === '2BR' ? 2 : unit.type === '3BR' ? 2.5 : 1);
+    const unitLayoutLabel = unit.type === 'Studio' && beds === 0 ? `Studio - ${baths} Bath` : `${beds} Bed - ${baths} Bath`;
 
     // Status configuration for consistent styling
     const statusConfig = {
@@ -4278,13 +4595,6 @@ const UnitDetailsPanel = ({
     };
 
     const daysRemaining = getDaysRemaining();
-    const unitLayoutLabel = unit.type === '1BR'
-        ? '1 Bed - 1 Bath'
-        : unit.type === '2BR'
-            ? '2 Bed - 2 Bath'
-            : unit.type === '3BR'
-                ? '3 Bed - 2.5 Bath'
-                : 'Studio - 1 Bath';
     const leaseHeadline = daysRemaining === null
         ? "No lease date"
         : daysRemaining < 0
@@ -4443,7 +4753,33 @@ const UnitDetailsPanel = ({
 
             {/* Main Content Area */}
             <div className="relative z-0 flex-1 space-y-6 overflow-y-auto px-8 pt-8 pb-36 custom-scrollbar">
-                {!isEditing && (
+                {isEditing ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                        <section className="space-y-4">
+                            <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">UNIT DETAILS</h3>
+                            <div className="space-y-4 rounded-[24px] border border-slate-200 bg-white p-6 dark:border-white/5 dark:bg-slate-900/40">
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Area (sqm)</label>
+                                    <input type="number" value={unit.areaSqm || ""} onChange={(e) => onUpdate({ areaSqm: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bedrooms</label>
+                                        <input type="number" value={unit.bedrooms || ""} onChange={(e) => onUpdate({ bedrooms: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Baths</label>
+                                        <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Kitchens</label>
+                                    <input type="number" value={unit.kitchens || ""} onChange={(e) => onUpdate({ kitchens: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                </div>
+                            </div>
+                        </section>
+                    </motion.div>
+                ) : (
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -4896,6 +5232,7 @@ const SidebarBlockLibrary = ({
     isPropertyMode = false,
     setPendingClearFloor,
     activeFloorItemCount,
+    onApplyPreset,
 }: {
     onDragStart: (type: SidebarBlockType, dbUnitId?: string) => (e: React.DragEvent<HTMLDivElement>) => void;
     styles: { readonly [key: string]: string; }
@@ -4905,6 +5242,7 @@ const SidebarBlockLibrary = ({
     onUnitClick?: (unit: DbUnit) => void;
     setPendingClearFloor: (pending: boolean) => void;
     activeFloorItemCount: number;
+    onApplyPreset: (presetType: "double-loaded" | "u-shape" | "l-shape" | "single-loaded") => void;
 }) => {
     const handleSidebarBlockDragEnd = () => {
         // Optional cleanup if needed inside component, but parent tracks ghost
@@ -4945,6 +5283,55 @@ const SidebarBlockLibrary = ({
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
+                <div>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                        <span className="material-icons-round text-primary text-sm">auto_awesome_mosaic</span>
+                        Layout Presets
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={() => onApplyPreset("double-loaded")}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                        >
+                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">view_week</span>
+                            <div className="text-center">
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Double Loaded</p>
+                                <p className="text-[10px] text-slate-500">Central corridor</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => onApplyPreset("u-shape")}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                        >
+                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">view_quilt</span>
+                            <div className="text-center">
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>U-Shape</p>
+                                <p className="text-[10px] text-slate-500">Courtyard style</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => onApplyPreset("l-shape")}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                        >
+                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">filter_none</span>
+                            <div className="text-center">
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>L-Shape</p>
+                                <p className="text-[10px] text-slate-500">Corner layout</p>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => onApplyPreset("single-loaded")}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                        >
+                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">vertical_split</span>
+                            <div className="text-center">
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Single Loaded</p>
+                                <p className="text-[10px] text-slate-500">One side units</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
                 {!isPropertyMode && (
                     <div>
                         <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
@@ -5104,6 +5491,41 @@ const SidebarBlockLibrary = ({
                             </div>
                             <div className="text-center">
                                 <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Spiral</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="pt-4 mt-4 border-t border-border">
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                        <span className="material-icons-round text-primary text-sm">meeting_room</span>
+                        Facilities
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            draggable="true"
+                            onDragStart={onDragStart("facility-function")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-slate-400 bg-slate-200'}`}>
+                                <span className={`material-icons-round text-lg ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>meeting_room</span>
+                            </div>
+                            <div className="text-center">
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Function Rm</p>
+                            </div>
+                        </div>
+                        <div
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            draggable="true"
+                            onDragStart={onDragStart("facility-studio")}
+                            onDragEnd={handleSidebarBlockDragEnd}
+                        >
+                            <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-slate-400 bg-slate-200'}`}>
+                                <span className={`material-icons-round text-lg ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>fitness_center</span>
+                            </div>
+                            <div className="text-center">
+                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Studio</p>
                             </div>
                         </div>
                     </div>
