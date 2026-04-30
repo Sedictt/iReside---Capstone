@@ -1,1020 +1,981 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Bell,
-    CheckCircle,
-    ChevronRight,
-    CreditCard,
-    Edit2,
-    type LucideIcon,
-    ShieldCheck,
     User,
-    Users,
+    Shield,
+    Bell,
+    CreditCard,
+    Globe,
     Download,
     Trash2,
     Building2,
     Mail,
-    AlertTriangle,
-    Eye,
-    EyeOff,
-    Smartphone,
-    Globe,
-    Camera,
-    MapPin,
     Phone,
+    MapPin,
     FileText,
+    Camera,
+    Save,
+    ChevronRight,
+    CheckCircle,
+    Key,
+    Smartphone,
     Monitor,
     LogOut,
-    Key,
-    Shield,
-    Save,
-    X,
-    ChevronDown,
-    Archive,
-    HardDrive,
-    Receipt,
+    Eye,
     Info,
+    AlertTriangle,
+    Zap,
+    Droplets,
+    Layout,
+    Facebook,
+    Instagram,
+    Twitter,
+    Linkedin,
+    UploadCloud,
+    ArrowLeft
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
+import { ProfileCoverUploader } from "@/components/profile/ProfileCoverUploader";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
-// Types
-type Section = "My Profile" | "Security" | "Privacy" | "Notifications" | "Billing" | "Data Export" | "Delete Account" | "GCash Destination" | "Water Billing" | "Electricity Billing";
+// --- Types ---
+type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data";
 
-const SIDEBAR_ITEMS: { icon: LucideIcon; label: Section; className?: string }[] = [
-    { icon: User, label: "My Profile" },
-    { icon: ShieldCheck, label: "Security" },
-    { icon: Eye, label: "Privacy" },
-    { icon: Bell, label: "Notifications" },
-    { icon: CreditCard, label: "Billing" },
-    { icon: Download, label: "Data Export" },
-    { icon: Trash2, label: "Delete Account", className: "text-red-500 hover:text-red-400 hover:bg-red-500/10" },
+interface SidebarItem {
+    id: SettingsCategory;
+    label: string;
+    icon: any;
+    description: string;
+}
+
+const SIDEBAR_ITEMS: SidebarItem[] = [
+    { 
+        id: "Identity", 
+        label: "Public Identity", 
+        icon: User,
+        description: "Manage your profile and public presence"
+    },
+    { 
+        id: "Finance", 
+        label: "Finance & Utilities", 
+        icon: CreditCard,
+        description: "Payment methods and utility rates"
+    },
+    { 
+        id: "Security", 
+        label: "Security & Login", 
+        icon: Shield,
+        description: "Password, 2FA and active sessions"
+    },
+    { 
+        id: "Notifications", 
+        label: "Notifications", 
+        icon: Bell,
+        description: "Communication and alert preferences"
+    },
+    { 
+        id: "Data", 
+        label: "Data & Privacy", 
+        icon: Globe,
+        description: "Export data and account deletion"
+    },
 ];
 
-const BILLING_SECTIONS: Section[] = ["GCash Destination", "Water Billing", "Electricity Billing"];
+// --- Components ---
 
-// Reusable Toggle Switch Component
-function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolean; onToggle: () => void; size?: "default" | "small" }) {
-    const isSmall = size === "small";
+function GlassCard({ children, className, title, description }: { children: React.ReactNode; className?: string; title?: string; description?: string }) {
+    return (
+        <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
+            {(title || description) && (
+                <div className="border-b border-white/5 px-8 py-6">
+                    {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
+                    {description && <p className="text-sm text-neutral-400">{description}</p>}
+                </div>
+            )}
+            <div className="p-8">{children}</div>
+        </div>
+    );
+}
+
+function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+                {Icon && <Icon className="h-3.5 w-3.5 text-neutral-500" />}
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</label>
+            </div>
+            {children}
+            {description && <p className="px-1 text-xs text-neutral-500">{description}</p>}
+        </div>
+    );
+}
+
+function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
     return (
         <button
             onClick={onToggle}
             className={cn(
-                "relative inline-flex items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/70 focus:ring-offset-2 focus:ring-offset-[#101911]",
-                enabled ? "bg-primary shadow-[0_0_16px_rgba(var(--primary-rgb),0.45)]" : "bg-white/10",
-                isSmall ? "h-5 w-9" : "h-6 w-11"
+                "relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300",
+                enabled ? "bg-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.3)]" : "bg-white/10"
             )}
         >
             <span
                 className={cn(
-                    "inline-block transform rounded-full bg-white shadow-sm transition-all duration-300",
-                    isSmall ? "h-3 w-3" : "h-4 w-4",
-                    enabled
-                        ? isSmall ? "translate-x-5" : "translate-x-6"
-                        : "translate-x-1"
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300",
+                    enabled ? "translate-x-6" : "translate-x-1"
                 )}
             />
         </button>
     );
 }
 
-// Reusable Setting Row Component
-function SettingRow({ title, description, children, border = true }: { title: string; description: string; children: React.ReactNode; border?: boolean }) {
+function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
     return (
-        <div className={cn("py-5", border && "border-b border-white/5")}>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-0.5 min-w-0">
-                    <h3 className="text-sm font-semibold text-white">{title}</h3>
-                    <p className="text-sm leading-relaxed text-neutral-400">{description}</p>
-                </div>
-                <div className="flex-shrink-0">{children}</div>
-            </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {tabs.map((tab) => (
+                <button
+                    key={tab}
+                    onClick={() => onTabChange(tab)}
+                    className={cn(
+                        "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold transition-all",
+                        activeTab === tab
+                            ? "bg-white/10 text-white shadow-xl shadow-white/5 border border-white/10"
+                            : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                    )}
+                >
+                    {tab}
+                </button>
+            ))}
         </div>
     );
 }
 
-// Section Header Component
-function SectionHeader({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
-    return (
-        <div className="mb-8">
-            <div className="mb-2 flex items-center gap-3">
-                <div className="rounded-2xl border border-primary/20 bg-primary/10 p-2.5">
-                    <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
-            </div>
-            <p className="ml-14 max-w-2xl text-sm text-neutral-400">{description}</p>
-        </div>
-    );
-}
+// --- Main Component ---
 
 export function LandlordSettings() {
+    const router = useRouter();
     const { profile, refreshProfile } = useAuth();
-    const [activeTab, setActiveTab] = useState<Section>("My Profile");
+    // UI State
+    const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
+    const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
+    const [isSaving, setIsSaving] = useState(false);
     const supabase = createClient();
 
-    // Profile State
-    const [profileName, setProfileName] = useState("");
-    const [profileEmail, setProfileEmail] = useState("");
-    const [profilePhone, setProfilePhone] = useState("");
-    const [profileAddress, setProfileAddress] = useState("");
-    const [profileBio, setProfileBio] = useState("");
-    const [profileWebsite, setProfileWebsite] = useState("");
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+    // Mapping of Sub-tabs
+    const SUB_TABS: Record<SettingsCategory, string[]> = {
+        Identity: ["Profile", "Branding", "Socials", "Verification", "Visibility"],
+        Finance: ["GCash", "Utilities"],
+        Security: ["Account", "Protection", "Sessions"],
+        Notifications: ["Alerts"],
+        Data: ["Export", "Danger"],
+    };
 
-    // Sync profile data
+    // Reset sub-tab when main tab changes
+    useEffect(() => {
+        setActiveSubTab(SUB_TABS[activeTab][0]);
+    }, [activeTab]);
+    const [formData, setFormData] = useState({
+        full_name: "",
+        business_name: "",
+        email: "",
+        phone: "",
+        website: "",
+        address: "",
+        bio: "",
+        business_permit_number: "",
+        public_visibility: true,
+        socials: {
+            facebook: "",
+            instagram: "",
+            twitter: "",
+            linkedin: "",
+        },
+    });
+
+    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+    const [properties, setProperties] = useState<any[]>([]);
+    const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
+
+    // Security States
+    const [otpEnabled, setOtpEnabled] = useState(false);
+    const [showOtpField, setShowOtpField] = useState(false);
+
     useEffect(() => {
         if (profile) {
-            setProfileName(profile.full_name || "");
-            setProfileEmail(profile.email || "");
-            setProfilePhone(profile.phone || "");
-            setProfileAddress(profile.address || "");
-            setProfileBio(profile.bio || "");
-            setProfileWebsite(profile.website || "");
+            setFormData({
+                full_name: profile.full_name || "",
+                business_name: profile.business_name || "",
+                email: profile.email || "",
+                phone: profile.phone || "",
+                website: profile.website || "",
+                address: profile.address || "",
+                bio: profile.bio || "",
+                business_permit_number: profile.business_permit_number || "",
+                public_visibility: true,
+                socials: typeof profile.socials === 'object' && profile.socials !== null 
+                    ? {
+                        facebook: (profile.socials as any).facebook || "",
+                        instagram: (profile.socials as any).instagram || "",
+                        twitter: (profile.socials as any).twitter || "",
+                        linkedin: (profile.socials as any).linkedin || "",
+                      }
+                    : {
+                        facebook: "",
+                        instagram: "",
+                        twitter: "",
+                        linkedin: "",
+                      },
+            });
+            fetchProperties();
         }
     }, [profile]);
 
-    const handleSaveProfile = async () => {
-        if (!profile) return;
+    const fetchProperties = async () => {
+        const { data, error } = await supabase
+            .from("properties")
+            .select("id, name")
+            .eq("landlord_id", profile?.id);
         
+        if (data) setProperties(data);
+    };
+
+    const handleSave = async () => {
+        if (!profile) return;
+        setIsSaving(true);
         try {
             const { error } = await supabase
                 .from("profiles")
                 .update({
-                    full_name: profileName,
-                    phone: profilePhone,
-                    address: profileAddress,
-                    bio: profileBio,
-                    website: profileWebsite
+                    full_name: formData.full_name,
+                    business_name: formData.business_name,
+                    phone: formData.phone,
+                    website: formData.website,
+                    address: formData.address,
+                    bio: formData.bio,
+                    business_permit_number: formData.business_permit_number,
+                    socials: formData.socials,
                 })
                 .eq("id", profile.id);
 
             if (error) throw error;
-            
             await refreshProfile();
-            toast.success("Profile updated successfully");
+            toast.success("Settings updated successfully");
         } catch (error: any) {
-            console.error("Failed to save profile:", error);
-            toast.error(error.message || "Failed to update profile");
+            toast.error(error.message || "Failed to update settings");
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    const handleToggleEdit = async () => {
-        if (isEditingProfile) {
-            await handleSaveProfile();
+    const [isUploadingPermit, setIsUploadingPermit] = useState(false);
+    const permitInputRef = useRef<HTMLInputElement>(null);
+
+    const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingPermit(true);
+        const loadingToast = toast.loading("Uploading permit...");
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/profile/permit", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to upload permit");
+            }
+
+            toast.success("Permit uploaded successfully", { id: loadingToast });
+            await refreshProfile();
+        } catch (error: any) {
+            toast.error(error.message, { id: loadingToast });
+        } finally {
+            setIsUploadingPermit(false);
+            if (permitInputRef.current) permitInputRef.current.value = "";
         }
-        setIsEditingProfile(!isEditingProfile);
     };
 
-    // Security State
-    const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true);
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-
-    // Privacy State
-    const [privacyProfileVisible, setPrivacyProfileVisible] = useState(true);
-    const [privacySearchIndexing, setPrivacySearchIndexing] = useState(true);
-    const [privacyDataSharing, setPrivacyDataSharing] = useState(false);
-
-    // Notification State
-    const [notifInquiryEmail, setNotifInquiryEmail] = useState(true);
-    const [notifInquirySms, setNotifInquirySms] = useState(false);
-    const [notifInquiryPush, setNotifInquiryPush] = useState(true);
-    const [notifMaintenanceEmail, setNotifMaintenanceEmail] = useState(true);
-    const [notifMaintenanceSms, setNotifMaintenanceSms] = useState(true);
-    const [notifMaintenancePush, setNotifMaintenancePush] = useState(true);
-    const [notifPaymentEmail, setNotifPaymentEmail] = useState(true);
-    const [notifPaymentSms, setNotifPaymentSms] = useState(false);
-    const [notifPaymentPush, setNotifPaymentPush] = useState(true);
-    const [notifLeaseEmail, setNotifLeaseEmail] = useState(true);
-    const [notifLeaseSms, setNotifLeaseSms] = useState(false);
-    const [notifLeasePush, setNotifLeasePush] = useState(false);
-    const [notifMarketingEmail, setNotifMarketingEmail] = useState(false);
-    const [notifMarketingSms, setNotifMarketingSms] = useState(false);
-    const [notifMarketingPush, setNotifMarketingPush] = useState(false);
-
-    // Delete Account State
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-    // Billing Expanded State
-    const [billingExpanded, setBillingExpanded] = useState(false);
-    const renderContent = () => {
-        switch (activeTab) {
-            case "My Profile":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={User} title="My Profile" description="Manage your company profile information visible to tenants." />
-
-                        {/* Profile Card */}
-                        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#171717]">
-                            {/* Cover */}
-                            <div className="relative h-36 bg-[linear-gradient(120deg,rgba(var(--primary-rgb),0.4),rgba(16,185,129,0.14),rgba(10,10,10,0.2))]">
-                                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
-                            </div>
-
-                            <div className="px-8 pb-8">
-                                {/* Avatar & Name */}
-                                <div className="flex flex-col md:flex-row md:items-end justify-between -mt-12 mb-8 gap-4">
-                                    <div className="flex items-end gap-5">
-                                        <div className="relative group">
-                                            <div 
-                                                className="flex h-24 w-24 items-center justify-center rounded-2xl p-1 shadow-xl ring-4 ring-[#171717] overflow-hidden transition-colors duration-500"
-                                                style={{ backgroundColor: profile?.avatar_bg_color || "#171717" }}
-                                            >
-                                                {profile?.avatar_url ? (
-                                                    <img src={profile.avatar_url} alt={profileName} className="h-full w-full object-cover" />
-                                                ) : (
-                                                    <span className="text-2xl font-black text-white">
-                                                        {(profileName || "C").split(" ").filter(Boolean).slice(0, 2).map(p => p[0]?.toUpperCase()).join("")}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <button 
-                                                onClick={() => setIsAvatarPickerOpen(true)}
-                                                className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-colors opacity-0 group-hover:opacity-100 hover:bg-primary/90"
-                                            >
-                                                <Camera className="h-3.5 w-3.5 text-white" />
-                                            </button>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-bold text-white">{profileName || "Loading..."}</h3>
-                                                <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
-                                                    <CheckCircle className="h-3 w-3" /> Verified
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-slate-400">Landlord ID: #{profile?.id?.slice(0, 8).toUpperCase() || "..."}</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={handleToggleEdit}
-                                        className={cn(
-                                            "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all shadow-sm",
-                                            isEditingProfile
-                                                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
-                                                : "border border-white/10 bg-[#101010] text-slate-300 hover:bg-white/5 hover:text-white"
-                                        )}
-                                    >
-                                        {isEditingProfile ? <><Save className="h-4 w-4" /> Save Changes</> : <><Edit2 className="h-4 w-4" /> Edit Profile</>}
-                                    </button>
-                                </div>
-
-                                {/* Profile Fields */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                            <Building2 className="h-3 w-3" /> Company Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={profileName}
-                                            onChange={(e) => setProfileName(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
-                                                isEditingProfile
-                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                            <Mail className="h-3 w-3" /> Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={profileEmail}
-                                            onChange={(e) => setProfileEmail(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
-                                                isEditingProfile
-                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                            <Phone className="h-3 w-3" /> Phone
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            value={profilePhone}
-                                            onChange={(e) => setProfilePhone(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
-                                                isEditingProfile
-                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                            <Globe className="h-3 w-3" /> Website
-                                        </label>
-                                        <input
-                                            type="url"
-                                            value={profileWebsite}
-                                            onChange={(e) => setProfileWebsite(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
-                                                isEditingProfile
-                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                            <MapPin className="h-3 w-3" /> Address
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={profileAddress}
-                                            onChange={(e) => setProfileAddress(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all",
-                                                isEditingProfile
-                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                                            <FileText className="h-3 w-3" /> Bio
-                                        </label>
-                                        <textarea
-                                            value={profileBio}
-                                            onChange={(e) => setProfileBio(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            rows={3}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-white transition-all resize-none",
-                                                isEditingProfile
-                                                    ? "bg-[#101010] border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case "Security":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={ShieldCheck} title="Security" description="Keep your account safe with these security settings." />
-
-                        {/* Email Address */}
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-slate-400" /> Email Address
-                            </h3>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                                        <Mail className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-white">{profileEmail}</p>
-                                        <p className="text-xs text-emerald-400 flex items-center gap-1">
-                                            <CheckCircle className="h-3 w-3" /> Verified
-                                        </p>
-                                    </div>
-                                </div>
-                                <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors">
-                                    Change <Edit2 className="h-3 w-3" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Password */}
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <Key className="h-4 w-4 text-slate-400" /> Password
-                            </h3>
-                            <div className="grid gap-4 max-w-lg">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold tracking-wider text-slate-500 uppercase">Current Password</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showCurrentPassword ? "text" : "password"}
-                                            value={currentPassword}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                            placeholder="Enter current password"
-                                            className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-600 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-                                        <button
-                                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition-colors"
-                                        >
-                                            {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold tracking-wider text-slate-500 uppercase">New Password</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showNewPassword ? "text" : "password"}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Enter new password"
-                                            className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-600 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                        />
-                                        <button
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition-colors"
-                                        >
-                                            {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold tracking-wider text-slate-500 uppercase">Confirm New Password</label>
-                                    <input
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder="Confirm new password"
-                                        className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                    />
-                                </div>
-                                {/* Password Strength Indicator */}
-                                {newPassword && (
-                                    <div className="space-y-2">
-                                        <div className="flex gap-1">
-                                            {[1, 2, 3, 4].map((i) => (
-                                                <div
-                                                    key={i}
-                                                    className={cn(
-                                                        "h-1 flex-1 rounded-full transition-colors",
-                                                        newPassword.length >= i * 3
-                                                            ? newPassword.length >= 12 ? "bg-emerald-500" : newPassword.length >= 8 ? "bg-amber-500" : "bg-red-500"
-                                                            : "bg-neutral-700"
-                                                    )}
-                                                />
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-slate-500">
-                                            {newPassword.length < 6 ? "Weak" : newPassword.length < 10 ? "Fair" : "Strong"} password
-                                        </p>
-                                    </div>
-                                )}
-                                <button className="mt-2 w-fit rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90">
-                                    Update Password
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Two-Factor Auth */}
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-start gap-4">
-                                    <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Shield className="h-5 w-5 text-emerald-400" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h3 className="text-sm font-semibold text-white">Two-Factor Authentication</h3>
-                                        <p className="text-sm text-slate-400">Add an extra layer of security. You&apos;ll need to enter a verification code in addition to your password.</p>
-                                        {isTwoFactorEnabled && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400 mt-2">
-                                                <CheckCircle className="h-3 w-3" /> Active
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <ToggleSwitch enabled={isTwoFactorEnabled} onToggle={() => setIsTwoFactorEnabled(!isTwoFactorEnabled)} />
-                            </div>
-                        </div>
-
-                        {/* Active Sessions */}
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <Monitor className="h-4 w-4 text-slate-400" /> Active Sessions
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/10 p-3">
-                                    <div className="flex items-center gap-3">
-                                        <Monitor className="h-4 w-4 text-primary" />
-                                        <div>
-                                            <p className="text-sm text-white">Chrome on Windows</p>
-                                            <p className="text-xs text-slate-500">Manila, Philippines Â· Current session</p>
-                                        </div>
-                                    </div>
-                                    <span className="rounded bg-primary/15 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">Current</span>
-                                </div>
-                                <div className="flex items-center justify-between rounded-lg bg-[#101010] p-3">
-                                    <div className="flex items-center gap-3">
-                                        <Smartphone className="h-4 w-4 text-slate-500" />
-                                        <div>
-                                            <p className="text-sm text-white">Safari on iPhone</p>
-                                            <p className="text-xs text-slate-500">Manila, Philippines Â· 2 hours ago</p>
-                                        </div>
-                                    </div>
-                                    <button className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors">Revoke</button>
-                                </div>
-                            </div>
-                            <button className="mt-4 text-xs text-red-400 hover:text-red-300 font-medium flex items-center gap-1 transition-colors">
-                                <LogOut className="h-3 w-3" /> Sign out all other sessions
-                            </button>
-                        </div>
-
-                        {/* Danger Zone */}
-                        <div className="rounded-2xl border border-red-500/10 bg-red-500/5 p-6">
-                            <h3 className="text-sm font-semibold text-red-400 mb-4 flex items-center gap-2">
-                                <AlertTriangle className="h-4 w-4" /> Danger Zone
-                            </h3>
-                            <SettingRow title="Deactivate Account" description="Temporarily disable your account. You can reactivate it later by signing in." border>
-                                <button className="px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors">
-                                    Deactivate
-                                </button>
-                            </SettingRow>
-                            <SettingRow title="Delete Account" description="Permanently delete your account and all associated data. This action cannot be undone." border={false}>
-                                <button className="px-4 py-2 rounded-lg border border-red-500/30 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors">
-                                    Delete Account
-                                </button>
-                            </SettingRow>
-                        </div>
-                    </div>
-                );
-
-            case "Privacy":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Eye} title="Privacy" description="Manage how your information is seen and used." />
-
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-slate-400" /> Public Visibility
-                            </h3>
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Public Profile</p>
-                                        <p className="text-sm text-slate-400">Allow potential tenants to find your profile in public search.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacyProfileVisible} onToggle={() => setPrivacyProfileVisible(!privacyProfileVisible)} />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Search Engine Indexing</p>
-                                        <p className="text-sm text-slate-400">Allow search engines like Google to show your profile.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacySearchIndexing} onToggle={() => setPrivacySearchIndexing(!privacySearchIndexing)} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <HardDrive className="h-4 w-4 text-slate-400" /> Data & Usage
-                            </h3>
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Data Usage for Improvements</p>
-                                        <p className="text-sm text-slate-400">Allow iReside to use your anonymous usage data to improve the platform.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacyDataSharing} onToggle={() => setPrivacyDataSharing(!privacyDataSharing)} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <Users className="h-4 w-4 text-slate-400" /> Blocked Users
-                            </h3>
-                            <p className="text-sm text-slate-400 mb-4">Manage tenants and users you have blocked.</p>
-                            <button className="px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors">
-                                View Blocked List
-                            </button>
-                        </div>
-                    </div>
-                );
-
-            case "Notifications":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Bell} title="Notifications" description="Choose how and when you want to be notified about activity." />
-
-                        {/* Notification Matrix */}
-                        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#171717]">
-                            {/* Header */}
-                            <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-                                <div className="flex items-center justify-end gap-8 pr-1">
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase w-12 text-center">Email</span>
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase w-12 text-center">SMS</span>
-                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase w-12 text-center">Push</span>
-                                </div>
-                            </div>
-
-                            {/* Rows */}
-                            <div className="divide-y divide-white/5">
-                                {/* New Inquiries */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">New Inquiries</p>
-                                        <p className="text-xs text-slate-400">When potential tenants message you about listings.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifInquiryEmail} onToggle={() => setNotifInquiryEmail(!notifInquiryEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifInquirySms} onToggle={() => setNotifInquirySms(!notifInquirySms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifInquiryPush} onToggle={() => setNotifInquiryPush(!notifInquiryPush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Maintenance Requests */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Maintenance Requests</p>
-                                        <p className="text-xs text-slate-400">Urgent notifications for repairs and tenant issues.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMaintenanceEmail} onToggle={() => setNotifMaintenanceEmail(!notifMaintenanceEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMaintenanceSms} onToggle={() => setNotifMaintenanceSms(!notifMaintenanceSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMaintenancePush} onToggle={() => setNotifMaintenancePush(!notifMaintenancePush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Payment Updates */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Payment Updates</p>
-                                        <p className="text-xs text-slate-400">Notifications about rent payments, receipts and payouts.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifPaymentEmail} onToggle={() => setNotifPaymentEmail(!notifPaymentEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifPaymentSms} onToggle={() => setNotifPaymentSms(!notifPaymentSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifPaymentPush} onToggle={() => setNotifPaymentPush(!notifPaymentPush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Lease Updates */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Lease Updates</p>
-                                        <p className="text-xs text-slate-400">Reminders for lease renewals, expirations and signatures.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifLeaseEmail} onToggle={() => setNotifLeaseEmail(!notifLeaseEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifLeaseSms} onToggle={() => setNotifLeaseSms(!notifLeaseSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifLeasePush} onToggle={() => setNotifLeasePush(!notifLeasePush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Marketing */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-white">Marketing & Promotions</p>
-                                        <p className="text-xs text-slate-400">Tips, product updates and promotional offers from iReside.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMarketingEmail} onToggle={() => setNotifMarketingEmail(!notifMarketingEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMarketingSms} onToggle={() => setNotifMarketingSms(!notifMarketingSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMarketingPush} onToggle={() => setNotifMarketingPush(!notifMarketingPush)} /></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex gap-3">
-                            <button className="px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors">
-                                Enable All
-                            </button>
-                            <button className="px-4 py-2 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors">
-                                Disable All
-                            </button>
-                        </div>
-                    </div>
-                );
-
-            case "Billing":
-            case "GCash Destination":
-            case "Water Billing":
-            case "Electricity Billing":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader 
-                            icon={CreditCard} 
-                            title={activeTab === "Billing" ? "GCash Destination" : activeTab} 
-                            description={
-                                activeTab === "Water Billing" ? "Configure water defaults and overrides per property." :
-                                activeTab === "Electricity Billing" ? "Configure electricity defaults and overrides per property." :
-                                "Manage how you receive rental payments from tenants."
-                            } 
-                        />
-                        <BillingOperationsPanel 
-                            activeSection={
-                                activeTab === "Water Billing" ? "water" : 
-                                activeTab === "Electricity Billing" ? "electricity" : 
-                                "gcash"
-                            } 
-                        />
-                    </div>
-                );
-
-            case "Data Export":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Download} title="Data Export" description="Download a copy of your data from iReside." />
-
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <div className="flex items-start gap-4 mb-6">
-                                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                                    <HardDrive className="h-6 w-6 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-semibold text-white mb-1">Export Your Data</h3>
-                                    <p className="text-sm text-slate-400 leading-relaxed">
-                                        Request a copy of all your data stored on iReside. This includes your profile information,
-                                        property listings, tenant records, financial transactions, and communication history.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3 mb-6">
-                                {[
-                                    { icon: User, label: "Profile Information", desc: "Personal details, preferences, settings" },
-                                    { icon: Building2, label: "Property Data", desc: "Listings, unit details, photos, amenities" },
-                                    { icon: Users, label: "Tenant Records", desc: "Lease agreements, contacts, payment history" },
-                                    { icon: Receipt, label: "Financial Records", desc: "Invoices, payouts, transaction logs" },
-                                ].map((item) => (
-                                    <label key={item.label} className="group flex cursor-pointer items-center gap-4 rounded-xl border border-white/10 bg-[#101010] p-4 transition-colors hover:border-white/15">
-                                        <input type="checkbox" defaultChecked className="h-4 w-4 accent-primary" />
-                                        <div className="flex items-center gap-3 flex-1">
-                                            <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                                                <item.icon className="h-4 w-4 text-slate-400 transition-colors group-hover:text-primary" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-white">{item.label}</p>
-                                                <p className="text-xs text-slate-500">{item.desc}</p>
-                                            </div>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs text-slate-500 flex items-center gap-1">
-                                    <Info className="h-3 w-3" /> Export may take up to 24 hours to process.
-                                </p>
-                                <button className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90">
-                                    <Download className="h-4 w-4" /> Request Export
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Previous Exports */}
-                        <div className="rounded-2xl border border-white/10 bg-[#171717] p-6">
-                            <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                                <Archive className="h-4 w-4 text-slate-400" /> Previous Exports
-                            </h3>
-                            <div className="flex items-center justify-between rounded-lg bg-[#101010] p-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                        <CheckCircle className="h-4 w-4 text-emerald-400" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-white">Full Data Export</p>
-                                        <p className="text-xs text-slate-500">Jan 15, 2026 Â· 12.4 MB</p>
-                                    </div>
-                                </div>
-                                <button className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary/80">
-                                    <Download className="h-3 w-3" /> Download
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case "Delete Account":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Trash2} title="Delete Account" description="Permanently remove your account and all associated data." />
-
-                        <div className="rounded-2xl border border-red-500/10 bg-red-500/5 p-6">
-                            <div className="flex items-start gap-4 mb-6">
-                                <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                                    <AlertTriangle className="h-6 w-6 text-red-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-red-400 mb-2">This action is irreversible</h3>
-                                    <p className="text-sm text-slate-400 leading-relaxed">
-                                        Deleting your account will permanently remove all your data including properties, tenant records,
-                                        financial history, and communication logs. This action cannot be undone.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="mb-6 rounded-xl border border-red-500/10 bg-[#101010] p-4">
-                                <h4 className="text-sm font-medium text-white mb-3">What will be deleted:</h4>
-                                <ul className="space-y-2">
-                                    {[
-                                        "All property listings and unit data",
-                                        "Tenant records and lease agreements",
-                                        "Financial records and transaction history",
-                                        "Communication history with tenants",
-                                        "Your profile and account settings",
-                                    ].map((text) => (
-                                        <li key={text} className="flex items-center gap-2 text-sm text-slate-400">
-                                            <X className="h-3 w-3 text-red-400 flex-shrink-0" />
-                                            {text}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            {!showDeleteConfirm ? (
-                                <button
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-red-600/20"
-                                >
-                                    I understand, delete my account
-                                </button>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="space-y-4 border-t border-red-500/10 pt-4"
-                                >
-                                    <p className="text-sm text-slate-400">
-                                        Please type <span className="text-red-400 font-mono font-bold">DELETE</span> to confirm:
-                                    </p>
+    const renderIdentity = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Profile":
+                    return (
+                        <GlassCard title="Profile Information" description="Basic details about you and your business.">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <SettingField label="Full Name" icon={User}>
                                     <input
                                         type="text"
-                                        value={deleteConfirmText}
-                                        onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                        placeholder="Type DELETE"
-                                        className="w-full max-w-xs rounded-lg border border-red-500/20 bg-[#101010] px-4 py-2.5 text-sm text-white placeholder-slate-600 transition-colors focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        value={formData.full_name}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
-                                    <div className="flex gap-3">
-                                        <button
-                                            disabled={deleteConfirmText !== "DELETE"}
-                                            className={cn(
-                                                "px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
-                                                deleteConfirmText === "DELETE"
-                                                    ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20"
-                                                    : "cursor-not-allowed bg-neutral-800 text-slate-500"
-                                            )}
+                                </SettingField>
+                                <SettingField label="Business Name" icon={Building2}>
+                                    <input
+                                        type="text"
+                                        value={formData.business_name}
+                                        onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Contact Email" icon={Mail} description="This email is used for inquiries.">
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        disabled
+                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
+                                    />
+                                </SettingField>
+                                <SettingField label="Phone Number" icon={Phone}>
+                                    <input
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Website" icon={Globe}>
+                                    <input
+                                        type="url"
+                                        value={formData.website}
+                                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <div className="md:col-span-2">
+                                    <SettingField label="Office Address" icon={MapPin}>
+                                        <input
+                                            type="text"
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                    </SettingField>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <SettingField label="Short Bio" icon={FileText} description="Briefly describe your property management style.">
+                                        <textarea
+                                            rows={4}
+                                            value={formData.bio}
+                                            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        />
+                                    </SettingField>
+                                </div>
+                            </div>
+                        </GlassCard>
+                    );
+                case "Branding":
+                    return (
+                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                            <GlassCard title="Cover Photo" description="A cinematic background for your public page.">
+                                <div className="relative h-64 w-full overflow-hidden rounded-[1.5rem] border border-white/5 bg-white/5">
+                                    <ProfileCoverUploader 
+                                        initialCoverUrl={profile?.cover_url || null} 
+                                        fullName={profile?.full_name || "Landlord"} 
+                                    />
+                                </div>
+                            </GlassCard>
+                            <GlassCard title="Avatar & Identity" description="Your primary identification photo.">
+                                <div className="flex flex-col items-center py-4">
+                                    <div 
+                                        className="group relative flex h-40 w-40 items-center justify-center rounded-[3rem] border-4 border-white/10 shadow-2xl transition-transform hover:scale-105"
+                                        style={{ backgroundColor: profile?.avatar_bg_color || "#22C55E" }}
+                                    >
+                                        {profile?.avatar_url ? (
+                                            <img src={profile.avatar_url} alt="Avatar" className="h-full w-full rounded-[2.8rem] object-cover" />
+                                        ) : (
+                                            <span className="text-5xl font-black text-white">
+                                                {profile?.full_name?.charAt(0).toUpperCase()}
+                                            </span>
+                                        )}
+                                        <button 
+                                            onClick={() => setIsAvatarPickerOpen(true)}
+                                            className="absolute -bottom-2 -right-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg transition-all hover:scale-110 active:scale-95"
                                         >
-                                            Permanently Delete
-                                        </button>
-                                        <button
-                                            onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                                            className="px-4 py-2.5 rounded-lg border border-white/10 text-sm font-medium text-slate-300 hover:bg-white/5 transition-colors"
-                                        >
-                                            Cancel
+                                            <Camera className="h-6 w-6" />
                                         </button>
                                     </div>
-                                </motion.div>
-                            )}
+                                    <h4 className="mt-6 text-xl font-bold text-white">{profile?.full_name}</h4>
+                                    <p className="text-sm text-neutral-500">Verified Landlord</p>
+                                </div>
+                            </GlassCard>
                         </div>
-                    </div>
-                );
+                    );
+                case "Socials":
+                    return (
+                        <GlassCard title="Social Media Links" description="Connect your social profiles to build more trust.">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <SettingField label="Facebook" icon={Facebook}>
+                                    <input
+                                        type="url"
+                                        placeholder="https://facebook.com/your-page"
+                                        value={formData.socials.facebook}
+                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, facebook: e.target.value } })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Instagram" icon={Instagram}>
+                                    <input
+                                        type="url"
+                                        placeholder="https://instagram.com/your-profile"
+                                        value={formData.socials.instagram}
+                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, instagram: e.target.value } })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Twitter / X" icon={Twitter}>
+                                    <input
+                                        type="url"
+                                        placeholder="https://twitter.com/your-handle"
+                                        value={formData.socials.twitter}
+                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, twitter: e.target.value } })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="LinkedIn" icon={Linkedin}>
+                                    <input
+                                        type="url"
+                                        placeholder="https://linkedin.com/in/your-profile"
+                                        value={formData.socials.linkedin}
+                                        onChange={(e) => setFormData({ ...formData, socials: { ...formData.socials, linkedin: e.target.value } })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                            </div>
+                        </GlassCard>
+                    );
+                case "Verification":
+                    return (
+                        <GlassCard title="Business Verification" description="Upload your business permit to receive a 'Verified' badge.">
+                            <div className="space-y-6">
+                                <SettingField label="Business Permit Number" icon={FileText}>
+                                    <input
+                                        type="text"
+                                        value={formData.business_permit_number}
+                                        onChange={(e) => setFormData({ ...formData, business_permit_number: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">Permit Document (Photo)</label>
+                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                                        <div className="relative h-48 w-full md:w-80 overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/5 transition-all hover:bg-white/[0.08]">
+                                            {profile?.business_permit_url ? (
+                                                <img src={profile.business_permit_url} alt="Business Permit" className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full flex-col items-center justify-center gap-2 text-neutral-500">
+                                                    <UploadCloud className="h-8 w-8" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest">No Document</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 space-y-4">
+                                            <p className="text-sm text-neutral-500 leading-relaxed">
+                                                Upload a clear photo of your current business permit. Supported formats: JPG, PNG. Max size: 15MB.
+                                            </p>
+                                            <button 
+                                                onClick={() => permitInputRef.current?.click()}
+                                                disabled={isUploadingPermit}
+                                                className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-bold text-primary transition-all hover:bg-primary/20 disabled:opacity-50"
+                                            >
+                                                <UploadCloud className="h-5 w-5" /> 
+                                                {isUploadingPermit ? "Uploading..." : profile?.business_permit_url ? "Replace Document" : "Upload Document"}
+                                            </button>
+                                            <input 
+                                                ref={permitInputRef}
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="hidden" 
+                                                onChange={handlePermitUpload}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </GlassCard>
+                    );
+                case "Visibility":
+                    return (
+                        <GlassCard title="Visibility" description="Manage how your profile is discovered.">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <h4 className="text-sm font-semibold text-white">Public Profile Status</h4>
+                                    <p className="text-xs text-neutral-400">When enabled, tenants can find your listings and profile page.</p>
+                                </div>
+                                <ToggleSwitch 
+                                    enabled={formData.public_visibility} 
+                                    onToggle={() => setFormData({ ...formData, public_visibility: !formData.public_visibility })} 
+                                />
+                            </div>
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
 
-            default:
-                return (
-                    <div className="flex items-center justify-center h-64 border border-dashed border-white/10 rounded-xl text-slate-500">
-                        Content for {activeTab} coming soon
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h2 className="text-3xl font-black text-white">Public Identity</h2>
+                        <p className="text-neutral-400">Control how you appear to prospective tenants.</p>
                     </div>
-                );
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                    >
+                        {isSaving ? "Saving..." : <><Save className="h-5 w-5" /> Save Changes</>}
+                    </button>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Identity} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const renderFinance = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "GCash":
+                    return (
+                        <GlassCard className="!p-0">
+                            <div className="p-8">
+                                <BillingOperationsPanel 
+                                    viewMode="gcash"
+                                    propertyId={selectedPropertyId}
+                                />
+                            </div>
+                        </GlassCard>
+                    );
+                case "Utilities":
+                    return (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                {["Water", "Electricity"].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        className={cn(
+                                            "flex items-center gap-3 rounded-2xl border px-6 py-4 text-sm font-bold transition-all",
+                                            activeFinanceTab === tab 
+                                                ? "border-primary/20 bg-primary/10 text-primary shadow-lg shadow-primary/5" 
+                                                : "border-white/5 bg-white/5 text-neutral-400 hover:bg-white/[0.08]"
+                                        )}
+                                        onClick={() => setActiveFinanceTab(tab as any)}
+                                    >
+                                        {tab === "Water" && <Droplets className="h-4 w-4" />}
+                                        {tab === "Electricity" && <Zap className="h-4 w-4" />}
+                                        {tab} Configuration
+                                    </button>
+                                ))}
+                            </div>
+                            <GlassCard className="!p-0">
+                                <div className="p-8">
+                                    <BillingOperationsPanel 
+                                        viewMode="rates"
+                                        utilityType={activeFinanceTab === "Water" ? "water" : "electricity"}
+                                        propertyId={selectedPropertyId}
+                                    />
+                                </div>
+                            </GlassCard>
+                        </div>
+                    );
+                default: return null;
+            }
+        };
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex-1">
+                        <h2 className="text-3xl font-black text-white">Finance & Utilities</h2>
+                        <p className="text-neutral-400">Configure how you receive payments and manage utility rates.</p>
+                    </div>
+                    
+                    {/* Property Selector */}
+                    {activeSubTab !== "GCash" && (
+                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-1">
+                            <div className="flex items-center gap-2 px-3 py-1">
+                                <Building2 className="h-4 w-4 text-primary" />
+                                <span className="text-xs font-bold text-white whitespace-nowrap">Property:</span>
+                            </div>
+                            <select
+                                value={selectedPropertyId}
+                                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                                className="bg-transparent text-sm font-bold text-white outline-none pr-8 py-2 cursor-pointer appearance-none"
+                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1rem' }}
+                            >
+                                <option value="all" className="bg-[#171717]">All Properties</option>
+                                {properties.map(p => (
+                                    <option key={p.id} value={p.id} className="bg-[#171717]">{p.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Finance} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const [activeFinanceTab, setActiveFinanceTab] = useState<"GCash" | "Water" | "Electricity">("GCash");
+
+    const renderSecurity = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Account":
+                    return (
+                        <GlassCard title="Change Password" description="Ensure your account is using a long, random password to stay secure.">
+                            <div className="space-y-6 max-w-lg">
+                                <SettingField label="Current Password" icon={Key}>
+                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+                                </SettingField>
+                                <SettingField label="New Password" icon={Key}>
+                                    <input type="password" placeholder="••••••••" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+                                </SettingField>
+                                
+                                {otpEnabled && (
+                                    <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        className="space-y-2 overflow-hidden"
+                                    >
+                                        <SettingField label="OTP Verification" icon={Smartphone} description="Check your mobile for the 6-digit code.">
+                                            <input type="text" maxLength={6} placeholder="000000" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white tracking-[0.5em] text-center focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary font-mono" />
+                                        </SettingField>
+                                    </motion.div>
+                                )}
+
+                                <button className="w-full rounded-2xl bg-white/10 py-3 text-sm font-bold text-white transition-all hover:bg-white/20">
+                                    {otpEnabled ? "Verify & Update" : "Update Password"}
+                                </button>
+                            </div>
+                        </GlassCard>
+                    );
+                case "Protection":
+                    return (
+                        <GlassCard title="Multi-Factor Authentication" description="Add a second layer of security using OTP (One-Time Passwords).">
+                            <div className="space-y-6 max-w-lg">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                                            <Smartphone className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-white">SMS/Email OTP</h4>
+                                            <p className="text-xs text-neutral-500">Require a code for sensitive changes.</p>
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch enabled={otpEnabled} onToggle={() => setOtpEnabled(!otpEnabled)} />
+                                </div>
+                                
+                                {otpEnabled && (
+                                    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                <span className="text-xs font-bold text-neutral-300">Verified Number: +63 917 •••• 123</span>
+                                            </div>
+                                            <button className="text-[10px] font-bold text-primary uppercase tracking-wider hover:underline">Change</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </GlassCard>
+                    );
+                case "Sessions":
+                    return (
+                        <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
+                            <div className="space-y-4 max-w-lg">
+                                <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                                    <div className="flex items-center gap-4">
+                                        <Monitor className="h-5 w-5 text-primary" />
+                                        <div>
+                                            <h4 className="text-sm font-bold text-white">Chrome on Windows</h4>
+                                            <p className="text-[10px] text-neutral-500 uppercase tracking-wider">Current Session Â· Manila, PH</p>
+                                        </div>
+                                    </div>
+                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
+                                </div>
+                                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
+                                    <div className="flex items-center gap-4">
+                                        <Smartphone className="h-5 w-5 text-neutral-400" />
+                                        <div>
+                                            <h4 className="text-sm font-bold text-white">Safari on iPhone</h4>
+                                            <p className="text-[10px] text-neutral-500 uppercase tracking-wider">Last seen 2h ago Â· Manila, PH</p>
+                                        </div>
+                                    </div>
+                                    <button className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors">Revoke</button>
+                                </div>
+                                <button className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors">
+                                    <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
+                                </button>
+                            </div>
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-white">Security & Login</h2>
+                    <p className="text-neutral-400">Protect your account and manage active sessions.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Security} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const renderNotifications = () => (
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+        >
+            <div>
+                <h2 className="text-3xl font-black text-white">Notifications</h2>
+                <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
+            </div>
+
+            <SubNav 
+                tabs={SUB_TABS.Notifications} 
+                activeTab={activeSubTab} 
+                onTabChange={setActiveSubTab} 
+            />
+
+            <div className="mt-8">
+                <GlassCard className="!p-0 overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-white/5 bg-white/[0.02]">
+                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {[
+                                { label: "New Lease Applications", desc: "When a prospective tenant submits an application." },
+                                { label: "Maintenance Requests", desc: "Urgent notifications for unit repairs." },
+                                { label: "Payment Confirmations", desc: "When rent is successfully received." },
+                                { label: "Direct Messages", desc: "Messages from active or prospective tenants." },
+                                { label: "System Announcements", desc: "Product updates and platform news." },
+                            ].map((item) => (
+                                <tr key={item.label} className="transition-colors hover:bg-white/[0.01]">
+                                    <td className="px-8 py-6">
+                                        <h4 className="text-sm font-bold text-white">{item.label}</h4>
+                                        <p className="text-xs text-neutral-500">{item.desc}</p>
+                                    </td>
+                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
+                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>
+                                    <td className="px-4 py-6 text-center"><ToggleSwitch enabled={false} onToggle={() => {}} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <div className="flex items-center justify-end gap-3 border-t border-white/5 p-6 bg-white/[0.02]">
+                        <button className="text-xs font-bold text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
+                        <button className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition-all">Save Preferences</button>
+                    </div>
+                </GlassCard>
+            </div>
+        </motion.div>
+    );
+
+    const renderData = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Export":
+                    return (
+                        <GlassCard title="Data Export" description="Download a copy of your records in JSON or CSV format.">
+                            <div className="space-y-4 max-w-lg">
+                                <p className="text-xs text-neutral-400">This includes your properties, tenant history, and financial ledgers.</p>
+                                <button className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10">
+                                    <Download className="h-4 w-4" /> Request Data Export
+                                </button>
+                            </div>
+                        </GlassCard>
+                    );
+                case "Danger":
+                    return (
+                        <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title="Danger Zone" description="Irreversible account actions.">
+                            <div className="space-y-4 max-w-lg">
+                                <p className="text-xs text-red-400/80">Permanently delete your account and all associated data. This cannot be undone.</p>
+                                <button className="flex items-center gap-2 rounded-2xl bg-red-500 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] active:scale-95">
+                                    <Trash2 className="h-4 w-4" /> Delete Account
+                                </button>
+                            </div>
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-white">Data & Privacy</h2>
+                    <p className="text-neutral-400">Manage your data and account longevity.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Data} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case "Identity": return renderIdentity();
+            case "Finance": return renderFinance();
+            case "Security": return renderSecurity();
+            case "Notifications": return renderNotifications();
+            case "Data": return renderData();
+            default: return null;
         }
     };
 
     return (
-        <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)]">
-            <aside className="xl:sticky xl:top-8 xl:self-start">
-                <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card/95 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.4)] backdrop-blur-xl">
-                    <div className="border-b border-border/60 px-5 py-5">
-                        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">Settings Map</p>
-                        <h2 className="mt-2 text-lg font-semibold text-foreground">Landlord Preferences</h2>
-                        <p className="mt-1 text-sm leading-6 text-muted-foreground">Navigate profile, trust, alerts, and billing controls from one place.</p>
+        <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
+            {/* Sidebar */}
+            <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+                <button
+                    onClick={() => router.push("/landlord")}
+                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-neutral-500 hover:text-white transition-colors group"
+                >
+                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                    Back to Dashboard
+                </button>
+
+                <div className="flex items-center gap-4 px-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
+                        <Layout className="h-6 w-6" />
                     </div>
+                    <div>
+                        <h1 className="text-xl font-black text-white">Settings</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
+                    </div>
+                </div>
 
-                    <nav className="space-y-1.5 p-3">
-                        {SIDEBAR_ITEMS.map((item) => {
-                            const isBilling = item.label === "Billing";
-                            const isActive = activeTab === item.label || (isBilling && BILLING_SECTIONS.includes(activeTab));
-
-                            return (
-                                <div key={item.label}>
-                                    <button
-                                        onClick={() => {
-                                            if (isBilling) {
-                                                setBillingExpanded(!billingExpanded);
-                                                if (!BILLING_SECTIONS.includes(activeTab)) {
-                                                    setActiveTab("GCash Destination");
-                                                }
-                                            } else {
-                                                setActiveTab(item.label);
-                                            }
-                                        }}
-                                        className={cn(
-                                            "group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all duration-200",
-                                            isActive
-                                                ? "border border-primary/20 bg-primary/10 text-primary shadow-[0_18px_30px_-26px_rgba(var(--primary-rgb),0.7)]"
-                                                : item.label === "Delete Account"
-                                                    ? "text-red-500 hover:bg-red-500/10"
-                                                    : "border border-transparent text-muted-foreground hover:border-border/70 hover:bg-background/80 hover:text-foreground"
-                                        )}
-                                    >
-                                        <span className={cn(
-                                            "flex h-9 w-9 items-center justify-center rounded-xl border transition-colors",
-                                            isActive
-                                                ? "border-primary/20 bg-primary/15 text-primary"
-                                                : item.label === "Delete Account"
-                                                    ? "border-red-500/20 bg-red-500/10 text-red-400"
-                                                    : "border-border/70 bg-background/80 text-muted-foreground group-hover:text-foreground"
-                                        )}>
-                                            <item.icon className="h-4 w-4" />
-                                        </span>
-                                        <span className="min-w-0 flex-1">{item.label}</span>
-                                        {isBilling ? (
-                                            <ChevronDown className={cn("h-4 w-4 transition-transform", billingExpanded ? "rotate-180" : "-rotate-90")} />
-                                        ) : activeTab === item.label ? (
-                                            <ChevronRight className="h-4 w-4" />
-                                        ) : null}
-                                    </button>
-
-                                    {isBilling && (
-                                        <AnimatePresence>
-                                            {billingExpanded && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: "auto" }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="mt-2 space-y-1.5 pl-6 pr-1 pb-2">
-                                                        {BILLING_SECTIONS.map((subLabel) => (
-                                                            <button
-                                                                key={subLabel}
-                                                                onClick={() => setActiveTab(subLabel as Section)}
-                                                                className={cn(
-                                                                    "flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-medium transition-colors",
-                                                                    activeTab === subLabel
-                                                                        ? "bg-primary/10 text-primary"
-                                                                        : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
-                                                                )}
-                                                            >
-                                                                <div className={cn("h-1.5 w-1.5 rounded-full", activeTab === subLabel ? "bg-primary" : "bg-border")} />
-                                                                {subLabel}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                <nav className="space-y-2">
+                    {SIDEBAR_ITEMS.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = activeTab === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={cn(
+                                    "group relative flex w-full flex-col items-start rounded-[1.5rem] border px-6 py-5 transition-all duration-500",
+                                    isActive 
+                                        ? "border-primary/20 bg-primary/10 text-primary shadow-2xl shadow-primary/10" 
+                                        : "border-transparent text-neutral-500 hover:bg-white/5 hover:text-neutral-300"
+                                )}
+                            >
+                                <div className="flex w-full items-center justify-between">
+                                    <Icon className={cn("h-5 w-5 transition-transform duration-500", isActive && "scale-110")} />
+                                    {isActive && (
+                                        <motion.div 
+                                            layoutId="active-indicator"
+                                            className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
+                                        />
                                     )}
                                 </div>
-                            );
-                        })}
-                    </nav>
-                </div>
-            </aside>
+                                <span className="mt-3 text-sm font-bold">{item.label}</span>
+                                <span className="text-[10px] font-medium opacity-60">{item.description}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
+            </div>
 
-            <div className="min-h-[600px] rounded-[1.9rem] border border-border/60 bg-card/95 p-5 shadow-[0_24px_70px_-45px_rgba(15,23,42,0.45)] backdrop-blur-xl md:p-7">
+            {/* Content Area */}
+            <main className="flex-1 min-w-0">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
                     >
                         {renderContent()}
                     </motion.div>
                 </AnimatePresence>
-            </div>
-            
+            </main>
+
             <AvatarPicker 
-                isOpen={isAvatarPickerOpen} 
-                onClose={() => setIsAvatarPickerOpen(false)} 
-                currentAvatarUrl={profile?.avatar_url || null} 
-                currentBgColor={profile?.avatar_bg_color || null}
+                isOpen={isAvatarPickerOpen}
+                onClose={() => setIsAvatarPickerOpen(false)}
+                onSelect={() => refreshProfile()}
             />
         </div>
     );
