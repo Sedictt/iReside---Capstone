@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import {
     User,
+    Mail,
+    Phone,
     MapPin,
     Home,
     CheckCircle2,
@@ -14,13 +16,22 @@ import {
     Award,
     Building2,
     Zap,
-    Check
+    Check,
+    Facebook,
+    Twitter,
+    Linkedin,
+    Instagram,
+    Globe,
+    ExternalLink
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
 import EditableBio from '@/components/landlord/EditableBio';
 import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
+import { ProfileCoverUploader } from '@/components/profile/ProfileCoverUploader';
+import { BusinessPermitCard } from '@/components/landlord/BusinessPermitCard';
 import { RoleBadge } from '@/components/profile/RoleBadge';
+import { SocialsHeader } from '@/components/profile/SocialsHeader';
 
 type LandlordProperty = {
     id: string;
@@ -122,11 +133,11 @@ export default async function LandlordProfilePage() {
         redirect('/login');
     }
 
-    const [profileRes, propertiesRes, activeLeasesRes, paymentsRes, feedbackRes] =
+    const [profileRes, propertiesRes, activeLeasesRes, paymentsRes, feedbackRes, applicationsRes] =
         await Promise.all([
             supabase
                 .from('profiles')
-                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at')
+                .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at, cover_url, socials, business_permit_url, business_permit_number, business_name')
                 .eq('id', user.id)
                 .maybeSingle(),
             supabase
@@ -149,10 +160,16 @@ export default async function LandlordProfilePage() {
                 .eq('landlord_id', user.id)
                 .order('created_at', { ascending: false })
                 .limit(5),
+            supabase
+                .from('landlord_applications')
+                .select('verification_status')
+                .eq('profile_id', user.id)
+                .maybeSingle(),
         ]);
 
     const profile = profileRes.data;
     const properties = (propertiesRes.data ?? []) as LandlordProperty[];
+    const verificationStatus = applicationsRes.data?.verification_status === 'verified';
 
     if (!profile) {
         redirect('/login');
@@ -240,234 +257,133 @@ export default async function LandlordProfilePage() {
             ? tenantFeedback.reduce((sum, feedback) => sum + feedback.rating, 0) / tenantFeedback.length
             : null;
 
+    // Type casting for socials
+    const socials = (profile.socials as Record<string, string>) || {};
+
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-8">
-            <div className="mx-auto max-w-6xl space-y-6">
-                <section className="relative w-full min-h-[400px] rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl group">
-                    {/* Background Image */}
-                    <div className="absolute inset-0">
-                        <Image
-                            src="https://images.unsplash.com/photo-1512918580421-b2feee3b85a6?q=80&w=2000&auto=format&fit=crop"
-                            alt="Penthouse"
-                            fill
-                            className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-[20s]"
+        <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-12">
+            <div className="mx-auto max-w-5xl space-y-8">
+                {/* Centered Profile Header Card */}
+                <div className="relative bg-[#171717]/80 border border-neutral-800 rounded-[3rem] overflow-hidden backdrop-blur-xl shadow-2xl flex flex-col items-center">
+                    {/* Cover Image Container */}
+                    <div className="relative h-64 md:h-80 w-full group">
+                        <ProfileCoverUploader 
+                            initialCoverUrl={profile.cover_url} 
+                            fullName={profile.full_name} 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
-                        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 to-transparent" />
                     </div>
-                    <div className="relative h-full flex flex-col justify-between p-8 md:p-12 z-10">
 
-                        {/* User Profile - Repositioned to Top */}
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                            <div className="flex items-center gap-6">
-                                <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 group/avatar cursor-pointer">
-                                    <ProfileAvatarUploader initialAvatarUrl={profileAvatarUrl} avatarBgColor={profile.avatar_bg_color} fullName={profile.full_name} />
-                                </div>
+                    {/* Profile Content Section */}
+                    <div className="relative w-full px-8 pb-12 -mt-16 md:-mt-24 flex flex-col items-center text-center">
+                        {/* Overlapping Avatar */}
+                        <div className="relative w-32 h-32 md:w-44 md:h-44 mb-6 z-20">
+                            <ProfileAvatarUploader 
+                                initialAvatarUrl={profileAvatarUrl} 
+                                avatarBgColor={profile.avatar_bg_color} 
+                                fullName={profile.full_name} 
+                                className="w-full h-full shadow-2xl"
+                            />
+                        </div>
 
-                                <div>
-                                    <div className="flex items-center flex-wrap gap-3 mb-1">
-                                        <h2 className="text-3xl md:text-4xl font-display text-white drop-shadow-lg">{profile.full_name}</h2>
-                                        <RoleBadge role={profile.role} />
-                                        
-                                        {/* Project Milestone Badges */}
-                                        <div className="flex items-center gap-2.5 mt-1 relative z-50">
-                                            {/* Fully Verified Badge */}
-                                            {profile.phone && (
-                                                <div className="relative group/badge cursor-help flex items-center justify-center w-8 h-8 rounded-full bg-[#6d9838]/10 border border-[#6d9838]/30 hover:bg-[#6d9838]/20 transition-colors">
-                                                    <ShieldCheck size={16} className="text-[#6d9838]" />
-                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] p-2.5 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl opacity-0 scale-95 pointer-events-none group-hover/badge:opacity-100 group-hover/badge:scale-100 transition-all z-[100] text-center origin-top">
-                                                        <p className="text-[11px] font-bold text-white mb-0.5">Fully Verified</p>
-                                                        <p className="text-[9px] text-neutral-400 leading-relaxed whitespace-normal">Identity and contact details have been successfully verified.</p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {occupancyRate === 100 && totalUnits > 0 && (
-                                                <div className="relative group/badge cursor-help flex items-center justify-center w-8 h-8 rounded-full bg-[#6d9838]/10 border border-[#6d9838]/30 hover:bg-[#6d9838]/20 transition-colors">
-                                                    <Award size={16} className="text-[#6d9838]" />
-                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] p-2.5 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl opacity-0 scale-95 pointer-events-none group-hover/badge:opacity-100 group-hover/badge:scale-100 transition-all z-[100] text-center origin-top">
-                                                        <p className="text-[11px] font-bold text-white mb-0.5">Full House</p>
-                                                        <p className="text-[9px] text-neutral-400 leading-relaxed whitespace-normal">Achieved 100% occupancy rate across all registered units.</p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {properties.length >= 2 && (
-                                                <div className="relative group/badge cursor-help flex items-center justify-center w-8 h-8 rounded-full bg-[#6d9838]/10 border border-[#6d9838]/30 hover:bg-[#6d9838]/20 transition-colors">
-                                                    <Building2 size={16} className="text-[#6d9838]" />
-                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] p-2.5 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl opacity-0 scale-95 pointer-events-none group-hover/badge:opacity-100 group-hover/badge:scale-100 transition-all z-[100] text-center origin-top">
-                                                        <p className="text-[11px] font-bold text-white mb-0.5">Mogul</p>
-                                                        <p className="text-[9px] text-neutral-400 leading-relaxed whitespace-normal">Successfully managing multiple properties on the platform.</p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="relative group/badge cursor-help flex items-center justify-center w-8 h-8 rounded-full bg-[#6d9838]/10 border border-[#6d9838]/30 hover:bg-[#6d9838]/20 transition-colors">
-                                                <Zap size={16} className="text-[#6d9838]" />
-                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] p-2.5 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl opacity-0 scale-95 pointer-events-none group-hover/badge:opacity-100 group-hover/badge:scale-100 transition-all z-[100] text-center origin-top">
-                                                    <p className="text-[11px] font-bold text-white mb-0.5">Lightning Responder</p>
-                                                    <p className="text-[9px] text-neutral-400 leading-relaxed whitespace-normal">Maintains an average response time of under 1 hour.</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                        {/* Name & Badge Area */}
+                        <div className="space-y-3 mb-8">
+                            <div className="flex items-center justify-center gap-4">
+                                <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight">
+                                    {profile.full_name}
+                                </h1>
+                                {verificationStatus && (
+                                    <div className="bg-[#6d9838]/20 border border-[#6d9838]/30 p-1.5 rounded-full shadow-lg shadow-[#6d9838]/10">
+                                        <CheckCircle2 size={20} className="text-[#6d9838]" />
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-white/80">
-                                        <span className="text-[10px] font-bold tracking-widest uppercase bg-white/10 px-2 py-1 rounded backdrop-blur-sm border border-white/10">ID : {profile.id.substring(0,8).toUpperCase()}</span>
-                                        <div className="flex items-center gap-1.5 opacity-90">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-[#6d9838]"></div>
-                                            <span className="text-[10px] font-bold tracking-widest uppercase">Verified Landlord</span>
-                                        </div>
-                                    </div>
-                                    <EditableBio initialBio={profile.bio || user.user_metadata?.bio || ''} />
-                                </div>
+                                )}
                             </div>
-
-                            <div className="flex flex-col items-start md:items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
-                                <div className="flex flex-col md:items-end gap-1 text-sm text-white/90 font-medium">
-                                    <span className="flex items-center justify-end gap-2 mb-1 opacity-80"><MapPin size={14} /> {properties[0]?.city ?? 'No city yet'}</span>
-                                    <a href={`mailto:${profile.email}`} className="hover:text-[#6d9838] transition-colors hover:underline decoration-[#6d9838]/50 underline-offset-4">{profile.email}</a>
-                                    {profile.phone && <a href={`tel:${profile.phone}`} className="hover:text-[#6d9838] transition-colors">{profile.phone}</a>}
-                                </div>
-                                <div className="flex gap-3 mt-2">
-                                    <Link
-                                        href="/landlord/messages"
-                                        className="inline-flex items-center justify-center gap-2 px-6 py-2 rounded-full bg-[#6d9838] hover:bg-[#5a7d2e] text-white border border-[#6d9838] backdrop-blur-md text-[10px] font-bold tracking-widest uppercase transition-all duration-300 shadow-lg"
-                                    >
-                                        <MessageSquare size={14} />
-                                        Messages
-                                    </Link>
-                                    <Link
-                                        href="/landlord/settings"
-                                        className="inline-flex items-center justify-center px-6 py-2 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 backdrop-blur-md text-[10px] font-bold tracking-widest uppercase transition-all duration-300"
-                                    >
-                                        Edit Profile
-                                    </Link>
-                                </div>
+                            <div className="flex items-center justify-center gap-3">
+                                <RoleBadge role={profile.role} className="scale-110" />
                             </div>
                         </div>
 
-                        {/* Stats Info (Bottom) */}
-                        <div className="mt-auto pt-16">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 border-t border-white/10 pt-6 backdrop-blur-[2px] bg-black/5 rounded-xl p-4 -mx-4 md:mx-0">
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-2 flex items-center gap-1.5"><Home size={14} className="text-[#6d9838]"/> Properties</p>
-                                    <p className="text-white font-medium text-2xl md:text-3xl">{properties.length}</p>
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-4 mb-12">
+                            <Link
+                                href="/landlord/settings"
+                                className="px-10 py-3 rounded-2xl bg-white text-black font-bold text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-white/5"
+                            >
+                                Edit Profile
+                            </Link>
+                            <Link
+                                href="/landlord/messages"
+                                className="w-14 h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-300"
+                            >
+                                <MessageSquare size={20} />
+                            </Link>
+                        </div>
+
+                        {/* Contact Info Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
+                            <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                    <Mail size={18} className="text-[#6d9838]" />
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-2 flex items-center gap-1.5"><TrendingUp size={14} className="text-[#6d9838]"/> Unit Occupancy</p>
-                                    <p className="text-white font-medium text-2xl md:text-3xl">{occupancyRate}%</p>
+                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Email Address</p>
+                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
+                            </div>
+                            <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                    <Phone size={18} className="text-[#6d9838]" />
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-2 flex items-center gap-1.5"><CheckCircle2 size={14} className="text-[#6d9838]"/> Active Leases</p>
-                                    <p className="text-white font-medium text-2xl md:text-3xl">{activeLeases}</p>
+                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Phone Number</p>
+                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                            </div>
+                            <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                    <MapPin size={18} className="text-[#6d9838]" />
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-2 flex items-center gap-1.5"><Wallet size={14} className="text-[#6d9838]"/> Collected This Month</p>
-                                    <p className="text-white font-medium text-2xl md:text-3xl">{formatCurrency(paymentStats.thisMonthCollected)}</p>
-                                </div>
+                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Primary Location</p>
+                                <p className="text-sm text-white/90 font-medium">{properties[0]?.city || 'Valenzuela, Metro Manila'}</p>
                             </div>
                         </div>
 
+                        {/* Social Connectivity Row */}
+                        <SocialsHeader userId={profile.id} initialSocials={socials} />
                     </div>
-                </section>
+                </div>
 
-                <div className="space-y-6">
-
-                    {/* Trust Center - Full Width */}
-                    <div className="bg-[#171717]/80 border border-neutral-800 rounded-3xl p-6 md:p-8 backdrop-blur-xl">
-                        <div className="flex items-center gap-3 mb-6 md:mb-8">
-                            <div className="w-12 h-12 bg-[#6d9838]/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-[#6d9838]/20">
-                                <ShieldCheck size={24} className="text-[#6d9838]" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-display text-white">Trust Center</h3>
-                                <p className="text-sm text-neutral-400">Platform safety & verification</p>
-                            </div>
+                {/* Bio Section */}
+                <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                            <User size={20} className="text-[#6d9838]" />
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="flex flex-col gap-1 p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-bold text-white uppercase tracking-wider">Identity</span>
-                                    <Check size={18} className="text-[#6d9838]" />
-                                </div>
-                                <p className="text-sm text-neutral-400">Government ID verified</p>
-                            </div>
-
-                            <div className="flex flex-col gap-1 p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-bold text-white uppercase tracking-wider">Email Address</span>
-                                    <Check size={18} className="text-[#6d9838]" />
-                                </div>
-                                <p className="text-sm text-neutral-400">Confirmed contact linked</p>
-                            </div>
-
-                            <div className="flex flex-col gap-1 p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-bold text-white uppercase tracking-wider">Phone Number</span>
-                                    {profile.phone ? (
-                                        <Check size={18} className="text-[#6d9838]" />
-                                    ) : (
-                                        <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest bg-orange-400/10 px-2.5 py-1 rounded border border-orange-400/20">Action Required</span>
-                                    )}
-                                </div>
-                                <p className="text-sm text-neutral-400">{profile.phone ? "SMS capable" : "Needs setup in settings"}</p>
-                            </div>
-                        </div>
+                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
                     </div>
+                    <div className="max-w-4xl">
+                        <EditableBio initialBio={profile.bio || ''} />
+                    </div>
+                </div>
 
-                    {/* Main Content Area: Reviews & Milestones */}
-                    <div className="space-y-6">
+                {/* Verified Business Permit Section */}
+                <BusinessPermitCard 
+                    businessName={profile.business_name || null}
+                    permitUrl={profile.business_permit_url || null}
+                    className="rounded-[3rem] shadow-xl"
+                />
 
-                        {/* Tenant feedback from landlord reviews */}
-                        <div className="bg-[#171717]/80 border border-neutral-800 rounded-3xl p-6 md:p-8 backdrop-blur-xl">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                                <div>
-                                    <h3 className="text-xl font-display text-white mb-1">Tenant Feedback</h3>
-                                    <p className="text-sm text-neutral-400">Recent ratings and reviews from tenants</p>
-                                </div>
-                                <div className="flex items-center w-fit gap-2 bg-[#6d9838]/10 text-[#6d9838] px-4 py-2 rounded-full border border-[#6d9838]/20 shadow-[0_0_15px_rgba(109,152,56,0.1)]">
-                                    <Star className="fill-current text-[#6d9838]" size={16} />
-                                    <span className="font-bold text-sm">
-                                        {averageRating ? `${averageRating.toFixed(1)} / 5.0` : 'No ratings yet'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {tenantFeedback.length > 0 ? (
-                                <div className="grid gap-4">
-                                    {tenantFeedback.map((feedback) => (
-                                        <div key={feedback.id} className="bg-black/40 border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="text-white font-medium text-sm">{feedback.author_name}</span>
-                                                        <span className="text-[10px] font-bold tracking-widest text-[#6d9838] uppercase bg-[#6d9838]/10 px-2 py-0.5 rounded">{feedback.rating.toFixed(1)} stars</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1 mt-1.5">
-                                                        {[1, 2, 3, 4, 5].map((star) => (
-                                                            <Star
-                                                                key={star}
-                                                                size={12}
-                                                                className={star <= Math.round(feedback.rating) ? 'fill-[#6d9838] text-[#6d9838]' : 'text-neutral-600'}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <span className="text-xs text-neutral-500 whitespace-nowrap">{formatRelativeDate(feedback.created_at)}</span>
-                                            </div>
-                                            <p className="text-sm text-neutral-300 leading-relaxed italic">&quot;{feedback.comment}&quot;</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-2xl border border-dashed border-white/10 bg-black/30 p-6">
-                                    <p className="text-sm text-neutral-300">No tenant reviews yet.</p>
-                                    <p className="text-xs text-neutral-500 mt-1">
-                                        Reviews will appear here once tenants submit landlord ratings.
-                                    </p>
-                                </div>
-                            )}
+                {/* Stats & connectivity section */}
+                <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-10 backdrop-blur-xl shadow-xl">
+                    <div className="flex items-center gap-4 mb-10">
+                        <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                            <TrendingUp size={20} className="text-[#6d9838]" />
+                        </div>
+                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Portfolio Stats</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                        <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
+                            <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Total Units</p>
+                            <p className="text-4xl font-display font-black text-white">{units.length}</p>
+                        </div>
+                        <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
+                            <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Occupancy</p>
+                            <p className="text-4xl font-display font-black text-white">{occupancyRate}%</p>
                         </div>
                     </div>
                 </div>
