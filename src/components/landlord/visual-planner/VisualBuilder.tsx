@@ -995,6 +995,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isTrashHot, setIsTrashHot] = useState(false);
     const [showDeleteToast, setShowDeleteToast] = useState(false);
     const [showLegend, setShowLegend] = useState(true);
+    const [statusFilters, setStatusFilters] = useState<Unit["status"][]>(["occupied", "vacant", "maintenance", "neardue"]);
+
+    const toggleStatusFilter = (status: Unit["status"]) => {
+        setStatusFilters(prev => 
+            prev.includes(status) 
+                ? prev.filter(s => s !== status) 
+                : [...prev, status]
+        );
+    };
+    const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [sidebarBlockGhost, setSidebarBlockGhost] = useState<SidebarBlockGhost | null>(null);
     const [resizingCorridorId, setResizingCorridorId] = useState<string | null>(null);
     const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(DEFAULT_FLOOR_LAYOUTS);
@@ -1290,6 +1300,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             if (key === 'l' && !e.ctrlKey && !e.metaKey) {
                 setIsLayoutLocked(prev => !prev);
             }
+            // Sidebar toggle (S)
+            if (key === 's' && !e.ctrlKey && !e.metaKey) {
+                setIsSidebarVisible(prev => !prev);
+            }
             // Hotkeys hint (?)
             if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
                 setShowHotkeys(prev => !prev);
@@ -1316,7 +1330,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isHUDHidden, isCanvasFullscreen, performUndo, flipSelectedItem]);
+    }, [isHUDHidden, isCanvasFullscreen, performUndo, flipSelectedItem, isSidebarVisible]);
 
     useEffect(() => {
         window.dispatchEvent(new CustomEvent('hide-sidebars', { detail: isCanvasFullscreen }));
@@ -3661,12 +3675,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             height: unit.h,
                                             zIndex: draggingUnitId === unit.id ? 40 : 10,
                                         }}
-                                        drag={!readOnly && !isLayoutLocked}
+                                        initial={false}
+                                        animate={{ 
+                                            opacity: statusFilters.includes(unit.status) ? 1 : 0,
+                                            scale: statusFilters.includes(unit.status) ? 1 : 0.95,
+                                            pointerEvents: statusFilters.includes(unit.status) ? 'auto' : 'none'
+                                        }}
+                                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                                        drag={!readOnly && !isLayoutLocked && statusFilters.includes(unit.status)}
                                         dragConstraints={blueprintRef}
                                         dragElastic={0}
                                         dragMomentum={false}
                                         dragSnapToOrigin
-                                        transition={{ duration: 0 }}
                                         onPointerDown={readOnly ? () => setTooltipUnit(unit) : () => setSelectedItem({ kind: "unit", id: unit.id })}
                                         onDragStart={(event, info) => {
                                              const pointer = getClientPointFromDragEvent(event) ?? info.point;
@@ -3856,7 +3876,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         <div className="flex items-center gap-4 px-2 py-1">
                                             <div className="flex flex-col">
                                                 <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Live Units</span>
-                                                <span className="font-mono text-lg font-black text-white leading-none mt-1">{units.length}</span>
+                                                <span className="font-mono text-lg font-black text-white leading-none mt-1">{units.filter(u => statusFilters.includes(u.status)).length}</span>
                                             </div>
                                             <div className="h-8 w-px bg-white/10" />
                                             <div className="flex flex-col">
@@ -3877,23 +3897,43 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     className="absolute bottom-8 left-8 z-30 pointer-events-none"
                                 >
                                     <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
-                                        <div className="flex items-center gap-8 px-6 py-1.5 whitespace-nowrap">
-                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                        <div className="flex items-center gap-6 px-6 py-1.5 whitespace-nowrap">
+                                            <button 
+                                                onClick={() => toggleStatusFilter("vacant")}
+                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("vacant") ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("vacant") ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                    {statusFilters.includes("vacant") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Available</span>
-                                            </div>
-                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                                            </button>
+                                            <button 
+                                                onClick={() => toggleStatusFilter("occupied")}
+                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("occupied") ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("occupied") ? 'bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                    {statusFilters.includes("occupied") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Occupied</span>
-                                            </div>
-                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                                            </button>
+                                            <button 
+                                                onClick={() => toggleStatusFilter("maintenance")}
+                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("maintenance") ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("maintenance") ? 'bg-rose-500 border-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                    {statusFilters.includes("maintenance") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Maintenance</span>
-                                            </div>
-                                            <div className="flex items-center gap-2.5 group cursor-help transition-transform hover:scale-105">
-                                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                                            </button>
+                                            <button 
+                                                onClick={() => toggleStatusFilter("neardue")}
+                                                className={`flex items-center gap-2.5 group transition-all hover:scale-105 ${statusFilters.includes("neardue") ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${statusFilters.includes("neardue") ? 'bg-amber-500 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-transparent border-white/30'}`}>
+                                                    {statusFilters.includes("neardue") && <span className="material-icons-round text-[10px] text-white">check</span>}
+                                                </div>
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Near Due</span>
-                                            </div>
+                                            </button>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -3924,21 +3964,24 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         }}
                                                     ></div>
 
-                                                    {units.map((unit) => (
-                                                        <div
-                                                            key={`minimap-${unit.id}`}
-                                                            className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/85' :
-                                                                unit.status === 'vacant' ? 'bg-status-vacant/85' :
-                                                                    unit.status === 'maintenance' ? 'bg-status-maintenance/85' : 'bg-status-due/85'
-                                                                }`}
-                                                            style={{
-                                                                left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
-                                                                top: `${((BLUEPRINT_MARGIN + unit.y) / WORLD_HEIGHT) * 100}%`,
-                                                                width: `${(unit.w / WORLD_WIDTH) * 100}%`,
-                                                                height: `${(unit.h / WORLD_HEIGHT) * 100}%`,
-                                                            }}
-                                                        ></div>
-                                                    ))}
+                                                    {units.map((unit) => {
+                                                        if (!statusFilters.includes(unit.status)) return null;
+                                                        return (
+                                                            <div
+                                                                key={`minimap-${unit.id}`}
+                                                                className={`absolute rounded-[1px] ${unit.status === 'occupied' ? 'bg-status-occupied/85' :
+                                                                    unit.status === 'vacant' ? 'bg-status-vacant/85' :
+                                                                        unit.status === 'maintenance' ? 'bg-status-maintenance/85' : 'bg-status-due/85'
+                                                                    }`}
+                                                                style={{
+                                                                    left: `${((BLUEPRINT_MARGIN + unit.x) / WORLD_WIDTH) * 100}%`,
+                                                                    top: `${((BLUEPRINT_MARGIN + unit.y) / WORLD_HEIGHT) * 100}%`,
+                                                                    width: `${(unit.w / WORLD_WIDTH) * 100}%`,
+                                                                    height: `${(unit.h / WORLD_HEIGHT) * 100}%`,
+                                                                }}
+                                                            ></div>
+                                                        );
+                                                    })}
 
                                                     {corridors.map((corridor) => (
                                                         <div
@@ -4099,6 +4142,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     >
                                         <span className="material-icons-round text-xl">help_outline</span>
                                     </button>
+                                    <button 
+                                        onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/40 hover:text-white hover:bg-white/5' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
+                                        title={isSidebarVisible ? "Hide Sidebar (S)" : "Show Sidebar (S)"}
+                                    >
+                                        <span className="material-icons-round text-xl">{isSidebarVisible ? 'dock' : 'view_sidebar'}</span>
+                                    </button>
                                     <div className="h-px bg-white/10 my-1 mx-2" />
                                 </motion.div>
                             )}
@@ -4156,6 +4206,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             <div className="grid grid-cols-2 gap-4">
                                                 <HotkeyItem label="Toggle Fullscreen" shortcut="F" />
                                                 <HotkeyItem label="Toggle HUD Overlay" shortcut="H" />
+                                                <HotkeyItem label="Toggle Sidebar" shortcut="S" />
                                                 <HotkeyItem label="Lock/Unlock Layout" shortcut="L" />
                                                 <HotkeyItem label="Quick Help" shortcut="?" />
                                             </div>
@@ -4333,7 +4384,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                 </main>
 
                 {/* Sidebar */}
-                {!readOnly && !isHUDHidden && (
+                {!readOnly && !isHUDHidden && isSidebarVisible && (
                     <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-slate-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
                         <div className="flex flex-col h-full min-h-0">
                             <div className="min-h-0 flex-1">
@@ -4897,7 +4948,7 @@ const UnitDetailsPanel = ({
                                         </div>
                                     </div>
                                     <p className="text-[11px] font-bold leading-relaxed text-indigo-800/70 dark:text-indigo-300/70 mb-4">
-                                        Share this unit's unique application link with prospective tenants to start their digital journey.
+                                        Share this unit&apos;s unique application link with prospective tenants to start their digital journey.
                                     </p>
                                     <div className="flex flex-col gap-2">
                                         <button 
