@@ -73,10 +73,12 @@ const utilityMeta = {
 
 export function BillingOperationsPanel({
   viewMode = "rates",
-  propertyId = "all"
+  propertyId = "all",
+  utilityType
 }: {
   viewMode?: "rates" | "gcash",
-  propertyId?: string
+  propertyId?: string,
+  utilityType?: "water" | "electricity"
 }) {
   const [workspace, setWorkspace] = useState<BillingWorkspace | null>(null);
   const [configs, setConfigs] = useState<UtilityConfigDraft[]>([]);
@@ -498,8 +500,13 @@ export function BillingOperationsPanel({
                 </div>
 
                 {/* Utility Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {(["water", "electricity"] as const).map(type => {
+                <div className={cn(
+                  "grid grid-cols-1 gap-8",
+                  !utilityType && "lg:grid-cols-2"
+                )}>
+                  {(["water", "electricity"] as const)
+                    .filter(type => !utilityType || type === utilityType)
+                    .map(type => {
                     const baseConfig = configs.find(c => c.property_id === property.id && c.utility_type === type && c.unit_id === null)!;
                     const overrides = configs.filter(c => c.property_id === property.id && c.utility_type === type && c.unit_id !== null);
                     const meta = utilityMeta[type];
