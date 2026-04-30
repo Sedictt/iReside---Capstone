@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Edit3, Check, X, Loader2 } from 'lucide-react';
+import { Edit3, Check, X, Loader2, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function EditableBio({
@@ -21,7 +21,19 @@ export default function EditableBio({
     const handleSave = async () => {
         setSaving(true);
         try {
-            // Since bio isn't in profiles table, update user metadata
+            // Get current user
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("No user found");
+
+            // Update profiles table
+            const { error: profileError } = await supabase
+                .from("profiles")
+                .update({ bio: tempBio })
+                .eq("id", user.id);
+
+            if (profileError) throw profileError;
+
+            // Also update user metadata for consistency
             const { error: metadataError } = await supabase.auth.updateUser({
                 data: { bio: tempBio }
             });
@@ -30,6 +42,7 @@ export default function EditableBio({
             
             setBio(tempBio);
             setIsEditing(false);
+            window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (e) {
             console.error("Failed to save bio:", e);
         } finally {
@@ -39,23 +52,23 @@ export default function EditableBio({
 
     if (isEditing) {
         return (
-            <div className="mt-4 max-w-xl animate-in fade-in slide-in-from-top-2">
+            <div className="mt-2 w-full animate-in fade-in slide-in-from-top-2">
                 <textarea
                     autoFocus
                     value={tempBio}
                     onChange={(e) => setTempBio(e.target.value)}
-                    className="w-full bg-black/40 border border-white/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#6d9838] resize-none pb-4"
-                    rows={3}
-                    placeholder="Write a short bio about yourself..."
+                    className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-4 text-sm text-white focus:outline-none focus:border-[#6d9838]/50 transition-colors resize-none"
+                    rows={4}
+                    placeholder="Tell potential tenants about yourself and your property management style..."
                 />
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-3 mt-3">
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-1.5 bg-[#6d9838] hover:bg-[#5a7d2e] text-white px-3 py-1.5 rounded-md text-xs font-semibold transition shadow-sm drop-shadow-md"
+                        className="flex items-center gap-2 bg-[#6d9838] hover:bg-[#5a7d2e] text-white px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase transition shadow-lg shadow-[#6d9838]/20 disabled:opacity-50"
                     >
-                        {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={14} />}
-                        Save
+                        {saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                        Save Bio
                     </button>
                     <button
                         onClick={() => {
@@ -63,7 +76,7 @@ export default function EditableBio({
                             setIsEditing(false);
                         }}
                         disabled={saving}
-                        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-xs font-medium transition"
+                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase transition"
                     >
                         <X size={14} />
                         Cancel
@@ -79,27 +92,26 @@ export default function EditableBio({
         return (
             <button
                 onClick={() => setIsEditing(true)}
-                className="mt-4 flex items-center gap-2 text-[10px] font-bold text-white/50 hover:text-white transition-colors uppercase tracking-widest border border-dashed border-white/20 rounded-full px-4 py-2 hover:bg-white/5"
+                className="mt-2 flex items-center gap-3 text-[10px] font-bold text-white/40 hover:text-white transition-all uppercase tracking-widest border border-dashed border-white/10 rounded-2xl px-6 py-4 hover:bg-white/5 w-full justify-center"
             >
-                <Edit3 size={12} />
-                Add a bio
+                <Plus size={16} />
+                Introduce yourself (Add Bio)
             </button>
         );
     }
 
     return (
-        <div className="mt-4 relative group w-fit">
-            <p className="text-sm text-white/80 max-w-xl leading-relaxed drop-shadow-md pb-6 md:pb-0 md:pr-24">
+        <div className="mt-2 relative group">
+            <p className="text-sm text-white/70 leading-relaxed max-w-2xl pr-8">
                 {bio}
             </p>
             {isOwner && (
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="absolute bottom-0 left-0 md:top-0 md:bottom-auto md:right-0 md:left-auto flex items-center gap-1.5 text-[10px] font-bold text-white/40 hover:text-white transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 uppercase tracking-widest bg-black/20 md:bg-transparent px-2 py-1 md:p-1 rounded"
+                    className="absolute -top-1 -right-1 p-2 rounded-full bg-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
                     aria-label="Edit Bio"
                 >
-                    <Edit3 size={12} />
-                    Edit Bio
+                    <Edit3 size={14} />
                 </button>
             )}
         </div>

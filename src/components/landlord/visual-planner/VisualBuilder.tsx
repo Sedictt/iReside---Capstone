@@ -3895,16 +3895,6 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <span className="text-[9px] font-black text-white/90 uppercase tracking-[0.1em]">Near Due</span>
                                             </div>
                                         </div>
-                                        
-                                        <div className="h-6 w-px bg-white/10 mx-1" />
-                                        
-                                        {/* Navigation Section */}
-                                        <div className="flex items-center gap-3 pl-4 pr-5 py-1.5 bg-primary/20 rounded-full border border-primary/20">
-                                            <span className="material-icons-round text-xs text-primary animate-pulse">navigation</span>
-                                            <span className="font-mono text-[10px] font-black text-primary uppercase whitespace-nowrap">
-                                                {Math.round(position.x)}<span className="mx-1 opacity-40">/</span>{Math.round(position.y)}
-                                            </span>
-                                        </div>
                                     </div>
                                 </motion.div>
 

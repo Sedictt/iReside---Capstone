@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { Camera, User } from "lucide-react";
+import { Camera } from "lucide-react";
+import { AvatarPicker } from "./AvatarPicker";
 
 type ProfileAvatarUploaderProps = {
     initialAvatarUrl: string | null;
@@ -12,50 +13,7 @@ type ProfileAvatarUploaderProps = {
 };
 
 export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullName, className }: ProfileAvatarUploaderProps) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(initialAvatarUrl);
-    const [isUploading, setIsUploading] = useState(false);
-
-    const handlePickFile = () => {
-        if (isUploading) return;
-        inputRef.current?.click();
-    };
-
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        event.target.value = "";
-
-        if (!file) return;
-
-        const previewUrl = URL.createObjectURL(file);
-        setAvatarUrl(previewUrl);
-        setIsUploading(true);
-
-        try {
-            const formData = new FormData();
-            formData.append("file", file);
-
-            const response = await fetch("/api/profile/avatar", {
-                method: "POST",
-                body: formData,
-            });
-
-            const payload = (await response.json()) as { avatarUrl?: string; error?: string };
-
-            if (!response.ok || !payload.avatarUrl) {
-                throw new Error(payload.error || "Failed to upload profile image.");
-            }
-
-            setAvatarUrl(payload.avatarUrl);
-            window.dispatchEvent(new CustomEvent("profile-updated"));
-        } catch (error) {
-            console.error(error);
-            setAvatarUrl(initialAvatarUrl);
-        } finally {
-            URL.revokeObjectURL(previewUrl);
-            setIsUploading(false);
-        }
-    };
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
 
     return (
         <div className={className}>
@@ -64,39 +22,37 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                 className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl transition-all duration-500 flex items-center justify-center"
                 style={{ backgroundColor: avatarBgColor || '#171717' }}
             >
-                {avatarUrl ? (
+                {initialAvatarUrl ? (
                     <Image
-                        src={avatarUrl}
+                        src={initialAvatarUrl}
                         alt={fullName}
                         fill
                         className="object-cover"
                     />
                 ) : (
-                    <span className="text-2xl font-black text-white">
+                    <span className="text-4xl font-black text-white">
                         {(fullName || "C").split(" ").filter(Boolean).slice(0, 2).map(p => p[0]?.toUpperCase()).join("")}
                     </span>
                 )}
             </div>
 
-            <input
-                ref={inputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-                disabled={isUploading}
-            />
-
             <button
                 type="button"
-                onClick={handlePickFile}
-                disabled={isUploading}
-                className="absolute bottom-1 right-1 h-7 w-7 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-lg z-20 disabled:opacity-60"
-                aria-label="Upload profile photo"
-                title={isUploading ? "Uploading..." : "Change profile photo"}
+                onClick={() => setIsPickerOpen(true)}
+                className="absolute bottom-1 right-1 h-10 w-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-lg z-20"
+                aria-label="Change profile appearance"
+                title="Change profile appearance"
             >
-                <Camera className="h-3.5 w-3.5" />
+                <Camera size={20} />
             </button>
+
+            {/* Avatar Picker Modal */}
+            <AvatarPicker 
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                currentAvatarUrl={initialAvatarUrl}
+                currentBgColor={avatarBgColor || '#171717'}
+            />
         </div>
     );
 }

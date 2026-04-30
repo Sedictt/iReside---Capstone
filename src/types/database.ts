@@ -49,6 +49,11 @@ export interface Database {
                     bio: string | null
                     website: string | null
                     address: string | null
+                    cover_url: string | null
+                    socials: Json | null
+                    business_permit_url: string | null
+                    business_permit_number: string | null
+                    business_name: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -63,6 +68,11 @@ export interface Database {
                     bio?: string | null
                     website?: string | null
                     address?: string | null
+                    cover_url?: string | null
+                    socials?: Json | null
+                    business_permit_url?: string | null
+                    business_permit_number?: string | null
+                    business_name?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -77,6 +87,11 @@ export interface Database {
                     bio?: string | null
                     website?: string | null
                     address?: string | null
+                    cover_url?: string | null
+                    socials?: Json | null
+                    business_permit_url?: string | null
+                    business_permit_number?: string | null
+                    business_name?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]

@@ -5,6 +5,12 @@
       "source": "JuliusBrussee/caveman",
       "sourceType": "github",
       "computedHash": "ac5fb2168c653fa5d660b5f510a4688d210717c7e10eb8fd91ef0d9b59f4e96e"
+    },
+    "huashu-design": {
+      "source": "alchaincyf/huashu-design",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "aedfa8eedd540a46aaa74a8c113bef80c81c8ead52c6714fbc261b74c0aebf2e"
     }
   }
 }
