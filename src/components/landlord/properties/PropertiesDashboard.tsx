@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import RevenueChart from "@/components/RevenueChart";
 import { PropertyEnvironmentBanner } from "@/components/landlord/PropertyEnvironmentBanner";
 import {
     Search,
@@ -12,16 +11,12 @@ import {
     Filter,
     MapPin,
     Building2,
-    Zap,
-    TrendingUp,
     Settings,
-    Wallet,
     Wrench,
     Users,
     X,
     Map,
-    Edit3,
-    Megaphone
+    Edit3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,7 +71,6 @@ export function PropertiesDashboard() {
     const [reloadKey, setReloadKey] = useState(0);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"All" | "Performing" | "Attention Required">("All");
-    const [expandedStatsId, setExpandedStatsId] = useState<string | null>(null);
     const [hubModalId, setHubModalId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -225,7 +219,6 @@ export function PropertiesDashboard() {
                 )}
 
                 {!isLoading && !loadError && filteredProperties.map((property) => {
-                    const style = getStyleByStatus(property.status);
                     const occupancyRatio = property.metrics.total > 0 ? property.metrics.occupied / property.metrics.total : 0;
                     const occupancyPercent = Math.round(occupancyRatio * 100);
 
@@ -338,20 +331,8 @@ export function PropertiesDashboard() {
                                         {/* Actions */}
                                         <div className="flex items-center gap-3 w-full lg:w-auto">
                                             <button 
-                                                onClick={() => setExpandedStatsId(expandedStatsId === property.id ? null : property.id)}
-                                                className={cn(
-                                                    "flex-1 lg:flex-none h-12 px-6 flex items-center justify-center gap-2 rounded-xl font-bold transition-all",
-                                                    expandedStatsId === property.id
-                                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                                                        : "bg-primary/10 text-primary hover:bg-primary/15"
-                                                )}
-                                            >
-                                                <TrendingUp className="h-4 w-4" />
-                                                <span>Stats</span>
-                                            </button>
-                                            <button 
                                                 onClick={() => setHubModalId(property.id)}
-                                                className="flex-1 lg:flex-none h-12 px-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-background font-bold text-foreground transition-all hover:bg-muted"
+                                                className="flex-1 lg:w-40 h-12 px-6 flex items-center justify-center gap-2 rounded-xl border border-border bg-background font-bold text-foreground transition-all hover:bg-muted shadow-sm"
                                             >
                                                 <Settings className="h-4 w-4" />
                                                 <span>Manage</span>
@@ -361,66 +342,7 @@ export function PropertiesDashboard() {
                                 </div>
                             </div>
 
-                            {/* Collapsible Stats Panel */}
-                            <AnimatePresence>
-                                {expandedStatsId === property.id && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                                        className="overflow-hidden border-t border-border"
-                                    >
-                                        <div className="grid grid-cols-1 gap-8 bg-muted/20 p-6 lg:grid-cols-3 lg:p-8">
-                                            {/* Financial Highlights */}
-                                            <div className="space-y-6">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <Wallet className="h-4 w-4 text-muted-foreground" />
-                                                        <h4 className="text-sm font-medium text-muted-foreground">Financial Highlights</h4>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <div className="flex items-end justify-between border-b border-border pb-4">
-                                                            <div>
-                                                                <p className="mb-1 text-xs text-muted-foreground">Net Operating Income (NOI)</p>
-                                                                <p className="text-xl font-bold text-foreground">{property.noi}</p>
-                                                            </div>
-                                                            <div className="flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-                                                                <TrendingUp className="h-3 w-3" /> +12% y/y
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-end justify-between border-b border-border pb-4">
-                                                            <div>
-                                                                <p className="mb-1 text-xs text-muted-foreground">Estimated Valuation</p>
-                                                                <p className="text-xl font-bold text-foreground">{property.valuation}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-end">
-                                                            <div>
-                                                                <p className="mb-1 text-xs text-muted-foreground">Capitalization Rate</p>
-                                                                <p className="text-xl font-bold text-foreground">{property.capRate}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
 
-                                            {/* Revenue Chart */}
-                                            <div className="lg:col-span-2">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Zap className="h-4 w-4 text-muted-foreground" />
-                                                        <h4 className="text-sm font-medium text-muted-foreground">Revenue Trend (YTD)</h4>
-                                                    </div>
-                                                </div>
-                                                <div className="h-[300px] w-full rounded-xl border border-border bg-background/75 p-4">
-                                                    <RevenueChart />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
                         </div>
                     );
                 })}
