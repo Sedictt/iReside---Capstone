@@ -291,9 +291,9 @@ export default function MessagesPage() {
     const [isSubmittingConfirmAction, setIsSubmittingConfirmAction] = useState(false);
     const [showReportWizard, setShowReportWizard] = useState(false);
     const [reportMessageId, setReportMessageId] = useState<string | undefined>(undefined);
-    const [activeF2FPayment, setActiveF2FPayment] = useState<UiMessageType | null>(null);
-    const [isF2FInterfaceOpen, setIsF2FInterfaceOpen] = useState(false);
-    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+     const [activeRefundMessage, setActiveRefundMessage] = useState<UiMessageType | null>(null);
+     const [issueToResolve, setIssueToResolve] = useState<UiMessageType | null>(null);
 
     const activeChannelRef = useRef<RealtimeChannel | null>(null);
     const handleDownloadFile = async (url: string, fileName: string) => {
@@ -714,12 +714,16 @@ export default function MessagesPage() {
             expiresAt: typeof metadata?.expiresAt === "string" ? metadata.expiresAt : undefined,
             landlordTransactionPath: typeof metadata?.landlordTransactionPath === "string" ? metadata.landlordTransactionPath : undefined,
             paymentId: typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined,
-            invoiceId: (typeof metadata?.invoiceId === "string" ? metadata.invoiceId : (typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined)),
+            invoiceId: (() => { const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i; const raw = typeof metadata?.invoiceId === "string" ? metadata.invoiceId : (typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined); return raw && UUID_RE.test(raw) ? raw : undefined; })(),
             invoiceNumber: typeof metadata?.invoiceNumber === "string" ? metadata.invoiceNumber : undefined,
             tenantName: typeof metadata?.tenantName === "string" ? metadata.tenantName : undefined,
             landlordName: typeof metadata?.landlordName === "string" ? metadata.landlordName : undefined,
             propertyName: typeof metadata?.propertyName === "string" ? metadata.propertyName : undefined,
             unit: typeof metadata?.unit === "string" ? metadata.unit : undefined,
+            issueType: metadata?.issueType as UiMessageType["issueType"],
+            shortfallAmount: typeof metadata?.shortfallAmount === "number" ? metadata.shortfallAmount : undefined,
+            hasRefundDetails: Boolean(metadata?.hasRefundDetails),
+            metadata: metadata || undefined,
             amount: typeof metadata?.amount === "string" ? metadata.amount : (typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined),
             description: typeof metadata?.description === "string" ? metadata.description : undefined,
             attachments: Array.isArray(message.attachments || metadata?.attachments) ? (message.attachments || metadata!.attachments as any[]).map((att: any) => ({
@@ -735,6 +739,7 @@ export default function MessagesPage() {
                 createdAt: att.createdAt
             })) : undefined,
             isAlbum: Boolean(message.isAlbum ?? metadata?.isAlbum),
+            rejectionReason: typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : undefined,
         };
     };
 
@@ -1002,6 +1007,7 @@ export default function MessagesPage() {
         if (!activeConversationId) return;
         const channel = supabase.channel(`messages-${activeConversationId}`)
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async () => { await refreshMessages(activeConversationId); await refreshConversations(); })
+            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async () => { await refreshMessages(activeConversationId); await refreshConversations(); })
             .on("broadcast", { event: "typing" }, ({ payload }) => {
                 const candidate = payload as { conversationId?: string; userId?: string; isTyping?: boolean };
                 if (candidate.conversationId !== activeConversationId || !candidate.userId || candidate.userId === user?.id) return;
@@ -1105,15 +1111,23 @@ export default function MessagesPage() {
 
                 <MessageList 
                     messages={messagesState}
+                    viewerRole="landlord"
                     isMessagesLoading={isMessagesLoading}
                     onDownloadImage={handleDownloadImage}
-                    onOpenF2F={(msg) => { setSelectedInvoiceId(msg.invoiceId || msg.id); }}
+                    onOpenF2F={(msg) => {
+                        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                        const candidateId = msg.invoiceId || msg.paymentId || null;
+                        const resolvedId = candidateId && UUID_RE.test(candidateId) ? candidateId : null;
+                        setSelectedInvoiceId(resolvedId);
+                        setActiveRefundMessage(msg);
+                    }}
                     onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
                     isDownloading={isDownloading}
                     updateShouldStickToBottom={updateShouldStickToBottom}
                     messagesScrollRef={messagesScrollRef}
                     messagesEndRef={messagesEndRef}
                     onReportMessage={openReportWizard}
+                    onResolveIssue={(msg) => setIssueToResolve(msg)}
                 />
 
                 <MessageComposer 
@@ -1342,11 +1356,29 @@ export default function MessagesPage() {
             </AnimatePresence>
 
 
-            <InvoiceModal 
-                invoiceId={selectedInvoiceId} 
-                onClose={() => setSelectedInvoiceId(null)} 
-                onUpdated={async () => { if (activeConversationId) { await refreshMessages(activeConversationId); await refreshConversations(); } }} 
-            />
+             <InvoiceModal 
+                 invoiceId={selectedInvoiceId} 
+                 onClose={() => {
+                     setSelectedInvoiceId(null);
+                     setActiveRefundMessage(null);
+                     // Refresh messages after modal closes to pick up any DB changes
+                     if (activeConversationId) {
+                         setTimeout(async () => {
+                             await refreshMessages(activeConversationId);
+                             await refreshConversations();
+                         }, 300);
+                     }
+                 }}
+                 onUpdated={async () => {
+                     if (activeConversationId) {
+                         // Small delay to let the DB write commit before fetching
+                         await new Promise(r => setTimeout(r, 400));
+                         await refreshMessages(activeConversationId);
+                         await refreshConversations();
+                     }
+                 }}
+                 refundMessage={activeRefundMessage}
+             />
         </div>
     );
 }

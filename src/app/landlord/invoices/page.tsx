@@ -107,7 +107,10 @@ export default function InvoicesPage() {
     }
 
     if (filterStatus !== "all") {
-      result = result.filter((i) => i.status === filterStatus || i.workflowStatus === filterStatus);
+      result = result.filter((i) => {
+        if (filterStatus === "refund_pending") return i.hasRefundRequest;
+        return i.status === filterStatus || i.workflowStatus === filterStatus;
+      });
     }
 
     result.sort((a, b) => {
@@ -191,6 +194,7 @@ export default function InvoicesPage() {
       confirmed: { label: "Confirmed", classes: "border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
       overdue: { label: "Late Payment", classes: "border-rose-500/30 bg-rose-500/15 text-rose-600 dark:text-rose-400" },
       rejected: { label: "Issue Found", classes: "border-rose-500/30 bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+      refund_pending: { label: "Refund Pending", classes: "border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400" },
     };
     return configs[status] || { label: status, classes: "border-border bg-muted text-muted-foreground" };
   };
@@ -352,6 +356,7 @@ export default function InvoicesPage() {
               <optgroup label="Issues">
                 <option value="overdue">Overdue</option>
                 <option value="rejected">Rejected</option>
+                <option value="refund_pending">Refund Pending</option>
               </optgroup>
             </select>
 
@@ -394,6 +399,12 @@ export default function InvoicesPage() {
                           <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Proof Attached
+                          </span>
+                        )}
+                        {invoice.hasRefundRequest && (
+                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 shadow-sm">
+                            <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                            Refund Details Sent
                           </span>
                         )}
                       </div>

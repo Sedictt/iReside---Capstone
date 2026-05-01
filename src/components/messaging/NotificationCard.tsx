@@ -13,10 +13,12 @@ interface NotificationCardProps {
     variant?: "default" | "warning" | "success" | "error";
     actionLabel?: string;
     onAction?: () => void;
+    disabled?: boolean;
     className?: string;
     // Additional fields for tenant-specific system messages
     paymentAmount?: string;
     receiptImg?: string;
+    refundImg?: string;
 }
 
 export function NotificationCard({
@@ -27,9 +29,11 @@ export function NotificationCard({
     variant = "default",
     actionLabel,
     onAction,
+    disabled = false,
     className,
     paymentAmount,
-    receiptImg
+    receiptImg,
+    refundImg
 }: NotificationCardProps) {
     const variants = {
         default: "border-white/10 bg-white/[0.03]",
@@ -138,18 +142,36 @@ export function NotificationCard({
                     </div>
                 )}
 
+                {/* Optional Refund Image */}
+                {refundImg && (
+                    <div className="flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-500">
+                        <div className="flex items-center gap-2 ml-4">
+                            <span className="text-[9px] uppercase tracking-[0.2em] text-emerald-500 font-black">Proof of Refund</span>
+                            <div className="h-[1px] flex-1 bg-emerald-500/10" />
+                        </div>
+                        <div className="rounded-[2rem] overflow-hidden border border-emerald-500/20 relative cursor-pointer shadow-2xl group/img bg-emerald-500/5">
+                            <img src={refundImg} alt="Refund Proof" className="w-full h-40 object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                                <span className="text-[10px] text-white font-black uppercase tracking-widest">Transaction Reconciled</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Action Section */}
                 {actionLabel && (
                     <motion.button
                         whileHover={{ scale: 1.02, translateY: -2 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={onAction}
+                        disabled={disabled}
                         className={cn(
                             "w-full py-4 rounded-[1.5rem] text-sm font-black transition-all flex items-center justify-center gap-3 shadow-2xl relative overflow-hidden group/btn",
-                            variant === "warning" && "bg-amber-500 text-white shadow-amber-500/30",
-                            variant === "success" && "bg-emerald-500 text-white shadow-emerald-500/30",
-                            variant === "error" && "bg-red-500 text-white shadow-red-500/30",
-                            variant === "default" && "bg-primary text-black shadow-primary/30"
+                            disabled && "bg-disabled text-medium cursor-not-allowed shadow-none opacity-50",
+                            !disabled && variant === "warning" && "bg-amber-500 text-white shadow-amber-500/30",
+                            !disabled && variant === "success" && "bg-emerald-500 text-white shadow-emerald-500/30",
+                            !disabled && variant === "error" && "bg-red-500 text-white shadow-red-500/30",
+                            !disabled && variant === "default" && "bg-primary text-black shadow-primary/30"
                         )}
                     >
                         {/* Shimmer Effect */}
