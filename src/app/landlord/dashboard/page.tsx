@@ -644,7 +644,7 @@ export default function LandlordDashboard() {
                                             }}
                                             className="w-full rounded-2xl bg-primary py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                                         >
-                                            I Confirm Payment
+                                            Complete Settlement
                                         </button>
                                         <button 
                                             onClick={() => setIsConfirmingAction(false)}

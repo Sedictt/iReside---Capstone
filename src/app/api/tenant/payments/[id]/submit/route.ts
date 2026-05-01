@@ -37,6 +37,8 @@ export async function POST(request: Request, context: RouteContext) {
         const note = formData.get("note");
         const partialAmountRaw = formData.get("partialAmount");
         const file = formData.get("receipt");
+        const selectedItemIdsRaw = formData.get("selectedItemIds");
+        const selectedReadingIdsRaw = formData.get("selectedReadingIds");
 
         if (method !== "gcash") {
             return NextResponse.json(
@@ -47,7 +49,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
-            .select("id, tenant_id, landlord_id, amount, paid_amount, balance_remaining, allow_partial_payments, invoice_number, workflow_status, review_action, status, intent_method, amount_tag, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, reference_number, payment_proof_url")
+            .select("id, tenant_id, landlord_id, amount, paid_amount, balance_remaining, allow_partial_payments, invoice_number, workflow_status, review_action, status, intent_method, amount_tag, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, reference_number, payment_proof_url, metadata")
             .eq("id", id)
             .eq("tenant_id", user.id)
             .single();
@@ -117,8 +119,13 @@ export async function POST(request: Request, context: RouteContext) {
                 payment_note: typeof note === "string" ? note.trim() || null : null,
                 payment_proof_path: proofUpload?.path ?? null,
                 payment_proof_url: proofUpload?.publicUrl ?? null,
-                paid_amount: partialAmount,
-                balance_remaining: Math.max(0, Number(payment.amount) - partialAmount),
+                paid_amount: Number(payment.paid_amount || 0) + partialAmount,
+                balance_remaining: Math.max(0, Number(payment.balance_remaining || payment.amount) - partialAmount),
+                metadata: {
+                    ...((payment.metadata as any) || {}),
+                    pending_item_ids: typeof selectedItemIdsRaw === "string" ? JSON.parse(selectedItemIdsRaw) : [],
+                    pending_reading_ids: typeof selectedReadingIdsRaw === "string" ? JSON.parse(selectedReadingIdsRaw) : [],
+                },
                 in_person_intent_expires_at: null,
                 last_action_at: nowIso,
                 last_action_by: user.id,

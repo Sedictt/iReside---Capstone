@@ -69,6 +69,7 @@ import { CashPaymentInterface } from "../../../components/landlord/CashPaymentIn
 import { InvoiceModal } from "../../../components/landlord/invoices/InvoiceModal";
 import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
+import { MessageReportWizard } from "@/components/messaging/MessageReportWizard";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:tenant:messages-cache";
 const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:tenant:conversations-cache";
@@ -78,8 +79,8 @@ const TENANT_QUICK_ACTIONS: QuickAction[] = [
     {
         key: "pay-rent",
         icon: CreditCard,
-        labelTop: "Pay",
-        labelBottom: "Rent",
+        labelTop: "Pay Rent",
+        labelBottom: "in Advance",
         iconClassName: "text-emerald-500",
         iconContainerClassName: "bg-emerald-500/10",
     },
@@ -224,13 +225,7 @@ export default function TenantMessagesPage() {
     const [pendingConfirmAction, setPendingConfirmAction] = useState<ConfirmActionType | null>(null);
     const [isSubmittingConfirmAction, setIsSubmittingConfirmAction] = useState(false);
     const [showReportWizard, setShowReportWizard] = useState(false);
-    const [reportCategory, setReportCategory] = useState("spam");
-    const [reportDetails, setReportDetails] = useState("");
-    const [reportExactMessage, setReportExactMessage] = useState("");
-    const [reportMessageId, setReportMessageId] = useState("");
-    const [reportScreenshots, setReportScreenshots] = useState<File[]>([]);
-    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-    const [reportWizardError, setReportWizardError] = useState<string | null>(null);
+    const [reportMessageId, setReportMessageId] = useState<string | undefined>(undefined);
     const [activeF2FPayment, setActiveF2FPayment] = useState<UiMessageType | null>(null);
     const [isF2FInterfaceOpen, setIsF2FInterfaceOpen] = useState(false);
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -269,7 +264,8 @@ export default function TenantMessagesPage() {
         const files: SharedFileItem[] = [];
         messagesState.forEach(msg => {
             if (msg.fileUrl) {
-                const isMedia = /\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm)$/i.test(msg.fileUrl) ||
+                const urlPath = msg.fileUrl.split('?')[0];
+                const isMedia = /\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm)$/i.test(urlPath) ||
                     msg.fileMimeType?.startsWith('image/') ||
                     msg.fileMimeType?.startsWith('video/');
                 files.push({
@@ -286,7 +282,8 @@ export default function TenantMessagesPage() {
             if (msg.attachments) {
                 msg.attachments.forEach(att => {
                     if (att.fileUrl) {
-                        const isMedia = /\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm)$/i.test(att.fileUrl) ||
+                        const urlPath = att.fileUrl.split('?')[0];
+                        const isMedia = /\.(jpg|jpeg|png|gif|webp|svg|mp4|mov|webm)$/i.test(urlPath) ||
                             att.fileMimeType?.startsWith('image/') ||
                             att.fileMimeType?.startsWith('video/');
                         files.push({
@@ -304,7 +301,13 @@ export default function TenantMessagesPage() {
             }
         });
 
+        const seen = new Set<string>();
         return files
+            .filter(file => {
+                if (seen.has(file.id)) return false;
+                seen.add(file.id);
+                return true;
+            })
             .filter(f => {
                 if (fileFilter === 'all') return true;
                 if (fileFilter === 'media') return f.isMedia;
@@ -620,37 +623,8 @@ export default function TenantMessagesPage() {
         }
     }, [activeContact?.participantUserId, refreshConversations, updateActiveContactActionState]);
 
-    const submitUserReport = useCallback(async () => {
-        if (!activeContact?.participantUserId || !activeConversationId) return;
-        setReportWizardError(null);
-        setIsSubmittingReport(true);
-        try {
-            const formData = new FormData();
-            formData.append("conversationId", activeConversationId);
-            formData.append("category", reportCategory);
-            formData.append("details", reportDetails);
-            formData.append("exactMessage", reportExactMessage);
-            formData.append("reportedMessageId", reportMessageId);
-            reportScreenshots.forEach((screenshot) => formData.append("screenshots", screenshot));
-            const response = await fetch(`/api/messages/users/${activeContact.participantUserId}/reports`, { method: "POST", body: formData });
-            const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-            if (!response.ok) throw new Error(payload?.error ?? "Failed to submit report.");
-            setShowReportWizard(false);
-            setReportCategory("spam");
-            setReportDetails("");
-            setReportExactMessage("");
-            setReportMessageId("");
-            setReportScreenshots([]);
-        } catch (error) {
-            setReportWizardError(error instanceof Error ? error.message : "Failed to submit report.");
-        } finally {
-            setIsSubmittingReport(false);
-        }
-    }, [activeContact?.participantUserId, activeConversationId, reportCategory, reportDetails, reportExactMessage, reportMessageId, reportScreenshots]);
-
-    const openReportWizard = useCallback(() => {
-        setReportWizardError(null);
-        setReportMessageId("");
+    const openReportWizard = useCallback((messageId?: string) => {
+        setReportMessageId(messageId);
         setShowReportWizard(true);
     }, []);
 
@@ -969,6 +943,7 @@ export default function TenantMessagesPage() {
     const handleFileUpload = (files: File[]) => queueSelectedFiles(files);
 
     const handleQuickAction = (key: string) => {
+        console.log("Handling quick action:", key);
         switch (key) {
             case "pay-rent": router.push("/tenant/payments"); break;
             case "request-repair": router.push("/tenant/maintenance"); break;
@@ -1115,7 +1090,6 @@ export default function TenantMessagesPage() {
                             messages={messagesState}
                             viewerRole="tenant"
                             isMessagesLoading={isMessagesLoading}
-                            onConfirmPayment={handleConfirmF2FPayment}
                             onDownloadImage={handleDownloadImage}
                             onOpenF2F={(msg) => { setActiveF2FPayment(msg); setIsF2FInterfaceOpen(true); }}
                             onImageClick={(images, index) => { setPreviewImages(images); setPreviewImageIndex(index); }}
@@ -1123,6 +1097,7 @@ export default function TenantMessagesPage() {
                             updateShouldStickToBottom={updateShouldStickToBottom}
                             messagesScrollRef={messagesScrollRef}
                             messagesEndRef={messagesEndRef}
+                            onReportMessage={openReportWizard}
                         />
 
                         <MessageComposer
@@ -1271,21 +1246,14 @@ export default function TenantMessagesPage() {
                     </div>
                 )}
 
-                {showReportWizard && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-xl rounded-[2.5rem] border border-border bg-card shadow-2xl overflow-hidden">
-                            <div className="flex items-center justify-between border-b border-divider p-6 bg-surface-1">
-                                <div className="flex items-center gap-3"><div className="p-2.5 rounded-2xl bg-red-500/10 text-red-500"><AlertTriangle className="h-5 w-5" /></div><h3 className="text-lg font-black tracking-tight text-high">Report Security Issue</h3></div>
-                                <button onClick={() => setShowReportWizard(false)} className="rounded-xl p-2 hover:bg-surface-2 transition-colors"><X className="h-5 w-5" /></button>
-                            </div>
-                            <div className="p-8 space-y-6">
-                                <div><label className="block text-[10px] font-black uppercase tracking-[0.2em] text-disabled mb-2 ml-1">Report Category</label><select value={reportCategory} onChange={(e) => setReportCategory(e.target.value)} className="w-full rounded-2xl border border-border bg-surface-2 p-3.5 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"><option value="spam">Spam or Solicitation</option><option value="phishing">Phishing or Scam</option><option value="harassment">Harassment</option><option value="other">Other</option></select></div>
-                                <div><label className="block text-[10px] font-black uppercase tracking-[0.2em] text-disabled mb-2 ml-1">Additional Details</label><textarea value={reportDetails} onChange={(e) => setReportDetails(e.target.value)} placeholder="Please provide more information..." className="w-full rounded-2xl border border-border bg-surface-2 p-4 text-sm font-medium focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all h-32 resize-none" /></div>
-                                <div className="pt-2"><button onClick={submitUserReport} disabled={isSubmittingReport || !reportDetails.trim()} className="w-full py-4 rounded-2xl bg-red-500 text-white font-black uppercase tracking-widest text-xs hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 active:scale-[0.98] disabled:opacity-50">{isSubmittingReport ? "Submitting..." : "Submit Security Report"}</button></div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
+                <MessageReportWizard
+                    isOpen={showReportWizard}
+                    onClose={() => setShowReportWizard(false)}
+                    targetUserId={activeContact?.participantUserId}
+                    conversationId={activeConversationId}
+                    reportedUserLabel={activeContact?.name}
+                    initialMessageId={reportMessageId}
+                />
 
                 {previewImages.length > 0 && (
                     <motion.div

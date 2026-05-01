@@ -111,7 +111,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
-            .select("id, lease_id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number, method, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
+            .select("id, lease_id, amount, paid_amount, balance_remaining, tenant_id, landlord_id, allow_partial_payments, receipt_number, method, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, payment_submitted_at, rejection_reason, in_person_intent_expires_at, metadata")
             .eq("id", id)
             .eq("landlord_id", user.id)
             .single();
@@ -165,20 +165,42 @@ export async function POST(request: Request, context: RouteContext) {
         const nowIso = new Date().toISOString();
         let workflowStatus: "confirmed" | "rejected" = "confirmed";
         let reviewAction: "accept_partial" | "request_completion" | "reject" | "confirm_received" = "confirm_received";
-        let balanceRemaining = Math.max(0, Number(payment.amount) - acceptedAmount);
-        let paidAmount = acceptedAmount;
+        
+        // Correct math: balance_remaining and paid_amount are already updated by tenant submit
+        // If we reject, we REVERT them. If we confirm, we KEEP them (or adjust if acceptedAmount differs).
+        let balanceRemaining = Number(payment.balance_remaining);
+        let paidAmount = Number(payment.paid_amount);
         let method = payment.method;
+
+        // Metadata handling
+        const currentMetadata = (payment.metadata as any) || {};
+        const pendingItems = currentMetadata.pending_item_ids || [];
+        const pendingReadings = currentMetadata.pending_reading_ids || [];
+        let paidItemIds = currentMetadata.paid_item_ids || [];
+        let paidReadingIds = currentMetadata.paid_reading_ids || [];
+        let newMetadata = { ...currentMetadata };
 
         if (parsed.action === "reject") {
             workflowStatus = "rejected";
             reviewAction = "reject";
-            balanceRemaining = Number(payment.amount);
-            paidAmount = 0;
+            // Revert to previous state
+            const rejectedAmount = Number(payment.paid_amount) - (beforeState.paid_amount || 0);
+            paidAmount = Number(beforeState.paid_amount || 0);
+            balanceRemaining = Number(beforeState.balance_remaining || payment.amount);
+            
+            // Clear pending items on rejection
+            newMetadata.pending_item_ids = [];
+            newMetadata.pending_reading_ids = [];
         } else if (parsed.action === "request_completion") {
             workflowStatus = "rejected";
             reviewAction = "request_completion";
-            balanceRemaining = Number(payment.amount);
-            paidAmount = 0;
+            // Revert to previous state
+            paidAmount = Number(beforeState.paid_amount || 0);
+            balanceRemaining = Number(beforeState.balance_remaining || payment.amount);
+            
+            // Clear pending items on rejection
+            newMetadata.pending_item_ids = [];
+            newMetadata.pending_reading_ids = [];
         } else {
             if (isNonExact) {
                 if (parsed.nonExactAction === "reject") {
@@ -201,6 +223,18 @@ export async function POST(request: Request, context: RouteContext) {
             if (parsed.action === "confirm_received") {
                 method = "cash";
             }
+
+            // Move pending items to paid items on confirmation
+            paidItemIds = Array.from(new Set([...paidItemIds, ...pendingItems]));
+            paidReadingIds = Array.from(new Set([...paidReadingIds, ...pendingReadings]));
+            
+            newMetadata = {
+                ...newMetadata,
+                paid_item_ids: paidItemIds,
+                paid_reading_ids: paidReadingIds,
+                pending_item_ids: [],
+                pending_reading_ids: [],
+            };
         }
 
         const { data: updatedPayment, error: updateError } = await adminClient
@@ -215,6 +249,7 @@ export async function POST(request: Request, context: RouteContext) {
                 rejection_reason: workflowStatus === "rejected" ? rejectionReason : null,
                 method,
                 intent_method: parsed.action === "confirm_received" ? "in_person" : payment.intent_method,
+                metadata: newMetadata,
                 in_person_intent_expires_at: null,
                 last_action_at: nowIso,
                 last_action_by: user.id,
