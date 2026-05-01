@@ -35,7 +35,7 @@ export async function GET() {
                         address,
                         images,
                         house_rules,
-                        amenities
+                        amenities:amenities (*)
                     )
                 ),
                 landlord:profiles!leases_landlord_id_fkey (
@@ -59,12 +59,13 @@ export async function GET() {
         }
 
         // Prefer active lease
-        const activeLease = leasesData.find((l: any) => l.status === "active") || leasesData[0];
+        const activeLease = leasesData.find((l) => l.status === "active") || leasesData[0];
 
         return NextResponse.json({
             lease: activeLease
         });
-    } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+    } catch (e: unknown) {
+        const error = e as Error;
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

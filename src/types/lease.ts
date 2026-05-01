@@ -20,7 +20,19 @@ export interface LeaseData {
             city: string;
             images: string[];
             house_rules: string[];
-            amenities: string[];
+            amenities: Array<{
+                id: string;
+                name: string;
+                type: string;
+                description: string;
+                price_per_unit: number;
+                unit_type: string;
+                capacity: number;
+                icon_name: string;
+                location_details: string;
+                image_url?: string;
+                status: string;
+            }>;
         }
     };
     landlord: {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import {
     FileText,
     Download,
@@ -22,7 +21,6 @@ import {
     Layers,
     Bed,
     Bath,
-    Coffee,
     LucideIcon
 } from "lucide-react";
 import Link from "next/link";
@@ -33,6 +31,7 @@ import UnitTransferRequest from "@/components/tenant/UnitTransferRequest";
 import { LeaseTour } from "@/components/tenant/LeaseTour";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import LeaseRenewalRequest from "@/components/tenant/LeaseRenewalRequest";
+import { PropertyAmenities } from "@/components/tenant/PropertyAmenities";
 import { LeaseData } from "@/types/lease";
 
 type TabId = "agreement" | "property" | "services";
@@ -356,21 +355,19 @@ function LeaseHubContent() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
-                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
-                                            <Coffee className="w-32 h-32" />
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-4">Amenities Access</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {lease.unit.property.amenities.length > 0 ? (
-                                                lease.unit.property.amenities.map((amenity, i) => (
-                                                    <span key={i} className="px-4 py-2 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border">
-                                                        {amenity}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <p className="text-xs text-muted-foreground italic">Standard property access included.</p>
-                                            )}
+                                    <div className="lg:col-span-1 space-y-10">
+                                        {/* Building Amenities */}
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm shadow-primary/5">
+                                                    <Building2 className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-lg font-black text-foreground tracking-tight">Building Amenities</h4>
+                                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
+                                                </div>
+                                            </div>
+                                            <PropertyAmenities amenities={lease.unit.property.amenities || []} />
                                         </div>
                                     </div>
                                 </div>
