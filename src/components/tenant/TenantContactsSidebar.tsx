@@ -832,7 +832,7 @@ export function TenantContactsSidebar() {
             <div
                 data-tour-id="tour-messages-sidebar"
                 className={cn(
-                    "hidden md:flex fixed top-0 right-0 h-screen bg-card/95 border-l border-border z-50 transition-all duration-500 ease-in-out flex-col shadow-[0_24px_60px_-30px_rgba(15,23,42,0.25)] overflow-hidden backdrop-blur-xl",
+                    "hidden md:flex fixed top-0 right-0 h-screen bg-card/60 border-l border-border z-50 transition-all duration-500 ease-in-out flex-col shadow-2xl overflow-hidden backdrop-blur-2xl",
                     isHovered ? "w-80" : "w-[88px]"
                 )}
                 onMouseEnter={() => setIsHovered(true)}

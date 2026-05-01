@@ -33,7 +33,7 @@ const NAV_SECTIONS = [
     {
         category: "Main",
         items: [
-            { label: "Home", href: "/tenant/community", icon: Home },
+            { label: "Community Hub", href: "/tenant/community", icon: Home },
             { label: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
         ],
     },
@@ -44,7 +44,7 @@ const NAV_SECTIONS = [
             { label: "Unit Map", href: "/tenant/unit-map", icon: Map },
             { label: "Building Amenities", href: "/tenant/utilities", icon: LayoutGrid },
             { label: "Maintenance", href: "/tenant/maintenance", icon: Wrench },
-            { label: "Payments", href: "/tenant/payments", icon: CreditCard },
+            { label: "Finance Hub", href: "/tenant/payments", icon: CreditCard },
             { label: "Messages", href: "/tenant/messages", icon: MessageSquare },
         ],
     },
