@@ -3,23 +3,41 @@
 import { useState } from "react";
 import Image from "next/image";
 import { 
-    Calendar, 
-    Clock, 
-    Users, 
-    Waves, 
-    Music, 
-    Coffee, 
-    Info, 
-    ChevronRight,
-    Search,
     History,
     CheckCircle2,
     AlertCircle,
     ArrowRight,
-    MapPin
+    MapPin,
+    Users,
+    Calendar,
+    Clock,
+    Info,
+    ChevronRight
 } from "lucide-react";
+import * as LucideIcons from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface BookingModalData {
+    id: string;
+    name: string;
+    type: string;
+    description: string;
+    price: number;
+    unit: string;
+    capacity: string;
+    image: string;
+    icon_name: string;
+    color: string;
+}
+
+// Helper to get icon component by name
+const getIconByName = (name: string | null) => {
+    if (!name) return LucideIcons.Zap;
+    // @ts-expect-error - dynamic lookup
+    const Icon = LucideIcons[name];
+    return Icon || LucideIcons.Zap;
+};
 
 // Mock Data
 const AMENITIES = [
@@ -32,7 +50,7 @@ const AMENITIES = [
         unit: "hour",
         capacity: "100 guests",
         image: "/amenities/function_room.png",
-        icon: Users,
+        icon_name: "Users",
         color: "bg-blue-500",
     },
     {
@@ -44,7 +62,7 @@ const AMENITIES = [
         unit: "free",
         capacity: "30 people",
         image: "/amenities/pool.png",
-        icon: Waves,
+        icon_name: "Waves",
         color: "bg-emerald-500",
     },
     {
@@ -56,7 +74,7 @@ const AMENITIES = [
         unit: "hour",
         capacity: "5 people",
         image: "/amenities/music_studio.png",
-        icon: Music,
+        icon_name: "Music",
         color: "bg-purple-500",
     },
 ];
@@ -82,7 +100,7 @@ const MY_BOOKINGS = [
 
 export default function TenantUtilitiesPage() {
     const [selectedCategory, setSelectedCategory] = useState("All");
-    const [bookingModal, setBookingModal] = useState<any>(null);
+    const [bookingModal, setBookingModal] = useState<BookingModalData | null>(null);
 
     const categories = ["All", "Events", "Leisure", "Creative", "Sports"];
 
@@ -163,7 +181,10 @@ export default function TenantUtilitiesPage() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                     <div className="absolute bottom-4 left-4 flex items-center gap-2">
                                         <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-lg", amenity.color)}>
-                                            <amenity.icon className="h-4 w-4" />
+                                            {(() => {
+                                                const Icon = getIconByName(amenity.icon_name);
+                                                return <Icon className="h-4 w-4" />;
+                                            })()}
                                         </div>
                                         <span className="text-xs font-black uppercase tracking-wider text-white drop-shadow-md">{amenity.type}</span>
                                     </div>
@@ -296,7 +317,10 @@ export default function TenantUtilitiesPage() {
 
                             <div className="mb-6 flex items-center gap-4 rounded-2xl bg-muted/30 p-4">
                                 <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl text-white", bookingModal.color)}>
-                                    <bookingModal.icon className="h-6 w-6" />
+                                    {(() => {
+                                        const Icon = getIconByName(bookingModal.icon_name);
+                                        return <Icon className="h-6 w-6" />;
+                                    })()}
                                 </div>
                                 <div>
                                     <p className="font-black text-foreground">{bookingModal.name}</p>

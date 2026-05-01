@@ -9,7 +9,7 @@ import {
     updateBookingStatus,
     deleteAmenity
 } from "@/lib/queries/amenities";
-import type { Amenity, AmenityBooking, AmenityWithProperty, AmenityBookingWithDetails } from "@/types/database";
+import type { AmenityWithProperty, AmenityBookingWithDetails } from "@/types/database";
 import { 
     Plus, 
     Search, 
@@ -19,9 +19,6 @@ import {
     Clock, 
     Calendar,
     Users,
-    Waves,
-    Music,
-    Coffee,
     LayoutGrid,
     History as HistoryIcon,
     ClipboardList,
@@ -36,15 +33,14 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { AddAmenityModal } from "@/components/landlord/AddAmenityModal";
 
+import * as LucideIcons from 'lucide-react';
+
 // Helper to get icon component by name
 const getIconByName = (name: string | null) => {
-    switch (name) {
-        case "Users": return Users;
-        case "Waves": return Waves;
-        case "Music": return Music;
-        case "Coffee": return Coffee;
-        default: return Zap;
-    }
+    if (!name) return LucideIcons.Zap;
+    // @ts-expect-error - dynamic lookup
+    const Icon = LucideIcons[name];
+    return Icon || LucideIcons.Zap;
 };
 
 export default function LandlordUtilitiesPage() {
