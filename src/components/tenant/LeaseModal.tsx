@@ -38,46 +38,46 @@ export default function LeaseModal({ open, onOpenChange }: LeaseModalProps) {
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="modal-overlay fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm" />
-                <Dialog.Content className="modal-content fixed left-[50%] top-[50%] h-[92vh] w-[95vw] max-w-[1000px] rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl focus:outline-none z-[70] flex flex-col overflow-hidden">
+                <Dialog.Content className="modal-content fixed left-[50%] top-[50%] h-[92vh] w-[95vw] max-w-[1000px] rounded-[2rem] bg-card border border-border shadow-2xl focus:outline-none z-[70] flex flex-col overflow-hidden backdrop-blur-xl">
 
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-20">
+                    <div className="flex items-center justify-between p-6 border-b border-border bg-card/50 backdrop-blur-md sticky top-0 z-20">
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                                 <FileText className="w-5 h-5" />
                             </div>
                             <div>
-                                <Dialog.Title className="text-xl font-bold text-white">Lease Agreement</Dialog.Title>
-                                <p className="text-xs text-slate-400 font-mono">#{leaseData.leaseId} • Active</p>
+                                <Dialog.Title className="text-xl font-bold text-foreground">Lease Agreement</Dialog.Title>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">#{leaseData.leaseId} • Active</p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white px-3 py-2 rounded-lg transition-colors">
+                            <button className="hidden sm:flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl transition-colors">
                                 <Printer className="w-4 h-4" />
                                 <span>Print</span>
                             </button>
-                            <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-primary/20">
+                            <button className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
                                 <Download className="w-4 h-4" />
                                 <span className="hidden sm:inline">Download PDF</span>
                             </button>
-                            <div className="w-px h-6 bg-slate-800 mx-2" />
-                            <Dialog.Close className="h-9 w-9 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                            <div className="w-px h-6 bg-border mx-2" />
+                            <Dialog.Close className="h-10 w-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                                 <X className="h-5 h-5" />
                             </Dialog.Close>
                         </div>
                     </div>
 
                     {/* Content Area - Dark Container for the Light Document */}
-                    <div className="flex-1 overflow-y-auto bg-slate-950 p-4 md:p-12 space-y-8 custom-scrollbar">
-                        <div className="max-w-[850px] mx-auto shadow-2xl">
+                    <div className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-12 space-y-8 custom-scrollbar">
+                        <div className="max-w-[850px] mx-auto shadow-2xl rounded-sm overflow-hidden">
                             <LeaseDocument {...leaseData} />
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-center">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-medium">
+                    <div className="p-4 border-t border-border bg-card/50 flex justify-center">
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.3em] font-black">
                             End of Document • Securely stored and encrypted by iReside
                         </p>
                     </div>

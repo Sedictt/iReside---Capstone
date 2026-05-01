@@ -32,22 +32,21 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
         <>
             {variant === "sidebar" ? (
                 /* Sidebar Card Trigger */
-                <div className="rounded-3xl border border-border/60 bg-card p-6 relative overflow-hidden group flex-shrink-0 shadow-[0_20px_50px_-28px_rgba(15,23,42,0.16)]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.045] via-transparent to-transparent opacity-80" />
-                    <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-red-400/80 via-red-300/35 to-transparent" />
+                <div className="rounded-[2rem] border border-border/60 bg-card p-8 relative overflow-hidden group flex-shrink-0 shadow-sm backdrop-blur-sm">
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.03] via-transparent to-transparent opacity-80" />
                     <div className="relative z-10">
-                        <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center gap-2">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 border border-red-500/15 shadow-sm">
-                                <LogOut className="w-4.5 h-4.5" />
-                            </span>
-                            End of Lease
-                        </h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
+                                <LogOut className="w-5 h-5" />
+                            </div>
+                            <h3 className="text-xl font-bold text-foreground">End of Lease</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                             Planning to move out? You must initiate a digital clearance request before leaving the property.
                         </p>
                         <button
                             onClick={handleRequest}
-                            className="w-full py-3 rounded-xl bg-red-500/10 text-red-600 font-semibold hover:bg-red-500/15 transition-all border border-red-500/20"
+                            className="w-full py-4 rounded-2xl bg-red-500/10 text-red-600 font-black uppercase tracking-widest text-[10px] hover:bg-red-500/15 transition-all border border-red-500/20 shadow-sm"
                         >
                             Request Move-Out
                         </button>
@@ -57,12 +56,12 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
                 /* Quick Action Trigger */
                 <button
                     onClick={handleRequest}
-                    className="bg-card border border-border hover:border-red-500/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg hover:shadow-red-500/5 hover:-translate-y-1 group w-full h-full text-left"
+                    className="bg-card/50 border border-border hover:border-red-500/40 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-red-500/5 hover:-translate-y-1 group backdrop-blur-sm"
                 >
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center transition-colors bg-red-500/10 text-red-500">
-                        <LogOut className="w-6 h-6" />
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 bg-red-500/10 text-red-500">
+                        <LogOut className="w-7 h-7" />
                     </div>
-                    <span className="text-sm font-medium text-center group-hover:text-red-500 transition-colors">Move Out</span>
+                    <span className="text-[10px] font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-widest">Move Out</span>
                 </button>
             )}
 
@@ -72,14 +71,19 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
                     <div className="relative w-full max-w-lg bg-card rounded-2xl overflow-hidden border border-border shadow-2xl flex flex-col">
 
                         {/* Header */}
-                        <div className="p-4 border-b border-border flex justify-between items-center bg-card z-10">
-                            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                                <LogOut className="w-5 h-5 text-muted-foreground" />
-                                Move-Out Clearance
-                            </h3>
+                        <div className="p-6 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-red-500/10 text-red-500">
+                                    <LogOut className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-foreground tracking-tight">Move-Out Clearance</h3>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">System Protocol v4.2</p>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => setIsOpen(false)}
-                                className="p-1 rounded-full hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
                             >
                                 <X className="h-5 w-5" />
                             </button>

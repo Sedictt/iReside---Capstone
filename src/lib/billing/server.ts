@@ -566,11 +566,15 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
         getReceiptMap(supabase, paymentIds),
     ]);
 
-    const mapped = payments.map((payment) => ({
-        ...buildInvoiceListItem(payment, readingMap.get(payment.id) ?? [], receiptMap.get(payment.id) ?? []),
-        paymentItems: (payment.payment_items ?? []).toSorted((a, b) => a.sort_order - b.sort_order),
-        dueDateLabel: formatDateLong(payment.due_date),
-    }));
+    const mapped = payments.map((payment) => {
+        const readings = readingMap.get(payment.id) ?? [];
+        return {
+            ...buildInvoiceListItem(payment, readings, receiptMap.get(payment.id) ?? []),
+            paymentItems: (payment.payment_items ?? []).toSorted((a, b) => a.sort_order - b.sort_order),
+            readings,
+            dueDateLabel: formatDateLong(payment.due_date),
+        };
+    });
 
     const actionable = mapped.filter((payment) =>
         payment.status === "pending" ||
@@ -585,7 +589,29 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
     const nextPayment = actionable[0] ?? null;
     const history = mapped.filter((payment) => payment.id !== nextPayment?.id);
 
-    return { nextPayment, history };
+    // Get basic lease info for projections
+    const { data: leaseData } = await supabase
+        .from("leases")
+        .select(`
+            id,
+            monthly_rent,
+            status,
+            unit:units (name, property:properties (name))
+        `)
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .maybeSingle();
+
+    return { 
+        nextPayment, 
+        history,
+        lease: leaseData ? {
+            id: leaseData.id,
+            monthlyRent: leaseData.monthly_rent,
+            propertyName: (leaseData.unit as any)?.property?.name,
+            unitName: (leaseData.unit as any)?.name
+        } : null
+    };
 }
 
 export async function getBillingWorkspace(supabase: AppSupabaseClient, landlordId: string): Promise<BillingWorkspace> {
@@ -1003,4 +1029,83 @@ export async function recordUtilityReading(
     if (error) throw error;
 
     return data;
+}
+export async function createAdvancePayment(supabase: AppSupabaseClient, tenantId: string) {
+    // 1. Get active lease
+    const { data: lease, error: leaseError } = await supabase
+        .from("leases")
+        .select(`
+            *,
+            unit:units (id, property_id, rent_amount)
+        `)
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .single();
+
+    if (leaseError || !lease) throw new Error("No active lease found for advance payment.");
+
+    // 2. Determine next cycle
+    const now = new Date();
+    const nextCycle = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const cycleKey = toIsoDate(nextCycle).substring(0, 7); // YYYY-MM
+
+    // 3. Check if an invoice already exists for this cycle
+    const { data: existing } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("lease_id", lease.id)
+        .eq("billing_cycle", cycleKey)
+        .maybeSingle();
+
+    if (existing) return { id: existing.id, exists: true };
+
+    // 4. Create the advance payment (Rent Only)
+    const terms = parseLeaseBillingTerms(lease.terms ?? null);
+    const dueDate = new Date(nextCycle.getFullYear(), nextCycle.getMonth(), Math.max(1, Math.min(terms.dueDay, 28)));
+    const rentAmount = Number(lease.monthly_rent ?? (lease.unit as any)?.rent_amount ?? 0);
+
+    const { data: payment, error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+            lease_id: lease.id,
+            tenant_id: tenantId,
+            landlord_id: lease.landlord_id,
+            amount: rentAmount,
+            subtotal: rentAmount,
+            paid_amount: 0,
+            balance_remaining: rentAmount,
+            status: "pending",
+            description: `${getNextMonthName(nextCycle)} Monthly Rent (Advance Payment)`,
+            due_date: toIsoDate(dueDate),
+            billing_cycle: cycleKey,
+            invoice_period_start: toIsoDate(nextCycle),
+            invoice_period_end: toIsoDate(new Date(nextCycle.getFullYear(), nextCycle.getMonth() + 1, 0)),
+            allow_partial_payments: terms.allowPartialPayments,
+            due_day_snapshot: terms.dueDay,
+            late_fee_amount: terms.lateFeeAmount,
+            invoice_number: makeInvoiceNumber(crypto.randomUUID(), cycleKey),
+            amount_tag: "advance_rent"
+        })
+        .select("id")
+        .single();
+
+    if (paymentError) throw paymentError;
+
+    // 5. Add the rent item
+    const { error: itemError } = await supabase.from("payment_items").insert({
+        payment_id: payment.id,
+        label: "Monthly Rent (Advance)",
+        amount: rentAmount,
+        category: "rent",
+        sort_order: 0,
+        metadata: { is_advance: true }
+    });
+
+    if (itemError) throw itemError;
+
+    return { id: payment.id, exists: false };
+}
+
+function getNextMonthName(date: Date) {
+    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
 }

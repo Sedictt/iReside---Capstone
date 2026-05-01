@@ -16,10 +16,8 @@ import {
     Home,
     Zap,
     Droplets,
-    Sparkles,
     AlertCircle,
     ArrowRight,
-    Phone,
     CheckCircle2
 } from "lucide-react";
 import Image from "next/image";
@@ -368,44 +366,50 @@ export default function TenantDashboard() {
                     )}
                 </AnimatePresence>
 
-                {/* Hero Banner */}
-                <div 
-                    className="relative w-full h-[280px] rounded-3xl overflow-hidden group border border-border/50 shadow-lg shadow-slate-900/10 dark:shadow-2xl dark:shadow-black/40"
-                    data-tour-id="tour-dashboard-overview"
-                >
-                    <Image
-                        src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688"
-                        alt="Property"
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/25 to-black/5 dark:from-black/60 dark:via-black/35 dark:to-black/10" />
+                {/* Command Center Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
+                            Welcome back, {lease?.landlordName ? "Tenant" : "Resident"}
+                        </h1>
+                        <p className="mt-2 text-muted-foreground">
+                            {lease ? `Everything is looking good at ${lease.propertyName}.` : "Welcome to your iReside dashboard."}
+                        </p>
+                    </div>
+                </div>
 
-                    <div className="absolute bottom-0 left-0 right-0 p-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div className="space-y-6 w-full md:w-auto">
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-white/85 dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]">
-                                        {isInitialLoading ? "Loading..." : nextPayment ? "Next Payment" : "No Upcoming Payments"}
-                                    </span>
-                                </div>
-                                <h2 className={cn("mb-2 text-4xl font-bold tracking-tight text-white dark:drop-shadow-[0_8px_28px_rgba(0,0,0,0.65)] md:text-5xl", isInitialLoading && "animate-pulse")}>
+                {/* Primary Command Card */}
+                <div className="relative overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/50 p-8 shadow-xl backdrop-blur-md dark:bg-white/[0.02]">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
+                        <Home className="w-48 h-48" />
+                    </div>
+                    
+                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                        {/* Next Payment Info */}
+                        <div className="md:col-span-2 space-y-6">
+                            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+                                    {isInitialLoading ? "Loading status..." : nextPayment ? "Payment Due • Active Standing" : "Account Up to Date • Excellent"}
+                                </span>
+                            </div>
+
+                            <div className="space-y-1">
+                                <h2 className={cn("text-5xl font-black tracking-tight text-foreground", isInitialLoading && "animate-pulse")}>
                                     {"\u20B1"}{displayPaymentParts.whole}
-                                    <span className="text-2xl text-white/70">.{displayPaymentParts.decimal}</span>
+                                    <span className="text-2xl text-muted-foreground font-medium">.{displayPaymentParts.decimal}</span>
                                 </h2>
-                                <p className={cn("flex items-center gap-2 font-medium text-white/85 dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]", isInitialLoading && "animate-pulse")}>
+                                <p className="text-muted-foreground flex items-center gap-2 font-medium">
                                     <Calendar className="w-4 h-4" />
-                                    {isInitialLoading ? "Loading payment..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
+                                    {isInitialLoading ? "Calculating..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
                                 </p>
                             </div>
 
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-4 pt-2">
                                 {nextPayment && (
                                     <Link
                                         href="/tenant/payments/checkout"
-                                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 transition-all hover:translate-y-[-1px]"
+                                        className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         <CreditCard className="w-4 h-4" />
                                         Pay Rent Now
@@ -413,24 +417,37 @@ export default function TenantDashboard() {
                                 )}
                                 <Link
                                     href="/tenant/payments"
-                                    className="rounded-xl border border-white/20 bg-black/45 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-black/55 dark:border-white/15 dark:bg-black/35 dark:text-white/90 dark:hover:bg-black/45"
+                                    className="bg-secondary/50 hover:bg-secondary text-secondary-foreground px-8 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] border border-border/50"
                                 >
-                                    View Details
+                                    Billing Details
                                 </Link>
                             </div>
                         </div>
 
-                        <div className={cn("flex min-w-[200px] flex-col items-center justify-center rounded-xl border border-white/20 bg-black/45 p-6 shadow-md shadow-black/20 dark:border-white/15 dark:bg-black/35 dark:shadow-lg dark:shadow-black/30", isInitialLoading && "animate-pulse")}>
-                            <p className="mb-2 text-sm font-medium text-white/85 dark:text-white/75">Time Remaining</p>
-                            <div className="flex items-start gap-4 text-white">
-                                <div className="text-center">
-                                    <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.days).padStart(2, "0")}</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 dark:text-white/60">Days</span>
+                        {/* Status Sidebar within Hero */}
+                        <div className="bg-muted/30 rounded-3xl p-6 border border-border/50 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Lease Progress</p>
+                                <span className="text-xs font-black text-primary">{leaseProgress.progressPercent}%</span>
+                            </div>
+                            <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${leaseProgress.progressPercent}%` }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    className="h-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" 
+                                />
+                            </div>
+                            <div className="flex justify-between items-end pt-2">
+                                <div>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Remaining</p>
+                                    <p className="text-sm font-bold text-foreground">
+                                        {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} months` : "--"}
+                                    </p>
                                 </div>
-                                <span className="mt-1 animate-blink text-2xl font-light text-white/55 dark:text-white/35">:</span>
-                                <div className="text-center">
-                                    <span className="text-3xl font-bold block">{isInitialLoading ? "--" : String(timeRemaining.hours).padStart(2, "0")}</span>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 dark:text-white/60">Hrs</span>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Expires</p>
+                                    <p className="text-sm font-bold text-foreground">{leaseProgress.endLabel}</p>
                                 </div>
                             </div>
                         </div>
@@ -443,618 +460,214 @@ export default function TenantDashboard() {
                     </div>
                 )}
 
-                {/* Community Announcement Banner */}
-                {isInitialLoading && (
-                    <div className="w-full bg-card border border-border rounded-xl p-4 flex items-start md:items-center justify-between gap-4 shadow-lg shadow-black/5 animate-pulse">
-                        <div className="flex items-start gap-4">
-                            <div className="h-10 w-10 rounded-full bg-muted/50" />
-                            <div className="space-y-2">
-                                <div className="h-4 w-40 bg-muted/50 rounded" />
-                                <div className="h-3 w-64 bg-muted/40 rounded" />
-                            </div>
-                        </div>
-                        <div className="h-7 w-20 bg-muted/40 rounded-lg" />
-                    </div>
-                )}
-                {announcement && showBanner && (
-                    <div className="w-full bg-card border border-border rounded-xl p-4 flex items-start md:items-center justify-between gap-4 shadow-lg shadow-black/5 animate-in fade-in slide-in-from-top-2">
-                        <div className="flex items-start gap-4">
-                            <div className="p-2 rounded-full bg-primary/10 text-primary flex-shrink-0">
-                                <Megaphone className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-sm md:text-base">{announcement.title}</h3>
-                                <p className="text-sm text-muted-foreground mt-0.5">{announcement.message}</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setShowBanner(false)}
-                            className="text-xs font-medium bg-muted hover:bg-muted/80 text-foreground px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
+                {/* Priority Feed (Alerts & Announcements) */}
+                <div className="grid grid-cols-1 gap-4">
+                    {announcement && showBanner && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm"
                         >
-                            Dismiss
-                        </button>
-                    </div>
-                )}
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-xl bg-primary text-white">
+                                    <Megaphone className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-0.5">Announcement</p>
+                                    <h3 className="font-bold text-sm text-foreground">{announcement.title}</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{announcement.message}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowBanner(false)}
+                                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-3 py-2"
+                            >
+                                Dismiss
+                            </button>
+                        </motion.div>
+                    )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column: Payments & Quick Actions */}
-                    <div className="lg:col-span-2 space-y-6">
+                    {overduePayments.length > 0 && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-xl bg-red-500 text-white">
+                                    <AlertCircle className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] mb-0.5">Payment Required</p>
+                                    <h3 className="font-bold text-sm text-foreground">You have {overduePayments.length} overdue bills</h3>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Totaling ₱{formatCurrency(overdueTotal, 2)} • Please settle your balance.</p>
+                                </div>
+                            </div>
+                            <Link
+                                href="/tenant/payments/checkout"
+                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all"
+                            >
+                                Pay Now
+                            </Link>
+                        </motion.div>
+                    )}
+                </div>
 
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content Area */}
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Quick Actions - More compact & elegant */}
                         <div data-tour-id="tour-quick-actions">
-                            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Services</h3>
+                            </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
                                     { icon: Wrench, label: "Request Repair", href: "/tenant/maintenance/new", color: "text-orange-500", bg: "bg-orange-500/10" },
                                     { icon: MessageSquare, label: "Messages", href: "/tenant/messages", color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                                    { icon: FileText, label: "Your Lease", href: "/tenant/lease/123", color: "text-purple-500", bg: "bg-purple-500/10" },
-                                ].map((action, i) => {
-                                    const isLease = action.label === "Your Lease";
-                                    const isLeaseDisabled = isLease && !lease;
-                                    const content = (
-                                        <>
-                                            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-colors", action.bg, action.color)}>
-                                                <action.icon className="w-6 h-6" />
-                                            </div>
-                                            <span className="text-sm font-medium text-center group-hover:text-primary transition-colors">{action.label}</span>
-                                        </>
-                                    );
-
-                                    if (isLease) {
-                                        return (
-                                            <button
-                                                key={i}
-                                                onClick={() => {
-                                                    if (!isLeaseDisabled) {
-                                                        setIsLeaseModalOpen(true);
-                                                    }
-                                                }}
-                                                disabled={isLeaseDisabled}
-                                                className={cn(
-                                                    "bg-card border border-border hover:border-primary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 group text-left",
-                                                    isLeaseDisabled && "opacity-50 cursor-not-allowed hover:shadow-none hover:-translate-y-0"
-                                                )}
-                                            >
-                                                {content}
-                                            </button>
-                                        );
-                                    }
-
-                                    return (
-                                        <Link
-                                            key={i}
-                                            href={action.href}
-                                            className="bg-card border border-border hover:border-primary/30 rounded-xl p-6 flex flex-col items-center justify-center gap-3 transition-all hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 group"
-                                        >
-                                            {content}
-                                        </Link>
-                                    );
-                                })}
+                                    { icon: Home, label: "Unit View", href: "/tenant/unit-map", color: "text-blue-500", bg: "bg-blue-500/10" },
+                                ].map((action, i) => (
+                                    <Link
+                                        key={i}
+                                        href={action.href}
+                                        className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
+                                    >
+                                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", action.bg, action.color)}>
+                                            <action.icon className="w-7 h-7" />
+                                        </div>
+                                        <span className="text-xs font-bold text-center group-hover:text-primary transition-colors uppercase tracking-widest">{action.label}</span>
+                                    </Link>
+                                ))}
                                 <MoveOutRequest variant="quickAction" />
                             </div>
                         </div>
 
-                        {/* Pending Bills Section */}
-                        {isInitialLoading ? (
-                            <div className="bg-card border border-red-500/20 rounded-2xl p-0 overflow-hidden shadow-lg shadow-red-500/5 animate-pulse">
-                                <div className="p-6 border-b border-border/50 bg-red-500/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-red-500/10" />
-                                        <div className="space-y-2">
-                                            <div className="h-4 w-48 bg-muted/50 rounded" />
-                                            <div className="h-3 w-64 bg-muted/40 rounded" />
-                                        </div>
-                                    </div>
-                                    <div className="h-6 w-20 bg-muted/40 rounded" />
-                                </div>
-                                <div className="divide-y divide-border/50">
-                                    {[0, 1].map((row) => (
-                                        <div key={row} className="p-4 sm:p-6 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-8 h-8 rounded-lg bg-muted/40" />
-                                                <div className="space-y-2">
-                                                    <div className="h-3 w-40 bg-muted/50 rounded" />
-                                                    <div className="h-3 w-56 bg-muted/40 rounded" />
-                                                </div>
-                                            </div>
-                                            <div className="h-8 w-24 bg-muted/40 rounded" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : overduePayments.length > 0 ? (
-                            <div className="bg-card border border-red-500/20 rounded-2xl p-0 overflow-hidden shadow-lg shadow-red-500/5 hover:border-red-500/40 transition-colors">
-                                <div className="p-6 border-b border-border/50 bg-red-500/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
-                                            <AlertCircle className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-foreground">Action Required: Unpaid Bills</h3>
-                                            <p className="text-xs text-muted-foreground mt-0.5">Please settle your balances to maintain your Trust Score.</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-1">Total Due</p>
-                                        <p className="text-xl font-bold text-red-500">{"\u20B1"}{formatCurrency(overdueTotal, 2)}</p>
-                                    </div>
-                                </div>
-
-                                <div className="divide-y divide-border/50">
-                                    {overduePayments.map((payment) => {
-                                        const desc = payment.description ?? "Payment";
-                                        const normalized = desc.toLowerCase();
-                                        const Icon = normalized.includes("electric")
-                                            ? Zap
-                                            : normalized.includes("water")
-                                                ? Droplets
-                                                : AlertCircle;
-                                        const iconClass = normalized.includes("electric")
-                                            ? "bg-yellow-500/10 text-yellow-500"
-                                            : normalized.includes("water")
-                                                ? "bg-blue-500/10 text-blue-500"
-                                                : "bg-red-500/10 text-red-500";
-
-                                        return (
-                                            <div key={payment.id} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
-                                                <div className="flex items-start gap-4">
-                                                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-1", iconClass)}>
-                                                        <Icon className="w-4 h-4" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-semibold text-foreground text-sm">{desc}</h4>
-                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                            Invoice <span className="font-mono text-muted-foreground/80">{buildInvoiceLabel(payment)}</span> -{" "}
-                                                            <span className="text-red-400 font-medium">{buildOverdueLabel(payment.dueDate)}</span>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
-                                                    <span className="font-bold text-foreground">{"\u20B1"}{formatCurrency(payment.amount, 2)}</span>
-                                                    <Link href="/tenant/payments/checkout" className="px-5 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20 hover:-translate-y-0.5">
-                                                        Pay <span className="hidden sm:inline">Now</span> <ArrowRight className="w-3.5 h-3.5" />
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ) : null}
-
-                        {/* Unit & Utilities Overview */}
-                        {isInitialLoading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between animate-pulse">
-                                    <div className="space-y-2">
-                                        <div className="h-4 w-24 bg-muted/50 rounded" />
-                                        <div className="h-3 w-40 bg-muted/40 rounded" />
-                                    </div>
-                                    <div className="mt-8 space-y-3">
-                                        <div className="h-2 w-full bg-muted/40 rounded" />
-                                        <div className="h-3 w-28 bg-muted/40 rounded" />
-                                    </div>
-                                </div>
-                                <div className="bg-card border border-border rounded-2xl p-6 space-y-4 animate-pulse">
-                                    <div className="h-4 w-24 bg-muted/50 rounded" />
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="h-3 w-24 bg-muted/40 rounded" />
-                                            <div className="h-3 w-16 bg-muted/40 rounded" />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="h-3 w-20 bg-muted/40 rounded" />
-                                            <div className="h-3 w-12 bg-muted/40 rounded" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-tour-id="tour-lease-details">
-                                {/* Lease Status Card */}
-                                <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors">
-                                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                                        <Home className="w-24 h-24" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-semibold mb-1">My Unit</h3>
-                                        <p className="text-muted-foreground text-sm">
-                                            {lease
-                                                ? `${lease.propertyName ?? "Property"}${lease.unitName ? `, ${lease.unitName}` : ""}`
-                                                : "No active lease"}
-                                        </p>
-                                    </div>
-                                    <div className="mt-8">
-                                        <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-muted-foreground">Lease Progress</span>
-                                            <span className="font-medium text-primary">
-                                                {leaseProgress.monthsLeft !== null ? `${leaseProgress.monthsLeft} months left` : "-"}
-                                            </span>
-                                        </div>
-                                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                            <div className="h-full bg-primary rounded-full" style={{ width: `${leaseProgress.progressPercent}%` }} />
-                                        </div>
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            {lease ? `Ends ${leaseProgress.endLabel}` : "No lease end date"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Utilities Card */}
-                                <div className="bg-card border border-border rounded-2xl p-6 space-y-6 hover:border-primary/30 transition-colors">
-                                    <h3 className="text-lg font-semibold">Utilities</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500">
-                                                    <Zap className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium">Electricity</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {electricityAmount !== null ? "Latest bill" : "No recent bill"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span className="text-sm font-bold">
-                                                {electricityAmount !== null ? `\u20B1${formatCurrency(electricityAmount)}` : "-"}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                                                    <Droplets className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium">Water</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {waterAmount !== null ? "Latest bill" : "No recent bill"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span className="text-sm font-bold">
-                                                {waterAmount !== null ? `\u20B1${formatCurrency(waterAmount)}` : "-"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* Lease Details Section */}
-                        {lease ? (
-                            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-semibold">Lease Details</h3>
-                                    <span className={cn(
-                                        "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide",
-                                        lease.status === "active" ? "bg-green-500/10 text-green-500" :
-                                        lease.status === "pending_signature" ? "bg-yellow-500/10 text-yellow-500" :
-                                        "bg-muted text-muted-foreground"
-                                    )}>
-                                        {lease.status.replace('_', ' ')}
-                                    </span>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Property</p>
-                                            <p className="font-semibold">{lease.propertyName ?? "N/A"}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Unit</p>
-                                            <p className="font-semibold">{lease.unitName ?? "N/A"}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Lease Period</p>
-                                            <p className="font-semibold">
-                                                {new Date(lease.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                {' - '}
-                                                {new Date(lease.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Monthly Rent</p>
-                                            <p className="font-semibold text-lg">₱{formatCurrency(lease.monthlyRent, 2)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Security Deposit</p>
-                                            <p className="font-semibold text-lg">₱{formatCurrency(lease.securityDeposit, 2)}</p>
-                                        </div>
-                                        {lease.landlordName && (
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Landlord Contact</p>
-                                                <p className="font-semibold">{lease.landlordName}</p>
-                                                {lease.landlordEmail && (
-                                                    <p className="text-sm text-muted-foreground">{lease.landlordEmail}</p>
-                                                )}
-                                                {lease.landlordPhone && (
-                                                    <p className="text-sm text-muted-foreground">{lease.landlordPhone}</p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="bg-card border border-border rounded-2xl p-6 text-center">
-                                <p className="text-muted-foreground">No active lease found</p>
-                            </div>
-                        )}
-
-                        {/* Payment History Section */}
-                        {paymentHistory.length > 0 && (
-                            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-semibold">Payment History</h3>
-                                    <Link href="/tenant/payments" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-wide">
-                                        View All
-                                    </Link>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                    {paymentHistory.slice(0, 5).map((payment) => {
-                                        const isAdvanceRent = payment.description?.toLowerCase().includes('advance rent');
-                                        const isSecurityDeposit = payment.category?.toLowerCase() === 'security_deposit' || 
-                                                                 payment.description?.toLowerCase().includes('security deposit');
-                                        
-                                        const statusColors = {
-                                            completed: "bg-green-500/10 text-green-500",
-                                            pending: "bg-yellow-500/10 text-yellow-500",
-                                            processing: "bg-blue-500/10 text-blue-500",
-                                            failed: "bg-red-500/10 text-red-500",
-                                            refunded: "bg-purple-500/10 text-purple-500",
-                                        };
-                                        
-                                        return (
-                                            <div key={payment.id} className="flex items-center justify-between p-4 rounded-xl border border-border hover:bg-muted/30 transition-colors">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <p className="font-semibold text-sm">
-                                                            {payment.description ?? "Payment"}
-                                                        </p>
-                                                        {(isAdvanceRent || isSecurityDeposit) && (
-                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary">
-                                                                {isAdvanceRent ? "Advance" : "Deposit"}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                        <span>Due: {new Date(payment.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                        {payment.paidAt && (
-                                                            <span>Paid: {new Date(payment.paidAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <span className="font-bold">₱{formatCurrency(payment.amount, 2)}</span>
-                                                    <span className={cn(
-                                                        "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide",
-                                                        statusColors[payment.status as keyof typeof statusColors] ?? "bg-muted text-muted-foreground"
-                                                    )}>
-                                                        {payment.status}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* Concierge Teaser */}
-                        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 rounded-2xl p-6 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 blur-3xl rounded-full pointer-events-none group-hover:bg-primary/20 transition-colors" />
-                            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                        {/* Recent Activity Section */}
+                        <div className="bg-card/50 border border-border rounded-[2rem] p-8 shadow-sm backdrop-blur-sm">
+                            <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Sparkles className="w-4 h-4 text-primary" />
-                                        <span className="text-xs font-semibold text-primary uppercase tracking-wide">iRis Assistant</span>
-                                    </div>
-                                    <h3 className="text-xl font-bold mb-1">Need help with something?</h3>
-                                    <p className="text-muted-foreground text-sm max-w-md">Ask iRis about building rules, amenities, or local recommendations.</p>
+                                    <h3 className="text-xl font-bold text-foreground tracking-tight">Recent Activity</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">Your latest updates and transactions</p>
                                 </div>
-                                <Link
-                                    href="/tenant/messages"
-                                    className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/20 whitespace-nowrap"
-                                >
-                                    Chat with iRis
+                                <Link href="/tenant/payments" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors">
+                                    Full History
                                 </Link>
                             </div>
+
+                            {paymentHistory.length > 0 ? (
+                                <div className="space-y-3">
+                                    {paymentHistory.slice(0, 4).map((payment) => {
+                                        const isAdvanceRent = payment.description?.toLowerCase().includes('advance rent');
+                                        const isSecurityDeposit = payment.category?.toLowerCase() === 'security_deposit';
+                                        
+                                        return (
+                                            <div key={payment.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border/40 hover:border-primary/20 hover:bg-primary/[0.02] transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                                        payment.status === 'completed' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+                                                    )}>
+                                                        {payment.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-bold text-sm text-foreground truncate">
+                                                                {payment.description ?? "Payment"}
+                                                            </p>
+                                                            {(isAdvanceRent || isSecurityDeposit) && (
+                                                                <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                                                    {isAdvanceRent ? "Advance" : "Deposit"}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5 uppercase font-bold tracking-wider">
+                                                            {payment.paidAt ? `Settled ${new Date(payment.paidAt).toLocaleDateString()}` : `Due ${new Date(payment.dueDate).toLocaleDateString()}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <p className="font-black text-sm text-foreground tracking-tight">₱{formatCurrency(payment.amount, 2)}</p>
+                                                    <p className={cn(
+                                                        "text-[8px] font-black uppercase tracking-[0.2em] mt-0.5",
+                                                        payment.status === 'completed' ? "text-emerald-500" : "text-amber-500"
+                                                    )}>
+                                                        {payment.status}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 border border-dashed border-border rounded-3xl bg-muted/20">
+                                    <p className="text-sm text-muted-foreground">No recent activity to show.</p>
+                                </div>
+                            )}
                         </div>
+
 
                     </div>
 
-                    {/* Right Column: Landlord / Support */}
-                    <div className="lg:col-span-1">
-                        <div className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-card/90 p-6 shadow-[0_24px_60px_-32px_rgba(15,23,42,0.24)] backdrop-blur-xl h-full flex flex-col">
-                            <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_right,rgba(173,200,125,0.2),transparent_55%)]" />
-                            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-3xl" />
-
-                            <div className="relative z-10 space-y-4 flex-1">
-                                <div className="space-y-4" data-tour-id="tour-landlord-support">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                                <Sparkles className="h-3.5 w-3.5" />
-                                                Tenant support
-                                            </div>
-                                            <h3 className="text-xl font-display text-foreground">Landlord / Support</h3>
-                                        </div>
-                                        <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
-                                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                            Online
-                                        </div>
-                                    </div>
-
-                                    {dashboardLoading ? (
-                                    <div className="space-y-3">
-                                        {[0, 1, 2].map((row) => (
-                                            <div key={row} className="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-background/60 animate-pulse">
-                                                <div className="h-12 w-12 rounded-2xl bg-muted/60" />
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="h-3 w-32 bg-muted/60 rounded" />
-                                                    <div className="h-3 w-48 bg-muted/40 rounded" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : lease ? (
-                                        <div className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(23,23,23,0.96),rgba(10,10,10,0.98))] dark:shadow-[0_18px_40px_-30px_rgba(0,0,0,0.6)]">
-                                            <div className="flex items-start gap-4">
-                                                <div 
-                                                    className={cn(
-                                                        "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-sm ring-1 ring-primary/10 overflow-hidden relative",
-                                                        !lease.landlordAvatarBgColor && "bg-primary/12"
-                                                    )}
-                                                    style={{ 
-                                                        backgroundColor: lease.landlordAvatarBgColor || undefined,
-                                                        color: lease.landlordAvatarBgColor ? 'white' : undefined
-                                                    }}
-                                                >
-                                                    {lease.landlordAvatarUrl ? (
-                                                        <Image
-                                                            src={lease.landlordAvatarUrl}
-                                                            alt={lease.landlordName ?? "Landlord"}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    ) : (
-                                                        <span className={cn(
-                                                            "text-lg font-black uppercase",
-                                                            !lease.landlordAvatarBgColor && "text-primary"
-                                                        )}>
-                                                            {(lease.landlordName ?? "Support team")
-                                                                .split(" ")
-                                                                .map((part) => part[0])
-                                                                .join("")
-                                                                .slice(0, 2)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Primary contact</p>
-                                                    <h4 className="mt-1 text-xl font-semibold text-foreground">{lease.landlordName ?? "Support team"}</h4>
-                                                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                                                        Fast help for billing, lease questions, unit concerns, and anything that needs landlord attention.
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-5 grid gap-3">
-                                                {lease.landlordEmail && (
-                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-muted/30 px-3.5 py-3 dark:border-white/10 dark:bg-white/5">
-                                                        <div className="mt-0.5 rounded-xl bg-blue-500/10 p-2 text-blue-600">
-                                                            <Mail className="h-4 w-4" />
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">Email</p>
-                                                            <p className="truncate text-sm font-semibold text-foreground">{lease.landlordEmail}</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {lease.landlordPhone && (
-                                                    <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-muted/30 px-3.5 py-3 dark:border-white/10 dark:bg-white/5">
-                                                        <div className="mt-0.5 rounded-xl bg-emerald-500/10 p-2 text-emerald-600">
-                                                            <Phone className="h-4 w-4" />
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">Phone</p>
-                                                            <p className="text-sm font-semibold text-foreground">{lease.landlordPhone}</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="mt-5">
-                                                <Link
-                                                    href="/tenant/messages"
-                                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-primary-foreground shadow-[0_16px_30px_-18px_rgba(var(--primary-rgb),0.55)] transition-all hover:bg-primary/90"
-                                                >
-                                                    <MessageSquare className="h-4 w-4" />
-                                                    Message
-                                                </Link>
-                                            </div>
-                                        </div>
-                                ) : supportActions.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground">No support actions available yet.</p>
-                                ) : (
-                                    <div className="rounded-2xl border border-dashed border-border bg-background/60 p-5 text-center">
-                                        <h4 className="text-sm font-semibold text-foreground">Support becomes available with an active lease</h4>
-                                        <p className="mt-2 text-xs text-muted-foreground">
-                                            Once a landlord is assigned, this panel will show your direct contact details and support actions.
-                                        </p>
-                                        <Link
-                                            href="/tenant/messages"
-                                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-                                        >
-                                            <MessageSquare className="h-4 w-4" />
-                                            Open messages
-                                        </Link>
-                                    </div>
-                                )}
+                    {/* Sidebar Area */}
+                    <div className="space-y-8">
+                        {/* Property Overview Card */}
+                        <div className="bg-card/90 border border-border/60 rounded-[2rem] p-8 shadow-sm backdrop-blur-xl relative overflow-hidden" data-tour-id="tour-lease-details">
+                            <div className="absolute top-0 right-0 h-32 w-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
+                            <div className="relative z-10 space-y-6">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>
+                                    <h3 className="text-2xl font-black text-foreground tracking-tight leading-tight">
+                                        {lease?.propertyName ?? "Property"}<br/>
+                                        <span className="text-muted-foreground text-lg">{lease?.unitName ?? "Unit"}</span>
+                                    </h3>
                                 </div>
 
-                                {lease && (
-                                    <div className="space-y-3">
-                                        {supportActions.map((item, index) => {
-                                            const Icon = item.icon;
-                                            const content = (
-                                                <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/75 p-4 shadow-[0_16px_36px_-30px_rgba(15,23,42,0.28)] transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:bg-background">
-                                                    <div className="absolute inset-y-0 left-0 w-1 rounded-full bg-gradient-to-b from-primary/70 to-primary/20 opacity-70" />
-                                                    <div className="flex items-start gap-4 pl-2">
-                                                        <div className={cn(
-                                                            "h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm ring-1 ring-black/5",
-                                                            item.iconBg,
-                                                            item.iconClass
-                                                        )}>
-                                                            <Icon className="w-5 h-5" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="mb-1 flex items-start justify-between gap-3">
-                                                                <div>
-                                                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-                                                                        {index === 0 ? "Recommended next step" : "Support option"}
-                                                                    </p>
-                                                                    <h4 className="mt-1 text-sm font-semibold text-foreground">{item.title}</h4>
-                                                                </div>
-                                                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-primary">
-                                                                    {item.cta}
-                                                                    <ChevronRight className="h-3 w-3" />
-                                                                </span>
-                                                            </div>
-                                                            <p className="text-xs leading-relaxed text-muted-foreground">{item.description}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-
-                                            if (item.action) {
-                                                return (
-                                                    <button
-                                                        key={item.id}
-                                                        type="button"
-                                                        onClick={item.action}
-                                                        className="w-full text-left"
-                                                    >
-                                                        {content}
-                                                    </button>
-                                                );
-                                            }
-
-                                            return (
-                                                <Link key={item.id} href={item.href ?? "/tenant/dashboard"} className="block">
-                                                    {content}
-                                                </Link>
-                                            );
-                                        })}
+                                <div className="space-y-4 pt-2">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
+                                        <div className="p-2.5 rounded-xl bg-background border border-border">
+                                            <Zap className="w-5 h-5 text-amber-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Electricity</p>
+                                            <p className="font-black text-sm text-foreground">₱{formatCurrency(electricityAmount ?? 0)}</p>
+                                        </div>
                                     </div>
-                                )}
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
+                                        <div className="p-2.5 rounded-xl bg-background border border-border">
+                                            <Droplets className="w-5 h-5 text-blue-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Water</p>
+                                            <p className="font-black text-sm text-foreground">₱{formatCurrency(waterAmount ?? 0)}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-border/50">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lease Details</p>
+                                        <button 
+                                            onClick={() => setIsLeaseModalOpen(true)}
+                                            className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
+                                        >
+                                            View Contract
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Monthly Rent</p>
+                                            <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.monthlyRent ?? 0)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Deposit</p>
+                                            <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.securityDeposit ?? 0)}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+
                     </div>
                 </div>
             <LeaseModal
