@@ -152,6 +152,7 @@ export async function GET() {
             .select("id, amount, status, due_date, description")
             .eq("tenant_id", user.id)
             .in("status", ["pending", "processing"])
+            .not("workflow_status", "in", '("under_review","awaiting_in_person","confirmed","receipted")')
             .order("due_date", { ascending: true })
             .limit(1),
         supabase
@@ -159,6 +160,7 @@ export async function GET() {
             .select("id, amount, status, due_date, description, reference_number")
             .eq("tenant_id", user.id)
             .in("status", ["pending", "processing"])
+            .not("workflow_status", "in", '("under_review","awaiting_in_person","confirmed","receipted")')
             .lt("due_date", nowIso)
             .order("due_date", { ascending: true })
             .limit(5),

@@ -74,6 +74,7 @@ export async function POST(request: Request, context: RouteContext) {
             .from("payments")
             .update({
                 workflow_status: "awaiting_in_person",
+                method: "cash",
                 intent_method: "in_person",
                 in_person_intent_expires_at: expiresAt,
                 payment_submitted_at: nowIso,

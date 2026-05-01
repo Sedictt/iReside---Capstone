@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { generateMonthlyInvoices } from "@/lib/billing/server";
 
 function generateTempPassword(length = 12): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
@@ -277,6 +278,19 @@ async function finalizeLease(params: FinalizeLeaseParams) {
         .from("units")
         .update({ status: "occupied" })
         .eq("id", params.unitId);
+
+    // 6. Auto-generate first month's payment for the new lease
+    try {
+        const billingMonth = new Date(params.leaseStart).toISOString().slice(0, 7); // "2026-05"
+        await generateMonthlyInvoices(
+            adminClient,
+            params.landlordId,
+            billingMonth,
+            [lease.id]
+        );
+    } catch (autoGenError) {
+        console.error("Auto-generate payment error:", autoGenError);
+    }
 
     return NextResponse.json({
         success: true,

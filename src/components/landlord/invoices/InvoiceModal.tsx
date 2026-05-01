@@ -35,6 +35,7 @@ export function InvoiceModal({
     const [reviewNote, setReviewNote] = useState("");
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
     const [rejectionReason, setRejectionReason] = useState("");
+    const [showRejectionWarning, setShowRejectionWarning] = useState(false);
     const [nonExactAction, setNonExactAction] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
     const [activeTab, setActiveTab] = useState<"approve" | "issue">("approve");
 
@@ -120,6 +121,14 @@ export function InvoiceModal({
             return;
         }
 
+        // Validate rejection reason before proceeding
+        const needsRejectionReason = action === "reject" || action === "request_completion" || nonExactAction === "reject" || nonExactAction === "request_completion";
+        if (needsRejectionReason && !rejectionReason.trim()) {
+            setShowRejectionWarning(true);
+            return;
+        }
+
+        setShowRejectionWarning(false);
         setActionLoading(action);
         try {
             const endpoint = action === "remind" ? "reminder" : "review";
@@ -140,7 +149,10 @@ export function InvoiceModal({
                             : undefined,
                 }),
             });
-            if (!response.ok) throw new Error();
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Request failed with status ${response.status}`);
+            }
             onUpdated();
             onClose();
         } finally {
@@ -589,6 +601,8 @@ export function InvoiceModal({
                                                         setRejectionReason={setRejectionReason}
                                                         nonExactAction={nonExactAction}
                                                         setNonExactAction={setNonExactAction}
+                                                        showRejectionWarning={showRejectionWarning}
+                                                        setShowRejectionWarning={setShowRejectionWarning}
                                                     />
 
                                                     <div className="pt-4 border-t border-white/5">
@@ -888,7 +902,9 @@ function WizardFlow({
     rejectionReason, 
     setRejectionReason, 
     nonExactAction, 
-    setNonExactAction 
+    setNonExactAction,
+    showRejectionWarning,
+    setShowRejectionWarning 
 }: {
     invoice: InvoiceDetail;
     runAction: (action: any) => void;
@@ -899,6 +915,8 @@ function WizardFlow({
     setRejectionReason: (v: string) => void;
     nonExactAction: string;
     setNonExactAction: (v: any) => void;
+    showRejectionWarning: boolean;
+    setShowRejectionWarning: (v: boolean) => void;
 }) {
     const [step, setStep] = useState<"diagnose" | "resolve" | "communicate">("diagnose");
     const [diagnosis, setDiagnosis] = useState<"amount" | "proof" | "other" | null>(null);
@@ -1016,6 +1034,16 @@ function WizardFlow({
                                 {nonExactAction === "other" && "The payment will be flagged with your custom reason and the tenant will be notified."}
                             </p>
                         </div>
+
+                        {showRejectionWarning && (
+                            <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-start gap-3">
+                                <AlertTriangle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-medium text-rose-400">Rejection reason required</p>
+                                    <p className="text-xs text-rose-300/70 mt-1">Please enter a reason for the tenant before rejecting or requesting completion.</p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="space-y-4">
                             <div className="relative group">
