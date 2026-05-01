@@ -290,24 +290,6 @@ export default function TenantMaintenancePage() {
                 </Link>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                {[
-                    { label: "Active", count: requests.filter(r => r.status !== 'Resolved').length, icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
-                    { label: "Resolved", count: requests.filter(r => r.status === 'Resolved').length, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-                    { label: "Total", count: requests.length, icon: Wrench, color: "text-primary", bg: "bg-primary/10" },
-                ].map((stat) => (
-                    <div key={stat.label} className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
-                        <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
-                            <stat.icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
-                            <p className="text-2xl font-black">{stat.count}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
 
             {/* Filters */}
             <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
