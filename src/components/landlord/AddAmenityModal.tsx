@@ -9,7 +9,72 @@ import {
     Waves, 
     Music, 
     Coffee, 
-    MapPin, 
+    MapPin,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    Dumbbell,
+    Wifi,
+    Tv,
+    Shield,
+    Thermometer,
+    Trash2,
+    Wind,
+    Sun,
+    Lock,
+    Key,
+    Clock,
+    Info,
+    Phone,
+    Monitor,
+    Bike,
+    Briefcase,
+    Utensils,
+    ShowerHead,
+    Baby,
+    Dog,
+    Trees,
+    Sofa,
+    Camera,
+    Plug,
+    BookOpen,
+    Sparkles,
+    Flame,
+    Store,
+    ShoppingBag,
+    Pizza,
+    ParkingCircle,
+    Mountain,
+    Moon,
+    Mail,
+    Library,
+    Landmark,
+    Lamp,
+    Hotel,
+    Home,
+    Heart,
+    Gift,
+    Gamepad2,
+    Fuel,
+    Flower2,
+    Fish,
+    ChefHat,
+    Bus,
+    Building2,
+    Box,
+    Bath,
+    BarChart3,
+    Award,
+    Accessibility,
+    Trophy,
+    Target,
+    Fingerprint,
+    GlassWater,
+    Beer,
+    Drumstick,
+    Plane,
+    Ship,
+    Sparkle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProperty } from '@/context/PropertyContext'
@@ -29,8 +94,72 @@ const ICONS = [
     { name: 'Waves', icon: Waves },
     { name: 'Music', icon: Music },
     { name: 'Coffee', icon: Coffee },
-    { name: 'Zap', icon: Zap }
+    { name: 'Zap', icon: Zap },
+    { name: 'Dumbbell', icon: Dumbbell },
+    { name: 'Wifi', icon: Wifi },
+    { name: 'Tv', icon: Tv },
+    { name: 'Shield', icon: Shield },
+    { name: 'Thermometer', icon: Thermometer },
+    { name: 'Trash2', icon: Trash2 },
+    { name: 'Wind', icon: Wind },
+    { name: 'Sun', icon: Sun },
+    { name: 'Lock', icon: Lock },
+    { name: 'Key', icon: Key },
+    { name: 'Clock', icon: Clock },
+    { name: 'Info', icon: Info },
+    { name: 'Phone', icon: Phone },
+    { name: 'Monitor', icon: Monitor },
+    { name: 'Bike', icon: Bike },
+    { name: 'Briefcase', icon: Briefcase },
+    { name: 'Utensils', icon: Utensils },
+    { name: 'ShowerHead', icon: ShowerHead },
+    { name: 'Baby', icon: Baby },
+    { name: 'Dog', icon: Dog },
+    { name: 'Trees', icon: Trees },
+    { name: 'Sofa', icon: Sofa },
+    { name: 'Camera', icon: Camera },
+    { name: 'Plug', icon: Plug },
+    { name: 'BookOpen', icon: BookOpen },
+    { name: 'Sparkles', icon: Sparkles },
+    { name: 'Flame', icon: Flame },
+    { name: 'Store', icon: Store },
+    { name: 'ShoppingBag', icon: ShoppingBag },
+    { name: 'Pizza', icon: Pizza },
+    { name: 'ParkingCircle', icon: ParkingCircle },
+    { name: 'Mountain', icon: Mountain },
+    { name: 'Moon', icon: Moon },
+    { name: 'Mail', icon: Mail },
+    { name: 'Library', icon: Library },
+    { name: 'Landmark', icon: Landmark },
+    { name: 'Lamp', icon: Lamp },
+    { name: 'Hotel', icon: Hotel },
+    { name: 'Home', icon: Home },
+    { name: 'Heart', icon: Heart },
+    { name: 'Gift', icon: Gift },
+    { name: 'Gamepad2', icon: Gamepad2 },
+    { name: 'Fuel', icon: Fuel },
+    { name: 'Flower2', icon: Flower2 },
+    { name: 'Fish', icon: Fish },
+    { name: 'ChefHat', icon: ChefHat },
+    { name: 'Bus', icon: Bus },
+    { name: 'Building2', icon: Building2 },
+    { name: 'Box', icon: Box },
+    { name: 'Bath', icon: Bath },
+    { name: 'BarChart3', icon: BarChart3 },
+    { name: 'Award', icon: Award },
+    { name: 'Accessibility', icon: Accessibility },
+    { name: 'Trophy', icon: Trophy },
+    { name: 'Target', icon: Target },
+    { name: 'Fingerprint', icon: Fingerprint },
+    { name: 'GlassWater', icon: GlassWater },
+    { name: 'Beer', icon: Beer },
+    { name: 'Drumstick', icon: Drumstick },
+    { name: 'Plane', icon: Plane },
+    { name: 'Ship', icon: Ship },
+    { name: 'Sparkle', icon: Sparkle }
 ]
+
+const ITEMS_PER_PAGE = 8
 
 export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddAmenityModalProps) {
     const { properties } = useProperty()
@@ -48,6 +177,25 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
         status: 'Active',
         tags: [] as string[]
     })
+
+    const [searchTerm, setSearchTerm] = useState('')
+    const [currentPage, setCurrentPage] = useState(0)
+
+    const filteredIcons = ICONS.filter(item => 
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const totalPages = Math.ceil(filteredIcons.length / ITEMS_PER_PAGE)
+    const paginatedIcons = filteredIcons.slice(
+        currentPage * ITEMS_PER_PAGE,
+        (currentPage + 1) * ITEMS_PER_PAGE
+    )
+
+    // Reset page when searching
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value)
+        setCurrentPage(0)
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -179,27 +327,97 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
-                                        Icon Representation
-                                    </label>
-                                    <div className="flex flex-wrap gap-3">
-                                        {ICONS.map(item => (
-                                            <button
-                                                key={item.name}
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, icon_name: item.name })}
-                                                className={cn(
-                                                    "flex h-12 w-12 items-center justify-center rounded-2xl border transition-all",
-                                                    formData.icon_name === item.name
-                                                        ? "border-primary bg-primary/10 text-primary"
-                                                        : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                                                )}
-                                            >
-                                                <item.icon className="h-5 w-5" />
-                                            </button>
-                                        ))}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                            Icon Representation
+                                        </label>
+                                        <div className="text-[10px] font-bold text-muted-foreground/40">
+                                            Page {currentPage + 1} of {Math.max(1, totalPages)}
+                                        </div>
                                     </div>
+
+                                    {/* Search Bar for Icons */}
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search icons..."
+                                            value={searchTerm}
+                                            onChange={handleSearch}
+                                            className="w-full rounded-xl border border-border bg-muted/30 py-2 pl-9 pr-4 text-xs font-bold outline-none transition-all focus:border-primary/50 focus:bg-muted/50"
+                                        />
+                                    </div>
+
+                                    <div className="relative min-h-[110px] overflow-hidden">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div
+                                                key={currentPage + searchTerm}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="grid grid-cols-4 gap-3"
+                                            >
+                                                {paginatedIcons.map(item => (
+                                                    <button
+                                                        key={item.name}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, icon_name: item.name })}
+                                                        className={cn(
+                                                            "flex h-12 w-full items-center justify-center rounded-2xl border transition-all",
+                                                            formData.icon_name === item.name
+                                                                ? "border-primary bg-primary/10 text-primary"
+                                                                : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                                                        )}
+                                                    >
+                                                        <item.icon className="h-5 w-5" />
+                                                    </button>
+                                                ))}
+                                                
+                                                {filteredIcons.length === 0 && (
+                                                    <div className="col-span-4 py-8 text-center text-xs font-medium text-muted-foreground/60">
+                                                        No icons found
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Pagination Controls */}
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center justify-between pt-2">
+                                            <button
+                                                type="button"
+                                                disabled={currentPage === 0}
+                                                onClick={() => setCurrentPage(prev => prev - 1)}
+                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+                                            <div className="flex gap-1.5">
+                                                {[...Array(totalPages)].map((_, i) => (
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        onClick={() => setCurrentPage(i)}
+                                                        className={cn(
+                                                            "h-1.5 w-1.5 rounded-full transition-all",
+                                                            currentPage === i ? "bg-primary w-4" : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
+                                                        )}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                disabled={currentPage === totalPages - 1}
+                                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/30 text-muted-foreground transition-all hover:bg-muted disabled:opacity-30"
+                                            >
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
