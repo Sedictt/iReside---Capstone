@@ -38,6 +38,7 @@ interface MessageBubbleProps {
     onOpenF2F?: (message: UiMessage) => void;
     onImageClick?: (images: { url: string; id: string }[], index: number) => void;
     isDownloading?: boolean;
+    viewerRole?: "landlord" | "tenant";
 }
 
 export function MessageBubble({ 
@@ -47,18 +48,24 @@ export function MessageBubble({
     onDownloadImage, 
     onOpenF2F,
     onImageClick,
-    isDownloading 
+    isDownloading,
+    viewerRole = "landlord"
 }: MessageBubbleProps) {
     const isSystem = message.type === "system";
 
     if (isSystem) {
-        return <SystemMessage 
-            message={message} 
-            onConfirmPayment={onConfirmPayment} 
-            onDownloadImage={onDownloadImage}
-            onOpenF2F={onOpenF2F}
-            isDownloading={isDownloading}
-        />;
+        return (
+            <div className="flex w-full justify-center my-8 px-4">
+                <SystemMessage 
+                    message={message} 
+                    viewerRole={viewerRole}
+                    onConfirmPayment={onConfirmPayment} 
+                    onDownloadImage={onDownloadImage}
+                    onOpenF2F={onOpenF2F}
+                    isDownloading={isDownloading}
+                />
+            </div>
+        );
     }
 
     const hasMedia = message.isAlbum || message.messageType === "image";
@@ -226,14 +233,18 @@ function SystemMessage({
     onConfirmPayment, 
     onDownloadImage,
     onOpenF2F,
-    isDownloading 
+    isDownloading,
+    viewerRole
 }: { 
     message: UiMessage, 
     onConfirmPayment?: (id: string) => void,
     onDownloadImage?: (id: string, name: string) => void,
     onOpenF2F?: (message: UiMessage) => void,
-    isDownloading?: boolean
+    isDownloading?: boolean,
+    viewerRole?: "landlord" | "tenant"
 }) {
+    const isLandlord = viewerRole === "landlord";
+
     // Invoice - Shared Official Receipt with real-time fetching
     if (message.systemType === "invoice") {
         return (
@@ -241,7 +252,7 @@ function SystemMessage({
                 message={message} 
                 onDownload={onDownloadImage}
                 isDownloading={isDownloading}
-                role="landlord"
+                role={viewerRole}
             />
         );
     }
@@ -252,11 +263,11 @@ function SystemMessage({
             <NotificationCard
                 message={message}
                 icon={<HandCoins className="h-6 w-6 text-white" />}
-                title="In-Person Payment"
-                subtitle="Verification Required"
+                title={isLandlord ? "In-Person Payment" : "Payment Awaiting Collection"}
+                subtitle={isLandlord ? "Verification Required" : "Face-to-Face Transaction"}
                 variant="warning"
-                actionLabel="Confirm Payment"
-                onAction={() => onOpenF2F?.(message)}
+                actionLabel={isLandlord ? "Confirm Payment" : undefined}
+                onAction={isLandlord ? () => onOpenF2F?.(message) : undefined}
             />
         );
     }
@@ -267,8 +278,8 @@ function SystemMessage({
             <NotificationCard
                 message={message}
                 icon={<Bell className="h-6 w-6 text-white" />}
-                title="Payment Reminder"
-                subtitle="Notification Sent"
+                title={isLandlord ? "Payment Reminder" : "Payment Request"}
+                subtitle={isLandlord ? "Notification Sent" : "Action Required"}
                 variant="default"
             />
         );
@@ -281,7 +292,10 @@ function SystemMessage({
             <NotificationCard
                 message={message}
                 icon={isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />}
-                title={isRejected ? "Payment Rejected" : "Payment Confirmed"}
+                title={isRejected 
+                    ? (isLandlord ? "Payment Rejected" : "Payment Declined") 
+                    : (isLandlord ? "Payment Confirmed" : "Payment Received")
+                }
                 subtitle={isRejected ? "Action Logged" : "Transaction Complete"}
                 variant={isRejected ? "error" : "success"}
             />

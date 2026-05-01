@@ -82,13 +82,12 @@ export function OfficialReceipt({
     };
 
     return (
-        <div className="flex justify-center w-full my-8 px-4">
-            <motion.div 
-                id={`receipt-${message.id}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-[340px] bg-white text-slate-900 p-8 shadow-2xl border border-slate-200 font-mono relative overflow-hidden"
-            >
+        <motion.div 
+            id={`receipt-${message.id}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-[340px] bg-white text-slate-900 p-8 shadow-2xl border border-slate-200 font-mono relative overflow-hidden"
+        >
                 {/* Subtle paper texture effect */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
                     style={{ 
@@ -189,6 +188,5 @@ export function OfficialReceipt({
                     ))}
                 </div>
             </motion.div>
-        </div>
     );
 }
