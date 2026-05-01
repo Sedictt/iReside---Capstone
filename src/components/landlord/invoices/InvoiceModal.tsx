@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -19,10 +20,12 @@ export function InvoiceModal({
     invoiceId,
     onClose,
     onUpdated,
+    role = "landlord"
 }: {
     invoiceId: string | null;
     onClose: () => void;
     onUpdated: () => void;
+    role?: "landlord" | "tenant";
 }) {
     const [invoice, setInvoice] = useState<InvoiceDetail>(null);
     const [loading, setLoading] = useState(false);
@@ -43,7 +46,10 @@ export function InvoiceModal({
 
         const load = async () => {
             try {
-                const response = await fetch(`/api/landlord/invoices/${invoiceId}`, { cache: "no-store" });
+                const endpoint = role === "landlord" 
+                    ? `/api/landlord/invoices/${invoiceId}` 
+                    : `/api/tenant/payments/${invoiceId}`;
+                const response = await fetch(endpoint, { cache: "no-store" });
                 if (!response.ok) throw new Error();
                 const payload = await response.json();
                 if (alive) {
@@ -392,9 +398,10 @@ export function InvoiceModal({
                         )}
                     </div>
 
-                    {/* Right Column: Decisions Hub */}
-                    <div className="relative border-l border-white/5 bg-surface-1/40 backdrop-blur-xl overflow-y-auto custom-scrollbar-premium">
-                        <div className="space-y-6 p-8 pb-12">
+                    {/* Right Column: Decisions Hub (Hidden for Tenants) */}
+                    {role === "landlord" && (
+                        <div className="relative border-l border-white/5 bg-surface-1/40 backdrop-blur-xl overflow-y-auto custom-scrollbar-premium">
+                            <div className="space-y-6 p-8 pb-12">
                             {invoice && (
                                 <>
                                     {/* Verification Section */}
@@ -629,6 +636,33 @@ export function InvoiceModal({
                             )}
                         </div>
                     </div>
+                    )}
+
+                    {role === "tenant" && (
+                        <div className="relative border-l border-white/5 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center p-12 text-center">
+                            <div className="space-y-8">
+                                <div className="flex justify-center">
+                                    <div className="w-20 h-20 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+                                        <ShieldCheck className="w-10 h-10" />
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-2xl font-black text-text-high tracking-tight">Verified Statement</h3>
+                                    <p className="text-sm text-text-medium leading-relaxed max-w-[280px]">
+                                        This invoice has been officially logged in the iReside ledger. You can download a digital copy or pay through the checkout.
+                                    </p>
+                                </div>
+                                {invoice?.status !== 'paid' && (
+                                    <Link 
+                                        href={`/tenant/payments/${invoiceId}/checkout`}
+                                        className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
+                                    >
+                                        Proceed to Payment <ArrowUpRight className="w-5 h-5" />
+                                    </Link>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </motion.div>
 

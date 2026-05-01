@@ -25,6 +25,7 @@ interface MessageComposerProps {
     pendingAttachments: PendingAttachment[];
     removePendingAttachment: (id: string) => void;
     isUploadingFile: boolean;
+    isSending?: boolean;
     isOtherUserTyping: boolean;
     otherUserName?: string;
 }
@@ -37,6 +38,7 @@ export function MessageComposer({
     pendingAttachments,
     removePendingAttachment,
     isUploadingFile,
+    isSending = false,
     isOtherUserTyping,
     otherUserName
 }: MessageComposerProps) {
@@ -199,10 +201,10 @@ export function MessageComposer({
                         </button>
                         <button 
                             onClick={onSendMessage}
-                            disabled={(!messageInput.trim() && pendingAttachments.length === 0) || isUploadingFile}
+                            disabled={(!messageInput.trim() && pendingAttachments.length === 0) || isUploadingFile || isSending}
                             className={cn(
                                 "p-2.5 rounded-full transition-all flex items-center justify-center min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                                (messageInput.trim() || pendingAttachments.length > 0) && !isUploadingFile
+                                (messageInput.trim() || pendingAttachments.length > 0) && !isUploadingFile && !isSending
                                     ? "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95" 
                                     : "bg-surface-3 text-disabled"
                             )}

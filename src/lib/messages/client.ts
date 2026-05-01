@@ -39,6 +39,13 @@ export type ConversationMessage = {
     metadata: Record<string, unknown> | null;
     readAt: string | null;
     createdAt: string;
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    fileMimeType?: string;
+    attachments?: any[];
+    isAlbum?: boolean;
+    timestamp?: string;
 };
 
 export type UploadedConversationFile = {
@@ -59,6 +66,7 @@ export type UploadedConversationFile = {
         url: string;
         path: string;
     };
+    error?: string;
 };
 
 export type PaymentHistoryEntry = {

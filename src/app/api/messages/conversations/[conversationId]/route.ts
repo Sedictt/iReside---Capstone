@@ -61,48 +61,85 @@ export async function GET(
 
         const messagesWithSignedUrls = await Promise.all(
             (messages ?? []).map(async (message) => {
-                const rawMetadata = message.metadata;
-                if (!rawMetadata || typeof rawMetadata !== "object") {
+                let metadata: Record<string, unknown>;
+                
+                if (typeof message.metadata === "string") {
+                    try {
+                        metadata = JSON.parse(message.metadata);
+                    } catch {
+                        return message;
+                    }
+                } else if (message.metadata && typeof message.metadata === "object" && !Array.isArray(message.metadata)) {
+                    metadata = message.metadata as Record<string, unknown>;
+                } else {
                     return message;
                 }
 
-                const metadata = rawMetadata as Record<string, unknown>;
                 const filePath = typeof metadata.filePath === "string" ? metadata.filePath : null;
+                const attachments = Array.isArray(metadata.attachments) ? metadata.attachments : null;
 
-                if (!filePath) {
-                    return message;
+                if (!filePath && !attachments) {
+                    return { ...message, metadata: metadata as any };
                 }
 
                 const bucket = typeof metadata.bucket === "string" ? metadata.bucket : DEFAULT_FILES_BUCKET;
-                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-                    .from(bucket)
-                    .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
 
-                if (signedUrlError || !signedUrlData?.signedUrl) {
-                    return message;
+                // Handle single file
+                let updatedMetadata = { ...metadata };
+                if (filePath) {
+                    const { data: signedUrlData } = await supabase.storage
+                        .from(bucket)
+                        .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
+                    if (signedUrlData?.signedUrl) {
+                        updatedMetadata.fileUrl = signedUrlData.signedUrl;
+                    }
+                }
+
+                // Handle album attachments
+                if (attachments) {
+                    const updatedAttachments = await Promise.all(
+                        attachments.map(async (att: any) => {
+                            if (typeof att.filePath !== "string") return att;
+                            const { data: signedUrlData } = await supabase.storage
+                                .from(bucket)
+                                .createSignedUrl(att.filePath, SIGNED_URL_TTL_SECONDS);
+                            if (signedUrlData?.signedUrl) {
+                                return { ...att, fileUrl: signedUrlData.signedUrl };
+                            }
+                            return att;
+                        })
+                    );
+                    updatedMetadata.attachments = updatedAttachments;
                 }
 
                 return {
                     ...message,
-                    metadata: {
-                        ...metadata,
-                        fileUrl: signedUrlData.signedUrl,
-                    } as Json,
+                    metadata: updatedMetadata as Json,
                 };
             })
         );
 
-        const payload = messagesWithSignedUrls.map((message) => ({
-            id: message.id,
-            conversationId: message.conversation_id,
-            senderId: message.sender_id,
-            sender: profileMap.get(message.sender_id) ?? null,
-            type: message.type,
-            content: message.content,
-            metadata: message.metadata,
-            readAt: message.read_at,
-            createdAt: message.created_at,
-        }));
+        const payload = messagesWithSignedUrls.map((message) => {
+            const metadata = message.metadata as Record<string, unknown> | null;
+            return {
+                id: message.id,
+                conversationId: message.conversation_id,
+                senderId: message.sender_id,
+                sender: profileMap.get(message.sender_id) ?? null,
+                type: message.type,
+                content: message.content,
+                metadata: message.metadata,
+                readAt: message.read_at,
+                createdAt: message.created_at,
+                fileUrl: typeof metadata?.fileUrl === "string" ? metadata.fileUrl : undefined,
+                fileName: typeof metadata?.fileName === "string" ? metadata.fileName : undefined,
+                fileSize: typeof metadata?.fileSize === "number" ? metadata.fileSize : undefined,
+                fileMimeType: typeof (metadata?.fileMimeType ?? metadata?.mimeType) === "string" ? (metadata?.fileMimeType ?? metadata?.mimeType) : undefined,
+                isAlbum: Boolean(metadata?.isAlbum),
+                attachments: Array.isArray(metadata?.attachments) ? metadata.attachments : undefined,
+                timestamp: message.created_at,
+            };
+        });
 
         return NextResponse.json({ messages: payload });
     } catch (error) {
@@ -132,8 +169,8 @@ export async function POST(
     const content = (body.content ?? "").trim();
     const messageType = body.type ?? "text";
 
-    if (!content) {
-        return NextResponse.json({ error: "Message content is required." }, { status: 400 });
+    if (!content && (messageType === "text" || messageType === "system")) {
+        return NextResponse.json({ error: "Message content is required for text messages." }, { status: 400 });
     }
 
     if (!(["text", "system", "image", "file"] as MessageType[]).includes(messageType)) {
@@ -200,6 +237,12 @@ export async function POST(
                     metadata: inserted.metadata,
                     readAt: inserted.read_at,
                     createdAt: inserted.created_at,
+                    fileUrl: isJsonObject(inserted.metadata) && typeof inserted.metadata.fileUrl === "string" ? inserted.metadata.fileUrl : undefined,
+                    fileName: isJsonObject(inserted.metadata) && typeof inserted.metadata.fileName === "string" ? inserted.metadata.fileName : undefined,
+                    fileSize: isJsonObject(inserted.metadata) && typeof inserted.metadata.fileSize === "number" ? inserted.metadata.fileSize : undefined,
+                    fileMimeType: isJsonObject(inserted.metadata) && typeof (inserted.metadata.fileMimeType ?? inserted.metadata.mimeType) === "string" ? (inserted.metadata.fileMimeType ?? inserted.metadata.mimeType) : undefined,
+                    isAlbum: isJsonObject(inserted.metadata) && Boolean(inserted.metadata.isAlbum),
+                    attachments: isJsonObject(inserted.metadata) && Array.isArray(inserted.metadata.attachments) ? inserted.metadata.attachments : undefined,
                 },
             },
             { status: 201 }

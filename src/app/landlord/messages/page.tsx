@@ -281,6 +281,7 @@ export default function MessagesPage() {
     const [isMessagesLoading, setIsMessagesLoading] = useState(false);
     const [pendingAttachments, setPendingAttachments] = useState<PendingAttachmentType[]>([]);
     const isUploadingFile = pendingAttachments.some(a => a.status === 'uploading');
+    const [isSending, setIsSending] = useState(false);
     const [fileUploadError, setFileUploadError] = useState<string | null>(null);
     const [isComposerDragOver, setIsComposerDragOver] = useState(false);
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
@@ -519,15 +520,18 @@ export default function MessagesPage() {
     const handleMessageInputChange = (val: string) => {
         setMessageInput(val);
         if (activeChannelRef.current && user?.id && activeConversationId) {
-            activeChannelRef.current.send({
-                type: "broadcast",
-                event: "typing",
-                payload: { conversationId: activeConversationId, userId: user.id, isTyping: val.length > 0 }
-            });
+            // Only send over WebSocket if the channel is fully joined to avoid REST fallback warnings
+            if ((activeChannelRef.current as any).state === "joined") {
+                activeChannelRef.current.send({
+                    type: "broadcast",
+                    event: "typing",
+                    payload: { conversationId: activeConversationId, userId: user.id, isTyping: val.length > 0 }
+                });
+            }
 
             if (typingStopTimeoutRef.current) window.clearTimeout(typingStopTimeoutRef.current);
             typingStopTimeoutRef.current = window.setTimeout(() => {
-                if (activeChannelRef.current) {
+                if (activeChannelRef.current && (activeChannelRef.current as any).state === "joined") {
                     activeChannelRef.current.send({
                         type: "broadcast",
                         event: "typing",
@@ -682,7 +686,12 @@ export default function MessagesPage() {
     }, []);
 
     const mapMessageToUi = (message: ConversationMessage): UiMessageType => {
-        const metadata = (message.metadata && typeof message.metadata === "object") ? (message.metadata as Record<string, unknown>) : null;
+        let metadata: Record<string, unknown> | null = null;
+        if (typeof message.metadata === "string") {
+            try { metadata = JSON.parse(message.metadata); } catch { metadata = null; }
+        } else if (message.metadata && typeof message.metadata === "object") {
+            metadata = message.metadata as Record<string, unknown>;
+        }
         const isOwn = user?.id === message.senderId;
         const redactedContent = typeof metadata?.redactedContent === "string" ? metadata.redactedContent : message.content;
         const isRedacted = Boolean(metadata?.isRedacted);
@@ -740,6 +749,19 @@ export default function MessagesPage() {
             unit: typeof metadata?.unit === "string" ? metadata.unit : undefined,
             amount: typeof metadata?.amount === "string" ? metadata.amount : (typeof metadata?.paymentAmount === "string" ? metadata.paymentAmount : undefined),
             description: typeof metadata?.description === "string" ? metadata.description : undefined,
+            attachments: Array.isArray(message.attachments || metadata?.attachments) ? (message.attachments || metadata!.attachments as any[]).map((att: any) => ({
+                id: att.id,
+                type: att.type || (isOwn ? "landlord" : "tenant"),
+                messageType: att.messageType || "image",
+                content: "",
+                fileUrl: att.fileUrl,
+                fileName: att.fileName,
+                fileSize: att.fileSize,
+                fileMimeType: att.fileMimeType || att.mimeType,
+                timestamp: att.timestamp,
+                createdAt: att.createdAt
+            })) : undefined,
+            isAlbum: Boolean(message.isAlbum ?? metadata?.isAlbum),
         };
     };
 
@@ -874,15 +896,21 @@ export default function MessagesPage() {
     };
 
     const handleSendMessage = async () => {
+        if (isSending) return;
         const textMessage = messageInput.trim();
         const hasText = textMessage.length > 0;
         const hasAttachment = pendingAttachments.length > 0;
         if ((!hasText && !hasAttachment) || !activeConversationId) return;
+
+        setIsSending(true);
         shouldStickToBottomRef.current = true;
 
-        if (activeChannelRef.current && user?.id) {
+        if (activeChannelRef.current && user?.id && (activeChannelRef.current as any).state === "joined") {
             void activeChannelRef.current.send({ type: "broadcast", event: "typing", payload: { conversationId: activeConversationId, userId: user.id, isTyping: false } });
         }
+
+        // Store original input for use as caption in albums
+        const originalInput = messageInput;
 
         if (hasText) {
             const optimisticId = `local-${Date.now()}`;
@@ -924,7 +952,7 @@ export default function MessagesPage() {
                     filePath: a.path,
                     fileName: a.file.name,
                     fileSize: a.file.size,
-                    fileMimeType: a.file.type,
+                    mimeType: a.file.type,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     createdAt: new Date().toISOString()
                 }));
@@ -932,29 +960,28 @@ export default function MessagesPage() {
                 try {
                     const created = await sendConversationMessage(
                         activeConversationId, 
-                        messageInput.trim(), // Use input as caption
+                        originalInput.trim() || "", // No default caption
                         { attachments, isAlbum: true },
                         "image"
                     );
                     const mapped = mapMessageToUi({ ...created, sender: null });
                     setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
-                    setMessageInput("");
+                    setMessageInput(""); // Clear again just in case it was only an album
                     clearPendingAttachments();
                 } catch (error) { setMessagesError("Failed to send album."); }
             } else {
-                // Individual uploads already happened? No, we used noMessage=true.
-                // We need to send messages for these files now.
+                // Send individually
                 for (const att of uploaded) {
                     try {
                         const created = await sendConversationMessage(
                             activeConversationId,
                             att.file.name,
-                            { 
-                                fileName: att.file.name, 
-                                fileSize: att.file.size, 
-                                mimeType: att.file.type, 
+                            {
+                                fileName: att.file.name,
+                                fileSize: att.file.size,
+                                mimeType: att.file.type,
                                 filePath: att.path,
-                                fileUrl: att.url 
+                                fileUrl: att.url
                             },
                             att.isImage ? "image" : "file"
                         );
@@ -963,15 +990,11 @@ export default function MessagesPage() {
                     } catch (err) { setMessagesError(`Failed to send ${att.file.name}`); }
                 }
                 clearPendingAttachments();
-                if (hasText) {
-                    // Send text message separately if not already sent
-                    // (Actually we might want to skip text if it was used as caption, 
-                    // but here text is separate from individual images in current logic)
-                }
             }
         }
         void refreshConversations();
         void refreshMessages(activeConversationId);
+        setIsSending(false);
     };
 
     const handleFileUpload = (files: File[]) => queueSelectedFiles(files);
@@ -1132,6 +1155,7 @@ export default function MessagesPage() {
                     pendingAttachments={pendingAttachments}
                     removePendingAttachment={removePendingAttachment}
                     isUploadingFile={isUploadingFile}
+                    isSending={isSending}
                     isOtherUserTyping={isOtherUserTyping}
                     otherUserName={displayContact.name}
                 />

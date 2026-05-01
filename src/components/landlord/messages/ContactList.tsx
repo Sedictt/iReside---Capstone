@@ -21,6 +21,7 @@ interface ContactListProps {
     handleStartConversation: (id: string) => void;
     conversationsError: string | null;
     setConversationsError: (val: string | null) => void;
+    dashboardHref?: string;
 }
 
 export function ContactList({
@@ -35,7 +36,8 @@ export function ContactList({
     userSearchError,
     handleStartConversation,
     conversationsError,
-    setConversationsError
+    setConversationsError,
+    dashboardHref = "/landlord/dashboard"
 }: ContactListProps) {
     return (
         <div className="flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-[2rem] border border-border bg-surface-1 shadow-sm lg:w-96">
@@ -44,7 +46,7 @@ export function ContactList({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Link
-                            href="/landlord/dashboard"
+                            href={dashboardHref}
                             className="rounded-xl border border-border bg-surface-2 p-2 transition-all hover:bg-surface-3 hover:scale-105 active:scale-95"
                             title="Back to Dashboard"
                         >

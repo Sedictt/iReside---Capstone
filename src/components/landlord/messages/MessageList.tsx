@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 interface MessageListProps {
     messages: UiMessage[];
     userId?: string;
+    viewerRole?: "landlord" | "tenant";
     isMessagesLoading: boolean;
     onConfirmPayment: (id: string) => void;
     onDownloadImage: (id: string, name: string) => void;
@@ -22,6 +23,7 @@ interface MessageListProps {
 export function MessageList({
     messages,
     userId,
+    viewerRole = "landlord",
     isMessagesLoading,
     onConfirmPayment,
     onDownloadImage,
@@ -91,7 +93,8 @@ export function MessageList({
                             <MessageBubble
                                 key={msg.id}
                                 message={msg}
-                                isMe={msg.type === "landlord"} // In landlord view, landlord is 'me'
+                                isMe={msg.type === viewerRole}
+                                viewerRole={viewerRole}
                                 onConfirmPayment={onConfirmPayment}
                                 onDownloadImage={onDownloadImage}
                                 onOpenF2F={onOpenF2F}
