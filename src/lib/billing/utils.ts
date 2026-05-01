@@ -94,8 +94,13 @@ export const getInvoiceStatus = ({
     dueDate: string;
     balanceRemaining?: number | null;
 }): InvoiceStatus => {
-    if (status === "completed" || (balanceRemaining ?? 0) <= 0) return "paid";
+    // 1. Explicit terminal states from DB status column
+    if (status === "completed") return "paid";
+    if (status === "failed") return "failed";
+    if (status === "refunded") return "refunded";
 
+    // 2. Workflow states should take priority over balance checks
+    // This ensures that "under_review" doesn't become "paid" just because balance is 0
     if (workflowStatus === "reminder_sent") return "reminder_sent";
     if (workflowStatus === "intent_submitted") return "intent_submitted";
     if (workflowStatus === "under_review") return "under_review";
@@ -103,10 +108,14 @@ export const getInvoiceStatus = ({
     if (workflowStatus === "confirmed") return "confirmed";
     if (workflowStatus === "rejected") return "rejected";
     if (workflowStatus === "receipted") return "paid";
-    if (status === "processing") return "processing";
-    if (status === "failed") return "failed";
-    if (status === "refunded") return "refunded";
 
+    // 3. Balance-based "paid" status
+    if ((balanceRemaining ?? 0) <= 0) return "paid";
+
+    // 4. Processing state
+    if (status === "processing") return "processing";
+
+    // 5. Overdue check
     const due = new Date(dueDate);
     if (!Number.isNaN(due.getTime()) && due.getTime() < Date.now()) {
         return "overdue";

@@ -585,9 +585,7 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
         payment.status === "overdue" ||
         payment.status === "reminder_sent" ||
         payment.status === "intent_submitted" ||
-        payment.status === "under_review" ||
-        payment.status === "awaiting_in_person" ||
-        payment.status === "confirmed",
+        payment.status === "rejected",
     );
     const nextPayment = actionable[0] ?? null;
     const history = mapped.filter((payment) => payment.id !== nextPayment?.id);

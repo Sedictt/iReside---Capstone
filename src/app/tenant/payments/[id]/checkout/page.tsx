@@ -561,18 +561,23 @@ export default function CheckoutPage() {
         return <div className="rounded-3xl border border-border bg-card p-8 text-center text-muted-foreground">Invoice unavailable.</div>;
     }
 
-    if (submitted || invoice.status === "paid") {
+    if (submitted || ["paid", "under_review", "awaiting_in_person", "confirmed", "receipted"].includes(invoice.status)) {
+        const isSettled = ["paid", "receipted"].includes(invoice.status);
+        const isProcessing = ["under_review", "awaiting_in_person", "confirmed"].includes(invoice.status);
+
         return (
             <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full" />
-                <CheckCircle2 className="mx-auto mb-5 h-12 w-12 text-emerald-400" />
+                <CheckCircle2 className={cn("mx-auto mb-5 h-12 w-12", isSettled ? "text-emerald-400" : "text-amber-400")} />
                 <h1 className="text-3xl font-black text-foreground">
-                    {invoice.status === "paid" ? "Invoice already paid" : "Payment submitted for review"}
+                    {isSettled ? "Invoice already paid" : "Payment submitted for review"}
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    {invoice.status === "paid" 
+                    {isSettled
                         ? "This transaction has been successfully settled and confirmed by your landlord. You can view the receipt in your payment history."
-                        : "Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment."}
+                        : invoice.status === "awaiting_in_person"
+                            ? "You've notified your landlord of an in-person payment. Once they confirm receipt of the cash, this invoice will be marked as paid."
+                            : "Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment."}
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
                     <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-bold text-foreground transition hover:bg-muted">Back to payments</Link>
