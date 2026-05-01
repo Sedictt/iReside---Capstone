@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
     FileText,
     Download,
@@ -15,51 +16,54 @@ import {
     FileSignature,
     Key,
     ScrollText,
-    Loader2
+    Loader2,
+    Building2,
+    UserCircle,
+    Phone,
+    MessageSquare,
+    Info,
+    ArrowUpRight,
+    History,
+    LayoutDashboard,
+    Maximize,
+    Bed,
+    Bath,
+    Layers,
+    Coffee,
+    Wind,
+    Shield,
+    Trash2,
+    LogOut,
+    ArrowRightLeft,
+    CheckCircle,
+    FileSearch,
+    Plus
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import { LeaseTour } from "@/components/tenant/LeaseTour";
+import LeaseModal from "@/components/tenant/LeaseModal";
+import LeaseRenewalRequest from "@/components/tenant/LeaseRenewalRequest";
+import { LeaseData } from "@/types/lease";
 
-type LeaseData = {
-    id: string;
-    status: string;
-    start_date: string;
-    end_date: string;
-    monthly_rent: number;
-    security_deposit: number;
-    terms: any;
-    signed_at: string;
-    unit: {
-        id: string;
-        name: string;
-        property: {
-            id: string;
-            name: string;
-            address: string;
-            images: string[];
-            house_rules: string[];
-        }
-    };
-    landlord: {
-        id: string;
-        full_name: string;
-        avatar_url: string;
-        phone: string;
-    };
-};
+type TabId = "agreement" | "property" | "services";
 
-export default function LeasesPage() {
+function LeaseHubContent() {
+    const searchParams = useSearchParams();
+    const isPreview = searchParams.get("preview") === "true";
     const [lease, setLease] = useState<LeaseData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<TabId>("agreement");
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
         const fetchData = async () => {
             try {
-                const res = await fetch("/api/tenant/lease", { cache: "no-store"});
+                const res = await fetch("/api/tenant/lease", { cache: "no-store" });
                 if (!res.ok) throw new Error("Failed to load lease");
                 const payload = await res.json();
                 if (isMounted && payload.lease) setLease(payload.lease);
@@ -88,11 +92,11 @@ export default function LeasesPage() {
         const start = new Date(lease.start_date).getTime();
         const end = new Date(lease.end_date).getTime();
         const now = Date.now();
-        
+
         const totalMs = end - start;
         const elapsedMs = Math.max(0, Math.min(now - start, totalMs));
         const remainingMs = Math.max(0, end - now);
-        
+
         const totalDays = Math.max(1, Math.round(totalMs / 86400000));
         const daysRemaining = Math.max(0, Math.round(remainingMs / 86400000));
         const percent = Math.min(100, (elapsedMs / totalMs) * 100);
@@ -103,26 +107,26 @@ export default function LeasesPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] opacity-70 space-y-4 text-foreground">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Fetching Lease Data...</span>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-xs font-black uppercase tracking-widest">Validating Lease Registry...</p>
             </div>
         );
     }
 
     if (!lease) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] max-w-2xl mx-auto text-center space-y-6">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-2xl mx-auto text-center space-y-6">
                 <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                    <FileText className="w-10 h-10" />
+                    <FileSearch className="w-10 h-10" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-foreground tracking-tight">No Active Lease Found</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tight">Registry Empty</h2>
                     <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
-                        You do not currently have an active lease on file in the system. If you believe this is an error, please contact your landlord.
+                        We couldn't find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
                     </p>
                 </div>
-                <Link href="/search" className="px-6 py-3 bg-primary text-primary-foreground font-bold uppercase tracking-widest text-[10px] rounded-2xl">
+                <Link href="/search" className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-primary/20 transition-all">
                     Discover Properties
                 </Link>
             </div>
@@ -131,281 +135,408 @@ export default function LeasesPage() {
 
     const imgUrl = lease.unit.property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2000&auto=format&fit=crop";
     const shortHash = lease.id.replace(/-/g, "").substring(0, 8).toUpperCase();
-
     const isEligibleForRenewal = progressData.daysRemaining <= 90 && progressData.daysRemaining > 0;
 
+    const tabs: { id: TabId; label: string; icon: any }[] = [
+        { id: "agreement", label: "Agreement", icon: ScrollText },
+        { id: "property", label: "The Residence", icon: Home },
+        { id: "services", label: "Governance", icon: Shield },
+    ];
+
     return (
-        <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
             <LeaseTour />
-            {/* Header */}
-            <div>
-                <h1 className="text-4xl md:text-5xl font-display text-foreground mb-3 mt-4">Smart Lease Hub</h1>
-                <p className="text-muted-foreground text-sm md:text-base max-w-2xl">
-                    Your digital and cryptographic lease agreement vault. View contract terms, download authorized copies, and track your lease lifecycle.
-                </p>
+            
+            {/* Consistent Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-foreground tracking-tighter">
+                        Lease Hub
+                    </h1>
+                    <p className="text-muted-foreground font-medium text-sm max-w-2xl">
+                        Your digital source of truth for your residency, agreement terms, and unit specifications.
+                    </p>
+                </div>
+
+                <div className="bg-card border border-border rounded-[1.5rem] p-3 shadow-sm flex items-center gap-6 ring-1 ring-primary/5">
+                    <div className="px-1 border-r border-border/50">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Contract Status</p>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <p className="text-sm font-black text-foreground uppercase tracking-wider">Active</p>
+                        </div>
+                    </div>
+                    <div className="px-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Lease Hash</p>
+                        <p className="text-sm font-mono text-muted-foreground">0x{shortHash}</p>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Main Content (Left) */}
-                <div className="xl:col-span-2 space-y-8">
-
-                    {/* Active Lease Hero Card */}
-                    <div
-                        className="relative rounded-3xl overflow-hidden shadow-[0_24px_60px_-28px_rgba(15,23,42,0.28)] group border border-border mt-2 bg-card"
-                        data-tour-id="tour-lease-summary"
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-1 p-1 bg-muted/30 border border-border rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                            "flex items-center gap-2 px-7 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
+                            activeTab === tab.id 
+                                ? "bg-card text-primary shadow-sm border border-border" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
                     >
-                        {/* Background Image & Overlay */}
-                        <div className="absolute inset-0 z-0">
-                            <Image
-                                src={imgUrl}
-                                alt="Property"
-                                fill
-                                className="object-cover opacity-30 group-hover:scale-105 group-hover:opacity-40 transition-all duration-700"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-                            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
-                        </div>
+                        <tab.icon className="w-4 h-4" />
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
-                        {/* Content */}
-                        <div className="relative z-10 p-8 md:p-10 flex flex-col justify-between min-h-[380px]">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <div className={cn(
-                                        "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest backdrop-blur-md mb-6",
-                                        lease.status === "active" 
-                                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                                            : "bg-amber-500/20 border-amber-500/30 text-amber-400"
-                                    )}>
-                                        <div className={cn(
-                                            "w-1.5 h-1.5 rounded-full",
-                                            lease.status === "active" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-                                        )} />
-                                        {lease.status} Smart Contract
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-400">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                    
+                    {/* Main Content Column */}
+                    <div className="lg:col-span-3 space-y-8">
+                        
+                        {activeTab === "agreement" && (
+                            <div className="space-y-8">
+                                {/* Hero Card - The Agreement */}
+                                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border min-h-[300px] flex flex-col justify-between">
+                                    <div className="absolute inset-0 z-0">
+                                        <Image
+                                            src={imgUrl}
+                                            alt="Property"
+                                            fill
+                                            className="object-cover opacity-[0.08] grayscale"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/90 to-transparent" />
                                     </div>
-                                    <h2 className="text-3xl md:text-5xl font-display text-slate-950 mb-2 tracking-tight">
-                                        {lease.unit.property.name}
-                                    </h2>
-                                    <p className="text-slate-700 flex items-center gap-2 text-sm font-semibold">
-                                        <MapPin className="w-4 h-4" /> {lease.unit.name ? `Unit ${lease.unit.name}, ` : ""}{lease.unit.property.address}
-                                    </p>
-                                </div>
 
-                                <div className="text-right hidden sm:block">
-                                    <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1">Contract Hash</p>
-                                    <p className="font-mono text-xs text-slate-400 truncate">0x{shortHash}</p>
-                                </div>
-                            </div>
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div>
+                                                <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">Source of Truth</p>
+                                                <h2 className="text-4xl font-black text-foreground tracking-tighter">Master Lease Agreement</h2>
+                                                <p className="text-muted-foreground font-medium text-sm mt-1">{lease.unit.property.name} • Unit {lease.unit.name}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button className="h-10 px-4 rounded-xl border border-border bg-background text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2 shadow-sm">
+                                                    <Download className="w-3 h-3" /> Download PDF
+                                                </button>
+                                                <button 
+                                                    onClick={() => setIsModalOpen(true)}
+                                                    className="h-10 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/10"
+                                                >
+                                                    <FileText className="w-3 h-3" /> View Lease
+                                                </button>
+                                            </div>
+                                        </div>
 
-                            <div className="mt-12 pt-8 border-t border-white/40 flex flex-col sm:flex-row gap-6 sm:items-center justify-between">
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                                    <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2">Monthly Rent</p>
-                                        <p className="text-2xl font-display text-slate-950 tabular-nums border-b border-primary/30 inline-block">₱{formatCurrency(lease.monthly_rent)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2">Security Deposit</p>
-                                        <p className="text-2xl font-display text-slate-950 tabular-nums">₱{formatCurrency(lease.security_deposit)}</p>
-                                    </div>
-                                    <div className="hidden md:block">
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2">Payment Cycle</p>
-                                        <p className="text-2xl font-display text-slate-950">1st of Month</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button disabled className="h-12 px-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors text-sm font-bold flex items-center gap-2 flex-shrink-0">
-                                        <FileSignature className="w-4 h-4" /> Signatures
-                                    </button>
-                                    <button disabled className="h-12 w-12 rounded-full border border-white/60 bg-white/70 disabled:opacity-50 hover:bg-white flex items-center justify-center text-slate-700 backdrop-blur-md transition-colors flex-shrink-0">
-                                        <Download className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Key Terms Highlights */}
-                    <div data-tour-id="tour-lease-terms">
-                        <h3 className="text-xl font-display text-foreground mb-4 flex items-center gap-2">
-                            <ScrollText className="w-5 h-5 text-primary" /> Key Provisions
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-5 rounded-3xl bg-card border border-border/50 hover:bg-muted/30 transition-colors group">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                                    <ShieldCheck className="w-5 h-5" />
-                                </div>
-                                <h4 className="text-sm font-bold text-foreground mb-1">Included Utilities</h4>
-                                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                                    {lease.terms?.utilitiesDescription || "Water and Internet are excluded unless specified. Electricity is sub-metered."}
-                                </p>
-                            </div>
-                            <div className="p-5 rounded-3xl bg-card border border-border/50 hover:bg-muted/30 transition-colors group">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                                    <Home className="w-5 h-5" />
-                                </div>
-                                <h4 className="text-sm font-bold text-foreground mb-1">Maintenance</h4>
-                                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                                    Landlord covers structural and major appliance repairs. Tenant handles minor wear & tear.
-                                </p>
-                            </div>
-                            <div className="p-5 rounded-3xl bg-card border border-border/50 hover:bg-muted/30 transition-colors group">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                                    <Key className="w-5 h-5" />
-                                </div>
-                                <h4 className="text-sm font-bold text-foreground mb-1">Subletting & Guests</h4>
-                                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                                    No subletting permitted. Guests staying over 14 consecutive days require landlord approval.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Document Vault */}
-                    <div data-tour-id="tour-lease-vault">
-                        <div className="flex justify-between items-end mb-4">
-                            <h3 className="text-xl font-display text-foreground flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-primary" /> Document Vault
-                            </h3>
-                            <button className="text-[10px] font-bold tracking-widest text-primary uppercase hover:text-foreground transition-colors">
-                                View All
-                            </button>
-                        </div>
-                        <div className="rounded-3xl border border-border/50 bg-card overflow-hidden shadow-xl shadow-black/20">
-                            <div className="divide-y divide-border/50">
-                                {[
-                                    { title: "Master Lease Agreement", date: formatDate(lease.signed_at || lease.start_date), type: "Contract", status: "Signed" },
-                                    { title: "Move-In Condition Report", date: formatDate(lease.start_date), type: "Report", status: "Verified", isNew: progressData.dayCount < 7 },
-                                    { title: "Building Rules & Regulations", date: formatDate(lease.signed_at || lease.start_date), type: "Addendum", status: "Acknowledged" },
-                                    isEligibleForRenewal ? { title: "Lease Renewal Option Notice", date: formatDate(new Date().toISOString()), type: "Notice", status: "Action Required", isNew: true } : null
-                                ].filter(Boolean).map((doc: any, i) => (
-                                    <div key={i} className="p-5 flex items-center justify-between hover:bg-muted/25 transition-colors group cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative h-12 w-12 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-colors group-hover:border-primary/20 shadow-sm">
-                                                <FileText className="w-5 h-5" />
-                                                {doc.isNew && <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background animate-pulse" />}
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Start Date</p>
+                                                <p className="text-base font-black text-foreground">{formatDate(lease.start_date)}</p>
                                             </div>
                                             <div>
-                                                <p className="font-medium text-foreground group-hover:text-primary transition-colors flex items-center gap-2 text-sm md:text-base">
-                                                    {doc.title}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">{doc.date} • {doc.type}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">End Date</p>
+                                                <p className="text-base font-black text-foreground">{formatDate(lease.end_date)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Monthly Rent</p>
+                                                <p className="text-base font-black text-primary">{formatCurrency(lease.monthly_rent)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Security Deposit</p>
+                                                <p className="text-base font-black text-foreground">{formatCurrency(lease.security_deposit)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="relative z-10 mt-8 pt-6 border-t border-border/50 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                                <CheckCircle2 className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-foreground">Legally Signed</p>
+                                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Signed on {formatDate(lease.signed_at || lease.start_date)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">Encrypted & Stored in Vault</p>
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Lease Lifecycle Section */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <div className="md:col-span-2 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden flex flex-col justify-center">
+                                        <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
+                                            <Clock className="w-24 h-24" />
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Residency Lifecycle</p>
+                                        
+                                        <div className="space-y-8">
+                                            <div className="relative">
+                                                <div className="h-4 w-full bg-muted rounded-full overflow-hidden border border-border">
+                                                    <div 
+                                                        className="h-full bg-primary transition-all duration-1000 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+                                                        style={{ width: `${progressData.percent}%` }}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between items-center mt-3">
+                                                    <p className="text-[10px] font-black text-foreground uppercase tracking-widest">Day {progressData.dayCount}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="w-3 h-3 text-primary" />
+                                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">{progressData.daysRemaining} Days Remaining</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-8 items-center pt-4 border-t border-border/50">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                                                        <CheckCircle className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-in Verified</p>
+                                                        <p className="text-sm font-black text-foreground">{formatDate(lease.start_date)}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                                                        <History className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-out Target</p>
+                                                        <p className="text-sm font-black text-foreground">{formatDate(lease.end_date)}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-6">
-                                            <div className={cn(
-                                                "hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border",
-                                                doc.status === "Signed" || doc.status === "Verified" || doc.status === "Acknowledged"
-                                                        ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
-                                                        : "bg-amber-500/10 text-amber-700 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.12)]"
-                                            )}>
-                                                {doc.status === "Signed" || doc.status === "Verified" || doc.status === "Acknowledged" ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                                                {doc.status}
+                                    </div>
+
+                                    <div className="md:col-span-1">
+                                        <LeaseRenewalRequest daysRemaining={progressData.daysRemaining} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "property" && (
+                            <div className="space-y-8">
+                                {/* Unit Configuration */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
+                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
+                                            <Building2 className="w-32 h-32" />
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-4">Unit Specifications</p>
+                                        <div className="grid grid-cols-2 gap-y-8">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Maximize className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Floor Area</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.sqft || '35'} SQFT</p>
+                                                </div>
                                             </div>
-                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
-                                                    <button className="p-2 text-muted-foreground hover:text-foreground bg-background border border-border rounded-xl hover:border-border transition-all hover:bg-muted">
-                                                    <Download className="w-4 h-4" />
-                                                </button>
-                                                    <button className="p-2 text-muted-foreground hover:text-foreground bg-background border border-border rounded-xl hover:border-border transition-all hover:bg-muted">
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Layers className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Level</p>
+                                                    <p className="text-base font-black text-foreground">Floor {lease.unit.floor}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Bed className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bedrooms</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.beds} Bedroom</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Bath className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bathrooms</p>
+                                                    <p className="text-base font-black text-foreground">{lease.unit.baths} Private</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
 
-                </div>
-
-                {/* Sidebar (Right) */}
-                <div className="space-y-6">
-
-                    {/* Timeline & Renewal Card */}
-                    <div className="rounded-3xl border border-border/60 bg-card relative overflow-hidden shadow-[0_20px_50px_-28px_rgba(15,23,42,0.18)] pt-6 pb-4 px-6" data-tour-id="tour-lease-timeline">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/80 via-primary/40 to-transparent" />
-                        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-40 w-40 rounded-full bg-primary/6 blur-3xl pointer-events-none" />
-
-                        <h3 className="text-lg font-display text-foreground mb-6">Lease Timeline</h3>
-
-                        <div className="relative mb-8">
-                            {/* Start/End labels */}
-                            <div className="flex justify-between items-end mb-3">
-                                <div>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Start Date</p>
-                                    <p className="font-mono text-xs text-foreground">{formatDate(lease.start_date)}</p>
+                                    <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
+                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
+                                            <Coffee className="w-32 h-32" />
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-4">Amenities Access</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {lease.unit.property.amenities.length > 0 ? (
+                                                lease.unit.property.amenities.map((amenity, i) => (
+                                                    <span key={i} className="px-4 py-2 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border">
+                                                        {amenity}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <p className="text-xs text-muted-foreground italic">Standard property access included.</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">End Date</p>
-                                    <p className="font-mono text-xs text-foreground">{formatDate(lease.end_date)}</p>
+
+                                {/* House Rules Section */}
+                                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border">
+                                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Building Regulations</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                                        {lease.unit.property.house_rules.length > 0 ? (
+                                            lease.unit.property.house_rules.map((rule, i) => (
+                                                <div key={i} className="flex items-start gap-4 group">
+                                                    <div className="w-6 h-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-all">
+                                                        <p className="text-[10px] font-black">{i + 1}</p>
+                                                    </div>
+                                                    <p className="text-xs font-bold text-foreground leading-relaxed">{rule}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-xs text-muted-foreground italic">Refer to the master lease for building-specific guidelines.</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+                        )}
 
-                            {/* Progress bar */}
-                            <div className="h-3 w-full bg-muted/80 rounded-full overflow-hidden border border-border relative">
-                                <div className="h-full bg-gradient-to-r from-primary/55 to-primary rounded-full relative transition-all duration-1000" style={{ width: `${progressData.percent}%` }}>
-                                    <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/50" />
+                        {activeTab === "services" && (
+                            <div className="space-y-12">
+                                {/* Service Requests Grid */}
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between px-1">
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Operational Requests</h3>
+                                        <div className="h-px flex-1 bg-border/50 mx-6 hidden md:block" />
+                                        <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                                            <Shield className="w-3 h-3" /> Managed by Protocol
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                         {/* Move Out Request Wrapper */}
+                                         <div className="lg:col-span-1">
+                                             <MoveOutRequest variant="hub" />
+                                         </div>
+
+                                         {/* Unit Transfer Promo */}
+                                         <div className="lg:col-span-1 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-primary/30 transition-all relative overflow-hidden h-full">
+                                             <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
+                                                 <ArrowRightLeft className="w-16 h-16" />
+                                             </div>
+                                             <div className="space-y-6">
+                                                 <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600">
+                                                     <ArrowRightLeft className="w-6 h-6" />
+                                                 </div>
+                                                 <div>
+                                                     <h4 className="text-lg font-black text-foreground tracking-tight">Unit Transfer</h4>
+                                                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                                                         Looking for a different floor, size, or view? Request a move within the same property.
+                                                     </p>
+                                                 </div>
+                                             </div>
+                                             <button className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-secondary transition-all flex items-center justify-center gap-2">
+                                                 Check Availability <ArrowUpRight className="w-4 h-4" />
+                                             </button>
+                                         </div>
+                                     </div>
                                 </div>
-                            </div>
-                            <div className="flex justify-between items-center mt-3">
-                                <span className={cn(
-                                    "px-2.5 py-1 rounded-md border text-[10px] font-bold tracking-wider",
-                                    lease.status === "active" ? "bg-primary/10 border-primary/20 text-primary" : "bg-red-500/10 border-red-500/20 text-red-600"
-                                )}>
-                                    {lease.status === "active" ? `DAY ${progressData.dayCount}` : lease.status.toUpperCase()}
-                                </span>
-                                <span className="text-sm font-medium text-muted-foreground">
-                                    <strong className="text-foreground">{progressData.daysRemaining} days</strong> remaining
-                                </span>
-                            </div>
-                        </div>
 
-                        {isEligibleForRenewal && (
-                            <div className="p-4 rounded-2xl bg-primary/8 border border-primary/20 mb-2 text-center group relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                                <p className="text-xs font-medium text-primary/90 mb-3">You are eligible to renew your lease.</p>
-                                <button className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:brightness-105 transition-all shadow-sm">
-                                    View Renewal Proposal
-                                </button>
+                                {/* Management Support Card */}
+                                <div className="bg-card border border-border rounded-[3rem] p-12 shadow-sm ring-1 ring-border relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-transparent opacity-80" />
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40" />
+                                    
+                                    <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
+                                        <div 
+                                            className="w-28 h-28 rounded-full border-4 border-card mx-auto overflow-hidden shadow-2xl ring-4 ring-primary/5 mb-8"
+                                            style={{ backgroundColor: lease.landlord?.avatar_bg_color || '#171717' }}
+                                        >
+                                            <Image
+                                                src={lease.landlord?.avatar_url || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"}
+                                                alt="Landlord"
+                                                width={112}
+                                                height={112}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                            />
+                                        </div>
+                                        
+                                        <div className="space-y-4 mb-10">
+                                            <div>
+                                                <h3 className="text-3xl font-black text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
+                                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-2 flex items-center justify-center gap-2">
+                                                    <ShieldCheck className="w-4 h-4" /> Landlord
+                                                </p>
+                                            </div>
+                                            <p className="text-base text-muted-foreground leading-relaxed">
+                                                Have a question about your unit or need to discuss your agreement? You can send a secure message directly to your landlord through the iReside chat.
+                                            </p>
+                                        </div>
+
+                                        <div className="w-full max-w-sm mx-auto">
+                                            <Link href="/tenant/messages" className="w-full py-5 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
+                                                <MessageSquare className="w-5 h-5" /> Send a Message
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Move-Out Component */}
-                    <MoveOutRequest />
-
-                    {/* Support Card */}
-                    <div className="rounded-3xl border border-border/50 bg-card p-6 flex flex-col items-center text-center relative overflow-hidden group" data-tour-id="tour-lease-manager">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
-
-                        <div className="w-20 h-20 rounded-full bg-background border-2 border-border/50 flex items-center justify-center mb-4 overflow-hidden relative shadow-lg group-hover:border-primary/50 transition-colors">
-                            <Image
-                                src={lease.landlord?.avatar_url || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=150&q=80"}
-                                alt="Property Manager"
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-                        <h4 className="text-lg font-display text-foreground mb-0.5 group-hover:text-primary transition-colors">{lease.landlord?.full_name || "Property Manager"}</h4>
-                        <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-4">Property Manager</p>
-
-                        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                            Have questions regarding your lease terms, deposits, or require an addendum?
-                        </p>
-
-                        <div className="flex gap-2 w-full">
-                            <Link href="/tenant/messages" className="flex-1 py-3 rounded-xl bg-muted hover:bg-secondary text-foreground text-xs font-bold transition-colors border border-border">
-                                Message
-                            </Link>
-                            <a href={(lease.landlord?.phone) ? `tel:${lease.landlord.phone}` : "#"} className={cn("inline-block flex-1 py-3 rounded-xl bg-muted text-foreground text-xs font-bold transition-colors border border-border text-center", !lease.landlord?.phone && "opacity-50 pointer-events-none hover:bg-muted")}>
-                                Book Call
-                            </a>
+                    {/* Sidebar Column */}
+                    <div className="lg:col-span-1 space-y-6">
+                        {/* Quick Reference Card */}
+                        <div className="bg-muted/20 border border-dashed border-border rounded-[2rem] p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
+                            <div className="w-12 h-12 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground mb-4">
+                                <Building2 className="w-6 h-6" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Assigned Unit</p>
+                            <p className="text-lg font-black text-foreground tracking-tight">{lease.unit.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">{lease.unit.property.name}</p>
+                            <div className="mt-6 pt-6 border-t border-border/50 w-full">
+                                <Link href="/tenant/dashboard" className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline flex items-center justify-center gap-2">
+                                    Return to Dashboard <ArrowUpRight className="w-3 h-3" />
+                                </Link>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
+
+            {/* Lease Modal */}
+            {lease && (
+                <LeaseModal 
+                    open={isModalOpen}
+                    onOpenChange={setIsModalOpen}
+                    leaseData={lease}
+                />
+            )}
         </div>
+    );
+}
+
+export default function LeasesPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-xs font-black uppercase tracking-widest">Initializing Vault...</p>
+            </div>
+        }>
+            <LeaseHubContent />
+        </Suspense>
     );
 }

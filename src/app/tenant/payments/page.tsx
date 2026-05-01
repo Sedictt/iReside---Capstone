@@ -9,23 +9,28 @@ import {
     Receipt, 
     Droplets, 
     Zap, 
-    Calendar,
-    TrendingUp,
-    FileText,
-    CreditCard,
-    ArrowUpRight,
-    AlertCircle,
-    LayoutDashboard,
-    Home,
-    Clock,
-    Info,
-    CreditCard as PaymentIcon,
-    ShieldCheck,
-    HelpCircle,
-    UserCircle
+    Calendar, 
+    TrendingUp, 
+    FileText, 
+    CreditCard, 
+    ArrowUpRight, 
+    AlertCircle, 
+    LayoutDashboard, 
+    Home, 
+    Clock, 
+    Info, 
+    CreditCard as PaymentIcon, 
+    ShieldCheck, 
+    HelpCircle, 
+    UserCircle, 
+    Download,
+    FileJson,
+    FileSpreadsheet,
+    FileCheck
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { jsPDF } from "jspdf";
 
 import type { InvoiceListItem, InvoiceReadingDetail } from "@/lib/billing/server";
 import { formatPhpCurrency } from "@/lib/billing/utils";
@@ -91,6 +96,127 @@ export default function FinanceHubPage() {
         } finally {
             setCreatingAdvance(false);
         }
+    };
+
+    const handleExportCSV = () => {
+        if (!payload?.history || payload.history.length === 0) return;
+
+        const headers = ["Invoice #", "Type", "Status", "Due Date", "Amount"];
+        const rows = payload.history.map(inv => [
+            inv.invoiceNumber,
+            inv.type,
+            inv.status,
+            inv.dueDate,
+            inv.amount.toString()
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `ireside_payment_history_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleExportPDF = () => {
+        if (!payload?.history || payload.history.length === 0) return;
+
+        const doc = new jsPDF();
+        const dateStr = new Date().toLocaleDateString();
+        
+        // Branding Header
+        doc.setFontSize(22);
+        doc.setTextColor(109, 152, 56); // Primary Color (Sage Green)
+        doc.text("iReside", 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("TENANT PAYMENT HISTORY STATEMENT", 14, 28);
+        doc.text(`Generated on: ${dateStr}`, 14, 34);
+
+        // Property Info
+        doc.setDrawColor(230);
+        doc.line(14, 40, 196, 40);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold");
+        doc.text(payload.lease?.propertyName || "Property Name", 14, 50);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Unit: ${payload.lease?.unitName || "N/A"}`, 14, 56);
+        doc.text(`Lease ID: ${payload.lease?.id || "N/A"}`, 14, 62);
+
+        // Table Header
+        let yPos = 75;
+        doc.setFillColor(245, 245, 245);
+        doc.rect(14, yPos - 5, 182, 8, "F");
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("Invoice #", 16, yPos);
+        doc.text("Type", 60, yPos);
+        doc.text("Status", 100, yPos);
+        doc.text("Due Date", 140, yPos);
+        doc.text("Amount", 175, yPos);
+
+        doc.line(14, yPos + 3, 196, yPos + 3);
+        yPos += 12;
+
+        // Table Content
+        doc.setFont("helvetica", "normal");
+        payload.history.forEach((inv, index) => {
+            if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            doc.text(inv.invoiceNumber, 16, yPos);
+            doc.text(inv.type, 60, yPos);
+            
+            // Color code status
+            if (inv.status === 'paid') doc.setTextColor(0, 150, 0);
+            else if (inv.status === 'overdue') doc.setTextColor(200, 0, 0);
+            else doc.setTextColor(100);
+            
+            doc.text(inv.status.toUpperCase(), 100, yPos);
+            doc.setTextColor(0);
+            
+            doc.text(inv.dueDate, 140, yPos);
+            doc.text(formatPhpCurrency(inv.amount), 175, yPos);
+            
+            doc.setDrawColor(245);
+            doc.line(14, yPos + 3, 196, yPos + 3);
+            yPos += 10;
+        });
+
+        // Summary
+        yPos += 10;
+        const totalPaid = payload.history
+            .filter(h => h.status === 'paid')
+            .reduce((sum, h) => sum + h.amount, 0);
+            
+        doc.setFillColor(245, 250, 245);
+        doc.rect(130, yPos - 5, 66, 15, "F");
+        doc.setFont("helvetica", "bold");
+        doc.text("Total Settled:", 135, yPos + 4);
+        doc.setTextColor(109, 152, 56);
+        doc.text(formatPhpCurrency(totalPaid), 165, yPos + 4);
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("This is a system-generated statement. No signature required.", 105, 285, { align: "center" });
+
+        doc.save(`ireside_payment_history_${new Date().toISOString().split('T')[0]}.pdf`);
     };
 
     if (loading) {
@@ -364,7 +490,27 @@ export default function FinanceHubPage() {
                                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Audit Trail</p>
                                         <h3 className="text-2xl font-black text-foreground tracking-tight">Payment Ledger</h3>
                                     </div>
-                                    <span className="text-[10px] font-bold text-muted-foreground bg-background border border-border px-4 py-1.5 rounded-full">{history.length} Total Records</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1 bg-background border border-border p-1 rounded-full">
+                                            <button 
+                                                onClick={handleExportPDF}
+                                                className="flex items-center gap-1.5 hover:bg-muted text-foreground px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all"
+                                                title="Professional Statement"
+                                            >
+                                                <FileText className="w-3 h-3 text-primary" />
+                                                PDF
+                                            </button>
+                                            <button 
+                                                onClick={handleExportCSV}
+                                                className="flex items-center gap-1.5 hover:bg-muted text-foreground px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all"
+                                                title="Data Spreadsheet"
+                                            >
+                                                <FileSpreadsheet className="w-3 h-3 text-muted-foreground" />
+                                                CSV
+                                            </button>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-muted-foreground bg-background border border-border px-4 py-1.5 rounded-full">{history.length} Records</span>
+                                    </div>
                                 </div>
                                 
                                 <div className="divide-y divide-border/50">
@@ -388,11 +534,19 @@ export default function FinanceHubPage() {
                                                 <div className="flex items-center gap-8">
                                                     <div className="text-right">
                                                         <p className="text-xl font-black text-foreground tracking-tighter">{formatPhpCurrency(invoice.amount)}</p>
-                                                        <div className={cn(
-                                                            "inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border mt-1.5",
-                                                            invoice.status === 'paid' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-muted text-muted-foreground border-border"
-                                                        )}>
-                                                            {invoice.status}
+                                                        <div className="flex items-center justify-end gap-2 mt-1.5">
+                                                            {invoice.hasReceipt && (
+                                                                <div className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-widest" title="Official Receipt Available">
+                                                                    <FileCheck className="w-3 h-3" />
+                                                                    Receipted
+                                                                </div>
+                                                            )}
+                                                            <div className={cn(
+                                                                "inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border",
+                                                                invoice.status === 'paid' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-muted text-muted-foreground border-border"
+                                                            )}>
+                                                                {invoice.status}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <Link 

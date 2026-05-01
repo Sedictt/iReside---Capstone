@@ -12,7 +12,7 @@ I will help you generate clear, conventional commit messages based on your stage
 - Keep subject line under 72 characters
 - Use bullet points for the commit body
 - Don't commit if no changes are present
-- Don't commit if lint errors are present
+- Don't commit if lint or build errors are present
 - Only execute this workflow when explicitly requested by the user (e.g., via `/git-commit` or direct request)
 
 ## Steps
@@ -24,9 +24,10 @@ First, ensure everything is staged and check the status:
 - Run `git diff --staged --stat` for a summary
 - Identify the type and scope of changes
 
-### 2. Check for Lint Errors
-Before proceeding, ensure the code is clean:
-- Run `npm run lint` to check for errors
+### 2. Check for Lint and Build Errors
+Before proceeding, ensure the code is clean and production-ready:
+- Run `npm run lint` to check for styling and syntax errors
+- Run `npm run build` to check for compilation and type errors
 - If errors exist, fix them before committing
 
 ### 3. Determine Commit Type
@@ -73,7 +74,7 @@ For complex changes, add a body:
 - Wrap at 72 characters
 
 ### 7. Execute Commit
-Present the suggested commit message and execute the commit immediately (provided no lint errors exist). You have full authority to commit without asking for permission.
+Present the suggested commit message and execute the commit immediately (provided no lint or build errors exist). You have full authority to commit without asking for permission.
 
 // turbo
 - Run `git commit -m "<message>"`

@@ -4,35 +4,15 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Download, Printer, FileText } from "lucide-react";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { cn } from "@/lib/utils";
+import { LeaseData } from "@/types/lease";
 
 interface LeaseModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    leaseData: LeaseData;
 }
 
-export default function LeaseModal({ open, onOpenChange }: LeaseModalProps) {
-    const leaseData = {
-        leaseId: "LSE-2024-8832",
-        parties: {
-            landlord: "The Grand Management",
-            tenant: "Sarah Chen"
-        },
-        property: {
-            unit: "Unit 304",
-            street: "123 Main St",
-            city: "Springfield, IL",
-            zip: "62701"
-        },
-        term: {
-            start: "Jan 01, 2024",
-            end: "Dec 31, 2024"
-        },
-        rent: {
-            monthly: 18500,
-            due: "1st"
-        },
-        deposit: 18500
-    };
+export default function LeaseModal({ open, onOpenChange, leaseData }: LeaseModalProps) {
 
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -48,7 +28,7 @@ export default function LeaseModal({ open, onOpenChange }: LeaseModalProps) {
                             </div>
                             <div>
                                 <Dialog.Title className="text-xl font-bold text-foreground">Lease Agreement</Dialog.Title>
-                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">#{leaseData.leaseId} • Active</p>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">#{leaseData.id} • Active</p>
                             </div>
                         </div>
 

@@ -1066,7 +1066,7 @@ export async function createAdvancePayment(supabase: AppSupabaseClient, tenantId
 
     const { data: payment, error: paymentError } = await supabase
         .from("payments")
-        .insert({
+        .insert([{
             lease_id: lease.id,
             tenant_id: tenantId,
             landlord_id: lease.landlord_id,
@@ -1084,8 +1084,12 @@ export async function createAdvancePayment(supabase: AppSupabaseClient, tenantId
             due_day_snapshot: terms.dueDay,
             late_fee_amount: terms.lateFeeAmount,
             invoice_number: makeInvoiceNumber(crypto.randomUUID(), cycleKey),
-            amount_tag: "advance_rent"
-        })
+            metadata: { 
+                type: "advance_rent_payment",
+                generated_at: new Date().toISOString(),
+                tag: "advance_rent"
+            }
+        }])
         .select("id")
         .single();
 
