@@ -20,7 +20,10 @@ const reviewSchema = z.object({
     amountTag: z.enum(["exact", "partial", "overpaid", "short_paid"]).optional(),
     nonExactAction: z.enum(["accept_partial", "request_completion", "reject"]).optional(),
     rejectionReason: z.string().max(500).optional(),
+    issueType: z.enum(["insufficient_amount", "excessive_amount", "not_received", "invalid_proof", "other"]).optional(),
+    shortfallAmount: z.number().optional(),
     idempotencyKey: z.string().max(120).optional(),
+    refundProofUrl: z.string().optional(),
 });
 
 type RouteContext = {
@@ -91,7 +94,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     try {
-        const parsed = reviewSchema.parse(await request.json());
+        const formData = await request.formData();
+        const rawJson = formData.get("json") as string;
+        const parsed = reviewSchema.parse(JSON.parse(rawJson));
+        const refundProofFile = formData.get("refundProofFile") as File | null;
+
         const idempotencyKey = request.headers.get("idempotency-key") ?? parsed.idempotencyKey ?? null;
 
         if (idempotencyKey) {
@@ -108,6 +115,21 @@ export async function POST(request: Request, context: RouteContext) {
         }
 
         await expireInPersonIntents(adminClient, user.id, { landlordId: user.id, paymentId: id });
+
+        let refundProofUrl = parsed.refundProofUrl || null;
+        if (refundProofFile && refundProofFile.size > 0) {
+            const fileExt = refundProofFile.name.split('.').pop();
+            const fileName = `refund-proof-${id}-${Date.now()}.${fileExt}`;
+            const { data: uploadData, error: uploadError } = await adminClient.storage
+                .from('payment-proofs')
+                .upload(fileName, refundProofFile);
+            
+            if (uploadError) throw uploadError;
+            const { data: { publicUrl } } = adminClient.storage
+                .from('payment-proofs')
+                .getPublicUrl(uploadData.path);
+            refundProofUrl = publicUrl;
+        }
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
@@ -194,9 +216,9 @@ export async function POST(request: Request, context: RouteContext) {
         } else if (parsed.action === "request_completion") {
             workflowStatus = "rejected";
             reviewAction = "request_completion";
-            // Revert to previous state
-            paidAmount = Number(beforeState.paid_amount || 0);
-            balanceRemaining = Number(beforeState.balance_remaining || payment.amount);
+            // Use the acceptedAmount provided in the review (essential for F2F shortfalls)
+            paidAmount = acceptedAmount;
+            balanceRemaining = Math.max(0, Number(payment.amount) - acceptedAmount);
             
             // Clear pending items on rejection
             newMetadata.pending_item_ids = [];
@@ -211,8 +233,8 @@ export async function POST(request: Request, context: RouteContext) {
                 } else if (parsed.nonExactAction === "request_completion") {
                     workflowStatus = "rejected";
                     reviewAction = "request_completion";
-                    balanceRemaining = Number(payment.amount);
-                    paidAmount = 0;
+                    paidAmount = acceptedAmount;
+                    balanceRemaining = Math.max(0, Number(payment.amount) - acceptedAmount);
                 } else {
                     reviewAction = "accept_partial";
                 }
@@ -249,7 +271,10 @@ export async function POST(request: Request, context: RouteContext) {
                 rejection_reason: workflowStatus === "rejected" ? rejectionReason : null,
                 method,
                 intent_method: parsed.action === "confirm_received" ? "in_person" : payment.intent_method,
-                metadata: newMetadata,
+                metadata: {
+                    ...newMetadata,
+                    refund_proof_url: refundProofUrl || (parsed.refundProofUrl ?? null),
+                },
                 in_person_intent_expires_at: null,
                 last_action_at: nowIso,
                 last_action_by: user.id,
@@ -298,13 +323,33 @@ export async function POST(request: Request, context: RouteContext) {
 
         const finalWorkflowStatus = receiptIssued ? "receipted" : updatedPayment.workflow_status;
 
+        const paymentMetadata = payment.metadata as any || {};
+        // Only mark as refund reconciliation if landlord is actually uploading refund proof AND the action is "confirm"
+        const isRefundReconciliation = parsed.issueType === "excessive_amount" && parsed.action === "confirm" && refundProofUrl !== null;
+
+        console.log("[Review API] REFUND CHECK:", {
+            action: parsed.action,
+            refundProofFile_present: !!refundProofFile,
+            refundProofUrl_value: refundProofUrl,
+            issueType_from_payload: parsed.issueType,
+            issueType_from_payment: paymentMetadata.issueType,
+            refundPreference_in_payment: !!paymentMetadata.refund_preference,
+            isRefundReconciliation: isRefundReconciliation,
+            paymentId: updatedPayment.id,
+            invoiceNumber: updatedPayment.invoice_number,
+        });
+
         await sendPaymentNotifications(
             adminClient,
             [updatedPayment.tenant_id, updatedPayment.landlord_id],
             {
-                title: finalWorkflowStatus === "rejected" ? "Payment review rejected" : "Payment review updated",
+                title: isRefundReconciliation 
+                    ? "Refund Processed" 
+                    : (finalWorkflowStatus === "rejected" ? "Payment review rejected" : "Payment review updated"),
                 message:
-                    finalWorkflowStatus === "rejected"
+                    isRefundReconciliation 
+                        ? `Refund for invoice ${updatedPayment.invoice_number ?? updatedPayment.id} has been processed.`
+                        : finalWorkflowStatus === "rejected"
                         ? `Invoice ${updatedPayment.invoice_number ?? updatedPayment.id} was rejected.`
                         : receiptIssued
                           ? `Invoice ${updatedPayment.invoice_number ?? updatedPayment.id} is confirmed and receipted.`
@@ -315,31 +360,93 @@ export async function POST(request: Request, context: RouteContext) {
                     amountTag,
                     reviewAction,
                     rejectionReason: finalWorkflowStatus === "rejected" ? rejectionReason : null,
+                    refundProofUrl: refundProofUrl || (parsed.refundProofUrl ?? null),
+                    isRefundReconciliation,
                 },
             },
         );
 
-        await sendPaymentSystemMessage(
-            adminClient,
-            updatedPayment,
-            {
-                actorId: user.id,
-                actorName: "Landlord",
-                content:
-                    finalWorkflowStatus === "rejected"
-                        ? `The payment request has been rejected. Reason: ${rejectionReason}`
-                        : receiptIssued
-                          ? "The payment has been confirmed and a digital receipt has been issued."
-                          : "The payment has been confirmed.",
-                metadata: {
-                    event: "landlord_review",
-                    workflowStatus: finalWorkflowStatus,
-                    reviewAction,
-                    amountTag,
-                    paymentId: updatedPayment.id,
+        // Send system message for normal payments (not refund reconciliation)
+        if (!isRefundReconciliation) {
+            await sendPaymentSystemMessage(
+                adminClient,
+                updatedPayment,
+                {
+                    actorId: user.id,
+                    actorName: "Landlord",
+                    content:
+                        finalWorkflowStatus === "rejected"
+                            ? `The payment request has been rejected. Reason: ${rejectionReason}`
+                            : receiptIssued
+                            ? "The payment has been confirmed and a digital receipt has been issued."
+                            : "The payment has been confirmed.",
+                    metadata: {
+                        event: "landlord_review",
+                        workflowStatus: finalWorkflowStatus,
+                        reviewAction,
+                        amountTag,
+                        paymentId: updatedPayment.id,
+                        rejectionReason: finalWorkflowStatus === "rejected" ? rejectionReason : null,
+                        issueType: parsed.issueType,
+                        shortfallAmount: parsed.shortfallAmount,
+                        refundProofUrl: refundProofUrl || (parsed.refundProofUrl ?? null),
+                    },
                 },
-            },
-        );
+            );
+        }
+        // Update existing overpayment message for refund reconciliation
+        else if (isRefundReconciliation) {
+            const { data: overpaymentMsg } = await adminClient
+                .from("messages")
+                .select("id, metadata")
+                .eq("type", "system")
+                .contains("metadata", { paymentId: updatedPayment.id, issueType: "excessive_amount" })
+                .maybeSingle();
+
+            if (overpaymentMsg) {
+                console.log("[Review API] Found existing refund message:", overpaymentMsg.id, "Updating to resolved state...");
+                const { error: updateError } = await adminClient
+                    .from("messages")
+                    .update({
+                        content: "The refund has been processed and reconciliation is complete.",
+                        metadata: {
+                            ...(overpaymentMsg.metadata as any || {}),
+                            isResolved: true,
+                            workflowStatus: finalWorkflowStatus,
+                            refundProofUrl: refundProofUrl || (parsed.refundProofUrl ?? null),
+                        },
+                        updated_at: nowIso,
+                    })
+                    .eq("id", overpaymentMsg.id)
+                    .select("id");
+
+                if (updateError) {
+                    console.error("[Review API] Failed to update refund message:", updateError);
+                } else {
+                    console.log("[Review API] Successfully updated message to resolved. Refund proof URL:", refundProofUrl);
+                }
+            } else {
+                console.log("[Review API] No existing refund message found for payment", updatedPayment.id, "- creating new one...");
+                await sendPaymentSystemMessage(
+                    adminClient,
+                    updatedPayment,
+                    {
+                        actorId: user.id,
+                        actorName: "Landlord",
+                        content: "The refund has been processed and reconciliation is complete.",
+                        metadata: {
+                            event: "landlord_review",
+                            systemType: "landlord_review",
+                            workflowStatus: finalWorkflowStatus,
+                            issueType: "excessive_amount",
+                            isResolved: true,
+                            refundProofUrl: refundProofUrl || (parsed.refundProofUrl ?? null),
+                            paymentId: updatedPayment.id,
+                        },
+                    },
+                );
+            }
+        }
 
         await insertPaymentAuditEvent(adminClient, {
             paymentId: updatedPayment.id,
@@ -369,6 +476,14 @@ export async function POST(request: Request, context: RouteContext) {
             ok: true,
             workflowStatus: finalWorkflowStatus,
             receiptIssued,
+            debug: {
+                isRefundReconciliation,
+                action: parsed.issueType,
+                issueType: parsed.issueType,
+                hasRefundProof: !!refundProofUrl,
+                paymentId: updatedPayment. id,
+                invoiceNumber: updatedPayment.invoice_number,
+            }
         });
     } catch (error) {
         console.error("Failed to review invoice:", error);

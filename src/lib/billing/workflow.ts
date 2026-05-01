@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 import { findDirectConversation } from "@/lib/messages/engine";
 import type { Database, Payment } from "@/types/database";

@@ -5,7 +5,7 @@ import {
     CheckCircle2, Clock3, Loader2, QrCode, Receipt, Send, X, XCircle, 
     FileText, User, Building2, Hash, ArrowUpRight, ShieldCheck, 
     AlertTriangle, Info, ChevronRight, MessageSquare, History,
-    CheckCircle, AlertCircle, HelpCircle
+    CheckCircle, AlertCircle, HelpCircle, Wallet
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,8 @@ import Link from "next/link";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { Upload, Camera, Trash2 } from "lucide-react";
 
 type InvoiceDetail = Awaited<ReturnType<typeof import("@/lib/billing/server").getInvoiceDetailForActor>>;
 
@@ -20,27 +22,49 @@ export function InvoiceModal({
     invoiceId,
     onClose,
     onUpdated,
-    role = "landlord"
+    role = "landlord",
+    refundMessage
 }: {
     invoiceId: string | null;
     onClose: () => void;
     onUpdated: () => void;
     role?: "landlord" | "tenant";
+    refundMessage?: any;
 }) {
     const [invoice, setInvoice] = useState<InvoiceDetail>(null);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState<"confirm" | "confirm_received" | "reject" | "request_completion" | "remind" | null>(null);
+    const [refundActionLoading, setRefundActionLoading] = useState(false);
+    const [refundActionError, setRefundActionError] = useState<string | null>(null);
     const [pendingAction, setPendingAction] = useState<{ type: any; label: string; desc: string; isCrucial?: boolean } | null>(null);
     const [confirmCountdown, setConfirmCountdown] = useState(0);
     const [reviewNote, setReviewNote] = useState("");
     const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
     const [rejectionReason, setRejectionReason] = useState("");
+    const [issueType, setIssueType] = useState<"insufficient_amount" | "excessive_amount" | "not_received" | "invalid_proof" | "other" | "">("");
+    const [shortfallAmount, setShortfallAmount] = useState<number | "">("");
     const [showRejectionWarning, setShowRejectionWarning] = useState(false);
     const [nonExactAction, setNonExactAction] = useState<"accept_partial" | "request_completion" | "reject">("accept_partial");
     const [activeTab, setActiveTab] = useState<"approve" | "issue">("approve");
+    const [refundProofFile, setRefundProofFile] = useState<File | null>(null);
 
     useEffect(() => {
         if (!invoiceId) return;
+        
+        // Reset all state when opening a new invoice to prevent data leak between tenants/invoices
+        setRefundProofFile(null);
+        setReviewNote("");
+        setRejectionReason("");
+        setIssueType("");
+        setShortfallAmount("");
+        setNonExactAction("accept_partial");
+        // Always open on approve tab (RefundCenter shows there when refund details exist)
+        setActiveTab("approve");
+        setPendingAction(null);
+        setConfirmCountdown(0);
+        setShowRejectionWarning(false);
+        setRefundActionError(null);
+        
         let alive = true;
         setLoading(true);
         document.body.style.overflow = "hidden";
@@ -111,7 +135,7 @@ export function InvoiceModal({
                 confirm: { label: "Issue Official Receipt", desc: "This will officially record the payment and generate a permanent receipt for the tenant. This action is financially binding.", isCrucial: true },
                 confirm_received: { label: "Confirm Cash Received", desc: "By clicking this, you confirm you have physically received the cash amount. This will update the property ledger immediately.", isCrucial: true },
                 reject: { label: "Reject This Payment", desc: "The tenant's submission will be cancelled. They will be notified to correct their proof or amount and resubmit.", isCrucial: true },
-                request_completion: { label: "Request Missing Balance", desc: "The tenant will be notified that they still owe a balance, but their current payment will be recorded.", isCrucial: false },
+                request_completion: { label: "Request Missing Balance", desc: "The tenant will be notified that they still owe a balance, but their current payment will be recorded.", isCrucial: true },
                 remind: { label: "Send Gentle Nudge", desc: "Sends a notification without changing status.", isCrucial: false }
             };
             const c = config[action];
@@ -130,35 +154,78 @@ export function InvoiceModal({
 
         setShowRejectionWarning(false);
         setActionLoading(action);
+        console.log("[InvoiceModal] runAction called:", action, "pendingAction:", pendingAction, "refundProofFile:", !!refundProofFile);
         try {
             const endpoint = action === "remind" ? "reminder" : "review";
             const amountTag = invoice?.amountTag ?? "exact";
+            const effectiveIssueType = issueType || ((invoice?.metadata as any)?.refund_preference ? "excessive_amount" : undefined);
+            
+            const payload = {
+                action,
+                note: reviewNote || undefined,
+                amountTag,
+                acceptedAmount: shortfallAmount !== "" 
+                    ? Number(invoice?.totalAmount ?? 0) - Number(shortfallAmount)
+                    : Number(invoice?.totalAmount ?? 0),
+                nonExactAction: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
+                    ? nonExactAction
+                    : undefined,
+                rejectionReason:
+                    action === "reject" || action === "request_completion" || nonExactAction === "reject" || nonExactAction === "request_completion"
+                        ? rejectionReason || undefined
+                        : undefined,
+                issueType: effectiveIssueType,
+                shortfallAmount: shortfallAmount !== "" ? Number(shortfallAmount) : undefined,
+            };
+
+            let body: any;
+            let headers: any = undefined;
+
+            if (action === "remind") {
+                body = undefined;
+            } else {
+                const formData = new FormData();
+                formData.append("json", JSON.stringify(payload));
+                if (refundProofFile) {
+                    formData.append("refundProofFile", refundProofFile);
+                }
+                body = formData;
+            }
+
             const response = await fetch(`/api/landlord/invoices/${invoiceId}/${endpoint}`, {
                 method: "POST",
-                headers: action === "remind" ? undefined : { "Content-Type": "application/json" },
-                body: action === "remind" ? undefined : JSON.stringify({
-                    action,
-                    note: reviewNote || undefined,
-                    amountTag,
-                    nonExactAction: amountTag !== "exact" && (action === "confirm" || action === "confirm_received")
-                        ? nonExactAction
-                        : undefined,
-                    rejectionReason:
-                        action === "reject" || action === "request_completion" || nonExactAction === "reject" || nonExactAction === "request_completion"
-                            ? rejectionReason || undefined
-                            : undefined,
-                }),
+                headers,
+                body,
             });
+            console.log("[InvoiceModal] API Response:", response.status, response.statusText);
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                throw new Error(errorData.error || "Failed to process review");
             }
+
+            // Reload invoice data to show updated state
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const reloadResponse = await fetch(`/api/landlord/invoices/${invoiceId}`, { cache: "no-store" });
+            if (reloadResponse.ok) {
+                const reloadData = await reloadResponse.json();
+                if (reloadData.invoice) {
+                    setInvoice(reloadData.invoice);
+                }
+            }
+
             onUpdated();
+            
+            // Delay closing to show the updated state
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            setRefundProofFile(null);
             onClose();
+        } catch (error: any) {
+            console.error("[InvoiceModal] Action failed:", error);
+            alert(error.message || "An unexpected error occurred. Please try again.");
         } finally {
             setActionLoading(null);
-            setPendingAction(null);
         }
+        setPendingAction(null);
     };
 
     const statusConfig = {
@@ -220,19 +287,24 @@ export function InvoiceModal({
     };
 
     const currentStatus = ((invoice?.workflowStatus ?? invoice?.status) as keyof typeof statusConfig) || "pending";
-    const statusStyle = statusConfig[currentStatus] || statusConfig.pending;
+     const statusStyle = statusConfig[currentStatus] || statusConfig.pending;
 
-    const content = (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/80 backdrop-blur-md" 
-                onClick={onClose} 
-            />
-            
-            <motion.div 
+     const handleClose = () => {
+         setRefundProofFile(null);
+         onClose();
+     };
+
+     const content = (
+         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+             <motion.div 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 exit={{ opacity: 0 }}
+                 className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+                 onClick={handleClose}
+             />
+             
+             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -290,13 +362,13 @@ export function InvoiceModal({
                                     <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse", statusStyle.dot)} />
                                     {statusStyle.label}
                                 </div>
-                            )}
-                            <button 
-                                onClick={onClose} 
-                                className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 hover:text-text-high active:scale-95 shadow-lg"
-                            >
-                                <X className="h-5 w-5 transition-transform group-hover:rotate-90" />
-                            </button>
+                             )}
+                             <button 
+                                 onClick={handleClose} 
+                                 className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-surface-2 text-text-medium transition-all hover:bg-surface-3 hover:text-text-high active:scale-95 shadow-lg"
+                             >
+                                 <X className="h-5 w-5 transition-transform group-hover:rotate-90" />
+                             </button>
                         </div>
                     </div>
                 </div>
@@ -314,9 +386,9 @@ export function InvoiceModal({
                             </div>
                         ) : (
                             <>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <Metric label="Total payable" value={formatPhpCurrency(invoice.totalAmount)} accent />
-                                    <Metric label="Current Balance" value={formatPhpCurrency(invoice.balanceRemaining)} warning={invoice.balanceRemaining > 0} />
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-black text-text-high tracking-tight">Financial Overview</h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Ledger Reconciliation</p>
                                 </div>
 
                                 <section className="space-y-4">
@@ -338,6 +410,26 @@ export function InvoiceModal({
                                                 </div>
                                             </div>
                                         ))}
+
+                                        {invoice.paidAmount === 0 && (
+                                            <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
+                                                <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Total Payable</p>
+                                                <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.totalAmount)}</p>
+                                            </div>
+                                        )}
+
+                                        {invoice.paidAmount > 0 && (
+                                            <>
+                                                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-2/30 px-5 py-3 mt-4">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Paid to Date</p>
+                                                    <p className="text-sm font-bold text-emerald-400">-{formatPhpCurrency(invoice.paidAmount)}</p>
+                                                </div>
+                                                <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 shadow-inner">
+                                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Remaining Balance</p>
+                                                    <p className="text-lg font-black text-primary">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </section>
 
@@ -372,7 +464,7 @@ export function InvoiceModal({
                                                     </div>
                                                     <div className="mt-5 border-t border-white/5 pt-4">
                                                         <p className="text-[10px] font-medium uppercase tracking-widest text-text-disabled">
-                                                            Billing Period: {formatDateLong(reading.billing_period_start)} – {formatDateLong(reading.billing_period_end)}
+                                                            Billing Period: {formatDateLong(reading.billing_period_start)} â€“ {formatDateLong(reading.billing_period_end)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -425,6 +517,33 @@ export function InvoiceModal({
                                                     </p>
                                                 </div>
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {(invoice.metadata as any)?.refund_proof_url && (
+                                        <div className="space-y-4 pt-8 border-t border-white/5 text-left">
+                                            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                                <Wallet className="h-4 w-4 text-amber-400" />
+                                                Proof of Refund
+                                            </h3>
+                                            <button 
+                                                onClick={() => setLightboxUrl((invoice.metadata as any).refund_proof_url)}
+                                                className="group relative w-full overflow-hidden rounded-3xl border border-amber-500/10 bg-amber-500/5 p-2 transition-all hover:border-amber-500/30 cursor-zoom-in text-left"
+                                            >
+                                                <div className="relative aspect-video overflow-hidden rounded-2xl bg-surface-2">
+                                                    <img 
+                                                        src={(invoice.metadata as any).refund_proof_url} 
+                                                        alt="Proof of Refund" 
+                                                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-md border border-white/20">
+                                                            <ArrowUpRight className="h-6 w-6" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
                                         </div>
                                     )}
                                 </section>
@@ -527,7 +646,21 @@ export function InvoiceModal({
                                                     exit={{ opacity: 0, x: -10 }}
                                                     className="space-y-4"
                                                 >
-                                                    {invoice.paymentMethod === "in_person" || invoice.paymentMethod === "cash" ? (
+                                                    {(invoice.metadata as any)?.refund_preference || refundMessage?.hasRefundDetails ? (
+                                                        <RefundCenter 
+                                                            invoice={invoice} 
+                                                            runAction={runAction} 
+                                                            actionLoading={actionLoading}
+                                                            proofFile={refundProofFile}
+                                                            onProofChange={setRefundProofFile}
+                                                            refundMessage={refundMessage}
+                                                            onRefundSuccess={() => {
+                                                                setRefundProofFile(null);
+                                                                onUpdated();
+                                                                setTimeout(() => onClose(), 1200);
+                                                            }}
+                                                        />
+                                                    ) : invoice.paymentMethod === "in_person" || invoice.paymentMethod === "cash" ? (
                                                         <F2FActionCenter 
                                                             invoice={invoice}
                                                             runAction={runAction}
@@ -548,7 +681,7 @@ export function InvoiceModal({
                                                                     </div>
                                                                 </div>
                                                             </div>
-
+ 
                                                             <div className="space-y-4">
                                                                 <div className="relative group">
                                                                     <textarea 
@@ -562,7 +695,7 @@ export function InvoiceModal({
                                                                         <MessageSquare className="h-4 w-4 text-primary" />
                                                                     </div>
                                                                 </div>
-
+ 
                                                                 <div className="space-y-3">
                                                                     <ActionButton 
                                                                         onClick={() => runAction("confirm")} 
@@ -603,6 +736,10 @@ export function InvoiceModal({
                                                         setNonExactAction={setNonExactAction}
                                                         showRejectionWarning={showRejectionWarning}
                                                         setShowRejectionWarning={setShowRejectionWarning}
+                                                        issueType={issueType}
+                                                        setIssueType={setIssueType}
+                                                        shortfallAmount={shortfallAmount}
+                                                        setShortfallAmount={setShortfallAmount}
                                                     />
 
                                                     <div className="pt-4 border-t border-white/5">
@@ -748,17 +885,18 @@ export function InvoiceModal({
                                         {/* Progress Bar for Crucial Timer */}
                                         {confirmCountdown > 0 && (
                                             <motion.div 
+                                                key="countdown-overlay"
                                                 initial={{ scaleX: 1 }}
                                                 animate={{ scaleX: 0 }}
                                                 transition={{ duration: 3, ease: "linear" }}
-                                                className="absolute inset-0 bg-white/5 origin-left"
+                                                className="absolute inset-0 bg-amber-500/30 origin-left z-0"
                                             />
                                         )}
                                         <span className="relative z-10 flex items-center justify-center gap-2">
                                             {confirmCountdown > 0 ? (
                                                 <>
-                                                    <Clock3 className="h-4 w-4" />
-                                                    Reviewing ({confirmCountdown}s)
+                                                    <Clock3 className="h-4 w-4 animate-pulse" />
+                                                    Hold to Confirm ({confirmCountdown}s)
                                                 </>
                                             ) : (
                                                 <>
@@ -780,6 +918,7 @@ export function InvoiceModal({
                     </div>
                 )}
             </AnimatePresence>
+
 
             {/* Lightbox for Proof of Payment */}
             <AnimatePresence>
@@ -829,7 +968,7 @@ function F2FActionCenter({
     reviewNote, 
     setReviewNote 
 }: {
-    invoice: InvoiceDetail | null;
+    invoice: NonNullable<InvoiceDetail>;
     runAction: (action: any) => void;
     actionLoading: any;
     reviewNote: string;
@@ -904,9 +1043,13 @@ function WizardFlow({
     nonExactAction, 
     setNonExactAction,
     showRejectionWarning,
-    setShowRejectionWarning 
+    setShowRejectionWarning,
+    issueType,
+    setIssueType,
+    shortfallAmount,
+    setShortfallAmount
 }: {
-    invoice: InvoiceDetail;
+    invoice: NonNullable<InvoiceDetail>;
     runAction: (action: any) => void;
     actionLoading: any;
     reviewNote: string;
@@ -917,9 +1060,14 @@ function WizardFlow({
     setNonExactAction: (v: any) => void;
     showRejectionWarning: boolean;
     setShowRejectionWarning: (v: boolean) => void;
+    issueType: string;
+    setIssueType: (v: any) => void;
+    shortfallAmount: number | "";
+    setShortfallAmount: (v: number | "") => void;
 }) {
-    const [step, setStep] = useState<"diagnose" | "resolve" | "communicate">("diagnose");
+    const [step, setStep] = useState<"diagnose" | "adjust" | "resolve" | "communicate">("diagnose");
     const [diagnosis, setDiagnosis] = useState<"amount" | "proof" | "other" | null>(null);
+    const [receivedAmount, setReceivedAmount] = useState<number | "">("");
 
     const handleDiagnosis = (d: "amount" | "proof" | "other") => {
         setDiagnosis(d);
@@ -927,7 +1075,7 @@ function WizardFlow({
             setNonExactAction("reject");
             setStep("communicate");
         } else if (d === "amount") {
-            setStep("resolve");
+            setStep("adjust");
         } else {
             setNonExactAction("other");
             setStep("communicate");
@@ -969,9 +1117,9 @@ function WizardFlow({
                     </motion.div>
                 )}
 
-                {step === "resolve" && (
+                {step === "adjust" && (
                     <motion.div 
-                        key="step-resolve"
+                        key="step-adjust"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -981,27 +1129,128 @@ function WizardFlow({
                             <button onClick={() => setStep("diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
                                 <ChevronRight className="h-4 w-4 rotate-180" />
                             </button>
+                            <p className="text-[11px] font-bold text-text-medium">Enter actual payment details</p>
+                        </div>
+
+                        <div className="rounded-2xl border border-white/10 bg-surface-2 p-5 space-y-4 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Expected Amount</p>
+                                <p className="text-sm font-black text-text-high">{formatPhpCurrency(invoice.balanceRemaining)}</p>
+                            </div>
+                            <div className="h-[1px] bg-white/5" />
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Actual Amount Received</p>
+                                <div className="relative group">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled group-focus-within:text-primary transition-colors font-black text-sm">â‚±</div>
+                                    <input 
+                                        type="number"
+                                        value={receivedAmount}
+                                        onChange={(e) => setReceivedAmount(e.target.value ? Number(e.target.value) : "")}
+                                        className="w-full rounded-xl border border-white/10 bg-surface-3 pl-8 pr-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <ActionButton 
+                            onClick={() => {
+                                if (receivedAmount === "") return;
+                                const diff = invoice.balanceRemaining - receivedAmount;
+                                setShortfallAmount(diff);
+                                setStep("resolve");
+                            }}
+                            disabled={receivedAmount === ""}
+                            variant="primary"
+                            fullWidth
+                            icon={<ChevronRight className="h-4 w-4" />}
+                        >
+                            Continue to Resolution
+                        </ActionButton>
+                    </motion.div>
+                )}
+
+                {step === "resolve" && (
+                    <motion.div 
+                        key="step-resolve"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-4"
+                    >
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setStep(diagnosis === "amount" ? "adjust" : "diagnose")} className="text-text-disabled hover:text-text-medium transition-colors">
+                                <ChevronRight className="h-4 w-4 rotate-180" />
+                            </button>
                             <p className="text-[11px] font-bold text-text-medium">How would you like to handle this?</p>
                         </div>
                         <div className="grid gap-3">
+                            {diagnosis === "amount" && (
+                                <>
+                                    <div className="rounded-xl bg-surface-2 p-3 flex items-center justify-between border border-white/5">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-text-disabled">Adjustment</p>
+                                        <p className={cn(
+                                            "text-[10px] font-black",
+                                            (shortfallAmount as number) > 0 ? "text-amber-400" : "text-emerald-400"
+                                        )}>
+                                            {(shortfallAmount as number) > 0 
+                                                ? `Shortfall: ${formatPhpCurrency(shortfallAmount as number)}` 
+                                                : `Excess: ${formatPhpCurrency(Math.abs(shortfallAmount as number))}`}
+                                        </p>
+                                    </div>
+
+                                    {(shortfallAmount as number) > 0 && (
+                                        <ResolutionCard 
+                                            active={issueType === "insufficient_amount"}
+                                            title="Insufficient Amount"
+                                            desc="Ask the tenant to pay the remaining balance."
+                                            onClick={() => { 
+                                                setIssueType("insufficient_amount"); 
+                                                setNonExactAction("request_completion"); 
+                                                setRejectionReason(`The payment amount is insufficient. Please pay the remaining balance of ${formatPhpCurrency(shortfallAmount as number)}.`);
+                                                setStep("communicate"); 
+                                            }}
+                                        />
+                                    )}
+
+                                    {(shortfallAmount as number) < 0 && (
+                                        <ResolutionCard 
+                                            active={issueType === "excessive_amount"}
+                                            title="Too Much Amount"
+                                            desc="Credit the overpayment to next month."
+                                            onClick={() => { 
+                                                setIssueType("excessive_amount"); 
+                                                setNonExactAction("accept_partial"); 
+                                                setRejectionReason(`The payment amount is excessive by ${formatPhpCurrency(Math.abs(shortfallAmount as number))}. We will credit the excess to your next month's rent.`);
+                                                setStep("communicate"); 
+                                            }}
+                                        />
+                                    )}
+                                </>
+                            )}
+                            {diagnosis === "proof" && (
+                                <ResolutionCard 
+                                    active={issueType === "not_received"}
+                                    title="Not Received"
+                                    desc="The funds haven't arrived in the account."
+                                    onClick={() => { 
+                                        setIssueType("not_received"); 
+                                        setNonExactAction("reject"); 
+                                        setRejectionReason("We did not receive the payment in our records. Please verify the transaction details and resubmit proof.");
+                                        setStep("communicate"); 
+                                    }}
+                                />
+                            )}
                             <ResolutionCard 
-                                active={nonExactAction === "request_completion"}
-                                title="Ask for Missing Funds"
-                                desc="The tenant will be notified to pay the remaining balance"
-                                onClick={() => { setNonExactAction("request_completion"); setStep("communicate"); }}
-                            />
-                            <ResolutionCard 
-                                active={nonExactAction === "accept_partial"}
-                                title="Accept as Partial"
-                                desc="Record the amount paid and keep the balance on ledger"
-                                disabled={invoice?.amountTag === "exact"}
-                                onClick={() => { setNonExactAction("accept_partial"); setStep("communicate"); }}
-                            />
-                            <ResolutionCard 
-                                active={nonExactAction === "reject"}
+                                active={nonExactAction === "reject" && issueType === "invalid_proof"}
                                 title="Reject Entirely"
-                                desc="Tell the tenant the amount is wrong and to try again"
-                                onClick={() => { setNonExactAction("reject"); setStep("communicate"); }}
+                                desc="Tell the tenant the evidence is invalid"
+                                onClick={() => { 
+                                    setIssueType("invalid_proof");
+                                    setNonExactAction("reject"); 
+                                    setRejectionReason("The proof of payment provided is invalid or unreadable. Please resubmit.");
+                                    setStep("communicate"); 
+                                }}
                             />
                         </div>
                     </motion.div>
@@ -1052,7 +1301,7 @@ function WizardFlow({
                                     onChange={(event) => setRejectionReason(event.target.value)} 
                                     rows={3} 
                                     className="w-full resize-none rounded-2xl border border-white/10 bg-surface-2 px-5 py-4 text-sm text-text-high placeholder:text-text-disabled focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-inner" 
-                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing ₱100')" 
+                                    placeholder="Add a reason for the tenant (e.g. 'The receipt is unreadable' or 'The amount is missing â‚±100')" 
                                 />
                                 <div className="absolute right-4 bottom-4 opacity-30 group-focus-within:opacity-100 transition-opacity">
                                     <MessageSquare className="h-4 w-4 text-amber-500" />
@@ -1165,17 +1414,19 @@ function StatusLine({ label, value, icon }: { label: string; value: string; icon
 function ActionButton({
     children,
     icon,
-    loading,
+    loading = false,
     onClick,
     variant = "ghost",
     fullWidth = false,
+    disabled = false,
 }: {
     children: ReactNode;
     icon: ReactNode;
-    loading: boolean;
+    loading?: boolean;
     onClick: () => void;
     variant?: "primary" | "danger" | "ghost";
     fullWidth?: boolean;
+    disabled?: boolean;
 }) {
     const variants = {
         primary: "bg-primary text-primary-foreground hover:brightness-110 shadow-[0_12px_24px_-8px_rgba(109,152,56,0.5)] border-t border-white/20",
@@ -1186,7 +1437,7 @@ function ActionButton({
     return (
         <button 
             onClick={onClick} 
-            disabled={loading} 
+            disabled={loading || disabled} 
             className={cn(
                 "group relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-40 overflow-hidden", 
                 fullWidth ? "w-full" : "",
@@ -1195,13 +1446,236 @@ function ActionButton({
         >
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-                <span className="transition-transform group-hover:scale-110 relative z-10">{icon}</span>
+                <>
+                    <span className="relative z-10 transition-transform group-hover:scale-110">{icon}</span>
+                    <span className="relative z-10">{children}</span>
+                </>
             )}
-            <span className="relative z-10">{children}</span>
         </button>
     );
 }
 
+function RefundCenter({ 
+    invoice, 
+    runAction, 
+    actionLoading,
+    proofFile,
+    onProofChange,
+    refundMessage,
+    onRefundSuccess
+}: { 
+    invoice: InvoiceDetail; 
+    runAction: (action: any) => void;
+    actionLoading: string | null;
+    proofFile: File | null;
+    onProofChange: (file: File | null) => void;
+    refundMessage?: any;
+    onRefundSuccess?: () => void;
+}) {
+    if (!invoice) return null;
+    const refund = (invoice.metadata as any)?.refund_preference;
+    if (!refund) return null;
+
+    const refundProofUrl = (invoice.metadata as any)?.refund_proof_url;
+    const isAlreadyRefunded = !!refundProofUrl;
+
+    if (isAlreadyRefunded) {
+        return (
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+                <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 p-8 text-center space-y-4">
+                    <div className="flex justify-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-400 shadow-inner">
+                            <CheckCircle2 className="h-8 w-8" />
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-lg font-black text-white">Refund Processed</p>
+                        <p className="text-xs font-medium text-emerald-100/60 leading-relaxed uppercase tracking-widest">Transaction Reconciled</p>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">Submitted Proof</p>
+                    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2 shadow-lg">
+                        <img 
+                            src={refundProofUrl} 
+                            alt="Refund Proof" 
+                            className="h-full w-full object-cover"
+                        />
+                    </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-surface-2 border border-white/5 text-center">
+                    <p className="text-[10px] text-text-medium font-medium leading-relaxed">
+                        The refund has been officially recorded. No further action is required for this reconciliation.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                        <Wallet className="h-3 w-3" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-xs font-bold text-text-high leading-tight">Tenant Refund Request</p>
+                        <p className="text-[10px] text-text-medium font-medium leading-relaxed">
+                            The tenant has requested a refund for the excess payment. Please process this via GCash.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid gap-3 p-3 rounded-xl bg-surface-2 border border-white/5 shadow-inner">
+                    <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Method</p>
+                        <p className="text-[10px] font-bold text-text-high uppercase tracking-widest">GCash</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Account Number</p>
+                        <p className="text-sm font-black text-primary tracking-wider font-mono">
+                            {refund.gcash_number || "Provided via QR"}
+                        </p>
+                    </div>
+                    {refund.qr_url && (
+                        <div className="pt-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled mb-2">Recipient QR Code</p>
+                            <div className="relative group aspect-square w-full max-w-[200px] mx-auto overflow-hidden rounded-xl border border-white/10 bg-white p-2">
+                                <img 
+                                    src={refund.qr_url} 
+                                    alt="Tenant GCash QR" 
+                                    className="h-full w-full object-contain"
+                                />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <p className="text-[10px] font-bold text-white uppercase tracking-widest">View Full Size</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled ml-1">Upload Proof of Refund</p>
+                <div className="relative">
+                    {!proofFile ? (
+                        <label className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 bg-surface-1 py-8 text-text-disabled transition-all hover:border-primary/30 hover:bg-surface-2 cursor-pointer group">
+                            <div className="p-3 rounded-full bg-surface-3 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                <Upload className="h-5 w-5" />
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs font-bold text-text-high group-hover:text-primary transition-colors">Select Proof Image</p>
+                                <p className="text-[10px] font-medium">PNG, JPG or WebP (Max 5MB)</p>
+                            </div>
+                            <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*"
+                                onChange={(e) => onProofChange(e.target.files?.[0] || null)}
+                            />
+                        </label>
+                    ) : (
+                        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-surface-2">
+                            <img 
+                                src={URL.createObjectURL(proofFile)} 
+                                alt="Refund Proof Preview" 
+                                className="h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <button 
+                                    onClick={() => onProofChange(null)}
+                                    className="p-3 rounded-2xl bg-red-500 text-white shadow-xl active:scale-90 transition-all"
+                                    title="Remove Image"
+                                >
+                                    <Trash2 className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <RefundSubmitButton
+                invoiceId={(invoice as any)?.id}
+                proofFile={proofFile}
+                onProofChange={onProofChange}
+                onSuccess={onRefundSuccess}
+            />
+        </div>
+    );
+}
+
+function RefundSubmitButton({
+    invoiceId,
+    proofFile,
+    onProofChange,
+    onSuccess
+}: {
+    invoiceId: string;
+    proofFile: File | null;
+    onProofChange: (file: File | null) => void;
+    onSuccess?: () => void;
+}) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            if (proofFile) {
+                formData.append("refundProofFile", proofFile);
+            }
+
+            const response = await fetch(
+                `/api/landlord/invoices/${invoiceId}/mark-refunded`,
+                { method: "POST", body: formData }
+            );
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || "Failed to mark refund as processed.");
+            }
+
+            onProofChange(null);
+            onSuccess?.();
+        } catch (err: any) {
+            setError(err.message || "Something went wrong. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="space-y-3 pt-2">
+            {error && (
+                <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                    <p className="text-[10px] font-medium text-rose-400 leading-relaxed">{error}</p>
+                </div>
+            )}
+            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled text-center mb-1">Finalize Resolution</p>
+            <ActionButton
+                onClick={handleSubmit}
+                loading={isSubmitting}
+                variant="primary"
+                fullWidth
+                icon={<CheckCircle2 className="h-5 w-5" />}
+            >
+                Mark as Refunded
+            </ActionButton>
+            <p className="text-[9px] text-text-disabled text-center leading-relaxed px-4">
+                By clicking this, you confirm that you have manually sent the refund to the tenant&apos;s provided details.
+            </p>
+        </div>
+    );
+}
 function CreditCardIcon({ className }: { className?: string }) {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>

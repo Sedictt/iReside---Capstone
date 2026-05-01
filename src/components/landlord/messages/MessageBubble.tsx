@@ -24,7 +24,8 @@ import {
     Zap,
     History,
     MoreVertical,
-    Copy
+    Copy,
+    TrendingUp
 } from "lucide-react";
 import { UiMessage, OutboundStatus } from "./types";
 import { Logo } from "@/components/ui/Logo";
@@ -40,7 +41,9 @@ interface MessageBubbleProps {
     onImageClick?: (images: { url: string; id: string }[], index: number) => void;
     isDownloading?: boolean;
     viewerRole?: "landlord" | "tenant";
+    onResolveIssue?: (message: UiMessage) => void;
     onReportMessage?: (id: string) => void;
+    isActionDisabled?: boolean;
 }
 
 export function MessageBubble({ 
@@ -51,7 +54,9 @@ export function MessageBubble({
     onImageClick,
     isDownloading,
     viewerRole = "landlord",
-    onReportMessage
+    onReportMessage,
+    isActionDisabled = false,
+    onResolveIssue
 }: MessageBubbleProps) {
     const isSystem = message.type === "system";
     const [didCopy, setDidCopy] = useState(false);
@@ -67,6 +72,8 @@ export function MessageBubble({
                     onDownloadImage={onDownloadImage}
                     onOpenF2F={onOpenF2F}
                     isDownloading={isDownloading}
+                    isActionDisabled={isActionDisabled}
+                    onResolveIssue={onResolveIssue}
                 />
             </div>
         );
@@ -337,13 +344,17 @@ function SystemMessage({
     onDownloadImage,
     onOpenF2F,
     isDownloading,
-    viewerRole
+    viewerRole,
+    isActionDisabled,
+    onResolveIssue
 }: { 
     message: UiMessage, 
     onDownloadImage?: (id: string, name: string) => void,
     onOpenF2F?: (message: UiMessage) => void,
     isDownloading?: boolean,
-    viewerRole?: "landlord" | "tenant"
+    viewerRole?: "landlord" | "tenant",
+    isActionDisabled?: boolean,
+    onResolveIssue?: (message: UiMessage) => void
 }) {
     const router = useRouter();
     const isLandlord = viewerRole === "landlord";
@@ -371,6 +382,7 @@ function SystemMessage({
                 variant="warning"
                 actionLabel={isLandlord ? "Process Payment" : "View Invoice"}
                 onAction={isLandlord ? () => onOpenF2F?.(message) : () => router.push(message.invoiceId ? `/tenant/payments/${message.invoiceId}/checkout` : "/tenant/payments")}
+                disabled={isActionDisabled}
             />
         );
     }
@@ -386,6 +398,7 @@ function SystemMessage({
                 variant="default"
                 actionLabel={!isLandlord ? "Pay Now" : undefined}
                 onAction={!isLandlord ? () => router.push(message.invoiceId ? `/tenant/payments/${message.invoiceId}/checkout` : "/tenant/payments") : undefined}
+                disabled={isActionDisabled}
             />
         );
     }
@@ -393,16 +406,45 @@ function SystemMessage({
     // Landlord Review Actions
     if (message.systemType === "landlord_review") {
         const isRejected = message.workflowStatus === "rejected";
+        const isOverpayment = message.issueType === "excessive_amount";
+        
         return (
             <NotificationCard
                 message={message}
-                icon={isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />}
-                title={isRejected 
-                    ? (isLandlord ? "Payment Rejected" : "Payment Declined") 
-                    : (isLandlord ? "Payment Confirmed" : "Payment Received")
+                icon={isOverpayment ? <TrendingUp className="h-6 w-6 text-white" /> : (isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />)}
+                title={isOverpayment 
+                    ? (message.metadata?.isResolved 
+                        ? "Reconciliation Complete"
+                        : (isLandlord 
+                            ? (message.metadata?.hasRefundDetails ? "Refund Details Available" : "Overpayment Detected")
+                            : (message.metadata?.hasRefundDetails ? "Refund Details Shared" : "Excess Payment Received")))
+                    : (isRejected 
+                        ? (isLandlord ? "Payment Rejected" : "Payment Declined") 
+                        : (isLandlord ? "Payment Confirmed" : "Payment Received"))
                 }
-                subtitle={isRejected ? "Action Logged" : "Transaction Complete"}
-                variant={isRejected ? "error" : "success"}
+                subtitle={isOverpayment 
+                    ? (message.metadata?.isResolved
+                        ? (isLandlord ? "Excess payment handled." : "Transaction fully settled.")
+                        : (isLandlord 
+                            ? (message.metadata?.hasRefundDetails ? "Tenant has submitted their refund preference." : `Reconciliation needed for ₱${Math.abs(Number(message.metadata?.shortfallAmount || 0)).toLocaleString()} excess`)
+                            : (message.metadata?.hasRefundDetails ? "Awaiting landlord processing." : `We received ₱${Math.abs(Number(message.metadata?.shortfallAmount || 0)).toLocaleString()} more than the required amount.`))) 
+                    : (isRejected ? "Action Logged" : "Transaction Complete")}
+                variant={isOverpayment ? (message.metadata?.isResolved ? "success" : "warning") : (isRejected ? "error" : "success")}
+                refundImg={message.metadata?.refundProofUrl}
+                actionLabel={
+                    message.metadata?.isResolved 
+                        ? undefined 
+                        : (isLandlord 
+                            ? (message.metadata?.hasRefundDetails ? "View Refund Info" : "Reconcile")
+                            : ((isRejected || (isOverpayment && !message.metadata?.hasRefundDetails)) ? "Resolve Issue" : undefined))
+                }
+                onAction={
+                    message.metadata?.isResolved
+                        ? undefined
+                        : (isLandlord 
+                            ? (message.metadata?.hasRefundDetails ? () => onOpenF2F?.(message) : undefined)
+                            : ((isRejected || isOverpayment) ? () => onResolveIssue?.(message) : undefined))
+                }
             />
         );
     }

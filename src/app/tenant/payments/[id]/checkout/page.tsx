@@ -471,7 +471,8 @@ export default function CheckoutPage() {
             .filter(r => selectedReadingIds.includes(r.id))
             .reduce((sum, r) => sum + (r.billing_mode === 'included_in_rent' ? 0 : r.computed_charge), 0);
             
-        return selectedItemsTotal + selectedReadingsTotal;
+        const totalSelected = selectedItemsTotal + selectedReadingsTotal;
+        return Math.max(0, totalSelected - invoice.paidAmount);
     }, [invoice, selectedItemIds, selectedReadingIds]);
 
     const submitPayment = async () => {
@@ -960,12 +961,32 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="mt-8 space-y-6 pt-6 border-t border-dashed border-border/50">
-                            <div className="flex items-center justify-between">
-                                <div>
+                            <div className="flex items-end justify-between">
+                                <div className="space-y-1">
+                                    {invoice.paidAmount > 0 && (
+                                        <div className="flex flex-col mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest line-through decoration-muted-foreground/50">
+                                                    Original Total: {formatPhpCurrency(invoice.totalAmount)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-1 w-1 rounded-full bg-emerald-500" />
+                                                <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">
+                                                    Paid to Date: {formatPhpCurrency(invoice.paidAmount)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
-                                        {amountDue < invoice.totalAmount ? "Selective Total" : "Total Amount Due"}
+                                        {amountDue < (invoice.paidAmount > 0 ? invoice.balanceRemaining : invoice.totalAmount) ? "Selection Total" : (invoice.paidAmount > 0 ? "Remaining Balance" : "Total Amount Due")}
                                     </p>
-                                    <p className="text-3xl font-black text-foreground tracking-tighter">{formatPhpCurrency(amountDue)}</p>
+                                    <p className={cn(
+                                        "text-3xl font-black tracking-tighter",
+                                        amountDue < invoice.totalAmount ? "text-amber-500" : "text-foreground"
+                                    )}>
+                                        {formatPhpCurrency(amountDue)}
+                                    </p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Due Date</p>

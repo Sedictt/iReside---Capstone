@@ -70,6 +70,7 @@ import { InvoiceModal } from "../../../components/landlord/invoices/InvoiceModal
 import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 import { TenantIrisChat } from "@/components/tenant/TenantIrisChat";
 import { MessageReportWizard } from "@/components/messaging/MessageReportWizard";
+import { PaymentIssueResolver } from "@/components/messaging/PaymentIssueResolver";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:tenant:messages-cache";
 const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:tenant:conversations-cache";
@@ -226,6 +227,7 @@ export default function TenantMessagesPage() {
     const [isSubmittingConfirmAction, setIsSubmittingConfirmAction] = useState(false);
     const [showReportWizard, setShowReportWizard] = useState(false);
     const [reportMessageId, setReportMessageId] = useState<string | undefined>(undefined);
+    const [issueToResolve, setIssueToResolve] = useState<UiMessageType | null>(null);
     const [activeF2FPayment, setActiveF2FPayment] = useState<UiMessageType | null>(null);
     const [isF2FInterfaceOpen, setIsF2FInterfaceOpen] = useState(false);
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -684,7 +686,7 @@ export default function TenantMessagesPage() {
             expiresAt: typeof metadata?.expiresAt === "string" ? metadata.expiresAt : undefined,
             landlordTransactionPath: typeof metadata?.landlordTransactionPath === "string" ? metadata.landlordTransactionPath : undefined,
             paymentId: typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined,
-            invoiceId: (typeof metadata?.invoiceId === "string" ? metadata.invoiceId : (typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined)),
+            invoiceId: (() => { const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i; const raw = typeof metadata?.invoiceId === "string" ? metadata.invoiceId : (typeof metadata?.paymentId === "string" ? metadata.paymentId : undefined); return raw && UUID_RE.test(raw) ? raw : undefined; })(),
             invoiceNumber: typeof metadata?.invoiceNumber === "string" ? metadata.invoiceNumber : undefined,
             tenantName: typeof metadata?.tenantName === "string" ? metadata.tenantName : undefined,
             landlordName: typeof metadata?.landlordName === "string" ? metadata.landlordName : undefined,
@@ -705,6 +707,11 @@ export default function TenantMessagesPage() {
                 createdAt: att.createdAt
             })) : undefined,
             isAlbum: Boolean(message.isAlbum ?? metadata?.isAlbum),
+            issueType: metadata?.issueType as UiMessageType["issueType"],
+            shortfallAmount: typeof metadata?.shortfallAmount === "number" ? metadata.shortfallAmount : undefined,
+            rejectionReason: typeof metadata?.rejectionReason === "string" ? metadata.rejectionReason : undefined,
+            hasRefundDetails: Boolean(metadata?.hasRefundDetails),
+            metadata: metadata || undefined,
         };
     };
 
@@ -972,6 +979,7 @@ export default function TenantMessagesPage() {
         if (!activeConversationId) return;
         const channel = supabase.channel(`messages-${activeConversationId}`)
             .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async () => { await refreshMessages(activeConversationId); await refreshConversations(); })
+            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async () => { await refreshMessages(activeConversationId); await refreshConversations(); })
             .on("broadcast", { event: "typing" }, ({ payload }) => {
                 const candidate = payload as { conversationId?: string; userId?: string; isTyping?: boolean };
                 if (candidate.conversationId !== activeConversationId || !candidate.userId || candidate.userId === user?.id) return;
@@ -1098,6 +1106,7 @@ export default function TenantMessagesPage() {
                             messagesScrollRef={messagesScrollRef}
                             messagesEndRef={messagesEndRef}
                             onReportMessage={openReportWizard}
+                            onResolveIssue={(msg) => setIssueToResolve(msg)}
                         />
 
                         <MessageComposer
@@ -1347,6 +1356,18 @@ export default function TenantMessagesPage() {
                 role="tenant"
                 onUpdated={async () => { if (activeConversationId) { await refreshMessages(activeConversationId); await refreshConversations(); } }}
             />
+
+            <AnimatePresence>
+                {issueToResolve && (
+                    <PaymentIssueResolver
+                        message={issueToResolve}
+                        onClose={() => setIssueToResolve(null)}
+                        onResolved={() => {
+                            setIssueToResolve(null);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 }

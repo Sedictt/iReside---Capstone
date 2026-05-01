@@ -58,6 +58,11 @@ export type UiMessage = {
     disclosureAllowed?: boolean;
     attachments?: UiMessage[];
     isAlbum?: boolean;
+    issueType?: "insufficient_amount" | "excessive_amount" | "not_received" | "invalid_proof" | "other";
+    shortfallAmount?: number;
+    rejectionReason?: string;
+    hasRefundDetails?: boolean;
+    metadata?: Record<string, any>;
 };
 
 export type SharedFileItem = {

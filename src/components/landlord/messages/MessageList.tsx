@@ -18,6 +18,7 @@ interface MessageListProps {
     messagesScrollRef: React.RefObject<HTMLDivElement | null>;
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     onReportMessage?: (id: string) => void;
+    onResolveIssue?: (message: UiMessage) => void;
 }
 
 export function MessageList({
@@ -32,7 +33,8 @@ export function MessageList({
     updateShouldStickToBottom,
     messagesScrollRef,
     messagesEndRef,
-    onReportMessage
+    onReportMessage,
+    onResolveIssue
 }: MessageListProps) {
     const groupedMessages = useMemo(() => {
         const result: UiMessage[] = [];
@@ -89,19 +91,29 @@ export function MessageList({
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {groupedMessages.map((msg) => (
-                            <MessageBubble
-                                key={msg.id}
-                                message={msg}
-                                isMe={msg.type === viewerRole}
-                                viewerRole={viewerRole}
-                                onDownloadImage={onDownloadImage}
-                                onOpenF2F={onOpenF2F}
-                                onImageClick={onImageClick}
-                                isDownloading={isDownloading}
-                                onReportMessage={onReportMessage}
-                            />
-                        ))}
+                        {groupedMessages.map((msg, idx) => {
+                            // Find if there is any landlord review (confirm or reject) for this same invoiceId that comes AFTER this message
+                            const hasSubsequentReview = msg.invoiceId ? groupedMessages.slice(idx + 1).some(m => 
+                                m.invoiceId === msg.invoiceId && 
+                                m.systemType === "landlord_review"
+                            ) : false;
+
+                            return (
+                                <MessageBubble
+                                    key={msg.id}
+                                    message={msg}
+                                    isMe={msg.type === viewerRole}
+                                    viewerRole={viewerRole}
+                                    onDownloadImage={onDownloadImage}
+                                    onOpenF2F={onOpenF2F}
+                                    onImageClick={onImageClick}
+                                    isDownloading={isDownloading}
+                                    onReportMessage={onReportMessage}
+                                    isActionDisabled={hasSubsequentReview}
+                                    onResolveIssue={onResolveIssue}
+                                />
+                            );
+                        })}
                         <div ref={messagesEndRef} className="h-1" />
                     </div>
                 )}
