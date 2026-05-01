@@ -5,45 +5,31 @@ import { useSearchParams } from "next/navigation";
 import {
     FileText,
     Download,
-    Calendar,
     CheckCircle2,
     Clock,
     Home,
     ShieldCheck,
-    AlertCircle,
-    ChevronRight,
-    MapPin,
-    FileSignature,
-    Key,
     ScrollText,
     Loader2,
     Building2,
-    UserCircle,
-    Phone,
     MessageSquare,
-    Info,
+    Shield,
     ArrowUpRight,
     History,
-    LayoutDashboard,
-    Maximize,
-    Bed,
-    Bath,
-    Layers,
-    Coffee,
-    Wind,
-    Shield,
-    Trash2,
-    LogOut,
-    ArrowRightLeft,
     CheckCircle,
     FileSearch,
-    Plus
+    Maximize,
+    Layers,
+    Bed,
+    Bath,
+    Coffee,
+    LucideIcon
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
+import UnitTransferRequest from "@/components/tenant/UnitTransferRequest";
 import { LeaseTour } from "@/components/tenant/LeaseTour";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import LeaseRenewalRequest from "@/components/tenant/LeaseRenewalRequest";
@@ -52,8 +38,6 @@ import { LeaseData } from "@/types/lease";
 type TabId = "agreement" | "property" | "services";
 
 function LeaseHubContent() {
-    const searchParams = useSearchParams();
-    const isPreview = searchParams.get("preview") === "true";
     const [lease, setLease] = useState<LeaseData | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabId>("agreement");
@@ -123,7 +107,7 @@ function LeaseHubContent() {
                 <div>
                     <h2 className="text-2xl font-black text-foreground tracking-tight">Registry Empty</h2>
                     <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
-                        We couldn't find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
+                        We couldn&apos;t find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
                     </p>
                 </div>
                 <Link href="/search" className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-primary/20 transition-all">
@@ -135,9 +119,8 @@ function LeaseHubContent() {
 
     const imgUrl = lease.unit.property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2000&auto=format&fit=crop";
     const shortHash = lease.id.replace(/-/g, "").substring(0, 8).toUpperCase();
-    const isEligibleForRenewal = progressData.daysRemaining <= 90 && progressData.daysRemaining > 0;
 
-    const tabs: { id: TabId; label: string; icon: any }[] = [
+    const tabs: { id: TabId; label: string; icon: LucideIcon }[] = [
         { id: "agreement", label: "Agreement", icon: ScrollText },
         { id: "property", label: "The Residence", icon: Home },
         { id: "services", label: "Governance", icon: Shield },
@@ -431,25 +414,9 @@ function LeaseHubContent() {
                                              <MoveOutRequest variant="hub" />
                                          </div>
 
-                                         {/* Unit Transfer Promo */}
-                                         <div className="lg:col-span-1 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-primary/30 transition-all relative overflow-hidden h-full">
-                                             <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
-                                                 <ArrowRightLeft className="w-16 h-16" />
-                                             </div>
-                                             <div className="space-y-6">
-                                                 <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600">
-                                                     <ArrowRightLeft className="w-6 h-6" />
-                                                 </div>
-                                                 <div>
-                                                     <h4 className="text-lg font-black text-foreground tracking-tight">Unit Transfer</h4>
-                                                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                                                         Looking for a different floor, size, or view? Request a move within the same property.
-                                                     </p>
-                                                 </div>
-                                             </div>
-                                             <button className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-secondary transition-all flex items-center justify-center gap-2">
-                                                 Check Availability <ArrowUpRight className="w-4 h-4" />
-                                             </button>
+                                         {/* Unit Transfer Request */}
+                                         <div className="lg:col-span-1">
+                                             <UnitTransferRequest currentUnitId={lease.unit.id} />
                                          </div>
                                      </div>
                                 </div>
