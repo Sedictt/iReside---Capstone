@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
     Check, 
     CheckCheck, 
@@ -26,32 +28,35 @@ import {
 } from "lucide-react";
 import { UiMessage, OutboundStatus } from "./types";
 import { Logo } from "@/components/ui/Logo";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 import { NotificationCard } from "@/components/messaging/NotificationCard";
 
 interface MessageBubbleProps {
     message: UiMessage;
     isMe: boolean;
-    onConfirmPayment?: (id: string) => void;
     onDownloadImage?: (id: string, name: string) => void;
     onOpenF2F?: (message: UiMessage) => void;
     onImageClick?: (images: { url: string; id: string }[], index: number) => void;
     isDownloading?: boolean;
     viewerRole?: "landlord" | "tenant";
+    onReportMessage?: (id: string) => void;
 }
 
 export function MessageBubble({ 
     message, 
     isMe, 
-    onConfirmPayment, 
     onDownloadImage, 
     onOpenF2F,
     onImageClick,
     isDownloading,
-    viewerRole = "landlord"
+    viewerRole = "landlord",
+    onReportMessage
 }: MessageBubbleProps) {
     const isSystem = message.type === "system";
+    const [didCopy, setDidCopy] = useState(false);
+    const [didCopyId, setDidCopyId] = useState(false);
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
 
     if (isSystem) {
         return (
@@ -59,7 +64,6 @@ export function MessageBubble({
                 <SystemMessage 
                     message={message} 
                     viewerRole={viewerRole}
-                    onConfirmPayment={onConfirmPayment} 
                     onDownloadImage={onDownloadImage}
                     onOpenF2F={onOpenF2F}
                     isDownloading={isDownloading}
@@ -70,6 +74,38 @@ export function MessageBubble({
 
     const hasMedia = message.isAlbum || message.messageType === "image";
     const hasContent = Boolean(message.content) || message.messageType === "file";
+    const copyText = message.isRedacted ? (message.redactedContent || "••••••••") : (message.content || "");
+
+    const handleCopy = async () => {
+        if (!copyText) return;
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(copyText);
+            } else {
+                const el = document.createElement("textarea");
+                el.value = copyText;
+                el.setAttribute("readonly", "");
+                el.style.position = "fixed";
+                el.style.left = "-9999px";
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand("copy");
+                document.body.removeChild(el);
+            }
+            setDidCopy(true);
+            window.setTimeout(() => setDidCopy(false), 1200);
+        } catch {
+            // no-op: clipboard may be blocked by browser permission policy
+        }
+    };
+
+    const handleCopyId = async () => {
+        try {
+            await navigator.clipboard.writeText(message.id);
+            setDidCopyId(true);
+            window.setTimeout(() => setDidCopyId(false), 1200);
+        } catch { }
+    };
 
     return (
         <div className={cn(
@@ -77,7 +113,7 @@ export function MessageBubble({
             isMe ? "justify-end" : "justify-start"
         )}>
             <div className={cn(
-                "max-w-[75%] md:max-w-[60%] flex flex-col",
+                "max-w-[75%] md:max-w-[60%] flex flex-col group",
                 isMe ? "items-end" : "items-start"
             )}>
                 {/* Media Section (Outside Bubble) */}
@@ -152,10 +188,78 @@ export function MessageBubble({
                     </motion.div>
                 )}
                 
-                <div className="flex items-center gap-1.5 mt-1 px-1">
+                <div className={cn(
+                    "flex items-center gap-1 mt-1 px-1 relative",
+                    isMe ? "flex-row-reverse" : "flex-row"
+                )}>
                     <span className="text-[10px] font-medium text-disabled">
                         {message.timestamp}
                     </span>
+                    
+                    {/* Kebab Menu Trigger */}
+                    <div className={cn(
+                        "opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all",
+                        isMe ? "mr-1" : "ml-1"
+                    )}>
+                        <button
+                            type="button"
+                            onClick={() => setShowActionsMenu(!showActionsMenu)}
+                            onBlur={() => setTimeout(() => setShowActionsMenu(false), 200)}
+                            className={cn(
+                                "inline-flex items-center justify-center rounded-lg p-1.5 transition-all",
+                                isMe ? "text-white/70 hover:text-white hover:bg-white/10" : "text-medium hover:text-high hover:bg-surface-2",
+                                showActionsMenu && (isMe ? "bg-white/20 text-white" : "bg-surface-3 text-high")
+                            )}
+                            title="Message actions"
+                        >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        <AnimatePresence>
+                            {showActionsMenu && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: isMe ? 5 : 5 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                                    className={cn(
+                                        "absolute bottom-full z-50 mb-2 min-w-[140px] rounded-2xl border border-border bg-surface-1 shadow-2xl p-1.5",
+                                        isMe ? "right-0" : "left-0"
+                                    )}
+                                >
+                                    {Boolean(copyText) && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCopy}
+                                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                        >
+                                            {didCopy ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+                                            {didCopy ? "Copied" : "Copy text"}
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyId}
+                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-colors"
+                                    >
+                                        {didCopyId ? <Check className="h-3 w-3 text-primary" /> : <ShieldCheck className="h-3 w-3" />}
+                                        {didCopyId ? "ID Copied" : "Copy ID"}
+                                    </button>
+                                    {!isMe && onReportMessage && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onReportMessage(message.id)}
+                                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-colors"
+                                        >
+                                            <AlertTriangle className="h-3 w-3" />
+                                            Report
+                                        </button>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     {isMe && <StatusIcon status={message.status} />}
                 </div>
             </div>
@@ -230,19 +334,18 @@ function renderSystemIcon(type: string) {
 
 function SystemMessage({ 
     message, 
-    onConfirmPayment, 
     onDownloadImage,
     onOpenF2F,
     isDownloading,
     viewerRole
 }: { 
     message: UiMessage, 
-    onConfirmPayment?: (id: string) => void,
     onDownloadImage?: (id: string, name: string) => void,
     onOpenF2F?: (message: UiMessage) => void,
     isDownloading?: boolean,
     viewerRole?: "landlord" | "tenant"
 }) {
+    const router = useRouter();
     const isLandlord = viewerRole === "landlord";
 
     // Invoice - Shared Official Receipt with real-time fetching
@@ -266,8 +369,8 @@ function SystemMessage({
                 title={isLandlord ? "In-Person Payment" : "Payment Awaiting Collection"}
                 subtitle={isLandlord ? "Verification Required" : "Face-to-Face Transaction"}
                 variant="warning"
-                actionLabel={isLandlord ? "Confirm Payment" : undefined}
-                onAction={isLandlord ? () => onOpenF2F?.(message) : undefined}
+                actionLabel={isLandlord ? "Process Payment" : "View Invoice"}
+                onAction={isLandlord ? () => onOpenF2F?.(message) : () => router.push(message.invoiceId ? `/tenant/payments/${message.invoiceId}/checkout` : "/tenant/payments")}
             />
         );
     }
@@ -281,6 +384,8 @@ function SystemMessage({
                 title={isLandlord ? "Payment Reminder" : "Payment Request"}
                 subtitle={isLandlord ? "Notification Sent" : "Action Required"}
                 variant="default"
+                actionLabel={!isLandlord ? "Pay Now" : undefined}
+                onAction={!isLandlord ? () => router.push(message.invoiceId ? `/tenant/payments/${message.invoiceId}/checkout` : "/tenant/payments") : undefined}
             />
         );
     }

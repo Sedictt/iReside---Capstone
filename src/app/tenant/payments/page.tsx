@@ -82,17 +82,34 @@ export default function FinanceHubPage() {
     }, []);
 
     const handlePayInAdvance = async () => {
+        console.log("handlePayInAdvance triggered");
         setCreatingAdvance(true);
         try {
             const response = await fetch("/api/tenant/payments/advance", {
                 method: "POST",
             });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("API error creating advance payment:", errorData);
+                alert(`Error: ${errorData.error || "Failed to create advance payment"}`);
+                return;
+            }
+
             const data = await response.json();
+            console.log("Advance payment created:", data);
+            
             if (data.id) {
-                router.push(`/tenant/payments/${data.id}/checkout`);
+                const checkoutUrl = `/tenant/payments/${data.id}/checkout`;
+                console.log("Redirecting to:", checkoutUrl);
+                router.push(checkoutUrl);
+            } else {
+                console.error("No ID returned from advance payment API");
+                alert("Critical error: Server did not return a valid invoice ID.");
             }
         } catch (error) {
-            console.error("Error creating advance payment:", error);
+            console.error("Network or execution error in handlePayInAdvance:", error);
+            alert("Network error: Could not connect to the billing service.");
         } finally {
             setCreatingAdvance(false);
         }
@@ -259,8 +276,8 @@ export default function FinanceHubPage() {
                     </p>
                 </div>
 
-                {nextPayment && (
-                    <div className="bg-card border border-border rounded-[1.5rem] p-3 shadow-sm flex items-center gap-6 ring-1 ring-primary/5">
+                {nextPayment ? (
+                    <div className="bg-card border border-border rounded-[1.5rem] p-3 shadow-sm flex items-center gap-6 ring-1 ring-primary/5 animate-in fade-in zoom-in duration-500">
                         <div className="px-1 border-r border-border/50">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Balance Due</p>
                             <p className="text-lg font-black text-foreground tracking-tight">
@@ -271,8 +288,24 @@ export default function FinanceHubPage() {
                             href={`/tenant/payments/${nextPayment.id}/checkout`}
                             className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0"
                         >
-                            Settle Now <ArrowRight className="w-4 h-4" />
+                            Pay Now <ArrowRight className="w-4 h-4" />
                         </Link>
+                    </div>
+                ) : (
+                    <div className="bg-primary/[0.03] border border-primary/20 rounded-[1.5rem] p-3 flex items-center gap-6 animate-in fade-in slide-in-from-right-4 duration-700">
+                        <div className="px-1 border-r border-primary/10">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-0.5">Next Cycle Early</p>
+                            <p className="text-lg font-black text-foreground tracking-tight">
+                                {formatPhpCurrency(lease?.monthlyRent ?? 0)}
+                            </p>
+                        </div>
+                        <button 
+                            onClick={handlePayInAdvance}
+                            disabled={creatingAdvance}
+                            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 disabled:opacity-50"
+                        >
+                            {creatingAdvance ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Pay Next Cycle Now <ArrowRight className="w-4 h-4" /></>}
+                        </button>
                     </div>
                 )}
             </div>
@@ -409,9 +442,11 @@ export default function FinanceHubPage() {
                                             </p>
                                             {!nextPayment && <p className="text-[9px] text-muted-foreground font-bold mt-0.5">Excludes pending utility computations</p>}
                                         </div>
-                                        <p className="text-4xl font-black text-primary tracking-tighter">
-                                            {nextPayment ? formatPhpCurrency(nextPayment.amount) : formatPhpCurrency(lease?.monthlyRent ?? 0)}
-                                        </p>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <p className="text-4xl font-black text-primary tracking-tighter">
+                                                {nextPayment ? formatPhpCurrency(nextPayment.amount) : formatPhpCurrency(lease?.monthlyRent ?? 0)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -531,7 +566,7 @@ export default function FinanceHubPage() {
                                                     </div>
                                                 </div>
                                                 
-                                                <div className="flex items-center gap-8">
+                                                <div className="flex items-center gap-4">
                                                     <div className="text-right">
                                                         <p className="text-xl font-black text-foreground tracking-tighter">{formatPhpCurrency(invoice.amount)}</p>
                                                         <div className="flex items-center justify-end gap-2 mt-1.5">
@@ -550,10 +585,16 @@ export default function FinanceHubPage() {
                                                         </div>
                                                     </div>
                                                     <Link 
-                                                        href={`/tenant/payments/${invoice.id}`}
-                                                        className="w-10 h-10 rounded-xl bg-muted/50 border border-border flex items-center justify-center hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-all"
+                                                        href={`/tenant/payments/${invoice.id}/checkout`}
+                                                        className={cn(
+                                                            "w-10 h-10 rounded-xl border flex items-center justify-center transition-all",
+                                                            invoice.status === 'paid' 
+                                                                ? "bg-muted/50 border-border hover:bg-primary/10 hover:border-primary/20 hover:text-primary" 
+                                                                : "bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white"
+                                                        )}
+                                                        title={invoice.status === 'paid' ? "View Summary" : "Pay Now"}
                                                     >
-                                                        <ArrowUpRight className="w-5 h-5" />
+                                                        {invoice.status === 'paid' ? <ArrowUpRight className="w-5 h-5" /> : <CreditCard className="w-4 h-4" />}
                                                     </Link>
                                                 </div>
                                             </div>
@@ -603,15 +644,6 @@ export default function FinanceHubPage() {
                                                     Pro-tip: Set aside {formatPhpCurrency((lease?.monthlyRent ?? 0) * 1.1)} for utilities.
                                                 </p>
                                             </div>
-                                            {!nextPayment && (
-                                                <button 
-                                                    onClick={handlePayInAdvance}
-                                                    disabled={creatingAdvance}
-                                                    className="w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2.5 disabled:opacity-50"
-                                                >
-                                                    {creatingAdvance ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Pay Rent in Advance <PaymentIcon className="w-4 h-4" /></>}
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                 </>

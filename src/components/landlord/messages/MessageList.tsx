@@ -10,7 +10,6 @@ interface MessageListProps {
     userId?: string;
     viewerRole?: "landlord" | "tenant";
     isMessagesLoading: boolean;
-    onConfirmPayment: (id: string) => void;
     onDownloadImage: (id: string, name: string) => void;
     onOpenF2F: (message: UiMessage) => void;
     onImageClick?: (images: { url: string; id: string }[], index: number) => void;
@@ -18,6 +17,7 @@ interface MessageListProps {
     updateShouldStickToBottom: () => void;
     messagesScrollRef: React.RefObject<HTMLDivElement | null>;
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
+    onReportMessage?: (id: string) => void;
 }
 
 export function MessageList({
@@ -25,14 +25,14 @@ export function MessageList({
     userId,
     viewerRole = "landlord",
     isMessagesLoading,
-    onConfirmPayment,
     onDownloadImage,
     onOpenF2F,
     onImageClick,
     isDownloading,
     updateShouldStickToBottom,
     messagesScrollRef,
-    messagesEndRef
+    messagesEndRef,
+    onReportMessage
 }: MessageListProps) {
     const groupedMessages = useMemo(() => {
         const result: UiMessage[] = [];
@@ -95,11 +95,11 @@ export function MessageList({
                                 message={msg}
                                 isMe={msg.type === viewerRole}
                                 viewerRole={viewerRole}
-                                onConfirmPayment={onConfirmPayment}
                                 onDownloadImage={onDownloadImage}
                                 onOpenF2F={onOpenF2F}
                                 onImageClick={onImageClick}
                                 isDownloading={isDownloading}
+                                onReportMessage={onReportMessage}
                             />
                         ))}
                         <div ref={messagesEndRef} className="h-1" />

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 import {
     computeUtilityCharge,
@@ -142,6 +143,7 @@ export type InvoiceDetail = {
     intentMethod: Payment["intent_method"] | null;
     inPersonIntentExpiresAt: string | null;
     landlordConfirmed: boolean;
+    metadata: Json;
     lineItems: PaymentItem[];
     readings: InvoiceReadingDetail[];
     receipts: PaymentReceipt[];
@@ -546,6 +548,7 @@ export async function getInvoiceDetailForActor(
         readings: readingMap.get(payment.id) ?? [],
         receipts,
         paymentDestination: destinationMap.get(payment.landlord_id) ?? null,
+        metadata: payment.metadata || {},
         leaseTermsSummary: terms,
     };
 }
@@ -1047,7 +1050,7 @@ export async function createAdvancePayment(supabase: AppSupabaseClient, tenantId
     // 2. Determine next cycle
     const now = new Date();
     const nextCycle = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const cycleKey = toIsoDate(nextCycle).substring(0, 7); // YYYY-MM
+    const cycleKey = toIsoDate(nextCycle); // Full date YYYY-MM-01
 
     // 3. Check if an invoice already exists for this cycle
     const { data: existing } = await supabase

@@ -18,6 +18,8 @@ type RouteContext = {
 
 const intentSchema = z.object({
     note: z.string().max(600).optional(),
+    selectedItemIds: z.array(z.string()).optional(),
+    selectedReadingIds: z.array(z.string()).optional(),
 });
 
 export async function POST(request: Request, context: RouteContext) {
@@ -42,7 +44,7 @@ export async function POST(request: Request, context: RouteContext) {
 
         const { data: payment, error: paymentError } = await adminClient
             .from("payments")
-            .select("id, tenant_id, landlord_id, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at")
+            .select("id, tenant_id, landlord_id, invoice_number, status, workflow_status, intent_method, amount_tag, review_action, paid_amount, balance_remaining, receipt_number, payment_submitted_at, rejection_reason, in_person_intent_expires_at, metadata")
             .eq("id", id)
             .eq("tenant_id", user.id)
             .maybeSingle();
@@ -76,6 +78,11 @@ export async function POST(request: Request, context: RouteContext) {
                 in_person_intent_expires_at: expiresAt,
                 payment_submitted_at: nowIso,
                 payment_note: note,
+                metadata: {
+                    ...((payment.metadata as any) || {}),
+                    pending_item_ids: body.selectedItemIds || [],
+                    pending_reading_ids: body.selectedReadingIds || [],
+                },
                 rejection_reason: null,
                 review_action: null,
                 last_action_at: nowIso,

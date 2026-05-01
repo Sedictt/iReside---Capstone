@@ -54,15 +54,15 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                     <X className="h-5 w-5" />
                 </button>
 
-                <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-amber-600 px-8 py-10">
-                    <div className="absolute right-0 top-0 -mr-10 -mt-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+                <div className="relative overflow-hidden border-b border-white/5 bg-card/40 px-8 py-10 backdrop-blur-2xl">
+                    <div className="absolute right-0 top-0 -mr-10 -mt-10 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
                     <div className="relative z-10 flex items-center gap-5">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-white/20 backdrop-blur-xl border border-white/30 shadow-xl">
-                            <HandCoins className="h-8 w-8 text-white" />
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] bg-card/50 backdrop-blur-xl border border-white/10 shadow-lg">
+                            <HandCoins className="h-8 w-8 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-white">Cash Payment</h2>
-                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">Face-to-Face Transaction</p>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">Cash Payment</h2>
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Face-to-Face Transaction</p>
                         </div>
                     </div>
                 </div>
@@ -111,6 +111,16 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                                 <p className="text-xs font-bold text-high">Verification Protocol</p>
                                 <p className="text-[11px] text-medium leading-relaxed">
                                     Continue to invoice review before approval. This keeps the full verification checklist and helps prevent accidental confirmation.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 flex gap-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-amber-500">Physical Cash Check Required</p>
+                                <p className="text-[11px] text-medium leading-relaxed italic">
+                                    Ensure you have the cash in hand before continuing. Recording this settlement will update the tenant's balance immediately.
                                 </p>
                             </div>
                         </div>

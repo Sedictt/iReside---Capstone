@@ -277,7 +277,7 @@ export default function TenantDashboard() {
                 id: "overdue-payments",
                 title: `Billing support needed`,
                 description: `You have ${overduePayments.length} overdue bill${overduePayments.length === 1 ? "" : "s"} totaling ₱${formatCurrency(overdueTotal, 2)}.`,
-                href: "/tenant/payments/checkout",
+                href: `/tenant/payments/${overduePayments[0]?.id}/checkout`,
                 cta: "Review billing",
                 icon: AlertCircle,
                 iconClass: "text-red-600",
@@ -288,7 +288,7 @@ export default function TenantDashboard() {
                 id: "next-payment",
                 title: "Upcoming payment",
                 description: `${nextPayment.description ?? "Your next payment"} is due ${formatDueDate(nextPayment.dueDate)}.`,
-                href: "/tenant/payments/checkout",
+                href: `/tenant/payments/${nextPayment.id}/checkout`,
                 cta: "View bill",
                 icon: CreditCard,
                 iconClass: "text-emerald-600",
@@ -408,7 +408,7 @@ export default function TenantDashboard() {
                             <div className="flex flex-wrap gap-4 pt-2">
                                 {nextPayment && (
                                     <Link
-                                        href="/tenant/payments/checkout"
+                                        href={`/tenant/payments/${nextPayment.id}/checkout`}
                                         className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         <CreditCard className="w-4 h-4" />
@@ -504,7 +504,7 @@ export default function TenantDashboard() {
                                 </div>
                             </div>
                             <Link
-                                href="/tenant/payments/checkout"
+                                href={`/tenant/payments/${overduePayments[0]?.id}/checkout`}
                                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 transition-all"
                             >
                                 Pay Now

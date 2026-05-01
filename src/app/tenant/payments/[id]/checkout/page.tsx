@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Loader2, QrCode, ShieldCheck, Upload, Wallet, Receipt, TrendingUp, Info, HelpCircle, HandCoins, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { formatDateLong, formatPhpCurrency } from "@/lib/billing/utils";
 import { cn } from "@/lib/utils";
@@ -100,7 +101,7 @@ function buildFaceToFacePreviewInvoice(invoiceId: string): InvoiceDetail {
         lateFeeAmount: 250,
         allowPartialPayments: true,
         description: "Preview monthly invoice",
-        paymentMethod: null,
+        paymentMethod: "in_person",
         referenceNumber: null,
         paymentSubmittedAt: null,
         paymentProofUrl: null,
@@ -112,6 +113,7 @@ function buildFaceToFacePreviewInvoice(invoiceId: string): InvoiceDetail {
         intentMethod: null,
         inPersonIntentExpiresAt: null,
         landlordConfirmed: false,
+        metadata: {},
         lineItems: [
             {
                 id: "preview-item-rent",
@@ -207,6 +209,190 @@ function buildFaceToFacePreviewInvoice(invoiceId: string): InvoiceDetail {
     };
 }
 
+function buildSelectivePreviewInvoice(invoiceId: string): InvoiceDetail {
+    const now = new Date().toISOString();
+
+    return {
+        id: invoiceId,
+        invoiceNumber: "INV-SEL-2026",
+        status: "pending",
+        workflowStatus: "pending",
+        tenant: {
+            id: "preview-tenant",
+            email: "tenant.preview@ireside.local",
+            full_name: "Selective Payment Demo",
+            role: "tenant",
+            avatar_url: null,
+            avatar_bg_color: null,
+            phone: "09171234567",
+            bio: null,
+            website: null,
+            address: null,
+            cover_url: null,
+            socials: {},
+            business_permit_url: null,
+            business_permit_number: null,
+            business_name: null,
+            created_at: now,
+            updated_at: now,
+        },
+        landlord: {
+            id: "preview-landlord",
+            email: "landlord.preview@ireside.local",
+            full_name: "Premium Property Management",
+            role: "landlord",
+            avatar_url: null,
+            avatar_bg_color: null,
+            phone: "09179876543",
+            bio: null,
+            website: null,
+            address: null,
+            cover_url: null,
+            socials: {},
+            business_permit_url: null,
+            business_permit_number: null,
+            business_name: null,
+            created_at: now,
+            updated_at: now,
+        },
+        property: {
+            id: "preview-property",
+            landlord_id: "preview-landlord",
+            name: "Skyline Heights Apartments",
+            address: "88 Orchid Blvd",
+            city: "Makati City",
+            description: "Standard residential complex",
+            type: "apartment",
+            lat: null,
+            lng: null,
+            amenities: ["Pool", "Gym", "Concierge"],
+            house_rules: ["Standard rules apply"],
+            contract_template: null,
+            images: [],
+            is_featured: false,
+            created_at: now,
+            updated_at: now,
+        },
+        unit: {
+            id: "preview-unit",
+            property_id: "preview-property",
+            name: "Unit 42A",
+            floor: 42,
+            status: "occupied",
+            rent_amount: 45000,
+            sqft: 120,
+            beds: 3,
+            baths: 3,
+            created_at: now,
+            updated_at: now,
+        },
+        dueDate: "2026-06-01",
+        issuedDate: "2026-05-15",
+        billingCycle: "2026-05-01",
+        invoicePeriodStart: "2026-05-01",
+        invoicePeriodEnd: "2026-05-31",
+        subtotal: 52450,
+        totalAmount: 52450,
+        paidAmount: 0,
+        balanceRemaining: 52450,
+        lateFeeAmount: 500,
+        allowPartialPayments: true,
+        description: "Selective payment preview",
+        paymentMethod: null,
+        referenceNumber: null,
+        paymentSubmittedAt: null,
+        paymentProofUrl: null,
+        paymentNote: null,
+        receiptNumber: null,
+        amountTag: null,
+        reviewAction: null,
+        rejectionReason: null,
+        intentMethod: null,
+        inPersonIntentExpiresAt: null,
+        landlordConfirmed: false,
+        metadata: {},
+        lineItems: [
+            {
+                id: "item-rent",
+                payment_id: invoiceId,
+                label: "Monthly Rent",
+                amount: 45000,
+                category: "rent",
+                sort_order: 0,
+                utility_type: null,
+                billing_mode: null,
+                reading_id: null,
+                metadata: {},
+                created_at: now,
+            },
+            {
+                id: "item-parking",
+                payment_id: invoiceId,
+                label: "Parking Slot B12",
+                amount: 5000,
+                category: "parking",
+                sort_order: 5,
+                utility_type: null,
+                billing_mode: null,
+                reading_id: null,
+                metadata: {},
+                created_at: now,
+            }
+        ],
+        readings: [
+            {
+                id: "reading-water",
+                utility_type: "water",
+                billing_mode: "tenant_paid",
+                billing_period_start: "2026-05-01",
+                billing_period_end: "2026-05-31",
+                previous_reading: 500,
+                current_reading: 512,
+                usage: 12,
+                billed_rate: 45,
+                computed_charge: 540,
+                note: null,
+                proof_image_url: null,
+                entered_at: now,
+            },
+            {
+                id: "reading-electric",
+                utility_type: "electricity",
+                billing_mode: "tenant_paid",
+                billing_period_start: "2026-05-01",
+                billing_period_end: "2026-05-31",
+                previous_reading: 1250,
+                current_reading: 1320,
+                usage: 70,
+                billed_rate: 21.15,
+                computed_charge: 1480.5,
+                note: null,
+                proof_image_url: null,
+                entered_at: now,
+            },
+        ],
+        receipts: [],
+        paymentDestination: {
+            id: "dest-selective",
+            landlord_id: "landlord-selective",
+            provider: "gcash",
+            account_name: "Skyline Heights Apartments",
+            account_number: "09170001122",
+            qr_image_path: null,
+            qr_image_url: null,
+            is_enabled: true,
+            created_at: now,
+            updated_at: now,
+        },
+        leaseTermsSummary: {
+            dueDay: 1,
+            lateFeeAmount: 500,
+            allowPartialPayments: true,
+            utilitiesDescription: "Standard luxury utility billing.",
+        },
+    };
+}
+
 export default function CheckoutPage() {
     const params = useParams<{ id: string }>();
     const router = useRouter();
@@ -219,16 +405,24 @@ export default function CheckoutPage() {
     const [note, setNote] = useState("");
     const [receipt, setReceipt] = useState<File | null>(null);
     const [partialAmount, setPartialAmount] = useState("");
+    const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+    const [selectedReadingIds, setSelectedReadingIds] = useState<string[]>([]);
     const [submitted, setSubmitted] = useState(false);
     const [inPersonTriggered, setInPersonTriggered] = useState(false);
     const isFaceToFacePreview = searchParams.get("preview") === "face_to_face";
+    const isSelectivePreview = searchParams.get("preview") === "selective";
 
     useEffect(() => {
         let alive = true;
         const load = async () => {
-            if (isFaceToFacePreview) {
+            if (isFaceToFacePreview || isSelectivePreview) {
                 if (alive) {
-                    setInvoice(buildFaceToFacePreviewInvoice(params.id));
+                    const previewData = isSelectivePreview 
+                        ? buildSelectivePreviewInvoice(params.id)
+                        : buildFaceToFacePreviewInvoice(params.id);
+                    setInvoice(previewData);
+                    setSelectedItemIds(previewData.lineItems.map(i => i.id));
+                    setSelectedReadingIds(previewData.readings.map(r => r.id));
                     setLoading(false);
                 }
                 return;
@@ -238,7 +432,11 @@ export default function CheckoutPage() {
                 const response = await fetch(`/api/tenant/payments/${params.id}`, { cache: "no-store" });
                 if (!response.ok) throw new Error();
                 const payload = await response.json();
-                if (alive) setInvoice(payload.invoice ?? null);
+                if (alive && payload.invoice) {
+                    setInvoice(payload.invoice);
+                    setSelectedItemIds(payload.invoice.lineItems.map((item: any) => item.id));
+                    setSelectedReadingIds(payload.invoice.readings.map((r: any) => r.id));
+                }
             } finally {
                 if (alive) setLoading(false);
             }
@@ -250,15 +448,31 @@ export default function CheckoutPage() {
     }, [isFaceToFacePreview, params.id]);
 
     useEffect(() => {
-        if (isFaceToFacePreview) {
-            setMethod("cash");
+        if (isFaceToFacePreview && invoice) {
+            setSelectedItemIds(invoice.lineItems.map(i => i.id));
+            setSelectedReadingIds(invoice.readings.map(r => r.id));
         }
-    }, [isFaceToFacePreview]);
+    }, [isFaceToFacePreview, invoice]);
+
+    useEffect(() => {
+        if (isFaceToFacePreview || isSelectivePreview) {
+            setMethod(isFaceToFacePreview ? "cash" : "gcash");
+        }
+    }, [isFaceToFacePreview, isSelectivePreview]);
 
     const amountDue = useMemo(() => {
         if (!invoice) return 0;
-        return invoice.balanceRemaining;
-    }, [invoice]);
+        
+        const selectedItemsTotal = invoice.lineItems
+            .filter(item => selectedItemIds.includes(item.id))
+            .reduce((sum, item) => sum + item.amount, 0);
+            
+        const selectedReadingsTotal = invoice.readings
+            .filter(r => selectedReadingIds.includes(r.id))
+            .reduce((sum, r) => sum + (r.billing_mode === 'included_in_rent' ? 0 : r.computed_charge), 0);
+            
+        return selectedItemsTotal + selectedReadingsTotal;
+    }, [invoice, selectedItemIds, selectedReadingIds]);
 
     const submitPayment = async () => {
         if (!invoice) return;
@@ -275,7 +489,17 @@ export default function CheckoutPage() {
             formData.append("method", method);
             formData.append("referenceNumber", referenceNumber);
             formData.append("note", note);
-            if (partialAmount) formData.append("partialAmount", partialAmount);
+            formData.append("selectedItemIds", JSON.stringify(selectedItemIds));
+            formData.append("selectedReadingIds", JSON.stringify(selectedReadingIds));
+            
+            // If the user hasn't selected everything, it's a partial payment
+            const isFullPayment = invoice.lineItems.length === selectedItemIds.length && 
+                                invoice.readings.length === selectedReadingIds.length && 
+                                !partialAmount;
+            
+            const finalAmount = partialAmount ? Number(partialAmount) : amountDue;
+            if (!isFullPayment || partialAmount) formData.append("partialAmount", finalAmount.toString());
+            
             if (receipt) formData.append("receipt", receipt);
 
             const response = await fetch(`/api/tenant/payments/${invoice.id}/submit`, {
@@ -304,7 +528,13 @@ export default function CheckoutPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ note }),
+                body: JSON.stringify({ 
+                    note,
+                    partialAmount: amountDue < invoice.totalAmount ? amountDue : undefined,
+                    selectedItemIds,
+                    selectedReadingIds,
+                    paymentMethod: "in_person"
+                }),
             });
             if (!response.ok) throw new Error();
             const payload = await response.json();
@@ -331,12 +561,19 @@ export default function CheckoutPage() {
         return <div className="rounded-3xl border border-border bg-card p-8 text-center text-muted-foreground">Invoice unavailable.</div>;
     }
 
-    if (submitted) {
+    if (submitted || invoice.status === "paid") {
         return (
-            <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm">
+            <div className="mx-auto max-w-3xl rounded-[2rem] border border-emerald-500/20 bg-card p-10 text-center shadow-sm relative overflow-hidden">
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full" />
                 <CheckCircle2 className="mx-auto mb-5 h-12 w-12 text-emerald-400" />
-                <h1 className="text-3xl font-black text-foreground">Payment submitted for review</h1>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment.</p>
+                <h1 className="text-3xl font-black text-foreground">
+                    {invoice.status === "paid" ? "Invoice already paid" : "Payment submitted for review"}
+                </h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    {invoice.status === "paid" 
+                        ? "This transaction has been successfully settled and confirmed by your landlord. You can view the receipt in your payment history."
+                        : "Your landlord has the proof, reference details, and invoice context. We kept the billing record open until they confirm the payment."}
+                </p>
                 <div className="mt-6 flex justify-center gap-3">
                     <Link href="/tenant/payments" className="rounded-2xl border border-border px-5 py-3 text-sm font-bold text-foreground transition hover:bg-muted">Back to payments</Link>
                     <Link href="/tenant/dashboard" className="rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90">Go to dashboard</Link>
@@ -346,185 +583,433 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-            <section className="rounded-[2.5rem] border border-border/40 bg-card/60 p-8 shadow-xl backdrop-blur-3xl relative overflow-hidden">
-                <div className="absolute -left-[10%] -top-[10%] h-[300px] w-[300px] rounded-full bg-primary/5 blur-[80px] pointer-events-none" />
-                <div className="relative z-10 mb-8 flex items-center justify-between">
-                    <button onClick={() => router.back()} className="group inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-5 py-2.5 text-sm font-bold text-foreground shadow-sm backdrop-blur-md transition-all hover:bg-muted hover:scale-105 active:scale-95"><ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />Back</button>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 shadow-sm"><ShieldCheck className="h-3.5 w-3.5" />Secure checkout</div>
-                </div>
+        <div className="mx-auto max-w-6xl pb-20">
+            {/* Ambient Background Glows */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full" />
+            </div>
 
-                {isFaceToFacePreview && (
-                    <div className="relative z-10 mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Preview mode: Face-to-face payment</p>
-                            <Link href={`/tenant/payments/${params.id}/checkout`} className="rounded-full border border-border bg-background px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-red-500 transition-colors hover:bg-muted hover:text-red-600">
-                                Clear Preview
-                            </Link>
-                        </div>
-                        <p className="mt-2 text-sm text-muted-foreground">This preview does not write to the database. Submitting here only shows the success state so you can validate the full flow safely.</p>
-                    </div>
-                )}
-
-                <div className="relative z-10 mb-8">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Checkout</p>
-                    <h1 className="mt-2 text-4xl font-black text-foreground md:text-5xl tracking-tight">{invoice.invoiceNumber}</h1>
-                    <p className="mt-4 text-sm font-medium text-muted-foreground">{invoice.property?.name} <span className="mx-1 text-border">•</span> {invoice.unit?.name} <span className="mx-1 text-border">•</span> due <span className="text-foreground">{formatDateLong(invoice.dueDate)}</span></p>
-                </div>
-
-                <div className="relative z-10 grid gap-5 md:grid-cols-2">
-                    <MethodCard
-                        active={method === "gcash"}
-                        disabled={isFaceToFacePreview}
-                        onClick={() => setMethod("gcash")}
-                        icon={<QrCode className="h-6 w-6" />}
-                        title="GCash"
-                        body={isFaceToFacePreview ? "Disabled in face-to-face preview mode." : "Use the landlord's saved wallet destination and upload proof."}
-                    />
-                    <MethodCard active={method === "cash"} onClick={() => setMethod("cash")} icon={<Wallet className="h-6 w-6" />} title="Cash / in person" body="Record your intent and let the landlord confirm receipt." />
-                </div>
-
-                {method === "gcash" ? (
-                    <div className="relative z-10 mt-8 grid gap-6 lg:grid-cols-[1fr_260px]">
-                        <div className="space-y-5">
-                            <Field label="Reference number"><input value={referenceNumber} onChange={(event) => setReferenceNumber(event.target.value)} className="w-full rounded-2xl border border-border/50 bg-background/80 px-5 py-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 hover:bg-background" placeholder="GCash reference" /></Field>
-                            {invoice.allowPartialPayments && <Field label="Partial amount (optional)"><input value={partialAmount} onChange={(event) => setPartialAmount(event.target.value)} className="w-full rounded-2xl border border-border/50 bg-background/80 px-5 py-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 hover:bg-background" placeholder={amountDue.toString()} /></Field>}
-                            <Field label="Payment proof">
-                                <label className="flex cursor-pointer overflow-hidden items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-background/50 px-5 py-5 text-sm font-bold text-foreground transition-all hover:bg-background/80 hover:border-primary/40 hover:shadow-sm">
-                                    <Upload className={cn("h-5 w-5", receipt ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="truncate max-w-[200px]">{receipt ? receipt.name : "Upload screenshot"}</span>
-                                    <input type="file" accept="image/*" className="hidden" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} />
-                                </label>
-                            </Field>
-                        </div>
-                        <div className="rounded-[2rem] border border-border/40 bg-background/50 p-5 text-center shadow-inner">
-                            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Destination QR</p>
-                            <div className="rounded-[1.6rem] border border-border/50 bg-card p-4 shadow-md transition-transform hover:scale-[1.02]">
-                                <div className="mb-4 aspect-square overflow-hidden rounded-2xl border border-border/50 bg-white p-2">
-                                    {invoice.paymentDestination?.qr_image_url ? <Image src={invoice.paymentDestination.qr_image_url} alt="Landlord GCash QR" width={320} height={320} unoptimized className="h-full w-full object-cover rounded-xl" /> : <div className="flex h-full items-center justify-center rounded-xl bg-slate-50 border border-dashed border-slate-200 text-slate-400"><QrCode className="h-12 w-12" /></div>}
+            <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_380px] items-start">
+                <div className="space-y-6">
+                    {/* Compact Header */}
+                    <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <button 
+                                onClick={() => router.back()} 
+                                className="group flex h-10 w-10 items-center justify-center rounded-full border border-border/50 bg-card/50 text-foreground transition-all hover:bg-muted hover:scale-105 active:scale-95"
+                            >
+                                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                            </button>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Checkout Hub</p>
+                                    <span className="h-1 w-1 rounded-full bg-border" />
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{invoice.property?.name}</p>
                                 </div>
-                                <p className="text-sm font-black text-foreground truncate">{invoice.paymentDestination?.account_name ?? invoice.landlord?.full_name ?? "Landlord"}</p>
-                                <p className="mt-1.5 text-[10px] uppercase tracking-[0.25em] text-primary">{invoice.paymentDestination?.account_number ?? invoice.landlord?.phone ?? "No number"}</p>
+                                <h1 className="text-2xl font-black tracking-tight text-foreground">{invoice.invoiceNumber}</h1>
                             </div>
                         </div>
+                    </header>
+
+                    {/* Step 1: Payment Method */}
+                    <section className="rounded-[2rem] border border-border/40 bg-card/40 p-1 backdrop-blur-xl shadow-sm">
+                        <div className="grid grid-cols-2 gap-1">
+                            <button
+                                onClick={() => setMethod("gcash")}
+                                disabled={isFaceToFacePreview}
+                                className={cn(
+                                    "relative flex items-center gap-3 rounded-[1.7rem] px-6 py-4 transition-all duration-300",
+                                    method === "gcash" ? "bg-background shadow-md ring-1 ring-border/50" : "text-muted-foreground hover:bg-white/5",
+                                    isFaceToFacePreview && "opacity-50 cursor-not-allowed"
+                                )}
+                            >
+                                <div className={cn(
+                                    "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+                                    method === "gcash" ? "border-primary/30 bg-primary/10 text-primary" : "border-border/50 bg-muted/50"
+                                )}>
+                                    <QrCode className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-black tracking-tight">GCash Wallet</p>
+                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Digital Settlement</p>
+                                </div>
+                                {method === "gcash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
+                            </button>
+
+                            <button
+                                onClick={() => setMethod("cash")}
+                                className={cn(
+                                    "relative flex items-center gap-3 rounded-[1.7rem] px-6 py-4 transition-all duration-300",
+                                    method === "cash" ? "bg-background shadow-md ring-1 ring-border/50" : "text-muted-foreground hover:bg-white/5"
+                                )}
+                            >
+                                <div className={cn(
+                                    "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+                                    method === "cash" ? "border-amber-500/30 bg-amber-500/10 text-amber-500" : "border-border/50 bg-muted/50"
+                                )}>
+                                    <Wallet className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-black tracking-tight">Cash / In-Person</p>
+                                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Face-to-Face</p>
+                                </div>
+                                {method === "cash" && <motion.div layoutId="active-pill" className="absolute inset-0 rounded-[1.7rem] border-2 border-primary/20 pointer-events-none" />}
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Step 2: Payment Details */}
+                    <div className="min-h-[400px]">
+                        <AnimatePresence mode="wait">
+                            {method === "gcash" ? (
+                                <motion.div 
+                                    key="gcash"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="grid gap-6 md:grid-cols-[1fr_280px]">
+                                        <div className="space-y-6 rounded-[2rem] border border-border/40 bg-card/60 p-8 shadow-xl backdrop-blur-3xl">
+                                            <div className="space-y-5">
+                                                <Field label="Reference number">
+                                                    <input 
+                                                        value={referenceNumber} 
+                                                        onChange={(event) => setReferenceNumber(event.target.value)} 
+                                                        className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                        placeholder="13-digit GCash Ref #" 
+                                                    />
+                                                </Field>
+                                                
+                                                <Field label="Transaction Receipt">
+                                                    <label className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/50 bg-background/30 px-5 py-8 text-center transition-all hover:bg-background/50 hover:border-primary/40 cursor-pointer">
+                                                        <div className={cn(
+                                                            "flex h-12 w-12 items-center justify-center rounded-full transition-all",
+                                                            receipt ? "bg-emerald-500/10 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]" : "bg-muted text-muted-foreground group-hover:text-primary"
+                                                        )}>
+                                                            {receipt ? <CheckCircle2 className="h-6 w-6" /> : <Upload className="h-6 w-6" />}
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-black text-foreground truncate max-w-[240px]">
+                                                                {receipt ? receipt.name : "Upload Screenshot"}
+                                                            </p>
+                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                                                JPG, PNG or PDF up to 5MB
+                                                            </p>
+                                                        </div>
+                                                        <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} />
+                                                    </label>
+                                                </Field>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-[2rem] border border-border/40 bg-card/60 p-6 shadow-xl backdrop-blur-3xl text-center flex flex-col justify-center">
+                                            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-primary">Destination QR</p>
+                                            <div className="group relative mx-auto mb-6 aspect-square w-full max-w-[200px] overflow-hidden rounded-3xl border border-border/50 bg-white p-3 shadow-md transition-all hover:scale-[1.02]">
+                                                {invoice.paymentDestination?.qr_image_url ? (
+                                                    <Image 
+                                                        src={invoice.paymentDestination.qr_image_url} 
+                                                        alt="Destination QR" 
+                                                        width={300} 
+                                                        height={300} 
+                                                        className="h-full w-full object-cover rounded-2xl"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-full items-center justify-center rounded-2xl bg-slate-50 border border-dashed border-slate-200">
+                                                        <QrCode className="h-12 w-12 text-slate-300" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-black text-foreground truncate">{invoice.paymentDestination?.account_name || "Landlord Wallet"}</p>
+                                                <p className="text-[11px] font-black tracking-[0.1em] text-primary">{invoice.paymentDestination?.account_number || "---"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Optional Note moved inside for better density */}
+                                    <div className="mt-6">
+                                        <Field label="Optional Note">
+                                            <textarea 
+                                                rows={2} 
+                                                value={note} 
+                                                onChange={(event) => setNote(event.target.value)} 
+                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                placeholder="Add a comment for the landlord..." 
+                                            />
+                                        </Field>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div 
+                                    key="cash"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="h-full"
+                                >
+                                    <div className="grid gap-6 md:grid-cols-[1fr_280px] h-full">
+                                        <div className="md:col-span-2 rounded-[2rem] border border-amber-500/20 bg-amber-500/5 p-8 shadow-xl backdrop-blur-3xl h-full flex flex-col justify-center">
+                                            <div className="flex items-center gap-3 text-lg font-black text-foreground">
+                                                <HandCoins className="h-6 w-6 text-amber-500" />
+                                                In-Person Settlement
+                                            </div>
+                                            <p className="mt-4 text-sm leading-relaxed text-muted-foreground font-medium max-w-2xl">
+                                                Coordinate with your landlord or building manager to settle this invoice via cash. Once paid, trigger the intent below so they can officially confirm the receipt.
+                                            </p>
+                                            
+                                            {inPersonTriggered ? (
+                                                <div className="mt-8 flex items-center gap-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 text-emerald-600 dark:text-emerald-400 self-start">
+                                                    <CheckCircle2 className="h-5 w-5 shrink-0" />
+                                                    <div className="text-sm">
+                                                        <p className="font-black">Intent Successfully Triggered</p>
+                                                        <p className="opacity-80">Waiting for landlord to confirm your cash payment.</p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="mt-8">
+                                                    <button
+                                                        onClick={triggerInPersonIntent}
+                                                        disabled={submitting}
+                                                        className="inline-flex items-center justify-center gap-3 rounded-full bg-amber-500 px-8 py-4 text-sm font-black text-white transition-all hover:bg-amber-600 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-60"
+                                                    >
+                                                        {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Wallet className="h-5 w-5" />}
+                                                        Notify Landlord of Payment
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Optional Note moved inside for better density */}
+                                    <div className="mt-6 rounded-[2rem] border border-border/40 bg-card/60 p-8 shadow-sm backdrop-blur-md">
+                                        <Field label="Optional Note">
+                                            <textarea 
+                                                rows={2} 
+                                                value={note} 
+                                                onChange={(event) => setNote(event.target.value)} 
+                                                className="w-full rounded-2xl border border-border/50 bg-background/50 px-5 py-4 text-sm font-black text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10" 
+                                                placeholder="Add a comment for the landlord..." 
+                                            />
+                                        </Field>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                ) : (
-                    <div className="relative z-10 mt-8 rounded-[2rem] border border-primary/20 bg-primary/5 p-6 shadow-inner">
-                        <div className="flex items-center gap-3 text-sm font-black text-foreground"><CreditCard className="h-5 w-5 text-primary" />Cash payment instructions</div>
-                        <p className="mt-3 text-sm leading-relaxed text-muted-foreground font-medium">Bring the exact amount to your landlord or building manager, then trigger the in-person intent so the landlord can confirm receipt.</p>
-                        {invoice.inPersonIntentExpiresAt && (
-                            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-primary">
-                                Intent expires: {formatDateLong(invoice.inPersonIntentExpiresAt)}
-                            </p>
-                        )}
-                        {inPersonTriggered && (
-                            <p className="mt-3 text-sm font-semibold text-emerald-400">
-                                In-person intent submitted. Waiting for landlord confirmation.
-                            </p>
-                        )}
-                        <button
-                            onClick={triggerInPersonIntent}
-                            disabled={submitting}
-                            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
-                        >
-                            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-                            Trigger In-Person Payment
-                        </button>
-                    </div>
-                )}
 
-                <label className="relative z-10 mt-8 block space-y-2.5">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Note to landlord</span>
-                    <textarea rows={3} value={note} onChange={(event) => setNote(event.target.value)} className="w-full rounded-2xl border border-border/50 bg-background/80 px-5 py-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 hover:bg-background" placeholder="Optional note for the landlord..." />
-                </label>
+                </div>
 
-                {method === "gcash" && (
-                    <button onClick={submitPayment} disabled={submitting || !receipt || !referenceNumber.trim()} className={cn("relative z-10 group mt-8 inline-flex w-full items-center justify-center gap-2.5 rounded-full px-6 py-4 text-sm font-bold transition-all shadow-lg", submitting || !receipt || !referenceNumber.trim() ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" : "bg-gradient-to-r from-primary to-blue-600 text-primary-foreground hover:scale-[1.02] hover:shadow-primary/20 active:scale-95")}>
-                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5 transition-transform group-hover:scale-110" />}
-                    Confirm & Submit Payment
-                    </button>
-                )}
-            </section>
+                {/* Right Column: Sticky Summary & Breakdown */}
+                <aside className="lg:sticky lg:top-24 space-y-6">
+                    <section className="rounded-[2.5rem] border border-border/50 bg-card/80 p-8 shadow-2xl backdrop-blur-2xl ring-1 ring-border/50">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Receipt className="h-5 w-5 text-primary" />
+                            <h2 className="text-lg font-black text-foreground tracking-tight">Invoice Summary</h2>
+                        </div>
 
-            <section className="rounded-[2.5rem] border border-border/50 bg-card/60 p-8 shadow-xl backdrop-blur-xl flex flex-col h-fit">
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Invoice breakdown</p>
-                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">What you are paying for</h2>
+                        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                            {invoice.lineItems.map((item) => {
+                                const metadata = (invoice.metadata as any) || {};
+                                const paidIds = metadata.paid_item_ids || [];
+                                const pendingIds = metadata.pending_item_ids || [];
+                                const isAlreadyPaid = paidIds.includes(item.id);
+                                const isUnderReview = pendingIds.includes(item.id);
+                                
+                                if (isAlreadyPaid || isUnderReview) {
+                                    return (
+                                        <div key={item.id} className="flex items-center gap-3 py-1 opacity-40 grayscale-[0.8]">
+                                            <div className={cn(
+                                                "w-5 h-5 rounded-md border flex items-center justify-center",
+                                                isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
+                                            )}>
+                                                {isAlreadyPaid ? (
+                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                ) : (
+                                                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-black text-foreground truncate">{item.label}</p>
+                                                <p className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-widest",
+                                                    isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
+                                                )}>
+                                                    {isAlreadyPaid ? "Already Paid" : "Under Review"}
+                                                </p>
+                                            </div>
+                                            <span className="text-xs font-black text-foreground line-through opacity-50">{formatPhpCurrency(item.amount)}</span>
+                                        </div>
+                                    );
+                                }
 
-                <div className="mt-8 space-y-4">
-                    {invoice.lineItems.map((item) => (
-                        <div key={item.id} className="group rounded-[1.6rem] border border-border/50 bg-background/80 px-5 py-4 shadow-sm backdrop-blur-md transition-all hover:bg-background hover:scale-[1.02] hover:border-border">
-                            <div className="flex items-center justify-between gap-4">
+                                const isSelected = selectedItemIds.includes(item.id);
+                                const isMandatory = !invoice.allowPartialPayments;
+                                
+                                return (
+                                    <div 
+                                        key={item.id} 
+                                        onClick={() => {
+                                            if (isMandatory) return;
+                                            setSelectedItemIds(prev => 
+                                                isSelected ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                                            );
+                                        }}
+                                        className={cn(
+                                            "flex items-center gap-3 py-1 group transition-opacity",
+                                            !isSelected && "opacity-60 grayscale-[0.5]"
+                                        )}
+                                    >
+                                        {!isMandatory && (
+                                            <div className={cn(
+                                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
+                                                isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
+                                            )}>
+                                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-black text-foreground truncate">{item.label}</p>
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{item.category}</p>
+                                        </div>
+                                        <span className="text-xs font-black text-foreground whitespace-nowrap">{formatPhpCurrency(item.amount)}</span>
+                                    </div>
+                                );
+                            })}
+                            
+                            {invoice.readings.map((reading) => {
+                                const metadata = (invoice.metadata as any) || {};
+                                const paidIds = metadata.paid_reading_ids || [];
+                                const pendingIds = metadata.pending_reading_ids || [];
+                                const isAlreadyPaid = paidIds.includes(reading.id);
+                                const isUnderReview = pendingIds.includes(reading.id);
+
+                                if (isAlreadyPaid || isUnderReview) {
+                                    return (
+                                        <div key={reading.id} className="flex items-center gap-3 py-1 opacity-40 grayscale-[0.8]">
+                                            <div className={cn(
+                                                "w-5 h-5 rounded-md border flex items-center justify-center",
+                                                isAlreadyPaid ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"
+                                            )}>
+                                                {isAlreadyPaid ? (
+                                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                ) : (
+                                                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-black capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
+                                                <p className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-widest",
+                                                    isAlreadyPaid ? "text-emerald-500" : "text-amber-500"
+                                                )}>
+                                                    {isAlreadyPaid ? "Already Paid" : "Under Review"}
+                                                </p>
+                                            </div>
+                                            <span className="text-xs font-black text-foreground line-through opacity-50">
+                                                {reading.billing_mode === "included_in_rent" ? "Bundled" : formatPhpCurrency(reading.computed_charge)}
+                                            </span>
+                                        </div>
+                                    );
+                                }
+
+                                const isSelected = selectedReadingIds.includes(reading.id);
+                                const isMandatory = !invoice.allowPartialPayments;
+                                
+                                return (
+                                    <div 
+                                        key={reading.id} 
+                                        onClick={() => {
+                                            if (isMandatory) return;
+                                            setSelectedReadingIds(prev => 
+                                                isSelected ? prev.filter(id => id !== reading.id) : [...prev, reading.id]
+                                            );
+                                        }}
+                                        className={cn(
+                                            "flex items-center gap-3 py-1 group transition-opacity",
+                                            !isSelected && "opacity-60 grayscale-[0.5]"
+                                        )}
+                                    >
+                                        {!isMandatory && (
+                                            <div className={cn(
+                                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer",
+                                                isSelected ? "bg-primary border-primary text-white shadow-sm shadow-primary/20" : "bg-card border-border group-hover:border-primary/50"
+                                            )}>
+                                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-black capitalize text-foreground truncate">{reading.utility_type} Consumption</p>
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Usage: {reading.usage} Units</p>
+                                        </div>
+                                        <span className={cn(
+                                            "text-xs font-black whitespace-nowrap",
+                                            reading.billing_mode === "included_in_rent" ? "text-primary/60" : "text-foreground"
+                                        )}>
+                                            {reading.billing_mode === "included_in_rent" ? "Bundled" : formatPhpCurrency(reading.computed_charge)}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-8 space-y-6 pt-6 border-t border-dashed border-border/50">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-black text-foreground">{item.label}</p>
-                                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{item.category}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                        {amountDue < invoice.totalAmount ? "Selective Total" : "Total Amount Due"}
+                                    </p>
+                                    <p className="text-3xl font-black text-foreground tracking-tighter">{formatPhpCurrency(amountDue)}</p>
                                 </div>
-                                <span className="text-base font-black text-foreground group-hover:text-primary transition-colors">{formatPhpCurrency(item.amount)}</span>
-                            </div>
-                        </div>
-                    ))}
-                    {invoice.readings.map((reading) => (
-                        <div key={reading.id} className="group rounded-[1.6rem] border border-border/50 bg-background/80 px-5 py-4 shadow-sm backdrop-blur-md transition-all hover:bg-background hover:scale-[1.02] hover:border-border">
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-sm font-black capitalize text-foreground">{reading.utility_type} reading</p>
-                                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{reading.previous_reading} to {reading.current_reading} <span className="mx-1">•</span> usage <span className="text-foreground">{reading.usage}</span></p>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Due Date</p>
+                                    <p className="text-xs font-bold text-foreground">{formatDateLong(invoice.dueDate)}</p>
                                 </div>
-                                <span className={cn("rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm", reading.billing_mode === "included_in_rent" ? "bg-muted text-muted-foreground border border-border/50" : "bg-primary/10 text-primary border border-primary/20")}>{reading.billing_mode === "included_in_rent" ? "bundled" : formatPhpCurrency(reading.computed_charge)}</span>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                            
+                            {amountDue === 0 && (
+                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                                    <Info className="w-3.5 h-3.5" /> Select at least one item to pay
+                                </div>
+                            )}
 
-                <div className="mt-8 rounded-[2rem] border border-border/50 bg-background/60 p-6 shadow-inner backdrop-blur-md">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Total due</p>
-                            <p className="mt-1 text-4xl font-black text-foreground tracking-tight">{formatPhpCurrency(amountDue)}</p>
+                            {method === "gcash" && (
+                                <button 
+                                    onClick={submitPayment} 
+                                    disabled={submitting || !receipt || !referenceNumber.trim() || amountDue === 0} 
+                                    className={cn(
+                                        "group flex w-full items-center justify-center gap-3 rounded-full py-5 text-sm font-black transition-all shadow-xl",
+                                        submitting || !receipt || !referenceNumber.trim() || amountDue === 0
+                                            ? "cursor-not-allowed border border-border/50 bg-background/50 text-muted-foreground shadow-none" 
+                                            : "bg-gradient-to-r from-primary to-blue-600 text-white hover:scale-[1.02] hover:shadow-primary/25 active:scale-95"
+                                    )}
+                                >
+                                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5 transition-transform group-hover:scale-110" />}
+                                    Confirm & Settle Now
+                                </button>
+                            )}
+
+                            <p className="text-[9px] text-center text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
+                                Secure processing provided by iReside. <br/>All payments are subject to landlord review.
+                            </p>
                         </div>
-                        <div className="sm:text-right">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Partial payments</p>
-                            <p className="mt-1 text-sm font-black text-foreground">{invoice.allowPartialPayments ? "Allowed" : "Not enabled"}</p>
-                        </div>
+                    </section>
+
+                    {/* Support Link */}
+                    <div className="rounded-[2rem] border border-border/40 bg-card/40 p-6 text-center">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Having Trouble?</p>
+                        <Link href="/tenant/messages" className="text-xs font-black text-primary hover:underline flex items-center justify-center gap-1.5">
+                            <HelpCircle className="h-3.5 w-3.5" />
+                            Contact Property Manager
+                        </Link>
                     </div>
-                </div>
-            </section>
+                </aside>
+            </div>
         </div>
     );
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-    return <label className="block space-y-2.5"><span className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</span>{children}</label>;
-}
-
-function MethodCard({
-    active,
-    body,
-    disabled = false,
-    icon,
-    onClick,
-    title,
-}: {
-    active: boolean;
-    body: string;
-    disabled?: boolean;
-    icon: ReactNode;
-    onClick: () => void;
-    title: string;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            disabled={disabled}
-            className={cn(
-                "relative overflow-hidden rounded-[2rem] border p-6 text-left transition-all",
-                disabled ? "cursor-not-allowed opacity-55" : "hover:scale-[1.02]",
-                active ? "border-primary/40 bg-primary/5 shadow-md" : "border-border/50 bg-background/60 hover:bg-background hover:border-border/80",
-            )}
-        >
-            {active && <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />}
-            <div className={cn("relative z-10 mb-5 inline-flex rounded-2xl border p-3.5 transition-colors", active ? "border-primary/30 bg-primary/10 text-primary shadow-sm" : "border-border/50 bg-card text-muted-foreground")}>{icon}</div>
-            <p className="relative z-10 text-xl font-black text-foreground">{title}</p>
-            <p className="relative z-10 mt-2 text-sm leading-relaxed text-muted-foreground font-medium">{body}</p>
-        </button>
-    );
+    return <label className="block space-y-2.5"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</span>{children}</label>;
 }
