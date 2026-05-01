@@ -239,10 +239,12 @@ export function LandlordSettings() {
     }, [profile]);
 
     const fetchProperties = async () => {
+        if (!profile?.id) return;
+        
         const { data, error } = await supabase
             .from("properties")
             .select("id, name")
-            .eq("landlord_id", profile?.id);
+            .eq("landlord_id", profile.id);
         
         if (data) setProperties(data);
     };
@@ -975,7 +977,8 @@ export function LandlordSettings() {
             <AvatarPicker 
                 isOpen={isAvatarPickerOpen}
                 onClose={() => setIsAvatarPickerOpen(false)}
-                onSelect={() => refreshProfile()}
+                currentAvatarUrl={profile?.avatar_url || null}
+                currentBgColor={profile?.avatar_bg_color || null}
             />
         </div>
     );

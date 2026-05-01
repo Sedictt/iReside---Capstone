@@ -6,7 +6,7 @@ import { LogOut, AlertOctagon, X, CheckCircle2, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils";
 
 interface MoveOutRequestProps {
-    variant?: "sidebar" | "quickAction";
+    variant?: "sidebar" | "quickAction" | "hub";
 }
 
 export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestProps) {
@@ -30,7 +30,31 @@ export default function MoveOutRequest({ variant = "sidebar" }: MoveOutRequestPr
 
     return (
         <>
-            {variant === "sidebar" ? (
+            {variant === "hub" ? (
+                /* Hub Section Variant - Matches the new grid style */
+                <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-red-500/30 transition-all relative overflow-hidden h-full">
+                    <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
+                        <LogOut className="w-16 h-16" />
+                    </div>
+                    <div className="space-y-6">
+                        <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                            <LogOut className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-black text-foreground tracking-tight">End of Lease</h4>
+                            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                                Planning to move out? Initiate a digital clearance request and manage your move-out timeline.
+                            </p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={handleRequest}
+                        className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
+                    >
+                        Request Move-Out
+                    </button>
+                </div>
+            ) : variant === "sidebar" ? (
                 /* Sidebar Card Trigger */
                 <div className="rounded-[2rem] border border-border/60 bg-card p-8 relative overflow-hidden group flex-shrink-0 shadow-sm backdrop-blur-sm">
                     <div className="absolute inset-0 bg-gradient-to-br from-red-500/[0.03] via-transparent to-transparent opacity-80" />

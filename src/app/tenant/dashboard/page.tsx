@@ -670,10 +670,48 @@ export default function TenantDashboard() {
 
                     </div>
                 </div>
-            <LeaseModal
-                open={isLeaseModalOpen}
-                onOpenChange={setIsLeaseModalOpen}
-            />
+            {dashboardData?.lease && (
+                <LeaseModal
+                    open={isLeaseModalOpen}
+                    onOpenChange={setIsLeaseModalOpen}
+                        leaseData={{
+                            id: dashboardData.lease.id,
+                            start_date: dashboardData.lease.startDate,
+                            end_date: dashboardData.lease.endDate,
+                            monthly_rent: dashboardData.lease.monthlyRent,
+                            security_deposit: dashboardData.lease.securityDeposit,
+                            signed_at: dashboardData.lease.startDate, // Fallback
+                            signed_document_url: null,
+                            unit: {
+                                id: "", // Placeholder
+                                name: dashboardData.lease.unitName || "",
+                                floor: 0, // Not in summary
+                                sqft: null,
+                                beds: 0,
+                                baths: 0,
+                                property: {
+                                    id: "", // Placeholder
+                                    name: dashboardData.lease.propertyName || "",
+                                    address: dashboardData.lease.propertyAddress || "",
+                                    city: dashboardData.lease.propertyCity || "",
+                                    images: [],
+                                    house_rules: [],
+                                    amenities: []
+                                }
+                            },
+                            landlord: {
+                                id: "", // Placeholder
+                                full_name: dashboardData.lease.landlordName || "",
+                                avatar_url: dashboardData.lease.landlordAvatarUrl || "",
+                                avatar_bg_color: dashboardData.lease.landlordAvatarBgColor || "#171717",
+                                phone: dashboardData.lease.landlordPhone || ""
+                            },
+                            tenant: {
+                                full_name: "" // Placeholder
+                            }
+                        }}
+                />
+            )}
             <TenantContactsSidebar />
         </div>
     </div>

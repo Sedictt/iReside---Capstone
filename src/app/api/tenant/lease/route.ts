@@ -21,22 +21,32 @@ export async function GET() {
                 security_deposit,
                 terms,
                 signed_at,
+                signed_document_url,
                 unit:units!inner (
                     id,
                     name,
+                    floor,
+                    sqft,
+                    beds,
+                    baths,
                     property:properties!inner (
                         id,
                         name,
                         address,
                         images,
-                        house_rules
+                        house_rules,
+                        amenities
                     )
                 ),
                 landlord:profiles!leases_landlord_id_fkey (
                     id,
                     full_name,
                     avatar_url,
+                    avatar_bg_color,
                     phone
+                ),
+                tenant:profiles!leases_tenant_id_fkey (
+                    full_name
                 )
             `)
             .eq("tenant_id", user.id)

@@ -1,24 +1,43 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { LeaseData } from "@/types/lease";
 
-interface LeaseDocumentProps {
-    leaseId: string;
-    parties: { landlord: string; tenant: string };
-    property: { unit: string; street: string; city: string; zip: string };
-    term: { start: string; end: string };
-    rent: { monthly: number; due: string };
-    deposit: number;
-}
+export function LeaseDocument(props: LeaseData) {
+    const {
+        id: leaseId,
+        landlord,
+        tenant,
+        unit,
+        start_date,
+        end_date,
+        monthly_rent,
+        security_deposit,
+    } = props;
 
-export function LeaseDocument({
-    leaseId,
-    parties,
-    property,
-    term,
-    rent,
-    deposit,
-}: LeaseDocumentProps) {
+    const parties = {
+        landlord: landlord.full_name,
+        tenant: tenant.full_name
+    };
+
+    const property = {
+        unit: unit.name,
+        street: unit.property.address,
+        city: unit.property.city,
+        zip: "" // Optional if not in DB
+    };
+
+    const term = {
+        start: start_date,
+        end: end_date
+    };
+
+    const rent = {
+        monthly: monthly_rent,
+        due: "1st of the month" // Default or from DB if available
+    };
+
+    const deposit = security_deposit;
     const currentDate = new Date().toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',

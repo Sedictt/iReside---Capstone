@@ -94,15 +94,15 @@ export const getInvoiceStatus = ({
     dueDate: string;
     balanceRemaining?: number | null;
 }): InvoiceStatus => {
+    if (status === "completed" || (balanceRemaining ?? 0) <= 0) return "paid";
+
     if (workflowStatus === "reminder_sent") return "reminder_sent";
     if (workflowStatus === "intent_submitted") return "intent_submitted";
     if (workflowStatus === "under_review") return "under_review";
     if (workflowStatus === "awaiting_in_person") return "awaiting_in_person";
     if (workflowStatus === "confirmed") return "confirmed";
     if (workflowStatus === "rejected") return "rejected";
-    if (workflowStatus === "receipted") return "receipted";
-
-    if (status === "completed" || (balanceRemaining ?? 0) <= 0) return "paid";
+    if (workflowStatus === "receipted") return "paid";
     if (status === "processing") return "processing";
     if (status === "failed") return "failed";
     if (status === "refunded") return "refunded";
