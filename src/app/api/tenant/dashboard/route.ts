@@ -66,6 +66,16 @@ type PaymentHistoryItem = {
     category: string | null;
 };
 
+type UpcomingMonth = {
+    month: string;
+    monthLabel: string;
+    amount: number;
+    dueDate: string;
+    invoiceId: string | null;
+    isForecast: boolean;
+    status: PaymentStatus | null;
+};
+
 const normalizeCategory = (value: string | null | undefined) => (value ?? "").trim().toLowerCase();
 
 const isPendingStatus = (status: PaymentStatus) => status === "pending" || status === "processing";
@@ -135,7 +145,8 @@ export async function GET() {
         { data: utilityRows, error: utilityError },
         { data: announcementRows, error: announcementError },
         { data: activityRows, error: activityError },
-        { data: paymentHistoryRows, error: paymentHistoryError }
+        { data: paymentHistoryRows, error: paymentHistoryError },
+        { data: upcomingPayments, error: upcomingPaymentsError }
     ] = await Promise.all([
         supabase
             .from("leases")
@@ -191,7 +202,14 @@ export async function GET() {
             `)
             .eq("tenant_id", user.id)
             .order("due_date", { ascending: false })
-            .limit(20)
+            .limit(20),
+        supabase
+            .from("payments")
+            .select("id, amount, due_date, billing_cycle, status, description, metadata")
+            .eq("tenant_id", user.id)
+            .eq("status", "pending")
+            .order("billing_cycle", { ascending: true })
+            .limit(3)
     ]);
 
     if (leaseError || nextPaymentError || overdueError || paymentHistoryError) {
@@ -297,6 +315,40 @@ export async function GET() {
         };
     });
 
+    // Build upcoming months forecast (next 3 months)
+    const upcomingMonths: UpcomingMonth[] = [];
+    const existingInvoices = new Map<string, typeof upcomingPayments extends (infer T)[] ? T : never>();
+    
+    // Index existing invoices by billing cycle
+    for (const inv of (upcomingPayments ?? [])) {
+        if (inv.billing_cycle) {
+            existingInvoices.set(inv.billing_cycle, inv);
+        }
+    }
+
+    // Get monthly rent from active lease for estimates
+    const monthlyRent = leaseSummary?.monthlyRent ?? 0;
+
+    for (let i = 1; i <= 3; i++) {
+        const targetDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const monthKey = targetDate.toISOString().slice(0, 7); // YYYY-MM
+        const cycleKey = `${monthKey}-01`;
+        
+        const existing = existingInvoices.get(cycleKey);
+        const metadata = existing?.metadata as Record<string, unknown> | null;
+        const isForecast = metadata?.is_forecast === true;
+
+        upcomingMonths.push({
+            month: monthKey,
+            monthLabel: targetDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+            amount: existing ? Number(existing.amount ?? 0) : monthlyRent,
+            dueDate: existing?.due_date ?? `${cycleKey}-05`,
+            invoiceId: existing?.id ?? null,
+            isForecast: !existing || isForecast,
+            status: existing ? (existing.status as PaymentStatus) : null,
+        });
+    }
+
     return NextResponse.json({
         lease: leaseSummary,
         nextPayment,
@@ -305,5 +357,6 @@ export async function GET() {
         announcement,
         recentActivity,
         paymentHistory,
+        upcomingMonths,
     });
 }

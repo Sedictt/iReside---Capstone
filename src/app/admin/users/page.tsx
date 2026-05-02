@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search, Users, UserCheck, ShieldAlert, MoreHorizontal, Mail, Calendar, Key } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Search, Users, UserCheck, ShieldAlert, MoreHorizontal, Mail, Calendar, Key, Eye, Send, MoreVertical, X } from "lucide-react";
 import type { UserRole } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "@/components/profile/RoleBadge";
+import { toast } from "sonner";
 
 interface UserRow {
     id: string;
@@ -15,17 +16,225 @@ interface UserRow {
     created_at: string;
 }
 
+interface UserDetail {
+    profile: {
+        id: string;
+        full_name: string;
+        email: string;
+        role: UserRole;
+        avatar_url: string | null;
+        phone?: string;
+        created_at: string;
+    };
+    application?: {
+        id: string;
+        business_name: string;
+        business_address: string;
+        phone: string;
+        identity_document_url: string | null;
+        ownership_document_url: string | null;
+        permit_document_url?: string | null;
+        status: string;
+        verification_status: string;
+        created_at: string;
+    } | null;
+}
+
 const ROLE_CONFIG: Record<UserRole, { label: string; colorClass: string; bgClass: string; borderClass: string; icon: React.ElementType }> = {
     tenant: { label: "Tenant", colorClass: "text-blue-400", bgClass: "bg-blue-500/10", borderClass: "border-blue-500/20", icon: Users },
     landlord: { label: "Landlord", colorClass: "text-primary", bgClass: "bg-primary/20", borderClass: "border-primary/20", icon: UserCheck },
     admin: { label: "Admin", colorClass: "text-purple-400", bgClass: "bg-purple-500/10", borderClass: "border-purple-500/20", icon: ShieldAlert },
 };
 
+function ActionMenu({ user, onViewSnapshot, onResendEmail }: { user: UserRow; onViewSnapshot: (u: UserRow) => void; onResendEmail: (u: UserRow) => void }) {
+    const [open, setOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative" ref={menuRef}>
+            <button
+                onClick={() => setOpen(!open)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] text-white/40 transition-all hover:bg-white/10 hover:text-white"
+            >
+                <MoreHorizontal className="h-5 w-5" />
+            </button>
+            
+            {open && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-white/10 bg-[#1a1a1a] p-2 shadow-2xl animate-in fade-in slide-in-from-top-2">
+                    {user.role === "landlord" && (
+                        <>
+                            <button
+                                onClick={() => { setOpen(false); onViewSnapshot(user); }}
+                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors"
+                            >
+                                <Eye className="h-4 w-4 text-blue-400" />
+                                View Registration
+                            </button>
+                            <button
+                                onClick={() => { setOpen(false); onResendEmail(user); }}
+                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors"
+                            >
+                                <Send className="h-4 w-4 text-primary" />
+                                Resend Onboarding
+                            </button>
+                        </>
+                    )}
+                    <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                        <Mail className="h-4 w-4 text-white/40" />
+                        Send Email
+                    </button>
+                    <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                        <Key className="h-4 w-4 text-white/40" />
+                        Reset Password
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => void }) {
+    const profile = user.profile;
+    const app = user.application;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-[#1a1a1a] p-8 shadow-2xl">
+                <button
+                    onClick={onClose}
+                    className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 transition-colors"
+                >
+                    <X className="h-5 w-5" />
+                </button>
+
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-white">Registration Snapshot</h2>
+                    <p className="text-sm text-white/50 mt-1">{profile.full_name} - {profile.email}</p>
+                </div>
+
+                <div className="space-y-8">
+                    {/* Personal Information */}
+                    <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Full Name</p>
+                                <p className="text-white font-medium mt-1">{profile.full_name}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Email</p>
+                                <p className="text-white font-medium mt-1">{profile.email}</p>
+                            </div>
+                            {app?.phone && (
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Phone</p>
+                                    <p className="text-white font-medium mt-1">{app.phone}</p>
+                                </div>
+                            )}
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Role</p>
+                                <RoleBadge role={profile.role} />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Business/Property Information */}
+                    {app && (
+                        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Name</p>
+                                    <p className="text-white font-medium mt-1">{app.business_name || "N/A"}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Address</p>
+                                    <p className="text-white font-medium mt-1">{app.business_address || "N/A"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Application Status</p>
+                                    <span className={cn(
+                                        "inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase",
+                                        app.status === "approved" && "bg-green-500/20 text-green-400 border border-green-500/30",
+                                        app.status === "pending" && "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
+                                        app.status === "rejected" && "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    )}>
+                                        {app.status}
+                                    </span>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Verification Status</p>
+                                    <span className={cn(
+                                        "inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase",
+                                        app.verification_status === "verified" && "bg-green-500/20 text-green-400 border border-green-500/30",
+                                        app.verification_status === "not_verified" && "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                                    )}>
+                                        {app.verification_status}
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Documents */}
+                    {app && (
+                        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {app.identity_document_url && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Identity Document</p>
+                                        <a href={app.identity_document_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                            <img src={app.identity_document_url} alt="Identity" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {app.ownership_document_url && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Proof of Ownership</p>
+                                        <a href={app.ownership_document_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                            <img src={app.ownership_document_url} alt="Ownership" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {app.permit_document_url && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit</p>
+                                        <a href={app.permit_document_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                            <img src={app.permit_document_url} alt="Permit" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {!app.identity_document_url && !app.ownership_document_url && !app.permit_document_url && (
+                                    <p className="text-white/40 text-sm">No documents uploaded</p>
+                                )}
+                            </div>
+                        </section>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<UserRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+    const [snapshotUser, setSnapshotUser] = useState<UserDetail | null>(null);
+    const [loadingSnapshot, setLoadingSnapshot] = useState(false);
 
     useEffect(() => {
         fetch("/api/admin/users")
@@ -47,6 +256,41 @@ export default function AdminUsersPage() {
         tenant: users.filter((u) => u.role === "tenant").length,
         landlord: users.filter((u) => u.role === "landlord").length,
         admin: users.filter((u) => u.role === "admin").length,
+    };
+
+    const handleViewSnapshot = async (user: UserRow) => {
+        setLoadingSnapshot(true);
+        try {
+            const res = await fetch(`/api/admin/users/${user.id}`);
+            const data = await res.json();
+            if (data.error) {
+                toast.error(data.error);
+            } else {
+                setSnapshotUser(data);
+            }
+        } catch (err) {
+            toast.error("Failed to load user details");
+        } finally {
+            setLoadingSnapshot(false);
+        }
+    };
+
+    const handleResendEmail = async (user: UserRow) => {
+        try {
+            const res = await fetch(`/api/admin/users/${user.id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "resend_onboarding" }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success("Onboarding email sent!");
+            } else {
+                toast.error(data.error || "Failed to send email");
+            }
+        } catch (err) {
+            toast.error("Failed to send email");
+        }
     };
 
     return (
@@ -108,7 +352,7 @@ export default function AdminUsersPage() {
                 </div>
             </section>
 
-            {/* Directory Table Area - Psychological Layout structured for scanning */}
+            {/* Directory Table Area */}
             <div className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card">
                 {/* Mobile Cards */}
                 <div className="p-4 md:hidden">
@@ -172,6 +416,18 @@ export default function AdminUsersPage() {
                                                 <Key className="h-3.5 w-3.5 text-white/30" />
                                                 {user.id.split("-")[0]}
                                             </span>
+                                        </div>
+
+                                        {/* Mobile Actions */}
+                                        <div className="mt-4 flex gap-2">
+                                            {user.role === "landlord" && (
+                                                <button
+                                                    onClick={() => handleViewSnapshot(user)}
+                                                    className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-white/70 hover:bg-white/10"
+                                                >
+                                                    View Registration
+                                                </button>
+                                            )}
                                         </div>
                                     </article>
                                 );
@@ -273,9 +529,11 @@ export default function AdminUsersPage() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5 text-right">
-                                                <button className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.02] text-white/40 transition-all hover:bg-white/10 hover:text-white">
-                                                    <MoreHorizontal className="h-5 w-5" />
-                                                </button>
+                                                <ActionMenu 
+                                                    user={user} 
+                                                    onViewSnapshot={handleViewSnapshot}
+                                                    onResendEmail={handleResendEmail}
+                                                />
                                             </td>
                                         </tr>
                                     );
@@ -285,6 +543,14 @@ export default function AdminUsersPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Snapshot Modal */}
+            {snapshotUser && (
+                <SnapshotModal 
+                    user={snapshotUser} 
+                    onClose={() => setSnapshotUser(null)} 
+                />
+            )}
         </div>
     );
 }

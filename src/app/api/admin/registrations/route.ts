@@ -17,6 +17,8 @@ interface RegistrationRow {
     phone: string;
     identity_document_url: string | null;
     ownership_document_url: string | null;
+    business_permit_url: string | null;
+    business_permit_card_url: string | null;
     liveness_document_url: string | null;
     status: ApplicationStatus;
     admin_notes: string | null;
@@ -86,7 +88,7 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to load registrations." }, { status: 500 });
     }
 
-    const baseRegistrations = (data ?? []) as RegistrationRow[];
+    const baseRegistrations = (data ?? []) as unknown as RegistrationRow[];
     const applicantIds = [...new Set(baseRegistrations.map((registration) => registration.profile_id))];
     const { data: applicants, error: applicantsError } =
         applicantIds.length > 0

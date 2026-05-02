@@ -129,7 +129,9 @@ export interface Database {
             landlord_applications: {
                 Row: {
                     id: string
-                    profile_id: string
+                    profile_id: string | null
+                    full_name: string | null
+                    email: string | null
                     phone: string
                     identity_document_url: string | null
                     ownership_document_url: string | null
@@ -142,12 +144,17 @@ export interface Database {
                     verification_data: Json | null
                     verification_checked_at: string | null
                     verification_notes: string | null
+                    onboarding_token: string | null
+                    onboarding_token_expires_at: string | null
+                    onboarding_completed_at: string | null
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
-                    profile_id: string
+                    profile_id?: string | null
+                    full_name?: string | null
+                    email?: string | null
                     phone: string
                     identity_document_url?: string | null
                     ownership_document_url?: string | null
@@ -160,12 +167,17 @@ export interface Database {
                     verification_data?: Json | null
                     verification_checked_at?: string | null
                     verification_notes?: string | null
+                    onboarding_token?: string | null
+                    onboarding_token_expires_at?: string | null
+                    onboarding_completed_at?: string | null
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
-                    profile_id?: string
+                    profile_id?: string | null
+                    full_name?: string | null
+                    email?: string | null
                     phone?: string
                     identity_document_url?: string | null
                     ownership_document_url?: string | null
@@ -178,6 +190,9 @@ export interface Database {
                     verification_data?: Json | null
                     verification_checked_at?: string | null
                     verification_notes?: string | null
+                    onboarding_token?: string | null
+                    onboarding_token_expires_at?: string | null
+                    onboarding_completed_at?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]

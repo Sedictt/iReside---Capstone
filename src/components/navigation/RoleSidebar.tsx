@@ -61,7 +61,12 @@ export function RoleSidebar({
     showCollapseToggle = false,
 }: RoleSidebarProps) {
     const pathname = usePathname();
+    const [mounted, setMounted] = useState(false);
     const [expandedOverrides, setExpandedOverrides] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const isItemActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
     const getSectionId = (category: string) => `sidebar-section-${category.replace(/\s+/g, "-").toLowerCase()}`;
@@ -189,7 +194,7 @@ export function RoleSidebar({
 
                 <div className="space-y-4">
                     {sections.map((section) => {
-                        const hasActiveItem = section.items.some((item) => isItemActive(item.href));
+                        const hasActiveItem = mounted && section.items.some((item) => isItemActive(item.href));
                         const isCollapsible = section.collapsible ?? !section.hideHeading;
                         const fallbackExpanded = section.defaultExpanded ?? hasActiveItem;
                         const isExpanded = !isCollapsible ? true : (expandedOverrides[section.category] ?? fallbackExpanded);

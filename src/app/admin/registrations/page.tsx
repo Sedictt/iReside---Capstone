@@ -42,6 +42,8 @@ interface RegistrationRow {
     phone: string;
     identity_document_url: string | null;
     ownership_document_url: string | null;
+    business_permit_url: string | null;
+    business_permit_card_url: string | null;
     liveness_document_url: string | null;
     status: RegistrationStatus;
     admin_notes: string | null;
@@ -130,7 +132,7 @@ export default function AdminRegistrationsPage() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("/api/admin/registrations");
+            const response = await fetch(`/api/admin/registrations?t=${Date.now()}`);
             const payload = await response.json();
             if (!response.ok) throw new Error(payload?.error || "Failed to load registrations.");
             const rows = (payload.registrations ?? []) as RegistrationRow[];
@@ -333,7 +335,7 @@ export default function AdminRegistrationsPage() {
 
                                                 <span className={cn(
                                                     "relative inline-flex items-center gap-1.5 self-center rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest",
-                                                    meta.bgClass, meta.textClass
+                                                    meta.dotClass, meta.bgClass, meta.textClass
                                                 )}>
                                                     <span className={cn("h-1.5 w-1.5 rounded-full", meta.dotClass)} />
                                                     <StatusIcon className="h-3 w-3" />
@@ -566,8 +568,13 @@ export default function AdminRegistrationsPage() {
                                         </div>
                                     </div>
                                     <div className="grid gap-3 sm:grid-cols-3">
+                                        <div className="col-span-full mb-2 rounded-lg bg-black/40 p-2 text-[8px] font-mono text-white/30">
+                                            DEBUG: ID={selected.identity_document_url ? 'OK' : 'NULL'} | PERMIT={selected.business_permit_url ? 'OK' : 'NULL'} | CARD={selected.business_permit_card_url ? 'OK' : 'NULL'} | OWNER={selected.ownership_document_url ? 'OK' : 'NULL'}
+                                        </div>
                                         {[
                                             { label: "Government ID", sublabel: "Identity verification", icon: Fingerprint, url: selected.identity_document_url },
+                                            { label: "Business Permit", sublabel: "Paper permit copy", icon: Building2, url: selected.business_permit_url },
+                                            { label: "Permit Card", sublabel: "Official permit card", icon: Building2, url: selected.business_permit_card_url },
                                             { label: "Ownership Proof", sublabel: "Property title / deed", icon: FileText, url: selected.ownership_document_url },
                                             { label: "Liveness Proof", sublabel: "Selfie video check", icon: User, url: selected.liveness_document_url },
                                         ].map((doc) => (
