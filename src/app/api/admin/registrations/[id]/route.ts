@@ -100,8 +100,6 @@ export async function PATCH(
         return NextResponse.json({ error: "Failed to load the applicant profile." }, { status: 500 });
     }
 
-    const previousRole = (applicant?.role as UserRole | undefined) ?? "tenant";
-
     if (registration.status === "approved" && status !== "approved") {
         return NextResponse.json(
             { error: "Approved registrations cannot be downgraded automatically because the account has already been promoted." },
@@ -109,8 +107,8 @@ export async function PATCH(
         );
     }
 
-    // Generate onboarding token for new landlords (without existing auth account)
-    if (status === "approved" && previousRole !== "landlord") {
+    // Generate onboarding token for new landlords when they transition to approved status
+    if (status === "approved" && registration.status !== "approved") {
         const timestamp = new Date().toISOString();
         
         // Generate unique onboarding token (72-hour expiry)
