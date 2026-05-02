@@ -89,6 +89,15 @@ type DashboardData = {
         description: string | null;
         category: string | null;
     }>;
+    upcomingMonths: Array<{
+        month: string;
+        monthLabel: string;
+        amount: number;
+        dueDate: string;
+        invoiceId: string | null;
+        isForecast: boolean;
+        status: string | null;
+    }>;
 };
 
 const formatCurrency = (value: number, decimals = 0) => {
@@ -205,6 +214,7 @@ export default function TenantDashboard() {
     const announcement = dashboardData?.announcement ?? null;
     const lease = dashboardData?.lease ?? null;
     const paymentHistory = dashboardData?.paymentHistory ?? [];
+    const upcomingMonths = dashboardData?.upcomingMonths ?? [];
 
     const isInitialLoading = dashboardLoading && !dashboardData;
     const nextPaymentAmount = nextPayment?.amount ?? 0;
@@ -453,6 +463,37 @@ export default function TenantDashboard() {
                         </div>
                     </div>
                 </div>
+
+                {/* Upcoming Months Preview */}
+                {upcomingMonths.length > 0 && (
+                    <div className="grid grid-cols-3 gap-3">
+                        {upcomingMonths.map((month) => (
+                            <div 
+                                key={month.month}
+                                className={cn(
+                                    "rounded-2xl p-4 border",
+                                    month.isForecast 
+                                        ? "bg-muted/30 border-border/50" 
+                                        : "bg-primary/5 border-primary/20"
+                                )}
+                            >
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    {month.monthLabel}
+                                </p>
+                                <p className="text-lg font-bold text-foreground mt-1">
+                                    ₱{formatCurrency(month.amount)}
+                                </p>
+                                <div className="flex items-center gap-1 mt-2">
+                                    {month.isForecast ? (
+                                        <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
+                                    ) : (
+                                        <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {dashboardError && (
                     <div className="w-full bg-red-500/5 border border-red-500/20 rounded-xl p-4 text-sm text-red-400">

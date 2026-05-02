@@ -50,6 +50,15 @@ type PaymentsPayload = {
         propertyName: string;
         unitName: string;
     } | null;
+    upcomingMonths: Array<{
+        month: string;
+        monthLabel: string;
+        amount: number;
+        dueDate: string;
+        invoiceId: string | null;
+        isForecast: boolean;
+        status: string | null;
+    }>;
 };
 
 type TabId = "bill" | "consumption" | "history";
@@ -99,12 +108,15 @@ export default function FinanceHubPage() {
             const data = await response.json();
             console.log("Advance payment created:", data);
             
-            if (data.id) {
-                const checkoutUrl = `/tenant/payments/${data.id}/checkout`;
+            // Handle new multi-month format (data.invoices) or old format (data.id)
+            const invoiceId = data.id || (data.invoices?.[0]?.invoiceId);
+            
+            if (invoiceId) {
+                const checkoutUrl = `/tenant/payments/${invoiceId}/checkout`;
                 console.log("Redirecting to:", checkoutUrl);
                 router.push(checkoutUrl);
             } else {
-                console.error("No ID returned from advance payment API");
+                console.error("No ID returned from advance payment API", data);
                 alert("Critical error: Server did not return a valid invoice ID.");
             }
         } catch (error) {
@@ -309,6 +321,37 @@ export default function FinanceHubPage() {
                     </div>
                 )}
             </div>
+
+            {/* Upcoming Months Preview */}
+            {payload?.upcomingMonths && payload.upcomingMonths.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                    {payload.upcomingMonths.map((month) => (
+                        <div 
+                            key={month.month}
+                            className={cn(
+                                "rounded-2xl p-4 border",
+                                month.isForecast 
+                                    ? "bg-muted/30 border-border/50" 
+                                    : "bg-primary/5 border-primary/20"
+                            )}
+                        >
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                {month.monthLabel}
+                            </p>
+                            <p className="text-lg font-bold text-foreground mt-1">
+                                {formatPhpCurrency(month.amount)}
+                            </p>
+                            <div className="flex items-center gap-1 mt-2">
+                                {month.isForecast ? (
+                                    <span className="text-[9px] font-medium text-muted-foreground">Estimated</span>
+                                ) : (
+                                    <span className="text-[9px] font-medium text-primary">Ready to Pay</span>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Unified Tab Navigation */}
             <div className="flex items-center gap-1 p-1 bg-muted/30 border border-border rounded-2xl w-full md:w-fit overflow-x-auto no-scrollbar">

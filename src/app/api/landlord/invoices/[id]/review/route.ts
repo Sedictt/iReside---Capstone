@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { upsertPaymentReceipt } from "@/lib/billing/server";
+import { upsertPaymentReceipt, generateNextMonthInvoice } from "@/lib/billing/server";
 import {
     computeAmountTag,
     expireInPersonIntents,
@@ -322,6 +322,17 @@ export async function POST(request: Request, context: RouteContext) {
         }
 
         const finalWorkflowStatus = receiptIssued ? "receipted" : updatedPayment.workflow_status;
+
+        // Auto-generate next month's invoice after payment is confirmed/receipted
+        if (finalWorkflowStatus === "confirmed" || finalWorkflowStatus === "receipted") {
+            try {
+                const nextInvoice = await generateNextMonthInvoice(adminClient, updatedPayment.lease_id);
+                console.log("[Review API] Auto-generated next month invoice:", nextInvoice);
+            } catch (nextInvoiceError) {
+                console.error("[Review API] Failed to auto-generate next month invoice:", nextInvoiceError);
+                // Don't fail the main operation if next invoice generation fails
+            }
+        }
 
         const paymentMetadata = payment.metadata as any || {};
         // Only mark as refund reconciliation if landlord is actually uploading refund proof AND the action is "confirm"

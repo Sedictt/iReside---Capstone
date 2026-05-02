@@ -613,7 +613,8 @@ export async function getTenantPaymentOverview(supabase: AppSupabaseClient, tena
             monthlyRent: leaseData.monthly_rent,
             propertyName: (leaseData.unit as any)?.property?.name,
             unitName: (leaseData.unit as any)?.name
-        } : null
+        } : null,
+        upcomingMonths: [] // Placeholder - will be populated by the API caller or computed here
     };
 }
 
@@ -1115,4 +1116,322 @@ export async function createAdvancePayment(supabase: AppSupabaseClient, tenantId
 
 function getNextMonthName(date: Date) {
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+export async function createMultiMonthAdvancePayment(
+    supabase: AppSupabaseClient,
+    tenantId: string,
+    options?: {
+        targetMonth?: string; // YYYY-MM format, defaults to next month
+        monthsCount?: number; // number of months to advance pay (1-12)
+    }
+) {
+    const monthsCount = Math.min(Math.max(options?.monthsCount ?? 1, 1), 12);
+    
+    // 1. Get active lease
+    const { data: lease, error: leaseError } = await supabase
+        .from("leases")
+        .select(`
+            *,
+            unit:units (id, property_id, rent_amount)
+        `)
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .single();
+
+    if (leaseError || !lease) throw new Error("No active lease found for advance payment.");
+
+    // 2. Determine starting month
+    const now = new Date();
+    let startCycle: Date;
+    
+    if (options?.targetMonth) {
+        const [year, month] = options.targetMonth.split('-').map(Number);
+        startCycle = new Date(year, month - 1, 1);
+    } else {
+        startCycle = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+
+    // 3. Check property settings for advance payment restrictions
+    const propertyId = (lease.unit as any)?.property_id;
+    let maxAdvanceMonths = 3; // default
+    let allowMultiple = true;
+    
+    if (propertyId) {
+        const { data: property } = await supabase
+            .from("properties")
+            .select("metadata")
+            .eq("id", propertyId)
+            .maybeSingle();
+        
+        const meta = (property?.metadata as Record<string, unknown>) ?? {};
+        maxAdvanceMonths = typeof meta.max_advance_months === "number" ? meta.max_advance_months : 3;
+        allowMultiple = meta.allow_multiple_advance !== false;
+    }
+
+    const effectiveMonthsCount = allowMultiple 
+        ? Math.min(monthsCount, maxAdvanceMonths) 
+        : 1;
+
+    const results: Array<{ month: string; invoiceId: string; exists: boolean }> = [];
+    
+    // 4. Create invoice for each month
+    for (let i = 0; i < effectiveMonthsCount; i++) {
+        const targetCycle = new Date(startCycle.getFullYear(), startCycle.getMonth() + i, 1);
+        const cycleKey = toIsoDate(targetCycle);
+        
+        // Check if invoice already exists for this cycle
+        const { data: existing } = await supabase
+            .from("payments")
+            .select("id, status")
+            .eq("lease_id", lease.id)
+            .eq("billing_cycle", cycleKey)
+            .maybeSingle();
+
+        if (existing) {
+            results.push({ month: cycleKey, invoiceId: existing.id, exists: true });
+            continue;
+        }
+
+        // Create the advance payment invoice
+        const terms = parseLeaseBillingTerms(lease.terms ?? null);
+        const dueDate = new Date(targetCycle.getFullYear(), targetCycle.getMonth(), Math.max(1, Math.min(terms.dueDay, 28)));
+        const rentAmount = Number(lease.monthly_rent ?? (lease.unit as any)?.rent_amount ?? 0);
+
+        const { data: payment, error: paymentError } = await supabase
+            .from("payments")
+            .insert([{
+                lease_id: lease.id,
+                tenant_id: tenantId,
+                landlord_id: lease.landlord_id,
+                amount: rentAmount,
+                subtotal: rentAmount,
+                paid_amount: 0,
+                balance_remaining: rentAmount,
+                status: "pending",
+                description: `${getNextMonthName(targetCycle)} Monthly Rent (Advance Payment)`,
+                due_date: toIsoDate(dueDate),
+                billing_cycle: cycleKey,
+                invoice_period_start: toIsoDate(targetCycle),
+                invoice_period_end: toIsoDate(new Date(targetCycle.getFullYear(), targetCycle.getMonth() + 1, 0)),
+                allow_partial_payments: terms.allowPartialPayments,
+                due_day_snapshot: terms.dueDay,
+                late_fee_amount: terms.lateFeeAmount,
+                invoice_number: makeInvoiceNumber(crypto.randomUUID(), cycleKey),
+                metadata: { 
+                    type: "advance_rent_payment",
+                    generated_at: new Date().toISOString(),
+                    tag: "advance_rent",
+                    source: "tenant_manual"
+                }
+            }])
+            .select("id")
+            .single();
+
+        if (paymentError) throw paymentError;
+
+        // Add the rent item
+        const { error: itemError } = await supabase.from("payment_items").insert({
+            payment_id: payment.id,
+            label: "Monthly Rent (Advance)",
+            amount: rentAmount,
+            category: "rent",
+            sort_order: 0,
+            metadata: { is_advance: true }
+        });
+
+        if (itemError) throw itemError;
+
+        // Update last_generated_at to prevent cron conflicts
+        await supabase
+            .from("leases")
+            .update({ 
+                metadata: { 
+                    last_invoice_generated_at: new Date().toISOString(),
+                    last_invoice_generated_for: cycleKey
+                } 
+            })
+            .eq("id", lease.id);
+
+        results.push({ month: cycleKey, invoiceId: payment.id, exists: false });
+    }
+
+    return { 
+        created: results.filter(r => !r.exists).length,
+        skipped: results.filter(r => r.exists).length,
+        invoices: results 
+    };
+}
+
+export async function generateNextMonthInvoice(
+    supabase: AppSupabaseClient,
+    leaseId: string,
+    options?: {
+        forceRegenerate?: boolean;
+        customMonth?: string; // YYYY-MM for custom billing month
+    }
+) {
+    const now = new Date();
+    let nextCycle: Date;
+    
+    if (options?.customMonth) {
+        const [year, month] = options.customMonth.split('-').map(Number);
+        nextCycle = new Date(year, month - 1, 1);
+    } else {
+        nextCycle = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+    
+    const cycleKey = toIsoDate(nextCycle);
+    const cycleEnd = new Date(nextCycle.getFullYear(), nextCycle.getMonth() + 1, 0);
+
+    // 1. Get the lease details
+    const { data: lease, error: leaseError } = await supabase
+        .from("leases")
+        .select(`
+            id,
+            unit_id,
+            tenant_id,
+            landlord_id,
+            monthly_rent,
+            terms,
+            status,
+            unit:units (
+                id,
+                property_id,
+                name,
+                rent_amount
+            )
+        `)
+        .eq("id", leaseId)
+        .single();
+
+    if (leaseError || !lease) throw new Error("Lease not found");
+    if (lease.status !== "active") throw new Error("Lease is not active");
+
+    // 2. Check if invoice already exists for this cycle
+    if (!options?.forceRegenerate) {
+        const { data: existing } = await supabase
+            .from("payments")
+            .select("id, status, workflow_status")
+            .eq("lease_id", leaseId)
+            .eq("billing_cycle", cycleKey)
+            .maybeSingle();
+
+        if (existing) {
+            return { id: existing.id, exists: true, status: existing.status };
+        }
+    }
+
+    // 3. Get utility configs for the property
+    const propertyId = (lease.unit as any)?.property_id;
+    if (!propertyId) throw new Error("Property not found on lease");
+
+    const { data: configs, error: configError } = await supabase
+        .from("utility_configs")
+        .select("*")
+        .eq("landlord_id", lease.landlord_id)
+        .eq("property_id", propertyId)
+        .eq("is_active", true);
+
+    if (configError) throw configError;
+
+    // 4. Build invoice items
+    const terms = parseLeaseBillingTerms(lease.terms ?? null);
+    const dueDate = new Date(nextCycle.getFullYear(), nextCycle.getMonth(), Math.max(1, Math.min(terms.dueDay, 28)));
+    const itemRows: Omit<PaymentItem, "id" | "created_at">[] = [];
+
+    // Base rent
+    const rentAmount = Number(lease.monthly_rent ?? (lease.unit as any)?.rent_amount ?? 0);
+    itemRows.push({
+        payment_id: "",
+        label: "Base rent",
+        amount: rentAmount,
+        category: "rent",
+        sort_order: 0,
+        utility_type: null,
+        billing_mode: null,
+        reading_id: null,
+        metadata: { is_forecast: true },
+    });
+
+    // Utility estimates (using last month's configs as estimates)
+    for (const config of configs ?? []) {
+        const estimatedCharge = config.billing_mode === "included_in_rent" ? 0 : 
+            (config.rate_per_unit ?? 0) * (config.default_usage_estimate ?? 10);
+        
+        if (estimatedCharge > 0 || config.billing_mode === "included_in_rent") {
+            itemRows.push({
+                payment_id: "",
+                label: config.utility_type === "water" ? "Water service (Est.)" : "Electricity service (Est.)",
+                amount: estimatedCharge,
+                category: config.utility_type,
+                sort_order: config.utility_type === "water" ? 10 : 20,
+                utility_type: config.utility_type,
+                billing_mode: config.billing_mode,
+                reading_id: null,
+                metadata: { 
+                    is_forecast: true,
+                    estimated_from_config: config.id,
+                    billing_mode: config.billing_mode 
+                },
+            });
+        }
+    }
+
+    const subtotal = itemRows.reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+
+    // 5. Create the payment record
+    const { data: paymentRow, error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+            lease_id: lease.id,
+            tenant_id: lease.tenant_id,
+            landlord_id: lease.landlord_id,
+            amount: subtotal,
+            subtotal,
+            paid_amount: 0,
+            balance_remaining: subtotal,
+            status: "pending",
+            description: `${formatDateLong(cycleKey)} monthly invoice`,
+            due_date: toIsoDate(dueDate),
+            billing_cycle: cycleKey,
+            invoice_period_start: toIsoDate(nextCycle),
+            invoice_period_end: toIsoDate(cycleEnd),
+            allow_partial_payments: terms.allowPartialPayments,
+            due_day_snapshot: terms.dueDay,
+            late_fee_amount: terms.lateFeeAmount,
+            invoice_number: makeInvoiceNumber(crypto.randomUUID(), cycleKey),
+            metadata: { 
+                is_forecast: true,
+                generated_at: new Date().toISOString(),
+                generated_by: "auto_next_invoice",
+                source_lease_id: leaseId
+            },
+        })
+        .select("id")
+        .single();
+
+    if (paymentError) throw paymentError;
+
+    // 6. Add payment items
+    const itemInsertRows = itemRows.map((item) => ({
+        ...item,
+        payment_id: paymentRow.id,
+    }));
+
+    const { error: itemError } = await supabase.from("payment_items").insert(itemInsertRows);
+    if (itemError) throw itemError;
+
+    // 7. Update last_generated_at to prevent cron conflicts
+    await supabase
+        .from("leases")
+        .update({ 
+            metadata: { 
+                last_invoice_generated_at: new Date().toISOString(),
+                last_invoice_generated_for: cycleKey
+            } 
+        })
+        .eq("id", leaseId);
+
+    return { id: paymentRow.id, exists: false };
 }

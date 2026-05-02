@@ -49,159 +49,149 @@ export function LeaseDocument(props: LeaseData) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative mx-auto w-full max-w-4xl bg-white p-8 text-slate-800 shadow-2xl md:p-12 lg:p-16 mb-32 print:shadow-none print:mb-0 transform-gpu"
+            className="relative mx-auto w-full max-w-4xl bg-white p-6 text-slate-900 shadow-2xl md:p-8 lg:p-10 mb-32 print:shadow-none print:mb-0 transform-gpu font-serif"
+            style={{ fontFamily: "'Times New Roman', Times, serif" }}
         >
-            <header className="mb-12 border-b border-slate-200 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+            <header className="mb-6 border-b-2 border-slate-900 pb-3 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
                 <div>
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl font-serif">
+                    <h1 className="mb-0.5 text-xl font-bold tracking-tight text-slate-950 md:text-2xl">
                         RESIDENTIAL LEASE AGREEMENT
                     </h1>
-                    <p className="text-lg text-slate-500 font-serif italic">State of California</p>
+                    <p className="text-sm text-slate-600 italic leading-none">Official Binding Documentation</p>
                 </div>
-                <div className="text-right text-xs uppercase text-slate-400 font-mono tracking-wide">
-                    <p>Doc Ref: #{leaseId}</p>
+                <div className="text-right text-[9px] uppercase text-slate-500 font-mono tracking-widest">
+                    <p className="font-bold">Ref: #{leaseId}</p>
                     <p>Date: {currentDate}</p>
                 </div>
             </header>
 
-            <section className="space-y-12 relative z-10">
+            <section className="space-y-6 relative z-10 leading-snug text-[13.5px]">
                 {/* Section 1: Parties */}
-                <div>
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
-                        1. Parties
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        1. PARTIES
                     </h2>
-                    <p className="mb-6 leading-relaxed text-slate-600">
-                        This Residential Lease Agreement (&quot;Agreement&quot;) is made and entered into on this{" "}
-                        <span className="font-semibold text-slate-900">{currentDate}</span>, by and between:
+                    <p className="text-slate-800">
+                        This Agreement is entered into on <span className="font-bold">{currentDate}</span>, by and between:
                     </p>
-                    <div className="grid gap-6 rounded-xl bg-slate-50 p-6 md:grid-cols-2 border border-slate-100">
-                        <div>
-                            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
-                                Landlord
-                            </p>
-                            <p className="text-lg font-semibold text-slate-900">{parties.landlord}</p>
-                            <p className="text-sm text-slate-500">123 Business Park Dr, San Francisco, CA</p>
+                    <div className="grid gap-6 md:grid-cols-2 pt-0.5">
+                        <div className="space-y-0">
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Landlord</p>
+                            <p className="text-sm font-bold text-slate-950 underline decoration-slate-300 underline-offset-2">{parties.landlord}</p>
                         </div>
-                        <div>
-                            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
-                                Tenant
-                            </p>
-                            <p className="text-lg font-semibold text-slate-900">{parties.tenant}</p>
-                            <p className="text-sm text-slate-500">ID: 998-XX-XXXX</p>
+                        <div className="space-y-0">
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-slate-400">Tenant</p>
+                            <p className="text-sm font-bold text-slate-950 underline decoration-slate-300 underline-offset-2">{parties.tenant}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Section 2: Property */}
-                <div>
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
-                        2. Property
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        2. THE PREMISES
                     </h2>
-                    <p className="mb-4 leading-relaxed text-slate-600">
-                        The Landlord agrees to lease to the Tenant, and the Tenant agrees to lease from the
-                        Landlord, the following property:
-                    </p>
-                    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex items-start gap-4">
-                        <div className="h-10 w-1 bg-slate-200 rounded-full"></div>
-                        <div>
-                            <p className="font-medium text-slate-900 text-lg">{property.unit}</p>
-                            <p className="text-slate-600">{property.street}</p>
-                            <p className="text-slate-600">
-                                {property.city}, {property.zip}
-                            </p>
-                        </div>
+                    <div className="pl-4 border-l-2 border-slate-100">
+                        <p className="font-bold text-slate-950 text-base leading-tight">{property.unit}</p>
+                        <p className="text-slate-700 text-sm">{property.street}, {property.city}</p>
                     </div>
                 </div>
 
                 {/* Section 3: Term */}
-                <div>
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
-                        3. Term
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        3. TERM OF LEASE
                     </h2>
-                    <p className="leading-relaxed text-slate-600 border-l-4 border-blue-500 pl-4 py-3 bg-blue-50/30 rounded-r-lg italic">
-                        The lease term shall commence on{" "}
-                        <span className="font-semibold text-slate-900 not-italic">{term.start}</span> and shall terminate on{" "}
-                        <span className="font-semibold text-slate-900 not-italic">{term.end}</span> (&quot;Lease Term&quot;).
+                    <p className="text-slate-800">
+                        Term begins on <span className="font-bold underline">{term.start}</span> and ends on <span className="font-bold underline">{term.end}</span>.
                     </p>
                 </div>
 
                 {/* Section 4: Rent */}
-                <div>
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
-                        4. Rent
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        4. RENT PAYMENTS
                     </h2>
-                    <p className="mb-4 leading-relaxed text-slate-600">
-                        Tenant agrees to pay Landlord as rent for the Premises the sum of{" "}
-                        <span className="font-bold text-slate-900 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">
-                            ₱{rent.monthly.toLocaleString()}.00
-                        </span>{" "}
-                        per month, payable in advance on the {rent.due} day of each month.
+                    <p className="text-slate-800">
+                        Monthly rent of <span className="font-bold text-slate-950">PHP {rent.monthly.toLocaleString()}.00</span> due on the {rent.due} day of each month.
                     </p>
-                    <ul className="list-disc pl-5 space-y-2 text-slate-600 ml-4 marker:text-blue-500">
-                        <li>Late fee: 5% of monthly rent if paid after the 5th.</li>
-                        <li>Payment method: ACH Transfer via iReside Portal.</li>
-                    </ul>
                 </div>
 
                 {/* Section 5: Security Deposit */}
-                <div>
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
-                        5. Security Deposit
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        5. SECURITY DEPOSIT
                     </h2>
-                    <p className="leading-relaxed text-slate-600">
-                        Upon execution of this Agreement, Tenant shall deposit with Landlord the sum of{" "}
-                        <span className="font-bold text-slate-900">
-                            ₱{deposit.toLocaleString()}.00
-                        </span>{" "}
-                        as security for any damage caused to the Premises during the term hereof.
+                    <p className="text-slate-800">
+                        Deposit of <span className="font-bold text-slate-950">PHP {deposit.toLocaleString()}.00</span> held for damages or defaults.
                     </p>
                 </div>
 
                 {/* Section 6: Utilities */}
-                <div>
-                    <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-2">
-                        6. Utilities
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        6. UTILITIES AND SERVICES
                     </h2>
-                    <p className="mb-4 leading-relaxed text-slate-600">
-                        Tenant shall be responsible for arranging and paying for all utility services required on
-                        the premises:
+                    {props.unit.property.house_rules?.includes("strategy:inclusive") ? (
+                        <p className="text-slate-800">
+                            The monthly rent is <span className="font-bold">INCLUSIVE</span> of standard essential utilities (Water and Electricity).
+                        </p>
+                    ) : (
+                        <p className="text-slate-800">
+                            The Tenant shall be responsible for all costs related to: <span className="font-bold">Water and Electricity.</span>
+                        </p>
+                    )}
+                </div>
+
+                {/* Section 7: Amenities & Facilities */}
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        7. AMENITIES AND FACILITIES
+                    </h2>
+                    <p className="text-slate-800">
+                        Access provided as part of residency: <span className="italic font-bold text-slate-950">{props.unit.property.amenities.length > 0 ? props.unit.property.amenities.map(a => a.name).join(", ") + "." : "Standard residential access."}</span>
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                        {["Water", "Electricity", "Gas", "Trash Collection", "Internet/Cable", "Sewer"].map((util) => (
-                            <span
-                                key={util}
-                                className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200"
-                            >
-                                {util}
-                            </span>
-                        ))}
-                    </div>
+                </div>
+
+                {/* Section 8: Building Rules & Conduct */}
+                <div className="space-y-1.5">
+                    <h2 className="text-[12px] font-bold uppercase tracking-widest text-slate-950 border-b border-slate-200 pb-0.5">
+                        8. BUILDING RULES & CONDUCT
+                    </h2>
+                    <p className="text-slate-800 leading-tight">
+                        Compliance required for:{" "}
+                        <span className="font-bold text-slate-950">
+                            {props.unit.property.house_rules
+                                ?.filter(rule => !rule.startsWith("strategy:"))
+                                .join(", ") || "Standard residential conduct"}
+                        </span>. 
+                        Violations may constitute a material breach of this Agreement.
+                    </p>
                 </div>
 
                 {/* Signature Placeholder */}
-                <div className="mt-20 pt-8 border-t-2 border-dashed border-slate-300">
-                    <div className="grid md:grid-cols-2 gap-16">
-                        <div>
-                            <div className="h-16 border-b border-slate-900 mb-2 bg-slate-50/50"></div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 flex justify-between">
-                                <span>Tenant Signature</span>
-                                <span className="text-slate-300 font-normal normal-case italic">Sign above</span>
+                <div className="mt-8 pt-4 border-t border-slate-200">
+                    <div className="grid md:grid-cols-2 gap-12">
+                        <div className="space-y-1.5">
+                            <div className="h-10 border-b border-slate-400"></div>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500">
+                                LESSEE (TENANT) SIGNATURE
                             </p>
                         </div>
-                        <div>
-                            <div className="h-16 border-b border-slate-900 mb-2 flex items-end justify-start">
-                                <span className="text-slate-900 font-mono mb-1 text-lg">{currentDate}</span>
+                        <div className="space-y-1.5">
+                            <div className={`h-10 border-b border-slate-400 flex items-end justify-start ${currentDate.length > 15 ? 'pb-0.5' : 'pb-1'}`}>
+                                <span className="text-slate-950 font-mono text-[10px]">{currentDate}</span>
                             </div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Date</p>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-slate-500">DATE OF EXECUTION</p>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Watermark */}
-            <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
-                <p className="-rotate-45 text-[min(12rem,15vw)] font-black uppercase text-slate-100 select-none">
-                    DRAFT
+            <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.015]">
+                <p className="-rotate-45 text-[min(10rem,12vw)] font-black uppercase text-slate-950 select-none">
+                    LEGAL DRAFT
                 </p>
             </div>
 

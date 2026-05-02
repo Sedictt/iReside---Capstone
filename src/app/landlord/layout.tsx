@@ -31,8 +31,10 @@ export default function LandlordLayout({
     const isMessages = pathname?.startsWith("/landlord/messages");
     const isUnitMap = pathname?.startsWith("/landlord/unit-map");
     const isSettings = pathname?.startsWith("/landlord/settings");
-    const showSidebar = !isMessages && !isSettings && !isGlobalFullscreen;
-    const showContactsSidebar = !isMessages && !isUnitMap && !isSettings && !isGlobalFullscreen;
+    const isOnboarding = pathname?.startsWith("/landlord/onboarding");
+    
+    const showSidebar = !isMessages && !isSettings && !isOnboarding && !isGlobalFullscreen;
+    const showContactsSidebar = !isMessages && !isUnitMap && !isSettings && !isOnboarding && !isGlobalFullscreen;
 
     return (
         <AuthProvider>

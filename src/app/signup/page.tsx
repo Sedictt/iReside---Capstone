@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ArrowRight, CheckCircle2, Upload, FileCheck, Check, Eye } from "lucide-react";
+import { Building2, ArrowRight, CheckCircle2, Upload, FileCheck, Check, Eye, Trash2, FileText } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { saveWizardState, loadWizardState, clearWizardState } from "@/lib/wizard-storage";
 
 export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
@@ -19,6 +21,8 @@ export default function SignUpPage() {
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
     
+    const [verificationCode, setVerificationCode] = useState("");
+    const [correctOtp, setCorrectOtp] = useState("");
     const [propertyName, setPropertyName] = useState("");
     const [propertyAddress, setPropertyAddress] = useState("");
 
@@ -27,22 +31,117 @@ export default function SignUpPage() {
     const [permitCardFile, setPermitCardFile] = useState<File | null>(null);
     const [ownershipFile, setOwnershipFile] = useState<File | null>(null);
 
-    const handleSendOTP = () => {
-        setOtpSent(true);
-        // Simulate OTP send
+    // Previews (not persisted in localStorage as they are blobs)
+    const [idPreview, setIdPreview] = useState<string | null>(null);
+    const [permitPreview, setPermitPreview] = useState<string | null>(null);
+    const [permitCardPreview, setPermitCardPreview] = useState<string | null>(null);
+    const [ownershipPreview, setOwnershipPreview] = useState<string | null>(null);
+
+    // Initialization: Load from localStorage
+    useEffect(() => {
+        const savedState = loadWizardState();
+        if (savedState) {
+            if (savedState.currentStep) setCurrentStep(savedState.currentStep as number);
+            if (savedState.fullName) setFullName(savedState.fullName as string);
+            if (savedState.phone) setPhone(savedState.phone as string);
+            if (savedState.email) setEmail(savedState.email as string);
+            if (savedState.otpVerified) setOtpVerified(savedState.otpVerified as boolean);
+            if (savedState.propertyName) setPropertyName(savedState.propertyName as string);
+            if (savedState.propertyAddress) setPropertyAddress(savedState.propertyAddress as string);
+            if (savedState.otpSent) setOtpSent(savedState.otpSent as boolean);
+            if (savedState.correctOtp) setCorrectOtp(savedState.correctOtp as string);
+            
+            toast.info("Progress restored", {
+                description: "We've loaded your previous registration progress."
+            });
+        }
+    }, []);
+
+    // Persistence: Save to localStorage whenever important state changes
+    useEffect(() => {
+        const stateToSave = {
+            currentStep,
+            fullName,
+            phone,
+            email,
+            otpSent,
+            otpVerified,
+            correctOtp,
+            propertyName,
+            propertyAddress
+        };
+        saveWizardState(stateToSave);
+    }, [currentStep, fullName, phone, email, otpSent, otpVerified, correctOtp, propertyName, propertyAddress]);
+
+    // Handle File Uploads with Previews
+    const handleFileChange = (file: File | null, setter: (f: File | null) => void, previewSetter: (s: string | null) => void) => {
+        setter(file);
+        if (file && file.type.startsWith("image/")) {
+            const url = URL.createObjectURL(file);
+            previewSetter(url);
+        } else {
+            previewSetter(null);
+        }
+    };
+    const handleSendOTP = async () => {
+        if (!email) {
+            toast.error("Please enter your email address first.");
+            return;
+        }
+        
+        setLoading(true);
+        try {
+            const response = await fetch("/api/auth/registration-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setOtpSent(true);
+                setCorrectOtp(data.otp);
+                toast.success("Verification code sent!", {
+                    description: "A 6-digit code has been sent to your email address."
+                });
+            } else {
+                toast.error(data.error || "Failed to send verification code.");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("An error occurred while sending the verification code.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleVerifyOTP = () => {
+        if (!verificationCode) {
+            toast.error("Code required", {
+                description: "Please enter the verification code sent to your email."
+            });
+            return;
+        }
+
+        if (verificationCode !== correctOtp) {
+            toast.error("Invalid code", {
+                description: "Incorrect verification code. Please check your email and try again."
+            });
+            return;
+        }
+
         setOtpVerified(true);
-        // Simulate OTP verify
+        toast.success("Email verified successfully!");
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (currentStep < 3) {
             if (currentStep === 1 && !otpVerified) {
-                alert("Please verify your email before proceeding.");
+                toast.warning("Verification required", {
+                    description: "Please verify your email before proceeding to the next step."
+                });
                 return;
             }
             setCurrentStep(s => s + 1);
@@ -50,11 +149,74 @@ export default function SignUpPage() {
             return;
         }
 
+        // Validate at least 3 of 4 documents
+        const filesCount = [idFile, permitFile, permitCardFile, ownershipFile].filter(Boolean).length;
+        if (filesCount < 3) {
+            toast.error("Incomplete documentation", {
+                description: `Please upload at least 3 of the 4 required documents to proceed. (Current: ${filesCount}/4)`
+            });
+            return;
+        }
+
+        // Submit the application
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+        
+        try {
+            // Prepare file data as base64
+            const fileToBase64 = (file: File): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = reader.result as string;
+                        const base64 = result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const idFileData = idFile ? { name: idFile.name, type: idFile.type, data: await fileToBase64(idFile) } : undefined;
+            const permitFileData = permitFile ? { name: permitFile.name, type: permitFile.type, data: await fileToBase64(permitFile) } : undefined;
+            const permitCardFileData = permitCardFile ? { name: permitCardFile.name, type: permitCardFile.type, data: await fileToBase64(permitCardFile) } : undefined;
+            const ownershipFileData = ownershipFile ? { name: ownershipFile.name, type: ownershipFile.type, data: await fileToBase64(ownershipFile) } : undefined;
+
+            const response = await fetch("/api/auth/landlord-register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    data: {
+                        fullName,
+                        phone,
+                        email,
+                        emailVerified: otpVerified,
+                        propertyName,
+                        propertyAddress,
+                        idFile: idFileData,
+                        permitFile: permitFileData,
+                        permitCardFile: permitCardFileData,
+                        ownershipFile: ownershipFileData,
+                    },
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                toast.error(result.error || "Failed to submit application");
+                return;
+            }
+
             setSubmitted(true);
-        }, 1500);
+            clearWizardState(); // Success!
+            toast.success("Application submitted successfully!");
+            
+        } catch (err) {
+            console.error("Submission error:", err);
+            toast.error("An error occurred while submitting your application");
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (submitted) {
@@ -187,7 +349,8 @@ export default function SignUpPage() {
                                         <button 
                                             type="button" 
                                             onClick={handleSendOTP}
-                                            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-white/87 active:scale-95 shadow-sm"
+                                            disabled={loading}
+                                            className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-white/87 active:scale-95 shadow-sm disabled:opacity-50"
                                         >
                                             {otpSent ? "Resend Code" : "Verify Email"}
                                         </button>
@@ -201,6 +364,8 @@ export default function SignUpPage() {
                                                 type="text" 
                                                 placeholder="000000" 
                                                 maxLength={6}
+                                                value={verificationCode}
+                                                onChange={e => setVerificationCode(e.target.value.replace(/[^0-9]/g, ""))}
                                                 className="w-full rounded-xl border border-white/10 bg-[#121212] px-4 py-3 text-white tracking-[0.75em] font-mono text-xl text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:tracking-normal placeholder:text-white/20" 
                                             />
                                         </div>
@@ -255,26 +420,43 @@ export default function SignUpPage() {
                             <h2 className="text-2xl font-bold text-white/87 tracking-tight">Identity & Credentials</h2>
                             <p className="text-sm text-white/60 mt-1 font-medium">Upload clear, legible copies to ensure swift approval.</p>
                         </div>
-
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {/* Valid ID */}
                             <div className={`relative rounded-2xl border border-dashed p-3 text-center transition-all duration-500 cursor-pointer flex flex-col items-center justify-center min-h-[140px] group/upload hover:z-50 ${idFile ? 'border-primary/50 bg-primary/10 shadow-[0_0_20px_rgba(109,152,56,0.15)]' : 'border-white/20 bg-white/[0.02] hover:border-primary/40 hover:bg-white/[0.04]'}`}>
                                 <input 
                                     type="file" 
-                                    required={!idFile} 
                                     title="" 
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
                                     accept=".pdf,.jpg,.jpeg,.png"
-                                    onChange={(e) => setIdFile(e.target.files?.[0] || null)}
+                                    onChange={(e) => handleFileChange(e.target.files?.[0] || null, setIdFile, setIdPreview)}
                                 />
                                 {idFile ? (
-                                    <>
-                                        <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                            <FileCheck className="h-8 w-8 text-amber-500" />
-                                        </div>
-                                        <span className="text-sm font-bold text-white/87 block truncate w-full px-2">{idFile.name}</span>
-                                        <span className="text-xs text-amber-500 mt-1 font-medium tracking-wide uppercase">Uploaded</span>
-                                    </>
+                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                        {idPreview ? (
+                                            <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
+                                                <img src={idPreview} alt="ID Preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <FileCheck className="h-8 w-8 text-amber-500" />
+                                            </div>
+                                        )}
+                                        <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{idFile.name}</span>
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIdFile(null);
+                                                setIdPreview(null);
+                                            }}
+                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
                                 ) : (
                                     <>
                                         {/* CSS ID Illustration */}
@@ -311,10 +493,10 @@ export default function SignUpPage() {
                                             <span className="font-bold text-white/87 block mb-2 text-sm">Accepted Valid IDs:</span>
                                             <ul className="list-disc pl-4 space-y-1">
                                                 <li>Passport</li>
-                                                <li>Driver's License</li>
+                                                <li>Driver&apos;s License</li>
                                                 <li>National ID / PhilID</li>
                                                 <li>UMID / SSS ID</li>
-                                                <li>Voter's ID</li>
+                                                <li>Voter&apos;s ID</li>
                                                 <li>PRC ID</li>
                                             </ul>
                                         </div>
@@ -322,24 +504,39 @@ export default function SignUpPage() {
                                 )}
                             </div>
 
-                            {/* Business Permit (Certificate/Paper) */}
+                            {/* Business Permit (Paper) */}
                             <div className={`relative rounded-2xl border border-dashed p-3 text-center transition-all duration-500 cursor-pointer flex flex-col items-center justify-center min-h-[140px] group/upload hover:z-50 ${permitFile ? 'border-primary/50 bg-primary/10 shadow-[0_0_20px_rgba(109,152,56,0.15)]' : 'border-white/20 bg-white/[0.02] hover:border-primary/40 hover:bg-white/[0.04]'}`}>
                                 <input 
                                     type="file" 
-                                    required={!permitFile} 
                                     title=""
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                                     accept=".pdf,.jpg,.jpeg,.png"
-                                    onChange={(e) => setPermitFile(e.target.files?.[0] || null)}
+                                    onChange={(e) => handleFileChange(e.target.files?.[0] || null, setPermitFile, setPermitPreview)}
                                 />
                                 {permitFile ? (
-                                    <>
-                                        <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                            <FileCheck className="h-8 w-8 text-amber-500" />
-                                        </div>
-                                        <span className="text-sm font-bold text-white/87 block truncate w-full px-2">{permitFile.name}</span>
-                                        <span className="text-xs text-amber-500 mt-1 font-medium tracking-wide uppercase">Uploaded</span>
-                                    </>
+                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                        {permitPreview ? (
+                                            <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
+                                                <img src={permitPreview} alt="Permit Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <FileCheck className="h-8 w-8 text-amber-500" />
+                                            </div>
+                                        )}
+                                        <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{permitFile.name}</span>
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setPermitFile(null);
+                                                setPermitPreview(null);
+                                            }}
+                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
                                 ) : (
                                     <>
                                         {/* CSS Business Permit (Paper) Illustration */}
@@ -373,21 +570,35 @@ export default function SignUpPage() {
                             <div className={`relative rounded-2xl border border-dashed p-3 text-center transition-all duration-500 cursor-pointer flex flex-col items-center justify-center min-h-[140px] group/upload hover:z-50 ${permitCardFile ? 'border-primary/50 bg-primary/10 shadow-[0_0_20px_rgba(109,152,56,0.15)]' : 'border-white/20 bg-white/[0.02] hover:border-primary/40 hover:bg-white/[0.04]'}`}>
                                 <input 
                                     type="file" 
-                                    required={!permitCardFile} 
                                     title=""
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
                                     accept=".pdf,.jpg,.jpeg,.png"
-                                    onChange={(e) => setPermitCardFile(e.target.files?.[0] || null)}
+                                    onChange={(e) => handleFileChange(e.target.files?.[0] || null, setPermitCardFile, setPermitCardPreview)}
                                 />
                                 {permitCardFile ? (
-                                    <>
-                                        <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                            <FileCheck className="h-8 w-8 text-amber-500" />
-                                        </div>
-                                        <span className="text-sm font-bold text-white/87 block truncate w-full px-2">{permitCardFile.name}</span>
-                                        <span className="text-xs text-amber-500 mt-1 font-medium tracking-wide uppercase">Uploaded</span>
-                                        <span className="text-[10px] text-amber-500 mt-2 font-bold flex items-center justify-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full"><Eye className="w-3 h-3"/> Publicly Visible</span>
-                                    </>
+                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                        {permitCardPreview ? (
+                                            <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
+                                                <img src={permitCardPreview} alt="Card Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                <FileCheck className="h-8 w-8 text-amber-500" />
+                                            </div>
+                                        )}
+                                        <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{permitCardFile.name}</span>
+                                        <button 
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setPermitCardFile(null);
+                                                setPermitCardPreview(null);
+                                            }}
+                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
+                                    </div>
                                 ) : (
                                     <>
                                         {/* CSS Business Permit Card Illustration */}
@@ -416,20 +627,12 @@ export default function SignUpPage() {
                                             </div>
                                             
                                             <div className="absolute bottom-1.5 right-6 z-10 flex items-center gap-1">
-                                                <span className="text-[3px] font-bold text-blue-900 leading-none text-right">SCAN<br/>ME!</span>
                                                 <div className="w-3.5 h-3.5 bg-white border border-slate-300 p-[1px] rounded-sm shadow-sm">
                                                     <div className="w-full h-full bg-slate-800 grid grid-cols-2 gap-[0.5px] p-[0.5px]">
                                                         <div className="bg-white"></div><div className="bg-white"></div>
                                                         <div className="bg-white"></div><div className="bg-white"></div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            
-                                            <div className="absolute top-1.5 right-2 z-0 flex items-end gap-[1px] opacity-40">
-                                                <div className="w-1.5 h-5 bg-slate-400 rounded-t-sm"></div>
-                                                <div className="w-2 h-8 bg-slate-500 rounded-t-sm"></div>
-                                                <div className="w-1.5 h-6 bg-slate-400 rounded-t-sm"></div>
-                                                <div className="w-1.5 h-4 bg-slate-300 rounded-t-sm"></div>
                                             </div>
                                         </div>
                                         <span className="text-base font-bold text-white/87 block">Business Permit (Card)</span>
@@ -441,23 +644,41 @@ export default function SignUpPage() {
 
                             {/* Proof of Ownership */}
                             <div className={`relative rounded-2xl border border-dashed p-3 text-center transition-all duration-500 cursor-pointer flex flex-col items-center justify-center min-h-[140px] group/upload hover:z-50 ${ownershipFile ? 'border-primary/50 bg-primary/10 shadow-[0_0_20px_rgba(109,152,56,0.15)]' : 'border-white/20 bg-white/[0.02] hover:border-primary/40 hover:bg-white/[0.04]'}`}>
-                                <input 
-                                    type="file" 
-                                    required={!ownershipFile} 
-                                    title=""
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                    onChange={(e) => setOwnershipFile(e.target.files?.[0] || null)}
-                                />
-                                {ownershipFile ? (
-                                    <>
-                                        <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                            <FileCheck className="h-8 w-8 text-amber-500" />
+                                    <input 
+                                        type="file" 
+                                        title=""
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={(e) => handleFileChange(e.target.files?.[0] || null, setOwnershipFile, setOwnershipPreview)}
+                                    />
+                                    {ownershipFile ? (
+                                        <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                            {ownershipPreview ? (
+                                                <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
+                                                    <img src={ownershipPreview} alt="Ownership Preview" className="w-full h-full object-cover" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                                    <FileCheck className="h-8 w-8 text-amber-500" />
+                                                </div>
+                                            )}
+                                            <span className="text-xs font-bold text-white/87 block truncate w-full px-2 text-center">{ownershipFile.name}</span>
+                                            <button 
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOwnershipFile(null);
+                                                    setOwnershipPreview(null);
+                                                }}
+                                                className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
                                         </div>
-                                        <span className="text-sm font-bold text-white/87 block truncate w-full px-2">{ownershipFile.name}</span>
-                                        <span className="text-xs text-amber-500 mt-1 font-medium tracking-wide uppercase">Uploaded</span>
-                                    </>
-                                ) : (
+                                    ) : (
                                     <>
                                         {/* CSS Proof of Ownership Illustration */}
                                         <div className="relative w-20 h-24 bg-[#fdfbf7] rounded-sm shadow-lg overflow-hidden mx-auto mb-4 group-hover/upload:scale-110 transition-transform duration-500 border border-slate-300 p-2.5 flex flex-col">
@@ -508,7 +729,11 @@ export default function SignUpPage() {
 
                         <button
                             type="submit"
-                            disabled={loading || (currentStep === 1 && !otpVerified)}
+                            disabled={
+                                loading || 
+                                (currentStep === 1 && !otpVerified) ||
+                                (currentStep === 3 && [idFile, permitFile, permitCardFile, ownershipFile].filter(Boolean).length < 3)
+                            }
                             className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-black py-3.5 px-6 font-bold text-sm transition-all duration-300 hover:bg-slate-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden ${currentStep === 1 ? "sm:w-full" : "sm:flex-1"}`}
                         >
                             <span className="relative z-10 flex items-center gap-2 tracking-tight">

@@ -527,3 +527,209 @@ We will only finalize approval after both payments are landlord-confirmed.
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }
+
+export async function sendRegistrationOTP({
+    to,
+    otp,
+}: {
+    to: string;
+    otp: string;
+}) {
+    const subject = `${otp} is your iReside verification code`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
+  <div style="max-width:480px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
+    <div style="background:#6d9838;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+    </div>
+    <div style="padding:32px;text-align:center;">
+      <h2 style="margin:0 0 8px;font-size:18px;font-weight:700;color:#fff;">Verify your email</h2>
+      <p style="margin:0 0 32px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+        Use the verification code below to continue your landlord registration.
+      </p>
+
+      <div style="background:#1a1a1a;border:2px dashed #2a2a2a;border-radius:12px;padding:24px;margin-bottom:32px;">
+        <span style="font-size:32px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:8px;margin-left:8px;">${otp}</span>
+      </div>
+
+      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+        This code will expire in 10 minutes. If you did not request this code, please ignore this email.
+      </p>
+    </div>
+    <div style="padding:16px;background:#0d0d0d;text-align:center;border-top:1px solid #2a2a2a;">
+      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+const text = `Your iReside verification code is: ${otp}\n\nThis code expires in 10 minutes.`;
+
+    await transporter.sendMail({ from: FROM, to, subject, html, text });
+}
+
+export async function sendLandlordRegistrationApproved({
+    to,
+    landlordName,
+    loginUrl,
+}: {
+    to: string;
+    landlordName: string;
+    loginUrl: string;
+}) {
+    const subject = "Your Landlord Registration is Approved — You can now access iReside";
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
+  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
+    <div style="background:#6d9838;padding:24px 32px;">
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Landlord Access Approved</p>
+    </div>
+    <div style="padding:32px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${landlordName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+        Great news! Your landlord registration has been approved. You now have full access to the iReside landlord portal.
+      </p>
+
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">Start Managing Your Properties</p>
+        <a href="${loginUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+          Go to Landlord Dashboard →
+        </a>
+      </div>
+
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">What you can do now</p>
+        <ul style="margin:0;padding-left:20px;color:#a3a3a3;font-size:13px;line-height:1.8;">
+          <li>Add and manage your properties</li>
+          <li>Create units and list them for rent</li>
+          <li>Invite tenants and process applications</li>
+          <li>Track payments and generate invoices</li>
+          <li>Handle maintenance requests</li>
+        </ul>
+      </div>
+
+      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+        Log in with the credentials you created during registration. If you need help getting started, check out our landlord guide in the dashboard.
+      </p>
+    </div>
+    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
+      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `Hi ${landlordName},
+
+Your landlord registration has been approved! You now have full access to the iReside landlord portal.
+
+LOG IN:
+${loginUrl}
+
+What you can do now:
+- Add and manage your properties
+- Create units and list them for rent
+- Invite tenants and process applications
+- Track payments and generate invoices
+- Handle maintenance requests
+
+Log in with the credentials you created during registration.
+
+— iReside`;
+
+    await transporter.sendMail({ from: FROM, to, subject, html, text });
+}
+
+export async function sendLandlordOnboardingMagicLink({
+    to,
+    landlordName,
+    onboardingUrl,
+    expiresAt,
+}: {
+    to: string;
+    landlordName: string;
+    onboardingUrl: string;
+    expiresAt: string;
+}) {
+    const subject = "Complete Your Landlord Setup — Action Required";
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
+  <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
+    <div style="background:#6d9838;padding:24px 32px;">
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
+      <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Complete Your Setup</p>
+    </div>
+    <div style="padding:32px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi <strong>${landlordName}</strong>,</p>
+      <p style="margin:0 0 24px;color:#a3a3a3;font-size:14px;line-height:1.6;">
+        Great news! Your landlord registration has been approved. To access your landlord dashboard, you need to complete a quick setup process.
+      </p>
+
+      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">Set Up Your Account</p>
+        <a href="${onboardingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+          Complete Setup →
+        </a>
+      </div>
+
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">⏰ Link Expires</p>
+        <p style="margin:0;font-size:14px;color:#fff;">${expiresAt}</p>
+        <p style="margin:4px 0 0;font-size:12px;color:#737373;">Please complete your setup before the link expires.</p>
+      </div>
+
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#6d9838;">What you'll do</p>
+        <ul style="margin:0;padding-left:20px;color:#a3a3a3;font-size:13px;line-height:1.8;">
+          <li>Create your account password</li>
+          <li>Verify your property details</li>
+          <li>Configure billing settings</li>
+          <li>Set up your profile</li>
+        </ul>
+      </div>
+
+      <p style="margin:0;color:#525252;font-size:12px;line-height:1.6;">
+        If you didn't expect this email or have questions, please contact support.
+      </p>
+    </div>
+    <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
+      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `Hi ${landlordName},
+
+Your landlord registration has been approved! Complete your setup to access your landlord dashboard.
+
+SETUP LINK:
+${onboardingUrl}
+
+The link expires: ${expiresAt}
+
+What you'll do:
+- Create your account password
+- Verify your property details
+- Configure billing settings
+- Set up your profile
+
+Complete your setup before the link expires.
+
+— iReside`;
+
+    await transporter.sendMail({ from: FROM, to, subject, html, text });
+}
