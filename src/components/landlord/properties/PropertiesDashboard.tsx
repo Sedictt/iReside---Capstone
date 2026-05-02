@@ -195,7 +195,7 @@ export function PropertiesDashboard() {
             </div>
 
             {/* Assets Stack View */}
-            <div className="space-y-6">
+            <div data-tour-id="tour-properties-list" className="space-y-6">
                 {isLoading && (
                     <div className="space-y-6">
                         {[1, 2, 3, 4].map((i) => (

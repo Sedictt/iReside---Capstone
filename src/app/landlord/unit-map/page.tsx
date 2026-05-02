@@ -85,5 +85,9 @@ export default function UnitMapPage() {
         );
     }
 
-    return <VisualBuilder />;
+    return (
+        <div data-tour-id="tour-unit-map" className="h-full">
+            <VisualBuilder />
+        </div>
+    );
 }

@@ -215,7 +215,7 @@ export function DashboardBanner({
 
             {/* Main Content Area */}
             <div className="absolute inset-0 z-10 flex items-center justify-between px-8 md:px-14">
-                <div className="flex flex-col justify-center max-w-2xl py-12">
+                <div data-tour-id="tour-welcome-area" className="flex flex-col justify-center max-w-2xl py-12">
                     {/* Badge */}
                     <div className="mb-6 flex items-center gap-2.5 w-fit rounded-full border border-white/10 bg-card/60 px-4 py-1.5 backdrop-blur-xl">
                         <div className="relative">

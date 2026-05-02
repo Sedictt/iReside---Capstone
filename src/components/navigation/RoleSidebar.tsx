@@ -23,6 +23,7 @@ export interface SidebarNavItem {
     href: string;
     icon: LucideIcon;
     badge?: number;
+    tourId?: string;
 }
 
 export interface SidebarNavSection {
@@ -85,6 +86,7 @@ export function RoleSidebar({
             <Link
                 key={item.href}
                 href={item.href}
+                data-tour-id={item.tourId}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                     "group relative flex items-center rounded-xl transition-all duration-300 ease-in-out",
