@@ -59,12 +59,9 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 
                 {!isCollapsed && (
                     <>
-                        <div className="flex flex-col items-start text-left">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                Current Property
-                            </span>
-                            <span className="max-w-[120px] truncate text-sm font-black text-foreground">
-                                {selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name}
+                        <div className="flex flex-col items-start text-left overflow-hidden">
+                            <span className="truncate text-sm font-black text-foreground">
+                                {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading...')}
                             </span>
                         </div>
 

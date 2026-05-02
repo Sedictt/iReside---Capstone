@@ -11,6 +11,7 @@ import { PropertyProvider } from "@/context/PropertyContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
+import { LandlordProductTourOverlay } from "@/components/landlord/LandlordProductTourOverlay";
 
 export default function LandlordLayout({
     children,
@@ -62,6 +63,7 @@ export default function LandlordLayout({
                             
                             {showContactsSidebar && <ContactsSidebar />}
                             <InPersonPaymentModal />
+                            <LandlordProductTourOverlay />
                         </div>
                         <ProfileCard />
                     </ProfileCardProvider>

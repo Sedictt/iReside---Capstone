@@ -285,7 +285,7 @@ export default function InvoicesPage() {
         */}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div data-tour-id="tour-finance-hub" className="grid gap-4 sm:grid-cols-3">
         {(() => {
           const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
           const netCashFlow = metrics.collectedLast30Days - totalExpenses;

@@ -427,7 +427,8 @@ export async function POST(request: Request, context: RouteParams) {
             if (totalUnits > unitCount) {
                 const unitsToCreate = Array.from({ length: totalUnits - unitCount }, (_, index) => {
                     const unitIndex = unitCount + index + 1;
-                    const floorNumber = totalFloors === 1 ? 1 : ((unitIndex - 1) % totalFloors) + 1;
+                    const unitsPerFloor = Math.ceil(totalUnits / totalFloors);
+                    const floorNumber = totalFloors === 1 ? 1 : Math.min(totalFloors, Math.floor((unitIndex - 1) / unitsPerFloor) + 1);
                     return {
                         property_id: property.id,
                         name: `Unit ${unitIndex}`,

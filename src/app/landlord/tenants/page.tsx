@@ -220,7 +220,7 @@ export default function TenantsPage() {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div data-tour-id="tour-tenant-hub" className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <AnimatePresence mode="popLayout">
                         {filteredTenants.map((tenant, idx) => (
                             <motion.div

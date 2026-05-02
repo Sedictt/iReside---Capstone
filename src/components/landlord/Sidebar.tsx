@@ -51,11 +51,11 @@ export function Sidebar({
             defaultExpanded: true,
             dividerBefore: true,
             items: [
-                { label: "Properties", href: "/landlord/properties", icon: Building2 },
-                { label: "Unit Map", href: "/landlord/unit-map", icon: Map },
+                { label: "Properties", href: "/landlord/properties", icon: Building2, tourId: "nav-properties" },
+                { label: "Unit Map", href: "/landlord/unit-map", icon: Map, tourId: "nav-unit-map" },
                 { label: "Facilities", href: "/landlord/utilities", icon: LayoutGrid },
                 { label: "Tenant Applications", href: "/landlord/applications", icon: ClipboardList, badge: counts.applications || undefined },
-                { label: "Tenants", href: "/landlord/tenants", icon: Users },
+                { label: "Tenants", href: "/landlord/tenants", icon: Users, tourId: "nav-tenant-hub" },
                 { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: counts.maintenance || undefined },
             ]
         },
@@ -64,7 +64,7 @@ export function Sidebar({
             icon: CreditCard,
             defaultExpanded: true,
             items: [
-                { label: "Finance Hub", href: "/landlord/invoices", icon: CreditCard },
+                { label: "Finance Hub", href: "/landlord/invoices", icon: CreditCard, tourId: "nav-finance-hub" },
                 { label: "Utility Billing", href: "/landlord/utility-billing", icon: Zap },
             ]
         },
