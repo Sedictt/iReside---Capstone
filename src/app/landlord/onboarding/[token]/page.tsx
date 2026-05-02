@@ -16,8 +16,17 @@ import {
     Grid,
     Layers,
     Download,
-    Upload
+    Upload,
+    Users,
+    ArrowRight,
+    Zap,
+    Settings,
+    X,
+    FileText,
+    Maximize2,
+    FilePlus
 } from "lucide-react";
+import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { toast } from "sonner";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
