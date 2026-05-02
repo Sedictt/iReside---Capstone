@@ -85,8 +85,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             const options = (data.options || []) as Property[]
             setProperties(options)
 
-            // If selected property is not in the list anymore (and not 'all'), reset to 'all'
-            if (selectedPropertyId !== 'all' && !options.find(p => p.id === selectedPropertyId)) {
+            // Auto-select if only one property exists
+            if (options.length === 1) {
+                setSelectedPropertyId(options[0].id)
+            } else if (selectedPropertyId !== 'all' && !options.find(p => p.id === selectedPropertyId)) {
+                // If selected property is not in the list anymore (and not 'all'), reset to 'all'
                 setSelectedPropertyId('all')
             }
         } catch (error) {

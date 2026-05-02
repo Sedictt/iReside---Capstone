@@ -368,6 +368,9 @@ export interface Database {
                     contract_template: Json | null
                     images: string[]
                     is_featured: boolean
+                    total_units: number
+                    total_floors: number
+                    base_rent_amount: number
                     created_at: string
                     updated_at: string
                 }
@@ -386,6 +389,9 @@ export interface Database {
                     contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
+                    total_units?: number
+                    total_floors?: number
+                    base_rent_amount?: number
                     created_at?: string
                     updated_at?: string
                 }
@@ -403,6 +409,9 @@ export interface Database {
                     contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
+                    total_units?: number
+                    total_floors?: number
+                    base_rent_amount?: number
                     updated_at?: string
                 }
                 Relationships: any[]
