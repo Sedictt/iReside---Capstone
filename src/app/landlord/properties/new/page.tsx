@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect, Suspense, type ChangeEvent, type DragEvent } from "react";
+import { useState, useEffect, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     Building2,
-    MapPin,
     Home,
-    Image as ImageIcon,
     CheckCircle2,
     ArrowLeft,
     ArrowRight,
@@ -14,25 +12,23 @@ import {
     Upload,
     Check,
     Grid,
-    Trees,
+    Layers,
     FileText,
     ClipboardList,
     ShieldCheck,
-    Trash2,
-    ArrowUp,
-    Star,
     Zap,
     Users,
-    DollarSign
+    Settings,
+    X,
+    Wallet,
+    Sparkles,
+    FilePlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-    SmartContractBuilderModal,
-    type SmartContractTemplate,
-} from "@/components/landlord/properties/SmartContractBuilderModal";
+import { SmartContractPreviewModal } from "@/components/landlord/properties/SmartContractPreviewModal";
 import ClickSpark from "@/components/ui/ClickSpark";
 import { createClient } from "@/lib/supabase/client";
-import type { UtilitySplitMethod } from "@/types/database";
+import { useAuth } from "@/hooks/useAuth";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -42,13 +38,6 @@ const PROPERTY_TYPE_TO_ENUM: Record<string, SupportedPropertyEnum> = {
     "Apartment": "apartment",
     "Dormitory": "dormitory",
     "Boarding House": "boarding_house",
-    // Legacy display names (edit-mode hydration compat)
-    "Apartment Complex": "apartment",
-    Condominium: "apartment",
-    "Single Family Home": "apartment",
-    Townhouse: "apartment",
-    Studio: "apartment",
-    "Commercial Space": "apartment",
 };
 
 const ENUM_TO_PROPERTY_TYPE: Record<string, string> = {
@@ -57,69 +46,16 @@ const ENUM_TO_PROPERTY_TYPE: Record<string, string> = {
     boarding_house: "Boarding House",
 };
 
-// Default occupancy by type
 const DEFAULT_OCCUPANCY: Record<SupportedPropertyEnum, number> = {
     apartment: 5,
     dormitory: 4,
     boarding_house: 2,
 };
 
-// Dynamic occupancy field label
-const OCCUPANCY_LABEL: Record<SupportedPropertyEnum, string> = {
-    apartment: "Household Capacity (Head Limit)",
-    dormitory: "Head Limit (Bedspace Capacity)",
-    boarding_house: "Room Limit (Head Limit)",
-};
-
-const SPLIT_OPTIONS: { value: UtilitySplitMethod; label: string; description: string }[] = [
-    { value: "equal_per_head", label: "Split by Head", description: "Divide the shared utility bill equally among all occupants residing in the property." },
-    { value: "fixed_charge", label: "Fixed Monthly Fee", description: "Charge a flat monthly utility fee per occupant, regardless of actual consumption." },
-    { value: "individual_meter", label: "Individual Meter", description: "Each tenant manages their own meter and pays the utility company directly — no shared billing involved." },
-];
-
-const PRESET_AMENITIES = [
-    "PWD Friendly",
-    "Gym Facility",
-    "24/7 Security",
-    "Parking",
-    "Coworking Space",
-    "Pet Friendly",
-    "Roof Deck",
-    "Lobby Lounge",
-];
-
 const MAX_PROPERTY_UPLOAD_FILES = 12;
 const SAVE_SAFETY_TIMEOUT_MS = 45_000;
 const MEDIA_UPLOAD_TIMEOUT_MS = 25_000;
 const PROPERTY_LOAD_TIMEOUT_MS = 12_000;
-
-const isSmartContractTemplate = (value: unknown): value is SmartContractTemplate => {
-    if (!value || typeof value !== "object") return false;
-
-    const candidate = value as {
-        answers?: unknown;
-        customClauses?: unknown;
-    };
-
-    const answersValid =
-        candidate.answers !== undefined &&
-        typeof candidate.answers === "object" &&
-        candidate.answers !== null;
-
-    const clauses = candidate.customClauses;
-    const clausesValid =
-        Array.isArray(clauses) &&
-        clauses.every(
-            (item) =>
-                item &&
-                typeof item === "object" &&
-                typeof (item as { id?: unknown }).id === "number" &&
-                typeof (item as { title?: unknown }).title === "string" &&
-                typeof (item as { description?: unknown }).description === "string"
-        );
-
-    return answersValid && clausesValid;
-};
 
 function NewAssetContent() {
     const router = useRouter();
@@ -128,6 +64,9 @@ function NewAssetContent() {
     const id = searchParams.get("id");
     const isEditMode = mode === "edit";
 
+    const { user, profile } = useAuth();
+    const supabase = createClient();
+    
     const [step, setStep] = useState<Step>(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [saveStage, setSaveStage] = useState<string | null>(null);
@@ -136,1326 +75,731 @@ function NewAssetContent() {
     const [saveWarning, setSaveWarning] = useState<string | null>(null);
     const [reloadPropertyKey, setReloadPropertyKey] = useState(0);
     const [isContractBuilderOpen, setIsContractBuilderOpen] = useState(false);
-    const [isContractGenerated, setIsContractGenerated] = useState(false);
-    const [contractTemplate, setContractTemplate] = useState<SmartContractTemplate | null>(null);
     const [customAmenity, setCustomAmenity] = useState("");
     const [customAmenities, setCustomAmenities] = useState<string[]>([]);
-    const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
     const [mediaFiles, setMediaFiles] = useState<File[]>([]);
     const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
     const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
     const [coverExistingUrl, setCoverExistingUrl] = useState<string | null>(null);
     const [coverNewIndex, setCoverNewIndex] = useState<number | null>(null);
-    const [draggingExistingIndex, setDraggingExistingIndex] = useState<number | null>(null);
-    const [dragOverExistingIndex, setDragOverExistingIndex] = useState<number | null>(null);
-    const [draggingNewIndex, setDraggingNewIndex] = useState<number | null>(null);
-    const [dragOverNewIndex, setDragOverNewIndex] = useState<number | null>(null);
     
-    // Form fields mapped for prepopulating if editing
     const [formData, setFormData] = useState({
         propertyName: "",
-        propertyType: "Apartment",
-        yearBuilt: "",
         address: "",
         totalUnits: "1",
         floorCount: "1",
         description: "",
         occupancyLimit: "5",
-        utilitySplitMethod: "individual_meter" as UtilitySplitMethod,
-        fixedChargeAmount: "500",
+        utilityBilling: "fixed_charge" as any,
+        baseRent: 0,
+        buildingRules: [] as string[],
+        amenities: [] as string[],
+        contractMode: "generate" as "generate" | "upload",
+        contractFile: null as string | null,
+        propertyType: "apartment" as SupportedPropertyEnum,
     });
 
     const hasHydratedEditData = formData.propertyName.trim().length > 0 && formData.address.trim().length > 0;
 
-    // Derived property enum
-    const resolvedPropertyEnum: SupportedPropertyEnum = PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment";
-
     useEffect(() => {
         if (!isEditMode || !id) return;
-
         const controller = new AbortController();
-        let didTimeout = false;
-        const timeout = window.setTimeout(() => {
-            didTimeout = true;
-            controller.abort();
-        }, PROPERTY_LOAD_TIMEOUT_MS);
+        const timeout = window.setTimeout(() => controller.abort(), PROPERTY_LOAD_TIMEOUT_MS);
 
         const loadProperty = async () => {
             setIsLoadingProperty(true);
             setLoadError(null);
-
             try {
-                const response = await fetch(`/api/landlord/properties/${id}`, {
-                    method: "GET",
-                    signal: controller.signal,
-                    cache: "no-store",
-                });
+                const response = await fetch(`/api/landlord/properties/${id}`, { signal: controller.signal });
+                const payload = await response.json();
+                if (!response.ok || !payload.property) throw new Error(payload.error || "Failed to load property details.");
 
-                const payload = (await response.json()) as {
-                    property?: {
-                        id: string;
-                        name: string;
-                        type: string;
-                        address: string;
-                        description: string | null;
-                        amenities: string[] | null;
-                        images: string[] | null;
-                        contract_template: unknown;
-                        unitCount: number;
-                        env_policy?: {
-                            utility_split_method?: string | null;
-                            utility_fixed_charge_amount?: number | null;
-                            max_occupants_per_unit?: number | null;
-                        } | null;
-                    };
-                    error?: string;
-                };
-
-                if (!response.ok || !payload.property) {
-                    throw new Error(payload.error || "Failed to load property details.");
+                const p = payload.property;
+                let contractMode: "generate" | "upload" = "generate";
+                let contractFile: string | null = null;
+                
+                if (p.contract_template && typeof p.contract_template === "object") {
+                    const ct = p.contract_template as any;
+                    if (ct.contract_mode) contractMode = ct.contract_mode;
+                    if (ct.file_name) contractFile = ct.file_name;
                 }
-
-                const property = payload.property;
-
-                const enumKey = (property.type ?? "apartment") as SupportedPropertyEnum;
-                const displayType = ENUM_TO_PROPERTY_TYPE[enumKey] ?? "Apartment";
-                const defaultOcc = DEFAULT_OCCUPANCY[enumKey] ?? 5;
 
                 setFormData({
-                    propertyName: property.name,
-                    propertyType: displayType,
-                    yearBuilt: "",
-                    address: property.address,
-                    totalUnits: String(property.unitCount ?? 1),
-                    floorCount: "1",
-                    description: property.description ?? "",
-                    occupancyLimit: String(property.env_policy?.max_occupants_per_unit ?? defaultOcc),
-                    utilitySplitMethod: (property.env_policy?.utility_split_method as UtilitySplitMethod) ?? "individual_meter",
-                    fixedChargeAmount: String(property.env_policy?.utility_fixed_charge_amount ?? 500),
+                    propertyName: p.name,
+                    address: p.address,
+                    totalUnits: String(p.unitCount ?? 1),
+                    floorCount: String(p.total_floors ?? 1),
+                    description: p.description ?? "",
+                    occupancyLimit: String(p.env_policy?.max_occupants_per_unit ?? 5),
+                    utilityBilling: (p.env_policy?.utility_split_method ?? "fixed_charge") as any,
+                    baseRent: p.base_rent_amount ?? 0,
+                    buildingRules: Array.isArray(p.house_rules) ? p.house_rules : [],
+                    amenities: Array.isArray(p.amenities) ? p.amenities : [],
+                    propertyType: (p.type ?? "apartment") as SupportedPropertyEnum,
+                    contractMode,
+                    contractFile
                 });
 
-                const incomingAmenities = Array.isArray(property.amenities)
-                    ? property.amenities.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-                    : [];
-
-                const presetAmenityLookup = new Set(PRESET_AMENITIES.map((item) => item.toLowerCase()));
-                const nextCustomAmenities = incomingAmenities.filter(
-                    (amenity) => !presetAmenityLookup.has(amenity.toLowerCase())
-                );
-
-                setSelectedAmenities(incomingAmenities);
-                setCustomAmenities(nextCustomAmenities);
-                setExistingImageUrls(
-                    Array.isArray(property.images)
-                        ? property.images.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-                        : []
-                );
-                const firstImage =
-                    Array.isArray(property.images) && typeof property.images[0] === "string" && property.images[0].trim().length > 0
-                        ? property.images[0]
-                        : null;
-                setCoverExistingUrl(firstImage);
-                setCoverNewIndex(null);
-                const resolvedContractTemplate = isSmartContractTemplate(property.contract_template)
-                    ? property.contract_template
-                    : null;
-                setContractTemplate(resolvedContractTemplate);
-                setIsContractGenerated(Boolean(resolvedContractTemplate));
-                setLoadError(null);
+                setExistingImageUrls(Array.isArray(p.images) ? p.images : []);
+                setCoverExistingUrl(Array.isArray(p.images) ? p.images[0] : null);
             } catch (error) {
-                if ((error as Error).name === "AbortError") {
-                    if (didTimeout) {
-                        setLoadError("Loading property details timed out. Please retry.");
-                    }
-                    return;
-                } else {
                 setLoadError(error instanceof Error ? error.message : "Failed to load property details.");
-                }
             } finally {
                 window.clearTimeout(timeout);
                 setIsLoadingProperty(false);
             }
         };
-
         void loadProperty();
-
-        return () => {
-            window.clearTimeout(timeout);
-            controller.abort();
-        };
+        return () => controller.abort();
     }, [isEditMode, id, reloadPropertyKey]);
+    
+    // Auto-select contract mode for new properties based on last used mode
+    useEffect(() => {
+        if (isEditMode || !user) return;
+        
+        const fetchLastContractMode = async () => {
+            const { data, error } = await supabase
+                .from("properties")
+                .select("contract_template")
+                .eq("landlord_id", user.id)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .single();
+                
+            if (data?.contract_template && typeof data.contract_template === "object") {
+                const ct = data.contract_template as any;
+                if (ct.contract_mode) {
+                    setFormData(prev => ({ ...prev, contractMode: ct.contract_mode }));
+                }
+            }
+        };
+        
+        void fetchLastContractMode();
+    }, [isEditMode, user]);
 
     useEffect(() => {
-        const nextPreviewUrls = mediaFiles.map((file) => URL.createObjectURL(file));
-        setMediaPreviewUrls(nextPreviewUrls);
-
-        return () => {
-            nextPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
-        };
+        const nextPreviews = mediaFiles.map(f => URL.createObjectURL(f));
+        setMediaPreviewUrls(nextPreviews);
+        return () => nextPreviews.forEach(url => URL.revokeObjectURL(url));
     }, [mediaFiles]);
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
+    const handleInputChange = (field: string, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
 
-    const handleAddCustomAmenity = () => {
-        const value = customAmenity.trim();
-        if (!value) return;
 
-        const alreadyExists = customAmenities.some(
-            (amenity) => amenity.toLowerCase() === value.toLowerCase()
-        );
-        if (!alreadyExists) {
-            setCustomAmenities((prev) => [...prev, value]);
-        }
-        setSelectedAmenities((prev) => {
-            if (prev.some((amenity) => amenity.toLowerCase() === value.toLowerCase())) {
-                return prev;
-            }
-
-            return [...prev, value];
-        });
-        setCustomAmenity("");
-    };
-
-    const handleToggleAmenity = (amenity: string) => {
-        setSelectedAmenities((prev) => {
-            const exists = prev.some((item) => item.toLowerCase() === amenity.toLowerCase());
-
-            if (exists) {
-                return prev.filter((item) => item.toLowerCase() !== amenity.toLowerCase());
-            }
-
-            return [...prev, amenity];
-        });
-    };
-
-    const handleMediaFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files || files.length === 0) {
-            return;
-        }
-
-        const nextFiles = Array.from(files);
-
-        setMediaFiles((prev) => {
-            const merged = [...prev, ...nextFiles];
-            const capped = merged.slice(0, MAX_PROPERTY_UPLOAD_FILES);
-
-            if (merged.length > MAX_PROPERTY_UPLOAD_FILES) {
-                setLoadError(`You can upload up to ${MAX_PROPERTY_UPLOAD_FILES} images only.`);
-            } else {
-                setLoadError((current) =>
-                    current === `You can upload up to ${MAX_PROPERTY_UPLOAD_FILES} images only.` ? null : current
-                );
-            }
-
-            if (coverExistingUrl === null && coverNewIndex === null && capped.length > 0) {
-                setCoverNewIndex(0);
-            }
-
-            return capped;
-        });
-
-        // Allow re-selecting the same file(s) in the next pick operation.
-        event.target.value = "";
-    };
-
-    const moveExistingImage = (index: number, direction: -1 | 1) => {
-        const target = index + direction;
-        if (target < 0 || target >= existingImageUrls.length) return;
-
-        const nextImages = [...existingImageUrls];
-        const [moved] = nextImages.splice(index, 1);
-        nextImages.splice(target, 0, moved);
-        setExistingImageUrls(nextImages);
-    };
-
-    const reorderExistingImages = (fromIndex: number, toIndex: number) => {
-        if (fromIndex === toIndex) return;
-        if (fromIndex < 0 || fromIndex >= existingImageUrls.length) return;
-        if (toIndex < 0 || toIndex >= existingImageUrls.length) return;
-
-        const nextImages = [...existingImageUrls];
-        const [moved] = nextImages.splice(fromIndex, 1);
-        nextImages.splice(toIndex, 0, moved);
-        setExistingImageUrls(nextImages);
-    };
-
-    const handleExistingDragStart = (index: number) => {
-        setDraggingExistingIndex(index);
-        setDragOverExistingIndex(index);
-    };
-
-    const handleExistingDragOver = (event: DragEvent<HTMLDivElement>, index: number) => {
-        event.preventDefault();
-        if (dragOverExistingIndex !== index) {
-            setDragOverExistingIndex(index);
-        }
-    };
-
-    const handleExistingDrop = (index: number) => {
-        if (draggingExistingIndex === null) return;
-        reorderExistingImages(draggingExistingIndex, index);
-        setDraggingExistingIndex(null);
-        setDragOverExistingIndex(null);
-    };
-
-    const handleExistingDragEnd = () => {
-        setDraggingExistingIndex(null);
-        setDragOverExistingIndex(null);
-    };
-
-    const reorderNewFiles = (fromIndex: number, toIndex: number) => {
-        if (fromIndex === toIndex) return;
-        if (fromIndex < 0 || fromIndex >= mediaFiles.length) return;
-        if (toIndex < 0 || toIndex >= mediaFiles.length) return;
-
-        const nextFiles = [...mediaFiles];
-        const [moved] = nextFiles.splice(fromIndex, 1);
-        nextFiles.splice(toIndex, 0, moved);
-        setMediaFiles(nextFiles);
-
-        if (coverNewIndex === null) return;
-        if (coverNewIndex === fromIndex) {
-            setCoverNewIndex(toIndex);
-            return;
-        }
-
-        if (fromIndex < toIndex && coverNewIndex > fromIndex && coverNewIndex <= toIndex) {
-            setCoverNewIndex(coverNewIndex - 1);
-            return;
-        }
-
-        if (fromIndex > toIndex && coverNewIndex >= toIndex && coverNewIndex < fromIndex) {
-            setCoverNewIndex(coverNewIndex + 1);
-        }
-    };
-
-    const handleNewDragStart = (index: number) => {
-        setDraggingNewIndex(index);
-        setDragOverNewIndex(index);
-    };
-
-    const handleNewDragOver = (event: DragEvent<HTMLDivElement>, index: number) => {
-        event.preventDefault();
-        if (dragOverNewIndex !== index) {
-            setDragOverNewIndex(index);
-        }
-    };
-
-    const handleNewDrop = (index: number) => {
-        if (draggingNewIndex === null) return;
-        reorderNewFiles(draggingNewIndex, index);
-        setDraggingNewIndex(null);
-        setDragOverNewIndex(null);
-    };
-
-    const handleNewDragEnd = () => {
-        setDraggingNewIndex(null);
-        setDragOverNewIndex(null);
-    };
-
-    const removeExistingImage = (urlToRemove: string) => {
-        const nextImages = existingImageUrls.filter((url) => url !== urlToRemove);
-        setExistingImageUrls(nextImages);
-
-        if (coverExistingUrl === urlToRemove) {
-            if (nextImages.length > 0) {
-                setCoverExistingUrl(nextImages[0]);
-                setCoverNewIndex(null);
-            } else if (mediaFiles.length > 0) {
-                setCoverExistingUrl(null);
-                setCoverNewIndex(0);
-            } else {
-                setCoverExistingUrl(null);
-                setCoverNewIndex(null);
-            }
-        }
+    const handleMediaFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+        const next = Array.from(files).slice(0, MAX_PROPERTY_UPLOAD_FILES - mediaFiles.length);
+        setMediaFiles(prev => [...prev, ...next]);
+        if (coverExistingUrl === null && coverNewIndex === null && next.length > 0) setCoverNewIndex(0);
     };
 
     const handleNext = () => {
-        if (step < 4) setStep((s) => (s + 1) as Step);
+        if (step < 4) setStep(s => (s + 1) as Step);
         else handleSubmit();
     };
 
     const handleBack = () => {
-        if (step > 1) setStep((s) => (s - 1) as Step);
+        if (step > 1) setStep(s => (s - 1) as Step);
         else router.push("/landlord/properties");
     };
 
-    const syncUnits = async (
-        supabase: ReturnType<typeof createClient>,
-        propertyId: string,
-        requestedTotalUnits: string,
-        requestedFloorCount: string
-    ) => {
-        const desiredUnitCount = Math.max(1, Math.floor(Number(requestedTotalUnits) || 1));
-        const floorCount = Math.max(1, Math.floor(Number(requestedFloorCount) || 1));
-
-        const { data: existingUnits, error: unitsError } = await supabase
-            .from("units")
-            .select("id, status, floor, created_at")
-            .eq("property_id", propertyId)
-            .order("created_at", { ascending: true });
-
-        if (unitsError) throw new Error("Failed to load existing units.");
-
-        const unitCount = existingUnits?.length ?? 0;
-
-        if (desiredUnitCount > unitCount) {
-            // Distribute new units across floors
-            const unitsToCreate = Array.from({ length: desiredUnitCount - unitCount }, (_, index) => {
-                const unitIndex = unitCount + index + 1;
-                // Distribute evenly: unit 1 → floor 1, wrapping around floorCount
-                const floorNumber = floorCount === 1 ? 1 : ((unitIndex - 1) % floorCount) + 1;
-                return {
-                    property_id: propertyId,
-                    name: `Unit ${unitIndex}`,
-                    floor: floorNumber,
-                    status: "vacant" as const,
-                    rent_amount: 0,
-                    beds: 1,
-                    baths: 1,
-                };
-            });
-
-            const { error: insertUnitsError } = await supabase.from("units").insert(unitsToCreate);
-            if (insertUnitsError) throw new Error("Failed to create additional units.");
-        } else if (desiredUnitCount < unitCount) {
-            const unitsToRemove = unitCount - desiredUnitCount;
-            const removableUnits = (existingUnits ?? []).filter((unit) => unit.status === "vacant").reverse();
-
-            if (removableUnits.length < unitsToRemove) {
-                throw new Error("Unable to reduce unit count because some units are occupied or under maintenance.");
-            }
-
-            const idsToDelete = removableUnits.slice(0, unitsToRemove).map((unit) => unit.id);
-            const { error: deleteUnitsError } = await supabase.from("units").delete().in("id", idsToDelete);
-            if (deleteUnitsError) throw new Error("Failed to remove extra units.");
-        }
-    };
-
-    /** Sync property_floor_configs rows based on the floor count from the wizard */
-    const syncFloorConfigs = async (
-        supabase: ReturnType<typeof createClient>,
-        propertyId: string,
-        requestedFloorCount: string
-    ) => {
-        const floorCount = Math.max(1, Math.floor(Number(requestedFloorCount) || 1));
-
-        // Fetch existing floor configs
-        const { data: existing } = await (supabase
-            .from("property_floor_configs" as any)
-            .select("floor_number, floor_key")
-            .eq("property_id", propertyId) as any);
-
-        const existingKeys = new Set((existing ?? []).map((f: any) => f.floor_key));
-
-        // Build desired set: ground (0) + floor1..floorN
-        const desired: Array<{ floor_number: number; floor_key: string; sort_order: number }> = [];
-        // Always add ground floor as floor 0
-        desired.push({ floor_number: 0, floor_key: "ground", sort_order: 0 });
-        for (let i = 1; i <= floorCount; i++) {
-            desired.push({ floor_number: i, floor_key: `floor${i}`, sort_order: i });
-        }
-
-        // Insert only missing configs (never delete existing ones — they may have custom names)
-        const toInsert = desired
-            .filter(d => !existingKeys.has(d.floor_key))
-            .map(d => ({
-                property_id: propertyId,
-                floor_number: d.floor_number,
-                floor_key: d.floor_key,
-                display_name: null, // use default display name
-                sort_order: d.sort_order,
-            }));
-
-        if (toInsert.length > 0) {
-            const { error } = await (supabase
-                .from("property_floor_configs" as any)
-                .insert(toInsert) as any);
-            if (error) throw new Error(`Failed to create floor configs: ${error.message}`);
-        }
-    };
-
-
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        setLoadError(null);
-        setSaveWarning(null);
-        setSaveStage("Verifying credentials...");
-
-        const safetyTimeout = window.setTimeout(() => {
-            setLoadError("Saving is taking longer than expected. Please check your connection and try again.");
-            setIsSubmitting(false);
-            setSaveStage(null);
-        }, SAVE_SAFETY_TIMEOUT_MS);
-
+        setSaveStage("Finalizing configuration...");
         try {
-            const supabase = createClient();
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (!user) throw new Error("Session expired.");
 
-            if (userError || !user) throw new Error("Authentication failed. Please log in again.");
-
-            // Prepare property data
-            const name = formData.propertyName.trim();
-            const address = formData.address.trim();
-            if (!name || !address) throw new Error("Property name and address are required.");
-
-            let mergedImages = [...existingImageUrls];
-            if (coverExistingUrl && mergedImages.includes(coverExistingUrl)) {
-                mergedImages = [coverExistingUrl, ...mergedImages.filter(url => url !== coverExistingUrl)];
-            }
-
-            const envType = PROPERTY_TYPE_TO_ENUM[formData.propertyType] ?? "apartment";
-            const occupancyLimit = Math.max(1, Math.floor(Number(formData.occupancyLimit) || DEFAULT_OCCUPANCY[envType]));
-            const splitMethod: UtilitySplitMethod = formData.utilitySplitMethod;
-            const fixedChargeAmount = splitMethod === "fixed_charge"
-                ? (parseFloat(formData.fixedChargeAmount) || 500)
-                : null;
-
-            const payload = {
-                name,
-                type: envType,
-                address,
-                description: formData.description.trim() || null,
-                amenities: selectedAmenities,
-                contract_template: contractTemplate,
-                images: mergedImages,
+            const propPayload = {
+                name: formData.propertyName,
+                address: formData.address,
+                type: formData.propertyType,
+                total_units: parseInt(formData.totalUnits),
+                total_floors: parseInt(formData.floorCount),
+                base_rent_amount: parseFloat(formData.baseRent.toString()) || 0,
+                description: formData.description,
+                amenities: formData.amenities,
+                house_rules: formData.buildingRules,
+                landlord_id: user.id,
+                city: "Valenzuela",
+                images: existingImageUrls,
             };
 
-            let propertyId = id ?? "";
-
+            let propId = id;
             if (isEditMode && id) {
-                setSaveStage("Updating property details...");
-                const { error } = await supabase
-                    .from("properties")
-                    .update(payload)
-                    .eq("id", id)
-                    .eq("landlord_id", user.id);
-
-                if (error) throw new Error(`Failed to update property: ${error.message}`);
-                propertyId = id;
-
-                // Update environment policy
-                await supabase.from("property_environment_policies")
-                    .update({
-                        environment_mode: envType,
-                        max_occupants_per_unit: occupancyLimit,
-                        utility_split_method: splitMethod,
-                        utility_fixed_charge_amount: fixedChargeAmount,
-                    })
-                    .eq("property_id", propertyId);
+                await supabase.from("properties").update(propPayload).eq("id", id);
             } else {
-                setSaveStage("Creating property profile...");
-                const { data: insertedProperty, error } = await supabase
-                    .from("properties")
-                    .insert({
-                        ...payload,
-                        landlord_id: user.id,
-                        city: "Valenzuela",
-                    })
-                    .select("id")
-                    .single();
-
-                if (error) throw new Error(`Failed to create property: ${error.message}`);
-                if (!insertedProperty?.id) throw new Error("Property created but ID missing.");
-                propertyId = insertedProperty.id;
-
-                await supabase.from("property_environment_policies").insert({
-                    property_id: propertyId,
-                    environment_mode: envType,
-                    needs_review: envType !== "apartment",
-                    max_occupants_per_unit: occupancyLimit,
-                    curfew_enabled: envType === "dormitory",
-                    visitor_cutoff_enabled: envType === "dormitory",
-                    quiet_hours_start: envType === "dormitory" ? "22:00:00" : null,
-                    quiet_hours_end: envType === "dormitory" ? "06:00:00" : null,
-                    gender_restriction_mode: "none",
-                    utility_split_method: splitMethod,
-                    utility_fixed_charge_amount: fixedChargeAmount,
-                    utility_policy_mode: splitMethod === "individual_meter" ? "separate_metered" :
-                                         splitMethod === "equal_per_head" ? "mixed" : "included_in_rent",
-                });
+                const { data, error } = await supabase.from("properties").insert(propPayload).select("id").single();
+                if (error) throw error;
+                propId = data?.id;
             }
 
-            // Sync units and floor configs
-            setSaveStage("Configuring units...");
-            await syncUnits(supabase, propertyId, formData.totalUnits, formData.floorCount);
-            setSaveStage("Configuring floors...");
-            await syncFloorConfigs(supabase, propertyId, formData.floorCount);
+            if (propId) {
+                // Map frontend choices to DB columns
+                // Mapping: 
+                // fixed_charge -> utility_policy_mode: included_in_rent, utility_split_method: fixed_charge
+                // individual_meter -> utility_policy_mode: separate_metered, utility_split_method: individual_meter
+                // equal_per_head -> utility_policy_mode: mixed, utility_split_method: equal_per_head
 
+                const policyMapping: Record<string, { mode: string, split: string }> = {
+                    fixed_charge: { mode: "included_in_rent", split: "fixed_charge" },
+                    individual_meter: { mode: "separate_metered", split: "individual_meter" },
+                    equal_per_head: { mode: "mixed", split: "equal_per_head" }
+                };
 
-            // Handle media uploads if any
-            let mediaSaveWarning: string | null = null;
-            if (mediaFiles.length > 0) {
-                try {
-                    setSaveStage(`Uploading ${mediaFiles.length} images...`);
-                    const mediaFormData = new FormData();
-                    mediaFormData.append("propertyId", propertyId);
-                    mediaFiles.forEach(file => mediaFormData.append("files", file));
+                const mapping = policyMapping[formData.utilityBilling] || policyMapping.fixed_charge;
 
-                    const controller = new AbortController();
-                    const mediaTimeout = window.setTimeout(() => controller.abort(), MEDIA_UPLOAD_TIMEOUT_MS);
+                await supabase.from("property_environment_policies").upsert({
+                    property_id: propId,
+                    environment_mode: "residential",
+                    max_occupants_per_unit: parseInt(formData.occupancyLimit),
+                    utility_policy_mode: mapping.mode as any,
+                    utility_split_method: mapping.split as any,
+                    updated_at: new Date().toISOString()
+                } as any, { onConflict: "property_id" });
 
-                    const uploadResponse = await fetch("/api/landlord/properties/media", {
-                        method: "POST",
-                        body: mediaFormData,
-                        signal: controller.signal,
-                    });
-
-                    window.clearTimeout(mediaTimeout);
-
-                    const uploadPayload = await uploadResponse.json();
-                    if (!uploadResponse.ok) throw new Error(uploadPayload.error || "Media upload failed.");
-
-                    const finalImages = [...uploadPayload.imageUrls, ...mergedImages];
-
-                    // Final update with all images including new ones
-                    setSaveStage("Finalizing media...");
-                    const { error: finalUpdateError } = await supabase
-                        .from("properties")
-                        .update({ images: finalImages })
-                        .eq("id", propertyId)
-                        .eq("landlord_id", user.id);
-
-                    if (finalUpdateError) throw new Error("Failed to finalize image order.");
-                } catch (mediaError) {
-                    console.error("Media upload warning:", mediaError);
-                    mediaSaveWarning = "Property details were saved, but image upload timed out or failed. Re-open edit and retry media upload.";
+                // Sync contract metadata if generated
+                if (formData.contractMode === "generate") {
+                    await supabase.from("properties").update({
+                        contract_template: {
+                            answers: {
+                                rent: formData.baseRent.toString(),
+                                occupancy_limit: formData.occupancyLimit,
+                                utility_split_method: formData.utilityBilling,
+                                utilities: formData.amenities,
+                            },
+                            customClauses: formData.buildingRules.map((rule, idx) => ({
+                                id: idx,
+                                title: "Building Rule",
+                                description: rule
+                            })),
+                            contract_mode: "generate",
+                            last_updated: new Date().toISOString()
+                        }
+                    }).eq("id", propId);
+                } else if (formData.contractMode === "upload") {
+                    await supabase.from("properties").update({
+                        contract_template: {
+                            contract_mode: "upload",
+                            file_name: formData.contractFile,
+                            last_updated: new Date().toISOString()
+                        }
+                    }).eq("id", propId);
                 }
             }
 
-            if (mediaSaveWarning) {
-                setSaveWarning(mediaSaveWarning);
-                setIsSubmitting(false);
-                setSaveStage(null);
-                return;
-            }
-
-            setSaveStage("Success! Redirecting...");
             router.push("/landlord/properties");
-            router.refresh();
-        } catch (error) {
-            console.error("Submit Error:", error);
-            setLoadError(error instanceof Error ? error.message : "An unexpected error occurred while saving.");
-            setIsSubmitting(false);
-            setSaveStage(null);
+        } catch (e) {
+            setLoadError("Critical save failure.");
         } finally {
-            window.clearTimeout(safetyTimeout);
+            setIsSubmitting(false);
         }
     };
 
     const STEPS = [
-        { id: 1, label: "Details", icon: Building2 },
-        { id: 2, label: "Units", icon: Grid },
-        { id: 3, label: "Media & Docs", icon: ImageIcon },
-        { id: 4, label: "Review", icon: CheckCircle2 }
+        { id: 1, label: "Identity", icon: Building2 },
+        { id: 2, label: "Architecture", icon: Grid },
+        { id: 3, label: "Financials", icon: "₱" },
+        { id: 4, label: "Governance", icon: ShieldCheck }
     ];
 
     return (
         <div className="min-h-screen pb-20 relative selection:bg-primary/30">
-            {/* Ambient Background Effects */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-                <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" />
-                <div className="absolute top-[30%] left-[-10%] w-[30%] h-[30%] bg-blue-500/10 rounded-full blur-[100px] mix-blend-screen" />
+                <div className="absolute top-[-10%] right-[-10%] w-[50rem] h-[50rem] rounded-full bg-primary/10 blur-[150px] opacity-50 animate-pulse" />
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8 animate-in fade-in duration-700">
-                {/* Header Navigation */}
+            <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-in fade-in duration-700">
                 <div className="flex items-center justify-between">
-                    <button
-                        onClick={handleBack}
-                        className="group flex items-center gap-2 text-sm font-medium text-neutral-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/5"
-                    >
+                    <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-bold text-white/40 hover:text-white transition-all bg-white/[0.03] px-5 py-2.5 rounded-full border border-white/5 backdrop-blur-xl">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        {step === 1 ? "Cancel" : "Go Back"}
+                        {step === 1 ? "Cancel" : "Back"}
                     </button>
-                    <div className="text-sm font-semibold text-neutral-500 uppercase tracking-widest bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
-                        {isEditMode ? "Asset Editor Wizard" : "Asset Creation Wizard"}
+                    <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl">
+                        {isEditMode ? "Asset Configuration" : "Expansion Wizard"}
                     </div>
                 </div>
 
-                {/* Wizard Container */}
-                <div className="bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative">
-                    {/* Top Progress Tracker */}
-                    <div className="p-8 border-b border-white/5 relative overflow-hidden bg-white/[0.02]">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-50" />
-
-                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-                            <div className="space-y-2">
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight">Property Wizard</h1>
-                                <p className="text-neutral-400">
-                                    {isEditMode 
-                                        ? `Editing listing details for ${formData.propertyName || "your selected property"}.`
-                                        : "Add a property to your portfolio in 4 simple steps."}
+                <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/12 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                    <div className="p-10 border-b border-white/5 bg-white/[0.01]">
+                        <div className="flex flex-col md:row md:items-center justify-between gap-10">
+                            <div className="space-y-3">
+                                <h1 className="text-4xl font-black text-white tracking-tight">Property Wizard</h1>
+                                <p className="text-white/40 text-sm font-medium max-w-md">
+                                    {isEditMode ? "Refining parameters for your asset." : "Establishing a new verified asset profile."}
                                 </p>
                             </div>
 
-                            {/* Circular Progress (Visual only) */}
-                            <div className="flex gap-2">
-                                {STEPS.map((s) => (
-                                    <div key={s.id} className="relative group cursor-default">
-                                        <div className={cn(
-                                            "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 border relative overflow-hidden",
-                                            step === s.id
-                                                ? "bg-primary text-black border-primary shadow-lg shadow-primary/20 scale-110"
-                                                : step > s.id
-                                                    ? "bg-primary/20 text-primary border-primary/30"
-                                                    : "bg-white/5 text-neutral-600 border-white/5"
-                                        )}>
-                                            {step > s.id ? <Check className="w-5 h-5 absolute inset-0 m-auto animate-in zoom-in" /> : <s.icon className={cn("w-5 h-5 transition-transform", step === s.id && "scale-110")} />}
-
-                                            {/* Glow effect for active step */}
-                                            {step === s.id && (
-                                                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-white/20 blur-md pointer-events-none" />
-                                            )}
+                            <div className="flex items-center gap-3">
+                                {STEPS.map((s, idx) => (
+                                    <div key={s.id} className="flex items-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border",
+                                                step === s.id ? "bg-primary text-black border-primary shadow-lg ring-4 ring-primary/10" : "bg-white/5 text-white/20 border-white/5"
+                                            )}>
+                                                {step > s.id ? (
+                                                    <Check className="w-5 h-5 text-primary" />
+                                                ) : typeof s.icon === "string" ? (
+                                                    <span className="text-sm font-black">{s.icon}</span>
+                                                ) : (
+                                                    <s.icon className="w-4 h-4" />
+                                                )}
+                                            </div>
+                                            <span className={cn("text-[9px] font-black uppercase tracking-widest", step === s.id ? "text-primary" : "text-white/20")}>{s.label}</span>
                                         </div>
-                                        {/* Tooltip */}
-                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-xs font-semibold text-neutral-300 pointer-events-none">
-                                            {s.label}
-                                        </div>
+                                        {idx < STEPS.length - 1 && <div className="w-6 h-px bg-white/5 mx-2 -mt-6" />}
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Step Content */}
-                    <div className={cn("p-8 sm:p-12", step === 2 ? "min-h-[260px]" : "min-h-[400px]")}>
-                        {loadError && (
-                            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <span>{loadError}</span>
-                                    {isEditMode && id && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setReloadPropertyKey((value) => value + 1)}
-                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 border border-white/20 text-white"
-                                        >
-                                            Retry
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {saveWarning && (
-                            <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                                {saveWarning}
-                            </div>
-                        )}
-
-                        {isLoadingProperty && isEditMode && !hasHydratedEditData && (
-                            <div className="mb-6 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-300">
-                                Loading property details...
-                            </div>
-                        )}
-
-                        {/* 1. Details */}
+                    <div className="p-10 min-h-[400px]">
+                        {/* 1. Identity */}
                         {step === 1 && (
-                            <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
-                                <div>
-                                    <h2 className="text-xl font-bold text-white mb-1">Basic Information</h2>
-                                    <p className="text-sm text-neutral-400">Enter the essential details about the property.</p>
+                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
+                                <div className="text-center md:text-left">
+                                    <h2 className="text-3xl font-black tracking-tight text-white">Property Identity</h2>
+                                    <p className="text-white/40 text-sm font-medium mt-1">Establish the visual and formal identity of your asset.</p>
                                 </div>
-
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Property Name</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="e.g. Grand View Residences" 
-                                            value={formData.propertyName}
-                                            onChange={(e) => handleInputChange("propertyName", e.target.value)}
-                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium" 
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Property Type</label>
-                                            <select 
-                                                value={formData.propertyType}
-                                                onChange={(e) => {
-                                                    const newType = e.target.value;
-                                                    const newEnum: SupportedPropertyEnum = PROPERTY_TYPE_TO_ENUM[newType] ?? "apartment";
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        propertyType: newType,
-                                                        occupancyLimit: String(DEFAULT_OCCUPANCY[newEnum]),
-                                                        utilitySplitMethod: newEnum === "apartment" ? "individual_meter" : "equal_per_head",
-                                                    }));
-                                                }}
-                                                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium appearance-none cursor-pointer"
-                                            >
-                                                <option value="Apartment">Apartment</option>
-                                                <option value="Dormitory">Dormitory</option>
-                                                <option value="Boarding House">Boarding House</option>
-                                            </select>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <Camera className="w-3.5 h-3.5 text-primary" />
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Year Built</label>
-                                            <input 
-                                                type="number" 
-                                                placeholder="e.g. 2018" 
-                                                value={formData.yearBuilt}
-                                                onChange={(e) => handleInputChange("yearBuilt", e.target.value)}
-                                                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium" 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Full Address</label>
-                                    <div className="relative">
-                                            <textarea 
-                                                rows={3} 
-                                                placeholder="123 Skyline Avenue, Metro Manila..." 
-                                                value={formData.address}
-                                                onChange={(e) => handleInputChange("address", e.target.value)}
-                                                className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-medium resize-none shadow-sm" 
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 2. Units & Billing */}
-                        {step === 2 && (
-                            <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
-                                <div>
-                                    <h2 className="text-xl font-bold text-white mb-1">Unit Configuration</h2>
-                                    <p className="text-sm text-neutral-400">Define the composition, occupancy limits, and billing policy.</p>
-                                </div>
-
-                                {/* 3-column number steppers */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {/* Total Units */}
-                                    {([
-                                        { key: "totalUnits" as const, label: "Total Units", icon: Home, color: "text-primary", accent: "border-primary/30 bg-primary/5", focusBorder: "focus:border-primary", min: 1 },
-                                        { key: "floorCount" as const, label: "Floors", icon: Grid, color: "text-blue-400", accent: "border-blue-400/30 bg-blue-400/5", focusBorder: "focus:border-blue-400", min: 1 },
-                                        { key: "occupancyLimit" as const, label: OCCUPANCY_LABEL[resolvedPropertyEnum], icon: Users, color: "text-amber-400", accent: "border-amber-400/30 bg-amber-400/5", focusBorder: "focus:border-amber-400", min: 1 },
-                                    ] as const).map(({ key, label, icon: Icon, color, accent, focusBorder, min }) => (
-                                        <div key={key} className={`rounded-2xl border ${accent} p-5 flex flex-col gap-3 min-w-0`}>
-                                            <div className="flex items-center gap-2">
-                                                <Icon className={`w-4 h-4 ${color} shrink-0`} />
-                                                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest leading-none truncate">{label}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const cur = Number(formData[key] ?? min);
-                                                        if (cur > min) handleInputChange(key, String(cur - 1));
-                                                    }}
-                                                    className="w-9 h-9 shrink-0 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white hover:bg-white/10 hover:border-white/20 transition-all text-lg font-bold leading-none select-none"
-                                                >
-                                                    −
-                                                </button>
-                                                <input
-                                                    type="number"
-                                                    min={min}
-                                                    value={formData[key] ?? min}
-                                                    onChange={(e) => handleInputChange(key, e.target.value)}
-                                                    className={`w-full min-w-0 text-center bg-transparent text-2xl font-black text-white focus:outline-none border-b-2 border-white/10 ${focusBorder} transition-colors pb-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const cur = Number(formData[key] ?? min);
-                                                        handleInputChange(key, String(cur + 1));
-                                                    }}
-                                                    className="w-9 h-9 shrink-0 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-white hover:bg-white/10 hover:border-white/20 transition-all text-lg font-bold leading-none select-none"
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                </div>
-
-                                {/* Billing & Utility Split Section */}
-                                <div className="space-y-4 pt-4 border-t border-white/5">
-                                    <div className="flex items-center gap-2">
-                                        <Zap className="w-4 h-4 text-primary" />
-                                        <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Billing &amp; Utility Split</label>
-                                    </div>
-                                    <p className="text-xs text-neutral-500">
-                                        {resolvedPropertyEnum === "apartment"
-                                            ? "Apartments default to individual metering. Tenants pay their own meter bills."
-                                            : "Choose how shared utility bills are split among occupants for this property."}
-                                    </p>
-
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {SPLIT_OPTIONS
-                                            .filter(opt =>
-                                                resolvedPropertyEnum === "apartment"
-                                                    ? opt.value === "individual_meter"
-                                                    : opt.value !== "equal_per_unit"
-                                            )
-                                            .map(opt => {
-                                                const isSelected = formData.utilitySplitMethod === opt.value;
-                                                return (
-                                                    <button
-                                                        key={opt.value}
-                                                        type="button"
-                                                        onClick={() => handleInputChange("utilitySplitMethod", opt.value)}
-                                                        className={cn(
-                                                            "w-full text-left px-5 py-4 rounded-xl border-2 transition-all flex items-center justify-between group",
-                                                            isSelected
-                                                                ? "bg-primary/10 border-primary text-white"
-                                                                : "bg-white/[0.02] border-white/5 text-neutral-300 hover:border-white/20 hover:bg-white/[0.05]"
-                                                        )}
-                                                    >
-                                                        <div>
-                                                            <p className="font-bold text-sm">{opt.label}</p>
-                                                            <p className="text-xs text-neutral-500 mt-0.5">{opt.description}</p>
-                                                        </div>
-                                                        <div className={cn(
-                                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ml-4 transition-colors",
-                                                            isSelected ? "border-primary bg-primary" : "border-white/20"
-                                                        )}>
-                                                            {isSelected && <Check className="w-3 h-3 text-black" />}
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })
-                                        }
-                                    </div>
-
-                                    {/* Fixed Charge Amount input */}
-                                    {formData.utilitySplitMethod === "fixed_charge" && (
-                                        <div className="mt-3 space-y-2 animate-in slide-in-from-top-2 duration-300">
-                                            <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                <DollarSign className="w-3.5 h-3.5" /> Fixed Monthly Fee per Occupant (₱)
-                                            </label>
-                                            <div className="relative">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-neutral-500">₱</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={formData.fixedChargeAmount}
-                                                    onChange={(e) => handleInputChange("fixedChargeAmount", e.target.value)}
-                                                    placeholder="500"
-                                                    className="w-full bg-[#111] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white text-lg font-bold focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-neutral-600"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. Media */}
-                        {step === 3 && (
-                            <div className="space-y-8 animate-in slide-in-from-right-8 duration-500">
-                                <div>
-                                    <h2 className="text-xl font-bold text-white mb-1">Media & Documents</h2>
-                                    <p className="text-sm text-neutral-400">Add photos, highlight amenities, and upload essential asset documents.</p>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><Camera className="w-4 h-4" /> Cover Photo</label>
-                                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-white/10 border-dashed rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/50 transition-all group overflow-hidden relative">
-                                        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary/20 text-neutral-400 group-hover:text-primary transition-all group-hover:scale-110">
-                                                <Upload className="w-5 h-5" />
-                                            </div>
-                                            <p className="mb-2 text-sm text-neutral-300"><span className="font-semibold text-white">Click to upload</span> high-res image</p>
-                                            <p className="text-xs text-neutral-500 font-medium">You can select multiple images (max 12, 8 MB each)</p>
-                                            {(mediaFiles.length > 0 || existingImageUrls.length > 0) && (
-                                                <p className="mt-2 text-xs text-primary font-semibold">
-                                                    {mediaFiles.length > 0
-                                                        ? `${mediaFiles.length} new image${mediaFiles.length === 1 ? "" : "s"} queued`
-                                                        : "No new uploads queued"}
-                                                    {existingImageUrls.length > 0 ? ` • ${existingImageUrls.length} existing image${existingImageUrls.length === 1 ? "" : "s"}` : ""}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <input type="file" className="hidden" accept="image/*" multiple onChange={handleMediaFileChange} />
-                                    </label>
-
-                                    {existingImageUrls.length > 0 && (
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Existing Images</p>
-                                            <p className="text-[11px] text-neutral-500">Drag cards to reorder. First image is used as default cover unless you set one.</p>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {existingImageUrls.map((url, index) => {
-                                                    const isCover = coverExistingUrl === url;
-                                                    const isDragOver = dragOverExistingIndex === index && draggingExistingIndex !== null;
-                                                    return (
-                                                        <div
-                                                            key={url}
-                                                            draggable
-                                                            onDragStart={() => handleExistingDragStart(index)}
-                                                            onDragOver={(event) => handleExistingDragOver(event, index)}
-                                                            onDrop={() => handleExistingDrop(index)}
-                                                            onDragEnd={handleExistingDragEnd}
-                                                            className={cn(
-                                                                "rounded-xl border bg-white/[0.02] p-3 space-y-2 transition-colors",
-                                                                isDragOver ? "border-primary/50" : "border-white/10"
-                                                            )}
-                                                        >
-                                                            <img src={url} alt={`Property image ${index + 1}`} className="h-28 w-full rounded-lg object-cover" />
-                                                            <div className="flex items-center justify-between gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setCoverExistingUrl(url);
-                                                                        setCoverNewIndex(null);
-                                                                    }}
-                                                                    className={cn(
-                                                                        "text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1",
-                                                                        isCover
-                                                                            ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-white/20"
-                                                                    )}
-                                                                >
-                                                                    <Star className="w-3.5 h-3.5" />
-                                                                    {isCover ? "Cover" : "Set Cover"}
-                                                                </button>
-
-                                                                <div className="flex items-center gap-1">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => moveExistingImage(index, -1)}
-                                                                        disabled={index === 0}
-                                                                        className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-neutral-300 hover:text-white disabled:opacity-40"
-                                                                        title="Move up"
-                                                                    >
-                                                                        <ArrowUp className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => moveExistingImage(index, 1)}
-                                                                        disabled={index === existingImageUrls.length - 1}
-                                                                        className="p-1.5 rounded-lg border border-white/10 bg-white/5 text-neutral-300 hover:text-white disabled:opacity-40 rotate-180"
-                                                                        title="Move down"
-                                                                    >
-                                                                        <ArrowUp className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => removeExistingImage(url)}
-                                                                        className="p-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                                                                        title="Remove image"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {mediaPreviewUrls.length > 0 && (
-                                        <div className="space-y-2">
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">New Uploads</p>
-                                            <p className="text-[11px] text-neutral-500">Drag cards to reorder upload order before saving.</p>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                {mediaPreviewUrls.map((url, index) => {
-                                                    const isCover = coverExistingUrl === null && coverNewIndex === index;
-                                                    const isDragOver = dragOverNewIndex === index && draggingNewIndex !== null;
-                                                    return (
-                                                        <div
-                                                            key={`${url}-${index}`}
-                                                            draggable
-                                                            onDragStart={() => handleNewDragStart(index)}
-                                                            onDragOver={(event) => handleNewDragOver(event, index)}
-                                                            onDrop={() => handleNewDrop(index)}
-                                                            onDragEnd={handleNewDragEnd}
-                                                            className={cn(
-                                                                "rounded-xl border bg-white/[0.02] p-3 space-y-2 transition-colors",
-                                                                isDragOver ? "border-primary/50" : "border-white/10"
-                                                            )}
-                                                        >
-                                                            <img src={url} alt={`New upload ${index + 1}`} className="h-28 w-full rounded-lg object-cover" />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setCoverExistingUrl(null);
-                                                                    setCoverNewIndex(index);
-                                                                }}
-                                                                className={cn(
-                                                                    "text-xs px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1",
-                                                                    isCover
-                                                                        ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
-                                                                        : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-white/20"
-                                                                )}
-                                                            >
-                                                                <Star className="w-3.5 h-3.5" />
-                                                                {isCover ? "Cover" : "Set Cover"}
-                                                            </button>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><Trees className="w-4 h-4" /> Key Amenities</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {PRESET_AMENITIES.map((amenity, i) => {
-                                            const isSelected = selectedAmenities.some(
-                                                (item) => item.toLowerCase() === amenity.toLowerCase()
-                                            );
-
-                                            return (
-                                                <button
-                                                    key={i}
-                                                    type="button"
-                                                    onClick={() => handleToggleAmenity(amenity)}
-                                                    className={cn(
-                                                        "px-4 py-2 rounded-full border text-sm font-medium transition-all",
-                                                        isSelected
-                                                            ? "border-primary/30 bg-primary/10 text-primary"
-                                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-primary hover:bg-primary/10"
-                                                    )}
-                                                >
-                                                    {amenity}
-                                                </button>
-                                            );
-                                        })}
-                                        {customAmenities.map((amenity, i) => {
-                                            const isSelected = selectedAmenities.some(
-                                                (item) => item.toLowerCase() === amenity.toLowerCase()
-                                            );
-
-                                            return (
-                                                <button
-                                                    key={`${amenity}-${i}`}
-                                                    type="button"
-                                                    onClick={() => handleToggleAmenity(amenity)}
-                                                    className={cn(
-                                                        "px-4 py-2 rounded-full border text-sm font-medium transition-all",
-                                                        isSelected
-                                                            ? "border-primary/30 bg-primary/10 text-primary"
-                                                            : "border-white/10 bg-white/5 text-neutral-300 hover:text-white hover:border-primary hover:bg-primary/10"
-                                                    )}
-                                                >
-                                                    {amenity}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                                        <input
-                                            type="text"
-                                            value={customAmenity}
-                                            onChange={(e) => setCustomAmenity(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    handleAddCustomAmenity();
-                                                }
-                                            }}
-                                            placeholder="Add custom amenity (e.g. EV Charging Station)"
-                                            className="flex-1 bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleAddCustomAmenity}
-                                            className="px-5 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:bg-primary/90 transition-all"
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 pt-4 border-t border-white/5">
-                                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><FileText className="w-4 h-4" /> Legal Documents</label>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <label className="flex flex-col items-center justify-center w-full h-32 border border-white/10 border-dashed rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/50 transition-all group overflow-hidden relative">
-                                            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 text-neutral-400 group-hover:text-primary transition-all group-hover:scale-110">
-                                                    <Upload className="w-4 h-4" />
-                                                </div>
-                                                <p className="mb-1 text-sm text-neutral-300"><span className="font-semibold text-white">Upload Existing File</span></p>
-                                                <p className="text-xs text-neutral-500 font-medium">PDF, DOC, DOCX</p>
-                                            </div>
-                                            <input type="file" className="hidden" accept=".pdf,.doc,.docx" multiple />
-                                        </label>
-
-                                        <div
-                                            onClick={() => setIsContractBuilderOpen(true)}
-                                            className="flex flex-col items-center justify-center w-full h-32 border border-primary/20 rounded-2xl cursor-pointer bg-primary/5 hover:bg-primary/10 transition-all group overflow-hidden relative"
-                                        >
-                                            <div className="absolute top-0 right-0 w-16 h-16 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all" />
-                                            <div className="flex flex-col items-center justify-center relative z-10 w-full">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2 text-primary transition-all group-hover:scale-110 relative">
-                                                    <ClipboardList className="w-4 h-4" />
-                                                    {isContractGenerated && (
-                                                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border border-black flex items-center justify-center">
-                                                            <Check className="w-2.5 h-2.5 text-black" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <p className="mb-1 text-sm text-primary font-bold">Smart Contract Builder</p>
-                                                {isContractGenerated ? (
-                                                    <p className="text-xs text-emerald-400 font-bold text-center px-4 bg-emerald-500/10 py-1 rounded-full border border-emerald-500/20">
-                                                        Standard Lease Configured
-                                                    </p>
+                                        <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 aspect-[16/10]">
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                                                {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
+                                                    <img src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <p className="text-xs text-primary/70 font-medium text-center px-4">Interactive form to construct your lease easily</p>
+                                                    <Upload className="w-8 h-8 text-white/20" />
                                                 )}
                                             </div>
+                                            <input type="file" onChange={handleMediaFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="space-y-4 pt-4 border-t border-white/5">
-                                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" /> Verification Documents</label>
-                                    <p className="text-xs text-neutral-500 font-medium">Please provide your building and business permits for admin verification before publishing.</p>
-
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <label className="flex flex-col items-center justify-center w-full h-32 border border-white/10 border-dashed rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/50 transition-all group overflow-hidden relative">
-                                            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 text-neutral-400 group-hover:text-primary transition-all group-hover:scale-110">
-                                                    <Upload className="w-4 h-4" />
-                                                </div>
-                                                <p className="mb-1 text-sm text-neutral-300"><span className="font-semibold text-white">Building Permit</span></p>
-                                                <p className="text-xs text-neutral-500 font-medium">PDF, JPG, PNG</p>
+                                    <div className="space-y-6 bg-white/[0.03] border border-white/5 rounded-[2.5rem] p-8">
+                                        <div className="space-y-2 relative">
+                                            <div className="flex items-center justify-between px-1">
+                                                <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Designation</label>
+                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="w-2.5 h-2.5" /> Locked by Admin</span>}
                                             </div>
-                                            <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                                        </label>
-
-                                        <label className="flex flex-col items-center justify-center w-full h-32 border border-white/10 border-dashed rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/50 transition-all group overflow-hidden relative">
-                                            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 text-neutral-400 group-hover:text-primary transition-all group-hover:scale-110">
-                                                    <Upload className="w-4 h-4" />
-                                                </div>
-                                                <p className="mb-1 text-sm text-neutral-300"><span className="font-semibold text-white">Business Permit</span></p>
-                                                <p className="text-xs text-neutral-500 font-medium">PDF, JPG, PNG</p>
+                                            <input 
+                                                type="text" 
+                                                disabled={isEditMode}
+                                                value={formData.propertyName} 
+                                                onChange={e => handleInputChange("propertyName", e.target.value)} 
+                                                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
+                                                placeholder="e.g. Skyline Residences" 
+                                            />
+                                        </div>
+                                        <div className="space-y-2 relative">
+                                            <div className="flex items-center justify-between px-1">
+                                                <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Location</label>
+                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="w-2.5 h-2.5" /> Locked by Admin</span>}
                                             </div>
-                                            <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                                        </label>
-
-                                        <label className="flex flex-col items-center justify-center w-full h-32 border border-white/10 border-dashed rounded-2xl cursor-pointer bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/50 transition-all group overflow-hidden relative">
-                                            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:bg-primary/20 text-neutral-400 group-hover:text-primary transition-all group-hover:scale-110">
-                                                    <Upload className="w-4 h-4" />
-                                                </div>
-                                                <p className="mb-1 text-sm text-neutral-300"><span className="font-semibold text-white">Occupancy Permit</span></p>
-                                                <p className="text-xs text-neutral-500 font-medium">PDF, JPG, PNG</p>
-                                            </div>
-                                            <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 4. Review */}
-                        {step === 4 && (
-                            <div className="space-y-8 animate-in slide-in-from-right-8 duration-500 flex flex-col items-center text-center">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary/20 to-emerald-500/20 flex items-center justify-center shadow-[0_0_50px_rgba(var(--primary),0.2)] mb-2 inline-flex relative">
-                                    <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-50" />
-                                    <Building2 className="w-10 h-10 text-primary" />
-                                </div>
-                                <div>
-                                    <h2 className="text-3xl font-black text-white mb-2">{isEditMode ? "Review Changes" : "Submit for Verification"}</h2>
-                                    <p className="text-neutral-400 max-w-md mx-auto">
-                                        {isEditMode 
-                                            ? "Review your updated property details before saving the changes to your portfolio."
-                                            : "Your asset profile is complete. Once submitted, our admins will verify your business and building permits before your asset goes live and is ready for tenant onboarding."}
-                                    </p>
-                                </div>
-
-                                <div className="w-full max-w-sm bg-white/[0.02] border border-white/5 rounded-2xl p-6 text-left space-y-4">
-                                    <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                                        <span className="text-sm text-neutral-400">Name</span>
-                                        <span className="font-semibold text-white">{formData.propertyName || "Grand View Residences"}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center pb-4 border-b border-white/5">
-                                        <span className="text-sm text-neutral-400">Units</span>
-                                        <span className="font-semibold text-white">{formData.totalUnits || "1"} Units</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-neutral-400">Status</span>
-                                        {isEditMode ? (
-                                            <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md">Published</span>
-                                        ) : (
-                                            <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md">Pending Admin Verification</span>
+                                            <textarea 
+                                                rows={3} 
+                                                disabled={isEditMode}
+                                                value={formData.address} 
+                                                onChange={e => handleInputChange("address", e.target.value)} 
+                                                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-medium text-white/80 outline-none focus:border-primary/50 resize-none ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
+                                                placeholder="Full address..." 
+                                            />
+                                        </div>
+                                        {isEditMode && (
+                                            <button 
+                                                type="button"
+                                                onClick={() => router.push("/landlord/support?topic=property_info_change")}
+                                                className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <ShieldCheck className="w-3.5 h-3.5" />
+                                                Request Identity Modification
+                                            </button>
                                         )}
                                     </div>
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Bottom Actions */}
-                    <div className="relative p-6 sm:px-12 sm:py-8 border-t border-white/5 bg-[#0a0a0a] flex items-center justify-between">
-                        {isSubmitting && saveStage && (
-                            <div className="absolute left-1/2 -translate-x-1/2 text-xs text-neutral-400">
-                                {saveStage}
+                        {/* 2. Architecture */}
+                        {step === 2 && (
+                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
+                                <div className="text-center md:text-left">
+                                    <h2 className="text-3xl font-black tracking-tight text-white">Architectural Scope</h2>
+                                    <p className="text-white/40 text-sm font-medium mt-1">Define the physical parameters and capacity.</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
+                                        <div className="flex items-center gap-2">
+                                            <Home className="w-4 h-4 text-primary" />
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Asset Class</h3>
+                                        </div>
+                                        <div className="grid gap-3">
+                                            {[
+                                                { id: "apartment", label: "Apartment", desc: "Multi-family residential unit" },
+                                                { id: "dormitory", label: "Dormitory", desc: "Student housing / Shared rooms" },
+                                                { id: "boarding_house", label: "Boarding House", desc: "Individual room rentals" },
+                                            ].map((opt) => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => handleInputChange("propertyType", opt.id)}
+                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.propertyType === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-2.5 h-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                        <div>
+                                                            <p className={`text-sm font-black tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                            <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                        </div>
+                                                    </div>
+                                                    {formData.propertyType === opt.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
+                                        <div className="flex items-center gap-2">
+                                            <Grid className="w-4 h-4 text-primary" />
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Structural Specs</h3>
+                                        </div>
+                                        <div className="grid gap-6">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Units</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={formData.totalUnits}
+                                                        onChange={(e) => handleInputChange("totalUnits", e.target.value)}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Floors</label>
+                                                    <input 
+                                                        type="number" 
+                                                        value={formData.floorCount}
+                                                        onChange={(e) => handleInputChange("floorCount", e.target.value)}
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Max Occupants per Unit</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={formData.occupancyLimit}
+                                                    onChange={(e) => handleInputChange("occupancyLimit", e.target.value)}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
-                        <button
-                            onClick={handleBack}
-                            disabled={isSubmitting}
-                            className={cn(
-                                "px-6 py-3 rounded-xl font-bold transition-all text-sm sm:text-base",
-                                step === 1 ? "opacity-0 pointer-events-none" : "text-white hover:bg-white/10"
-                            )}
-                        >
-                            Back
-                        </button>
 
-                        <button
-                            onClick={handleNext}
-                            disabled={isSubmitting}
-                            className={cn(
-                                "px-8 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(var(--primary),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary),0.5)] flex items-center gap-2 hover:scale-105",
-                                step === 4 && !isEditMode ? "bg-amber-500 hover:bg-amber-500/90 text-black shadow-[rgba(245,158,11,0.3)] hover:shadow-[rgba(245,158,11,0.5)]" : "bg-primary hover:bg-primary/90 text-black"
-                            )}
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                                    {isEditMode ? "Saving Changes..." : "Submitting..."}
-                                </>
-                            ) : step === 4 ? (
-                                isEditMode ? <>Save Changes <CheckCircle2 className="w-4 h-4" /></> : <>Submit for Verification <CheckCircle2 className="w-4 h-4" /></>
-                            ) : (
-                                <>Next Step <ArrowRight className="w-4 h-4" /></>
-                            )}
+                        {/* 3. Financials */}
+                        {step === 3 && (
+                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
+                                <div className="text-center md:text-left">
+                                    <h2 className="text-3xl font-black tracking-tight text-white">Financial Strategy</h2>
+                                    <p className="text-white/40 text-sm font-medium mt-1">Configure billing logic and amenities.</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">                                     
+                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                        <div className="flex items-center gap-2">
+                                            <Wallet className="w-4 h-4 text-primary" />
+                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
+                                        </div>
+
+                                        <div className="grid gap-6">
+                                            <div className="grid gap-3">
+                                                <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Utility Management</label>
+                                                <div className="grid gap-2">
+                                                    {[
+                                                        { id: "fixed_charge", label: "Bundled Utilities", desc: "All-inclusive monthly rate" },
+                                                        { id: "individual_meter", label: "Metered Consumption", desc: "Pay-per-use direct billing" },
+                                                        { id: "equal_per_head", label: "Hybrid Strategy", desc: "Fixed base + usage overhead" },
+                                                    ].map((opt) => (
+                                                        <button
+                                                            key={opt.id}
+                                                            onClick={() => handleInputChange("utilityBilling", opt.id)}
+                                                            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl border transition-all text-left ${formData.utilityBilling === opt.id ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/5" : "bg-white/5 border-white/5 hover:bg-white/[0.08]"}`}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`w-2.5 h-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
+                                                                <div>
+                                                                    <p className={`text-sm font-black tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                                    <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
+                                                                </div>
+                                                            </div>
+                                                            {formData.utilityBilling === opt.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
+                                                <div className="relative group">
+                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
+                                                    <input 
+                                                        type="text" 
+                                                        value={formData.baseRent === 0 ? "" : formData.baseRent.toLocaleString('en-US')}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value.replace(/,/g, "");
+                                                            const num = parseInt(val) || 0;
+                                                            handleInputChange("baseRent", num);
+                                                        }}
+                                                        placeholder="0.00"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-5 text-2xl font-black text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-primary" />
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Amenities</h3>
+                                            </div>
+                                            <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.amenities.length} Selected</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {[
+                                                "Wi-Fi", "Gym", "Pool", "Laundry", "Parking", 
+                                                "Security", "CCTV", "Garden", "Elevator"
+                                            ].map((amenity) => (
+                                                <button
+                                                    key={amenity}
+                                                    onClick={() => {
+                                                        const newAmenities = formData.amenities.includes(amenity)
+                                                            ? formData.amenities.filter(a => a !== amenity)
+                                                            : [...formData.amenities, amenity];
+                                                        handleInputChange("amenities", newAmenities);
+                                                    }}
+                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${formData.amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
+                                                >
+                                                    {amenity}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. Rules & Policy */}
+                        {step === 4 && (
+                            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
+                                <div className="text-center md:text-left">
+                                    <h2 className="text-3xl font-black tracking-tight text-white">Rules & Governance</h2>
+                                    <p className="text-white/40 text-sm font-medium mt-1">Define property conduct and validate configuration.</p>
+                                </div>
+                                    {/* Building Rules - Spans 12 columns */}
+                                    <div className="lg:col-span-12">
+                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <ShieldCheck className="w-4 h-4 text-primary" />
+                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
+                                                </div>
+                                                <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.buildingRules.length} Defined</span>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text"
+                                                        value={customAmenity}
+                                                        onChange={(e) => setCustomAmenity(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && customAmenity.trim()) {
+                                                                handleInputChange("buildingRules", [...formData.buildingRules, customAmenity.trim()]);
+                                                                setCustomAmenity("");
+                                                            }
+                                                        }}
+                                                        placeholder="Define a new property rule..."
+                                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white focus:border-primary/50 transition-all placeholder:text-white/10 outline-none"
+                                                    />
+                                                    <button 
+                                                        onClick={() => {
+                                                            if (customAmenity.trim()) {
+                                                                handleInputChange("buildingRules", [...formData.buildingRules, customAmenity.trim()]);
+                                                                setCustomAmenity("");
+                                                            }
+                                                        }}
+                                                        className="px-6 py-2 bg-primary text-black rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                                    >
+                                                        Add Rule
+                                                    </button>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-3">
+                                                    {formData.buildingRules.map((rule, index) => (
+                                                        <div 
+                                                            key={index}
+                                                            className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 group hover:border-primary/30 transition-all"
+                                                        >
+                                                            <span className="text-xs font-bold text-white/80">{rule}</span>
+                                                            <button 
+                                                                onClick={() => handleInputChange("buildingRules", formData.buildingRules.filter((_, i) => i !== index))}
+                                                                className="text-white/20 hover:text-red-400 transition-colors"
+                                                            >
+                                                                <X className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contract Preview - Span 5 */}
+                                    <div className="lg:col-span-5">
+                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="w-4 h-4 text-primary" />
+                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
+                                            </div>
+                                            
+                                            <div 
+                                                onClick={() => {
+                                                    if (formData.contractMode === "generate") {
+                                                        setIsContractBuilderOpen(true);
+                                                    } else {
+                                                        document.getElementById('contract-upload-input')?.click();
+                                                    }
+                                                }}
+                                                className="relative group cursor-pointer aspect-[16/11] rounded-[2rem] border border-white/10 bg-black/40 overflow-hidden shadow-2xl flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/40"
+                                            >
+                                                <input 
+                                                    id="contract-upload-input"
+                                                    type="file" 
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            handleInputChange("contractFile", file.name);
+                                                        }
+                                                    }}
+                                                    className="hidden"
+                                                    accept=".pdf,.doc,.docx"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-black/60 pointer-events-none" />
+                                                
+                                                {formData.contractMode === "generate" ? (
+                                                    <>
+                                                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500">
+                                                            <FileText className="w-8 h-8 text-primary" />
+                                                        </div>
+                                                        <div className="text-center px-4 relative z-10">
+                                                            <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">Contract Preview</span>
+                                                            <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black">
+                                                                Draft Synchronized
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${formData.contractFile ? "bg-primary/20 border-primary/40" : "bg-white/5 border-white/10"}`}>
+                                                            {formData.contractFile ? <CheckCircle2 className="w-8 h-8 text-primary" /> : <Upload className="w-8 h-8 text-white/20" />}
+                                                        </div>
+                                                        <div className="text-center px-4">
+                                                            <span className={`block text-xs font-black uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-white/40"}`}>
+                                                                {formData.contractFile ? "Upload Complete" : "Click to Upload"}
+                                                            </span>
+                                                            {formData.contractFile && <span className="block text-[8px] text-white/30 uppercase tracking-widest font-bold mt-1 truncate max-w-[150px] mx-auto">{formData.contractFile}</span>}
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                                                    <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                                        {formData.contractMode === "generate" ? <ShieldCheck className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                                            {formData.contractMode === "generate" ? "View Generated Draft" : (formData.contractFile ? "Change Document" : "Upload File")}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Lease Management Method - Span 7 */}
+                                    <div className="lg:col-span-7">
+                                        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6 h-full flex flex-col">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <FilePlus className="w-4 h-4 text-primary" />
+                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Lease Management Method</h3>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/20 rounded-lg">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                                    <span className="text-[8px] font-black text-primary uppercase tracking-widest">Global Preference</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="grid gap-5 flex-1">
+                                                <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
+                                                    {[
+                                                        { id: "generate", label: "Auto-Generate Digital Lease" },
+                                                        { id: "upload", label: "Upload Proprietary Document" }
+                                                    ].map((mode) => (
+                                                        <button 
+                                                            key={mode.id}
+                                                            onClick={() => handleInputChange("contractMode", mode.id as any)}
+                                                            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formData.contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
+                                                        >
+                                                            {mode.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="bg-white/5 rounded-2xl p-6 border border-white/5 flex-1 flex flex-col items-center justify-center text-center space-y-3">
+                                                    <div className="w-12 h-12 rounded-full bg-white/[0.03] flex items-center justify-center">
+                                                        {formData.contractMode === "generate" ? <ShieldCheck className="w-6 h-6 text-primary/40" /> : <Upload className="w-6 h-6 text-white/20" />}
+                                                    </div>
+                                                    <p className="text-[11px] text-white/40 font-bold uppercase tracking-widest leading-relaxed max-w-xs">
+                                                        {formData.contractMode === "generate" 
+                                                            ? "Automatically bind your asset configuration into a legally-compliant digital agreement powered by iReside Smart Draft." 
+                                                            : "Securely host and link your existing physical or PDF-based lease documentation to this property profile."}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-10 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
+                        <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-white/40 hover:text-white transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
+                            <ArrowLeft className="w-4 h-4" /><span>Back</span>
+                        </button>
+                        <button onClick={handleNext} disabled={isSubmitting} className="px-10 py-5 bg-primary text-black rounded-2xl font-black uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
+                            {isSubmitting ? "Syncing..." : step === 4 ? "Finalize Profile" : "Continue"}
                         </button>
                     </div>
                 </div>
             </div>
 
-            <SmartContractBuilderModal
+            <SmartContractPreviewModal
                 isOpen={isContractBuilderOpen}
                 onClose={() => setIsContractBuilderOpen(false)}
-                initialTemplate={contractTemplate}
-                propertyType={resolvedPropertyEnum}
-                utilitySplitMethod={formData.utilitySplitMethod}
-                fixedChargeAmount={formData.utilitySplitMethod === "fixed_charge" ? Number(formData.fixedChargeAmount) : undefined}
-                onSave={(template) => {
-                    setContractTemplate(template);
-                    setIsContractGenerated(true);
-                    // Sync occupancy limit from contract builder back into wizard state
-                    if (template.answers.hard_occupancy_limit) {
-                        setFormData(prev => ({ ...prev, occupancyLimit: String(template.answers.hard_occupancy_limit) }));
-                    }
+                landlordName={profile?.full_name || user?.email}
+                data={{
+                    propertyName: formData.propertyName,
+                    propertyType: formData.propertyType,
+                    baseRent: formData.baseRent,
+                    occupancyLimit: formData.occupancyLimit,
+                    utilityBilling: formData.utilityBilling,
+                    amenities: formData.amenities,
+                    buildingRules: formData.buildingRules
                 }}
             />
         </div>
@@ -1469,5 +813,5 @@ export default function NewAssetPage() {
                 <NewAssetContent />
             </Suspense>
         </ClickSpark>
-    );    
-} 
+    );
+}

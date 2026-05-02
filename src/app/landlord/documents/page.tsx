@@ -13,17 +13,22 @@ import {
     CheckCircle2,
     AlertCircle,
     Loader2,
-    ExternalLink
+    ExternalLink,
+    X,
+    Maximize2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LeaseDocument } from "@/components/lease/LeaseDocument";
 
 interface Document {
     id: string;
     name: string;
     description: string;
     url: string;
-    type: string;
+    category: string;
     updatedAt: string;
+    isTemplate?: boolean;
+    templateData?: any;
 }
 
 interface VerificationInfo {
@@ -32,11 +37,21 @@ interface VerificationInfo {
     verifiedAt: string;
 }
 
+interface LandlordProfile {
+    full_name: string;
+    avatar_url: string;
+    avatar_bg_color: string;
+    phone: string;
+}
+
 export default function DocumentsPage() {
     const [documents, setDocuments] = useState<Document[]>([]);
     const [verification, setVerification] = useState<VerificationInfo | null>(null);
+    const [profile, setProfile] = useState<LandlordProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedTemplate, setSelectedTemplate] = useState<Document | null>(null);
+    const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
         const fetchDocuments = async () => {
@@ -48,6 +63,7 @@ export default function DocumentsPage() {
                 
                 setDocuments(data.documents);
                 setVerification(data.verification);
+                setProfile(data.profile);
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -58,11 +74,12 @@ export default function DocumentsPage() {
         fetchDocuments();
     }, []);
 
-    const getIcon = (type: string) => {
-        switch (type) {
+    const getIcon = (category: string) => {
+        switch (category) {
             case "Identity": return Fingerprint;
             case "Business": return Building2;
             case "Property": return FileText;
+            case "Lease": return ShieldCheck;
             default: return FileText;
         }
     };
@@ -77,6 +94,9 @@ export default function DocumentsPage() {
             </div>
         );
     }
+
+    const registrationDocs = documents.filter(d => d.category !== "Lease");
+    const leaseDocs = documents.filter(d => d.category === "Lease");
 
     return (
         <div className="min-h-screen bg-background p-8 pb-20">
@@ -105,7 +125,7 @@ export default function DocumentsPage() {
                                 <span className="text-primary">Credentials.</span>
                             </h1>
                             <p className="max-w-xl text-lg font-medium leading-relaxed text-neutral-400">
-                                Your compliance records and legal documents are encrypted and stored securely. These credentials establish your trust status on the platform.
+                                Your compliance records, property deeds, and legal lease agreements are encrypted and stored securely.
                             </p>
                         </div>
                     </div>
@@ -113,61 +133,130 @@ export default function DocumentsPage() {
 
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     
-                    {/* ─── Document List ─── */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="flex items-center justify-between px-2">
-                            <h2 className="text-xl font-bold text-white tracking-tight">Verified Documents</h2>
-                            <span className="text-xs font-bold uppercase tracking-widest text-neutral-500">{documents.length} Records</span>
-                        </div>
+                    {/* ─── Document Sections ─── */}
+                    <div className="lg:col-span-2 space-y-12">
+                        
+                        {/* Registration Credentials */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between px-2">
+                                <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                                    <Fingerprint className="h-5 w-5 text-primary" />
+                                    Identity & Compliance
+                                </h2>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
+                            </div>
 
-                        <div className="grid gap-4">
-                            {documents.map((doc) => {
-                                const Icon = getIcon(doc.type);
-                                return (
-                                    <div 
-                                        key={doc.id}
-                                        className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
-                                    >
-                                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
-                                            <Icon className="h-7 w-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
-                                        </div>
-                                        
-                                        <div className="flex-1 min-w-0 space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
-                                                <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
-                                                    {doc.type}
-                                                </span>
+                            <div className="grid gap-4">
+                                {registrationDocs.map((doc) => {
+                                    const Icon = getIcon(doc.category);
+                                    return (
+                                        <div 
+                                            key={doc.id}
+                                            className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
+                                        >
+                                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
+                                                <Icon className="h-7 w-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
                                             </div>
-                                            <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
-                                            <div className="flex items-center gap-4 pt-1">
-                                                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
-                                                    <Clock className="h-3 w-3" />
-                                                    Uploaded {new Date(doc.updatedAt).toLocaleDateString()}
+                                            
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
+                                                    <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
+                                                        {doc.category}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
+                                                <div className="flex items-center gap-4 pt-1">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                                                        <Clock className="h-3 w-3" />
+                                                        Uploaded {new Date(doc.updatedAt).toLocaleDateString()}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex gap-2">
-                                            <a 
-                                                href={doc.url} 
-                                                target="_blank" 
-                                                rel="noreferrer"
-                                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
-                                            >
-                                                <Eye className="h-4 w-4" />
-                                            </a>
-                                            <a 
-                                                href={doc.url} 
-                                                download 
-                                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
-                                            >
-                                                <Download className="h-4 w-4" />
-                                            </a>
+                                            <div className="flex gap-2">
+                                                <a 
+                                                    href={doc.url} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </a>
+                                            </div>
                                         </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Lease Agreements */}
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between px-2">
+                                <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                                    <FileText className="h-5 w-5 text-primary" />
+                                    Lease Contracts
+                                </h2>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{leaseDocs.length} Active</span>
+                            </div>
+
+                            <div className="grid gap-4">
+                                {leaseDocs.length > 0 ? leaseDocs.map((doc) => {
+                                    const Icon = getIcon(doc.category);
+                                    return (
+                                        <div 
+                                            key={doc.id}
+                                            className="group relative flex items-center gap-6 rounded-[2rem] border border-white/5 bg-neutral-900/40 p-6 transition-all duration-300 hover:border-primary/20 hover:bg-neutral-900/60"
+                                        >
+                                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.03] transition-colors group-hover:border-primary/20 group-hover:bg-primary/5">
+                                                <Icon className="h-7 w-7 text-neutral-500 transition-colors group-hover:text-primary" strokeWidth={1.5} />
+                                            </div>
+                                            
+                                            <div className="flex-1 min-w-0 space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
+                                                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-primary">
+                                                        OFFICIAL
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-neutral-500 truncate">{doc.description}</p>
+                                                <div className="flex items-center gap-4 pt-1">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+                                                        <Clock className="h-3 w-3" />
+                                                        Ref: {doc.id.slice(0, 8)} • {new Date(doc.updatedAt).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                {doc.isTemplate ? (
+                                                    <button 
+                                                        onClick={() => {
+                                                            setSelectedTemplate(doc);
+                                                            setShowPreview(true);
+                                                        }}
+                                                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                    >
+                                                        <Maximize2 className="h-4 w-4" />
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/[0.03] text-neutral-400 transition-all hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                }) : (
+                                    <div className="rounded-[2rem] border border-dashed border-white/10 bg-neutral-900/20 p-12 text-center">
+                                        <FileText className="h-10 w-10 text-neutral-700 mx-auto mb-4" />
+                                        <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">No Active Lease Contracts</p>
+                                        <p className="text-xs text-neutral-600 mt-1">Contracts will appear here once properties are listed and tenants sign.</p>
                                     </div>
-                                );
-                            })}
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -249,6 +338,76 @@ export default function DocumentsPage() {
                 </div>
 
             </div>
+            {/* ─── Preview Modal ─── */}
+            {showPreview && selectedTemplate && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+                    <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setShowPreview(false)} />
+                    
+                    <div className="relative w-full max-w-4xl max-h-full bg-neutral-900 rounded-[3rem] border border-white/10 overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-300">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                    <ShieldCheck className="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-black text-white uppercase tracking-widest">Digital Agreement Preview</h4>
+                                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Smart Template • Secure Protocol v2.1</p>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setShowPreview(false)}
+                                className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-all"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="flex-1 overflow-y-auto p-12 bg-neutral-950/50 custom-scrollbar">
+                            <div className="max-w-3xl mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
+                                <LeaseDocument 
+                                    id="PREVIEW-MODE"
+                                    start_date={new Date().toISOString().split('T')[0]}
+                                    end_date={new Date(Date.now() + 31536000000).toISOString().split('T')[0]}
+                                    monthly_rent={selectedTemplate.templateData?.base_rent_amount || 0}
+                                    security_deposit={selectedTemplate.templateData?.base_rent_amount || 0}
+                                    signed_at={null}
+                                    signed_document_url={null}
+                                    unit={{
+                                        id: "preview-unit",
+                                        name: "Unit 101",
+                                        floor: 1,
+                                        sqft: 25,
+                                        beds: 1,
+                                        baths: 1,
+                                        property: {
+                                            id: "preview-prop",
+                                            name: selectedTemplate.name.replace("Contract Template - ", ""),
+                                            address: "Property Address Sample",
+                                            city: "Metro Manila",
+                                            images: [],
+                                            house_rules: selectedTemplate.templateData?.customClauses?.map((c: any) => `${c.title}: ${c.description}`) || [],
+                                            amenities: []
+                                        }
+                                    } as any}
+                                    landlord={{
+                                        id: "landlord-id",
+                                        full_name: profile?.full_name || "Landlord",
+                                        avatar_url: profile?.avatar_url || "",
+                                        avatar_bg_color: profile?.avatar_bg_color || "#10B981",
+                                        phone: profile?.phone || "000-000-0000"
+                                    }}
+                                    tenant={{
+                                        full_name: "Prospective Tenant"
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

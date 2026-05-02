@@ -91,32 +91,36 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                     </div>
 
                     <div className="custom-scrollbar-premium max-h-[320px] overflow-y-auto pr-1">
-                        <button
-                            onClick={() => {
-                                setSelectedPropertyId('all')
-                                setIsOpen(false)
-                            }}
-                            className={cn(
-                                "group flex w-full items-center gap-3 rounded-xl p-3 transition-all hover:bg-white/5",
-                                selectedPropertyId === 'all' && "bg-primary/5"
-                            )}
-                        >
-                            <div className={cn(
-                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-                                selectedPropertyId === 'all' ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground/60 group-hover:text-foreground"
-                            )}>
-                                <LayoutGrid className="h-5 w-5" />
-                            </div>
-                            <div className="flex flex-1 flex-col items-start overflow-hidden">
-                                <span className="text-sm font-black text-foreground">All Properties</span>
-                                <span className="text-[10px] font-medium text-muted-foreground/60">See every property together</span>
-                            </div>
-                            {selectedPropertyId === 'all' && (
-                                <Check className="h-4 w-4 text-primary" />
-                            )}
-                        </button>
+                        {properties.length > 1 && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setSelectedPropertyId('all')
+                                        setIsOpen(false)
+                                    }}
+                                    className={cn(
+                                        "group flex w-full items-center gap-3 rounded-xl p-3 transition-all hover:bg-white/5",
+                                        selectedPropertyId === 'all' && "bg-primary/5"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                                        selectedPropertyId === 'all' ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground/60 group-hover:text-foreground"
+                                    )}>
+                                        <LayoutGrid className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex flex-1 flex-col items-start overflow-hidden">
+                                        <span className="text-sm font-black text-foreground">All Properties</span>
+                                        <span className="text-[10px] font-medium text-muted-foreground/60">See every property together</span>
+                                    </div>
+                                    {selectedPropertyId === 'all' && (
+                                        <Check className="h-4 w-4 text-primary" />
+                                    )}
+                                </button>
 
-                        <div className="my-2 h-px bg-white/5" />
+                                <div className="my-2 h-px bg-white/5" />
+                            </>
+                        )}
 
                         <div className="px-2 py-1">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Your Properties</p>

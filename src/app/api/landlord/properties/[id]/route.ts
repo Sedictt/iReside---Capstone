@@ -24,7 +24,7 @@ export async function GET(
 
     const { data: property, error: propertyError } = await supabase
         .from("properties")
-        .select("id, name, type, address, description, amenities, house_rules, images, contract_template")
+        .select("id, name, type, address, description, amenities, house_rules, images, contract_template, total_units, total_floors, base_rent_amount")
         .eq("id", propertyId)
         .eq("landlord_id", user.id)
         .maybeSingle();
