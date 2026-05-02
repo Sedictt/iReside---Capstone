@@ -15,6 +15,7 @@ interface AvatarPickerProps {
     onClose: () => void;
     currentAvatarUrl: string | null;
     currentBgColor: string | null;
+    onSelect?: (url: string, color: string) => void;
 }
 
 const DEFAULT_AVATARS_COUNT = 16; // 3 to 18
@@ -25,7 +26,7 @@ const PRESET_COLORS = [
     "#dc2626", "#ea580c", "#d97706", "#059669", "#2563eb", "#4f46e5", "#7c3aed", "#c026d3", "#db2777", "#0891b2", "#52525b", "#262626"
 ];
 
-export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor }: AvatarPickerProps) {
+export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor, onSelect }: AvatarPickerProps) {
     const { profile, refreshProfile } = useAuth();
     const [selectedAvatar, setSelectedAvatar] = useState<string | null>(currentAvatarUrl);
     const [selectedColor, setSelectedColor] = useState<string>(currentBgColor || "#171717");
@@ -61,7 +62,15 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
     }, [currentPage, defaultAvatars]);
 
     const handleSave = async () => {
-        if (!profile || !selectedAvatar) return;
+        if (!selectedAvatar) return;
+        
+        if (onSelect) {
+            onSelect(selectedAvatar, selectedColor);
+            onClose();
+            return;
+        }
+
+        if (!profile) return;
         setIsUpdating(true);
         setError(null);
 
