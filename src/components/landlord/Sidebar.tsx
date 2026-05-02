@@ -14,7 +14,8 @@ import {
     User,
     LayoutGrid,
     BarChart2,
-    Zap
+    Zap,
+    ShieldCheck
 } from "lucide-react";
 import { signOut } from "@/lib/supabase/client-auth";
 import { RoleSidebar, type SidebarNavSection } from "@/components/navigation/RoleSidebar";
@@ -73,6 +74,7 @@ export function Sidebar({
             defaultExpanded: true,
             items: [
                 { label: "Profile", href: "/landlord/profile", icon: User },
+                { label: "Document Vault", href: "/landlord/documents", icon: ShieldCheck },
                 { label: "Settings", href: "/landlord/settings", icon: Settings },
             ]
         },

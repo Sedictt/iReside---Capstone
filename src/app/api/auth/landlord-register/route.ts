@@ -31,13 +31,8 @@ const landlordRegistrationWithFilesSchema = landlordRegistrationSchema.extend({
     ownershipFile: fileSchema,
 });
 
-export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: "10mb",
-        },
-    },
-};
+// Next.js App Router handles body size limits via next.config.js or defaults. 
+// The 'config' export is deprecated in Route Handlers.
 
 export async function POST(request: Request) {
     try {
@@ -87,28 +82,50 @@ export async function POST(request: Request) {
             }
         }
 
-        // Create auth user with unconfirmed email (will be confirmed later)
-        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-            email: parsed.email.toLowerCase(),
-            password: crypto.randomBytes(32).toString('hex'), // Temporary password
-            email_confirm: false, // Not confirmed yet
-            user_metadata: {
-                full_name: parsed.fullName,
-                phone: parsed.phone,
-                role: 'landlord',
-            }
-        });
+        // Check for existing auth user
+        let userId: string;
+        
+        // Use listUsers as a way to find by email (Supabase admin SDK)
+        const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers();
+        const existingAuthUser = users.find(u => u.email?.toLowerCase() === parsed.email.toLowerCase());
 
-        if (authError) {
-            console.error("Failed to create auth user:", authError);
-            return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
+        if (existingAuthUser) {
+            userId = existingAuthUser.id;
+            console.log(`[Register] Using existing auth user: ${userId}`);
+            
+            // Update role to landlord in metadata if not already
+            await adminClient.auth.admin.updateUserById(userId, {
+                user_metadata: { 
+                    ...existingAuthUser.user_metadata,
+                    role: 'landlord' 
+                }
+            });
+        } else {
+            // Create auth user with unconfirmed email (will be confirmed later)
+            const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+                email: parsed.email.toLowerCase(),
+                password: crypto.randomBytes(32).toString('hex'), // Temporary password
+                email_confirm: false, // Not confirmed yet
+                user_metadata: {
+                    full_name: parsed.fullName,
+                    phone: parsed.phone,
+                    role: 'landlord',
+                }
+            });
+
+            if (authError) {
+                console.error("Failed to create auth user:", authError);
+                return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
+            }
+            
+            userId = authData.user.id;
         }
 
-        // Create or update profile record for this landlord (trigger might have already created it)
+        // Create or update profile record for this landlord
         const { data: profileData, error: profileError } = await adminClient
             .from("profiles")
             .upsert({
-                id: authData.user.id,
+                id: userId,
                 email: parsed.email.toLowerCase(),
                 full_name: parsed.fullName,
                 phone: parsed.phone,
@@ -119,8 +136,10 @@ export async function POST(request: Request) {
 
         if (profileError) {
             console.error("Failed to create profile:", profileError);
-            // Delete the auth user if profile creation fails
-            await adminClient.auth.admin.deleteUser(authData.user.id);
+            // Only delete if we just created the user
+            if (!existingAuthUser) {
+                await adminClient.auth.admin.deleteUser(userId);
+            }
             return NextResponse.json({ error: "Failed to create profile" }, { status: 500 });
         }
 
@@ -186,16 +205,29 @@ export async function POST(request: Request) {
 
         if (appError) {
             console.error("Failed to create landlord application:", appError);
-            // Clean up: delete auth user and profile if application creation fails
-            await adminClient.auth.admin.deleteUser(authData.user.id);
+            // Clean up: delete profile if application creation fails
+            // Only delete auth user if we just created them
+            if (!existingAuthUser) {
+                await adminClient.auth.admin.deleteUser(userId);
+            }
             await adminClient.from("profiles").delete().eq("id", profileData.id);
             return NextResponse.json({ error: "Failed to submit application" }, { status: 500 });
         }
 
+        // Immediately sync business info to profile so it's ready even before onboarding
+        await adminClient
+            .from("profiles")
+            .update({
+                business_name: parsed.propertyName,
+                business_permit_url: permitCardDocUrl || permitDocUrl, // Prioritize card
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", profileData.id);
+
         return NextResponse.json({
             success: true,
             applicationId: application.id,
-            userId: authData.user.id,
+            userId: userId,
             message: "Application submitted successfully. You will receive an email once an admin reviews your application."
         });
 
@@ -205,7 +237,7 @@ export async function POST(request: Request) {
         if (error instanceof z.ZodError) {
             return NextResponse.json({ 
                 error: "Invalid form data", 
-                details: error.errors 
+                details: error.issues 
             }, { status: 400 });
         }
 

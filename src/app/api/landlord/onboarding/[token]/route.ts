@@ -294,7 +294,7 @@ export async function POST(request: Request, context: RouteParams) {
             email: email!,
             role: "landlord" as UserRole,
             business_name: application.business_name,
-            business_permit_url: (application as any).business_permit_url || (application as any).business_permit_card_url,
+            business_permit_url: (application as any).business_permit_card_url || (application as any).business_permit_url,
             updated_at: new Date().toISOString(),
         };
         if (avatarUrl) profileUpsertData.avatar_url = avatarUrl;
