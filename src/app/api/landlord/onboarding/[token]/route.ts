@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { Database, UnitStatus, UserRole } from "@/types/database";
 
 interface RouteParams {
     params: Promise<{ token: string }>;
@@ -16,13 +17,17 @@ const onboardingSchema = z.object({
     fullName: z.string().min(2, "Full name is required"),
     phone: z.string().min(10, "Valid phone number is required"),
     propertyConfig: z.object({
-        propertyPhoto: z.string().optional(),
+        propertyPhoto: z.string().nullable().optional(),
+        profilePhoto: z.string().nullable().optional(),
+        profileBgColor: z.string().nullable().optional(),
+        coverPhoto: z.string().nullable().optional(),
         totalUnits: z.number().default(1),
         totalFloors: z.number().default(1),
         headLimit: z.union([z.number(), z.literal("none")]).default(4),
         utilityBilling: z.enum(["included_in_rent", "separate_metered", "mixed"]).default("included_in_rent"),
         baseRent: z.number().default(0),
         amenities: z.array(z.string()).default([]),
+        house_rules: z.array(z.string()).default([]),
         contractMode: z.enum(["upload", "generate"]).default("generate"),
     }).optional(),
 });
@@ -213,17 +218,92 @@ export async function POST(request: Request, context: RouteParams) {
             userId = authData.user.id;
         }
 
-        // Upsert profile (use upsert to handle cases where profile might already exist)
+        // Handle profile photo (avatar) upload or URL
+        let avatarUrl: string | null = null;
+        if (parsed.propertyConfig?.profilePhoto) {
+            const photo = parsed.propertyConfig.profilePhoto;
+            // If it's already a public URL (from AvatarPicker), use directly
+            if (photo.startsWith('http')) {
+                avatarUrl = photo;
+            } else if (photo.startsWith('data:')) {
+                // It's a base64 data URL, upload it
+                try {
+                    const base64Data = photo.split(',')[1];
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    const fileName = `avatars/${userId}-${Date.now()}.png`;
+                    
+                    const { error: uploadError } = await adminClient
+                        .storage
+                        .from('landlord-documents')
+                        .upload(fileName, buffer, {
+                            contentType: 'image/png',
+                            upsert: true
+                        });
+
+                    if (!uploadError) {
+                        const { data: { publicUrl } } = adminClient
+                            .storage
+                            .from('landlord-documents')
+                            .getPublicUrl(fileName);
+                        avatarUrl = publicUrl;
+                    }
+                } catch (err) {
+                    console.error("[Onboarding] Failed to upload avatar:", err);
+                }
+            }
+        }
+
+        // Handle profile cover banner upload
+        let profileCoverUrl: string | null = null;
+        if (parsed.propertyConfig?.coverPhoto) {
+            const cover = parsed.propertyConfig.coverPhoto;
+            if (cover.startsWith('http')) {
+                profileCoverUrl = cover;
+            } else if (cover.startsWith('data:')) {
+                try {
+                    const base64Data = cover.split(',')[1];
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    const fileName = `profile-covers/${userId}-${Date.now()}.png`;
+                    
+                    const { error: uploadError } = await adminClient
+                        .storage
+                        .from('landlord-documents')
+                        .upload(fileName, buffer, {
+                            contentType: 'image/png',
+                            upsert: true
+                        });
+
+                    if (!uploadError) {
+                        const { data: { publicUrl } } = adminClient
+                            .storage
+                            .from('landlord-documents')
+                            .getPublicUrl(fileName);
+                        profileCoverUrl = publicUrl;
+                    }
+                } catch (err) {
+                    console.error("[Onboarding] Failed to upload profile cover:", err);
+                }
+            }
+        }
+
+        // Upsert profile — only set avatar fields if we have new values
+        const profileUpsertData: any = {
+            id: userId,
+            full_name: parsed.fullName || fullName!,
+            phone: parsed.phone,
+            email: email!,
+            role: "landlord" as UserRole,
+            business_name: application.business_name,
+            business_permit_url: (application as any).business_permit_url || (application as any).business_permit_card_url,
+            updated_at: new Date().toISOString(),
+        };
+        if (avatarUrl) profileUpsertData.avatar_url = avatarUrl;
+        if (profileCoverUrl) profileUpsertData.cover_url = profileCoverUrl;
+        if (parsed.propertyConfig?.profileBgColor) profileUpsertData.avatar_bg_color = parsed.propertyConfig.profileBgColor;
+
         const { error: profileError } = await adminClient
             .from("profiles")
-            .upsert({
-                id: userId,
-                full_name: parsed.fullName || fullName!,
-                phone: parsed.phone,
-                email: email!,
-                role: "landlord",
-                updated_at: new Date().toISOString(),
-            }, { onConflict: "id" });
+            .upsert(profileUpsertData, { onConflict: "id" });
 
         if (profileError) {
             console.error("[Onboarding] Failed to create profile:", profileError);
@@ -231,54 +311,89 @@ export async function POST(request: Request, context: RouteParams) {
         }
 
         // Handle property photo upload if provided
-        let coverUrl = null;
+        let propertyCoverUrl = null;
         if (parsed.propertyConfig?.propertyPhoto) {
-            try {
-                const base64Data = parsed.propertyConfig.propertyPhoto.split(',')[1];
-                const buffer = Buffer.from(base64Data, 'base64');
-                const fileName = `property-photos/${userId}-${Date.now()}.png`;
-                
-                const { data: uploadData, error: uploadError } = await adminClient
-                    .storage
-                    .from('landlord-documents')
-                    .upload(fileName, buffer, {
-                        contentType: 'image/png',
-                        upsert: true
-                    });
-
-                if (uploadError) throw uploadError;
-                
-                const { data: { publicUrl } } = adminClient
-                    .storage
-                    .from('landlord-documents')
-                    .getPublicUrl(fileName);
+            const propPhoto = parsed.propertyConfig.propertyPhoto;
+            if (propPhoto.startsWith('http')) {
+                propertyCoverUrl = propPhoto;
+            } else if (propPhoto.startsWith('data:')) {
+                try {
+                    const base64Data = propPhoto.split(',')[1];
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    const fileName = `property-photos/${userId}-${Date.now()}.png`;
                     
-                coverUrl = publicUrl;
-            } catch (err) {
-                console.error("[Onboarding] Failed to upload property photo:", err);
+                    const { data: uploadData, error: uploadError } = await adminClient
+                        .storage
+                        .from('landlord-documents')
+                        .upload(fileName, buffer, {
+                            contentType: 'image/png',
+                            upsert: true
+                        });
+
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: { publicUrl } } = adminClient
+                        .storage
+                        .from('landlord-documents')
+                        .getPublicUrl(fileName);
+                        
+                    propertyCoverUrl = publicUrl;
+                } catch (err) {
+                    console.error("[Onboarding] Failed to upload property photo:", err);
+                }
             }
         }
 
-        // Create/Update property from application data
-        const { data: property, error: propertyError } = await adminClient
+        // Create/Update property — check if one exists first since there's no unique constraint on landlord_id
+        const propertyData: any = {
+            name: application.business_name!,
+            address: application.business_address!,
+            total_units: parsed.propertyConfig?.totalUnits ?? 1,
+            total_floors: parsed.propertyConfig?.totalFloors ?? 1,
+            base_rent_amount: parsed.propertyConfig?.baseRent ?? 0,
+            amenities: parsed.propertyConfig?.amenities ?? [],
+            house_rules: parsed.propertyConfig?.house_rules ?? [],
+            updated_at: new Date().toISOString(),
+        };
+        if (propertyCoverUrl) {
+            propertyData.images = [propertyCoverUrl];
+        }
+
+        // Check if property already exists for this landlord
+        const { data: existingProperty } = await adminClient
             .from("properties")
-            .upsert({
-                landlord_id: userId,
-                name: application.business_name!,
-                address: application.business_address!,
-                total_units: parsed.propertyConfig?.totalUnits ?? 1,
-                total_floors: parsed.propertyConfig?.totalFloors ?? 1,
-                base_rent_amount: parsed.propertyConfig?.baseRent ?? 0,
-                amenities: parsed.propertyConfig?.amenities ?? [],
-                cover_url: coverUrl,
-                updated_at: new Date().toISOString(),
-            }, { onConflict: "landlord_id" })
-            .select()
-            .single();
+            .select("id")
+            .eq("landlord_id", userId)
+            .maybeSingle();
+
+        let property: any = null;
+        let propertyError: any = null;
+
+        if (existingProperty) {
+            // Update existing property
+            const result = await adminClient
+                .from("properties")
+                .update(propertyData)
+                .eq("id", existingProperty.id)
+                .select()
+                .single();
+            property = result.data;
+            propertyError = result.error;
+        } else {
+            // Insert new property
+            const result = await adminClient
+                .from("properties")
+                .insert({ ...propertyData, landlord_id: userId })
+                .select()
+                .single();
+            property = result.data;
+            propertyError = result.error;
+        }
 
         if (propertyError) {
-            console.error("[Onboarding] Failed to create property:", propertyError);
+            console.error("[Onboarding] Failed to create/update property:", propertyError);
         }
+
 
         // Apply environment policies
         if (property) {
@@ -317,7 +432,7 @@ export async function POST(request: Request, context: RouteParams) {
                         property_id: property.id,
                         name: `Unit ${unitIndex}`,
                         floor: floorNumber,
-                        status: "vacant",
+                        status: "vacant" as UnitStatus,
                         rent_amount: parsed.propertyConfig?.baseRent ?? 0,
                         beds: 1,
                         baths: 1,
@@ -328,9 +443,21 @@ export async function POST(request: Request, context: RouteParams) {
 
             // 2. Sync Floor Configs
             const floorConfigs = [];
-            floorConfigs.push({ property_id: property.id, floor_number: 0, floor_key: "ground", sort_order: 0 });
+            floorConfigs.push({ 
+                property_id: property.id, 
+                floor_number: 0, 
+                floor_key: "ground", 
+                display_name: "Ground Floor",
+                sort_order: 0 
+            });
             for (let i = 1; i <= totalFloors; i++) {
-                floorConfigs.push({ property_id: property.id, floor_number: i, floor_key: `floor${i}`, sort_order: i });
+                floorConfigs.push({ 
+                    property_id: property.id, 
+                    floor_number: i, 
+                    floor_key: `floor${i}`, 
+                    display_name: `Floor ${i}`,
+                    sort_order: i 
+                });
             }
             await adminClient.from("property_floor_configs").upsert(floorConfigs, { onConflict: "property_id,floor_key" });
 
@@ -375,6 +502,7 @@ export async function POST(request: Request, context: RouteParams) {
         console.error("[Onboarding] Error:", error);
         
         if (error instanceof z.ZodError) {
+            console.error("[Onboarding] Validation Error:", JSON.stringify(error.issues, null, 2));
             return NextResponse.json({ 
                 error: "Invalid form data", 
                 details: error.issues 

@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
 import { generateLeasePdf } from "@/lib/lease-pdf";
+import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import html2canvas from "html2canvas";
 
 interface OnboardingData {
@@ -84,6 +85,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const [contractFile, setContractFile] = useState<string | null>(null);
     const [buildingRules, setBuildingRules] = useState<string[]>(["No Smoking", "No Pets", "No Loud Music after 10PM"]);
     const [newRule, setNewRule] = useState("");
+    
+    // Profile Identity
+    const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+    const [profileBgColor, setProfileBgColor] = useState("#171717");
+    const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
+    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -91,6 +98,29 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPropertyPhoto(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setCoverPhoto(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfilePhoto(reader.result as string);
+                setProfileBgColor("#171717");
             };
             reader.readAsDataURL(file);
         }
@@ -135,7 +165,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         if (saved) {
             try {
                 const state = JSON.parse(saved);
-                if (state.currentStep) setCurrentStep(state.currentStep);
+                // Don't restore currentStep - always start fresh from password
+                // to ensure password is always entered
                 if (state.fullName) setFullName(state.fullName);
                 if (state.phone) setPhone(state.phone);
                 if (state.totalUnits) setTotalUnits(state.totalUnits);
@@ -144,6 +175,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                 if (state.baseRent) setBaseRent(state.baseRent);
                 if (state.amenities) setAmenities(state.amenities);
                 if (state.headLimit) setHeadLimit(state.headLimit);
+                if (state.profilePhoto) setProfilePhoto(state.profilePhoto);
+                if (state.profileBgColor) setProfileBgColor(state.profileBgColor);
+                if (state.coverPhoto) setCoverPhoto(state.coverPhoto);
+                if (state.password) setPassword(state.password);
+                if (state.confirmPassword) setConfirmPassword(state.confirmPassword);
             } catch (err) {
                 console.error("Failed to load persisted state");
             }
@@ -162,10 +198,31 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             utilityBilling,
             baseRent,
             amenities,
-            headLimit
+            headLimit,
+            profilePhoto,
+            profileBgColor,
+            coverPhoto,
+            password,
+            confirmPassword
         };
         localStorage.setItem(`onboarding_progress_${data.email}`, JSON.stringify(state));
-    }, [data?.email, currentStep, fullName, phone, totalUnits, totalFloors, utilityBilling, baseRent, amenities, headLimit]);
+    }, [
+        data?.email, 
+        currentStep, 
+        fullName, 
+        phone, 
+        totalUnits, 
+        totalFloors, 
+        utilityBilling, 
+        baseRent, 
+        amenities, 
+        headLimit,
+        profilePhoto,
+        profileBgColor,
+        coverPhoto,
+        password,
+        confirmPassword
+    ]);
 
     const getPasswordStrength = (pwd: string): { score: number; label: string; color: string } => {
         let score = 0;
@@ -222,6 +279,17 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
             return;
         }
 
+        if (!password || password.length < 8) {
+            toast.error("Please go back to Step 1 and set a valid password");
+            setCurrentStep("password");
+            return;
+        }
+
+        if (!validatePassword()) {
+            setCurrentStep("password");
+            return;
+        }
+
         setSubmitting(true);
         
         try {
@@ -234,12 +302,16 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     phone,
                     propertyConfig: {
                         propertyPhoto,
+                        profilePhoto,
+                        profileBgColor,
+                        coverPhoto,
                         totalUnits,
                         totalFloors,
                         headLimit,
                         utilityBilling,
                         baseRent,
                         amenities,
+                        house_rules: buildingRules,
                         contractMode
                     }
                 }),
@@ -362,14 +434,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                 </div>
 
                 {/* Step Content */}
-                <div className="bg-white/[0.02] border border-white/12 rounded-3xl p-8 backdrop-blur-xl">
-                    {currentStep === "password" && (
-                        <div className="space-y-6">
-                            <div className="text-center mb-6">
-                                <h2 className="text-2xl font-black">Create Your Password</h2>
-                                <p className="text-white/60 mt-2">Set a strong password to secure your account</p>
-                            </div>
-                            
+                <div className="bg-white/[0.02] border border-white/12 rounded-[2.5rem] p-8 backdrop-blur-xl shadow-2xl overflow-hidden relative">
                     {currentStep === "password" && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <div className="text-center mb-4">
@@ -406,14 +471,14 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 
                                 <div className="space-y-3">
                                     <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                        Access Password
+                                        Password
                                     </label>
                                     <div className="relative group">
                                         <input 
                                             type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="Min. 8 characters"
+                                            placeholder="e.g. MyPass@2024"
                                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-14 text-white focus:border-primary/50 focus:bg-primary/5 transition-all outline-none font-bold"
                                         />
                                         <button
@@ -465,14 +530,14 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 
                                 <div className="space-y-3">
                                     <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                        Confirm Access
+                                        Confirm Password
                                     </label>
                                     <div className="relative">
                                         <input 
                                             type={showConfirmPassword ? "text" : "password"}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
-                                            placeholder="Repeat password"
+                                            placeholder="e.g. MyPass@2024"
                                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-14 text-white focus:border-primary/50 transition-all font-bold"
                                         />
                                         <button
@@ -497,8 +562,6 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    )}
                         </div>
                     )}
 
@@ -1032,8 +1095,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         landlord={{
                                                             id: "landlord-id",
                                                             full_name: fullName || "Landlord Name",
-                                                            avatar_url: "",
-                                                            avatar_bg_color: "#10B981",
+                                                            avatar_url: profilePhoto || "",
+                                                            avatar_bg_color: profileBgColor || "#10B981",
                                                             phone: phone || "000-000-0000"
                                                         }}
                                                         tenant={{
@@ -1072,38 +1135,109 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 <p className="text-white/50 text-sm mt-1">Complete your administrative identity</p>
                             </div>
                             
-                            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6 backdrop-blur-xl shadow-2xl">
-                                <div className="space-y-3">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                        Full Legal Name
-                                    </label>
-                                    <div className="relative group">
-                                        <input 
-                                            type="text"
-                                            value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
-                                            placeholder="As shown on official documents"
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-bold"
-                                        />
+                            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden backdrop-blur-xl shadow-2xl">
+                                {/* Cover Photo Section */}
+                                <div className="relative h-40 group cursor-pointer bg-white/5 border-b border-white/5">
+                                    {coverPhoto ? (
+                                        <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                            <ImageIcon className="w-6 h-6 text-white/10" />
+                                            <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Set Cover Banner</span>
+                                        </div>
+                                    )}
+                                    <input 
+                                        type="file" 
+                                        onChange={handleCoverPhotoChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                                        accept="image/*"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
+                                        <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
+                                            <Camera className="w-4 h-4 text-white" />
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Cover</span>
+                                        </div>
                                     </div>
                                 </div>
-                                
-                                <div className="space-y-3">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
-                                        Active Phone Number
-                                    </label>
-                                    <div className="relative group">
-                                        <input 
-                                            type="tel"
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            placeholder="+63 9xx xxx xxxx"
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-bold"
-                                        />
+
+                                {/* Profile Photo & Details Wrapper */}
+                                <div className="p-8 pt-0 -mt-12 relative z-10">
+                                    <div className="flex flex-col md:flex-row items-end gap-6 mb-8">
+                                        {/* Profile Photo */}
+                                        <div 
+                                            onClick={() => setIsAvatarPickerOpen(true)}
+                                            className="relative group shrink-0 cursor-pointer"
+                                        >
+                                            <div 
+                                                className="w-32 h-32 rounded-[2.5rem] border-4 border-[#121212] overflow-hidden shadow-2xl relative transition-transform duration-500 group-hover:scale-105"
+                                                style={{ backgroundColor: profileBgColor }}
+                                            >
+                                                {profilePhoto ? (
+                                                    <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <span className="text-4xl font-black text-white/20">
+                                                            {(fullName || "C").split(" ").filter(Boolean).slice(0, 1).map(p => p[0]?.toUpperCase()).join("")}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
+                                                    <Camera className="w-6 h-6 text-white" />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-black rounded-full border-4 border-[#121212] flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                                                <Camera className="w-3 h-3" />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 pb-2">
+                                            <h3 className="text-xl font-black text-white uppercase tracking-widest leading-none mb-1">
+                                                {fullName || "New Landlord"}
+                                            </h3>
+                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                                                <ShieldCheck className="w-3 h-3" />
+                                                Authorized Operator
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p className="text-[10px] text-white/20 mt-3 flex items-start gap-2 px-1 leading-relaxed">
-                                        <ShieldCheck className="w-3 h-3 mt-0.5" />
-                                        <span>This number will be used for official communications and tenant inquiries.</span>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-3">
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                                Full Legal Name
+                                            </label>
+                                            <div className="relative group">
+                                                <input 
+                                                    type="text"
+                                                    value={fullName}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                    placeholder="As shown on official ID"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-bold"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="space-y-3">
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                                Administrative Contact
+                                            </label>
+                                            <div className="relative group">
+                                                <input 
+                                                    type="tel"
+                                                    value={phone}
+                                                    onChange={(e) => setPhone(e.target.value)}
+                                                    placeholder="+63 9xx xxx xxxx"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-primary/50 transition-all outline-none font-bold"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[10px] text-white/20 mt-6 flex items-start gap-2 px-1 leading-relaxed border-t border-white/5 pt-6">
+                                        <ShieldCheck className="w-3 h-3 mt-0.5 text-primary/40" />
+                                        <span>Your profile configuration establishes your legal and administrative presence within the iReside network. Ensure all contact data is accurate for billing and emergency dispatch.</span>
                                     </p>
                                 </div>
                             </div>
@@ -1140,6 +1274,17 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     </div>
                 </div>
             </main>
+
+            <AvatarPicker 
+                isOpen={isAvatarPickerOpen}
+                onClose={() => setIsAvatarPickerOpen(false)}
+                currentAvatarUrl={profilePhoto}
+                currentBgColor={profileBgColor}
+                onSelect={(url, color) => {
+                    setProfilePhoto(url);
+                    setProfileBgColor(color);
+                }}
+            />
         </div>
     );
 }
