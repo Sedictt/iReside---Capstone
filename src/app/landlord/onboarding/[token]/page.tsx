@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { 
     Eye, 
     EyeOff, 
@@ -10,14 +9,6 @@ import {
     Loader2, 
     Building2, 
     User, 
-    Settings, 
-    Users,
-    Zap,
-    FileText,
-    Maximize2,
-    FilePlus,
-    X,
-    ArrowRight,
     Lock,
     ImageIcon,
     Camera,
@@ -34,6 +25,7 @@ import { LeaseData } from "@/types/lease";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import html2canvas from "html2canvas";
+import { LucideIcon } from "lucide-react";
 
 interface OnboardingData {
     email: string;
