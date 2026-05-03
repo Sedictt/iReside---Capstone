@@ -317,7 +317,7 @@ export async function GET() {
 
     // Build upcoming months forecast (next 3 months)
     const upcomingMonths: UpcomingMonth[] = [];
-    const existingInvoices = new Map<string, typeof upcomingPayments extends (infer T)[] ? T : never>();
+    const existingInvoices = new Map<string, any>();
     
     // Index existing invoices by billing cycle
     for (const inv of (upcomingPayments ?? [])) {

@@ -1160,11 +1160,11 @@ export async function createMultiMonthAdvancePayment(
     if (propertyId) {
         const { data: property } = await supabase
             .from("properties")
-            .select("metadata")
+            .select("*")
             .eq("id", propertyId)
             .maybeSingle();
         
-        const meta = (property?.metadata as Record<string, unknown>) ?? {};
+        const meta = ((property as any)?.metadata as Record<string, unknown>) ?? {};
         maxAdvanceMonths = typeof meta.max_advance_months === "number" ? meta.max_advance_months : 3;
         allowMultiple = meta.allow_multiple_advance !== false;
     }
@@ -1250,7 +1250,7 @@ export async function createMultiMonthAdvancePayment(
                     last_invoice_generated_at: new Date().toISOString(),
                     last_invoice_generated_for: cycleKey
                 } 
-            })
+            } as any)
             .eq("id", lease.id);
 
         results.push({ month: cycleKey, invoiceId: payment.id, exists: false });
@@ -1357,7 +1357,7 @@ export async function generateNextMonthInvoice(
     // Utility estimates (using last month's configs as estimates)
     for (const config of configs ?? []) {
         const estimatedCharge = config.billing_mode === "included_in_rent" ? 0 : 
-            (config.rate_per_unit ?? 0) * (config.default_usage_estimate ?? 10);
+            (config.rate_per_unit ?? 0) * ((config as any).default_usage_estimate ?? 10);
         
         if (estimatedCharge > 0 || config.billing_mode === "included_in_rent") {
             itemRows.push({
@@ -1430,7 +1430,7 @@ export async function generateNextMonthInvoice(
                 last_invoice_generated_at: new Date().toISOString(),
                 last_invoice_generated_for: cycleKey
             } 
-        })
+        } as any)
         .eq("id", leaseId);
 
     return { id: paymentRow.id, exists: false };

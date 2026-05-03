@@ -149,8 +149,8 @@ export const getQuestProgress = (questId: LandlordQuestId, state: LandlordProduc
     if (!quest) return 0;
 
     const completedStepIds = (state.metadata?.completed_step_ids as string[]) || [];
-    const questStepIds = quest.stepIds;
-    const completedCount = (questStepIds as string[]).filter((id: string) => completedStepIds.includes(id)).length;
+    const questStepIds = quest.stepIds as readonly string[];
+    const completedCount = (questStepIds as readonly string[]).filter((id: string) => completedStepIds.includes(id)).length;
 
     // If the global current_step_index is past a step, consider it completed for the progress bar
     // This handles legacy data or users moving through the linear tour

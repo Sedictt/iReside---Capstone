@@ -77,7 +77,8 @@ export function DashboardBanner({
     onNewWalkIn,
     onCreateInvite
 }: DashboardBannerProps) {
-    const [time, setTime] = useState<Date | null>(null);
+    const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    const [time, setTime] = useState<Date>(() => getManilaTime());
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isQuestPanelOpen, setIsQuestPanelOpen] = useState(false);
     
@@ -107,10 +108,6 @@ export function DashboardBanner({
     }, []);
 
     useEffect(() => {
-        const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
-        
-        // Update time immediately and then on interval
-        setTime(() => getManilaTime());
         const timer = setInterval(() => {
             setTime(getManilaTime());
         }, 1000);
@@ -152,7 +149,11 @@ export function DashboardBanner({
             <div className="absolute top-8 right-8 z-20 flex items-center gap-4">
                 {/* Mission Control Trigger - Glowing Exclamation */}
                 <button
-                    onClick={() => setIsQuestPanelOpen(true)}
+                    onClick={() => {
+                        setIsQuestPanelOpen(true);
+                        window.dispatchEvent(new CustomEvent("open-quest-board"));
+                    }}
+                    data-tour-id="tour-quest-trigger"
                     className="relative group flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-xl transition-all hover:bg-primary/10 active:scale-95"
                 >
                     <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-pulse blur-md pointer-events-none" />
@@ -260,7 +261,7 @@ export function DashboardBanner({
                             <div className="absolute inset-0 h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">
-                            {time?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) || "Loading..."}
+                            {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </span>
                     </div>
 
@@ -321,21 +322,19 @@ export function DashboardBanner({
                 </div>
 
                 {/* Right Side - Digital Clock */}
-                {time && (
-                    <div className="hidden lg:flex flex-col items-end mt-16 self-center">
-                        <div className="flex items-baseline gap-2">
-                            <span className="font-mono text-7xl font-black tracking-tighter text-foreground tabular-nums">
-                                {time.getHours().toString().padStart(2, '0')}:{time.getMinutes().toString().padStart(2, '0')}
-                            </span>
-                            <span className="text-2xl font-black uppercase tracking-[0.2em] text-primary">
-                                {time.getHours() >= 12 ? 'PM' : 'AM'}
-                            </span>
-                        </div>
-                        <div className="mt-2 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/60">
-                            Local Operation Time
-                        </div>
+                <div className="hidden lg:flex flex-col items-end mt-16 self-center">
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-mono text-7xl font-black tracking-tighter text-foreground tabular-nums">
+                            {time.getHours().toString().padStart(2, '0')}:{time.getMinutes().toString().padStart(2, '0')}
+                        </span>
+                        <span className="text-2xl font-black uppercase tracking-[0.2em] text-primary">
+                            {time.getHours() >= 12 ? 'PM' : 'AM'}
+                        </span>
                     </div>
-                )}
+                    <div className="mt-2 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/60">
+                        Local Operation Time
+                    </div>
+                </div>
             </div>
 
             {/* Side Quest Panel */}

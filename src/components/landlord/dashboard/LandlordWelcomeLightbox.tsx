@@ -25,8 +25,8 @@ export function LandlordWelcomeLightbox() {
     };
 
     const handleOpenQuests = () => {
-        // Dispatch a custom event that the dashboard can listen to
-        window.dispatchEvent(new CustomEvent("open-quest-board"));
+        // Dispatch a custom event to start the highlight guide
+        window.dispatchEvent(new CustomEvent("start-quest-trigger-guide"));
         handleClose();
     };
 
