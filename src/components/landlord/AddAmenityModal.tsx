@@ -80,6 +80,7 @@ import { cn } from '@/lib/utils'
 import { useProperty } from '@/context/PropertyContext'
 import { upsertAmenity } from '@/lib/queries/amenities'
 import { toast } from 'sonner'
+import { createClient } from '@/lib/supabase/client'
 
 interface AddAmenityModalProps {
     isOpen: boolean
@@ -175,8 +176,11 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
         icon_name: 'Zap',
         location_details: '',
         status: 'Active',
-        tags: [] as string[]
+        tags: [] as string[],
+        image_url: ''
     })
+    const [photoFile, setPhotoFile] = useState<File | null>(null)
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(0)
@@ -206,9 +210,31 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
         try {
             setLoading(true)
+            
+            let uploadedImageUrl = formData.image_url
+            if (photoFile) {
+                const supabase = createClient()
+                const fileExt = photoFile.name.split('.').pop()
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`
+                const filePath = `amenities/${fileName}`
+
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, photoFile)
+
+                if (uploadError) throw uploadError
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('property-images')
+                    .getPublicUrl(filePath)
+                
+                uploadedImageUrl = publicUrl
+            }
+
             await upsertAmenity({
                 ...formData,
                 landlord_id: landlordId,
+                image_url: uploadedImageUrl,
                 price_per_unit: Number(formData.price_per_unit),
                 capacity: Number(formData.capacity)
             })
@@ -476,6 +502,47 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         className="min-h-[120px] w-full resize-none rounded-2xl border border-border bg-muted/50 px-5 py-4 text-sm font-medium outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        Facility Photo
+                                    </label>
+                                    <div 
+                                        onClick={() => document.getElementById('facility-photo-input')?.click()}
+                                        className="relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted/30 transition-all hover:border-primary/50 hover:bg-muted/50 h-[120px] flex items-center justify-center"
+                                    >
+                                        {photoPreview ? (
+                                            <>
+                                                <img 
+                                                    src={photoPreview} 
+                                                    alt="Preview" 
+                                                    className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <Camera className="h-6 w-6 text-white" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-2 text-muted-foreground/60">
+                                                <Camera className="h-8 w-8" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Click to upload photo</span>
+                                            </div>
+                                        )}
+                                        <input 
+                                            id="facility-photo-input"
+                                            type="file" 
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) {
+                                                    setPhotoFile(file)
+                                                    setPhotoPreview(URL.createObjectURL(file))
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
