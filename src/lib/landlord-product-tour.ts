@@ -17,12 +17,48 @@ export const LANDLORD_PRODUCT_TOUR_STEPS = [
         fallback: "Look for the 'Unit Map' icon in your sidebar to see your property layout.",
     },
     {
-        id: "unit_map",
-        title: "Visual Unit Map",
-        description: "This is the heart of your property management. Use the Visual Planner to map out your units, track occupancy, and see your building layout at a glance.",
+        id: "unit_map_setup",
+        title: "Floor Plan Organizer",
+        description: "Before you can see your visual map, we need to organize your units by floor. This wizard helps you quickly distribute units to their respective levels.",
+        route: "/landlord/unit-map",
+        anchorId: "tour-wizard-header",
+        fallback: "This organizer is where you assign units to floors to build your property map.",
+        nonInteractive: true,
+    },
+    {
+        id: "wizard_lanes",
+        title: "Floor Assignments",
+        description: "Drag and drop units between these boards to assign them to floors. You can also add new floors if needed to match your building's architecture.",
+        route: "/landlord/unit-map",
+        anchorId: "tour-wizard-lanes",
+        fallback: "Assign each unit to its corresponding floor here.",
+        nonInteractive: true,
+    },
+    {
+        id: "wizard_bulk",
+        title: "Magic Bulk Organizer",
+        description: "Have a lot of units? Use the Bulk Organizer to instantly distribute units across multiple floors using simple sliders.",
+        route: "/landlord/unit-map",
+        anchorId: "tour-wizard-bulk",
+        fallback: "The Bulk Organizer helps you manage large unit counts efficiently.",
+        nonInteractive: true,
+    },
+    {
+        id: "wizard_generate",
+        title: "Launch Visual Map",
+        description: "Once you're happy with the assignments, click 'Generate Map'. We'll automatically build a high-fidelity visual layout for you to refine on the canvas.",
+        route: "/landlord/unit-map",
+        anchorId: "tour-wizard-generate",
+        fallback: "Click Generate Map to finalize your setup and see your property layout.",
+        nonInteractive: true,
+    },
+    {
+        id: "unit_map_visual",
+        title: "Interactive Canvas",
+        description: "Welcome to your high-fidelity map! You can now see unit status at a glance. Green units are vacant, while occupied units show tenant details. Click any unit to manage it.",
         route: "/landlord/unit-map",
         anchorId: "tour-unit-map",
-        fallback: "The Unit Map allows you to visually interact with your property floors and units.",
+        fallback: "This interactive canvas is where you'll spend most of your time managing unit occupancy.",
     },
     {
         id: "nav_properties",
@@ -74,6 +110,69 @@ export const LANDLORD_PRODUCT_TOUR_STEPS = [
     },
 ] as const;
 
+export type LandlordQuestId = "unit_map" | "properties" | "tenants" | "finance";
+
+export const LANDLORD_QUESTS = [
+    {
+        id: "unit_map",
+        title: "Your Unit Map",
+        description: "Set up your building layout and organize your units visually.",
+        icon: "map",
+        stepIds: ["nav_unit_map", "unit_map_setup", "wizard_lanes", "wizard_bulk", "wizard_generate", "unit_map_visual"],
+    },
+    {
+        id: "properties",
+        title: "Managing Properties",
+        description: "Learn how to add properties and manage your portfolio.",
+        icon: "business",
+        stepIds: ["nav_properties", "properties_portfolio"],
+    },
+    {
+        id: "tenants",
+        title: "Managing Residents",
+        description: "Invite residents, manage applications, and handle leases.",
+        icon: "people",
+        stepIds: ["nav_tenants", "tenant_management"],
+    },
+    {
+        id: "finance",
+        title: "Financial Overview",
+        description: "Track revenue, manage invoices, and monitor utility billing.",
+        icon: "payments",
+        stepIds: ["nav_finance", "finance_hub"],
+    },
+] as const;
+
+export const getQuestProgress = (questId: LandlordQuestId, state: LandlordProductTourState | null) => {
+    if (!state) return 0;
+    const quest = LANDLORD_QUESTS.find((q: any) => q.id === questId);
+    if (!quest) return 0;
+
+    const completedStepIds = (state.metadata?.completed_step_ids as string[]) || [];
+    const questStepIds = quest.stepIds;
+    const completedCount = (questStepIds as string[]).filter((id: string) => completedStepIds.includes(id)).length;
+
+    // If the global current_step_index is past a step, consider it completed for the progress bar
+    // This handles legacy data or users moving through the linear tour
+    const currentStepId = LANDLORD_PRODUCT_TOUR_STEPS[state.current_step_index]?.id;
+    const currentStepIndexInQuest = questStepIds.indexOf(currentStepId);
+    
+    // If we are currently IN a step of this quest, everything before it is done
+    let effectiveCompleted = completedCount;
+    if (currentStepIndexInQuest !== -1) {
+        effectiveCompleted = Math.max(effectiveCompleted, currentStepIndexInQuest);
+    } else {
+        // Check if we are past the entire quest
+        const lastStepOfQuest = questStepIds[questStepIds.length - 1];
+        const lastStepIdxInGlobal = LANDLORD_PRODUCT_TOUR_STEPS.findIndex(s => s.id === lastStepOfQuest);
+        if (state.current_step_index > lastStepIdxInGlobal) {
+            effectiveCompleted = questStepIds.length;
+        }
+    }
+
+    return Math.round((effectiveCompleted / questStepIds.length) * 100);
+};
+
 export type LandlordProductTourStepId = (typeof LANDLORD_PRODUCT_TOUR_STEPS)[number]["id"];
 export type LandlordProductTourStatus = "not_started" | "in_progress" | "skipped" | "completed";
 export type LandlordProductTourEventType =
@@ -110,7 +209,7 @@ export type LandlordProductTourState = {
     updated_at?: string;
 };
 
-type LandlordProductTourDbRow = {
+export type LandlordProductTourDbRow = {
     landlord_id: string;
     status: LandlordProductTourStatus;
     current_step_index: number;
@@ -423,6 +522,9 @@ export const progressLandlordProductTourStep = async (
     const nextIndex = current.current_step_index + 1;
     const completed = nextIndex >= LANDLORD_PRODUCT_TOUR_STEPS.length;
 
+    const completedStepIds = new Set((current.metadata?.completed_step_ids as string[]) || []);
+    completedStepIds.add(stepId);
+
     const { data, error } = await client
         .from("landlord_product_tour_states")
         .update({
@@ -435,6 +537,7 @@ export const progressLandlordProductTourStep = async (
             metadata: {
                 ...current.metadata,
                 ...(metadata ?? {}),
+                completed_step_ids: Array.from(completedStepIds),
             },
         })
         .eq("landlord_id", landlordId)

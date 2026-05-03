@@ -401,11 +401,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
         setIsSaving(true);
         try {
             const BLUEPRINT_WIDTH = 1600;
-            const COLS = 4;
-            const UNIT_W = 220;
-            const UNIT_H = 150;
-            const PADDING = 30;
-            const COL_STRIDE = UNIT_W + PADDING;
+            const PADDING = 40;
 
             const positions: Array<{
                 unitId: string;
@@ -417,17 +413,44 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
             }> = [];
 
             for (const fc of floorConfigs) {
-                const floorUnits = units.filter(u => u.floor === fc.floor_number);
+                const floorUnits = [...units].filter(u => u.floor === fc.floor_number);
+                
+                // Sort units numerically by name (e.g., "101", "102", "201")
+                floorUnits.sort((a, b) => {
+                    const numA = parseInt(a.name.replace(/\D/g, "")) || 0;
+                    const numB = parseInt(b.name.replace(/\D/g, "")) || 0;
+                    if (numA !== numB) return numA - numB;
+                    return a.name.localeCompare(b.name, undefined, { numeric: true });
+                });
+
+                const count = floorUnits.length;
+                if (count === 0) continue;
+
+                // Dynamically decide columns based on unit count
+                let cols = 4;
+                if (count <= 2) cols = 2;
+                else if (count <= 6) cols = 3;
+                else if (count <= 12) cols = 4;
+                else if (count <= 24) cols = 5;
+                else cols = 6;
+
+                // Calculate width to fit the blueprint dynamically
+                const availableWidth = BLUEPRINT_WIDTH - (PADDING * 2);
+                const unitW = (availableWidth - (cols - 1) * PADDING) / cols;
+                
+                // Cap height to prevent overly tall units, but keep a reasonable aspect ratio
+                const unitH = Math.min(180, unitW * 0.65);
+
                 floorUnits.forEach((unit, idx) => {
-                    const col = idx % COLS;
-                    const row = Math.floor(idx / COLS);
+                    const col = idx % cols;
+                    const row = Math.floor(idx / cols);
                     positions.push({
                         unitId: unit.id,
                         floorKey: fc.floor_key,
-                        x: PADDING + col * COL_STRIDE,
-                        y: PADDING + row * (UNIT_H + PADDING),
-                        w: UNIT_W,
-                        h: UNIT_H,
+                        x: PADDING + col * (unitW + PADDING),
+                        y: PADDING + row * (unitH + PADDING),
+                        w: Math.round(unitW),
+                        h: Math.round(unitH),
                     });
                 });
             }
@@ -511,15 +534,15 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
         <div className="flex h-screen flex-col bg-[#050505] text-white">
             {/* Top Navigation / Header */}
             <header className="flex h-20 shrink-0 items-center justify-between border-b border-white/5 bg-white/[0.02] px-8 backdrop-blur-xl">
-                <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-black">
-                        <Layout className="h-5 w-5" />
+                    <div data-tour-id="tour-wizard-header" className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-black">
+                            <Layout className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-black tracking-tight">{propertyName}</h1>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Floor Plan Organizer</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-lg font-black tracking-tight">{propertyName}</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">Floor Plan Organizer</p>
-                    </div>
-                </div>
 
                 <div className="flex items-center gap-6">
                     <div className="hidden md:flex flex-col items-end gap-1">
@@ -538,6 +561,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
 
                     <div className="flex items-center gap-2">
                         <button
+                            data-tour-id="tour-wizard-bulk"
                             onClick={() => setIsBulkOrganizerOpen(!isBulkOrganizerOpen)}
                             disabled={isSaving}
                             title="Open Bulk Organizer"
@@ -552,6 +576,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                         </button>
                         
                         <button
+                            data-tour-id="tour-wizard-generate"
                             onClick={handleAutoPlace}
                             disabled={isSaving}
                             className="group relative flex items-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-widest text-black transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
@@ -701,6 +726,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                     </p>
                                 </div>
                                 <button
+                                    data-tour-id="tour-wizard-add-floor"
                                     onClick={handleAddFloor}
                                     disabled={isSaving}
                                     className="group flex shrink-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
@@ -712,7 +738,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            <div data-tour-id="tour-wizard-lanes" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                 {/* Holding Area for Unassigned Units */}
                                 {units.some(u => u.floor === -1) && (
                                     <div className="col-span-1 lg:col-span-2 mb-4">

@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DashboardBanner } from "@/components/landlord/dashboard/DashboardBanner";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { useProperty } from "@/context/PropertyContext";
 import {
     CreditCard,
     AlertTriangle,
@@ -22,8 +24,6 @@ import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { useProperty } from "@/context/PropertyContext";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 

@@ -5,7 +5,7 @@ import VisualBuilder from "@/components/landlord/visual-planner/VisualBuilder";
 import { MapSetupWizard } from "@/components/landlord/visual-planner/MapSetupWizard";
 import { PropertySelectorHub } from "@/components/landlord/community/PropertySelectorHub";
 import { useProperty } from "@/context/PropertyContext";
-import { Map, Loader2 } from "lucide-react";
+import { Map } from "lucide-react";
 
 type MapState = "loading" | "no-property" | "setup" | "ready";
 
@@ -51,14 +51,7 @@ export default function UnitMapPage() {
     }, [selectedPropertyId, loading, properties.length, setupKey]);
 
     if (mapState === "loading") {
-        return (
-            <div className="flex-1 flex items-center justify-center bg-[#080808]">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-neutral-500 text-sm">Loading Visual Planner...</p>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     if (mapState === "no-property") {
