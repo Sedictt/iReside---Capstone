@@ -24,6 +24,7 @@ import { ActionRequired } from "@/components/landlord/dashboard/ActionRequired";
 import { WalkInApplicationModal } from "@/components/landlord/applications/WalkInApplicationModal";
 import { TenantInviteManager } from "@/components/landlord/applications/TenantInviteManager";
 import { CommandCenter } from "@/components/landlord/dashboard/CommandCenter";
+import { LandlordWelcomeLightbox } from "@/components/landlord/dashboard/LandlordWelcomeLightbox";
 
 type PaymentCategory = "Overdue" | "Near Due" | "Paid";
 
@@ -442,6 +443,9 @@ export default function LandlordDashboard() {
                     <ActionRequired />
                 </div>
             </div>
+
+            {/* Welcome Lightbox on First Visit */}
+            <LandlordWelcomeLightbox />
 
             {/* Modals & Overlays */}
             <PaymentModal
