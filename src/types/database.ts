@@ -54,6 +54,7 @@ export interface Database {
                     business_permit_url: string | null
                     business_permit_number: string | null
                     business_name: string | null
+                    business_permits: string[]
                     created_at: string
                     updated_at: string
                 }
@@ -73,6 +74,7 @@ export interface Database {
                     business_permit_url?: string | null
                     business_permit_number?: string | null
                     business_name?: string | null
+                    business_permits?: string[]
                     created_at?: string
                     updated_at?: string
                 }
@@ -92,6 +94,7 @@ export interface Database {
                     business_permit_url?: string | null
                     business_permit_number?: string | null
                     business_name?: string | null
+                    business_permits?: string[]
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -147,6 +150,8 @@ export interface Database {
                     onboarding_token: string | null
                     onboarding_token_expires_at: string | null
                     onboarding_completed_at: string | null
+                    business_permit_url: string | null
+                    business_permit_card_url: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -170,6 +175,8 @@ export interface Database {
                     onboarding_token?: string | null
                     onboarding_token_expires_at?: string | null
                     onboarding_completed_at?: string | null
+                    business_permit_url?: string | null
+                    business_permit_card_url?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -193,6 +200,8 @@ export interface Database {
                     onboarding_token?: string | null
                     onboarding_token_expires_at?: string | null
                     onboarding_completed_at?: string | null
+                    business_permit_url?: string | null
+                    business_permit_card_url?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]

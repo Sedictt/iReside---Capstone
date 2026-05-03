@@ -326,7 +326,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Request ID is required." }, { status: 400 });
     }
 
-    const updates: Record<string, unknown> = {};
+    const updates: any = {};
     if (body.tenantRepairStatus) {
         updates.tenant_repair_status = body.tenantRepairStatus;
         updates.status = "in_progress";

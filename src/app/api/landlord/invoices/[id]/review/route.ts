@@ -426,7 +426,6 @@ export async function POST(request: Request, context: RouteContext) {
                             workflowStatus: finalWorkflowStatus,
                             refundProofUrl: refundProofUrl || (parsed.refundProofUrl ?? null),
                         },
-                        updated_at: nowIso,
                     })
                     .eq("id", overpaymentMsg.id)
                     .select("id");

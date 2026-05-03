@@ -86,7 +86,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     for (const row of requests) {
-        const bypassUpdate: Record<string, unknown> = {
+        const bypassUpdate: any = {
             status: "completed",
             bypassed: true,
             reviewed_at: nowIso,

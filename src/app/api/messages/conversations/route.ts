@@ -24,7 +24,11 @@ export async function GET() {
         const conversations = await buildConversationSummaries(supabase, user.id);
         return NextResponse.json({ conversations });
     } catch (error) {
-        console.error("Failed to fetch conversations:", error);
+        console.error("Failed to fetch conversations:", {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            userId: user.id,
+        });
         const message = error instanceof Error ? error.message : "Failed to fetch conversations.";
         return NextResponse.json({ error: message }, { status: 500 });
     }
@@ -72,6 +76,11 @@ export async function POST(request: Request) {
             .insert({ id: conversationId });
 
         if (conversationError) {
+            console.error("Failed to create conversation:", {
+                error: conversationError.message,
+                code: conversationError.code,
+                details: conversationError.details,
+            });
             return NextResponse.json({ error: "Failed to create conversation." }, { status: 500 });
         }
 
@@ -83,12 +92,21 @@ export async function POST(request: Request) {
         const { error: participantsError } = await supabase.from("conversation_participants").insert(inserts);
 
         if (participantsError) {
+            console.error("Failed to add conversation participants:", {
+                error: participantsError.message,
+                code: participantsError.code,
+                details: participantsError.details,
+            });
             return NextResponse.json({ error: "Failed to add conversation participants." }, { status: 500 });
         }
 
         return NextResponse.json({ conversationId, reused: false }, { status: 201 });
     } catch (error) {
-        console.error("Failed to create conversation:", error);
+        console.error("Failed to create conversation:", {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            userId: user.id,
+        });
         const message = error instanceof Error ? error.message : "Failed to create conversation.";
         return NextResponse.json({ error: message }, { status: 500 });
     }

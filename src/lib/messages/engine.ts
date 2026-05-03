@@ -213,7 +213,13 @@ export const getConversationIdsForUser = async (supabase: DbClient, userId: stri
         .eq("user_id", userId);
 
     if (error) {
-        throw new Error("Failed to load user conversations.");
+        console.error("Failed to load user conversations.", {
+            userId,
+            error: error.message,
+            code: error.code,
+            details: error.details,
+        });
+        throw new Error(`Failed to load user conversations: ${error.message}`);
     }
 
     return Array.from(new Set((data ?? []).map((row) => row.conversation_id)));
