@@ -33,7 +33,8 @@ interface UserDetail {
         phone: string;
         identity_document_url: string | null;
         ownership_document_url: string | null;
-        permit_document_url?: string | null;
+        business_permit_url?: string | null;
+        business_permit_card_url?: string | null;
         status: string;
         verification_status: string;
         created_at: string;
@@ -208,15 +209,23 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                         </a>
                                     </div>
                                 )}
-                                {app.permit_document_url && (
+                                {app.business_permit_url && (
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit</p>
-                                        <a href={app.permit_document_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
-                                            <img src={app.permit_document_url} alt="Permit" className="w-full h-full object-cover" />
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Paper)</p>
+                                        <a href={app.business_permit_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                            <img src={app.business_permit_url} alt="Permit Paper" className="w-full h-full object-cover" />
                                         </a>
                                     </div>
                                 )}
-                                {!app.identity_document_url && !app.ownership_document_url && !app.permit_document_url && (
+                                {app.business_permit_card_url && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Permit (Card)</p>
+                                        <a href={app.business_permit_card_url} target="_blank" rel="noopener noreferrer" className="block h-32 rounded-xl border border-white/10 overflow-hidden hover:border-primary/50 transition-colors">
+                                            <img src={app.business_permit_card_url} alt="Permit Card" className="w-full h-full object-cover" />
+                                        </a>
+                                    </div>
+                                )}
+                                {!app.identity_document_url && !app.ownership_document_url && !app.business_permit_url && !app.business_permit_card_url && (
                                     <p className="text-white/40 text-sm">No documents uploaded</p>
                                 )}
                             </div>
