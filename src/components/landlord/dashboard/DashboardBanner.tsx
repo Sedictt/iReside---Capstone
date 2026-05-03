@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles } from "lucide-react";
+import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles, Home, Users, FileText, Settings, MessageSquare, CreditCard, AlertTriangle, X } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+
+type SearchResultType = "property" | "tenant" | "maintenance" | "page" | "invoice" | "document";
+
+interface SearchResult {
+    id: string;
+    type: SearchResultType;
+    title: string;
+    subtitle: string;
+    href: string;
+    icon: React.ElementType;
+}
 
 type BannerNotification = {
     id: string;
@@ -77,10 +89,17 @@ export function DashboardBanner({
     onNewWalkIn,
     onCreateInvite
 }: DashboardBannerProps) {
+    const router = useRouter();
     const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
     const [time, setTime] = useState<Date>(() => getManilaTime());
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isQuestPanelOpen, setIsQuestPanelOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     
     const { 
         notifications, 
@@ -117,6 +136,127 @@ export function DashboardBanner({
 
     const handleClearAll = async () => {
         await markAllAsRead();
+    };
+
+    const pageIndex = [
+        { title: "Dashboard", href: "/landlord/dashboard", subtitle: "Overview & stats" },
+        { title: "Properties", href: "/landlord/properties", subtitle: "Manage listings" },
+        { title: "Tenants", href: "/landlord/tenants", subtitle: "Tenant management" },
+        { title: "Messages", href: "/landlord/messages", subtitle: "Communications" },
+        { title: "Invoices", href: "/landlord/invoices", subtitle: "Billing & payments" },
+        { title: "Maintenance", href: "/landlord/maintenance", subtitle: "Repair requests" },
+        { title: "Applications", href: "/landlord/applications", subtitle: "Tenant applications" },
+        { title: "Unit Map", href: "/landlord/unit-map", subtitle: "Property map" },
+        { title: "Documents", href: "/landlord/documents", subtitle: "File manager" },
+        { title: "Analytics", href: "/landlord/analytics", subtitle: "Insights" },
+        { title: "Settings", href: "/landlord/settings", subtitle: "Account settings" },
+        { title: "Profile", href: "/landlord/profile", subtitle: "Your profile" },
+        { title: "Utilities", href: "/landlord/utilities", subtitle: "Utility tracking" },
+        { title: "Utility Billing", href: "/landlord/utility-billing", subtitle: "Billing setup" },
+        { title: "Community", href: "/landlord/community", subtitle: "Landlord network" },
+    ];
+
+    const settingsIndex = [
+        { title: "Public Identity", href: "/landlord/settings?category=Identity", subtitle: "Profile & public presence" },
+        { title: "Finance & Utilities", href: "/landlord/settings?category=Finance", subtitle: "Payment & utility rates" },
+        { title: "Security & Login", href: "/landlord/settings?category=Security", subtitle: "Password, 2FA, sessions" },
+        { title: "Notifications", href: "/landlord/settings?category=Notifications", subtitle: "Alerts & communication" },
+        { title: "Data & Privacy", href: "/landlord/settings?category=Data", subtitle: "Export & account deletion" },
+    ];
+
+    const performSearch = async (query: string) => {
+        if (!query.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        const results: SearchResult[] = [];
+
+        const matchedPages = pageIndex.filter(p => 
+            p.title.toLowerCase().includes(query.toLowerCase()) || p.subtitle.toLowerCase().includes(query.toLowerCase())
+        );
+        matchedPages.forEach(p => {
+            results.push({
+                id: `page-${p.title}`,
+                type: "page",
+                title: p.title,
+                subtitle: p.subtitle,
+                href: p.href,
+                icon: p.title === "Settings" ? Settings : p.title === "Messages" ? MessageSquare : p.title === "Invoices" ? CreditCard : Home
+            });
+        });
+
+        const matchedSettings = settingsIndex.filter(s => 
+            s.title.toLowerCase().includes(query.toLowerCase()) || s.subtitle.toLowerCase().includes(query.toLowerCase())
+        );
+        matchedSettings.forEach(s => {
+            results.push({
+                id: `setting-${s.title}`,
+                type: "page",
+                title: s.title,
+                subtitle: s.subtitle,
+                href: s.href,
+                icon: Settings
+            });
+        });
+
+        try {
+            setSearchLoading(true);
+            const res = await fetch(`/api/landlord/search?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            
+            if (data.results) {
+                data.results.forEach((p: { id: string; type: string; title: string; subtitle: string; href: string }) => {
+                    results.push({
+                        ...p,
+                        type: p.type as SearchResultType,
+                        icon: Home
+                    });
+                });
+            }
+        } catch (e) {
+            console.error("Search error:", e);
+        } finally {
+            setSearchLoading(false);
+        }
+
+        if (results.length === 0) {
+            results.push({
+                id: "no-results",
+                type: "page",
+                title: "No results found",
+                subtitle: `Try a different search term for "${query}"`,
+                href: "#",
+                icon: Search
+            });
+        }
+
+        setSearchResults(results);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+                setIsSearchOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const debounce = setTimeout(() => {
+            performSearch(searchQuery);
+        }, 200);
+        return () => clearTimeout(debounce);
+    }, [searchQuery]);
+
+    const handleResultClick = (result: SearchResult) => {
+        if (result.href !== "#") {
+            router.push(result.href);
+        }
+        setIsSearchOpen(false);
+        setSearchQuery("");
     };
 
     return (
@@ -166,13 +306,63 @@ export function DashboardBanner({
                 </button>
 
                 {/* Search Bar - Premium Glassmorphism */}
-                <div className="relative group hidden sm:block">
+                <div className="relative group hidden sm:block" ref={searchRef}>
                     <Search className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                     <input
+                        ref={inputRef}
                         type="text"
                         placeholder="Search properties, tenants..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setIsSearchOpen(true);
+                        }}
+                        onFocus={() => setIsSearchOpen(true)}
                         className="w-64 rounded-2xl border border-white/10 bg-surface-2 py-2.5 pl-11 pr-4 text-sm text-foreground backdrop-blur-xl transition-all placeholder:text-muted-foreground/60 hover:bg-surface-3 focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
+                    
+                    {isSearchOpen && searchQuery.trim() && (
+                        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-white/10 bg-surface-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-3xl animate-in fade-in zoom-in-95 duration-200">
+                            <div className="max-h-80 overflow-y-auto custom-scrollbar-premium">
+                                {searchLoading ? (
+                                    <div className="px-4 py-4 space-y-3">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="flex items-center gap-3">
+                                                <Skeleton className="h-8 w-8 rounded-lg" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Skeleton className="h-3 w-24 rounded-full" />
+                                                    <Skeleton className="h-2 w-32 rounded-full opacity-60" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    searchResults.slice(0, 6).map((result) => (
+                                        <button
+                                            key={result.id}
+                                            onClick={() => handleResultClick(result)}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/5"
+                                        >
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                                <result.icon className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-foreground truncate">{result.title}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
+                                            </div>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                            {searchResults.length > 6 && (
+                                <div className="border-t border-white/5 px-4 py-2">
+                                    <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                                        {searchResults.length} results - press enter for more
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Notifications */}
