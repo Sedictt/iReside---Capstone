@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { UiMessage } from "@/components/landlord/messages/types";
+import { cn } from "@/lib/utils";
 
 interface OfficialReceiptProps {
     message: UiMessage;
     onDownload?: (id: string, name: string) => void;
     isDownloading?: boolean;
     role?: "landlord" | "tenant";
+    isCompact?: boolean;
 }
 
 interface InvoiceData {
@@ -27,7 +29,8 @@ export function OfficialReceipt({
     message, 
     onDownload, 
     isDownloading,
-    role = "landlord"
+    role = "landlord",
+    isCompact = false
 }: OfficialReceiptProps) {
     const [realData, setRealData] = useState<InvoiceData | null>(null);
     const [loading, setLoading] = useState(false);
@@ -86,7 +89,10 @@ export function OfficialReceipt({
             id={`receipt-${message.id}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-[340px] bg-white text-slate-900 p-8 shadow-2xl border border-slate-200 font-mono relative overflow-hidden"
+            className={cn(
+                "w-full max-w-[340px] bg-white text-slate-900 shadow-2xl border border-slate-200 font-mono relative overflow-hidden",
+                isCompact ? "p-4" : "p-8"
+            )}
         >
                 {/* Subtle paper texture effect */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
@@ -105,8 +111,14 @@ export function OfficialReceipt({
                 </div>
 
                 {/* Logo Area */}
-                <div className="text-center mb-8 relative pt-2">
-                    <h1 className="text-xl font-bold tracking-tighter mb-1">iReside</h1>
+                <div className={cn(
+                    "text-center relative pt-2",
+                    isCompact ? "mb-4" : "mb-8"
+                )}>
+                    <h1 className={cn(
+                        "font-bold tracking-tighter mb-1",
+                        isCompact ? "text-lg" : "text-xl"
+                    )}>iReside</h1>
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Payment Confirmation</p>
                     {loading && (
                         <div className="absolute -top-1 right-0">
@@ -116,7 +128,10 @@ export function OfficialReceipt({
                 </div>
 
                 {/* Receipt Data */}
-                <div className="space-y-3 text-[11px] relative">
+                <div className={cn(
+                    "space-y-3 relative",
+                    isCompact ? "text-[10px]" : "text-[11px]"
+                )}>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Invoice #:</span>
                         <span className="text-right truncate max-w-[150px] font-bold">{displayData.invoiceId}</span>
@@ -158,11 +173,20 @@ export function OfficialReceipt({
                 </div>
 
                 {/* Separator */}
-                <div className="my-6 border-t border-dashed border-slate-300 relative" />
+                <div className={cn(
+                    "border-t border-dashed border-slate-300 relative",
+                    isCompact ? "my-4" : "my-6"
+                )} />
 
                 {/* Totals */}
-                <div className="space-y-1 mb-8 relative">
-                    <div className="flex justify-between text-sm font-black">
+                <div className={cn(
+                    "space-y-1 relative",
+                    isCompact ? "mb-4" : "mb-8"
+                )}>
+                    <div className={cn(
+                        "flex justify-between font-black",
+                        isCompact ? "text-xs" : "text-sm"
+                    )}>
                         <span>TOTAL AMOUNT:</span>
                         <span>₱{displayData.amount}</span>
                     </div>

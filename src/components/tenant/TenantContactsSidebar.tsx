@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File } from "lucide-react";
+import { Users, Phone, MoreHorizontal, MessageSquare, Video, X, Send, Maximize2, Check, CheckCheck, Clock3, MoreVertical, File, HandCoins, Bell, TrendingUp, AlertTriangle, CheckCircle2, History, Zap, Wallet, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChatWidget } from "./ChatWidget";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -19,6 +20,8 @@ import {
 } from "@/lib/messages/client";
 import { RoleBadge, type BadgeRole } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
+import { NotificationCard } from "@/components/messaging/NotificationCard";
+import { OfficialReceipt } from "@/components/messaging/OfficialReceipt";
 
 interface ChatUser {
     id: string;
@@ -48,6 +51,11 @@ type MiniChatMessage = {
     messageType?: "text" | "system" | "image" | "file";
     fileUrl?: string | null;
     fileMimeType?: string | null;
+    systemType?: string;
+    metadata?: Record<string, any> | null;
+    workflowStatus?: string;
+    issueType?: string;
+    invoiceId?: string;
 };
 
 type MiniChatState = {
@@ -274,6 +282,11 @@ export function TenantContactsSidebar() {
             messageType: message.type,
             fileUrl: typeof message.metadata?.fileUrl === "string" ? message.metadata.fileUrl : null,
             fileMimeType: typeof message.metadata?.mimeType === "string" ? message.metadata.mimeType : null,
+            systemType: message.metadata?.systemType as string | undefined,
+            workflowStatus: message.metadata?.workflowStatus as string | undefined,
+            issueType: message.metadata?.issueType as string | undefined,
+            invoiceId: message.metadata?.invoiceId as string | undefined,
+            metadata: message.metadata,
         }));
 
         setChatStateById((prev) => ({
@@ -1183,6 +1196,13 @@ export function TenantContactsSidebar() {
                                     <p className="text-xs text-muted-foreground text-center">No messages yet</p>
                                 )}
                                 {chatState.messages.map((message) => {
+                                    if (message.messageType === "system") {
+                                        return (
+                                            <div key={message.id} className="flex w-full justify-center my-6 px-2">
+                                                <MiniSystemMessage message={message} router={router} />
+                                            </div>
+                                        );
+                                    }
                                     const hasImage = Boolean(message.fileUrl && message.fileMimeType?.startsWith("image/"));
                                     const hasFile = Boolean(message.fileUrl && !message.fileMimeType?.startsWith("image/"));
 
@@ -1386,6 +1406,88 @@ type ContactCardProps = {
     status: string;
     isExpanded: boolean;
 };
+
+function renderSystemIcon(type: string) {
+    switch (type) {
+        case 'awaiting_in_person': return <HandCoins className="h-5 w-5" />;
+        case 'reminder_sent': return <Bell className="h-5 w-5" />;
+        case 'invoice': return <Receipt className="h-5 w-5" />;
+        case 'landlord_review': return <History className="h-5 w-5" />;
+        default: return <Zap className="h-5 w-5" />;
+    }
+}
+
+function MiniSystemMessage({ message, router }: { message: MiniChatMessage; router: any }) {
+    const isOverpayment = message.issueType === "excessive_amount";
+    const isRejected = message.workflowStatus === "rejected";
+    const isResolved = message.metadata?.isResolved;
+
+    if (message.systemType === "invoice") {
+        return (
+            <div className="flex flex-col gap-2 items-center w-full">
+                <OfficialReceipt 
+                    message={message as any} 
+                    isCompact={true}
+                    role="tenant"
+                />
+            </div>
+        );
+    }
+
+    if (message.systemType === "landlord_review") {
+        return (
+            <NotificationCard
+                message={message}
+                icon={isOverpayment ? <TrendingUp className="h-6 w-6 text-white" /> : (isRejected ? <AlertTriangle className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />)}
+                title={isOverpayment 
+                    ? (isResolved ? "Reconciliation Complete" : "Overpayment Detected")
+                    : (isRejected ? "Payment Rejected" : "Payment Confirmed")
+                }
+                subtitle={isResolved ? "Transaction Settled" : "Action Logged"}
+                variant={isOverpayment ? (isResolved ? "success" : "warning") : (isRejected ? "error" : "success")}
+                refundImg={message.metadata?.refundProofUrl as string}
+                isCompact={true}
+            />
+        );
+    }
+
+    if (message.systemType === "awaiting_in_person" || message.workflowStatus === "awaiting_in_person") {
+        return (
+            <NotificationCard
+                message={message}
+                icon={<HandCoins className="h-6 w-6 text-white" />}
+                title="In-Person Payment"
+                subtitle="Verification Required"
+                variant="warning"
+                isCompact={true}
+            />
+        );
+    }
+
+    if (message.systemType === "reminder_sent") {
+        return (
+            <NotificationCard
+                message={message}
+                icon={<Bell className="h-6 w-6 text-white" />}
+                title="Payment Reminder"
+                subtitle="Notification Sent"
+                variant="default"
+                isCompact={true}
+            />
+        );
+    }
+
+    return (
+        <NotificationCard
+            message={message}
+            icon={renderSystemIcon(message.systemType || "")}
+            title="System Notification"
+            subtitle={formatMiniTimestamp(message.createdAt)}
+            variant="default"
+            isCompact={true}
+        />
+    );
+}
 
 function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpanded }: ContactCardProps) {
     const isIssue = status === "Late Payment" || status === "Notice Given";
