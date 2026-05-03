@@ -42,6 +42,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/ui/LoadingSpinner";
 import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import { ProfileCoverUploader } from "@/components/profile/ProfileCoverUploader";
 import { createClient } from "@/lib/supabase/client";
@@ -163,7 +164,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 
 export function LandlordSettings() {
     const router = useRouter();
-    const { profile, refreshProfile } = useAuth();
+    const { profile, loading, refreshProfile } = useAuth();
     // UI State
     const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
     const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
@@ -183,6 +184,11 @@ export function LandlordSettings() {
     useEffect(() => {
         setActiveSubTab(SUB_TABS[activeTab][0]);
     }, [activeTab]);
+
+    if (loading) {
+        return <PageLoader message="Loading your settings..." />;
+    }
+
     const [formData, setFormData] = useState({
         full_name: "",
         business_name: "",
@@ -386,26 +392,26 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Profile Information" description="Basic details about you and your business.">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <SettingField label="Full Name" icon={User}>
+                                <SettingField label="Full Name" icon={User} description="Verified by admin. Contact support to change.">
                                     <input
                                         type="text"
-                                        value={formData.full_name}
-                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        value={profile?.full_name || ""}
+                                        disabled
+                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
                                     />
                                 </SettingField>
-                                <SettingField label="Business Name" icon={Building2}>
+                                <SettingField label="Business Name" icon={Building2} description="Verified by admin. Contact support to change.">
                                     <input
                                         type="text"
-                                        value={formData.business_name}
-                                        onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                        value={profile?.business_name || ""}
+                                        disabled
+                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
                                     />
                                 </SettingField>
                                 <SettingField label="Contact Email" icon={Mail} description="This email is used for inquiries.">
                                     <input
                                         type="email"
-                                        value={formData.email}
+                                        value={profile?.email || ""}
                                         disabled
                                         className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
                                     />
