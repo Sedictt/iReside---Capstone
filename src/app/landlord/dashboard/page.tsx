@@ -89,7 +89,7 @@ export default function LandlordDashboard() {
     });
     const [paymentsLoading, setPaymentsLoading] = useState(true);
     const [paymentsError, setPaymentsError] = useState<string | null>(null);
-    const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
+
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [availableUnits, setAvailableUnits] = useState<{
@@ -189,38 +189,7 @@ export default function LandlordDashboard() {
         };
     }, [selectedPropertyId]);
 
-    useEffect(() => {
-        const controller = new AbortController();
 
-        const loadSystemAdvisory = async () => {
-            try {
-                const response = await fetch("/api/landlord/system-advisory", {
-                    method: "GET",
-                    signal: controller.signal,
-                });
-
-                if (!response.ok) {
-                    setSystemAdvisory(null);
-                    return;
-                }
-
-                const payload = (await response.json()) as { advisory?: SystemAdvisory | null };
-                setSystemAdvisory(payload.advisory ?? null);
-            } catch (error) {
-                if ((error as Error).name === "AbortError") {
-                    return;
-                }
-
-                setSystemAdvisory(null);
-            }
-        };
-
-        void loadSystemAdvisory();
-  
-        return () => {
-            controller.abort();
-        };
-    }, []);
   
     useEffect(() => {
         const loadUnits = async () => {
@@ -327,28 +296,7 @@ export default function LandlordDashboard() {
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                 />
 
-                {/* System Advisory - Premium Styling */}
-                {systemAdvisory && (
-                    <div className="group relative overflow-hidden rounded-[2rem] border border-amber-500/25 bg-amber-500/10 p-6 backdrop-blur-sm animate-in zoom-in-95 duration-500">
-                        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-5">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-400">
-                                    <AlertTriangle className="h-7 w-7" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-amber-300">{systemAdvisory.title}</h3>
-                                    <p className="text-sm font-medium text-muted-foreground/80">{systemAdvisory.message}</p>
-                                </div>
-                            </div>
-                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/12 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-300">
-                                Global Alert
-                            </div>
-                        </div>
-                        <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-[0.03] transition-transform duration-700 group-hover:scale-125">
-                            <AlertTriangle className="h-40 w-40" />
-                        </div>
-                    </div>
-                )}
+
 
                 {/* Primary Hub */}
                 <div className="relative">

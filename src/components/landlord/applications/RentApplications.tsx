@@ -414,8 +414,18 @@ export function RentApplications() {
                 if (!response.ok) throw new Error("Failed to load applications");
                 const payload = (await response.json()) as { applications?: RentApplication[] };
                 if (!controller.signal.aborted) {
-                    setApplications(Array.isArray(payload.applications) ? payload.applications : []);
+                    const fetchedApps = Array.isArray(payload.applications) ? payload.applications : [];
+                    setApplications(fetchedApps);
                     setDataFetched(true);
+
+                    // Handle deep linking via ?id=
+                    const deepLinkId = searchParams?.get("id");
+                    if (deepLinkId) {
+                        const targetApp = fetchedApps.find(a => a.id === deepLinkId);
+                        if (targetApp) {
+                            setSelectedApp(targetApp);
+                        }
+                    }
                 }
             } catch (fetchError) {
                 if ((fetchError as Error).name !== "AbortError" && !controller.signal.aborted) {

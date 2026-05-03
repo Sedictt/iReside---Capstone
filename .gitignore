@@ -109,3 +109,8 @@ node_modules/
 /openspec
 /docs/.outdated-docs
 /tmp
+
+# Sensitive seed files with credentials
+supabase/seeds/auth_users.sql
+supabase/seeds/data.sql
+supabase_backup/seed.sql
