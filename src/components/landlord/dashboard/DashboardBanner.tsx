@@ -7,6 +7,9 @@ import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
+import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
+import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 type BannerNotification = {
     id: string;
@@ -76,6 +79,7 @@ export function DashboardBanner({
 }: DashboardBannerProps) {
     const [time, setTime] = useState<Date | null>(null);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isQuestPanelOpen, setIsQuestPanelOpen] = useState(false);
     
     const { 
         notifications, 
@@ -85,12 +89,19 @@ export function DashboardBanner({
         markAllAsRead 
     } = useNotifications();
 
+    const { profile, user, loading: authLoading } = useAuth();
+    const rawName = profile?.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || "";
+    const firstName = rawName.split(" ")[0] || "Landlord";
+    
+    // Replace 'Landlord' in the title if it exists, otherwise use title as is
+    const displayTitle = title.includes("Landlord") ? title.replace("Landlord", firstName) : title;
     const displaySubtitle = simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle;
 
     useEffect(() => {
-        setTime(new Date());
+        const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+        setTime(getManilaTime());
         const timer = setInterval(() => {
-            setTime(new Date());
+            setTime(getManilaTime());
         }, 1000);
         return () => clearInterval(timer);
     }, []);
@@ -127,6 +138,20 @@ export function DashboardBanner({
 
             {/* Header Actions */}
             <div className="absolute top-8 right-8 z-20 flex items-center gap-4">
+                {/* Mission Control Trigger - Glowing Exclamation */}
+                <button
+                    onClick={() => setIsQuestPanelOpen(true)}
+                    className="relative group flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-xl transition-all hover:bg-primary/10 active:scale-95"
+                >
+                    <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-pulse blur-md pointer-events-none" />
+                    <AlertCircle className="h-5 w-5 text-primary transition-transform group-hover:scale-110" />
+                    
+                    {/* Tooltip-like label */}
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 scale-0 px-2 py-1 rounded bg-surface-4 text-[10px] font-bold text-foreground opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all whitespace-nowrap border border-white/5 shadow-xl">
+                        View Missions
+                    </span>
+                </button>
+
                 {/* Search Bar - Premium Glassmorphism */}
                 <div className="relative group hidden sm:block">
                     <Search className="absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
@@ -223,12 +248,12 @@ export function DashboardBanner({
                             <div className="absolute inset-0 h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]" />
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                            {time?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) || "Loading..."}
                         </span>
                     </div>
 
                     <h1 className="mb-4 text-4xl font-black tracking-tight text-foreground md:text-6xl leading-[1.1]">
-                        {title}
+                        {displayTitle}
                         <span className="text-primary prose-invert">.</span>
                     </h1>
                     
@@ -288,10 +313,10 @@ export function DashboardBanner({
                     <div className="hidden lg:flex flex-col items-end mt-16 self-center">
                         <div className="flex items-baseline gap-2">
                             <span className="font-mono text-7xl font-black tracking-tighter text-foreground tabular-nums">
-                                {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                {time.getHours().toString().padStart(2, '0')}:{time.getMinutes().toString().padStart(2, '0')}
                             </span>
                             <span className="text-2xl font-black uppercase tracking-[0.2em] text-primary">
-                                {time.toLocaleTimeString('en-US', { hour12: true }).split(' ')[1]}
+                                {time.getHours() >= 12 ? 'PM' : 'AM'}
                             </span>
                         </div>
                         <div className="mt-2 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/60">
@@ -300,6 +325,12 @@ export function DashboardBanner({
                     </div>
                 )}
             </div>
+
+            {/* Side Quest Panel */}
+            <LandlordQuestBoard 
+                isOpen={isQuestPanelOpen} 
+                onClose={() => setIsQuestPanelOpen(false)} 
+            />
         </div>
     );
 }

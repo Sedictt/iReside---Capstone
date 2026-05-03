@@ -34,10 +34,11 @@ import {
     Twitter,
     Linkedin,
     UploadCloud,
-    ArrowLeft
+    ArrowLeft,
+    RotateCcw
 } from "lucide-react";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { BillingOperationsPanel } from "@/components/landlord/BillingOperationsPanel";
 import { useAuth } from "@/hooks/useAuth";
@@ -175,7 +176,7 @@ export function LandlordSettings() {
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
-        Data: ["Export", "Danger"],
+        Data: ["Export", "Tour", "Danger"],
     };
 
     // Reset sub-tab when main tab changes
@@ -199,6 +200,24 @@ export function LandlordSettings() {
             linkedin: "",
         },
     });
+
+    const [tourState, setTourState] = useState<any>(null);
+
+    const fetchTourState = useCallback(async () => {
+        try {
+            const res = await fetch("/api/landlord/tour?start=0");
+            if (res.ok) {
+                const data = await res.json();
+                setTourState(data.state);
+            }
+        } catch (err) {
+            console.error("Failed to fetch tour state", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchTourState();
+    }, [fetchTourState]);
 
     const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
     const [properties, setProperties] = useState<any[]>([]);
@@ -310,7 +329,56 @@ export function LandlordSettings() {
             if (permitInputRef.current) permitInputRef.current.value = "";
         }
     };
+    const [isResetting, setIsResetting] = useState(false);
 
+    const handleHardResetTour = async () => {
+        if (!confirm("Are you sure you want to reset all tour progress? This cannot be undone.")) return;
+        
+        setIsResetting(true);
+        const loadingToast = toast.loading("Resetting tour progress...");
+
+        try {
+            const response = await fetch("/api/landlord/tour", {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || "Failed to reset tour");
+            }
+
+            toast.success("Tour progress has been completely reset", { id: loadingToast });
+            await refreshProfile();
+        } catch (error: any) {
+            toast.error(error.message, { id: loadingToast });
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
+    const handleToggleCompletedQuests = async () => {
+        try {
+            const nextValue = !tourState?.metadata?.show_completed_quests;
+            
+            // Optimistic update
+            setTourState((prev: any) => ({
+                ...prev,
+                metadata: { ...prev?.metadata, show_completed_quests: nextValue }
+            }));
+
+            const res = await fetch("/api/landlord/tour/metadata", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ show_completed_quests: nextValue, quest_board_hidden: false }),
+            });
+            if (res.ok) {
+                toast.success(nextValue ? "Quests will now remain visible" : "Completed quests will be hidden");
+                await fetchTourState();
+            }
+        } catch (err) {
+            toast.error("Failed to update preferences");
+        }
+    };
     const renderIdentity = () => {
         const renderSubContent = () => {
             switch (activeSubTab) {
@@ -855,6 +923,36 @@ export function LandlordSettings() {
                             </div>
                         </GlassCard>
                     );
+                case "Tour":
+                    return (
+                        <GlassCard title="Product Mastery Quests" description="Reset your progress or manage your learning experience.">
+                            <div className="space-y-6 max-w-lg">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <h4 className="text-sm font-semibold text-white">Show Completed Quests</h4>
+                                        <p className="text-xs text-neutral-400">Keep the mastery board visible even after completion.</p>
+                                    </div>
+                                    <ToggleSwitch 
+                                        enabled={!!tourState?.metadata?.show_completed_quests} 
+                                        onToggle={handleToggleCompletedQuests} 
+                                    />
+                                </div>
+                                
+                                <div className="pt-6 border-t border-white/5">
+                                    <h4 className="text-sm font-semibold text-white">Hard Reset</h4>
+                                    <p className="mt-1 text-xs text-neutral-400">This will wipe all tour progress and event logs, allowing you to start all quests from zero.</p>
+                                    <button 
+                                        onClick={handleHardResetTour}
+                                        disabled={isResetting}
+                                        className="mt-4 flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-3 text-sm font-bold text-red-500 transition-all hover:bg-red-500/10 disabled:opacity-50"
+                                    >
+                                        <RotateCcw className="h-4 w-4" /> 
+                                        {isResetting ? "Resetting..." : "Reset All Quests"}
+                                    </button>
+                                </div>
+                            </div>
+                        </GlassCard>
+                    );
                 case "Danger":
                     return (
                         <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title="Danger Zone" description="Irreversible account actions.">
@@ -909,14 +1007,6 @@ export function LandlordSettings() {
         <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
             {/* Sidebar */}
             <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
-                <button
-                    onClick={() => router.push("/landlord")}
-                    className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-neutral-500 hover:text-white transition-colors group"
-                >
-                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                    Back to Dashboard
-                </button>
-
                 <div className="flex items-center gap-4 px-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
                         <Layout className="h-6 w-6" />

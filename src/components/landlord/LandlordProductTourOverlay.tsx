@@ -314,6 +314,10 @@ export function LandlordProductTourOverlay() {
                         />
                     )}
 
+                    {(activeStep as any).nonInteractive && (
+                        <div className="fixed inset-0 z-[92] bg-transparent cursor-not-allowed" />
+                    )}
+
                     <div className="fixed bottom-5 right-5 z-[95] w-[24rem] rounded-2xl border border-white/20 bg-neutral-950/95 p-4 shadow-2xl">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Getting Started Guide</p>
                         <h3 className="mt-1 text-base font-semibold text-white">{panelTitle}</h3>
