@@ -98,11 +98,23 @@ export function DashboardBanner({
     const displaySubtitle = simplifiedMode ? "Hi! Here is a quick look at your houses today." : subtitle;
 
     useEffect(() => {
+        const handleOpenQuestBoard = () => {
+            setIsQuestPanelOpen(true);
+        };
+
+        window.addEventListener("open-quest-board", handleOpenQuestBoard);
+        return () => window.removeEventListener("open-quest-board", handleOpenQuestBoard);
+    }, []);
+
+    useEffect(() => {
         const getManilaTime = () => new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
-        setTime(getManilaTime());
+        
+        // Update time immediately and then on interval
+        setTime(() => getManilaTime());
         const timer = setInterval(() => {
             setTime(getManilaTime());
         }, 1000);
+        
         return () => clearInterval(timer);
     }, []);
 

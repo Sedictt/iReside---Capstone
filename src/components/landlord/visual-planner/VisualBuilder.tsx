@@ -2712,85 +2712,202 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const newUnits: Unit[] = [];
         const newCorridors: Corridor[] = [];
         
-        // Grab dbUnits if available or use generic IDs
-        const unplacedCopy = [...unplacedDbUnits];
-        let genericIdCounter = 100;
+        // 1. Collect ALL units belonging to this floor
+        const floorPool: DbUnit[] = [];
+        const activeFloorNum = parseFloorNumber(activeFloor);
         
-        const createUnit = (x: number, y: number, w: number, h: number, type: Unit["type"]): Unit => {
-            const dbUnit = unplacedCopy.shift();
-            if (dbUnit) {
-                return {
+        // Add current canvas units (they might be DB units)
+        units.forEach(u => {
+            const dbRef = dbUnits.find(dbu => dbu.id === (u.dbId || u.id));
+            if (dbRef) {
+                floorPool.push(dbRef);
+            }
+        });
+        
+        // Add unplaced units belonging to this floor
+        const otherUnplaced: DbUnit[] = [];
+        unplacedDbUnits.forEach(dbu => {
+            if (dbu.floor === activeFloorNum) {
+                floorPool.push(dbu);
+            } else {
+                otherUnplaced.push(dbu);
+            }
+        });
+
+        // Sort pool for consistent layout (numerically by name)
+        floorPool.sort((a, b) => {
+            const numA = parseInt(a.name.replace(/\D/g, "")) || 0;
+            const numB = parseInt(b.name.replace(/\D/g, "")) || 0;
+            if (numA !== numB) return numA - numB;
+            return a.name.localeCompare(b.name, undefined, { numeric: true });
+        });
+
+        let unitIdx = 0;
+        
+        const getNextFromPool = () => {
+            if (unitIdx < floorPool.length) {
+                return floorPool[unitIdx++];
+            }
+            return null;
+        };
+
+        const createUnitFromPool = (x: number, y: number, w: number, h: number): Unit | null => {
+            const dbUnit = getNextFromPool();
+            if (!dbUnit) return null;
+            return {
                     id: dbUnit.id,
                     dbId: dbUnit.id,
                     name: dbUnit.name,
-                    type,
+                    type: (dbUnit.beds === 0 ? "Studio" : dbUnit.beds === 2 ? "2BR" : dbUnit.beds >= 3 ? "3BR" : "1BR") as Unit["type"],
                     status: (dbUnit.status as Unit["status"]) ?? "vacant",
                     x, y, w, h,
                     floor: dbUnit.floor,
                 };
-            }
-            
-            genericIdCounter++;
-            const newId = String(genericIdCounter);
-            return {
-                id: newId,
-                dbId: "",
-                name: `Unit ${newId}`,
-                type,
-                status: "vacant",
-                x, y, w, h
-            };
         };
 
-        const cx = 300;
         const cy = 200;
 
+            
+
+
+
+
+
+
+
+
+
+
+
+
+        const cx = 300;
+
+        const UNIT_W = 200;
+        const UNIT_H = 140;
+        const PADDING = 20;
+
+
+
         if (presetType === "double-loaded") {
-            newCorridors.push({ id: `corridor-${Date.now()}`, label: "Central Corridor", x: cx, y: cy + 140, w: 900, h: 80 });
-            for (let i = 0; i < 4; i++) {
-                newUnits.push(createUnit(cx + 40 + i * 220, cy, 200, 140, "1BR")); // Top row
-                newUnits.push(createUnit(cx + 40 + i * 220, cy + 220, 200, 140, "1BR")); // Bottom row
-            }
-        } else if (presetType === "u-shape") {
-            newCorridors.push({ id: `corridor-north-${Date.now()}`, label: "North Corridor", x: cx + 160, y: cy, w: 600, h: 80 });
-            newCorridors.push({ id: `corridor-west-${Date.now()}`, label: "West Wing", x: cx + 80, y: cy, w: 80, h: 460 });
-            newCorridors.push({ id: `corridor-east-${Date.now()}`, label: "East Wing", x: cx + 760, y: cy, w: 80, h: 460 });
+            const unitsPerSide = Math.ceil(floorPool.length / 2);
+            const totalWidth = unitsPerSide * (UNIT_W + PADDING) + PADDING;
+            const corridorW = Math.max(900, totalWidth);
             
-            // Top row
-            for (let i = 0; i < 3; i++) {
-                newUnits.push(createUnit(cx + 160 + i * 200, cy - 140, 200, 140, "1BR"));
+            newCorridors.push({ 
+                id: `corridor-${Date.now()}`, 
+                label: "Central Corridor", 
+                x: cx, 
+                y: cy + UNIT_H, 
+                w: corridorW, 
+                h: 80 
+            });
+
+            // Top Row
+            for (let i = 0; i < unitsPerSide; i++) {
+                const u = createUnitFromPool(cx + PADDING + i * (UNIT_W + PADDING), cy, UNIT_W, UNIT_H);
+                if (u) newUnits.push(u);
             }
-            // West wing
-            for (let i = 0; i < 2; i++) {
-                newUnits.push(createUnit(cx - 120, cy + 100 + i * 160, 200, 140, "1BR"));
+            // Bottom Row
+            for (let i = 0; i < unitsPerSide; i++) {
+                const u = createUnitFromPool(cx + PADDING + i * (UNIT_W + PADDING), cy + UNIT_H + 80, UNIT_W, UNIT_H);
+                if (u) newUnits.push(u);
             }
-            // East wing
-            for (let i = 0; i < 2; i++) {
-                newUnits.push(createUnit(cx + 840, cy + 100 + i * 160, 200, 140, "1BR"));
-            }
-        } else if (presetType === "l-shape") {
-            newCorridors.push({ id: `corridor-north-${Date.now()}`, label: "North Corridor", x: cx + 160, y: cy, w: 600, h: 80 });
-            newCorridors.push({ id: `corridor-west-${Date.now()}`, label: "West Wing", x: cx + 80, y: cy, w: 80, h: 460 });
+
+
+
+
+
+
+
+
+
+
+
             
-            // Top row
-            for (let i = 0; i < 3; i++) {
-                newUnits.push(createUnit(cx + 160 + i * 200, cy - 140, 200, 140, "1BR"));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        } else if (presetType === "single-loaded") {
+            const totalWidth = floorPool.length * (UNIT_W + PADDING) + PADDING;
+            const corridorW = Math.max(900, totalWidth);
+            
+            newCorridors.push({ 
+                id: `corridor-${Date.now()}`, 
+                label: "Main Corridor", 
+                x: cx, 
+                y: cy + UNIT_H, 
+                w: corridorW, 
+                h: 80 
+            });
+
+            for (let i = 0; i < floorPool.length; i++) {
+                const u = createUnitFromPool(cx + PADDING + i * (UNIT_W + PADDING), cy, UNIT_W, UNIT_H);
+                if (u) newUnits.push(u);
             }
-            // West wing
-            for (let i = 0; i < 2; i++) {
-                newUnits.push(createUnit(cx - 120, cy + 100 + i * 160, 200, 140, "1BR"));
+        } else if (presetType === "u-shape" || presetType === "l-shape") {
+            const unitsPerSegment = Math.ceil(floorPool.length / 3);
+            
+            newCorridors.push({ 
+                id: `corridor-center-${Date.now()}`, 
+                label: "Central Wing", 
+                x: cx + 100, 
+                y: cy + 100, 
+                w: 600, 
+                h: 80 
+            });
+
+            for (let i = 0; i < unitsPerSegment; i++) {
+                const u = createUnitFromPool(cx + 100 + i * (UNIT_W + PADDING), cy - 40, UNIT_W, UNIT_H);
+                if (u) newUnits.push(u);
             }
-        } else if (presetType === "single-loaded") {
-            newCorridors.push({ id: `corridor-${Date.now()}`, label: "Single Corridor", x: cx, y: cy + 140, w: 900, h: 80 });
-            for (let i = 0; i < 4; i++) {
-                newUnits.push(createUnit(cx + 40 + i * 220, cy, 200, 140, "1BR")); // Top row only
+            for (let i = 0; i < unitsPerSegment; i++) {
+                const u = createUnitFromPool(cx - 100, cy + 100 + i * (UNIT_H + PADDING), UNIT_W, UNIT_H);
+                if (u) newUnits.push(u);
+            }
+            if (presetType === "u-shape") {
+                for (let i = 0; i < unitsPerSegment; i++) {
+                    const u = createUnitFromPool(cx + 700, cy + 100 + i * (UNIT_H + PADDING), UNIT_W, UNIT_H);
+                    if (u) newUnits.push(u);
+                }
             }
         }
 
         setUnits(newUnits);
         setCorridors(newCorridors);
         setStructures([]);
-        setUnplacedDbUnits(unplacedCopy);
+        // Ensure unplaced pool reflects the changes
+        const placedIds = new Set(newUnits.map(u => u.dbId || u.id));
+        const unplacedLeftovers = floorPool.filter(dbu => !placedIds.has(dbu.id));
+        
+        setUnplacedDbUnits([...otherUnplaced, ...unplacedLeftovers]);
+
         
         isUndoingRef.current = false;
     };
