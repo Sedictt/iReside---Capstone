@@ -206,7 +206,19 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as {
         propertyId: string;
-        positions?: Array<{ unitId: string; floorKey: string; x: number; y: number; w: number; h: number }>;
+        positions?: Array<{ 
+            unitId: string; 
+            floorKey: string; 
+            x: number; 
+            y: number; 
+            w: number; 
+            h: number;
+            metadata?: {
+                beds?: number;
+                baths?: number;
+                sqft?: number;
+            }
+        }>;
         decorations?: Record<string, unknown>;
     };
 
@@ -285,22 +297,26 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Also sync units.floor based on floorKey (e.g. "floor2" → floor=2, "ground" → floor=0)
-        const floorUpdates = validPositions.map(p => {
+        // Also sync units.floor based on floorKey AND metadata if provided
+        for (const p of validPositions) {
             let floorNumber = 1;
             if (p.floorKey === "ground") floorNumber = 0;
             else {
                 const match = /^floor(\d+)$/i.exec(p.floorKey);
                 if (match) floorNumber = parseInt(match[1], 10);
             }
-            return { id: p.unitId, floor: floorNumber };
-        });
 
-        for (const update of floorUpdates) {
+            const updateData: Record<string, any> = { floor: floorNumber };
+            if (p.metadata) {
+                if (p.metadata.beds !== undefined) updateData.beds = p.metadata.beds;
+                if (p.metadata.baths !== undefined) updateData.baths = p.metadata.baths;
+                if (p.metadata.sqft !== undefined) updateData.sqft = p.metadata.sqft;
+            }
+
             await supabase
                 .from("units")
-                .update({ floor: update.floor })
-                .eq("id", update.id);
+                .update(updateData as any)
+                .eq("id", p.unitId);
         }
     }
 

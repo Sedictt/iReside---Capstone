@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
@@ -247,7 +247,7 @@ const ACTIVE_FLOOR_STORAGE_KEY = "ireside.visualPlanner.activeFloor";
 const UNIT_NOTES_STORAGE_KEY = "ireside.visualPlanner.unitNotes";
 const EMPTY_FLOOR_LAYOUT: FloorLayout = { units: [], corridors: [], structures: [] };
 const DEFAULT_ACTIVE_FLOOR = "floor1";
-// Default layouts are empty â€” real data is loaded from DB
+// Default layouts are empty Ã¢â‚¬â€ real data is loaded from DB
 const DEFAULT_FLOOR_LAYOUTS: Record<FloorId, FloorLayout> = {
     ground: { units: [], corridors: [], structures: [] },
     floor1: { units: [], corridors: [], structures: [] },
@@ -287,6 +287,9 @@ const dbUnitToCanvasUnit = (dbUnit: DbUnit): Unit => {
         w: pos.w,
         h: pos.h,
         details: dbUnit.maintenance_description || dbUnit.maintenance_title,
+        areaSqm: dbUnit.sqft ? Math.round(dbUnit.sqft * 0.092903) : undefined,
+        bedrooms: dbUnit.beds,
+        baths: dbUnit.baths,
         leaseStart: dbUnit.lease_start,
         leaseEnd: dbUnit.lease_end,
         maintenanceDate: dbUnit.maintenance_created_at,
@@ -476,7 +479,7 @@ const UnitHistoryModal = ({
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-black text-foreground`}>₱{item.rent.toLocaleString()}</p>
+                                                <p className={`text-xs font-black text-foreground`}>â‚±{item.rent.toLocaleString()}</p>
                                                 <p className="text-[9px] font-bold text-muted-foreground">Monthly Rent</p>
                                             </div>
                                         </div>
@@ -497,7 +500,7 @@ const UnitHistoryModal = ({
                                                 <p className="text-[10px] font-bold text-muted-foreground mt-1">{new Date(item.date).toLocaleDateString()} &bull; {item.description}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className={`text-xs font-black text-foreground`}>₱{item.cost.toLocaleString()}</p>
+                                                <p className={`text-xs font-black text-foreground`}>â‚±{item.cost.toLocaleString()}</p>
                                                 <p className="text-[9px] font-bold text-muted-foreground">Cost</p>
                                             </div>
                                         </div>
@@ -970,6 +973,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isLayoutLocked, setIsLayoutLocked] = useState(false);
     const [showHotkeys, setShowHotkeys] = useState(false);
     const [isCanvasFullscreen, setIsCanvasFullscreen] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<"idle" | "waiting" | "saving" | "saved">("idle");
     const [isMinimapDragging, setIsMinimapDragging] = useState(false);
     // DB-driven state
     const [dbUnits, setDbUnits] = useState<DbUnit[]>([]);
@@ -1020,6 +1024,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [tooltipUnit, setTooltipUnit] = useState<Unit | null>(null);
     const [tenantInvites, setTenantInvites] = useState<any[]>([]);
     const [refreshKey, setRefreshKey] = useState(0);
+
+    interface CollisionItem { kind: 'unit' | 'corridor' | 'structure'; id: string; x: number; y: number; w: number; h: number }
+    const collisionItems = useMemo<CollisionItem[]>(() => [
+        ...units.map(u => ({ kind: 'unit' as const, id: u.id, x: u.x, y: u.y, w: u.w, h: u.h })),
+        ...corridors.map(c => ({ kind: 'corridor' as const, id: c.id, x: c.x, y: c.y, w: c.w, h: c.h })),
+        ...structures.map(s => ({ kind: 'structure' as const, id: s.id, x: s.x, y: s.y, w: s.w, h: s.h }))
+    ], [units, corridors, structures]);
 
     useEffect(() => {
         setHasMounted(true);
@@ -1495,18 +1506,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         const rawPosition = getDraggedItemRawPosition(kind, id, pointerX, pointerY, fallbackX, fallbackY);
         const basePosition = getSnappedRectPosition(rawPosition.x, rawPosition.y, width, height);
         const ignoredItem = { kind, id } satisfies SelectedCanvasItem;
-
-        const targets = [
-            ...units
-                .filter((unit) => !(kind === "unit" && unit.id === id))
-                .map((unit) => ({ x: unit.x, y: unit.y, w: unit.w, h: unit.h })),
-            ...corridors
-                .filter((corridor) => !(kind === "corridor" && corridor.id === id))
-                .map((corridor) => ({ x: corridor.x, y: corridor.y, w: corridor.w, h: corridor.h })),
-            ...structures
-                .filter((structure) => !(kind === "structure" && structure.id === id))
-                .map((structure) => ({ x: structure.x, y: structure.y, w: structure.w, h: structure.h })),
-        ];
+        const targets = collisionItems.filter((item: CollisionItem) => !(item.kind === kind && item.id === id));
 
         const candidateXMap = new Map<number, number>();
         const candidateYMap = new Map<number, number>();
@@ -1525,7 +1525,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
             }
         };
 
-        targets.forEach((target) => {
+        targets.forEach((target: CollisionItem) => {
             const targetLeft = target.x;
             const targetRight = target.x + target.w;
             const targetTop = target.y;
@@ -1634,21 +1634,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         rect: { x: number; y: number; w: number; h: number },
         ignoredItem?: SelectedCanvasItem
     ) {
-        const collidesWithUnits = units.some((unit) => {
-            if (ignoredItem?.kind === "unit" && ignoredItem.id === unit.id) return false;
-            return doesRectOverlap(rect, unit);
-        });
-        if (collidesWithUnits) return true;
-
-        const collidesWithCorridors = corridors.some((corridor) => {
-            if (ignoredItem?.kind === "corridor" && ignoredItem.id === corridor.id) return false;
-            return doesRectOverlap(rect, corridor);
-        });
-        if (collidesWithCorridors) return true;
-
-        return structures.some((structure) => {
-            if (ignoredItem?.kind === "structure" && ignoredItem.id === structure.id) return false;
-            return doesRectOverlap(rect, structure);
+        return collisionItems.some((item: CollisionItem) => {
+            if (ignoredItem && ignoredItem.kind === item.kind && ignoredItem.id === item.id) return false;
+            return doesRectOverlap(rect, item);
         });
     }
 
@@ -2389,27 +2377,57 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         if (!selectedPropertyId || selectedPropertyId === "all" || !hasHydratedFloorState || readOnly) return;
 
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = setTimeout(() => {
+        setSaveStatus("waiting");
+        autoSaveTimerRef.current = setTimeout(async () => {
+            setSaveStatus("saving");
             const allLayouts = {
                 ...floorLayouts,
                 [activeFloor]: { ...(floorLayouts[activeFloor] || {}), units, corridors, structures },
             };
-            const allPositions: Array<{ unitId: string; floorKey: string; x: number; y: number; w: number; h: number }> = [];
+            const allPositions: Array<{ 
+                unitId: string; 
+                floorKey: string; 
+                x: number; 
+                y: number; 
+                w: number; 
+                h: number;
+                metadata?: { beds?: number; baths?: number; sqft?: number }
+            }> = [];
             const decorations: Record<string, { corridors: Corridor[]; structures: Structure[] }> = {};
 
             for (const [floorKey, layout] of Object.entries(allLayouts)) {
                 for (const unit of layout.units) {
-                    allPositions.push({ unitId: (unit as Unit).dbId ?? unit.id, floorKey, x: unit.x, y: unit.y, w: unit.w, h: unit.h });
+                    const canvasUnit = unit as Unit;
+                    allPositions.push({ 
+                        unitId: canvasUnit.dbId ?? canvasUnit.id, 
+                        floorKey, 
+                        x: canvasUnit.x, 
+                        y: canvasUnit.y, 
+                        w: canvasUnit.w, 
+                        h: canvasUnit.h,
+                        metadata: {
+                            beds: canvasUnit.bedrooms,
+                            baths: canvasUnit.baths,
+                            sqft: canvasUnit.areaSqm ? Math.round(canvasUnit.areaSqm / 0.092903) : undefined
+                        }
+                    });
                 }
                 if (layout.corridors.length > 0 || layout.structures.length > 0) {
                     decorations[floorKey] = { corridors: layout.corridors, structures: layout.structures };
                 }
             }
-            void fetch("/api/landlord/unit-map", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ propertyId: selectedPropertyId, positions: allPositions, decorations }),
-            });
+            try {
+                await fetch("/api/landlord/unit-map", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ propertyId: selectedPropertyId, positions: allPositions, decorations }),
+                });
+                setSaveStatus("saved");
+                setTimeout(() => setSaveStatus("idle"), 3000);
+            } catch (err) {
+                console.error("Auto-save failed:", err);
+                setSaveStatus("idle");
+            }
         }, 1500);
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2854,7 +2872,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 
 
-        } else if (presetType === "single-loaded") {
+
+        } else if (presetType === "single-loaded") {
             const totalWidth = floorPool.length * (UNIT_W + PADDING) + PADDING;
             const corridorW = Math.max(900, totalWidth);
             
@@ -3208,14 +3227,21 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     {!readOnly && (
                         <>
                             <div className={`h-6 w-px mx-1 ${isDark ? 'bg-slate-700' : 'bg-border'}`}></div>
-                            <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${isDark ? 'bg-slate-900 hover:bg-slate-800 text-slate-200 border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-border'}`}>
-                                <span className="material-icons-round text-sm">save_alt</span>
-                                Draft
-                            </button>
-                            <button className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-medium shadow-lg shadow-primary/20 transition-colors">
-                                <span className="material-icons-round text-sm">save</span>
-                                Save Changes
-                            </button>
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                saveStatus === "idle" ? "text-slate-400" :
+                                saveStatus === "waiting" ? "text-amber-500 animate-pulse" :
+                                saveStatus === "saving" ? "text-primary animate-pulse" :
+                                "text-emerald-500"
+                            }`}>
+                                <span className="material-icons-round text-sm">
+                                    {saveStatus === "idle" ? "cloud_done" :
+                                     saveStatus === "waiting" ? "pending" :
+                                     saveStatus === "saving" ? "sync" : "check_circle"}
+                                </span>
+                                {saveStatus === "idle" ? "All Changes Saved" :
+                                 saveStatus === "waiting" ? "Changes Pending..." :
+                                 saveStatus === "saving" ? "Auto-saving..." : "Saved to Cloud"}
+                            </div>
                         </>
                     )}
                 </div>
@@ -4668,7 +4694,7 @@ const StructureDetailsPanel = ({
                 <div className="absolute bottom-8 left-8 right-8 z-20">
                     <h1 className="text-[2rem] font-black leading-tight text-white capitalize">{structure.label}</h1>
                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                        {structure.type} {structure.variant ? `• ${structure.variant}` : ''}
+                        {structure.type} {structure.variant ? `â€¢ ${structure.variant}` : ''}
                     </p>
                 </div>
             </div>
@@ -4708,7 +4734,6 @@ const UnitDetailsPanel = ({
     onOpenInvite?: () => void;
     onOpenHistory?: () => void;
 }) => {
-    const [isEditing, setIsEditing] = useState(false);
     const [tenantActionMenu, setTenantActionMenu] = useState<TenantActionMenuState>({ isOpen: false });
     const [quickActionError, setQuickActionError] = useState<string | null>(null);
     const [pendingQuickAction, setPendingQuickAction] = useState<QuickActionType | null>(null);
@@ -4911,348 +4936,345 @@ const UnitDetailsPanel = ({
 
             {/* Main Content Area */}
             <div className="relative z-0 flex-1 space-y-6 overflow-y-auto px-8 pt-8 pb-36 custom-scrollbar">
-                {isEditing ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                        <section className="space-y-4">
-                            <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">UNIT DETAILS</h3>
-                            <div className="space-y-4 rounded-[24px] border border-slate-200 bg-white p-6 dark:border-white/5 dark:bg-slate-900/40">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="space-y-8"
+                >
+                    {/* Residence Configuration (Always Editable) */}
+                    <section className="space-y-4">
+                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">RESIDENCE CONFIGURATION</h3>
+                        <div className="space-y-4 rounded-[24px] border border-slate-200 bg-white p-6 dark:border-white/5 dark:bg-slate-900/40">
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Area (sqm)</label>
+                                <input type="number" value={unit.areaSqm || ""} onChange={(e) => onUpdate({ areaSqm: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Area (sqm)</label>
-                                    <input type="number" value={unit.areaSqm || ""} onChange={(e) => onUpdate({ areaSqm: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bedrooms</label>
-                                        <input type="number" value={unit.bedrooms || ""} onChange={(e) => onUpdate({ bedrooms: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Baths</label>
-                                        <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
-                                    </div>
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bedrooms</label>
+                                    <input type="number" value={unit.bedrooms || ""} onChange={(e) => onUpdate({ bedrooms: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Kitchens</label>
-                                    <input type="number" value={unit.kitchens || ""} onChange={(e) => onUpdate({ kitchens: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Baths</label>
+                                    <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
                                 </div>
                             </div>
-                        </section>
-                    </motion.div>
-                ) : (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-8"
-                    >
-                        {/* Tenant Spotlight Card */}
-                        {unit.status !== 'vacant' && (
-                            <section className="relative">
-                            <div className="mb-4 flex items-center justify-between px-1">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RESIDENT PROFILE</h3>
-                                {unit.status === 'occupied' && (
-                                    <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-black uppercase text-primary">Lease Holder</div>
-                                )}
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Kitchens</label>
+                                <input type="number" value={unit.kitchens || ""} onChange={(e) => onUpdate({ kitchens: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
                             </div>
-                            
-                            <motion.div 
-                                className="relative overflow-visible"
-                                initial={false}
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setTenantActionMenu((current) => ({ isOpen: !current.isOpen }))}
-                                    className="group relative flex w-full flex-col rounded-3xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-slate-900/60 dark:hover:bg-slate-900"
-                                >
-                                    <div className="flex items-center gap-5">
-                                        <div className="relative">
-                                            <div className="relative h-16 w-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                                <div className="h-full w-full overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
-                                                    {unit.tenantAvatarUrl ? (
-                                                        <img
-                                                            src={unit.tenantAvatarUrl}
-                                                            alt="Tenant"
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <img
-                                                            src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
-                                                            alt="Tenant"
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    )}
-                                                </div>
-                                                <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
-                                            <div className="mt-1 flex items-center gap-2">
-                                                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
-                                                <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                                                <span className="text-[11px] font-bold text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
-                                            <span className="material-icons-round text-xl">more_vert</span>
-                                        </div>
-                                    </div>
-                                </button>
-                                
-                                <AnimatePresence>
-                                    {tenantActionMenu.isOpen && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            className="absolute right-0 top-[90px] z-50 w-64 rounded-[28px] border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
-                                        >
-                                            <Link
-                                                href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
-                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
-                                            >
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                                    <span className="material-icons-round text-base">chat_bubble</span>
-                                                </div>
-                                                Message Resident
-                                            </Link>
-                                            {canViewTenantProfile ? (
-                                                <Link
-                                                    href={tenantProfileHref}
-                                                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
-                                                >
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-                                                        <span className="material-icons-round text-base">person</span>
-                                                    </div>
-                                                    Access Portfolio
-                                                </Link>
-                                            ) : (
-                                                <div
-                                                    title="No tenant identity available for this unit yet."
-                                                    className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-400 dark:text-slate-600"
-                                                >
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-300 dark:bg-white/5">
-                                                        <span className="material-icons-round text-base">person_off</span>
-                                                    </div>
-                                                    Access Portfolio
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                        </section>
-                        )}
+                        </div>
+                    </section>
 
-                        {unit.status === 'vacant' && onOpenWalkIn && (
-                            <div className="flex flex-col gap-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.1)" }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={onOpenWalkIn}
-                                    className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-black tracking-[0.2em] text-primary transition-all hover:border-primary/50"
-                                >
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                        <span className="material-icons-round text-2xl">person_add</span>
-                                    </div>
-                                    START WALK-IN APPLICATION
-                                </motion.button>
-
-                                <div className="group relative overflow-hidden rounded-[32px] border border-indigo-500/20 bg-indigo-500/5 p-6 shadow-xl shadow-indigo-500/5 dark:bg-indigo-950/20">
-                                    <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">INVITE RESIDENT</h3>
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
-                                            <span className="material-icons-round text-lg">qr_code_2</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-[11px] font-bold leading-relaxed text-indigo-800/70 dark:text-indigo-300/70 mb-4">
-                                        Share this unit&apos;s unique application link with prospective tenants to start their digital journey.
-                                    </p>
-                                    <div className="flex flex-col gap-2">
-                                        <button 
-                                            onClick={onOpenInvite}
-                                            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest transition-all hover:bg-indigo-600 active:scale-95 shadow-lg shadow-indigo-500/20"
-                                        >
-                                            <span className="material-icons-round text-sm">qr_code_2</span>
-                                            Generate Invite Link
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Operational Context Cards */}
-                        <div className="grid grid-cols-1 gap-6">
-                            {/* Maintenance Blocker (Critical Alert Style) */}
-                            {(unit.status === "maintenance" || unit.maintenanceStatus) && (
-                                <motion.div 
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    className="group relative overflow-hidden rounded-[32px] border border-rose-500/30 bg-rose-50 p-6 shadow-xl shadow-rose-500/5 dark:bg-rose-950/20"
-                                >
-                                    <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
-                                    <div className="flex items-start gap-5">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
-                                            <span className="material-icons-round animate-pulse text-2xl">engineering</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
-                                                <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
-                                            </div>
-                                            <p className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white line-clamp-2">
-                                                {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
-                                            </p>
-                                            <div className="mt-3 flex items-center gap-2">
-                                                <span className="text-[11px] font-bold text-rose-500/80">Reported {maintenanceOpenedDate ? maintenanceOpenedDate.toLocaleDateString() : "recently"}</span>
-                                                <div className="h-1 w-1 rounded-full bg-rose-300 dark:bg-rose-700" />
-                                                <span className="text-[11px] font-bold text-rose-500/80">Status: {unit.maintenanceStatus?.toUpperCase() || "OPEN"}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Lease Analytics & Timeline */}
-                            {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                                <div className="group relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/20 dark:border-white/5 dark:bg-slate-900/40 dark:shadow-none">
-                                    <h3 className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">LEASE ANALYTICS</h3>
-                                    
-                                    <div className="flex flex-col items-center">
-                                        <div className="relative h-44 w-72">
-                                            <svg className="h-full w-full" viewBox="0 0 200 100">
-                                                <path
-                                                    d="M 20 100 A 80 80 0 0 1 180 100"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="10"
-                                                    strokeLinecap="round"
-                                                    className="text-slate-100 dark:text-white/5"
-                                                />
-                                                <motion.path
-                                                    initial={{ strokeDashoffset: 251.2 }}
-                                                    animate={{ strokeDashoffset: 251.2 - ((() => {
-                                                        if (!unit.leaseStart || !unit.leaseEnd) return 0;
-                                                        const start = new Date(unit.leaseStart).getTime();
-                                                        const end = new Date(unit.leaseEnd).getTime();
-                                                        const total = end - start;
-                                                        const elapsed = nowMs - start;
-                                                        const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
-                                                        return (percent / 100) * 251.2;
-                                                    })()) }}
-                                                    d="M 20 100 A 80 80 0 0 1 180 100"
-                                                    fill="none"
-                                                    stroke="url(#leaseGradient)"
-                                                    strokeWidth="10"
-                                                    strokeLinecap="round"
-                                                    strokeDasharray="251.2"
-                                                    transition={{ duration: 1.5, ease: "easeOut" }}
-                                                />
-                                                <defs>
-                                                    <linearGradient id="leaseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                        <stop offset="0%" stopColor="#4f46e5" />
-                                                        <stop offset="100%" stopColor="#c026d3" />
-                                                    </linearGradient>
-                                                </defs>
-                                            </svg>
-                                            
-                                            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
-                                                <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                                                    {daysRemaining !== null ? `${Math.abs(daysRemaining)}` : "--"}
-                                                </p>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                                    DAYS {daysRemaining && daysRemaining < 0 ? "OVERDUE" : "REMAINING"}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-8 flex w-full items-center justify-between gap-4">
-                                            <div className="flex-1 space-y-1">
-                                                <p className="text-[10px] font-bold text-slate-400">Lease Commenced</p>
-                                                <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
-                                            </div>
-                                            <div className="h-8 w-px bg-slate-100 dark:bg-white/5" />
-                                            <div className="flex-1 text-right space-y-1">
-                                                <p className="text-[10px] font-bold text-slate-400">Renewal Window</p>
-                                                <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6 w-full rounded-2xl bg-slate-50 p-4 dark:bg-black/20">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-800">
-                                                    <span className="material-icons-round text-sm text-primary">insights</span>
-                                                </div>
-                                                <p className="text-[11px] font-bold leading-tight text-slate-600 dark:text-slate-400">
-                                                    {leaseMilestoneText}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                    {/* Tenant Spotlight Card */}
+                    {unit.status !== 'vacant' && (
+                        <section className="relative">
+                        <div className="mb-4 flex items-center justify-between px-1">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RESIDENT PROFILE</h3>
+                            {unit.status === 'occupied' && (
+                                <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-black uppercase text-primary">Lease Holder</div>
                             )}
                         </div>
-
-                        {/* Recent Activity / Status */}
-                        <section className="space-y-4">
-                            <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RECENT ACTIVITY</h3>
-                            
-                            <div className="grid grid-cols-1 gap-3">
-                                {unit.applicationCount && unit.applicationCount > 0 ? (
-                                    <div className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
-                                            <span className="material-icons-round text-xl">assignment_ind</span>
+                        
+                        <motion.div 
+                            className="relative overflow-visible"
+                            initial={false}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => setTenantActionMenu((current) => ({ isOpen: !current.isOpen }))}
+                                className="group relative flex w-full flex-col rounded-3xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-slate-900/60 dark:hover:bg-slate-900"
+                            >
+                                <div className="flex items-center gap-5">
+                                    <div className="relative">
+                                        <div className="relative h-16 w-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
+                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                                {unit.tenantAvatarUrl ? (
+                                                    <img
+                                                        src={unit.tenantAvatarUrl}
+                                                        alt="Tenant"
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={unit.tenant ? `https://ui-avatars.com/api/?name=${encodeURIComponent(unit.tenant)}&background=random&color=fff` : "https://images.unsplash.com/photo-1529778456-9a2cf1fbe4a8?auto=format&fit=crop&w=150&q=80"}
+                                                        alt="Tenant"
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border-4 border-white bg-emerald-500 shadow-sm dark:border-black"></div>
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs font-black text-slate-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
-                                            <p className="text-[10px] font-bold text-slate-500">Awaiting landlord review</p>
-                                        </div>
-                                        <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-black text-primary hover:underline">VIEW ALL</Link>
-                                    </div>
-                                ) : null}
-
-                                <div 
-                                    className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                                    onClick={onOpenHistory}
-                                >
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-                                        <span className="material-icons-round text-xl">history</span>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs font-black text-slate-900 dark:text-white">Full Unit History</p>
-                                        <p className="text-[10px] font-bold text-slate-500">View past leases & maintenance</p>
+                                        <p className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
+                                        <div className="mt-1 flex items-center gap-2">
+                                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
+                                            <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                            <span className="text-[11px] font-bold text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
+                                        </div>
                                     </div>
-                                    <span className="material-icons-round text-slate-400 text-sm">chevron_right</span>
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
+                                        <span className="material-icons-round text-xl">more_vert</span>
+                                    </div>
+                                </div>
+                            </button>
+                            
+                            <AnimatePresence>
+                                {tenantActionMenu.isOpen && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                        className="absolute right-0 top-[90px] z-50 w-64 rounded-[28px] border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
+                                    >
+                                        <Link
+                                            href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
+                                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
+                                        >
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                                <span className="material-icons-round text-base">chat_bubble</span>
+                                            </div>
+                                            Message Resident
+                                        </Link>
+                                        {canViewTenantProfile ? (
+                                            <Link
+                                                href={tenantProfileHref}
+                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
+                                            >
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                                    <span className="material-icons-round text-base">person</span>
+                                                </div>
+                                                Access Portfolio
+                                            </Link>
+                                        ) : (
+                                            <div
+                                                title="No tenant identity available for this unit yet."
+                                                className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-400 dark:text-slate-600"
+                                            >
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-300 dark:bg-white/5">
+                                                    <span className="material-icons-round text-base">person_off</span>
+                                                </div>
+                                                Access Portfolio
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </section>
+                    )}
+
+                    {unit.status === 'vacant' && onOpenWalkIn && (
+                        <div className="flex flex-col gap-4">
+                            <motion.button
+                                whileHover={{ scale: 1.02, backgroundColor: "rgba(var(--primary), 0.1)" }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={onOpenWalkIn}
+                                className="flex w-full items-center justify-center gap-3 rounded-[32px] border-2 border-dashed border-primary/30 bg-primary/5 p-8 text-[11px] font-black tracking-[0.2em] text-primary transition-all hover:border-primary/50"
+                            >
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <span className="material-icons-round text-2xl">person_add</span>
+                                </div>
+                                START WALK-IN APPLICATION
+                            </motion.button>
+
+                            <div className="group relative overflow-hidden rounded-[32px] border border-indigo-500/20 bg-indigo-500/5 p-6 shadow-xl shadow-indigo-500/5 dark:bg-indigo-950/20">
+                                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-indigo-500/10 blur-2xl transition-all group-hover:bg-indigo-500/20" />
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">INVITE RESIDENT</h3>
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500 text-white">
+                                        <span className="material-icons-round text-lg">qr_code_2</span>
+                                    </div>
+                                </div>
+                                <p className="text-[11px] font-bold leading-relaxed text-indigo-800/70 dark:text-indigo-300/70 mb-4">
+                                    Share this unit&apos;s unique application link with prospective tenants to start their digital journey.
+                                </p>
+                                <div className="flex flex-col gap-2">
+                                    <button 
+                                        onClick={onOpenInvite}
+                                        className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest transition-all hover:bg-indigo-600 active:scale-95 shadow-lg shadow-indigo-500/20"
+                                    >
+                                        <span className="material-icons-round text-sm">qr_code_2</span>
+                                        Generate Invite Link
+                                    </button>
                                 </div>
                             </div>
-                        </section>
+                        </div>
+                    )}
 
-                        {/* Command Center Quick Actions */}
-                        <section className="rounded-[32px] border border-slate-200 bg-slate-900 p-6 shadow-2xl dark:border-white/5">
-                            <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">COMMAND CENTER</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                {quickActions.map((action) => (
-                                    <motion.button
-                                        key={action}
-                                        whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.15)" }}
-                                        whileTap={{ scale: 0.98 }}
-                                        type="button"
-                                        onClick={() => handleQuickAction(action)}
-                                        className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/10 p-4 text-[11px] font-black text-white transition-all hover:shadow-xl hover:shadow-black/20"
-                                    >
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-                                            <span className="material-icons-round text-xl">{QUICK_ACTION_META[action].icon}</span>
+                    {/* Operational Context Cards */}
+                    <div className="grid grid-cols-1 gap-6">
+                        {/* Maintenance Blocker (Critical Alert Style) */}
+                        {(unit.status === "maintenance" || unit.maintenanceStatus) && (
+                            <motion.div 
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                className="group relative overflow-hidden rounded-[32px] border border-rose-500/30 bg-rose-50 p-6 shadow-xl shadow-rose-500/5 dark:bg-rose-950/20"
+                            >
+                                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl transition-all group-hover:bg-rose-500/20" />
+                                <div className="flex items-start gap-5">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-500/30">
+                                        <span className="material-icons-round animate-pulse text-2xl">engineering</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
+                                            <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
                                         </div>
-                                        {QUICK_ACTION_META[action].label.toUpperCase()}
-                                    </motion.button>
-                                ))}
+                                        <p className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white line-clamp-2">
+                                            {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
+                                        </p>
+                                        <div className="mt-3 flex items-center gap-2">
+                                            <span className="text-[11px] font-bold text-rose-500/80">Reported {maintenanceOpenedDate ? maintenanceOpenedDate.toLocaleDateString() : "recently"}</span>
+                                            <div className="h-1 w-1 rounded-full bg-rose-300 dark:bg-rose-700" />
+                                            <span className="text-[11px] font-bold text-rose-500/80">Status: {unit.maintenanceStatus?.toUpperCase() || "OPEN"}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Lease Analytics & Timeline */}
+                        {(unit.status === 'occupied' || unit.status === 'neardue') && (
+                            <div className="group relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/20 dark:border-white/5 dark:bg-slate-900/40 dark:shadow-none">
+                                <h3 className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">LEASE ANALYTICS</h3>
+                                
+                                <div className="flex flex-col items-center">
+                                    <div className="relative h-44 w-72">
+                                        <svg className="h-full w-full" viewBox="0 0 200 100">
+                                            <path
+                                                d="M 20 100 A 80 80 0 0 1 180 100"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="10"
+                                                strokeLinecap="round"
+                                                className="text-slate-100 dark:text-white/5"
+                                            />
+                                            <motion.path
+                                                initial={{ strokeDashoffset: 251.2 }}
+                                                animate={{ strokeDashoffset: 251.2 - ((() => {
+                                                    if (!unit.leaseStart || !unit.leaseEnd) return 0;
+                                                    const start = new Date(unit.leaseStart).getTime();
+                                                    const end = new Date(unit.leaseEnd).getTime();
+                                                    const total = end - start;
+                                                    const elapsed = nowMs - start;
+                                                    const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+                                                    return (percent / 100) * 251.2;
+                                                })()) }}
+                                                d="M 20 100 A 80 80 0 0 1 180 100"
+                                                fill="none"
+                                                stroke="url(#leaseGradient)"
+                                                strokeWidth="10"
+                                                strokeLinecap="round"
+                                                strokeDasharray="251.2"
+                                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                            />
+                                            <defs>
+                                                <linearGradient id="leaseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="#4f46e5" />
+                                                    <stop offset="100%" stopColor="#c026d3" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        
+                                        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
+                                            <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+                                                {daysRemaining !== null ? `${Math.abs(daysRemaining)}` : "--"}
+                                            </p>
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                                DAYS {daysRemaining && daysRemaining < 0 ? "OVERDUE" : "REMAINING"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 flex w-full items-center justify-between gap-4">
+                                        <div className="flex-1 space-y-1">
+                                            <p className="text-[10px] font-bold text-slate-400">Lease Commenced</p>
+                                            <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                        </div>
+                                        <div className="h-8 w-px bg-slate-100 dark:bg-white/5" />
+                                        <div className="flex-1 text-right space-y-1">
+                                            <p className="text-[10px] font-bold text-slate-400">Renewal Window</p>
+                                            <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 w-full rounded-2xl bg-slate-50 p-4 dark:bg-black/20">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-800">
+                                                <span className="material-icons-round text-sm text-primary">insights</span>
+                                            </div>
+                                            <p className="text-[11px] font-bold leading-tight text-slate-600 dark:text-slate-400">
+                                                {leaseMilestoneText}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            {quickActionError && (
-                                <p className="mt-3 text-xs font-semibold text-rose-300">{quickActionError}</p>
-                            )}
-                        </section>
-                    </motion.div>
-                )}
+                        )}
+                    </div>
+
+                    {/* Recent Activity / Status */}
+                    <section className="space-y-4">
+                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RECENT ACTIVITY</h3>
+                        
+                        <div className="grid grid-cols-1 gap-3">
+                            {unit.applicationCount && unit.applicationCount > 0 ? (
+                                <div className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+                                        <span className="material-icons-round text-xl">assignment_ind</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-black text-slate-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
+                                        <p className="text-[10px] font-bold text-slate-500">Awaiting landlord review</p>
+                                    </div>
+                                    <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-black text-primary hover:underline">VIEW ALL</Link>
+                                </div>
+                            ) : null}
+
+                            <div 
+                                className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                                onClick={onOpenHistory}
+                            >
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+                                    <span className="material-icons-round text-xl">history</span>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-xs font-black text-slate-900 dark:text-white">Full Unit History</p>
+                                    <p className="text-[10px] font-bold text-slate-500">View past leases & maintenance</p>
+                                </div>
+                                <span className="material-icons-round text-slate-400 text-sm">chevron_right</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Command Center Quick Actions */}
+                    <section className="rounded-[32px] border border-slate-200 bg-slate-900 p-6 shadow-2xl dark:border-white/5">
+                        <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">COMMAND CENTER</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            {quickActions.map((action) => (
+                                <motion.button
+                                    key={action}
+                                    whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.15)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    type="button"
+                                    onClick={() => handleQuickAction(action)}
+                                    className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white/10 p-4 text-[11px] font-black text-white transition-all hover:shadow-xl hover:shadow-black/20"
+                                >
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                                        <span className="material-icons-round text-xl">{QUICK_ACTION_META[action].icon}</span>
+                                    </div>
+                                    {QUICK_ACTION_META[action].label.toUpperCase()}
+                                </motion.button>
+                            ))}
+                        </div>
+                        
+                        {quickActionError && (
+                            <p className="mt-3 text-xs font-semibold text-rose-300">{quickActionError}</p>
+                        )}
+                    </section>
+                </motion.div>
             </div>
 
             {pendingQuickAction && (
@@ -5287,31 +5309,15 @@ const UnitDetailsPanel = ({
             )}
 
             {/* Footer */}
-            {isEditing ? (
-                <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
-                    <button
-                        onClick={onDelete}
-                        className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all"
-                    >
-                        <span className="material-icons-round">delete</span>
-                    </button>
-                    <button
-                        onClick={() => setIsEditing(false)}
-                        className="flex-1 py-3 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-primary/20"
-                    >
-                        Save Changes
-                    </button>
-                </div>
-            ) : (
-                <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20">
-                    <button
-                        onClick={() => setIsEditing(true)}
-                        className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-widest text-xs rounded-xl transition-all shadow-lg shadow-primary/20"
-                    >
-                        Edit Residence
-                    </button>
-                </div>
-            )}
+            <div className="p-6 border-t border-border bg-card/95 backdrop-blur-xl absolute bottom-0 w-full z-20 flex gap-4">
+                <button
+                    onClick={onDelete}
+                    className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl transition-all font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+                >
+                    <span className="material-icons-round text-sm">delete</span>
+                    Remove Unit
+                </button>
+            </div>
         </div>
     );
 };
