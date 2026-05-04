@@ -154,7 +154,6 @@ export function MaintenanceDashboard() {
 
                 if (!controller.signal.aborted) {
                     setRequests(fetchedRequests);
-
                     // Handle deep linking via ?id=
                     const deepLinkId = searchParams?.get("id");
                     if (deepLinkId) {

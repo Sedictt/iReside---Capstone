@@ -191,6 +191,38 @@ export default function LandlordDashboard() {
     }, [selectedPropertyId]);
 
 
+    const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        const loadSystemAdvisory = async () => {
+            try {
+                const response = await fetch("/api/landlord/system-advisory", {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    setSystemAdvisory(null);
+                    return;
+                }
+
+                const payload = (await response.json()) as { advisory?: SystemAdvisory | null };
+                setSystemAdvisory(payload.advisory ?? null);
+            } catch (error) {
+                if ((error as Error).name === "AbortError") {
+                    return;
+                }
+                setSystemAdvisory(null);
+            }
+        };
+
+        void loadSystemAdvisory();
+  
+        return () => {
+            controller.abort();
+        };
+    }, []);
   
     useEffect(() => {
         const loadUnits = async () => {
@@ -297,6 +329,28 @@ export default function LandlordDashboard() {
                     onCreateInvite={() => setIsInviteModalOpen(true)}
                 />
 
+                {/* System Advisory - Premium Styling */}
+                {systemAdvisory && (
+                    <div className="group relative overflow-hidden rounded-[2rem] border border-amber-500/25 bg-amber-500/10 p-6 backdrop-blur-sm animate-in zoom-in-95 duration-500">
+                        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-5">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-400">
+                                    <AlertTriangle className="h-7 w-7" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-amber-300">{systemAdvisory.title}</h3>
+                                    <p className="text-sm font-medium text-muted-foreground/80">{systemAdvisory.message}</p>
+                                </div>
+                            </div>
+                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/12 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-300">
+                                Global Alert
+                            </div>
+                        </div>
+                        <div className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-[0.03] transition-transform duration-700 group-hover:scale-125">
+                            <AlertTriangle className="h-40 w-40" />
+                        </div>
+                    </div>
+                )}
 
 
                 {/* Primary Hub */}
@@ -328,8 +382,8 @@ export default function LandlordDashboard() {
                     </div>
 
                     {/* Renewals Card */}
-                    <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
-                        <div className="mb-10 flex flex-wrap items-center justify-between gap-4 px-2">
+                    <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
+                        <div className="flex flex-wrap items-center justify-between gap-4 px-2">
                             <div className="flex min-w-0 items-center gap-4">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
                                     <RefreshCw className="h-6 w-6" />
@@ -339,20 +393,10 @@ export default function LandlordDashboard() {
                                     <p className="text-sm font-medium text-muted-foreground/80">Review and manage tenant renewal requests.</p>
                                 </div>
                             </div>
-                            <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest text-muted-foreground/60 transition-all hover:bg-card">
+                            <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
                                 View All
                                 <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                             </Link>
-                        </div>
-
-                        <div className="flex items-center gap-4 px-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-                                <AlertTriangle className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Pending Requests</p>
-                                <p className="text-sm font-medium">Check renewal requests</p>
-                            </div>
                         </div>
                     </div>
 
