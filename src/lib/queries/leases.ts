@@ -111,3 +111,73 @@ export async function getActiveLease(tenantId: string) {
     if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows
     return data
 }
+
+/**
+ * Fetch renewal requests for a tenant.
+ */
+export async function getTenantRenewalRequests(tenantId: string) {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+        .from('renewal_requests')
+        .select(`
+            *,
+            current_lease:leases!inner (
+                id, start_date, end_date, monthly_rent
+            ),
+            new_lease:leases!new_lease_id (*)
+        `)
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data
+}
+
+/**
+ * Fetch renewal requests for a landlord.
+ */
+export async function getLandlordRenewalRequests(landlordId: string, status?: string) {
+    const supabase = await createClient()
+
+    let query = supabase
+        .from('renewal_requests')
+        .select(`
+            *,
+            current_lease:leases!inner (
+                *,
+                unit:units!inner (*),
+                tenant:profiles!leases_tenant_id_fkey (*)
+            )
+        `)
+        .eq('landlord_id', landlordId)
+
+    if (status) {
+        query = query.eq('status', status)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data
+}
+
+/**
+ * Get a single renewal request by ID.
+ */
+export async function getRenewalRequestById(requestId: string) {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+        .from('renewal_requests')
+        .select(`
+            *,
+            current_lease:leases!inner (*),
+            new_lease:leases!new_lease_id (*)
+        `)
+        .eq('id', requestId)
+        .single()
+
+    if (error) throw error
+    return data
+}

@@ -35,7 +35,8 @@ export async function GET() {
                         address,
                         images,
                         house_rules,
-                        amenities:amenities (*)
+                        amenities:amenities (*),
+                        renewal_settings
                     )
                 ),
                 landlord:profiles!leases_landlord_id_fkey (

@@ -30,6 +30,7 @@ import LeaseModal from "@/components/tenant/LeaseModal";
 import { TenantContactsSidebar } from "@/components/tenant/TenantContactsSidebar";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import { DashboardTour } from "@/components/tenant/DashboardTour";
+import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 
 type DashboardData = {
     lease: {
@@ -151,6 +152,7 @@ const buildOverdueLabel = (value: string) => {
 
 export default function TenantDashboard() {
     const searchParams = useSearchParams();
+    const previewDays = searchParams.get("preview_days");
     const router = useRouter();
     const [showBanner, setShowBanner] = useState(true);
     const [showMaintenanceSuccess, setShowMaintenanceSuccess] = useState(false);
@@ -268,6 +270,14 @@ export default function TenantDashboard() {
         return { monthsLeft, progressPercent, endLabel };
     }, [lease?.startDate, lease?.endDate]);
 
+    const daysRemaining = useMemo(() => {
+        if (previewDays) return parseInt(previewDays);
+        if (!lease?.endDate) return 0;
+        const end = new Date(lease.endDate).getTime();
+        const diff = end - Date.now();
+        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }, [lease?.endDate, previewDays]);
+
     const utilitiesByLabel = useMemo(() => {
         const map = new Map<string, number>();
         (dashboardData?.utilities ?? []).forEach((item) => {
@@ -347,6 +357,7 @@ export default function TenantDashboard() {
             </div>
 
             <DashboardTour />
+            <LeaseRenewalReminder daysRemaining={daysRemaining} leaseId={lease?.id} />
 
             <div className="space-y-6 relative z-10 text-foreground">
                 <AnimatePresence>
