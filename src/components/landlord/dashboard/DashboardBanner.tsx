@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
-import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 type SearchResultType = "property" | "tenant" | "maintenance" | "page" | "invoice" | "document";
@@ -456,7 +455,7 @@ export function DashboardBanner({
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
                                                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
-                                                    <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.createdAt || notification.created_at)}</p>
+                                                    <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
                                                 </div>
                                                 <div className="flex items-center justify-center w-8 h-8 shrink-0">
                                                     {!notification.read ? (
