@@ -15,6 +15,7 @@ interface NotificationCardProps {
     onAction?: () => void;
     disabled?: boolean;
     className?: string;
+    isCompact?: boolean;
     // Additional fields for tenant-specific system messages
     paymentAmount?: string;
     receiptImg?: string;
@@ -31,6 +32,7 @@ export function NotificationCard({
     onAction,
     disabled = false,
     className,
+    isCompact = false,
     paymentAmount,
     receiptImg,
     refundImg
@@ -61,13 +63,15 @@ export function NotificationCard({
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             className={cn(
-                "relative group max-w-[380px] w-full rounded-[2.5rem] p-[1px] overflow-hidden transition-all duration-500 shadow-2xl",
+                "relative group max-w-[380px] w-full p-[1px] overflow-hidden transition-all duration-500 shadow-2xl",
+                isCompact ? "rounded-3xl" : "rounded-[2.5rem]",
                 className
             )}
         >
             {/* Ambient Background Blur/Glass */}
             <div className={cn(
-                "absolute inset-0 backdrop-blur-3xl rounded-[2.5rem] border",
+                "absolute inset-0 backdrop-blur-3xl border",
+                isCompact ? "rounded-3xl" : "rounded-[2.5rem]",
                 variants[variant]
             )} />
             
@@ -77,17 +81,28 @@ export function NotificationCard({
                 glowVariants[variant]
             )} />
 
-            <div className="relative p-6 flex flex-col gap-6">
+            <div className={cn(
+                "relative flex flex-col",
+                isCompact ? "p-4 gap-3" : "p-6 gap-6"
+            )}>
                 {/* Top Section: Icon & Header */}
-                <div className="flex items-center gap-4">
+                <div className={cn(
+                    "flex items-center",
+                    isCompact ? "gap-3" : "gap-4"
+                )}>
                     <div className={cn(
-                        "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-white/10 transition-transform duration-500 group-hover:scale-110",
+                        "rounded-2xl flex items-center justify-center shrink-0 border border-white/10 transition-transform duration-500 group-hover:scale-110",
+                        isCompact ? "w-10 h-10" : "w-14 h-14",
                         iconVariants[variant]
                     )}>
+                        {/* Adjust icon size if possible, though icon is passed as node */}
                         {icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-black text-high tracking-tight leading-tight mb-0.5">
+                        <h3 className={cn(
+                            "font-black text-high tracking-tight leading-tight mb-0.5",
+                            isCompact ? "text-sm" : "text-xl"
+                        )}>
                             {title}
                         </h3>
                         <div className="flex items-center gap-2">
@@ -101,29 +116,47 @@ export function NotificationCard({
 
                 {/* Optional Payment Highlight Section */}
                 {paymentAmount && (
-                    <div className="flex justify-between items-center bg-primary/[0.08] rounded-[2rem] p-5 border border-primary/20 group-hover:bg-primary/[0.12] transition-colors">
+                    <div className={cn(
+                        "flex justify-between items-center bg-primary/[0.08] border border-primary/20 group-hover:bg-primary/[0.12] transition-colors",
+                        isCompact ? "rounded-2xl p-3" : "rounded-[2rem] p-5"
+                    )}>
                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase tracking-[0.15em] text-medium font-black mb-1 opacity-60">Amount Paid</span>
-                            <span className="text-2xl font-black text-primary tracking-tighter">₱{paymentAmount}</span>
+                            <span className="text-[9px] uppercase tracking-[0.15em] text-medium font-black mb-0.5 opacity-60">Amount Paid</span>
+                            <span className={cn(
+                                "font-black text-primary tracking-tighter",
+                                isCompact ? "text-lg" : "text-2xl"
+                            )}>₱{paymentAmount}</span>
                         </div>
-                        <div className="h-12 w-12 bg-primary/20 rounded-2xl flex items-center justify-center border border-primary/30 shadow-inner">
-                            <Wallet className="h-5 w-5 text-primary" />
+                        <div className={cn(
+                            "bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30 shadow-inner",
+                            isCompact ? "h-9 w-9" : "h-12 w-12"
+                        )}>
+                            <Wallet className={cn(isCompact ? "h-4 w-4" : "h-5 w-5", "text-primary")} />
                         </div>
                     </div>
                 )}
 
                 {/* Content Area */}
-                <div className="bg-white/[0.02] backdrop-blur-md rounded-[2rem] p-5 border border-white/5 relative overflow-hidden group-hover:bg-white/[0.04] transition-colors">
+                <div className={cn(
+                    "bg-white/[0.02] backdrop-blur-md border border-white/5 relative overflow-hidden group-hover:bg-white/[0.04] transition-colors",
+                    isCompact ? "rounded-2xl p-3" : "rounded-[2rem] p-5"
+                )}>
                     {/* Subtle pattern or gradient inside content area */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
                     
-                    <p className="relative z-10 text-sm text-high/80 leading-relaxed font-medium">
+                    <p className={cn(
+                        "relative z-10 text-high/80 leading-relaxed font-medium",
+                        isCompact ? "text-xs" : "text-sm"
+                    )}>
                         {message.content}
                     </p>
 
                     {message.expiresAt && (
-                        <div className="mt-4 flex items-center gap-2 text-[10px] text-amber-500 font-black uppercase tracking-wider bg-amber-500/10 w-fit px-3 py-1.5 rounded-full border border-amber-500/20">
-                            <Hammer className="w-3.5 h-3.5" />
+                        <div className={cn(
+                            "mt-3 flex items-center gap-2 text-[9px] text-amber-500 font-black uppercase tracking-wider bg-amber-500/10 w-fit rounded-full border border-amber-500/20",
+                            isCompact ? "px-2.5 py-1" : "px-3 py-1.5"
+                        )}>
+                            <Hammer className="w-3 h-3" />
                             <span>Deadline: {new Date(message.expiresAt).toLocaleDateString()}</span>
                         </div>
                     )}
@@ -131,12 +164,18 @@ export function NotificationCard({
 
                 {/* Optional Receipt Image */}
                 {receiptImg && (
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[9px] uppercase tracking-[0.2em] text-medium font-black ml-4 opacity-40">Proof of Payment</span>
-                        <div className="rounded-[2rem] overflow-hidden border border-white/10 relative cursor-pointer shadow-2xl group/img">
-                            <img src={receiptImg} alt="Receipt" className="w-full h-40 object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                                <span className="text-[10px] text-white font-black uppercase tracking-widest">Click to expand</span>
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-[8px] uppercase tracking-[0.2em] text-medium font-black ml-2 opacity-40">Proof of Payment</span>
+                        <div className={cn(
+                            "overflow-hidden border border-white/10 relative cursor-pointer shadow-2xl group/img",
+                            isCompact ? "rounded-xl" : "rounded-[2rem]"
+                        )}>
+                            <img src={receiptImg} alt="Receipt" className={cn(
+                                "w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700",
+                                isCompact ? "h-24" : "h-40"
+                            )} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                <span className="text-[8px] text-white font-black uppercase tracking-widest">Click to expand</span>
                             </div>
                         </div>
                     </div>
@@ -144,15 +183,21 @@ export function NotificationCard({
 
                 {/* Optional Refund Image */}
                 {refundImg && (
-                    <div className="flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-500">
-                        <div className="flex items-center gap-2 ml-4">
-                            <span className="text-[9px] uppercase tracking-[0.2em] text-emerald-500 font-black">Proof of Refund</span>
+                    <div className="flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-500">
+                        <div className="flex items-center gap-2 ml-2">
+                            <span className="text-[8px] uppercase tracking-[0.2em] text-emerald-500 font-black">Proof of Refund</span>
                             <div className="h-[1px] flex-1 bg-emerald-500/10" />
                         </div>
-                        <div className="rounded-[2rem] overflow-hidden border border-emerald-500/20 relative cursor-pointer shadow-2xl group/img bg-emerald-500/5">
-                            <img src={refundImg} alt="Refund Proof" className="w-full h-40 object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                                <span className="text-[10px] text-white font-black uppercase tracking-widest">Transaction Reconciled</span>
+                        <div className={cn(
+                            "overflow-hidden border border-emerald-500/20 relative cursor-pointer shadow-2xl group/img bg-emerald-500/5",
+                            isCompact ? "rounded-xl" : "rounded-[2rem]"
+                        )}>
+                            <img src={refundImg} alt="Refund Proof" className={cn(
+                                "w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700",
+                                isCompact ? "h-24" : "h-40"
+                            )} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                <span className="text-[8px] text-white font-black uppercase tracking-widest">Transaction Reconciled</span>
                             </div>
                         </div>
                     </div>
@@ -161,12 +206,13 @@ export function NotificationCard({
                 {/* Action Section */}
                 {actionLabel && (
                     <motion.button
-                        whileHover={{ scale: 1.02, translateY: -2 }}
+                        whileHover={{ scale: 1.02, translateY: -1 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={onAction}
                         disabled={disabled}
                         className={cn(
-                            "w-full py-4 rounded-[1.5rem] text-sm font-black transition-all flex items-center justify-center gap-3 shadow-2xl relative overflow-hidden group/btn",
+                            "w-full rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-2xl relative overflow-hidden group/btn",
+                            isCompact ? "py-2.5" : "py-4",
                             disabled && "bg-disabled text-medium cursor-not-allowed shadow-none opacity-50",
                             !disabled && variant === "warning" && "bg-amber-500 text-white shadow-amber-500/30",
                             !disabled && variant === "success" && "bg-emerald-500 text-white shadow-emerald-500/30",
@@ -178,8 +224,11 @@ export function NotificationCard({
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_2s_infinite] pointer-events-none" />
                         
                         <span className="relative z-10">{actionLabel}</span>
-                        <div className="relative z-10 w-5 h-5 rounded-full bg-black/10 flex items-center justify-center">
-                            <Zap className="w-3.5 h-3.5 fill-current" />
+                        <div className={cn(
+                            "relative z-10 rounded-full bg-black/10 flex items-center justify-center",
+                            isCompact ? "w-4 h-4" : "w-5 h-5"
+                        )}>
+                            <Zap className={cn(isCompact ? "w-3 h-3" : "w-3.5 h-3.5", "fill-current")} />
                         </div>
                     </motion.button>
                 )}

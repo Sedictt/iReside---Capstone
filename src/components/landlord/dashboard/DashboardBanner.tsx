@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles, Home, Users, FileText, Settings, MessageSquare, CreditCard, AlertTriangle, X } from "lucide-react";
+import { Search, Bell, Wrench, Map, QrCode, UserPlus, Sparkles, Home, Users, FileText, Settings, MessageSquare, CreditCard, AlertTriangle, X, Check, AlertCircle } from "lucide-react";
 import { ProfileWidget } from "@/components/landlord/ProfileWidget";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useNotifications } from "@/context/NotificationContext";
 import { LandlordQuestBoard } from "@/components/landlord/dashboard/LandlordQuestBoard";
-import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 type SearchResultType = "property" | "tenant" | "maintenance" | "page" | "invoice" | "document";
@@ -106,6 +105,7 @@ export function DashboardBanner({
         unreadCount, 
         loading: notificationsLoading, 
         error: notificationsError,
+        markAsRead,
         markAllAsRead 
     } = useNotifications();
 
@@ -136,6 +136,44 @@ export function DashboardBanner({
 
     const handleClearAll = async () => {
         await markAllAsRead();
+    };
+
+    const getNotificationHref = (notification: any) => {
+        const data = notification.data || {};
+        const type = notification.type;
+        const id = data.paymentId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
+
+        switch (type) {
+            case "payment":
+                return `/landlord/invoices?id=${id}`;
+            case "application":
+                return `/landlord/applications?id=${id}`;
+            case "maintenance":
+                return `/landlord/maintenance?id=${id}`;
+            case "message":
+                return `/landlord/messages?conversation=${id}`;
+            case "lease":
+                return `/landlord/leases?id=${id}`;
+            default:
+                return "#";
+        }
+    };
+
+    const handleNotificationClick = async (notification: any) => {
+        if (!notification.read) {
+            await markAsRead(notification.id);
+        }
+        
+        const href = getNotificationHref(notification);
+        if (href !== "#") {
+            router.push(href);
+            setIsNotificationsOpen(false);
+        }
+    };
+
+    const handleMarkAsRead = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        await markAsRead(id);
     };
 
     const pageIndex = [
@@ -408,16 +446,33 @@ export function DashboardBanner({
                                     </div>
                                 ) : (
                                     notifications.map((notification) => (
-                                        <div key={notification.id} className="group/item relative px-6 py-4 transition-all hover:bg-white/3">
+                                        <div 
+                                            key={notification.id} 
+                                            onClick={() => handleNotificationClick(notification)}
+                                            className="group/item relative px-6 py-4 transition-all hover:bg-white/3 cursor-pointer"
+                                        >
                                             <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors">{notification.title}</p>
-                                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{notification.message}</p>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
+                                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
                                                     <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
                                                 </div>
-                                                {!notification.read && (
-                                                    <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
-                                                )}
+                                                <div className="flex items-center justify-center w-8 h-8 shrink-0">
+                                                    {!notification.read ? (
+                                                        <div className="relative flex items-center justify-center w-8 h-8">
+                                                            <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] group-hover/item:scale-0 transition-transform duration-300" />
+                                                            <button
+                                                                onClick={(e) => handleMarkAsRead(e, notification.id)}
+                                                                title="Mark as read"
+                                                                className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover/item:opacity-100 bg-primary/20 rounded-full text-primary hover:bg-primary/30 transition-all duration-300 transform scale-50 group-hover/item:scale-100"
+                                                            >
+                                                                <Check className="h-4 w-4 stroke-[3px]" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-2 w-2 rounded-full border border-white/10" />
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))
@@ -428,7 +483,7 @@ export function DashboardBanner({
                                     onClick={handleClearAll}
                                     className="w-full rounded-xl py-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground transition-all hover:bg-card hover:text-foreground"
                                 >
-                                    Clear all notifications
+                                    Mark all as read
                                 </button>
                             </div>
                         </div>

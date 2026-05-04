@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { CalendarDays, FileText, Loader2, Plus, Search, X, Filter } from "lucide-react";
 
 import { InvoiceModal } from "@/components/landlord/invoices/InvoiceModal";
@@ -22,6 +23,7 @@ interface ExpenseItem {
 
 export default function InvoicesPage() {
   const { selectedPropertyId } = useProperty();
+  const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [metrics, setMetrics] = useState({ totalOutstanding: 0, overdueAmount: 0, collectedLast30Days: 0, totalInvoices: 0 });
@@ -86,6 +88,14 @@ export default function InvoicesPage() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const id = searchParams?.get("id");
+    if (id) {
+      setSelectedInvoiceId(id);
+      setActiveTab("invoices");
+    }
+  }, [searchParams]);
 
   const visibleActiveLeases = useMemo(() => {
     const leases = workspace?.activeLeases ?? [];

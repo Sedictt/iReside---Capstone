@@ -17,6 +17,7 @@ import {
     Pencil,
     MessageSquare,
     FolderOpen,
+    RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { PaymentModal } from "@/components/landlord/dashboard/PaymentModal";
@@ -89,7 +90,7 @@ export default function LandlordDashboard() {
     });
     const [paymentsLoading, setPaymentsLoading] = useState(true);
     const [paymentsError, setPaymentsError] = useState<string | null>(null);
-    const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
+
     const [isWalkInModalOpen, setIsWalkInModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [availableUnits, setAvailableUnits] = useState<{
@@ -189,9 +190,11 @@ export default function LandlordDashboard() {
         };
     }, [selectedPropertyId]);
 
+
+    const [systemAdvisory, setSystemAdvisory] = useState<SystemAdvisory | null>(null);
+
     useEffect(() => {
         const controller = new AbortController();
-
         const loadSystemAdvisory = async () => {
             try {
                 const response = await fetch("/api/landlord/system-advisory", {
@@ -210,7 +213,6 @@ export default function LandlordDashboard() {
                 if ((error as Error).name === "AbortError") {
                     return;
                 }
-
                 setSystemAdvisory(null);
             }
         };
@@ -350,6 +352,7 @@ export default function LandlordDashboard() {
                     </div>
                 )}
 
+
                 {/* Primary Hub */}
                 <div className="relative">
                     <CommandCenter
@@ -376,6 +379,25 @@ export default function LandlordDashboard() {
                             View Invoices
                             <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                         </Link>
+                    </div>
+
+                    {/* Renewals Card */}
+                    <div className="relative z-0 h-auto w-full rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl mb-8">
+                        <div className="flex flex-wrap items-center justify-between gap-4 px-2">
+                            <div className="flex min-w-0 items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                                    <RefreshCw className="h-6 w-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black tracking-tight text-foreground">Lease Renewals</h2>
+                                    <p className="text-sm font-medium text-muted-foreground/80">Review and manage tenant renewal requests.</p>
+                                </div>
+                            </div>
+                            <Link href="/landlord/tenants?tab=renewals" className="group shrink-0 flex items-center gap-2 rounded-xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-black uppercase tracking-widest transition-all hover:bg-card">
+                                View All
+                                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">

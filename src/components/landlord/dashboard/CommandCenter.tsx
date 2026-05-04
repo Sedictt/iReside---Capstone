@@ -14,7 +14,8 @@ import {
     Zap,
     BarChart3,
     FolderSearch2,
-    Hammer
+    Hammer,
+    RefreshCw
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -178,7 +179,7 @@ export function CommandCenter({
                             { label: "Application Review", icon: ClipboardList, href: "/landlord/applications", color: "text-amber-400", bgColor: "bg-amber-400/15" },
                             { label: "Utility Billing", icon: Zap, href: "/landlord/utility-billing", color: "text-sky-400", bgColor: "bg-sky-400/15" },
                             { label: "Maintenance Logs", icon: Hammer, href: "/landlord/maintenance", color: "text-rose-400", bgColor: "bg-rose-400/15" },
-                            { label: "Financial Analytics", icon: BarChart3, href: "/landlord/reports", color: "text-cyan-400", bgColor: "bg-cyan-400/15" },
+                            { label: "Lease Renewals", icon: RefreshCw, href: "/landlord/tenants?tab=renewals", color: "text-cyan-400", bgColor: "bg-cyan-400/15" },
                             { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-indigo-400", bgColor: "bg-indigo-400/15" },
                             { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-slate-400", bgColor: "bg-slate-400/15" },
                         ].map((action, i) => {

@@ -21,26 +21,33 @@ import {
     Layers,
     Bed,
     Bath,
-    LucideIcon
+    LucideIcon,
+    X
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import MoveOutRequest from "@/components/tenant/MoveOutRequest";
 import UnitTransferRequest from "@/components/tenant/UnitTransferRequest";
 import { LeaseTour } from "@/components/tenant/LeaseTour";
 import LeaseModal from "@/components/tenant/LeaseModal";
 import LeaseRenewalRequest from "@/components/tenant/LeaseRenewalRequest";
+import LeaseRenewalReminder from "@/components/tenant/LeaseRenewalReminder";
 import { PropertyAmenities } from "@/components/tenant/PropertyAmenities";
 import { LeaseData } from "@/types/lease";
 
 type TabId = "agreement" | "property" | "services";
 
 function LeaseHubContent() {
+    const searchParams = useSearchParams();
+    const previewDays = searchParams.get("preview_days");
+    
     const [lease, setLease] = useState<LeaseData | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabId>("agreement");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [renewalRequest, setRenewalRequest] = useState<any>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -49,7 +56,21 @@ function LeaseHubContent() {
                 const res = await fetch("/api/tenant/lease", { cache: "no-store" });
                 if (!res.ok) throw new Error("Failed to load lease");
                 const payload = await res.json();
-                if (isMounted && payload.lease) setLease(payload.lease);
+                if (isMounted && payload.lease) {
+                    setLease(payload.lease as LeaseData);
+                    
+                    // Fetch renewal requests for this lease
+                    try {
+                        const renewRes = await fetch("/api/tenant/renewals", { cache: "no-store" });
+                        if (renewRes.ok) {
+                            const renewData = await renewRes.json();
+                            const leaseRenewal = renewData?.find((r: any) => r.current_lease_id === payload.lease.id);
+                            if (isMounted) setRenewalRequest(leaseRenewal);
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch renewal requests:", e);
+                    }
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -71,6 +92,17 @@ function LeaseHubContent() {
     };
 
     const progressData = useMemo(() => {
+        if (previewDays) {
+            const days = parseInt(previewDays);
+            const total = 365;
+            return { 
+                daysRemaining: days, 
+                totalDays: total, 
+                percent: Math.max(0, Math.min(100, ((total - days) / total) * 100)), 
+                dayCount: Math.max(1, total - days) 
+            };
+        }
+
         if (!lease?.start_date || !lease?.end_date) return { daysRemaining: 0, totalDays: 1, percent: 0, dayCount: 0 };
         const start = new Date(lease.start_date).getTime();
         const end = new Date(lease.end_date).getTime();
@@ -128,13 +160,21 @@ function LeaseHubContent() {
     return (
         <div className="space-y-6 max-w-[1400px] mx-auto pb-12">
             <LeaseTour />
+            <LeaseRenewalReminder daysRemaining={progressData.daysRemaining} leaseId={lease?.id} />
             
             {/* Consistent Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-foreground tracking-tighter">
-                        Lease Hub
-                    </h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-4xl font-black text-foreground tracking-tighter">
+                            Lease Hub
+                        </h1>
+                        {previewDays && (
+                            <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-600 uppercase tracking-widest animate-pulse">
+                                Preview Mode: {previewDays} Days
+                            </div>
+                        )}
+                    </div>
                     <p className="text-muted-foreground font-medium text-sm max-w-2xl">
                         Your digital source of truth for your residency, agreement terms, and unit specifications.
                     </p>
@@ -251,6 +291,39 @@ function LeaseHubContent() {
                                     </div>
                                 </div>
 
+                                {/* Renewal Status Banner */}
+                                {renewalRequest && (
+                                    <div className={cn(
+                                        "border rounded-[2rem] p-6 shadow-sm flex items-center gap-4",
+                                        renewalRequest.status === "pending" && "bg-amber-500/5 border-amber-500/20",
+                                        renewalRequest.status === "approved" && "bg-emerald-500/5 border-emerald-500/20",
+                                        renewalRequest.status === "rejected" && "bg-red-500/5 border-red-500/20"
+                                    )}>
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center",
+                                            renewalRequest.status === "pending" && "bg-amber-500/10 text-amber-600",
+                                            renewalRequest.status === "approved" && "bg-emerald-500/10 text-emerald-600",
+                                            renewalRequest.status === "rejected" && "bg-red-500/10 text-red-600"
+                                        )}>
+                                            {renewalRequest.status === "pending" && <Clock className="w-5 h-5" />}
+                                            {renewalRequest.status === "approved" && <CheckCircle2 className="w-5 h-5" />}
+                                            {renewalRequest.status === "rejected" && <X className="w-5 h-5" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-foreground">
+                                                {renewalRequest.status === "pending" && "Renewal Request Pending"}
+                                                {renewalRequest.status === "approved" && "Renewal Approved!"}
+                                                {renewalRequest.status === "rejected" && "Renewal Request Rejected"}
+                                            </p>
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                                {renewalRequest.status === "pending" && "Awaiting landlord response"}
+                                                {renewalRequest.status === "approved" && "New lease ready for signing"}
+                                                {renewalRequest.status === "rejected" && (renewalRequest.landlord_notes || "Contact your landlord")}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Lease Lifecycle Section */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                     <div className="md:col-span-2 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden flex flex-col justify-center">
@@ -300,7 +373,11 @@ function LeaseHubContent() {
                                     </div>
 
                                     <div className="md:col-span-1">
-                                        <LeaseRenewalRequest daysRemaining={progressData.daysRemaining} />
+                                         <LeaseRenewalRequest 
+                                             daysRemaining={progressData.daysRemaining} 
+                                             leaseId={lease?.id} 
+                                             renewalSettings={lease?.unit.property.renewal_settings}
+                                         />
                                     </div>
                                 </div>
                             </div>

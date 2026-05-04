@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import {
     Bell,
@@ -20,6 +20,7 @@ import {
     Menu,
     X,
     LayoutGrid,
+    Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,47 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useNotifications } from "@/context/NotificationContext";
 import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { motion, AnimatePresence } from "framer-motion";
+import type { Notification, Profile } from "@/types/database";
+
+function formatTimeAgo(value: string) {
+    const timestamp = new Date(value);
+    const now = new Date();
+    const diffMs = now.getTime() - timestamp.getTime();
+
+    if (Number.isNaN(diffMs) || diffMs < 0) {
+        return "Recently";
+    }
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diffMs < hour) {
+        const minutes = Math.max(1, Math.floor(diffMs / minute));
+        return `${minutes}m ago`;
+    }
+
+    if (diffMs < day) {
+        const hours = Math.max(1, Math.floor(diffMs / hour));
+        return `${hours}h ago`;
+    }
+
+    const days = Math.floor(diffMs / day);
+    if (days === 1) {
+        return "Yesterday";
+    }
+
+    if (days < 7) {
+        return `${days}d ago`;
+    }
+
+    return timestamp.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    });
+}
 
 const NAV_SECTIONS = [
     {
@@ -52,9 +94,68 @@ const NAV_SECTIONS = [
 
 export function TenantSidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const notificationsRef = useRef<HTMLDivElement>(null);
+    const mobileNotificationsRef = useRef<HTMLDivElement>(null);
     const { profile, user } = useAuth();
-    const { unreadCount } = useNotifications();
+    const { 
+        notifications, 
+        unreadCount, 
+        loading: notificationsLoading, 
+        error: notificationsError,
+        markAsRead,
+        markAllAsRead 
+    } = useNotifications();
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+                setIsNotificationsOpen(false);
+            }
+            if (mobileNotificationsRef.current && !mobileNotificationsRef.current.contains(event.target as Node)) {
+                setIsNotificationsOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleNotificationClick = async (notification: Notification) => {
+        if (!notification.read) {
+            await markAsRead(notification.id);
+        }
+        
+        const data = (notification.data || {}) as any;
+        const type = notification.type;
+        const id = data.paymentId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
+
+        let href = "#";
+        switch (type) {
+            case "payment":
+                href = `/tenant/payments?id=${id}`;
+                break;
+            case "lease":
+                href = `/tenant/lease?id=${id}`;
+                break;
+            case "maintenance":
+                href = `/tenant/maintenance?id=${id}`;
+                break;
+            case "message":
+                href = `/tenant/messages?conversation=${id}`;
+                break;
+            default:
+                href = "/tenant/dashboard";
+        }
+
+        if (href !== "#") {
+            router.push(href);
+            setIsNotificationsOpen(false);
+        }
+    };
+
     const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
     const avatarUrl =
         profile?.avatar_url ||
@@ -102,14 +203,58 @@ export function TenantSidebar() {
                     <Link href="/" className="flex items-center">
                         <Logo className="h-30 w-66" />
                     </Link>
-                    <button
-                        type="button"
-                        onClick={() => setIsMobileOpen((prev) => !prev)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
-                        aria-label="Toggle tenant navigation"
-                    >
-                        {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="relative" ref={mobileNotificationsRef}>
+                            <button
+                                type="button"
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className={cn(
+                                    "relative flex h-9 w-9 items-center justify-center rounded-lg border border-border transition-all",
+                                    isNotificationsOpen ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"
+                                )}
+                                aria-label="Notifications"
+                            >
+                                <Bell className="h-4 w-4" />
+                                {unreadCount > 0 && (
+                                    <span className={cn(
+                                        "absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold",
+                                        isNotificationsOpen ? "bg-background text-primary" : "bg-primary text-primary-foreground"
+                                    )}>
+                                        {unreadCount > 9 ? "9+" : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            <AnimatePresence>
+                                {isNotificationsOpen && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+                                    >
+                                        <NotificationPanelContent 
+                                            notifications={notifications}
+                                            loading={notificationsLoading}
+                                            error={notificationsError}
+                                            unreadCount={unreadCount}
+                                            onNotificationClick={handleNotificationClick}
+                                            onMarkAllAsRead={markAllAsRead}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsMobileOpen((prev) => !prev)}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground"
+                            aria-label="Toggle tenant navigation"
+                        >
+                            {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -129,7 +274,7 @@ export function TenantSidebar() {
                     <div className="mb-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-left">
                         <ProfileCardTrigger 
                             userId={user?.id || ""} 
-                            initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as any }}
+                            initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                             asChild
                         >
                             <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-border cursor-pointer hover:ring-primary transition-all" style={{ backgroundColor: avatarBgColor }}>
@@ -140,7 +285,7 @@ export function TenantSidebar() {
                             <div className="flex min-w-0 items-center gap-2">
                                 <ProfileCardTrigger 
                                     userId={user?.id || ""} 
-                                    initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as any }}
+                                    initialData={{ full_name: displayName, avatar_url: avatarUrl, role: profile?.role as Profile["role"] }}
                                 >
                                     <p className="truncate text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">{displayName}</p>
                                 </ProfileCardTrigger>
@@ -148,14 +293,47 @@ export function TenantSidebar() {
                             </div>
                             <p className="truncate text-xs text-muted-foreground">{profile?.email || user?.email || "Tenant Account"}</p>
                         </div>
-                        <button type="button" className="relative rounded-full bg-muted p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" aria-label="Notifications">
-                            <Bell className="h-4 w-4" />
-                            {unreadCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-                                    {unreadCount > 9 ? "9+" : unreadCount}
-                                </span>
-                            )}
-                        </button>
+                        <div className="relative" ref={notificationsRef}>
+                            <button 
+                                type="button" 
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className={cn(
+                                    "relative rounded-full p-2 transition-all active:scale-95",
+                                    isNotificationsOpen ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                )} 
+                                aria-label="Notifications"
+                            >
+                                <Bell className="h-4 w-4" />
+                                {unreadCount > 0 && (
+                                    <span className={cn(
+                                        "absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold",
+                                        isNotificationsOpen ? "bg-background text-primary" : "bg-primary text-primary-foreground"
+                                    )}>
+                                        {unreadCount > 9 ? "9+" : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            <AnimatePresence>
+                                {isNotificationsOpen && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                                        exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                                        className="absolute left-full bottom-0 z-50 mb-0 ml-4 w-80 overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+                                    >
+                                        <NotificationPanelContent 
+                                            notifications={notifications}
+                                            loading={notificationsLoading}
+                                            error={notificationsError}
+                                            unreadCount={unreadCount}
+                                            onNotificationClick={handleNotificationClick}
+                                            onMarkAllAsRead={markAllAsRead}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
 
                     <div className="space-y-1">
@@ -239,3 +417,81 @@ export function TenantSidebar() {
 }
 
 export const TenantNavbar = TenantSidebar;
+
+function NotificationPanelContent({ 
+    notifications, 
+    loading, 
+    error, 
+    unreadCount, 
+    onNotificationClick, 
+    onMarkAllAsRead 
+}: { 
+    notifications: Notification[], 
+    loading: boolean, 
+    error: string | null, 
+    unreadCount: number, 
+    onNotificationClick: (n: Notification) => void, 
+    onMarkAllAsRead: () => void 
+}) {
+    return (
+        <>
+            <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
+            </div>
+
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar-premium">
+                {loading ? (
+                    <div className="px-6 py-4 space-y-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="space-y-2">
+                                <Skeleton className="h-4 w-3/4 rounded-full" />
+                                <Skeleton className="h-3 w-full rounded-full opacity-60" />
+                            </div>
+                        ))}
+                    </div>
+                ) : error ? (
+                    <div className="px-6 py-8 text-center text-red-500">
+                        <p className="text-sm font-medium">{error}</p>
+                    </div>
+                ) : notifications.length === 0 ? (
+                    <div className="px-6 py-12 text-center text-muted-foreground">
+                        <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-20" />
+                        <p className="text-sm font-bold">All caught up!</p>
+                        <p className="text-[10px] mt-1 opacity-60">You have no notifications yet</p>
+                    </div>
+                ) : (
+                    notifications.map((notification) => (
+                        <div 
+                            key={notification.id} 
+                            onClick={() => onNotificationClick(notification)}
+                            className="group/item relative px-6 py-4 transition-all hover:bg-muted/50 cursor-pointer border-b border-border/30 last:border-0"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors truncate">{notification.title}</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
+                                    <p className="mt-2 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-wider">{formatTimeAgo(notification.created_at)}</p>
+                                </div>
+                                {!notification.read && (
+                                    <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+            <div className="border-t border-border/50 p-3 bg-muted/20">
+                <button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onMarkAllAsRead();
+                    }}
+                    className="w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
+                >
+                    Mark all as read
+                </button>
+            </div>
+        </>
+    );
+}

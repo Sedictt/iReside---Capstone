@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     Wrench,
@@ -55,6 +56,7 @@ export interface MaintenanceRequest {
 
 export function MaintenanceDashboard() {
     const { selectedPropertyId } = useProperty();
+    const searchParams = useSearchParams();
     const [filter, setFilter] = useState<"All" | Status>("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
@@ -152,6 +154,14 @@ export function MaintenanceDashboard() {
 
                 if (!controller.signal.aborted) {
                     setRequests(fetchedRequests);
+                    // Handle deep linking via ?id=
+                    const deepLinkId = searchParams?.get("id");
+                    if (deepLinkId) {
+                        const targetRequest = fetchedRequests.find(r => r.id === deepLinkId);
+                        if (targetRequest) {
+                            setSelectedRequest(targetRequest);
+                        }
+                    }
                 }
             } catch (fetchError) {
                 if ((fetchError as Error).name === "AbortError") {

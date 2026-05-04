@@ -7,41 +7,72 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface LeaseRenewalRequestProps {
-    variant?: "sidebar" | "quickAction";
+    variant?: "sidebar" | "quickAction" | "none";
     daysRemaining: number;
+    leaseId?: string;
+    autoOpen?: boolean;
+    renewalSettings?: {
+        base_rent_adjustment: number;
+        adjustment_type: "percentage" | "fixed";
+        new_rules: string[];
+        landlord_memo: string;
+        is_enabled: boolean;
+    };
 }
 
-export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining }: LeaseRenewalRequestProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [status, setStatus] = useState<"idle" | "evaluating" | "options" | "success">("idle");
+export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining, leaseId, autoOpen = false, renewalSettings }: LeaseRenewalRequestProps) {
+    const [isOpen, setIsOpen] = useState(autoOpen);
+    const [step, setStep] = useState<"disclosure" | "request">("disclosure");
+    const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [selectedTerm, setSelectedTerm] = useState<number>(12);
+    const [acknowledged, setAcknowledged] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const handleStartRequest = () => {
-        setIsOpen(true);
-        setStatus("evaluating");
+    const handleSubmit = async () => {
+        if (!leaseId) {
+            toast.error("Lease ID not found");
+            return;
+        }
 
-        // Simulate a system scan for eligibility
-        setTimeout(() => {
-            setStatus("options");
-        }, 2000);
-    };
+        setSubmitting(true);
+        try {
+            const response = await fetch(`/api/tenant/lease/${leaseId}/renew`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ term_months: selectedTerm })
+            });
 
-    const handleSubmit = () => {
-        setStatus("success");
-        toast.success("Renewal Request Sent", {
-            description: `Landlord has been notified of your ${selectedTerm}-month renewal intent.`
-        });
-        
-        // Auto-close after 3 seconds
-        setTimeout(() => {
-            setIsOpen(false);
-            setStatus("idle");
-        }, 3500);
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error("Renewal Request Failed", {
+                    description: data.error || "Something went wrong"
+                });
+                return;
+            }
+
+            setSubmitted(true);
+            toast.success("Renewal Request Sent", {
+                description: `Landlord has been notified of your ${selectedTerm}-month renewal intent.`
+            });
+
+            // Auto-close after 3 seconds
+            setTimeout(() => {
+                setIsOpen(false);
+                setSubmitted(false);
+            }, 3500);
+        } catch (error) {
+            toast.error("Renewal Request Failed", {
+                description: "Network error. Please try again."
+            });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const isEligible = daysRemaining <= 90;
@@ -71,11 +102,11 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                             {isEligible 
-                                ? "You are within the renewal window. Secure your unit for another term with pre-approved rates."
-                                : `Your renewal window opens in ${daysRemaining - 90} days. Stay tuned for exclusive extension offers.`}
+                                ? "Your lease is eligible for renewal. Select a term below to notify your landlord of your intent to stay."
+                                : `Renewal requests open when your lease has 90 days remaining (in ${daysRemaining - 90} days).`}
                         </p>
                         <button
-                            onClick={handleStartRequest}
+                            onClick={() => setIsOpen(true)}
                             disabled={!isEligible}
                             className={cn(
                                 "w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all border shadow-sm",
@@ -88,10 +119,10 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         </button>
                     </div>
                 </div>
-            ) : (
+            ) : variant === "quickAction" ? (
                 /* Quick Action Trigger */
                 <button
-                    onClick={handleStartRequest}
+                    onClick={() => setIsOpen(true)}
                     disabled={!isEligible}
                     className="bg-card/50 border border-border hover:border-primary/40 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                 >
@@ -103,7 +134,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                     </div>
                     <span className="text-[10px] font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">Renew Lease</span>
                 </button>
-            )}
+            ) : variant === "none" ? null : null}
 
             {/* Modal */}
             {mounted && isOpen ? createPortal(
@@ -117,8 +148,9 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     <RefreshCw className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-foreground tracking-tight">Renewal Proposal</h3>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Agreement Lifecycle v2.0</p>
+                                    <h3 className="text-xl font-black text-foreground tracking-tight">
+                                        {step === "disclosure" ? "Latest Property Terms" : "Lease Renewal Request"}
+                                    </h3>
                                 </div>
                             </div>
                             <button
@@ -130,36 +162,92 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         </div>
 
                         {/* Content */}
-                        <div className="p-8 flex flex-col items-center justify-center min-h-[350px]">
-                            {status === "evaluating" && (
-                                <div className="text-center space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                                    <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-                                        <div className="absolute inset-0 rounded-full border-4 border-border" />
-                                        <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-                                        <ShieldCheck className="w-8 h-8 text-primary/50 animate-pulse" />
+                        <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
+                            {submitted ? (
+                                <div className="text-center space-y-6 animate-in zoom-in-95 duration-500">
+                                    <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                        <CheckCircle2 className="w-10 h-10" />
                                     </div>
-                                    <div>
-                                        <h4 className="text-xl font-bold text-foreground mb-2">Evaluating Standing...</h4>
-                                        <p className="text-sm text-muted-foreground">Checking payment history, trust score, and unit availability.</p>
+                                    <div className="space-y-2">
+                                        <h4 className="text-2xl font-black text-foreground">Request Sent</h4>
+                                        <p className="text-sm text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
+                                            Your request to renew for **{selectedTerm} months** has been sent to your landlord for review.
+                                        </p>
+                                    </div>
+                                    <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
+                                        <Clock className="w-3 h-3" /> Awaiting Landlord Response
                                     </div>
                                 </div>
-                            )}
-
-                            {status === "options" && (
-                                <div className="w-full animate-in zoom-in-95 duration-500 space-y-6">
-                                    <div className="text-center space-y-2 mb-8">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest mb-2">
-                                            Pre-Approved for Renewal
+                            ) : step === "disclosure" ? (
+                                <div className="w-full animate-in slide-in-from-right-4 duration-500 space-y-6">
+                                    <div className="bg-primary/5 rounded-[2rem] p-6 border border-primary/10 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
+                                            <ShieldCheck className="w-16 h-16" />
                                         </div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">Official Property Memo</p>
+                                        <p className="text-sm font-medium text-foreground leading-relaxed">
+                                            {renewalSettings?.landlord_memo || "No specific updates have been posted by the landlord for this renewal window."}
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Updated Terms</h4>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center text-primary">
+                                                        <ArrowRight className="w-4 h-4" />
+                                                    </div>
+                                                    <span className="text-xs font-black text-foreground uppercase tracking-widest">Expected Rent Adjustment</span>
+                                                </div>
+                                                <span className="text-sm font-black text-primary">
+                                                    {renewalSettings?.base_rent_adjustment ? (
+                                                        renewalSettings.adjustment_type === "percentage" 
+                                                            ? `+${renewalSettings.base_rent_adjustment}%` 
+                                                            : `+PHP ${renewalSettings.base_rent_adjustment.toLocaleString()}`
+                                                    ) : "No change"}
+                                                </span>
+                                            </div>
+
+                                            {renewalSettings?.new_rules && renewalSettings.new_rules.length > 0 && (
+                                                <div className="space-y-3 pt-2">
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Rules & Clauses</p>
+                                                    {renewalSettings.new_rules.map((rule, i) => (
+                                                        <div key={i} className="flex items-start gap-3 p-3 bg-muted/20 rounded-xl border border-dashed border-border">
+                                                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                                                            <p className="text-[11px] font-medium text-foreground">{rule}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-3 pt-2">
+                                        <input 
+                                            type="checkbox" 
+                                            id="acknowledge"
+                                            checked={acknowledged}
+                                            onChange={(e) => setAcknowledged(e.target.checked)}
+                                            className="w-5 h-5 rounded-lg border-border text-primary focus:ring-primary/20"
+                                        />
+                                        <label htmlFor="acknowledge" className="text-[11px] font-bold text-muted-foreground cursor-pointer select-none">
+                                            I have reviewed the latest property terms and rules.
+                                        </label>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="w-full animate-in slide-in-from-right-4 duration-500 space-y-6">
+                                    <div className="text-center space-y-2 mb-8">
                                         <h4 className="text-2xl font-black text-foreground">Select Your Term</h4>
                                         <p className="text-sm text-muted-foreground">Choose your preferred extension period.</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-3">
                                         {[
-                                            { months: 6, label: "Short Term", price: "Standard Rate" },
-                                            { months: 12, label: "Annual Standard", price: "Locked Rate", popular: true },
-                                            { months: 24, label: "Long Term Duo", price: "2% Discount" }
+                                            { months: 6, label: "Short Term", price: "Market Rate" },
+                                            { months: 12, label: "Annual Standard", price: "Policy Rate", popular: true },
+                                            { months: 24, label: "Long Term Duo", price: "Policy Rate" }
                                         ].map((opt) => (
                                             <button
                                                 key={opt.months}
@@ -197,45 +285,41 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border border-border">
                                         <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                                         <p className="text-[10px] text-muted-foreground leading-relaxed italic">
-                                            Pricing is indicative and based on current market rates. Final approval is subject to landlord verification and signature.
+                                            Terms are based on the renewal policy disclosed in the previous step. Final approval is subject to landlord signature.
                                         </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {status === "success" && (
-                                <div className="text-center space-y-6 animate-in zoom-in-95 duration-500">
-                                    <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                                        <CheckCircle2 className="w-10 h-10" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h4 className="text-2xl font-black text-foreground">Request Transmitted</h4>
-                                        <p className="text-sm text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
-                                            Your renewal intent for **{selectedTerm} months** has been sent to property management. 
-                                        </p>
-                                    </div>
-                                    <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
-                                        <Clock className="w-3 h-3" /> Awaiting Landlord Response
                                     </div>
                                 </div>
                             )}
                         </div>
 
                         {/* Footer */}
-                        {status === "options" && (
-                            <div className="p-4 border-t border-border bg-background/50 flex gap-3">
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="px-4 py-3 rounded-xl text-muted-foreground font-semibold hover:bg-muted hover:text-foreground transition-all flex-1"
-                                >
-                                    Not Now
-                                </button>
-                                <button
-                                    onClick={handleSubmit}
-                                    className="px-4 py-3 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex flex-1 items-center justify-center gap-2 shadow-lg shadow-primary/20"
-                                >
-                                    Submit Request <ArrowRight className="w-4 h-4" />
-                                </button>
+                        {!submitted && (
+                            <div className="p-6 border-t border-border bg-background/50 flex gap-3">
+                                {step === "disclosure" ? (
+                                    <button
+                                        onClick={() => setStep("request")}
+                                        disabled={!acknowledged}
+                                        className="w-full py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                    >
+                                        Accept & Proceed <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => setStep("disclosure")}
+                                            className="px-6 py-4 rounded-2xl border border-border text-muted-foreground font-black uppercase tracking-widest text-[10px] hover:bg-muted transition-all flex-1"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={handleSubmit}
+                                            disabled={submitting}
+                                            className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex-[2] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                        >
+                                            {submitting ? "Submitting..." : "Submit Request"} <ArrowRight className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

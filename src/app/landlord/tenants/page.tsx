@@ -18,9 +18,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty } from "@/context/PropertyContext";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { AddTenantModal } from "@/components/landlord/tenants/AddTenantModal";
+import LandlordRenewalReview from "@/components/landlord/leases/RenewalReview";
 
 type TenantStatus = "Active" | "Moving Out" | "Evicted";
 type TenantPaymentStatus = "paid" | "late" | "pending";
@@ -50,6 +52,10 @@ const formatLeaseEnd = (value: string | null) => {
 };
 
 export default function TenantsPage() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const currentTab = searchParams.get("tab") || "directory";
+
     const { selectedPropertyId } = useProperty();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<TenantStatus | "All">("All");
@@ -57,6 +63,12 @@ export default function TenantsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const setTab = (tab: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", tab);
+        router.push(`/landlord/tenants?${params.toString()}`);
+    };
 
     const loadTenants = useCallback(async (controller?: AbortController) => {
         setLoading(true);
@@ -151,7 +163,7 @@ export default function TenantsPage() {
             {/* Header Block (§8.2) */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Tenants Directory</h1>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Tenants Hub</h1>
                     <p className="mt-1 text-muted-foreground">Manage resident records and lease timelines across your portfolio.</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -165,8 +177,36 @@ export default function TenantsPage() {
                 </div>
             </div>
 
-            {/* Filter Bar (§8.5) */}
-            <div className="flex flex-col gap-4 rounded-[2rem] border border-border bg-card p-3 shadow-sm lg:flex-row lg:items-center">
+            {/* Tab Switcher */}
+            <div className="flex items-center gap-1 border-b border-border">
+                {[
+                    { id: "directory", label: "Directory", icon: Users },
+                    { id: "renewals", label: "Lease Renewals", icon: Clock },
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setTab(tab.id)}
+                        className={cn(
+                            "flex items-center gap-2 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
+                            currentTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <tab.icon className="h-4 w-4" />
+                        {tab.label}
+                        {currentTab === tab.id && (
+                            <motion.div 
+                                layoutId="activeTab"
+                                className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full"
+                            />
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {currentTab === "directory" ? (
+                <>
+                    {/* Filter Bar (§8.5) */}
+                    <div className="flex flex-col gap-4 rounded-[2rem] border border-border bg-card p-3 shadow-sm lg:flex-row lg:items-center">
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
@@ -332,6 +372,12 @@ export default function TenantsPage() {
                             </button>
                         </div>
                     )}
+                </div>
+                )}
+                </>
+            ) : (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <LandlordRenewalReview />
                 </div>
             )}
         </div>

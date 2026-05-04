@@ -140,7 +140,7 @@ export async function sendLandlordCredentialsCopy({
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
     <div style="background:#1a1a1a;padding:24px 32px;border-bottom:1px solid #2a2a2a;">
-      <h1 style="margin:0;color:#fff;font-size:18px;font-weight:900;">α1 — Landlord Copy</h1>
+      <h1 style="margin:0;color:#fff;font-size:18px;font-weight:900;">iReside — Landlord Copy</h1>
     </div>
     <div style="padding:32px;">
       <p style="margin:0 0 16px;font-size:15px;">Hi <strong>${landlordName}</strong>,</p>
@@ -163,7 +163,7 @@ export async function sendLandlordCredentialsCopy({
 </body>
 </html>`;
 
-    const text = `Hi ${landlordName},\n\nTenant account created for ${tenantName}.\n\nEmail: ${tenantEmail}\nTemp Password: ${tempPassword}\n${inviteUrl ? `Reset link: ${inviteUrl}\n` : ""}\n— α1`;
+    const text = `Hi ${landlordName},\n\nTenant account created for ${tenantName}.\n\nEmail: ${tenantEmail}\nTemp Password: ${tempPassword}\n${inviteUrl ? `Reset link: ${inviteUrl}\n` : ""}\n— iReside`;
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }
@@ -200,7 +200,7 @@ export async function sendSigningLinkEmail({
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
     <div style="background:#6d9838;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">α1</h1>
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Lease Agreement</p>
     </div>
     <div style="padding:32px;">
@@ -256,13 +256,13 @@ export async function sendSigningLinkEmail({
       </p>
     </div>
     <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© α1 Property Management</p>
+      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
     </div>
   </div>
 </body>
 </html>`;
 
-    const text = `Hi ${tenantName},\n\nYour lease application has been approved! Your lease agreement is ready for signature.\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMonthly Rent: ₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSecurity Deposit: ₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nREVIEW AND SIGN:\n${signingUrl}\n\nLink expires: ${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nLANDLORD CONTACT:\n${landlordName}\n${landlordEmail}\n\n— α1`;
+    const text = `Hi ${tenantName},\n\nYour lease application has been approved! Your lease agreement is ready for signature.\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMonthly Rent: ₱${rentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSecurity Deposit: ₱${depositAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\nREVIEW AND SIGN:\n${signingUrl}\n\nLink expires: ${expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nLANDLORD CONTACT:\n${landlordName}\n${landlordEmail}\n\n— iReside`;
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }
@@ -287,7 +287,7 @@ export async function sendTenantSignedNotification({
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
     <div style="background:#1a1a1a;padding:24px 32px;border-bottom:1px solid #2a2a2a;">
-      <h1 style="margin:0;color:#fff;font-size:18px;font-weight:900;">α1 — Lease Update</h1>
+      <h1 style="margin:0;color:#fff;font-size:18px;font-weight:900;">iReside — Lease Update</h1>
     </div>
     <div style="padding:32px;">
       <p style="margin:0 0 16px;font-size:15px;">Hi <strong>${landlordName}</strong>,</p>
@@ -306,7 +306,7 @@ export async function sendTenantSignedNotification({
 </body>
 </html>`;
 
-    const text = `Hi ${landlordName},\n\n${tenantName} has signed their lease agreement.\n\nLease ID: ${leaseId}\n\nLog in to your landlord dashboard to countersign the lease.\n\n— α1`;
+    const text = `Hi ${landlordName},\n\n${tenantName} has signed their lease agreement.\n\nLease ID: ${leaseId}\n\nLog in to your landlord dashboard to countersign the lease.\n\n— iReside`;
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }
@@ -333,7 +333,7 @@ export async function sendLeaseActivatedNotification({
 <body style="font-family:sans-serif;background:#0a0a0a;color:#e5e5e5;margin:0;padding:0;">
   <div style="max-width:560px;margin:40px auto;background:#141414;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;">
     <div style="background:#6d9838;padding:24px 32px;">
-      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">α1</h1>
+      <h1 style="margin:0;color:#000;font-size:22px;font-weight:900;letter-spacing:-0.5px;">iReside</h1>
       <p style="margin:4px 0 0;color:#000;font-size:12px;font-weight:700;opacity:0.7;text-transform:uppercase;letter-spacing:2px;">Lease Activated</p>
     </div>
     <div style="padding:32px;">
@@ -363,13 +363,13 @@ export async function sendLeaseActivatedNotification({
       </p>
     </div>
     <div style="padding:16px 32px;border-top:1px solid #1a1a1a;text-align:center;">
-      <p style="margin:0;color:#404040;font-size:11px;">© α1 Property Management</p>
+      <p style="margin:0;color:#404040;font-size:11px;">© iReside Property Management</p>
     </div>
   </div>
 </body>
 </html>`;
 
-    const text = `Hi ${tenantName},\n\nYour lease agreement has been fully signed and is now active!\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMove-in Date: ${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nWelcome to your new home! You can now access your tenant portal to manage your lease.\n\n— α1`;
+    const text = `Hi ${tenantName},\n\nYour lease agreement has been fully signed and is now active!\n\nPROPERTY DETAILS:\nProperty: ${propertyName}\nUnit: ${unitName}\nMove-in Date: ${new Date(moveInDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\nWelcome to your new home! You can now access your tenant portal to manage your lease.\n\n— iReside`;
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }

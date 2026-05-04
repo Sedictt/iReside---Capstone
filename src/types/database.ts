@@ -25,7 +25,7 @@ export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
 export type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
 export type MessageType = 'text' | 'system' | 'image' | 'file'
-export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application'
+export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application' | 'lease_renewal_request' | 'lease_renewal_approved' | 'lease_renewal_rejected'
 export type ListingScope = 'property' | 'unit'
 export type ListingStatus = 'draft' | 'published' | 'paused'
 export type LocationType = 'city' | 'barangay' | 'street'
@@ -33,6 +33,7 @@ export type TenantInviteMode = 'property' | 'unit'
 export type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
 export type TenantInviteApplicationType = 'online' | 'face_to_face' | 'existing_tenant'
 export type ApplicationSource = 'walk_in_application' | 'invite_link'
+export type RenewalStatus = 'pending' | 'approved' | 'rejected' | 'signed'
 
 export interface Database {
     public: {
@@ -54,6 +55,7 @@ export interface Database {
                     business_permit_url: string | null
                     business_permit_number: string | null
                     business_name: string | null
+                    business_permits: string[]
                     created_at: string
                     updated_at: string
                 }
@@ -73,6 +75,7 @@ export interface Database {
                     business_permit_url?: string | null
                     business_permit_number?: string | null
                     business_name?: string | null
+                    business_permits?: string[]
                     created_at?: string
                     updated_at?: string
                 }
@@ -92,6 +95,7 @@ export interface Database {
                     business_permit_url?: string | null
                     business_permit_number?: string | null
                     business_name?: string | null
+                    business_permits?: string[]
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -147,6 +151,8 @@ export interface Database {
                     onboarding_token: string | null
                     onboarding_token_expires_at: string | null
                     onboarding_completed_at: string | null
+                    business_permit_url: string | null
+                    business_permit_card_url: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -170,6 +176,8 @@ export interface Database {
                     onboarding_token?: string | null
                     onboarding_token_expires_at?: string | null
                     onboarding_completed_at?: string | null
+                    business_permit_url?: string | null
+                    business_permit_card_url?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -193,6 +201,8 @@ export interface Database {
                     onboarding_token?: string | null
                     onboarding_token_expires_at?: string | null
                     onboarding_completed_at?: string | null
+                    business_permit_url?: string | null
+                    business_permit_card_url?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -371,6 +381,8 @@ export interface Database {
                     total_units: number
                     total_floors: number
                     base_rent_amount: number
+                    renewal_window_days: number
+                    renewal_settings: Json
                     created_at: string
                     updated_at: string
                 }
@@ -392,6 +404,8 @@ export interface Database {
                     total_units?: number
                     total_floors?: number
                     base_rent_amount?: number
+                    renewal_window_days?: number
+                    renewal_settings?: Json
                     created_at?: string
                     updated_at?: string
                 }
@@ -412,6 +426,8 @@ export interface Database {
                     total_units?: number
                     total_floors?: number
                     base_rent_amount?: number
+                    renewal_window_days?: number
+                    renewal_settings?: Json
                     updated_at?: string
                 }
                 Relationships: any[]
@@ -556,6 +572,55 @@ export interface Database {
                     tenant_id?: string
                     rating?: number
                     comment?: string | null
+                    updated_at?: string
+                }
+                Relationships: any[]
+            }
+            renewal_requests: {
+                Row: {
+                    id: string
+                    current_lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    proposed_start_date: string | null
+                    proposed_end_date: string | null
+                    proposed_monthly_rent: number | null
+                    proposed_security_deposit: number | null
+                    terms_json: Json | null
+                    status: RenewalStatus
+                    landlord_notes: string | null
+                    new_lease_id: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    current_lease_id: string
+                    tenant_id: string
+                    landlord_id: string
+                    proposed_start_date?: string | null
+                    proposed_end_date?: string | null
+                    proposed_monthly_rent?: number | null
+                    proposed_security_deposit?: number | null
+                    terms_json?: Json | null
+                    status?: RenewalStatus
+                    landlord_notes?: string | null
+                    new_lease_id?: string | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    current_lease_id?: string
+                    tenant_id?: string
+                    landlord_id?: string
+                    proposed_start_date?: string | null
+                    proposed_end_date?: string | null
+                    proposed_monthly_rent?: number | null
+                    proposed_security_deposit?: number | null
+                    terms_json?: Json | null
+                    status?: RenewalStatus
+                    landlord_notes?: string | null
+                    new_lease_id?: string | null
                     updated_at?: string
                 }
                 Relationships: any[]
