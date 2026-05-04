@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { RenewalStatus } from "@/types/database";
 
 /**
  * GET /api/landlord/renewals
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
 
     // Apply status filter if provided
     if (statusFilter) {
-      query = query.eq("status", statusFilter);
+      query = query.eq("status", statusFilter as RenewalStatus);
     }
 
     // Apply property filter if provided

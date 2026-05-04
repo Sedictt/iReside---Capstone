@@ -38,14 +38,14 @@ export async function POST(
     }
 
     // Fetch lease with property for renewal window check
-    const { data: lease, error: leaseError } = await supabase
+    const { data: lease, error: leaseError } = await (supabase
       .from("leases")
       .select(`
         *,
         unit:units (
           property:properties (*)
         )
-      `)
+      `) as any)
       .eq("id", leaseId)
       .eq("tenant_id", user.id)
       .single();

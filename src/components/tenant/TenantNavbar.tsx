@@ -31,7 +31,7 @@ import { RoleBadge } from "@/components/profile/RoleBadge";
 import { ProfileCardTrigger } from "@/components/ui/ProfileCardTrigger";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Notification } from "@/types/database";
+import type { Notification, Profile } from "@/types/database";
 
 function formatTimeAgo(value: string) {
     const timestamp = new Date(value);
@@ -128,7 +128,7 @@ export function TenantSidebar() {
             await markAsRead(notification.id);
         }
         
-        const data = notification.data || {};
+        const data = (notification.data || {}) as any;
         const type = notification.type;
         const id = data.paymentId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
 

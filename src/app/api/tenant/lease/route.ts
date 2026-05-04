@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { LeaseData } from "@/types/lease";
 
 export async function GET() {
     const supabase = await createClient();
@@ -33,10 +34,12 @@ export async function GET() {
                         id,
                         name,
                         address,
+                        city,
                         images,
                         house_rules,
                         amenities:amenities (*),
-                        renewal_settings
+                        renewal_settings,
+                        renewal_window_days
                     )
                 ),
                 landlord:profiles!leases_landlord_id_fkey (
@@ -63,7 +66,7 @@ export async function GET() {
         const activeLease = leasesData.find((l) => l.status === "active") || leasesData[0];
 
         return NextResponse.json({
-            lease: activeLease
+            lease: activeLease as unknown as LeaseData
         });
     } catch (e: unknown) {
         const error = e as Error;

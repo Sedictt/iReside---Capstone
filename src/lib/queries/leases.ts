@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { RenewalStatus } from '@/types/database'
 
 /**
  * Fetch all leases for a tenant.
@@ -137,7 +138,7 @@ export async function getTenantRenewalRequests(tenantId: string) {
 /**
  * Fetch renewal requests for a landlord.
  */
-export async function getLandlordRenewalRequests(landlordId: string, status?: string) {
+export async function getLandlordRenewalRequests(landlordId: string, status?: RenewalStatus) {
     const supabase = await createClient()
 
     let query = supabase

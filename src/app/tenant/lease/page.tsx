@@ -21,7 +21,8 @@ import {
     Layers,
     Bed,
     Bath,
-    LucideIcon
+    LucideIcon,
+    X
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -56,7 +57,7 @@ function LeaseHubContent() {
                 if (!res.ok) throw new Error("Failed to load lease");
                 const payload = await res.json();
                 if (isMounted && payload.lease) {
-                    setLease(payload.lease);
+                    setLease(payload.lease as LeaseData);
                     
                     // Fetch renewal requests for this lease
                     try {

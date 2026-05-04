@@ -20,6 +20,8 @@ export interface LeaseData {
             city: string;
             images: string[];
             house_rules: string[];
+            renewal_settings?: any;
+            renewal_window_days?: number;
             amenities: Array<{
                 id: string;
                 name: string;

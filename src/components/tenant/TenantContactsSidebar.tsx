@@ -115,6 +115,7 @@ const formatMiniTimestamp = (iso: string) => {
 };
 
 export function TenantContactsSidebar() {
+    const router = useRouter();
     const { user } = useAuth();
     const supabase = useMemo(() => createSupabaseClient(), []);
     const [isHovered, setIsHovered] = useState(false);

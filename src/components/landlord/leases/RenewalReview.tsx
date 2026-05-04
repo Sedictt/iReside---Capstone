@@ -22,6 +22,7 @@ interface RenewalRequest {
         start_date: string;
         end_date: string;
         monthly_rent: number;
+        security_deposit: number;
         unit: {
             name: string;
             beds: number;
@@ -93,6 +94,7 @@ export default function LandlordRenewalReview() {
                         start_date: "2026-01-01",
                         end_date: "2026-12-31",
                         monthly_rent: 15000,
+                        security_deposit: 15000,
                         unit: {
                             name: "Unit 402",
                             beds: 2,
@@ -123,6 +125,7 @@ export default function LandlordRenewalReview() {
                         start_date: "2025-09-15",
                         end_date: "2026-09-14",
                         monthly_rent: 8500,
+                        security_deposit: 8500,
                         unit: {
                             name: "Studio 101",
                             beds: 1,
