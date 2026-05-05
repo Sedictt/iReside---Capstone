@@ -56,6 +56,7 @@ export function Sidebar({
                 { label: "Facilities", href: "/landlord/utilities", icon: LayoutGrid },
                 { label: "Tenant Applications", href: "/landlord/applications", icon: ClipboardList, badge: counts.applications || undefined },
                 { label: "Tenants", href: "/landlord/tenants", icon: Users, tourId: "nav-tenant-hub" },
+                { label: "Move-Out Requests", href: "/landlord/move-out", icon: ClipboardList },
                 { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: counts.maintenance || undefined },
             ]
         },

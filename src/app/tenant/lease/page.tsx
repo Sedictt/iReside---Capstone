@@ -45,9 +45,80 @@ function LeaseHubContent() {
     
     const [lease, setLease] = useState<LeaseData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<TabId>("agreement");
+    
+    // Add mock data for previewing different move-out states
+    const previewParam = searchParams.get("preview");
+    const moveOutPreviewStatus = searchParams.get("moveOutStatus") || (previewParam !== null ? "approved" : null);
+
+    const [activeTab, setActiveTab] = useState<TabId>(moveOutPreviewStatus ? "services" : "agreement");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [renewalRequest, setRenewalRequest] = useState<any>(null);
+    const [renewalRequest, setRenewalRequest] = useState<unknown>(null);
+
+    // Add mock data for previewing different move-out states
+    const mockMoveOutRequest = useMemo(() => {
+        if (!moveOutPreviewStatus) return null;
+        
+        const base = {
+            id: "mock-id",
+            requested_date: new Date(Date.now() + 30 * 86400000).toISOString(),
+            reason: "Moving closer to work",
+            denial_reason: null,
+            checklist_data: {
+                "Return Keys": false,
+                "Clean Unit": false,
+                "Remove Trash": true
+            },
+            deposit_deductions: [],
+            deposit_refund_amount: 15000,
+            created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+            approved_at: null,
+            denied_at: null,
+            inspection_date: null,
+            completed_at: null,
+        };
+
+        switch (moveOutPreviewStatus) {
+            case "pending":
+                return { ...base, status: "pending" as const };
+            case "approved":
+                return { 
+                    ...base, 
+                    status: "approved" as const, 
+                    approved_at: new Date(Date.now() - 1 * 86400000).toISOString() 
+                };
+            case "denied":
+                return { 
+                    ...base, 
+                    status: "denied" as const, 
+                    denied_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+                    denial_reason: "Notice period too short (minimum 30 days required)."
+                };
+            case "inspection":
+                return { 
+                    ...base, 
+                    status: "approved" as const, 
+                    approved_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+                    inspection_date: new Date().toISOString(),
+                    deposit_deductions: [
+                        { description: "Wall Painting Touch-up", amount: 2500 },
+                        { description: "Cleaning Fee", amount: 1500 },
+                        { description: "Unpaid Electricity Bill", amount: 1250 }
+                    ],
+                    deposit_refund_amount: 9750
+                };
+            case "completed":
+                return { 
+                    ...base, 
+                    status: "completed" as const, 
+                    approved_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+                    inspection_date: new Date(Date.now() - 2 * 86400000).toISOString(),
+                    completed_at: new Date().toISOString(),
+                    deposit_refund_amount: 15000
+                };
+            default:
+                return null;
+        }
+    }, [moveOutPreviewStatus]);
 
     useEffect(() => {
         let isMounted = true;
@@ -64,7 +135,7 @@ function LeaseHubContent() {
                         const renewRes = await fetch("/api/tenant/renewals", { cache: "no-store" });
                         if (renewRes.ok) {
                             const renewData = await renewRes.json();
-                            const leaseRenewal = renewData?.find((r: any) => r.current_lease_id === payload.lease.id);
+                            const leaseRenewal = renewData?.find((r: { current_lease_id: string }) => r.current_lease_id === payload.lease.id);
                             if (isMounted) setRenewalRequest(leaseRenewal);
                         }
                     } catch (e) {
@@ -118,7 +189,7 @@ function LeaseHubContent() {
         const dayCount = Math.round(elapsedMs / 86400000) + 1;
 
         return { daysRemaining, totalDays, percent, dayCount };
-    }, [lease]);
+    }, [lease, previewDays]);
 
     if (loading) {
         return (
@@ -148,6 +219,8 @@ function LeaseHubContent() {
         );
     }
 
+
+
     const imgUrl = lease.unit.property.images?.[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2000&auto=format&fit=crop";
     const shortHash = lease.id.replace(/-/g, "").substring(0, 8).toUpperCase();
 
@@ -169,9 +242,9 @@ function LeaseHubContent() {
                         <h1 className="text-4xl font-black text-foreground tracking-tighter">
                             Lease Hub
                         </h1>
-                        {previewDays && (
+                        {(previewDays || moveOutPreviewStatus) && (
                             <div className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-600 uppercase tracking-widest animate-pulse">
-                                Preview Mode: {previewDays} Days
+                                Preview Mode: {previewDays ? `${previewDays} Days` : `Move-Out ${moveOutPreviewStatus}`}
                             </div>
                         )}
                     </div>
@@ -484,9 +557,9 @@ function LeaseHubContent() {
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                          {/* Move Out Request Wrapper */}
-                                         <div className="lg:col-span-1">
-                                             <MoveOutRequest variant="hub" />
-                                         </div>
+                                          <div className="lg:col-span-1">
+                                              <MoveOutRequest variant="hub" initialRequest={mockMoveOutRequest} />
+                                          </div>
 
                                          {/* Unit Transfer Request */}
                                          <div className="lg:col-span-1">

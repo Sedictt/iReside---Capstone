@@ -16,6 +16,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Requested date is required" }, { status: 400 });
         }
 
+        const moveOutDate = new Date(requestedDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Calculate 30 days from now
+        const minDate = new Date(today);
+        minDate.setDate(today.getDate() + 30);
+
+        if (moveOutDate < minDate) {
+            return NextResponse.json({ 
+                error: `Move-out requests require a minimum of 30 days notice. Earliest available date is ${minDate.toLocaleDateString()}.` 
+            }, { status: 400 });
+        }
+
         // 1. Get active lease
         const { data: lease, error: leaseError } = await supabase
             .from("leases")

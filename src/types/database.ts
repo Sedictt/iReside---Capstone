@@ -25,7 +25,7 @@ export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent'
 export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
 export type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
 export type MessageType = 'text' | 'system' | 'image' | 'file'
-export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application' | 'lease_renewal_request' | 'lease_renewal_approved' | 'lease_renewal_rejected'
+export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application' | 'lease_renewal_request' | 'lease_renewal_approved' | 'lease_renewal_rejected' | 'move_out_approved' | 'move_out_denied' | 'move_out_inspection_completed' | 'move_out_finalized'
 export type ListingScope = 'property' | 'unit'
 export type ListingStatus = 'draft' | 'published' | 'paused'
 export type LocationType = 'city' | 'barangay' | 'street'
@@ -1435,6 +1435,17 @@ export interface Database {
                     requested_date: string
                     status: MoveOutStatus
                     notes: string | null
+                    approved_at: string | null
+                    denied_at: string | null
+                    completed_at: string | null
+                    denial_reason: string | null
+                    inspection_date: string | null
+                    inspection_notes: string | null
+                    inspection_photos: string[] | null
+                    deposit_deductions: Json | null
+                    deposit_refund_amount: number | null
+                    checklist_completed: boolean
+                    checklist_data: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -1447,6 +1458,17 @@ export interface Database {
                     requested_date: string
                     status?: MoveOutStatus
                     notes?: string | null
+                    approved_at?: string | null
+                    denied_at?: string | null
+                    completed_at?: string | null
+                    denial_reason?: string | null
+                    inspection_date?: string | null
+                    inspection_notes?: string | null
+                    inspection_photos?: string[] | null
+                    deposit_deductions?: Json | null
+                    deposit_refund_amount?: number | null
+                    checklist_completed?: boolean
+                    checklist_data?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -1458,6 +1480,17 @@ export interface Database {
                     requested_date?: string
                     status?: MoveOutStatus
                     notes?: string | null
+                    approved_at?: string | null
+                    denied_at?: string | null
+                    completed_at?: string | null
+                    denial_reason?: string | null
+                    inspection_date?: string | null
+                    inspection_notes?: string | null
+                    inspection_photos?: string[] | null
+                    deposit_deductions?: Json | null
+                    deposit_refund_amount?: number | null
+                    checklist_completed?: boolean
+                    checklist_data?: Json | null
                     updated_at?: string
                 }
                 Relationships: any[]

@@ -114,3 +114,4 @@ node_modules/
 supabase/seeds/auth_users.sql
 supabase/seeds/data.sql
 supabase_backup/seed.sql
+/supabase-bak
