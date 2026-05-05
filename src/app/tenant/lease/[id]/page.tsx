@@ -10,8 +10,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function LeaseDetailsPage({ params }: { params: { id: string } }) {
-    // In a real app, fetch lease details using params.id
+export default async function LeaseDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    // In a real app, fetch lease details using id
 
     return (
         <div className="space-y-8">

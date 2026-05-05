@@ -22,6 +22,7 @@ interface Deduction {
 
 interface MoveOutInspectionFormProps {
   requestId: string;
+  leaseId: string;
   originalDeposit: number;
   onSuccess: () => void;
   onCancel: () => void;
@@ -29,6 +30,7 @@ interface MoveOutInspectionFormProps {
 
 export function MoveOutInspectionForm({
   requestId,
+  leaseId,
   originalDeposit,
   onSuccess,
   onCancel,

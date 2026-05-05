@@ -393,7 +393,8 @@ export function RentApplications() {
     useEffect(() => {
         setMounted(true);
         setLoading(true);
-        if (searchParams?.get("action") === "tenant-application") {
+        const action = searchParams?.get("action");
+        if (action === "tenant-application" || action === "walk-in") {
             setShowTenantApplicationModal(true);
         }
     }, [searchParams]);

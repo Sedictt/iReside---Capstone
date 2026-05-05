@@ -11,9 +11,9 @@ test.describe("tenant guided onboarding", () => {
     test("tenant can complete onboarding and resume mid-flow", async ({ page }) => {
         await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
 
-        await page.getByLabel("Email Address").fill(TENANT_EMAIL);
+        await page.getByLabel("Email", { exact: true }).fill(TENANT_EMAIL);
         await page.getByLabel("Password").fill(TENANT_PASSWORD);
-        await page.getByRole("button", { name: "Log In" }).click();
+        await page.getByRole("button", { name: /Sign into Account|Log In/i }).click();
 
         await expect(page).toHaveURL(/\/tenant\/onboarding/);
 

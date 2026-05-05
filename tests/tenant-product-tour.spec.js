@@ -7,9 +7,9 @@ const TENANT_PASSWORD = process.env.PLAYWRIGHT_TENANT_ONBOARDING_PASSWORD || "";
 
 async function loginAsTenant(page) {
     await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
-    await page.getByLabel("Email Address").fill(TENANT_EMAIL);
+    await page.getByLabel("Email", { exact: true }).fill(TENANT_EMAIL);
     await page.getByLabel("Password").fill(TENANT_PASSWORD);
-    await page.getByRole("button", { name: "Log In" }).click();
+    await page.getByRole("button", { name: /Sign into Account|Log In/i }).click();
 }
 
 test.describe("tenant product tour", () => {

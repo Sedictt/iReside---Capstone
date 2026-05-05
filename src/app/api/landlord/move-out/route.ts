@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     // Apply status filter if provided and not 'all'
     if (statusFilter && statusFilter !== "all") {
-      query = query.eq("status", statusFilter);
+      query = query.eq("status", statusFilter as any);
     }
 
     const { data: moveOutRequests, error: fetchError } = await query.order("created_at", { ascending: false });
@@ -55,11 +55,11 @@ export async function GET(request: Request) {
     const { data: leases } = await supabase
       .from("leases")
       .select("*, units(*, properties(*)), tenant:profiles!leases_tenant_id_fkey(*)")
-      .in("id", leaseIds);
+      .in("id", leaseIds) as any;
 
     // Build response with related data
     const enrichedRequests = moveOutRequests.map(req => {
-      const lease = leases?.find(l => l.id === req.lease_id);
+      const lease = (leases as any[])?.find((l: any) => l.id === req.lease_id);
       return {
         ...req,
         lease: lease ? {

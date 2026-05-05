@@ -12,12 +12,12 @@ test('landlord can submit a walk-in application through the wizard', async ({ pa
 
   await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle' });
 
-  await page.getByLabel('Email Address').fill(LANDLORD_EMAIL);
+  await page.getByLabel('Email', { exact: true }).fill(LANDLORD_EMAIL);
   await page.getByLabel('Password').fill(LANDLORD_PASSWORD);
-  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('button', { name: /Sign into Account|Log In/i }).click();
 
   await page.goto(`${BASE_URL}/landlord/applications?action=walk-in`, { waitUntil: 'networkidle' });
-  await expect(page.getByText('Walk-in Application Wizard')).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Tenant Application Wizard|Walk-in Application Wizard/i)).toBeVisible({ timeout: 15000 });
 
   await page.locator('#unit-select').selectOption({ index: 1 });
   await page.locator('#applicant-name').fill(applicantName);
@@ -47,6 +47,6 @@ test('landlord can submit a walk-in application through the wizard', async ({ pa
 
   await page.getByRole('button', { name: /Finish & Approve|Save & Finish/i }).click();
 
-  await expect(page.getByText('Walk-in Application Wizard')).toBeHidden({ timeout: 20000 });
+  await expect(page.getByText(/Tenant Application Wizard|Walk-in Application Wizard/i)).toBeHidden({ timeout: 20000 });
   await expect(page.getByText(applicantName)).toBeVisible({ timeout: 20000 });
 });

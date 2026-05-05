@@ -18,13 +18,13 @@ export async function PUT(req: Request, { params }: RouteParams) {
     const body = await req.json();
     const { inspection_notes, inspection_photos, deposit_deductions } = body;
 
-    const { data: existingRequest, error: fetchError } = await supabase
+    const { data: existingRequest, error: fetchError } = await (supabase
       .from("move_out_requests")
       .select("*, lease:leases(id, unit_id, security_deposit)")
       .eq("id", id)
       .eq("landlord_id", user.id)
       .eq("status", "approved")
-      .single();
+      .single() as any);
 
     if (fetchError || !existingRequest) {
       return NextResponse.json({ error: "Move-out request not found or not approved" }, { status: 404 });

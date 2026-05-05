@@ -34,18 +34,18 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false });
 
     if (status && status !== "all") {
-      query = query.eq("status", status);
+      query = query.eq("status", status as any);
     }
 
     if (propertyId) {
       query = query.eq("lease.units.properties.id", propertyId);
     }
 
-    const { data: requests, error: fetchError } = await query;
+    const { data: requests, error: fetchError } = await (query as any);
 
     if (fetchError) throw fetchError;
 
-    const formattedRequests = requests?.map((req) => ({
+    const formattedRequests = (requests as any[])?.map((req: any) => ({
       id: req.id,
       tenant_name: req.tenant?.full_name || "Unknown",
       tenant_email: req.tenant?.email,

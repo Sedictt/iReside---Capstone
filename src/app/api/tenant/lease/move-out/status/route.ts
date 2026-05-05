@@ -10,7 +10,7 @@ export async function GET() {
   }
 
   try {
-    const { data: request, error: fetchError } = await supabase
+    const { data: request, error: fetchError } = await (supabase
       .from("move_out_requests")
       .select(`
         *,
@@ -20,7 +20,7 @@ export async function GET() {
       .in("status", ["pending", "approved"])
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .single() as any);
 
     if (fetchError || !request) {
       return NextResponse.json({ hasRequest: false, request: null });

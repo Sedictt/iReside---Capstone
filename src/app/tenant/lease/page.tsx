@@ -52,7 +52,7 @@ function LeaseHubContent() {
 
     const [activeTab, setActiveTab] = useState<TabId>(moveOutPreviewStatus ? "services" : "agreement");
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [renewalRequest, setRenewalRequest] = useState<unknown>(null);
+    const [renewalRequest, setRenewalRequest] = useState<any>(null);
 
     // Add mock data for previewing different move-out states
     const mockMoveOutRequest = useMemo(() => {
