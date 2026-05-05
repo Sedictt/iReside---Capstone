@@ -36,7 +36,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
           : Number(existingRequest.lease.security_deposit))
       : 0;
 
-    const updateData: Record<string, unknown> = {
+    const updateData: any = {
       status: "completed",
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
