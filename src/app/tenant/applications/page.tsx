@@ -25,7 +25,12 @@ import {
     Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { properties } from "@/lib/data";
+// import { properties } from "@/lib/data"; // Removed legacy data
+const properties = [
+    { id: "1", name: "The Obsidian Tower", address: "123 Dark St, Metro City", type: "Studio", images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"], price: "18,500" },
+    { id: "2", name: "The Vertex", address: "456 High St, Metro City", type: "1BR", images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop"], price: "12,000" },
+    { id: "4", name: "Emerald Heights", address: "789 Park Ave, Metro City", type: "2BR", images: ["https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&h=600&fit=crop"], price: "25,000" },
+];
 import { motion, AnimatePresence } from "framer-motion";
 
 // Mock applications data expanded for the new design
@@ -298,52 +303,31 @@ export default function MyApplicationsPage() {
                             </div>
                         </div>
 
-                        {/* Saved for Later - Enhanced */}
+                        {/* Help & Support Card */}
                         <div className="bg-[#111111]/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
-                                <Heart className="w-32 h-32 rotate-12" />
+                                <ShieldCheck className="w-32 h-32 rotate-12" />
                             </div>
 
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-white font-extrabold text-lg tracking-tight">Vaulted</h3>
-                                <span className="text-[10px] font-black bg-white/5 border border-white/5 px-2.5 py-1 rounded-lg text-white/40 uppercase tracking-widest">3 Items</span>
+                                <h3 className="text-white font-extrabold text-lg tracking-tight">Support</h3>
                             </div>
 
-                            <div className="space-y-6">
-                                {properties.slice(2, 4).map((prop, i) => (
-                                    <div key={i} className="flex gap-5 group cursor-pointer transition-all">
-                                        <div className="w-20 h-20 rounded-[1.5rem] overflow-hidden bg-[#1a1a1a] shrink-0 border border-white/5">
-                                            <Image
-                                                src={prop.images[0]}
-                                                alt={prop.name}
-                                                width={80}
-                                                height={80}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
-                                            />
-                                        </div>
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
-                                            <h4 className="text-white font-black text-sm truncate group-hover:text-primary transition-colors tracking-tight">{prop.name}</h4>
-                                            <p className="text-primary font-bold text-xs leading-none">₱{prop.price.replace('₱', '')}<span className="text-white/20 font-black text-[9px] ml-1">/mo</span></p>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <Link
-                                                    href={`/tenant/applications/${prop.id}/apply`}
-                                                    className="flex items-center gap-1.5 text-[9px] font-black text-black bg-primary px-3 py-1.5 rounded-xl uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-primary/10 active:scale-95"
-                                                >
-                                                    <Zap className="w-2.5 h-2.5" />
-                                                    Apply
-                                                </Link>
-                                                <button className="p-2 rounded-xl bg-white/5 text-white/40 hover:text-red-400 transition-colors">
-                                                    <Heart className="w-3 h-3 fill-transparent" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="space-y-4">
+                                <p className="text-white/40 text-sm font-medium">Have questions about your application or the verification process?</p>
+                                <Link 
+                                    href="/tenant/messages" 
+                                    className="block w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white text-center hover:bg-white/10 transition-all"
+                                >
+                                    Message Support
+                                </Link>
+                                <Link 
+                                    href="/tenant/dashboard" 
+                                    className="block w-full py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center hover:text-white transition-all"
+                                >
+                                    Back to Dashboard
+                                </Link>
                             </div>
-
-                            <Link href="/search" className="block w-full mt-10 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 border border-dashed border-white/10 rounded-3xl hover:border-primary/50 hover:text-primary transition-all text-center">
-                                Discover More Properties
-                            </Link>
                         </div>
                     </div>
                 </div>

@@ -12,7 +12,6 @@ export async function GET() {
     try {
         const [
             { data: applicationsData, error: appError },
-            { data: savedData, error: savedError },
             { data: activityRows, error: activityError }
         ] = await Promise.all([
             supabase
@@ -39,18 +38,6 @@ export async function GET() {
                 .eq("applicant_id", user.id)
                 .order("created_at", { ascending: false }),
             supabase
-                .from("saved_properties")
-                .select(`
-                    id,
-                    property:properties!inner (
-                        id, name, address, images, type,
-                        units ( rent_amount )
-                    )
-                `)
-                .eq("user_id", user.id)
-                .order("created_at", { ascending: false })
-                .limit(3),
-            supabase
                 .from("notifications")
                 .select("id, type, title, message, read, created_at")
                 .eq("user_id", user.id)
@@ -60,12 +47,10 @@ export async function GET() {
         ]);
 
         if (appError) throw appError;
-        if (savedError) throw savedError;
         if (activityError) throw activityError;
 
         return NextResponse.json({
             applications: applicationsData,
-            savedProperties: savedData,
             recentActivity: activityRows
         });
     } catch (e: any) {

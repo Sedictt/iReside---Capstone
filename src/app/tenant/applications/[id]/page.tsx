@@ -25,7 +25,27 @@ import {
     Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { properties } from "@/lib/data";
+// import { properties } from "@/lib/data"; // Removed legacy data
+const properties = [
+    { 
+        id: "1", 
+        name: "The Obsidian Tower", 
+        address: "123 Dark St, Metro City", 
+        type: "Studio", 
+        images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"], 
+        price: "18,500",
+        amenities: ["Concierge", "Rooftop Pool", "Fitness Center"]
+    },
+    { 
+        id: "2", 
+        name: "The Vertex", 
+        address: "456 High St, Metro City", 
+        type: "1BR", 
+        images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop"], 
+        price: "12,000",
+        amenities: ["In-unit Laundry", "Parking", "City View"]
+    },
+];
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ApplicationDashboardPage() {
@@ -161,10 +181,13 @@ export default function ApplicationDashboardPage() {
                                 </div>
                             </div>
 
-                            <Link href={`/search`} className="mt-4 p-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-2xl text-[10px] text-primary transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest group">
-                                View Full Listing
+                            <button 
+                                onClick={() => router.push('/tenant/applications')}
+                                className="mt-4 p-4 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-2xl text-[10px] text-primary transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest group"
+                            >
+                                Back to Applications
                                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1" />
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </div>

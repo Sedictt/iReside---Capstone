@@ -25,9 +25,25 @@ import {
     X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { properties, Property } from "@/lib/data";
+// import { properties, Property } from "@/lib/data"; // Removed legacy data
+const properties = [
+    { 
+        id: "1", 
+        name: "The Obsidian Tower", 
+        address: "123 Dark St, Metro City", 
+        type: "Studio", 
+        images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop"], 
+        price: "18,500",
+        amenities: ["Concierge", "Rooftop Pool", "Fitness Center"]
+    },
+];
+
+type Property = typeof properties[0];
+
 import { motion, AnimatePresence } from "framer-motion";
-import PropertyDetailModal from "@/components/PropertyDetailModal";
+
+// import PropertyDetailModal from "@/components/PropertyDetailModal"; // Removed legacy component
+const PropertyDetailModal = ({ property, isLiked, onLike, open, onOpenChange }: any) => null; 
 
 export default function RentApplicationPage() {
     const params = useParams();
@@ -134,10 +150,10 @@ export default function RentApplicationPage() {
                             Track Progress
                         </Link>
                         <Link
-                            href="/search"
+                            href="/tenant/dashboard"
                             className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all flex items-center justify-center gap-3 backdrop-blur-md active:scale-95"
                         >
-                            Find More Homes
+                            Return to Dashboard
                             <ArrowRight className="h-4 w-4 opacity-50" />
                         </Link>
                     </div>
@@ -177,11 +193,11 @@ export default function RentApplicationPage() {
                         {/* Header Section */}
                         <div className="space-y-4">
                             <button
-                                onClick={() => router.back()}
+                                onClick={() => router.push('/tenant/applications')}
                                 className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors group"
                             >
                                 <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                                Return to Listing
+                                Return to Applications
                             </button>
                             <h1 className="text-4xl font-extrabold text-white tracking-tighter leading-none">
                                 Application <br />

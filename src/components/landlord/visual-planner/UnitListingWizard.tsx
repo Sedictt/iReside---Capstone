@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -75,7 +75,7 @@ export function UnitListingWizard({
                 List Unit {unit.name || "Unit"}
               </h2>
               <p className="text-slate-500 text-sm mt-1">
-                Publish your unit to our marketplace and instantly attract verified tenants.
+                Configure your unit details and prepare it for tenant invitations.
               </p>
             </div>
             <button
@@ -115,7 +115,7 @@ export function UnitListingWizard({
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900">Let's get this unit rented!</h3>
                   <p className="text-slate-500 max-w-sm mx-auto mt-2 text-sm leading-relaxed">
-                    We'll guide you through setting up pricing, uploading photos, and listing this unit for prospective tenants.
+                    We'll guide you through setting up pricing, uploading photos, and preparing this unit for your future tenants.
                   </p>
                 </div>
                 
@@ -147,7 +147,7 @@ export function UnitListingWizard({
                 transition={stepTransition}
                 className="space-y-6 transform-gpu"
               >
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Set Marketing Pricing</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Set Rental Pricing</h3>
                 <p className="text-slate-500 text-sm mb-6">Determine your monthly rent and deposit requirements.</p>
                 
                 <div className="space-y-4">
@@ -241,7 +241,7 @@ export function UnitListingWizard({
                         Main Thumbnail <span className="text-rose-400">*</span>
                       </label>
                     </div>
-                    <p className="text-xs text-slate-500 mb-3">This is the key photo tenants will see in the search results.</p>
+                    <p className="text-xs text-slate-500 mb-3">This is the key photo tenants will see when they receive an invitation.</p>
                     <div className="border-2 border-dashed border-border hover:border-primary/50 bg-slate-50 rounded-2xl flex flex-col items-center justify-center p-6 transition-colors cursor-pointer group h-36">
                       <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-primary/20 group-hover:text-primary transition-colors text-slate-400 shadow-sm">
                         <span className="material-icons-round text-2xl">add_photo_alternate</span>
@@ -320,9 +320,9 @@ export function UnitListingWizard({
                   <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="material-icons-round text-4xl text-emerald-400">check_circle</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-3">Ready to Publish!</h3>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-3">Ready to Activate!</h3>
                   <p className="text-slate-500 text-sm max-w-sm mx-auto leading-relaxed">
-                    Your listing is looking great. It will be immediately visible on our marketplace. You can edit these details later from your properties dashboard.
+                    Your unit configuration is looking great. It will be ready for tenant invitations immediately.
                   </p>
                 </div>
                 
@@ -331,8 +331,8 @@ export function UnitListingWizard({
                     <span className="material-icons-round">notification_important</span>
                   </div>
                   <div className="text-sm">
-                    <p className="text-slate-900 font-medium">Automatic Notifications</p>
-                    <p className="text-slate-500">We'll alert interested tenants who saved similar properties.</p>
+                    <p className="text-slate-900 font-medium">Internal Portfolio</p>
+                    <p className="text-slate-500">This unit will be added to your active management portfolio.</p>
                   </div>
                 </div>
               </motion.div>
@@ -377,8 +377,8 @@ export function UnitListingWizard({
                 }}
                 className="px-8 py-2.5 rounded-xl font-bold text-sm text-white bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all outline-none flex items-center gap-2"
               >
-                <span className="material-icons-round text-[18px]">public</span>
-                Publish Listing
+                <span className="material-icons-round text-[18px]">bolt</span>
+                Activate Unit
               </button>
             )}
           </div>

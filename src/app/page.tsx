@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, PieChart, MessageSquare, Twitter, Github, Linkedin, Mail } from "lucide-react";
+import { Building, ChevronRight, ArrowRight, Home, Users, BarChart3, Clock, Lock, Zap, FileText, CheckCircle2, Sparkles, Activity, LayoutDashboard, MapPin, Receipt, Hammer, PieChart, MessageSquare, Twitter, Github, Linkedin, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import gsap from "gsap";
@@ -71,32 +71,32 @@ const HOW_IT_WORKS = [
 
 const SHOWCASE_MODULES = [
     {
-        id: "dashboard",
-        title: "Operations Dashboard",
-        desc: "See occupancy, income, lease status, and urgent tasks in one real-time command center.",
-        href: "/modules/dashboard",
-        icon: LayoutDashboard,
-        color: "bg-blue-500",
-        shadow: "shadow-blue-500/20",
-    },
-    {
-        id: "map",
-        title: "Unit Map",
-        desc: "Visualize every property and unit at a glance to spot vacancies, turnover risk, and leasing opportunities faster.",
+        id: "unit-map",
+        title: "Portfolio Map",
+        desc: "See your entire portfolio on one high-fidelity interactive map. Track occupancy and unit status visually.",
         href: "/modules/unit-map",
         icon: MapPin,
         color: "bg-emerald-500",
         shadow: "shadow-emerald-500/20",
     },
     {
-        id: "finance",
-        title: "Rent & Invoices",
-        desc: "Automate billing, track payment status, and keep monthly collections predictable with less manual follow-up.",
+        id: "maintenance",
+        title: "Maintenance Ops",
+        desc: "Centralized maintenance management. From tenant reports to contractor dispatching and tracking.",
+        href: "/landlord/maintenance",
+        icon: Hammer,
+        color: "bg-amber-500",
+        shadow: "shadow-amber-500/20",
+    },
+    {
+        id: "financials",
+        title: "Financials",
+        desc: "Robust automated rent collection, automated receipts, and deep financial reporting for properties.",
         href: "/modules/financials",
         icon: Receipt,
-        color: "bg-purple-500",
-        shadow: "shadow-purple-500/20",
-    }
+        color: "bg-blue-500",
+        shadow: "shadow-blue-500/20",
+    },
 ];
 
 const IRIS_WORKFLOWS = [

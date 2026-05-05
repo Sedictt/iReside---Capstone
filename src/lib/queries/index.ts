@@ -1,9 +1,7 @@
 // Barrel export for all query functions
 export {
-    getProperties,
     getPropertyById,
     getLandlordProperties,
-    getSavedProperties,
 } from './properties'
 
 export {
