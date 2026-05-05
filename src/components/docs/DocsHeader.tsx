@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Menu, X, Github, ExternalLink } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface DocsHeaderProps {
   onMenuToggle?: () => void;
@@ -67,6 +68,7 @@ export function DocsHeader({ onMenuToggle, isMenuOpen }: DocsHeaderProps) {
           </div>
           
           <div className="flex items-center gap-1 border-l border-divider pl-4">
+            <ThemeToggle variant="sidebar" className="h-9 w-9" />
             <Button variant="ghost" size="icon" className="h-9 w-9 text-text-medium" asChild>
               <a href="https://github.com/ireside" target="_blank" rel="noopener noreferrer">
                 <Github className="h-5 w-5" />
