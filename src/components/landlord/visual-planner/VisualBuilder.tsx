@@ -184,61 +184,17 @@ interface TenantActionMenuState {
 type UnitNotesState = Record<string, string>;
 
 const INITIAL_UNITS: Unit[] = [
-    {
-        id: "101",
-        dbId: "",
-        name: "Unit 101",
-        type: "1BR",
-        status: "occupied",
-        tenant: "J. Doe",
-        x: 20,
-        y: 20,
-        w: 200,
-        h: 140,
-        details: "1BR Standard",
-        leaseStart: "2023-01-01",
-        leaseEnd: "2024-01-01"
-    },
-    {
-        id: "102",
-        dbId: "",
-        name: "Unit 102",
-        type: "1BR",
-        status: "vacant",
-        x: 240,
-        y: 20,
-        w: 200,
-        h: 140,
-        details: "Listed 2d ago"
-    },
-    {
-        id: "103",
-        dbId: "",
-        name: "Unit 103",
-        type: "2BR",
-        status: "maintenance",
-        x: 460,
-        y: 20,
-        w: 200,
-        h: 140,
-        details: "HVAC Repair",
-        leaseEnd: "ETA: 2 Days"
-    },
-    {
-        id: "104",
-        dbId: "",
-        name: "Unit 104 (Suite)",
-        type: "3BR",
-        status: "neardue",
-        tenant: "M. Scott",
-        x: 680,
-        y: 20,
-        w: 280,
-        h: 140,
-        leaseStart: "2023-05-01",
-        leaseEnd: "2024-05-01",
-        details: "Lease ends in 15 days"
-    },
+    // Left Wing
+    { id: "demo-1", dbId: "", name: "101", type: "1BR", status: "occupied", tenant: "J. Doe", x: 100, y: 40, w: 180, h: 120, details: "1BR Standard", leaseStart: "2023-01-01", leaseEnd: "2024-01-01" },
+    { id: "demo-2", dbId: "", name: "102", type: "1BR", status: "vacant", x: 280, y: 40, w: 180, h: 120, details: "Ready for Move-in" },
+    { id: "demo-3", dbId: "", name: "103", type: "2BR", status: "maintenance", x: 460, y: 40, w: 220, h: 120, details: "Deep Cleaning", leaseEnd: "ETA: 6h" },
+    { id: "demo-4", dbId: "", name: "104", type: "1BR", status: "occupied", tenant: "A. Smith", x: 680, y: 40, w: 180, h: 120, details: "Premium View" },
+    
+    // Right Wing
+    { id: "demo-5", dbId: "", name: "105", type: "3BR", status: "neardue", tenant: "M. Scott", x: 100, y: 200, w: 280, h: 140, details: "Penthouse Suite", leaseEnd: "Ends in 12d" },
+    { id: "demo-6", dbId: "", name: "106", type: "1BR", status: "occupied", tenant: "L. Croft", x: 380, y: 200, w: 180, h: 140, details: "Compact Studio" },
+    { id: "demo-7", dbId: "", name: "107", type: "2BR", status: "vacant", x: 560, y: 200, w: 200, h: 140, details: "Renovated Unit" },
+    { id: "demo-8", dbId: "", name: "108", type: "1BR", status: "occupied", tenant: "B. Wayne", x: 760, y: 200, w: 180, h: 140, details: "Corner Unit" },
 ];
 
 const LEGEND_VISIBILITY_STORAGE_KEY = "ireside.visualPlanner.legendVisible";
@@ -246,7 +202,7 @@ const FLOOR_LAYOUTS_STORAGE_KEY = "ireside.visualPlanner.floorLayouts";
 const ACTIVE_FLOOR_STORAGE_KEY = "ireside.visualPlanner.activeFloor";
 const UNIT_NOTES_STORAGE_KEY = "ireside.visualPlanner.unitNotes";
 const EMPTY_FLOOR_LAYOUT: FloorLayout = { units: [], corridors: [], structures: [] };
-const DEFAULT_ACTIVE_FLOOR = "floor1";
+const DEFAULT_ACTIVE_FLOOR = "ground";
 // Default layouts are empty Ã¢â‚¬â€ real data is loaded from DB
 const DEFAULT_FLOOR_LAYOUTS: Record<FloorId, FloorLayout> = {
     ground: { units: [], corridors: [], structures: [] },
@@ -929,7 +885,15 @@ const TransferRequestModal = ({
     );
 };
 
-export default function VisualBuilder({ readOnly = false, propertyId: externalPropertyId }: { readOnly?: boolean; propertyId?: string } = {}) {
+export default function VisualBuilder({ 
+    readOnly = false, 
+    propertyId: externalPropertyId,
+    demoMode = false 
+}: { 
+    readOnly?: boolean; 
+    propertyId?: string;
+    demoMode?: boolean;
+} = {}) {
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = externalPropertyId ?? propertyContext?.selectedPropertyId ?? "all";
     const selectedProperty = propertyContext?.selectedProperty;
@@ -967,7 +931,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const panPointerIdRef = useRef<number | null>(null);
     const panStartPointerRef = useRef({ x: 0, y: 0 });
     const panStartPositionRef = useRef({ x: 0, y: 0 });
-    const [units, setUnits] = useState<Unit[]>([]);
+    const [units, setUnits] = useState<Unit[]>(demoMode ? INITIAL_UNITS : []);
     const [isPropertyMenuOpen, setIsPropertyMenuOpen] = useState(false);
     const [isHUDHidden, setIsHUDHidden] = useState(false);
     const [isLayoutLocked, setIsLayoutLocked] = useState(false);
@@ -977,12 +941,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isMinimapDragging, setIsMinimapDragging] = useState(false);
     // DB-driven state
     const [dbUnits, setDbUnits] = useState<DbUnit[]>([]);
-    const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>([]);
-    const [isLoadingMap, setIsLoadingMap] = useState(false);
+    const [floorConfigs, setFloorConfigs] = useState<FloorConfig[]>(demoMode ? [
+        { id: "f1", floor_number: 1, floor_key: "ground", display_name: "Ground Floor", sort_order: 1 }
+    ] : []);
+    const [isLoadingMap, setIsLoadingMap] = useState(!demoMode);
     const [mapLoadError, setMapLoadError] = useState<string | null>(null);
-    const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
-    const [placedCount, setPlacedCount] = useState(0);
-    const [totalDbUnits, setTotalDbUnits] = useState(0);
+    const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(demoMode ? true : null);
+    const [placedCount, setPlacedCount] = useState(demoMode ? INITIAL_UNITS.length : 0);
+    const [totalDbUnits, setTotalDbUnits] = useState(demoMode ? INITIAL_UNITS.length : 0);
     // Unplaced units: DB units not yet on the canvas
     const [unplacedDbUnits, setUnplacedDbUnits] = useState<DbUnit[]>([]);
 
@@ -990,8 +956,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [showOverlapToast, setShowOverlapToast] = useState(false);
     const [isPanning, setIsPanning] = useState(false);
     const [dragPlacement, setDragPlacement] = useState<DragPlacementState | null>(null);
-    const [corridors, setCorridors] = useState<Corridor[]>([]);
-    const [structures, setStructures] = useState<Structure[]>([]);
+    const [corridors, setCorridors] = useState<Corridor[]>(demoMode ? [
+        { id: "c1", label: "Main Hallway", x: 100, y: 160, w: 840, h: 40 }
+    ] : []);
+    const [structures, setStructures] = useState<Structure[]>(demoMode ? [
+        { id: "s1", type: "elevator", label: "Lobby Elevator", x: 20, y: 150, w: 60, h: 60 },
+        { id: "s2", type: "stairwell", variant: "u-shape", label: "East Stairs", x: 960, y: 150, w: 60, h: 60 }
+    ] : []);
     const [selectedItem, setSelectedItem] = useState<SelectedCanvasItem | null>(null);
     const [pendingDelete, setPendingDelete] = useState<PendingDeleteState | null>(null);
     const [pendingClearFloor, setPendingClearFloor] = useState(false);
@@ -1011,8 +982,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
     const [sidebarBlockGhost, setSidebarBlockGhost] = useState<SidebarBlockGhost | null>(null);
     const [resizingCorridorId, setResizingCorridorId] = useState<string | null>(null);
-    const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(DEFAULT_FLOOR_LAYOUTS);
-    const [hasHydratedFloorState, setHasHydratedFloorState] = useState(false);
+    const [floorLayouts, setFloorLayouts] = useState<Record<FloorId, FloorLayout>>(demoMode ? {
+        ground: { 
+            units: INITIAL_UNITS, 
+            corridors: [{ id: "c1", label: "Main Hallway", x: 100, y: 160, w: 840, h: 40 }],
+            structures: [
+                { id: "s1", type: "elevator", label: "Lobby Elevator", x: 20, y: 150, w: 60, h: 60 },
+                { id: "s2", type: "stairwell", label: "East Stairs", x: 960, y: 150, w: 60, h: 60 }
+            ]
+        }
+    } : DEFAULT_FLOOR_LAYOUTS);
+    const [hasHydratedFloorState, setHasHydratedFloorState] = useState(demoMode);
     const [isRenamingFloor, setIsRenamingFloor] = useState(false);
     const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [unitNotes, setUnitNotes] = useState<UnitNotesState>({});
@@ -1052,7 +1032,58 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         };
         fetchInvites();
     }, [refreshKey]);
+    // ---------------------------------------------------------------
+    // Demo Mode Hydration
+    // ---------------------------------------------------------------
     useEffect(() => {
+        if (!demoMode) return;
+        
+        const syncDemo = () => {
+            setIsLoadingMap(false);
+            setDbUnits([]);
+            setFloorConfigs([
+                { id: "f1", floor_number: 1, floor_key: "ground", display_name: "Ground Floor", sort_order: 1 }
+            ]);
+            setIsSetupComplete(true);
+            setPlacedCount(INITIAL_UNITS.length);
+            setTotalDbUnits(INITIAL_UNITS.length);
+            setStatusFilters(["occupied", "vacant", "maintenance", "neardue"]);
+            
+            const demoUnits = INITIAL_UNITS.map(u => ({ ...u }));
+            const layouts: Record<FloorId, FloorLayout> = {
+                ground: { 
+                    units: demoUnits, 
+                    corridors: [
+                        { id: "c1", label: "Main Hallway", x: 100, y: 160, w: 840, h: 40 }
+                    ], 
+                    structures: [
+                        { id: "s1", type: "elevator", label: "Lobby Elevator", x: 20, y: 150, w: 60, h: 60 },
+                        { id: "s2", type: "stairwell", variant: "u-shape", label: "East Stairs", x: 960, y: 150, w: 60, h: 60 }
+                    ] 
+                }
+            };
+            setFloorLayouts(layouts);
+            setActiveFloor("ground");
+            setUnits(demoUnits);
+            setCorridors([...layouts.ground.corridors]);
+            setStructures([...layouts.ground.structures]);
+            setHasHydratedFloorState(true);
+            if (!readOnly) setIsSidebarVisible(true);
+        };
+
+        syncDemo();
+        // Aggressive re-hydration loop to prevent state resets
+        const interval = setInterval(() => {
+            if (units.length === 0) syncDemo();
+        }, 500);
+        return () => clearInterval(interval);
+    }, [demoMode, units.length]);
+
+    // ---------------------------------------------------------------
+    // Load real data from DB when a property is selected
+    // ---------------------------------------------------------------
+    useEffect(() => {
+        if (demoMode) return;
         if (!selectedPropertyId || selectedPropertyId === "all") return;
 
         const controller = new AbortController();
@@ -1143,7 +1174,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
         void load();
         return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedPropertyId, refreshKey]);
+    }, [selectedPropertyId, refreshKey, demoMode]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -1238,8 +1269,8 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     // Auto-record history on changes
     useEffect(() => {
-        if (isUndoingRef.current) {
-            isUndoingRef.current = false;
+        if (demoMode || isUndoingRef.current) {
+            if (isUndoingRef.current) isUndoingRef.current = false;
             return;
         }
 
@@ -3098,7 +3129,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const selectedUnitNote = selectedUnit ? (unitNotes[selectedUnit.id] ?? "") : "";
 
     return (
-        <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} h-screen flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
+        <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} h-full flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
             {/* Header */}
             <AnimatePresence>
                 {!isCanvasFullscreen && (
@@ -4013,7 +4044,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    className="absolute top-6 left-6 z-30 pointer-events-none"
+                                    className="absolute top-10 left-10 z-30 pointer-events-none"
                                 >
                                     <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-slate-900/90 hover:scale-[1.02]">
                                         <div className="flex items-center gap-4 px-2 py-1">
@@ -4037,7 +4068,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
-                                    className="absolute bottom-8 left-8 z-30 pointer-events-none"
+                                    className="absolute bottom-12 left-12 z-30 pointer-events-none"
                                 >
                                     <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
                                         <div className="flex items-center gap-6 px-6 py-1.5 whitespace-nowrap">
@@ -4086,7 +4117,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
-                                    className="absolute bottom-8 right-8 z-30 pointer-events-none"
+                                    className="absolute bottom-12 right-12 z-30 pointer-events-none"
                                 >
                                     <div className="flex gap-4 items-end pointer-events-auto">
                                         {/* Minimap */}
@@ -4255,7 +4286,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     </AnimatePresence>
 
                     {/* Viewport System Toolbar (Always Visible) */}
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
+                    <div className="absolute right-10 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
                         <div className="flex flex-col bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl">
                             {!isHUDHidden && (
                                 <motion.div 
@@ -5695,7 +5726,7 @@ const SidebarBlockLibrary = ({
                     </div>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-border">
+                <div className="pt-4 mt-4 border-t border-border pb-10">
                     <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                         <span className="material-icons-round text-primary text-sm">construction</span>
                         Canvas Tools

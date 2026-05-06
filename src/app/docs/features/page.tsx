@@ -19,6 +19,8 @@ export const metadata = {
   description: "Learn about the core platform capabilities of iReside like the Unit Map, Document Manager, Financial Hub, Communication, and Maintenance.",
 };
 
+import { UnitMapFeatureSection } from "@/components/docs/UnitMapFeatureSection";
+
 export default function FeaturesPage() {
   return (
     <div className="space-y-16 pb-16">
@@ -38,48 +40,8 @@ export default function FeaturesPage() {
       </section>
 
       {/* Unit Map - The Hero Feature */}
-      <section id="unit-map" className="scroll-mt-24 space-y-8 rounded-3xl border border-divider bg-surface-1 p-8 lg:p-12 shadow-sm">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
-          <div className="flex-1 space-y-4">
-            <div className="inline-flex items-center gap-2 text-primary font-semibold">
-              <Map className="h-5 w-5" />
-              <span>Signature Feature</span>
-            </div>
-            <h2 className="text-3xl font-bold text-text-high">Interactive Unit Map</h2>
-            <p className="text-lg text-text-medium leading-relaxed">
-              Visualize your entire property layout at a glance. The Unit Map feature transforms standard, text-based property lists into an interactive, visual grid that mirrors your actual building layout.
-            </p>
-            <ul className="space-y-3 pt-2">
-              <li className="flex gap-3">
-                <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
-                  <CheckCircle className="h-full w-full" />
-                </div>
-                <span className="text-text-medium"><strong>Visual Organization:</strong> Represent properties spatially to match reality. Easily identify which unit is adjacent to which.</span>
-              </li>
-              <li className="flex gap-3">
-                <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
-                  <CheckCircle className="h-full w-full" />
-                </div>
-                <span className="text-text-medium"><strong>Instant Status Indicators:</strong> Color-coded blocks immediately reveal which units are vacant, occupied, or pending maintenance.</span>
-              </li>
-              <li className="flex gap-3">
-                <div className="mt-1 h-6 w-6 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center p-1">
-                  <CheckCircle className="h-full w-full" />
-                </div>
-                <span className="text-text-medium"><strong>Quick Actions:</strong> Click any unit block to instantly access lease details, tenant information, and open requests.</span>
-              </li>
-            </ul>
-          </div>
-          <div className="flex-1 rounded-xl border border-divider bg-surface-2 p-6 flex flex-col items-center justify-center text-center space-y-4 min-h-[300px]">
-            <img 
-              src="/section-cards/unit-map.png" 
-              alt="Interactive Unit Map visualization showing property layout with color-coded units" 
-              className="max-w-full h-auto rounded-lg shadow-sm"
-            />
-            <p className="text-sm text-text-medium italic">Visual representation of the intuitive Unit Map layout</p>
-          </div>
-        </div>
-      </section>
+      <UnitMapFeatureSection />
+
 
       {/* Grid Features */}
       <section className="grid gap-8 sm:grid-cols-2">
