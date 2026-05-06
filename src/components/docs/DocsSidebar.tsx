@@ -63,9 +63,18 @@ export const DOCS_NAV: NavSection[] = [
         href: "/docs/getting-started/account-setup", 
         icon: User,
         subItems: [
-          { title: "1. Registration", href: "/docs/getting-started/account-setup#registration" },
-          { title: "2. Choose Your Role", href: "/docs/getting-started/account-setup#roles" },
-          { title: "3. Profile Completion", href: "/docs/getting-started/account-setup#profile" },
+          { title: "Getting Started as a Landlord", href: "/docs/getting-started/account-setup#roles" },
+          { title: "1. Start Your Registration", href: "/docs/getting-started/account-setup#registration" },
+          { title: "2. Verify Your Email", href: "/docs/getting-started/account-setup#email-verification" },
+          { title: "3. Create a Strong Password", href: "/docs/getting-started/account-setup#password" },
+          { title: "4. Complete Your Profile", href: "/docs/getting-started/account-setup#profile" },
+          { title: "5. Add a Photo (Optional)", href: "/docs/getting-started/account-setup#photo" },
+          { title: "6. Contact Information", href: "/docs/getting-started/account-setup#contact" },
+          { title: "7. Notification Preferences", href: "/docs/getting-started/account-setup#notifications" },
+          { title: "8. Security Settings", href: "/docs/getting-started/account-setup#security" },
+          { title: "9. Review & Accept Terms", href: "/docs/getting-started/account-setup#terms" },
+          { title: "10. Confirm and Complete", href: "/docs/getting-started/account-setup#confirmation" },
+          { title: "What Happens Next", href: "/docs/getting-started/account-setup#next-steps" },
         ]
       },
       { 
