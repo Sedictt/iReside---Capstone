@@ -90,36 +90,114 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
   },
   "getting-started/quick-start": {
     title: "Quick Start Guide",
-    subtitle: "Jump straight into the action with iReside.",
+    subtitle: "Get up and running with iReside in just a few minutes.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Ready to explore iReside? Follow these quick steps to get the most out of the platform from day one. The process differs based on whether you&apos;re a tenant or landlord.</p>
+        <p>Welcome to iReside. Whether you&apos;re renting an apartment or managing properties, this guide will walk you through the basics so you can start using the platform right away. The steps are different depending on whether you&apos;re a tenant or a landlord, so pick the one that applies to you.</p>
         
-        <h3 id="tenants">If you&apos;re a Tenant:</h3>
-        <p>As a tenant, you don&apos;t need to create an account upfront. Your landlord will guide you through the application process. Here&apos;s what to expect:</p>
-        <ol>
-          <li><strong>Receive Application Form:</strong> Your landlord will provide you with an application form. This can come through an invitation link they send you, or they may fill it out based on your face-to-face conversation with them.</li>
-          <li><strong>Submit Your Information:</strong> Fill out the required information about yourself, including employment status, income, references, and any other details the landlord requests.</li>
-          <li><strong>Complete the Application Process:</strong> Follow any additional steps the landlord requires, such as background checks or financial verification.</li>
-          <li><strong>Reach an Agreement:</strong> Once your application is reviewed and approved, you&apos;ll negotiate the lease terms with the landlord and reach an agreement.</li>
-          <li><strong>Account Created:</strong> Once the landlord accepts you and you&apos;ve agreed to the lease, your account will be automatically created in the system. You can then log in and start using iReside to manage your tenancy.</li>
-        </ol>
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">What&apos;s the Difference?</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">A tenant is someone renting a space. A landlord is someone who owns the property and is renting it out. You&apos;ll see different options in the app based on which one you are.</p>
+        </div>
 
-        <h3 id="landlords">If you&apos;re a Landlord:</h3>
-        <p>If you&apos;re a landlord, follow these steps to get your properties set up and start managing tenants:</p>
-        <ol>
-          <li><strong>Create Your Account:</strong> Sign up on iReside using the account setup process. Choose &quot;Landlord&quot; as your role.</li>
-          <li><strong>Business Verification:</strong> Complete the mandatory verification to access all management tools. This protects everyone on the platform and establishes trust.</li>
-          <li><strong>Add Your Properties:</strong> Input details about each of your properties and units, including floor plans, rent amounts, and house rules.</li>
-          <li><strong>Create Application Forms:</strong> Set up application forms for prospective tenants. You can customize these to request the information you need.</li>
-          <li><strong>Invite Tenants:</strong> Send invitation links or application forms to prospective tenants. They&apos;ll complete the form, and you&apos;ll review their applications.</li>
-          <li><strong>Review &amp; Accept:</strong> Review submitted applications, conduct any background or financial checks you require, and accept tenants you want to move forward with.</li>
-          <li><strong>Manage Your Tenants:</strong> Once you&apos;ve accepted a tenant, their account is created automatically, and you can both use iReside to manage payments, communication, documents, maintenance requests, and more.</li>
-        </ol>
+        <h3 id="before-you-start">Before You Start</h3>
+        <p>Here are a few things that will make the process smoother:</p>
+        <ul>
+          <li>Have an email address ready that you check regularly</li>
+          <li>Keep your phone number handy in case you need to verify your identity</li>
+          <li>If you have documents like your ID or lease, have them nearby</li>
+          <li>Make sure you&apos;re in a place with a stable internet connection</li>
+        </ul>
+
+        <h3 id="how-long">How Long Does This Take?</h3>
+        <p>For most people, the entire process takes between 5 to 15 minutes. If you have all your information ready, you can be done even faster.</p>
+        
+        <h3 id="tenants">Getting Started as a Tenant</h3>
+        <p>If you&apos;re looking for a place to rent, here&apos;s what you need to know. The good news is that you don&apos;t have to create an account before you can apply. Your landlord will handle most of the setup for you.</p>
+
+        <h4 id="tenant-step-1">Step 1: Wait for Your Landlord&apos;s Invitation</h4>
+        <p>When you&apos;ve found a place you&apos;re interested in, ask the landlord for an application form or invitation link. This is what starts the process. The landlord will send this to you through email or another contact method you&apos;ve arranged with them.</p>
+
+        <h4 id="tenant-step-2">Step 2: Fill Out Your Application</h4>
+        <p>Once you get the invitation link or form, click it and you&apos;ll see an application. Fill out everything honestly and completely. This usually includes things like your employment information, how much money you make, references from past landlords or employers, and personal details about yourself.</p>
+        <p>Don&apos;t worry if you&apos;re not sure about something. Most landlords are happy to answer questions about what they&apos;re looking for.</p>
+
+        <h4 id="tenant-step-3">Step 3: Submit Any Required Documents</h4>
+        <p>The landlord might ask you to upload documents to prove things you&apos;ve written in your application. This could be a pay stub to show your income, a letter from a previous landlord as a reference, or a copy of your ID. The app will let you know exactly what&apos;s needed.</p>
+
+        <h4 id="tenant-step-4">Step 4: Wait for a Response</h4>
+        <p>After you submit your application, the landlord will review it. You&apos;ll get notifications in the app as they review your information. Some landlords move quickly, while others might take a few days. Be patient and keep checking your notifications.</p>
+
+        <h4 id="tenant-step-5">Step 5: If Approved, Sign Your Lease</h4>
+        <p>If the landlord likes your application, they&apos;ll send you the lease agreement to review. Take time to read through it and make sure you understand all the terms. The rent amount, how long you&apos;re renting, what utilities are included, and rules about pets or guests should all be clear. Once you&apos;re happy with everything, you&apos;ll sign it digitally right in the app.</p>
+
+        <h4 id="tenant-step-6">Step 6: Your Account is Ready</h4>
+        <p>After you sign the lease, your account will be created automatically. We&apos;ll send your login credentials to the email address you provided. Check your inbox and any spam folders for a message that contains your temporary username and password.</p>
+        <p>You can now log in and access all the tools you need to manage your rental. This is where you&apos;ll pay rent, request repairs if something breaks, message your landlord, view your lease agreement, and access any other important documents.</p>
+        
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Important: Change Your Password Right Away</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">The password we send you is temporary and only meant for your first login. As soon as you log in, go to your account settings and create a new password that only you know. This keeps your account secure and protects your personal information. Choose a password that&apos;s different from ones you use elsewhere and includes a mix of letters, numbers, and special characters.</p>
+        </div>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Quick Tip for Tenants</p>
+          <p className="m-0 text-text-medium text-sm">Don&apos;t create an account on your own before your landlord invites you. Wait for them to send the invitation link. This makes sure everything is set up correctly and your information is stored safely.</p>
+        </div>
+
+        <h3 id="landlords">Getting Started as a Landlord</h3>
+        <p>If you own properties and want to rent them out through iReside, here&apos;s how to get your account ready and start finding tenants.</p>
+
+        <h4 id="landlord-step-1">Step 1: Sign Up for Your Account</h4>
+        <p>Go to the iReside website and click the sign up button. Choose &quot;I&apos;m a landlord&quot; when asked what role you play. You&apos;ll enter your email address, create a password, and give us some basic information about yourself. You can also sign up using your Google account if that&apos;s easier.</p>
+
+        <h4 id="landlord-step-2">Step 2: Verify Your Identity</h4>
+        <p>For security and trust, we need to confirm who you are. This is a standard process that protects everyone on the platform. You&apos;ll be asked to provide some identifying information and documents. This might include things like a government ID or proof of your business. Don&apos;t worry, we keep everything secure and private.</p>
+
+        <h4 id="landlord-step-3">Step 3: Add Your Properties</h4>
+        <p>Next, you&apos;ll add the properties you want to rent out. For each property, you&apos;ll enter details like the address, how many bedrooms and bathrooms it has, the monthly rent amount, and any special features. You can also add photos and a description to make it more appealing to tenants. If you have multiple units or properties, add them all here.</p>
+
+        <h4 id="landlord-step-4">Step 4: Create Your Application Form</h4>
+        <p>Decide what information you need from potential tenants. Do you want to know about their employment? Do you require references from past landlords? The app lets you customize your application form based on what&apos;s important to you. This form is what tenants will fill out when they apply.</p>
+
+        <h4 id="landlord-step-5">Step 5: Find and Invite Tenants</h4>
+        <p>When you&apos;re ready to rent out a property, send out application links to people who are interested. You can do this through email or by sharing a link directly. When someone receives your invitation, they&apos;ll fill out your application form.</p>
+
+        <h4 id="landlord-step-6">Step 6: Review Applications and Make Your Decisions</h4>
+        <p>As applications come in, you&apos;ll see all the information tenants have provided. You can review their employment details, references, and any documents they&apos;ve uploaded. If you want to do background checks or verify their income, you can do that through iReside. Once you&apos;ve decided on a tenant, you&apos;ll send them the lease to sign.</p>
+
+        <h4 id="landlord-step-7">Step 7: Both Tenants and Landlords Can Manage Everything</h4>
+        <p>After the lease is signed, you and your tenant can both use iReside to handle everything going forward. You&apos;ll collect rent payments, your tenant can request repairs or maintenance, you can both communicate through messaging, and all documents stay organized in one place.</p>
+
+        <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-green-700 dark:text-green-300 m-0">You&apos;re in Control</p>
+          <p className="m-0 text-green-600 dark:text-green-200 text-sm">As a landlord, you set the rules. You decide what questions are on your application, who you rent to, and how you want to communicate with your tenants. iReside just gives you the tools to manage it all in one place.</p>
+        </div>
+
+        <h3 id="what-comes-next">What Comes Next?</h3>
+        <p>Now that you understand the basics, you&apos;re ready to dive deeper. Here are the next steps based on your role:</p>
+        <ul>
+          <li><strong>Tenants:</strong> Check out the section on submitting your application and what to expect as a renter</li>
+          <li><strong>Landlords:</strong> Learn about managing your properties, handling tenant applications, and collecting rent payments</li>
+          <li><strong>Everyone:</strong> Explore the platform features to get the most out of iReside</li>
+        </ul>
+
+        <h3 id="common-questions">Common Questions to Get Started</h3>
+        <p><strong>Do I need to pay anything to use iReside?</strong></p>
+        <p>No, iReside is completely free to use for both tenants and landlords right now. Some landlords might charge a small fee for background checks, but that&apos;s between you and them.</p>
+        
+        <p><strong>Is my information safe?</strong></p>
+        <p>Yes. Your information is protected like a locked mailbox. When you send information to iReside, it travels through a secure connection so no one can peek at it in transit. Your account is password-protected, and we store your data on secure servers. We also have safeguards to make sure only you can access your account. If you want extra protection, you can turn on two-factor authentication, which is like having a second lock on your account.</p>
+        
+        <p><strong>What if I have a problem or get stuck?</strong></p>
+        <p>We&apos;re here to help. You can reach out to our support team through the app, and we&apos;ll answer your questions or fix any issues as quickly as possible. Check the support section for more help options and answers to other common questions.</p>
+
+        <p><strong>Can I change my mind after signing?</strong></p>
+        <p>That depends on your lease agreement and local laws. We recommend reading your lease carefully before you sign it. If you have questions about your rights or the terms, reach out to our support team or speak with a local housing organization.</p>
       </div>
     ),
     next: "tenant/applications",
-    prev: "getting-started/account-setup",
+    prev: "getting-started/quick-start",
   },
   "tenant/applications": {
     title: "Submitting Applications",
@@ -130,10 +208,10 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
         
         <h3 id="review">1. Review Invitation</h3>
         <p>Access the property details through the link provided by your landlord. You can review the unit specifications, rent terms, and house rules.</p>
-
+ 
         <h3 id="submission">2. Digital Submission</h3>
         <p>Confirm your profile details and submit your application. This includes any necessary background checks or income verifications required for that specific property.</p>
-
+ 
         <h3 id="tracking">3. Real-time Tracking</h3>
         <p>Stay informed as the landlord reviews your application. You&apos;ll receive instant notifications upon approval or requests for further information.</p>
       </div>
@@ -147,13 +225,13 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
         <h3>Is iReside free to use?</h3>
-        <p>For tenants, the platform is free to use when invited by a landlord. Some background check fees may apply depending on the landlord&apos;s requirements. For landlords, we offer various plans tailored to your portfolio size.</p>
-
+        <p>Yes, iReside is completely free for both tenants and landlords. Some background check fees may apply depending on the landlord&apos;s requirements, but those are optional.</p>
+ 
         <h3>How do I pay rent?</h3>
         <p>Rent can be paid via bank transfer, credit card, or digital wallets. You can set up recurring payments to ensure you never miss a deadline.</p>
-
+ 
         <h3>Is my data secure?</h3>
-        <p>Yes. iReside uses industry-standard encryption and secure verification partners (like Stripe and Plaid) to ensure your sensitive information remains private.</p>
+        <p>Yes. Think of iReside like a bank for your rental information. Your data is protected by locks and safeguards so only you can see it. Your password keeps your account private, and we make sure your information stays safe on our servers. You can also add an extra layer of protection by turning on two-factor authentication if you&apos;d like.</p>
       </div>
     ),
     next: "support/troubleshooting",
