@@ -16,10 +16,13 @@ import {
   Wrench
 } from "lucide-react";
 
+import { AnimatePresence, motion } from "framer-motion";
+
 export interface NavItem {
   title: string;
   href: string;
   icon?: React.ElementType;
+  subItems?: { title: string; href: string }[];
 }
 
 export interface NavSection {
@@ -32,14 +35,40 @@ export const DOCS_NAV: NavSection[] = [
     title: "Getting Started",
     items: [
       { title: "Introduction", href: "/docs", icon: BookOpen },
-      { title: "Account Setup", href: "/docs/getting-started/account-setup", icon: User },
-      { title: "Quick Start", href: "/docs/getting-started/quick-start", icon: Settings },
+      { 
+        title: "Account Setup", 
+        href: "/docs/getting-started/account-setup", 
+        icon: User,
+        subItems: [
+          { title: "1. Registration", href: "/docs/getting-started/account-setup#registration" },
+          { title: "2. Choose Your Role", href: "/docs/getting-started/account-setup#roles" },
+          { title: "3. Profile Completion", href: "/docs/getting-started/account-setup#profile" },
+        ]
+      },
+      { 
+        title: "Quick Start", 
+        href: "/docs/getting-started/quick-start", 
+        icon: Settings,
+        subItems: [
+          { title: "For Tenants", href: "/docs/getting-started/quick-start#tenants" },
+          { title: "For Landlords", href: "/docs/getting-started/quick-start#landlords" },
+        ]
+      },
     ],
   },
   {
     title: "Tenant Guide",
     items: [
-      { title: "Submitting Applications", href: "/docs/tenant/applications", icon: FileText },
+      { 
+        title: "Submitting Applications", 
+        href: "/docs/tenant/applications", 
+        icon: FileText,
+        subItems: [
+          { title: "1. Review Invitation", href: "/docs/tenant/applications#review" },
+          { title: "2. Digital Submission", href: "/docs/tenant/applications#submission" },
+          { title: "3. Real-time Tracking", href: "/docs/tenant/applications#tracking" },
+        ]
+      },
       { title: "Paying Rent", href: "/docs/tenant/payments", icon: CreditCard },
       { title: "Maintenance Requests", href: "/docs/tenant/maintenance", icon: Wrench },
     ],
@@ -79,25 +108,52 @@ export function DocsSidebar() {
                 const Icon = item.icon || ChevronRight;
 
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 state-layer",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-text-medium hover:text-text-high"
-                    )}
-                  >
-                    <Icon className={cn(
-                      "h-4 w-4 transition-colors",
-                      isActive ? "text-primary" : "text-text-disabled group-hover:text-text-medium"
-                    )} />
-                    {item.title}
-                    {isActive && (
-                      <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-pulse-subtle" />
-                    )}
-                  </Link>
+                  <div key={item.href} className="flex flex-col gap-1">
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 state-layer",
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-text-medium hover:text-text-high"
+                      )}
+                    >
+                      <Icon className={cn(
+                        "h-4 w-4 transition-colors",
+                        isActive ? "text-primary" : "text-text-disabled group-hover:text-text-medium"
+                      )} />
+                      {item.title}
+                      {isActive && (
+                        <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-pulse-subtle" />
+                      )}
+                    </Link>
+
+                    {/* Sub-items (Outline) */}
+                    <AnimatePresence>
+                      {isActive && item.subItems && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mb-2 ml-4 flex flex-col border-l border-divider pl-4 mt-1 gap-1">
+                            {item.subItems.map((subItem) => (
+                              <Link
+                                key={subItem.href}
+                                href={subItem.href}
+                                className="py-1.5 text-xs font-medium text-text-disabled hover:text-primary transition-colors flex items-center gap-2 group/sub"
+                              >
+                                <div className="h-1 w-1 rounded-full bg-text-disabled group-hover/sub:bg-primary transition-colors" />
+                                {subItem.title}
+                              </Link>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 );
               })}
             </div>

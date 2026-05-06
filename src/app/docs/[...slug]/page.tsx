@@ -13,7 +13,7 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
       <div className="prose prose-slate dark:prose-invert max-w-none">
         <p>Setting up your account on iReside is a straightforward process designed to get you up and running in minutes. Depending on your role, the experience will vary slightly.</p>
         
-        <h3>1. Registration</h3>
+        <h3 id="registration">1. Registration</h3>
         <p>Visit the <Link href="/signup">Signup</Link> page and provide your basic information. You can sign up using your email address or through Google SSO.</p>
         
         <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
@@ -21,14 +21,14 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
           <p className="m-0 text-text-medium italic text-sm">Use your primary email address as it will be used for all critical notifications and official receipts.</p>
         </div>
 
-        <h3>2. Choose Your Role</h3>
+        <h3 id="roles">2. Choose Your Role</h3>
         <p>After verifying your email, you&apos;ll be asked to choose between two primary roles:</p>
         <ul>
           <li><strong>Tenant:</strong> Typically joins via a secure invitation link sent by a landlord.</li>
           <li><strong>Landlord:</strong> For property owners and managers looking to digitize their existing portfolio and manage tenancies.</li>
         </ul>
 
-        <h3>3. Profile Completion</h3>
+        <h3 id="profile">3. Profile Completion</h3>
         <p>For tenants, completing your profile is essential to respond to invitations. For landlords, it establishes credibility for your business.</p>
       </div>
     ),
@@ -42,14 +42,14 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
       <div className="prose prose-slate dark:prose-invert max-w-none">
         <p>Ready to explore iReside? Follow these quick steps to get the most out of the platform from day one.</p>
         
-        <h3>If you&apos;re a Tenant:</h3>
+        <h3 id="tenants">If you&apos;re a Tenant:</h3>
         <ol>
           <li><strong>Accept Invite:</strong> Check your email for a secure invitation link from your landlord.</li>
           <li><strong>Verify Identity:</strong> Complete the onboarding to verify your profile.</li>
           <li><strong>Review & Apply:</strong> Review the property details provided in the invite and submit your digital application.</li>
         </ol>
 
-        <h3>If you&apos;re a Landlord:</h3>
+        <h3 id="landlords">If you&apos;re a Landlord:</h3>
         <ol>
           <li><strong>Business Verification:</strong> Complete the mandatory verification to access management tools.</li>
           <li><strong>Add Property:</strong> Setup your property and unit details internally.</li>
@@ -67,13 +67,13 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
       <div className="prose prose-slate dark:prose-invert max-w-none">
         <p>Applications in iReside are initiated through a landlord invitation. Once you receive an invitation, the application process is entirely digital and secure.</p>
         
-        <h3>1. Review Invitation</h3>
+        <h3 id="review">1. Review Invitation</h3>
         <p>Access the property details through the link provided by your landlord. You can review the unit specifications, rent terms, and house rules.</p>
 
-        <h3>2. Digital Submission</h3>
+        <h3 id="submission">2. Digital Submission</h3>
         <p>Confirm your profile details and submit your application. This includes any necessary background checks or income verifications required for that specific property.</p>
 
-        <h3>3. Real-time Tracking</h3>
+        <h3 id="tracking">3. Real-time Tracking</h3>
         <p>Stay informed as the landlord reviews your application. You&apos;ll receive instant notifications upon approval or requests for further information.</p>
       </div>
     ),
