@@ -14,7 +14,12 @@ import {
   ShieldCheck, 
   CreditCard,
   Wrench,
-  Rocket
+  Rocket,
+  Home,
+  ClipboardList,
+  LayoutGrid,
+  History,
+  ArrowRightLeft
 } from "lucide-react";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -94,7 +99,7 @@ export const DOCS_NAV: NavSection[] = [
       { 
         title: "Submitting Applications", 
         href: "/docs/tenant/applications", 
-        icon: FileText,
+        icon: ClipboardList,
         subItems: [
           { title: "1. Review Invitation", href: "/docs/tenant/applications#review" },
           { title: "2. Digital Submission", href: "/docs/tenant/applications#submission" },
@@ -103,14 +108,18 @@ export const DOCS_NAV: NavSection[] = [
       },
       { title: "Paying Rent", href: "/docs/tenant/payments", icon: CreditCard },
       { title: "Maintenance Requests", href: "/docs/tenant/maintenance", icon: Wrench },
+      { title: "Lease & Documents", href: "/docs/tenant/lease", icon: FileText },
+      { title: "Moving In & Out", href: "/docs/tenant/moving", icon: ArrowRightLeft },
     ],
   },
   {
     title: "Landlord Guide",
     items: [
+      { title: "Property Management", href: "/docs/landlord/properties", icon: Home },
       { title: "Tenant Screening", href: "/docs/landlord/screening", icon: ShieldCheck },
       { title: "Financial Overview", href: "/docs/landlord/finance", icon: CreditCard },
-      { title: "Document Management", href: "/docs/landlord/documents", icon: FileText },
+      { title: "Maintenance Control", href: "/docs/landlord/maintenance", icon: Wrench },
+      { title: "Lease Management", href: "/docs/landlord/documents", icon: FileText },
     ],
   },
   {
