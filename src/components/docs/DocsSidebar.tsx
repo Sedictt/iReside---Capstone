@@ -103,19 +103,15 @@ export const DOCS_NAV: NavSection[] = [
 
 export function DocsSidebar() {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [isManualCollapse, setIsManualCollapse] = useState(false);
 
-  // Auto-expand the active section on mount and when pathname changes
+  // Reset manual collapse when navigating to a new page
   useEffect(() => {
-    if (pathname && !expandedItems.includes(pathname)) {
-      setExpandedItems((prev) => [...prev, pathname]);
-    }
+    setIsManualCollapse(false);
   }, [pathname]);
 
-  const toggleItem = (href: string) => {
-    setExpandedItems((prev) =>
-      prev.includes(href) ? prev.filter((i) => i !== href) : [...prev, href]
-    );
+  const toggleCollapse = () => {
+    setIsManualCollapse((prev) => !prev);
   };
 
   return (
@@ -130,7 +126,7 @@ export function DocsSidebar() {
               {section.items.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon || ChevronRight;
-                const isExpanded = expandedItems.includes(item.href) || isActive;
+                const isExpanded = isActive && !isManualCollapse;
 
                 return (
                   <div key={item.href} className="flex flex-col gap-1">
@@ -154,11 +150,11 @@ export function DocsSidebar() {
                         )}
                       </Link>
 
-                      {item.subItems && (
+                      {isActive && item.subItems && (
                         <button
                           onClick={(e) => {
                             e.preventDefault();
-                            toggleItem(item.href);
+                            toggleCollapse();
                           }}
                           className={cn(
                             "absolute right-2 flex h-7 w-7 items-center justify-center rounded-md hover:bg-surface-2 transition-all",
