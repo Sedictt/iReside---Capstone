@@ -68,7 +68,7 @@ export default function DocsPage() {
       {/* What is iReside Section */}
       <section className="space-y-6">
         <div className="space-y-3">
-          <h2 className="text-3xl font-bold text-text-high">What is iReside?</h2>
+          <h2 id="what-is-ireside" className="text-3xl font-bold text-text-high">What is iReside?</h2>
           <p className="text-text-medium leading-relaxed max-w-3xl">
             iReside is a modern property management platform designed to make renting easier and more transparent for everyone involved. Instead of juggling spreadsheets and scattered documents, everything happens in one secure place.
           </p>
@@ -80,7 +80,7 @@ export default function DocsPage() {
 
       {/* Who Should Use This Section */}
       <section className="space-y-6">
-        <h2 className="text-3xl font-bold text-text-high">Who is This For?</h2>
+        <h2 id="who-is-this-for" className="text-3xl font-bold text-text-high">Who is This For?</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
             <Link 
@@ -110,7 +110,7 @@ export default function DocsPage() {
       {/* Key Features Section */}
       <section className="rounded-3xl bg-surface-2/50 border border-divider p-8 lg:p-12">
         <div className="mb-10 space-y-3">
-          <h2 className="text-3xl font-bold text-text-high">What You Can Do on iReside</h2>
+          <h2 id="features" className="text-3xl font-bold text-text-high">What You Can Do on iReside</h2>
           <p className="text-text-medium max-w-2xl">
             We built iReside with practical features that solve real problems in property management.
           </p>
@@ -165,7 +165,7 @@ export default function DocsPage() {
       {/* How It Works Section */}
       <section className="space-y-6">
         <div className="space-y-3">
-          <h2 className="text-3xl font-bold text-text-high">How iReside Works</h2>
+          <h2 id="how-it-works" className="text-3xl font-bold text-text-high">How iReside Works</h2>
           <p className="text-text-medium max-w-3xl leading-relaxed">
             The process is straightforward and designed to be fast without cutting corners on safety.
           </p>
@@ -217,7 +217,7 @@ export default function DocsPage() {
 
       {/* Why Choose iReside Section */}
       <section className="space-y-6">
-        <h2 className="text-3xl font-bold text-text-high">Why Choose iReside</h2>
+        <h2 id="why-choose" className="text-3xl font-bold text-text-high">Why Choose iReside</h2>
         <div className="rounded-2xl border border-divider bg-surface-1 p-8">
           <div className="space-y-6">
             <div className="flex gap-4">
@@ -273,7 +273,7 @@ export default function DocsPage() {
 
       {/* Getting Started Section */}
       <section className="space-y-6">
-        <h2 className="text-3xl font-bold text-text-high">Ready to Get Started?</h2>
+        <h2 id="get-started" className="text-3xl font-bold text-text-high">Ready to Get Started?</h2>
         <div className="rounded-2xl bg-primary/5 border border-primary/20 p-8">
           <p className="mb-6 text-text-medium leading-relaxed">
             Follow these steps to begin your property management journey. Whether you are a landlord or tenant, we will guide you through the process.
