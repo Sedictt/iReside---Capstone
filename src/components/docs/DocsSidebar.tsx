@@ -101,12 +101,28 @@ export const DOCS_NAV: NavSection[] = [
         href: "/docs/tenant/applications", 
         icon: ClipboardList,
         subItems: [
-          { title: "1. Review Invitation", href: "/docs/tenant/applications#review" },
-          { title: "2. Digital Submission", href: "/docs/tenant/applications#submission" },
-          { title: "3. Real-time Tracking", href: "/docs/tenant/applications#tracking" },
+          { title: "Two Ways to Apply", href: "/docs/tenant/applications#two-ways-to-apply" },
+          { title: "Before Applying", href: "/docs/tenant/applications#before-applying" },
+          { title: "Online Process", href: "/docs/tenant/applications#method-1-online" },
+          { title: "In-Person Process", href: "/docs/tenant/applications#method-2-factoface" },
+          { title: "Required Info", href: "/docs/tenant/applications#what-information" },
+          { title: "Documents", href: "/docs/tenant/applications#documents-explained" },
+          { title: "Tips for Success", href: "/docs/tenant/applications#tips-for-success" },
         ]
       },
-      { title: "Paying Rent", href: "/docs/tenant/payments", icon: CreditCard },
+      { 
+        title: "Paying Rent", 
+        href: "/docs/tenant/payments", 
+        icon: CreditCard,
+        subItems: [
+          { title: "1. GCash (E-Wallet)", href: "/docs/tenant/payments#gcash" },
+          { title: "2. Cash (In-Person)", href: "/docs/tenant/payments#cash" },
+          { title: "Verification Process", href: "/docs/tenant/payments#verification" },
+          { title: "Partial Payments", href: "/docs/tenant/payments#partial-payments" },
+          { title: "Audit Trail", href: "/docs/tenant/payments#audit-trail" },
+          { title: "Security Reminders", href: "/docs/tenant/payments#security" },
+        ]
+      },
       { title: "Maintenance Requests", href: "/docs/tenant/maintenance", icon: Wrench },
       { title: "Lease & Documents", href: "/docs/tenant/lease", icon: FileText },
       { title: "Moving In & Out", href: "/docs/tenant/moving", icon: ArrowRightLeft },
