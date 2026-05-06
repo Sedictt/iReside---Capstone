@@ -108,57 +108,21 @@ export default function DocsPage() {
       </section>
 
       {/* Key Features Section */}
-      <section className="rounded-3xl bg-surface-2/50 border border-divider p-8 lg:p-12">
-        <div className="mb-10 space-y-3">
-          <h2 id="features" className="text-3xl font-bold text-text-high">What You Can Do on iReside</h2>
-          <p className="text-text-medium max-w-2xl">
-            We built iReside with practical features that solve real problems in property management.
-          </p>
-        </div>
-        
-        <div className="grid gap-8 sm:grid-cols-2">
-          {[
-            {
-              title: "Verify Everyone Safely",
-              description: "Share and review identity and financial information securely. All data is encrypted and only visible to those involved in the transaction.",
-              icon: Shield
-            },
-            {
-              title: "Chat and Coordinate",
-              description: "Send messages directly to your landlord or tenant, get instant notifications, and keep all conversations in one place.",
-              icon: MessageSquare
-            },
-            {
-              title: "Organize Rent Payments",
-              description: "Set up recurring rent reminders for both landlord and tenant, track payment history, and get digital receipts in one place.",
-              icon: Zap
-            },
-            {
-              title: "Organize Lease Documents",
-              description: "Store and manage all lease agreements and documents in one secure place. Digital signing makes the process faster and simpler.",
-              icon: CheckCircle2
-            },
-            {
-              title: "Manage Properties Easily",
-              description: "View all your properties in one dashboard. Track units, tenants, and agreements without jumping between apps.",
-              icon: Building2
-            },
-            {
-              title: "Set Your Own Standards",
-              description: "Define your property rules and tenant requirements. The platform helps you organize and communicate them clearly to all parties.",
-              icon: Lock
-            }
-          ].map((feature) => (
-            <div key={feature.title} className="flex gap-4">
-              <div className="flex-shrink-0 flex h-12 w-12 items-center justify-center rounded-lg bg-surface-1 shadow-sm border border-divider">
-                <feature.icon className="h-6 w-6 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-bold text-text-high">{feature.title}</h4>
-                <p className="text-sm text-text-medium leading-relaxed">{feature.description}</p>
-              </div>
-            </div>
-          ))}
+      <section className="rounded-3xl bg-surface-2/50 border border-divider p-8 lg:p-12 text-center md:text-left">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-2xl">
+            <h2 id="features" className="text-3xl font-bold text-text-high">Platform Capabilities</h2>
+            <p className="text-lg text-text-medium leading-relaxed">
+              We built iReside with practical features that solve real problems in property management. This includes our signature <strong>Unit Map</strong> visualizing your properties entirely, the <strong>Financial Hub</strong> for tracking payments, built-in <strong>Communication</strong>, and <strong>Maintenance Tracking</strong>.
+            </p>
+          </div>
+          <div>
+            <Button asChild size="lg" className="bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg shadow-primary/20">
+              <Link href="/docs/features">
+                Explore Core Features <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 

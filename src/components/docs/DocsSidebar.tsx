@@ -13,7 +13,8 @@ import {
   FileText, 
   ShieldCheck, 
   CreditCard,
-  Wrench
+  Wrench,
+  Rocket
 } from "lucide-react";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -43,6 +44,18 @@ export const DOCS_NAV: NavSection[] = [
           { title: "Who is This For?", href: "/docs#who-is-this-for" },
           { title: "Platform Features", href: "/docs#features" },
           { title: "How it Works", href: "/docs#how-it-works" },
+        ]
+      },
+      {
+        title: "Core Features",
+        href: "/docs/features",
+        icon: Rocket,
+        subItems: [
+          { title: "Unit Map", href: "/docs/features#unit-map" },
+          { title: "Document & Lease", href: "/docs/features#document-manager" },
+          { title: "Financial Hub", href: "/docs/features#financial-hub" },
+          { title: "Communication", href: "/docs/features#communication" },
+          { title: "Maintenance", href: "/docs/features#maintenance" },
         ]
       },
       { 
