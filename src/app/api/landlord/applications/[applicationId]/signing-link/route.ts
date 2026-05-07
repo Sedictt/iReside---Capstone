@@ -38,7 +38,8 @@ export async function POST(
       id,
       status,
       applicant_id,
-      lease_id
+      lease_id,
+      unit_id
     `)
     .eq("id", applicationId)
     .maybeSingle();
@@ -58,13 +59,6 @@ export async function POST(
     );
   }
 
-  // Fetch applicant profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("email, full_name")
-    .eq("id", application.applicant_id || "")
-    .maybeSingle();
-
   // Fetch lease with unit and property details
   let lease: any = null;
   if (application.lease_id) {
@@ -74,6 +68,7 @@ export async function POST(
         id,
         status,
         landlord_id,
+        tenant_id,
         signing_link_token_hash,
         start_date,
         monthly_rent,
@@ -91,14 +86,14 @@ export async function POST(
     lease = leaseData;
   } else {
     // FALLBACK: Try to find a lease that was created but not linked to this application
-    // This happens if the initial approval action failed to update the lease_id
-    console.log(`[signing-link] Fallback: Searching for unlinked lease for applicant ${application.applicant_id}`);
+    console.log(`[signing-link] Fallback: Searching for unlinked lease for application ${applicationId}`);
     const { data: foundLease } = await supabase
       .from("leases")
       .select(`
         id,
         status,
         landlord_id,
+        tenant_id,
         signing_link_token_hash,
         start_date,
         monthly_rent,
@@ -111,8 +106,11 @@ export async function POST(
           )
         )
       `)
-      .eq("tenant_id", application.applicant_id || "")
+      // Search by unit and status since applicant_id might be null
+      .eq("unit_id", (application as any).unit_id || "") 
       .eq("status", "pending_signature")
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
     
     if (foundLease) {
@@ -132,6 +130,23 @@ export async function POST(
       }
     }
   }
+
+  // Determine the tenant ID to use
+  const tenantId = application.applicant_id || lease?.tenant_id;
+
+  if (!tenantId) {
+    return NextResponse.json(
+      { error: "Tenant ID not found for this application or lease" },
+      { status: 400 }
+    );
+  }
+
+  // Fetch applicant profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", tenantId)
+    .maybeSingle();
 
   // Verify landlord owns this application
   if (!lease || lease.landlord_id !== user.id) {
@@ -173,7 +188,7 @@ export async function POST(
     );
   }
 
-  const token = generateSigningToken(application.lease_id, application.applicant_id || "");
+  const token = generateSigningToken(application.lease_id, tenantId);
   const tokenHash = hashToken(token);
 
   // Update lease with token hash, signing mode, and status

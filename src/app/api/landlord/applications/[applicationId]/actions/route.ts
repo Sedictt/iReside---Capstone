@@ -486,10 +486,13 @@ export async function POST(
 
                 leaseId = lease.id;
 
-                // CRITICAL: Update application with the new lease_id
+                // CRITICAL: Update application with the new lease_id and applicant_id
                 await adminClient
                     .from("applications")
-                    .update({ lease_id: lease.id })
+                    .update({ 
+                        lease_id: lease.id,
+                        applicant_id: tenantId 
+                    })
                     .eq("id", applicationId);
 
                 try {
