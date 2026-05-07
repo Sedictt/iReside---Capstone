@@ -135,15 +135,6 @@ export default function TenantHomeScreen() {
                 </div>
             </div>
 
-            {/* Search Bar */}
-            <div 
-                className={styles.searchBar} 
-                onClick={() => navigate("propertySearch")}
-            >
-                <Search className={styles.searchIcon} size={18} />
-                <span className={styles.searchPlaceholder}>Find a new home...</span>
-            </div>
-
             {/* Rent Status Card */}
             <div className={styles.rentCard}>
                 <div className={styles.rentCardGlow} />

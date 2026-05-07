@@ -13,7 +13,6 @@ export type ScreenName =
     | "emailVerification"
     // Tenant Screens
     | "tenantHome"
-    | "propertySearch"
     | "propertyDetail"
     | "savedProperties"
     | "applicationForm"
@@ -86,7 +85,6 @@ export const LANDLORD_TAB_SCREENS: Record<LandlordTab, ScreenName> = {
 // Maps any screen name to the tab it belongs to, for auto-syncing the indicator
 const TENANT_SCREEN_TO_TAB: Partial<Record<ScreenName, TenantTab>> = {
     tenantHome:          "home",
-    propertySearch:      "home",
     propertyDetail:      "home",
     savedProperties:     "home",
     applicationTracker:  "activity",

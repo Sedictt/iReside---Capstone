@@ -7,7 +7,6 @@ import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import EmailVerificationScreen from "./screens/EmailVerificationScreen";
 import TenantHomeScreen from "./screens/TenantHomeScreen";
-import PropertySearchScreen from "./screens/PropertySearchScreen";
 import PropertyDetailScreen from "./screens/PropertyDetailScreen";
 import SavedPropertiesScreen from "./screens/SavedPropertiesScreen";
 import TenantChatScreen from "./screens/TenantChatScreen";
@@ -206,7 +205,6 @@ function ScreenRouter() {
         signup: SignUpScreen,
         emailVerification: EmailVerificationScreen,
         tenantHome: TenantHomeScreen,
-        propertySearch: PropertySearchScreen,
         propertyDetail: PropertyDetailScreen,
         savedProperties: SavedPropertiesScreen,
         tenantChat: TenantChatScreen,

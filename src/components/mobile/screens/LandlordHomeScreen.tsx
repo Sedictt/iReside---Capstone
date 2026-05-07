@@ -60,6 +60,14 @@ const ACTION_ITEMS = [
     screen: "activity" as const,
     params: { tab: "invoices" },
   },
+  {
+    id: "a4",
+    title: "1 Move-Out Request",
+    desc: "Unit 12A final inspection pending",
+    type: "warning",
+    icon: Clock,
+    screen: "landlordMoveOutReview" as const,
+  },
 ];
 
 // ─── Component ──────────────────────────────────────────────
