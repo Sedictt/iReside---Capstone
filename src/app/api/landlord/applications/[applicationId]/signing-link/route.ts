@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { generateSigningToken } from "@/lib/jwt";
 import { hashToken } from "@/lib/jwt";
 import { logAuditEvent } from "@/lib/audit-logging";
@@ -39,7 +40,9 @@ export async function POST(
       status,
       applicant_id,
       lease_id,
-      unit_id
+      unit_id,
+      applicant_email,
+      applicant_name
     `)
     .eq("id", applicationId)
     .maybeSingle();
@@ -57,6 +60,61 @@ export async function POST(
       { error: "Application not found" },
       { status: 404 }
     );
+  }
+
+  // 1. REPAIR applicant_id if missing
+  let currentApplicantId = application.applicant_id;
+  if (!currentApplicantId && application.applicant_email) {
+    console.log(`[signing-link] Missing applicant_id. Searching for profile with email: ${application.applicant_email}`);
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", application.applicant_email)
+      .maybeSingle();
+      
+    if (existingProfile) {
+      console.log(`[signing-link] Found existing profile ${existingProfile.id}, linking to application...`);
+      currentApplicantId = existingProfile.id;
+      await supabase
+        .from("applications")
+        .update({ applicant_id: existingProfile.id })
+        .eq("id", applicationId);
+    } else {
+      // Create tenant account automatically if it doesn't exist
+      console.log(`[signing-link] No profile found for ${application.applicant_email}. Provisioning account...`);
+      const adminClient = createAdminClient();
+      const tempPassword = Math.random().toString(36).slice(-12);
+      
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+        email: application.applicant_email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: application.applicant_name || "Tenant",
+          role: "tenant",
+          onboarding_source: "signing_link_repair",
+        }
+      });
+      
+      if (!createError && newUser?.user) {
+        console.log(`[signing-link] Provisioned new tenant account ${newUser.user.id}`);
+        currentApplicantId = newUser.user.id;
+        
+        await adminClient.from("profiles").upsert({
+          id: newUser.user.id,
+          full_name: application.applicant_name || "Tenant",
+          email: application.applicant_email,
+          role: "tenant",
+        });
+        
+        await adminClient
+          .from("applications")
+          .update({ applicant_id: newUser.user.id })
+          .eq("id", applicationId);
+      } else {
+        console.error("[signing-link] Failed to provision tenant account:", createError?.message);
+      }
+    }
   }
 
   // Fetch lease with unit and property details
@@ -87,7 +145,8 @@ export async function POST(
   } else {
     // FALLBACK: Try to find a lease that was created but not linked to this application
     console.log(`[signing-link] Fallback: Searching for unlinked lease for application ${applicationId}`);
-    const { data: foundLease } = await supabase
+    
+    let foundLeaseQuery = supabase
       .from("leases")
       .select(`
         id,
@@ -106,9 +165,17 @@ export async function POST(
           )
         )
       `)
-      // Search by unit and status since applicant_id might be null
-      .eq("unit_id", (application as any).unit_id || "") 
-      .eq("status", "pending_signature")
+      .eq("status", "pending_signature");
+
+    // Try to narrow down by tenant if we have one
+    if (currentApplicantId) {
+      foundLeaseQuery = foundLeaseQuery.eq("tenant_id", currentApplicantId);
+    } else {
+      // Otherwise narrow by unit
+      foundLeaseQuery = foundLeaseQuery.eq("unit_id", (application as any).unit_id || "");
+    }
+
+    const { data: foundLease } = await foundLeaseQuery
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -132,7 +199,7 @@ export async function POST(
   }
 
   // Determine the tenant ID to use
-  const tenantId = application.applicant_id || lease?.tenant_id;
+  const tenantId = currentApplicantId || lease?.tenant_id;
 
   if (!tenantId) {
     return NextResponse.json(
