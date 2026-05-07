@@ -66,6 +66,7 @@ import {
 import { InvoiceModal } from "../../../components/landlord/invoices/InvoiceModal";
 import { redactMessageForSend } from "../../../lib/messages/redaction-client";
 import { MessageReportWizard } from "@/components/messaging/MessageReportWizard";
+import { playSound } from "@/hooks/useSound";
 
 const MESSAGE_CACHE_KEY_PREFIX = "ireside:landlord:messages-cache";
 const CONVERSATIONS_CACHE_KEY_PREFIX = "ireside:landlord:conversations-cache";
@@ -895,6 +896,7 @@ export default function MessagesPage() {
             try {
                 const created = await sendConversationMessage(activeConversationId, textMessage, { isRedacted: moderation.isSensitive, redactedContent: moderation.redactedMessage, isConfirmedDisclosed: false, isPhishing: moderation.isPhishing, redactionCategory: moderation.redactionCategory, disclosureAllowed: moderation.disclosureAllowed });
                 const mapped = mapMessageToUi({ ...created, sender: null });
+                playSound("message", 0.4); // Sent sound
                 setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...mapped, status: "sent" } : msg));
                 window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
             } catch (error) {
@@ -1006,7 +1008,14 @@ export default function MessagesPage() {
     useEffect(() => {
         if (!activeConversationId) return;
         const channel = supabase.channel(`messages-${activeConversationId}`)
-            .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async () => { await refreshMessages(activeConversationId); await refreshConversations(); })
+            .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async (payload) => { 
+                const newMessage = payload.new as any;
+                if (newMessage.sender_id !== user?.id) {
+                    playSound("message");
+                }
+                await refreshMessages(activeConversationId); 
+                await refreshConversations(); 
+            })
             .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${activeConversationId}` }, async () => { await refreshMessages(activeConversationId); await refreshConversations(); })
             .on("broadcast", { event: "typing" }, ({ payload }) => {
                 const candidate = payload as { conversationId?: string; userId?: string; isTyping?: boolean };

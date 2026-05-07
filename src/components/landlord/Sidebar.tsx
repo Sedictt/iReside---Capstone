@@ -32,7 +32,9 @@ export function Sidebar({
     onToggleCollapse?: () => void;
     showCollapseToggle?: boolean;
 }) {
-    const { counts } = useNotifications();
+    const { counts, importantNotifications } = useNotifications();
+    
+    const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
     const NAV_ITEMS: SidebarNavSection[] = [
         {
@@ -55,11 +57,11 @@ export function Sidebar({
                 { label: "Properties", href: "/landlord/properties", icon: Building2, tourId: "nav-properties" },
                 { label: "Unit Map", href: "/landlord/unit-map", icon: Map, tourId: "nav-unit-map" },
                 { label: "Facilities", href: "/landlord/utilities", icon: LayoutGrid },
-                { label: "Tenant Applications", href: "/landlord/applications", icon: ClipboardList, badge: counts.applications || undefined },
+                { label: "Tenant Applications", href: "/landlord/applications", icon: ClipboardList, badge: counts.applications || undefined, urgent: isUrgent('application') },
                 { label: "Tenants", href: "/landlord/tenants", icon: Users, tourId: "nav-tenant-hub" },
-                { label: "Leases", href: "/landlord/leases", icon: FileText },
-                { label: "Move-Out Requests", href: "/landlord/move-out", icon: ClipboardList },
-                { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: counts.maintenance || undefined },
+                { label: "Leases", href: "/landlord/leases", icon: FileText, urgent: isUrgent('lease') || isUrgent('lease_renewal_request') },
+                { label: "Move-Out Requests", href: "/landlord/move-out", icon: ClipboardList, urgent: isUrgent('move_out_approved') || isUrgent('move_out_denied') },
+                { label: "Maintenance", href: "/landlord/maintenance", icon: Wrench, badge: counts.maintenance || undefined, urgent: isUrgent('maintenance') },
             ]
         },
         {
@@ -67,7 +69,7 @@ export function Sidebar({
             icon: CreditCard,
             defaultExpanded: true,
             items: [
-                { label: "Finance Hub", href: "/landlord/invoices", icon: CreditCard, tourId: "nav-finance-hub" },
+                { label: "Finance Hub", href: "/landlord/invoices", icon: CreditCard, tourId: "nav-finance-hub", urgent: isUrgent('payment') },
                 { label: "Utility Billing", href: "/landlord/utility-billing", icon: Zap },
             ]
         },

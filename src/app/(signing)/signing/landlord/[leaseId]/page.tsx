@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { generateLeasePdf } from "@/lib/lease-pdf";
 import { CheckCircle2, AlertCircle, FileText, Shield, ArrowLeft, PenTool } from "lucide-react";
-import { toast } from "sonner";
+import { useAppToast } from "@/hooks/useAppToast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +50,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
   const leaseId = resolvedParams.leaseId;
   const token = searchParams.get("token");
   
+  const toast = useAppToast();
   const [lease, setLease] = useState<LeaseDetails | null>(null);
   const [leasePdf, setLeasePdf] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(true);

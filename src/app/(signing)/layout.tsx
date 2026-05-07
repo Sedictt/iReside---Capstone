@@ -21,7 +21,6 @@ export default function SigningLayout({
         >
           <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20">
             {children}
-            <Toaster position="top-center" richColors />
           </div>
         </ThemeProvider>
       </NotificationProvider>

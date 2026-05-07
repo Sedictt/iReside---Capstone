@@ -23,6 +23,7 @@ export interface SidebarNavItem {
     href: string;
     icon: LucideIcon;
     badge?: number;
+    urgent?: boolean;
     tourId?: string;
 }
 
@@ -131,11 +132,17 @@ export function RoleSidebar({
                 </div>
 
                 {!isCollapsed && item.badge ? (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/20">
+                    <span className={cn(
+                        "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/20",
+                        item.urgent && "animate-pulse ring-red-500/50 shadow-lg shadow-red-500/40"
+                    )}>
                         {item.badge}
                     </span>
                 ) : isCollapsed && item.badge ? (
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
+                    <span className={cn(
+                        "absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900",
+                        item.urgent && "animate-ping"
+                    )} />
                 ) : null}
             </Link>
         );

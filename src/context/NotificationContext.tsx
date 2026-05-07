@@ -5,10 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOptionalProperty } from "@/context/PropertyContext";
 import type { Notification, NotificationType } from "@/types/database";
+import { playSound } from "@/hooks/useSound";
 
 interface NotificationContextType {
     notifications: Notification[];
+    importantNotifications: Notification[];
     unreadCount: number;
+    urgentCount: number;
     loading: boolean;
     error: string | null;
     markAsRead: (id: string) => Promise<void>;
@@ -29,7 +32,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const propertyContext = useOptionalProperty();
     const selectedPropertyId = propertyContext?.selectedPropertyId ?? "all";
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [importantNotifications, setImportantNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [urgentCount, setUrgentCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [counts, setCounts] = useState({
@@ -140,10 +145,61 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 .order("created_at", { ascending: false })
                 .limit(50);
 
-            if (error) throw error;
+            let finalData = data || [];
 
-            setNotifications(data || []);
-            setUnreadCount((data || []).filter(n => !n.read).length);
+            // Support preview mode for UI testing
+            if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview_notifications') === 'true') {
+                const mockNotifications: Notification[] = [
+                    {
+                        id: 'mock-1',
+                        user_id: user.id,
+                        type: 'lease',
+                        title: 'Lease Agreement Ready',
+                        message: 'Your lease agreement for Unit 402 is ready for countersignature.',
+                        read: false,
+                        created_at: new Date().toISOString(),
+                        data: { leaseId: 'mock-lease' }
+                    },
+                    {
+                        id: 'mock-2',
+                        user_id: user.id,
+                        type: 'payment',
+                        title: 'Urgent: Payment Failed',
+                        message: 'The security deposit payment for the new application has been rejected.',
+                        read: false,
+                        created_at: new Date().toISOString(),
+                        data: { paymentId: 'mock-payment' }
+                    },
+                    {
+                        id: 'mock-3',
+                        user_id: user.id,
+                        type: 'maintenance',
+                        title: 'Urgent Maintenance',
+                        message: 'Emergency plumbing request reported in Property Alpha, Unit 101.',
+                        read: false,
+                        created_at: new Date().toISOString(),
+                        data: { maintenanceId: 'mock-maint' }
+                    }
+                ];
+                finalData = [...mockNotifications, ...finalData];
+            }
+
+            const unread = finalData.filter(n => !n.read);
+            setNotifications(finalData);
+            setUnreadCount(unread.length);
+            
+            // Define what counts as an "important" notification
+            const importantTypes: NotificationType[] = [
+                'lease', 
+                'lease_renewal_request', 
+                'payment', 
+                'maintenance',
+                'application'
+            ];
+            
+            const important = unread.filter(n => importantTypes.includes(n.type));
+            setImportantNotifications(important);
+            setUrgentCount(important.length);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to fetch notifications");
         } finally {
@@ -237,7 +293,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     if (payload.eventType === "INSERT") {
                         const newNotification = payload.new as Notification;
                         setNotifications(prev => [newNotification, ...prev]);
-                        if (!newNotification.read) setUnreadCount(prev => prev + 1);
+                        if (!newNotification.read) {
+                            setUnreadCount(prev => prev + 1);
+                            if (newNotification.type === "message") {
+                                playSound("message");
+                            } else {
+                                playSound("notification");
+                            }
+                        }
                     } else if (payload.eventType === "UPDATE") {
                         const updatedNotification = payload.new as Notification;
                         setNotifications(prev =>
@@ -321,7 +384,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         <NotificationContext.Provider
             value={{
                 notifications,
+                importantNotifications,
                 unreadCount,
+                urgentCount,
                 loading,
                 error,
                 markAsRead,

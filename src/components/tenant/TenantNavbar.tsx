@@ -106,8 +106,11 @@ export function TenantSidebar() {
         loading: notificationsLoading, 
         error: notificationsError,
         markAsRead,
-        markAllAsRead 
+        markAllAsRead,
+        importantNotifications
     } = useNotifications();
+
+    const isUrgent = (type: string) => importantNotifications.some(n => n.type === type);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -186,7 +189,12 @@ export function TenantSidebar() {
                                     )}
                                 >
                                     <item.icon className={cn("h-5 w-5", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                                    <span>{item.label}</span>
+                                    <span className="flex-1">{item.label}</span>
+                                    {((item.href === '/tenant/lease' && (isUrgent('lease') || isUrgent('lease_renewal_request'))) ||
+                                      (item.href === '/tenant/maintenance' && isUrgent('maintenance')) ||
+                                      (item.href === '/tenant/payments' && isUrgent('payment'))) && (
+                                        <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                    )}
                                 </Link>
                             );
                         })}

@@ -29,6 +29,7 @@ import { SmartContractPreviewModal } from "@/components/landlord/properties/Smar
 import ClickSpark from "@/components/ui/ClickSpark";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { playSound } from "@/hooks/useSound";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -288,8 +289,14 @@ function NewAssetContent() {
                 }
             }
 
+            if (propId) {
+                // ... (rest of the logic)
+            }
+
+            playSound("success");
             router.push("/landlord/properties");
         } catch (e) {
+            playSound("error");
             setLoadError("Critical save failure.");
         } finally {
             setIsSubmitting(false);

@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
+import { NotificationBanner } from "@/components/navigation/NotificationBanner";
 
 export default function TenantLayout({
     children,
@@ -58,6 +59,7 @@ export default function TenantLayout({
                                     }}
                                     className="w-full h-full flex-1 flex flex-col"
                                 >
+                                    <NotificationBanner />
                                     {useImmersiveLayout ? (
                                         children
                                     ) : (

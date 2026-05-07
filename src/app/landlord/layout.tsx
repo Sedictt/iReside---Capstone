@@ -12,6 +12,7 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
 import { LandlordQuestTriggerGuide } from "@/components/landlord/dashboard/LandlordQuestTriggerGuide";
+import { NotificationBanner } from "@/components/navigation/NotificationBanner";
 
 export default function LandlordLayout({
     children,
@@ -58,6 +59,7 @@ export default function LandlordLayout({
                                     showContactsSidebar ? "md:pr-24" : ""
                                 )}
                             >
+                                <NotificationBanner />
                                 {children}
                             </main>
                             

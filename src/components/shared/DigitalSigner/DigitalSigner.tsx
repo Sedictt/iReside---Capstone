@@ -25,6 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { playSound } from '@/hooks/useSound';
 
 // Configure worker using the local build
 if (typeof window !== 'undefined') {
@@ -300,6 +301,7 @@ export function DigitalSigner({
         };
         setSignatures([...signatures, newSignature]);
         setIsPenActive(false);
+        playSound("success");
         toast.success('Signature extracted and placed');
       };
       img.src = event.target?.result as string;
