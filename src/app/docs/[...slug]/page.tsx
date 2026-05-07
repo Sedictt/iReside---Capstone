@@ -438,18 +438,187 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
   },
   "tenant/maintenance": {
     title: "Maintenance Requests",
-    subtitle: "How to report issues and track repairs in your home.",
+    subtitle: "How to report issues, track repairs, and work with your landlord to keep your home in good condition.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Something broken? iReside makes it easy to report maintenance issues directly to your landlord. You can track the progress of your request from submission to completion.</p>
-        <h3>How to Submit a Request</h3>
-        <ol>
-          <li>Go to the **Maintenance** tab in your dashboard.</li>
-          <li>Click **New Request**.</li>
-          <li>Describe the issue in detail.</li>
-          <li>Upload photos or videos of the problem.</li>
-          <li>Submit and wait for your landlord to respond.</li>
-        </ol>
+        <p>Living in a rental property means things sometimes need fixing. A leaky faucet, a broken appliance, or an issue with the heating system - whatever the problem, iReside makes it simple to report maintenance issues and track their progress from start to finish. You can submit requests, upload photos as proof, and even handle minor repairs yourself if your landlord approves.</p>
+
+        <h3 id="overview">What is a Maintenance Request?</h3>
+        <p>A maintenance request is your way of telling your landlord that something in your home needs attention. Instead of calling, texting, or trying to catch your landlord in person, you can submit a request through iReside. Your landlord will see it right away, and both of you can track what's being done about it. This creates a clear record that both of you can access anytime.</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Why Use Maintenance Requests?</p>
+          <p className="m-0 text-text-medium text-sm">Using iReside to report maintenance keeps everything organized. Your landlord gets your request immediately, you both have a record of what was reported and when, and you can see the status of repairs in real time. This helps prevent misunderstandings and makes sure problems get addressed promptly.</p>
+        </div>
+
+        <h3 id="types-of-issues">What Issues Should You Report?</h3>
+        <p>Report any problem in your home that your landlord is responsible for fixing. This includes:</p>
+        <ul>
+          <li><strong>Plumbing issues:</strong> Leaks, dripping faucets, running toilets, clogged drains, or no water pressure</li>
+          <li><strong>Electrical problems:</strong> Outlets not working, flickering lights, or tripped breakers</li>
+          <li><strong>Heating and cooling:</strong> Air conditioning not working, heat not turning on, or temperature control problems</li>
+          <li><strong>Appliance breakdowns:</strong> Stove, refrigerator, oven, or other built-in appliances not working</li>
+          <li><strong>Structural issues:</strong> Cracks in walls, roof leaks, broken windows, or door problems</li>
+          <li><strong>Pest problems:</strong> Bugs, rodents, or other unwanted creatures</li>
+          <li><strong>Other repairs:</strong> Anything else that needs professional attention</li>
+        </ul>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Important: Emergency Issues</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">If you have an emergency - like a gas leak, fire, electrical hazard, burst pipe, or break-in - don't wait to use iReside. Call emergency services immediately (911 in most places). Report the issue in the app after you've ensured your safety. Include emergency details in your description so your landlord knows what happened.</p>
+        </div>
+
+        <h3 id="when-not-to-report">When NOT to Submit a Request</h3>
+        <p>Some things are your responsibility as a tenant, not the landlord's. Don't submit maintenance requests for:</p>
+        <ul>
+          <li>Regular cleaning or tidying up</li>
+          <li>Issues caused by your own actions or negligence</li>
+          <li>Personal items or furniture you brought into the home</li>
+          <li>Damage you caused intentionally</li>
+        </ul>
+        <p>If you're unsure whether something is your responsibility, it's okay to ask your landlord. It's better to ask than to assume.</p>
+
+        <h3 id="how-to-submit">How to Submit a Maintenance Request</h3>
+        <p>The process is straightforward and takes just a few minutes.</p>
+
+        <h4 id="step-1">Step 1: Access the Maintenance Section</h4>
+        <p>Log into your iReside account and go to the <strong>Maintenance</strong> section of your dashboard. This is usually in the main menu. You'll see a list of any previous maintenance requests you've submitted, along with their current status.</p>
+
+        <h4 id="step-2">Step 2: Create a New Request</h4>
+        <p>Click the <strong>New Request</strong> or <strong>+</strong> button to start creating a new maintenance request. This will open a form where you'll provide details about the problem.</p>
+
+        <h4 id="step-3">Step 3: Describe the Issue</h4>
+        <p>Give your request a clear, short title that describes the problem. For example: "Leaky kitchen faucet," "Air conditioner not cooling," or "Broken bathroom door lock." Keep the title simple so your landlord knows immediately what the issue is.</p>
+        <p>Then write a more detailed description explaining what's wrong. Be specific. Instead of just saying "Something is broken," explain: Where is the problem? When did you first notice it? What exactly is happening? Is it getting worse? For example: "The kitchen sink faucet has been dripping constantly for three days. It drips about once per second even when turned off completely."</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Pro Tip: Be Detailed</p>
+          <p className="m-0 text-text-medium text-sm">The more details you provide, the faster your landlord can respond. Include information like when the problem started, whether it's getting worse, and how it's affecting you. If you've already tried any fixes, mention that too.</p>
+        </div>
+
+        <h4 id="step-4">Step 4: Select a Category</h4>
+        <p>Choose which type of issue you're reporting from the available categories. The system offers options like Plumbing, Electrical, HVAC, Appliances, Structural, Pest, and Other. Selecting the right category helps your landlord prioritize and route the request to the right person if they use a contractor.</p>
+
+        <h4 id="step-5">Step 5: Add Photos or Videos</h4>
+        <p>This is optional but highly recommended. If you can safely photograph or video the problem, do it. A picture is worth a thousand words and helps your landlord understand exactly what's happening. You can take multiple photos (up to 5) to show different angles or details.</p>
+        <p>To add photos, click the upload area and select images from your phone or computer. You can drag and drop images, or click to browse your files. Make sure the images are clear and show the problem well. If a photo is blurry or too dark, try retaking it.</p>
+
+        <h4 id="step-6">Step 6: Set a Priority Level</h4>
+        <p>Indicate how urgent the issue is. Your options are typically Low, Medium, High, or Urgent. Be honest about the priority:</p>
+        <ul>
+          <li><strong>Low:</strong> Minor issues that don't affect daily life - like a small scratch on a wall or a cabinet that doesn't close perfectly</li>
+          <li><strong>Medium:</strong> Issues that are inconvenient but not urgent - like a bathroom light that flickers occasionally</li>
+          <li><strong>High:</strong> Issues that seriously affect your comfort or safety - like heating not working in winter or multiple outlets not working</li>
+          <li><strong>Urgent:</strong> Critical issues that need immediate attention - like no water, gas smell, electrical hazard, or roof leak</li>
+        </ul>
+
+        <h4 id="step-7">Step 7: Submit Your Request</h4>
+        <p>Once you've filled in all the details, click <strong>Submit Request</strong>. The system will confirm that your request has been sent to your landlord. You'll see a confirmation message, and you can now track the status of your request.</p>
+
+        <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-green-700 dark:text-green-300 m-0">Confirmation & Notifications</p>
+          <p className="m-0 text-green-600 dark:text-green-200 text-sm">After you submit, you'll receive a confirmation in the app. Your landlord will be notified right away. You can check your notification settings to decide whether you want email or app alerts about your request's progress.</p>
+        </div>
+
+        <h3 id="self-repair-option">Handling Minor Repairs Yourself</h3>
+        <p>Sometimes the best solution for a small problem is to fix it yourself. iReside allows you to ask your landlord for permission to handle minor repairs on your own. This can be faster than waiting for someone else to come out, and it shows initiative.</p>
+
+        <h4 id="self-repair-when">When Might Self-Repair Work?</h4>
+        <p>Self-repair is best for simple, low-risk issues like:</p>
+        <ul>
+          <li>Fixing a leaky faucet or toilet by replacing a part</li>
+          <li>Resetting a circuit breaker</li>
+          <li>Patching a small hole in drywall</li>
+          <li>Cleaning out a clogged drain</li>
+          <li>Replacing a light bulb or battery in a smoke detector</li>
+        </ul>
+        <p>However, you should NOT attempt self-repair for complex issues like major plumbing, electrical work, roof repairs, or structural problems. These need professional expertise.</p>
+
+        <h4 id="how-to-request-self-repair">How to Request Permission for Self-Repair</h4>
+        <p>When you submit your maintenance request, there's an option to say "I'd like to fix this myself if you approve." Toggle this option on. In your description, explain what you plan to do and why you think it's something you can handle safely. For example: "The bathroom sink drain is clogged. I have a drain snake and think I can clear it myself."</p>
+        <p>Your landlord will review your request and either approve or decline. If they approve, you'll get instructions on what to do. If they decline, they'll arrange for a professional to handle it instead.</p>
+
+        <h4 id="self-repair-process">What Happens if Your Landlord Approves?</h4>
+        <p>Once approved, you can proceed with the repair. As you're working, the status will show your progress (repairing, done). When you've finished, you'll update the status to "Done" and potentially upload photos showing the completed repair so your landlord can verify everything is fixed.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Self-Repair Responsibility</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">If you attempt a repair and make it worse, you may be responsible for the damage. Only try repairs you're confident you can do safely. If something goes wrong during a landlord-approved self-repair, let your landlord know immediately and submit a new request to have a professional fix it.</p>
+        </div>
+
+        <h3 id="tracking-status">Tracking Your Maintenance Request</h3>
+        <p>After you submit your request, you can always check its status in the Maintenance section.</p>
+
+        <h4 id="status-meanings">Understanding Status Updates</h4>
+        <p>Your request will move through different statuses as it's handled:</p>
+        <ul>
+          <li><strong>Submitted:</strong> Your request has been received and sent to your landlord. They'll review it soon.</li>
+          <li><strong>Under Review:</strong> Your landlord is looking at your request and deciding how to proceed.</li>
+          <li><strong>Assigned:</strong> Your landlord has decided how the repair will be handled - either they'll do it, a contractor will handle it, or you'll fix it yourself.</li>
+          <li><strong>In Progress:</strong> The repair work is currently being done. Either a professional is working on it or you're handling it yourself.</li>
+          <li><strong>Resolved:</strong> The repair is complete. Your landlord has confirmed that the problem has been fixed.</li>
+          <li><strong>Closed:</strong> The request is fully done and archived in your history.</li>
+        </ul>
+
+        <h4 id="when-to-expect-updates">How Long Does It Take?</h4>
+        <p>Response times vary depending on the issue and your landlord's availability:</p>
+        <ul>
+          <li><strong>Emergency issues (unsafe):</strong> Usually addressed within 24 hours</li>
+          <li><strong>Important issues (affects comfort):</strong> Usually addressed within 2-7 days</li>
+          <li><strong>Minor issues:</strong> May take 1-2 weeks</li>
+        </ul>
+        <p>Your lease agreement might specify response times, so check that if you want to know what's expected. If a significant amount of time has passed and you haven't heard anything, you can check in with your landlord through the messaging feature in iReside.</p>
+
+        <h4 id="photo-requests">Photo Verification</h4>
+        <p>Sometimes your landlord might ask you to provide photos showing that the repair is complete. For example, if you do a self-repair or if a contractor completes work, your landlord might ask for photos to verify the job was done well. You'll upload these right in the app, and your landlord will review them to confirm everything is satisfactory.</p>
+
+        <h3 id="communication">Communicating About Your Requests</h3>
+        <p>Throughout the maintenance process, you might need to share information or ask questions. iReside has built-in messaging so you can communicate directly with your landlord right within the app.</p>
+        <ul>
+          <li>If your landlord needs more details, they might message you asking clarifying questions</li>
+          <li>If you think of additional information after submitting, you can add it through messages</li>
+          <li>If something changes about your availability (you can't be home during repairs, for example), let your landlord know through messages</li>
+          <li>All messages are tied to your specific maintenance request, so everything is organized together</li>
+        </ul>
+
+        <h3 id="request-history">Viewing Your Request History</h3>
+        <p>All your maintenance requests - past and present - are stored in your Maintenance section. You can view details of any request anytime: what was reported, when, what the issue was, and how it was resolved. This is helpful if you need to remember when something was fixed (useful for your own records) or if a similar problem comes up again.</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Complete Record</p>
+          <p className="m-0 text-text-medium text-sm">Your maintenance history in iReside serves as a documented record of what repairs have been done to the property. This is useful if there are ever disputes about the condition of your home when you move out.</p>
+        </div>
+
+        <h3 id="common-questions">Common Questions About Maintenance Requests</h3>
+        
+        <p><strong>What if my landlord ignores my maintenance request?</strong></p>
+        <p>If your landlord doesn't respond within a reasonable timeframe (check your lease for specifics), you can try messaging them through the app as a reminder. If the issue is urgent or affects your health and safety, you may have legal rights to have it repaired yourself and deduct costs from rent, depending on your location's rental laws. Contact your local tenant rights organization or legal advice if you're in this situation.</p>
+        
+        <p><strong>Can I submit multiple maintenance requests at once?</strong></p>
+        <p>Yes, you can submit multiple requests if you have multiple issues. However, it's often better to group related issues into one request if possible (for example, "Multiple outlets not working in the kitchen"). This helps your landlord prioritize their work.</p>
+        
+        <p><strong>What if I take a photo and the issue isn't visible?</strong></p>
+        <p>That's okay. Some problems (like strange noises, water pressure issues, or intermittent problems) aren't easy to photograph. Just describe what you're experiencing in detail, and your landlord will understand. Take a photo of the area if you can, or include anything that might help - like a photo of a control panel or a specific fixture.</p>
+        
+        <p><strong>Can I request repairs after I move out?</strong></p>
+        <p>Once you've moved out, maintenance requests won't be necessary - those become the responsibility of the new tenant or the landlord. However, if the damage existed while you lived there and wasn't fixed, you might need documentation. This is why keeping a record of your maintenance requests is important.</p>
+        
+        <p><strong>What if I accidentally submit a request for something that's actually my responsibility?</strong></p>
+        <p>Just let your landlord know through a message or by contacting them directly. There's no penalty for asking. It's better to ask and be told it's your responsibility than to let something deteriorate because you weren't sure.</p>
+        
+        <p><strong>Can I cancel a maintenance request after submitting it?</strong></p>
+        <p>Contact your landlord through messages and explain that you'd like to cancel the request. Most landlords are understanding about this, especially if you catch it quickly before they've started arranging repairs.</p>
+
+        <h3 id="tips-for-success">Tips for Getting Your Issues Fixed Quickly</h3>
+        <ul>
+          <li><strong>Report issues promptly:</strong> Don't wait until something gets worse. The sooner you report it, the sooner it can be fixed.</li>
+          <li><strong>Be specific:</strong> The more details you provide, the faster your landlord can respond. Don't just say something is "broken" - explain what it's doing that's wrong.</li>
+          <li><strong>Include photos:</strong> A clear photo helps your landlord assess the situation without needing to come investigate first.</li>
+          <li><strong>Set the right priority:</strong> Be honest about how urgent the issue is. This helps your landlord manage their time and respond to the most critical issues first.</li>
+          <li><strong>Respond quickly to landlord questions:</strong> If your landlord needs more information or wants to schedule repairs, respond promptly so things can move forward.</li>
+          <li><strong>Keep communication in the app:</strong> Use iReside messaging for discussions about the request so there's a record of everything.</li>
+          <li><strong>Accept reasonable response times:</strong> Understanding that your landlord might not be available immediately helps set realistic expectations.</li>
+        </ul>
       </div>
     ),
     next: "tenant/lease",

@@ -123,7 +123,25 @@ export const DOCS_NAV: NavSection[] = [
           { title: "Security Reminders", href: "/docs/tenant/payments#security" },
         ]
       },
-      { title: "Maintenance Requests", href: "/docs/tenant/maintenance", icon: Wrench },
+      { 
+        title: "Maintenance Requests", 
+        href: "/docs/tenant/maintenance", 
+        icon: Wrench,
+        subItems: [
+          { title: "What is a Maintenance Request?", href: "/docs/tenant/maintenance#overview" },
+          { title: "What NOT to Report", href: "/docs/tenant/maintenance#when-not-to-report" },
+          { title: "Issue Types & Examples", href: "/docs/tenant/maintenance#issue-types" },
+          { title: "Emergency Protocol", href: "/docs/tenant/maintenance#emergency" },
+          { title: "Setting Priority Levels", href: "/docs/tenant/maintenance#step-6" },
+          { title: "How to Submit (7 Steps)", href: "/docs/tenant/maintenance#how-to-submit" },
+          { title: "Self-Repair Option", href: "/docs/tenant/maintenance#self-repair" },
+          { title: "Tracking Status", href: "/docs/tenant/maintenance#status-tracking" },
+          { title: "Communication & Messaging", href: "/docs/tenant/maintenance#communication" },
+          { title: "Request History", href: "/docs/tenant/maintenance#request-history" },
+          { title: "FAQ", href: "/docs/tenant/maintenance#faq" },
+          { title: "Tips for Success", href: "/docs/tenant/maintenance#tips-for-success" },
+        ]
+      },
       { title: "Lease & Documents", href: "/docs/tenant/lease", icon: FileText },
       { title: "Moving In & Out", href: "/docs/tenant/moving", icon: ArrowRightLeft },
     ],

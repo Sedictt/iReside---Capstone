@@ -31,7 +31,7 @@ type ActionBody = {
     };
 };
 
-const ALLOWED_STATUSES: ApplicationStatus[] = ["reviewing", "approved", "rejected"];
+const ALLOWED_STATUSES: ApplicationStatus[] = ["reviewing", "payment_pending", "approved", "rejected"];
 
 const isAllowedStatus = (value: unknown): value is ApplicationStatus =>
     typeof value === "string" && ALLOWED_STATUSES.includes(value as ApplicationStatus);
