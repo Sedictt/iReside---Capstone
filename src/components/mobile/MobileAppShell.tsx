@@ -7,6 +7,7 @@ import LoginScreen from "./screens/LoginScreen";
 import SignUpScreen from "./screens/SignUpScreen";
 import EmailVerificationScreen from "./screens/EmailVerificationScreen";
 import TenantHomeScreen from "./screens/TenantHomeScreen";
+import PropertySearchScreen from "./screens/PropertySearchScreen";
 import PropertyDetailScreen from "./screens/PropertyDetailScreen";
 import SavedPropertiesScreen from "./screens/SavedPropertiesScreen";
 import TenantChatScreen from "./screens/TenantChatScreen";
@@ -17,6 +18,7 @@ import LeaseScreen from "./screens/LeaseScreen";
 import PaymentsScreen from "./screens/PaymentsScreen";
 import TenantProfileScreen from "./screens/TenantProfileScreen";
 import TenantSettingsScreen from "./screens/TenantSettingsScreen";
+import TenantMaintenanceScreen from "./screens/TenantMaintenanceScreen";
 import LandlordHomeScreen from "./screens/LandlordHomeScreen";
 import LandlordPropertiesScreen from "./screens/LandlordPropertiesScreen";
 import LandlordPropertyDetailScreen from "./screens/LandlordPropertyDetailScreen";
@@ -38,6 +40,8 @@ import RevenueDashboardScreen from "./screens/RevenueDashboardScreen";
 import InboxScreen from "./screens/InboxScreen";
 import ActivityScreen from "./screens/ActivityScreen";
 import AddPropertyScreen from "./screens/AddPropertyScreen";
+import TenantMoveOutScreen from "./screens/TenantMoveOutScreen";
+import LandlordMoveOutReviewScreen from "./screens/LandlordMoveOutReviewScreen";
 import {
     Home,
     Search,
@@ -106,6 +110,8 @@ const SCREENS_WITHOUT_TABS: ScreenName[] = [
     "moveInChecklist",
     "revenueDashboard",
     "addProperty",
+    "tenantMoveOut",
+    "landlordMoveOutReview",
 ];
 
 // ─── Status Bar ────────────────────────────────────────────
@@ -196,6 +202,7 @@ function ScreenRouter() {
         signup: SignUpScreen,
         emailVerification: EmailVerificationScreen,
         tenantHome: TenantHomeScreen,
+        propertySearch: PropertySearchScreen,
         propertyDetail: PropertyDetailScreen,
         savedProperties: SavedPropertiesScreen,
         tenantChat: TenantChatScreen,
@@ -206,6 +213,7 @@ function ScreenRouter() {
         payments: PaymentsScreen,
         tenantProfile: TenantProfileScreen,
         tenantSettings: TenantSettingsScreen,
+        tenantMaintenance: TenantMaintenanceScreen,
         landlordHome: LandlordHomeScreen,
         landlordProperties: LandlordPropertiesScreen,
         landlordPropertyDetail: LandlordPropertyDetailScreen,
@@ -227,6 +235,8 @@ function ScreenRouter() {
         inbox: InboxScreen,
         activity: ActivityScreen,
         addProperty: AddPropertyScreen,
+        tenantMoveOut: TenantMoveOutScreen,
+        landlordMoveOutReview: LandlordMoveOutReviewScreen,
     };
 
     const ScreenComponent = screenComponents[currentScreen];

@@ -28,6 +28,8 @@ export type ScreenName =
     | "chatConversation"
     | "tenantProfile"
     | "tenantSettings"
+    | "tenantMaintenance"
+    | "tenantMoveOut"
     // Landlord Screens
     | "landlordHome"
     | "landlordProperties"
@@ -43,6 +45,7 @@ export type ScreenName =
     | "landlordProfile"
     | "landlordSettings"
     | "addProperty"
+    | "landlordMoveOutReview"
     // Shared
     | "notifications"
     | "irisChat"
@@ -101,6 +104,8 @@ const TENANT_SCREEN_TO_TAB: Partial<Record<ScreenName, TenantTab>> = {
     irisChat:            "inbox",
     tenantProfile:       "profile",
     tenantSettings:      "profile",
+    tenantMaintenance:   "inbox",
+    tenantMoveOut:       "profile",
     notifications:       "profile",
 };
 
@@ -119,6 +124,7 @@ const LANDLORD_SCREEN_TO_TAB: Partial<Record<ScreenName, LandlordTab>> = {
     landlordInvoiceDetail:     "activity",
     landlordMaintenance:       "activity",
     landlordMaintenanceDetail: "activity",
+    landlordMoveOutReview:     "activity",
     moveInChecklist:           "activity",
     inbox:                     "inbox",
     landlordChat:              "inbox",

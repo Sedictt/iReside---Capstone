@@ -13,6 +13,7 @@ import {
     AlertCircle,
     Megaphone,
     ChevronRight,
+    Search,
 } from "lucide-react";
 import { useNavigation } from "../navigation";
 import styles from "./TenantHomeScreen.module.css";
@@ -41,7 +42,7 @@ const QUICK_ACTIONS = [
     { id: "pay", label: "Pay Rent", icon: CreditCard, color: "Green", screen: "payments" as const },
     { id: "lease", label: "View Lease", icon: FileText, color: "Blue", screen: "leaseList" as const },
     { id: "saved", label: "Saved", icon: Heart, color: "Amber", screen: "savedProperties" as const },
-    { id: "maintenance", label: "Request Fix", icon: Wrench, color: "Purple", screen: "notifications" as const },
+    { id: "maintenance", label: "Request Fix", icon: Wrench, color: "Purple", screen: "tenantMaintenance" as const },
 ];
 
 const NOTIFICATIONS = [
@@ -132,6 +133,15 @@ export default function TenantHomeScreen() {
                         {hasUnread && <div className={styles.notifBadge} />}
                     </button>
                 </div>
+            </div>
+
+            {/* Search Bar */}
+            <div 
+                className={styles.searchBar} 
+                onClick={() => navigate("propertySearch")}
+            >
+                <Search className={styles.searchIcon} size={18} />
+                <span className={styles.searchPlaceholder}>Find a new home...</span>
             </div>
 
             {/* Rent Status Card */}

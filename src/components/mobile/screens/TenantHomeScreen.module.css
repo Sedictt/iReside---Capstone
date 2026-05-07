@@ -18,7 +18,37 @@
 
 /* ─── Greeting Header ──────────────────────────────────── */
 .greeting {
-    padding: 12px 0 20px;
+    padding: 12px 0 16px;
+}
+
+/* ─── Search Bar ───────────────────────────────────────── */
+.searchBar {
+    display: flex;
+    align-items: center;
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 14px;
+    height: 48px;
+    padding: 0 16px;
+    margin-bottom: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.searchBar:active {
+    transform: scale(0.98);
+    border-color: #6d9838;
+}
+
+.searchIcon {
+    color: #525252;
+    margin-right: 12px;
+}
+
+.searchPlaceholder {
+    font-size: 14px;
+    color: #737373;
+    font-weight: 500;
 }
 
 .greetingRow {

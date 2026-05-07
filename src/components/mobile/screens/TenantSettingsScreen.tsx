@@ -189,6 +189,20 @@ export default function TenantSettingsScreen() {
                         </div>
                     </div>
                 </div>
+                {/* Lease Actions */}
+                <div className={styles.section}>
+                    <div className={styles.sectionTitle}>Lease Actions</div>
+                    <div className={styles.listGroup}>
+                        <div 
+                            className={styles.listItem} 
+                            style={{ cursor: "pointer", padding: "16px" }}
+                            onClick={() => navigate("tenantMoveOut")}
+                        >
+                            <div style={{ color: "#ef4444", fontWeight: 600 }}>Request Move-Out</div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Sign Out */}
                 <div className={styles.section}>
                     <button className={styles.signOutButton} onClick={handleSignOut}>
