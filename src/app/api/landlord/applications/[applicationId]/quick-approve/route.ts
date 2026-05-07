@@ -127,12 +127,16 @@ export async function POST(
 
         const signingLink = generateSigningLink(lease.id, tenantId);
 
-        const { data: linkData } = await adminClient.auth.admin.generateLink({
-            type: "recovery",
-            email: tenantEmail,
-        }).catch(() => ({ properties: {} }));
-
-        const inviteUrl = linkData?.properties?.action_link;
+        let inviteUrl: string | undefined;
+        try {
+            const linkResult = await adminClient.auth.admin.generateLink({
+                type: "recovery",
+                email: tenantEmail,
+            });
+            inviteUrl = (linkResult as any)?.properties?.action_link;
+        } catch {
+            // ignore
+        }
 
         await supabase
             .from("applications")
