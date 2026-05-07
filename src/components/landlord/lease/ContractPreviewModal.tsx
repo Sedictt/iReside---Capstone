@@ -232,9 +232,17 @@ export function ContractPreviewModal({
                               },
                               advance_payment: {
                                   amount: advanceAmount,
+                                  method: "cash" as const,
+                                  reference_number: `ADVANCE-${Date.now()}`,
+                                  paid_at: new Date().toISOString(),
+                                  status: "pending",
                               },
                               security_deposit_payment: {
                                   amount: securityDeposit,
+                                  method: "cash" as const,
+                                  reference_number: `DEPOSIT-${Date.now()}`,
+                                  paid_at: new Date().toISOString(),
+                                  status: "pending",
                               },
                           }),
                 }),
