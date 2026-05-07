@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
 type ProfileCoverUploaderProps = {
     initialCoverUrl: string | null;
@@ -26,6 +28,13 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
         event.target.value = "";
 
         if (!file) return;
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error("File too large", {
+                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
+            });
+            return;
+        }
 
         const previewUrl = URL.createObjectURL(file);
         setCoverUrl(previewUrl);

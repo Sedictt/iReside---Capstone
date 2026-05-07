@@ -6,6 +6,7 @@ import { Logo } from "@/components/ui/Logo";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { saveWizardState, loadWizardState, clearWizardState } from "@/lib/wizard-storage";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
 export default function SignUpPage() {
     const [loading, setLoading] = useState(false);
@@ -75,6 +76,13 @@ export default function SignUpPage() {
 
     // Handle File Uploads with Previews
     const handleFileChange = (file: File | null, setter: (f: File | null) => void, previewSetter: (s: string | null) => void) => {
+        if (file && file.size > MAX_FILE_SIZE) {
+            toast.error("File too large", {
+                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.`
+            });
+            return;
+        }
+
         setter(file);
         if (file && file.type.startsWith("image/")) {
             const url = URL.createObjectURL(file);
@@ -150,10 +158,21 @@ export default function SignUpPage() {
         }
 
         // Validate at least 3 of 4 documents
-        const filesCount = [idFile, permitFile, permitCardFile, ownershipFile].filter(Boolean).length;
+        const files = [idFile, permitFile, permitCardFile, ownershipFile].filter((f): f is File => f !== null);
+        const filesCount = files.length;
+
         if (filesCount < 3) {
             toast.error("Incomplete documentation", {
                 description: `Please upload at least 3 of the 4 required documents to proceed. (Current: ${filesCount}/4)`
+            });
+            return;
+        }
+
+        // Secondary file size validation
+        const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE);
+        if (oversizedFiles.length > 0) {
+            toast.error("File size limit exceeded", {
+                description: `Some files exceed the ${MAX_FILE_SIZE_MB}MB limit. Please remove or replace them before submitting.`
             });
             return;
         }
@@ -431,7 +450,7 @@ export default function SignUpPage() {
                                     onChange={(e) => handleFileChange(e.target.files?.[0] || null, setIdFile, setIdPreview)}
                                 />
                                 {idFile ? (
-                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {idPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <img src={idPreview} alt="ID Preview" className="w-full h-full object-cover" />
@@ -452,7 +471,7 @@ export default function SignUpPage() {
                                                 setIdFile(null);
                                                 setIdPreview(null);
                                             }}
-                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </button>
@@ -514,10 +533,13 @@ export default function SignUpPage() {
                                     onChange={(e) => handleFileChange(e.target.files?.[0] || null, setPermitFile, setPermitPreview)}
                                 />
                                 {permitFile ? (
-                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {permitPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <img src={permitPreview} alt="Permit Preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
@@ -532,7 +554,7 @@ export default function SignUpPage() {
                                                 setPermitFile(null);
                                                 setPermitPreview(null);
                                             }}
-                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </button>
@@ -576,10 +598,13 @@ export default function SignUpPage() {
                                     onChange={(e) => handleFileChange(e.target.files?.[0] || null, setPermitCardFile, setPermitCardPreview)}
                                 />
                                 {permitCardFile ? (
-                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                    <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                         {permitCardPreview ? (
                                             <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                 <img src={permitCardPreview} alt="Card Preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-white">Change Image</span>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="p-3 bg-amber-500/20 rounded-full mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
@@ -594,7 +619,7 @@ export default function SignUpPage() {
                                                 setPermitCardFile(null);
                                                 setPermitCardPreview(null);
                                             }}
-                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                            className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </button>
@@ -652,7 +677,7 @@ export default function SignUpPage() {
                                         onChange={(e) => handleFileChange(e.target.files?.[0] || null, setOwnershipFile, setOwnershipPreview)}
                                     />
                                     {ownershipFile ? (
-                                        <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2">
+                                        <div className="relative z-30 w-full h-full flex flex-col items-center justify-center p-2 pointer-events-none">
                                             {ownershipPreview ? (
                                                 <div className="relative w-full h-24 mb-2 rounded-lg overflow-hidden border border-white/10 group-hover/upload:scale-105 transition-transform duration-500">
                                                     <img src={ownershipPreview} alt="Ownership Preview" className="w-full h-full object-cover" />
@@ -673,7 +698,7 @@ export default function SignUpPage() {
                                                     setOwnershipFile(null);
                                                     setOwnershipPreview(null);
                                                 }}
-                                                className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors"
+                                                className="mt-2 p-1.5 bg-rose-500/20 text-rose-500 rounded-lg hover:bg-rose-500/40 transition-colors pointer-events-auto"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </button>

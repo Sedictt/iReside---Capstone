@@ -43,7 +43,7 @@ describe('JWT Utilities for Lease Signing', () => {
       expect(result.valid).toBe(true);
       expect(result.payload).toBeDefined();
       expect(result.payload?.leaseId).toBe(leaseId);
-      expect(result.payload?.tenantId).toBe(tenantId);
+      expect(result.payload?.actorId).toBe(tenantId);
       expect(result.payload?.type).toBe('lease_signing');
       expect(result.error).toBeUndefined();
     });
@@ -59,7 +59,7 @@ describe('JWT Utilities for Lease Signing', () => {
     it('should reject a token with wrong type', () => {
       const jwt = require('jsonwebtoken');
       const wrongToken = jwt.sign(
-        { leaseId: 'lease-123', tenantId: 'tenant-456', type: 'wrong_type' },
+        { leaseId: 'lease-123', actorId: 'tenant-456', role: 'tenant', type: 'wrong_type' },
         process.env.JWT_SECRET,
         { expiresIn: '30d' }
       );
@@ -114,7 +114,7 @@ describe('JWT Utilities for Lease Signing', () => {
 
         expect(result.valid).toBe(true);
         expect(result.payload?.leaseId).toBe(leaseId);
-        expect(result.payload?.tenantId).toBe(tenantId);
+        expect(result.payload?.actorId).toBe(tenantId);
       }
     });
   });

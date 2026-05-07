@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
 interface AvatarPickerProps {
     isOpen: boolean;
@@ -101,6 +102,14 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !profile) return;
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error("File too large", {
+                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
+            });
+            e.target.value = "";
+            return;
+        }
 
         setIsUploading(true);
         setError(null);

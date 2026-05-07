@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import crypto from "crypto";
+import { MAX_FILE_SIZE } from "@/lib/constants";
 
 const landlordRegistrationSchema = z.object({
     fullName: z.string().min(2, "Full name is required"),
@@ -22,7 +23,13 @@ const fileSchema = z.object({
     name: z.string(),
     type: z.string(),
     data: z.string(),
-}).optional();
+}).optional().refine(file => {
+    if (!file) return true;
+    // Calculate approximate size from base64 (3/4 of length)
+    // base64 length is always a multiple of 4.
+    const sizeInBytes = (file.data.length * 3) / 4;
+    return sizeInBytes <= MAX_FILE_SIZE * 1.1; // 10% margin for base64 overhead/padding
+}, "File size exceeds the 5MB limit");
 
 const landlordRegistrationWithFilesSchema = landlordRegistrationSchema.extend({
     idFile: fileSchema,

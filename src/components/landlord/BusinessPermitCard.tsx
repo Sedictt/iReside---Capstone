@@ -4,6 +4,8 @@ import { Award, Building2, CheckCircle2, Info, ShieldCheck, Loader2, X, Maximize
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
 type BusinessPermitCardProps = {
     businessName: string | null;
@@ -24,6 +26,14 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error("File too large", {
+                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.`
+            });
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+        }
 
         setUploading(true);
         const formData = new FormData();

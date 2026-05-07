@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
     Eye, 
     EyeOff, 
@@ -24,11 +24,13 @@ import {
     X,
     FileText,
     Maximize2,
-    FilePlus
+    FilePlus,
+    HelpCircle
 } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { toast } from "sonner";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 import { LeaseDocument } from "@/components/lease/LeaseDocument";
 import { LeaseData } from "@/types/lease";
 import { generateLeasePdf } from "@/lib/lease-pdf";
@@ -55,6 +57,8 @@ const STEPS: { id: Step; label: string; icon: any }[] = [
 
 export default function OnboardingPage({ params }: { params: Promise<{ token: string }> }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isPreview = searchParams.get("preview") === "true";
     const [token, setToken] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -96,6 +100,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > MAX_FILE_SIZE) {
+                toast.error("File too large", {
+                    description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
+                });
+                e.target.value = "";
+                return;
+            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPropertyPhoto(reader.result as string);
@@ -107,6 +118,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleCoverPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > MAX_FILE_SIZE) {
+                toast.error("File too large", {
+                    description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
+                });
+                e.target.value = "";
+                return;
+            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setCoverPhoto(reader.result as string);
@@ -118,6 +136,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > MAX_FILE_SIZE) {
+                toast.error("File too large", {
+                    description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
+                });
+                e.target.value = "";
+                return;
+            }
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProfilePhoto(reader.result as string);
@@ -131,6 +156,22 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         const resolveParams = async () => {
             const { token: resolvedToken } = await params;
             setToken(resolvedToken);
+
+            if (isPreview) {
+                const mockData: OnboardingData = {
+                    email: "preview@example.com",
+                    fullName: "Preview Landlord",
+                    phone: "09123456789",
+                    propertyName: "Sample Property",
+                    propertyAddress: "123 Preview Lane, Metro Manila"
+                };
+                setData(mockData);
+                setFullName(mockData.fullName);
+                setPhone(mockData.phone);
+                setLoading(false);
+                setCurrentStep("property"); // Start at property step for easier previewing
+                return;
+            }
             
             try {
                 const response = await fetch(`/api/landlord/onboarding/${resolvedToken}`);
@@ -157,7 +198,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         };
         
         resolveParams();
-    }, [params, router]);
+    }, [params, router, isPreview]);
 
     // Load persisted state from localStorage when email is available
     useEffect(() => {
@@ -600,7 +641,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             </div>
                                             <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" accept="image/*" />
                                             {propertyPhoto && (
-                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20">
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20 pointer-events-none">
                                                     <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
                                                         <Camera className="w-4 h-4 text-white" />
                                                         <span className="text-xs font-bold text-white">Change Cover</span>
@@ -694,9 +735,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Utility Management</label>
                                                 <div className="grid gap-2">
                                                     {[
-                                                        { id: "included_in_rent", label: "Bundled Utilities", desc: "All-inclusive monthly rate" },
-                                                        { id: "separate_metered", label: "Metered Consumption", desc: "Pay-per-use direct billing" },
-                                                        { id: "mixed", label: "Hybrid Strategy", desc: "Fixed base + usage overhead" },
+                                                        { id: "included_in_rent", label: "Included in Rent", desc: "Utilities are part of the rent", popular: false },
+                                                        { id: "mixed", label: "Submetered", desc: "You bill tenants for usage", popular: true },
+                                                        { id: "separate_metered", label: "Direct to Provider", desc: "Tenants pay utility companies", popular: false },
                                                     ].map((opt) => (
                                                         <button
                                                             key={opt.id}
@@ -706,13 +747,43 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             <div className="flex items-center gap-4">
                                                                 <div className={`w-2.5 h-2.5 rounded-full ${utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                                 <div>
-                                                                    <p className={`text-sm font-black tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className={`text-sm font-black tracking-tight ${utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                                        {opt.popular && (
+                                                                            <span className="text-[7px] font-black uppercase tracking-widest bg-primary/20 text-primary px-1.5 py-0.5 rounded-full border border-primary/20">Most Popular</span>
+                                                                        )}
+                                                                    </div>
                                                                     <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
                                                                 </div>
                                                             </div>
                                                             {utilityBilling === opt.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
                                                         </button>
                                                     ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Strategy Explanation Card */}
+                                            <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <div className="flex gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                                        <HelpCircle className="w-5 h-5 text-primary" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">How this works</h4>
+                                                        <p className="text-xs text-white/60 font-medium leading-relaxed">
+                                                            {utilityBilling === "included_in_rent" && "The utility cost is part of the rent. Your tenants do not pay anything extra for their water or electricity usage."}
+                                                            {utilityBilling === "separate_metered" && "Tenants have their own separate accounts and meters. They receive and pay their own bills directly to the utility company."}
+                                                            {utilityBilling === "mixed" && "The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside."}
+                                                        </p>
+                                                        <div className="flex items-center gap-2 pt-1">
+                                                            <div className="w-1 h-1 rounded-full bg-primary" />
+                                                            <span className="text-[9px] font-bold text-white/40 uppercase tracking-tighter">
+                                                                {utilityBilling === "included_in_rent" && "Best for: Simple rent setups"}
+                                                                {utilityBilling === "separate_metered" && "Best for: Standard houses or apartments"}
+                                                                {utilityBilling === "mixed" && "Best for: Multi unit buildings with one main meter"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -848,6 +919,13 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0];
                                                     if (file) {
+                                                        if (file.size > MAX_FILE_SIZE) {
+                                                            toast.error("File too large", {
+                                                                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit.`
+                                                            });
+                                                            e.target.value = "";
+                                                            return;
+                                                        }
                                                         setContractFile(file.name);
                                                         toast.success(`Contract linked: ${file.name}`);
                                                     }
@@ -1153,7 +1231,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         className="absolute inset-0 opacity-0 cursor-pointer z-10" 
                                         accept="image/*"
                                     />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
                                         <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
                                             <Camera className="w-4 h-4 text-white" />
                                             <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Cover</span>

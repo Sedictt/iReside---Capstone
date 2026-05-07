@@ -47,6 +47,7 @@ import { AvatarPicker } from "@/components/profile/AvatarPicker";
 import { ProfileCoverUploader } from "@/components/profile/ProfileCoverUploader";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data";
@@ -308,6 +309,14 @@ export function LandlordSettings() {
     const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error("File too large", {
+                description: `The file "${file.name}" exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please upload a smaller file.`
+            });
+            if (permitInputRef.current) permitInputRef.current.value = "";
+            return;
+        }
 
         setIsUploadingPermit(true);
         const loadingToast = toast.loading("Uploading permit...");
