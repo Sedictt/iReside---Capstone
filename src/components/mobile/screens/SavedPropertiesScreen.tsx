@@ -6,7 +6,6 @@ import {
     X,
     BedDouble,
     Bath,
-    Search,
     ArrowUpDown,
     ArrowLeft,
 } from "lucide-react";
@@ -74,15 +73,13 @@ export default function SavedPropertiesScreen() {
                     </div>
                     <h2 className={styles.emptyTitle}>No Saved Properties</h2>
                     <p className={styles.emptySub}>
-                        Properties you like will appear here. Start browsing to save your
-                        favorites.
+                        Saved properties will appear here once your landlord assigns you to a unit.
                     </p>
                     <button
                         className={styles.emptyButton}
-                        onClick={() => navigate("propertySearch")}
+                        onClick={() => navigate("tenantHome")}
                     >
-                        <Search />
-                        Browse Properties
+                        Return Home
                     </button>
                 </div>
             </div>
