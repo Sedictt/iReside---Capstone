@@ -72,7 +72,7 @@ const PAST_PAYMENTS: Payment[] = [
 
 // ─── Component ──────────────────────────────────────────────
 export default function PaymentsScreen() {
-    const { goBack } = useNavigation();
+    const { goBack, navigate } = useNavigation();
     const [activeTab, setActiveTab] = useState<"upcoming" | "history">("upcoming");
     const [showPayModal, setShowPayModal] = useState(false);
     const [selectedMethod, setSelectedMethod] = useState<"gcash" | "maya" | "card" | "bank">("gcash");
