@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DigitalSigner } from "@/components/shared/DigitalSigner/DigitalSigner";
 import { generateLeasePdf } from "@/lib/lease-pdf";
-import { verifySigningToken } from "@/lib/jwt";
-import { CheckCircle, AlertCircle, Loader2, FileText } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface LeaseDetails {
@@ -33,11 +32,8 @@ interface LeaseDetails {
   };
 }
 
-export default function TenantLeaseSigningPage({
-  params,
-}: {
-  params: Promise<{ leaseId: string }>;
-}) {
+// Separate component to handle search params with Suspense
+function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [leaseId, setLeaseId] = useState<string | null>(null);
@@ -59,7 +55,7 @@ export default function TenantLeaseSigningPage({
     void extractParams();
   }, [params, searchParams]);
 
-  // Verify token and fetch lease details
+  // Fetch lease details with server-side token verification
   useEffect(() => {
     if (!leaseId || !token) return;
 
@@ -68,16 +64,8 @@ export default function TenantLeaseSigningPage({
         setLoading(true);
         setError(null);
 
-        // Verify token
-        const tokenResult = verifySigningToken(token);
-        if (!tokenResult.valid || !tokenResult.payload) {
-          setError(tokenResult.error || "Invalid signing token");
-          setLoading(false);
-          return;
-        }
-
-        // Fetch lease details
-        const response = await fetch(`/api/tenant/leases/${leaseId}`);
+        // Fetch lease details with token for verification (verification happens on the server)
+        const response = await fetch(`/api/tenant/leases/${leaseId}?token=${token}`);
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || "Failed to fetch lease details");
@@ -115,30 +103,6 @@ export default function TenantLeaseSigningPage({
     if (!leaseId || !token) return;
 
     try {
-      // Since the current API expects a data URL for the signature, 
-      // but we now have a full signed PDF, we should ideally upload the PDF.
-      // However, to minimize database changes, we can extract the signature from the PDF 
-      // OR just update the API to accept a file.
-      
-      // For now, I'll convert the blob to a data URL and send it as the signature 
-      // AND also upload the PDF to storage if we had a place for it.
-      
-      // Let's check if there's a storage bucket for signed leases.
-      // The current leases table has tenant_signature as a string (likely data URL of the ink).
-      
-      // But wait, the robust technology is about the PDF.
-      // I'll update the API call to send the signed PDF to a new endpoint or handle it.
-      
-      // Actually, I'll just stick to the current API's requirement for now but use the new UI.
-      // To get the "signature" from the DigitalSigner, I'd need to change DigitalSigner to return signatures separately.
-      
-      // ALTERNATIVELY: I'll just upload the whole signed PDF to Supabase storage 
-      // and store the URL in the database. 
-      // But the database type is string for signature.
-      
-      // Let's just send the signed blob to the API.
-      // I'll update the API to handle Multipart Form Data or just send the blob.
-
       const reader = new FileReader();
       reader.readAsDataURL(signedBlob);
       reader.onloadend = async () => {
@@ -150,7 +114,7 @@ export default function TenantLeaseSigningPage({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            tenant_signature: base64data, // This is now the whole PDF as data URL (hacky but works with existing schema)
+            tenant_signature: base64data,
             signing_token: token,
           }),
         });
@@ -235,5 +199,27 @@ export default function TenantLeaseSigningPage({
         onSigned={handleSigned}
         title={`Lease Agreement - ${lease.unit.property.name}`}
     />
+  );
+}
+
+export default function TenantLeaseSigningPage({
+  params,
+}: {
+  params: Promise<{ leaseId: string }>;
+}) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <div className="relative mb-8">
+            <div className="w-20 h-20 border-2 border-indigo-500/20 rounded-full mx-auto" />
+            <div className="absolute inset-0 w-20 h-20 border-t-2 border-indigo-500 rounded-full animate-spin mx-auto" />
+          </div>
+          <h2 className="text-2xl font-black tracking-tighter uppercase text-indigo-400">Loading</h2>
+        </div>
+      </div>
+    }>
+      <LeaseSigningContent params={params} />
+    </Suspense>
   );
 }

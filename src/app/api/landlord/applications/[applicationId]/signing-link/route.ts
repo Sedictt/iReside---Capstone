@@ -115,7 +115,7 @@ export async function POST(
   }
 
   // Verify lease is in correct status
-  if (lease.status !== "pending_signature") {
+  if (lease.status !== "pending_signature" && lease.status !== "pending_tenant_signature") {
     return NextResponse.json(
       { error: `Lease is not ready for signing. Current status: ${lease.status}` },
       { status: 409 }

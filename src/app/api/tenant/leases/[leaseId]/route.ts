@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { verifySigningToken } from "@/lib/jwt";
 
 /**
  * GET /api/tenant/leases/[leaseId]
@@ -17,12 +18,43 @@ export async function GET(
   const supabase = await createClient();
 
   try {
+    // Get token from query params
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get("token");
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "Signing token is required" },
+        { status: 401 }
+      );
+    }
+
+    // Verify token
+    const tokenResult = verifySigningToken(token);
+    if (!tokenResult.valid || !tokenResult.payload) {
+      return NextResponse.json(
+        { error: tokenResult.error || "Invalid signing token" },
+        { status: 401 }
+      );
+    }
+
+    const { leaseId: tokenLeaseId, tenantId: tokenTenantId } = tokenResult.payload;
+
+    // Verify lease ID matches
+    if (tokenLeaseId !== leaseId) {
+      return NextResponse.json(
+        { error: "Lease ID mismatch" },
+        { status: 403 }
+      );
+    }
+
     // Fetch lease with related data
     const { data: lease, error: leaseError } = await supabase
       .from("leases")
       .select(`
         id,
         status,
+        tenant_id,
         start_date,
         end_date,
         monthly_rent,
@@ -59,6 +91,14 @@ export async function GET(
       return NextResponse.json(
         { error: "Lease not found" },
         { status: 404 }
+      );
+    }
+
+    // Verify tenant ID matches
+    if (lease.tenant_id !== tokenTenantId) {
+      return NextResponse.json(
+        { error: "Unauthorized: Tenant ID mismatch" },
+        { status: 403 }
       );
     }
 

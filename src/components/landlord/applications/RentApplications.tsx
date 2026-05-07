@@ -1099,6 +1099,43 @@ export function RentApplications() {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Lease Agreement (§6.4) */}
+                                {selectedApp.lease && (
+                                    <div className="space-y-4">
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Lease Agreement</h4>
+                                        <div className="rounded-[2.5rem] border border-border bg-background/50 p-6 space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+                                                        <FileText className="h-6 w-6 text-primary" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-black text-foreground">Digital Lease Contract</p>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">ID: {selectedApp.lease.id.slice(0, 8)}...</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <LeaseStatusBadge status={selectedApp.lease.status} />
+                                            </div>
+
+                                            {(selectedApp.lease.status === 'pending_signature' || selectedApp.lease.status === 'pending_tenant_signature') && (
+                                                <div className="rounded-2xl bg-amber-500/5 border border-amber-500/10 p-5 flex items-start gap-4">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600">
+                                                        <Clock className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Awaiting Signature</p>
+                                                        <p className="text-[11px] font-medium text-amber-600/70 leading-relaxed">
+                                                            The lease has been generated and is ready for the tenant to sign. You can use the buttons below to manage the signing process.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="border-t border-border bg-card/80 p-8 backdrop-blur-xl">
@@ -1117,9 +1154,40 @@ export function RentApplications() {
                                             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Status: {selectedApp.status}</span>
                                         </div>
                                         {selectedApp.status === "approved" && (
-                                            <button onClick={() => handleSendCredentials(selectedApp.id)} className="w-full rounded-2xl border border-blue-500/20 bg-blue-500/10 py-4 text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-95">
-                                                Resend Access Portal Link
-                                            </button>
+                                            <div className="space-y-3">
+                                                <button 
+                                                    onClick={() => handleSendCredentials(selectedApp.id)} 
+                                                    disabled={sendingCredentials}
+                                                    className="w-full rounded-2xl border border-blue-500/20 bg-blue-500/10 py-4 text-xs font-black uppercase tracking-widest text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {sendingCredentials ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Resend Access Portal Link"}
+                                                </button>
+
+                                                {(selectedApp.lease?.status === "pending_signature" || selectedApp.lease?.status === "pending_tenant_signature") && (
+                                                    <button 
+                                                        onClick={() => handleGenerateSigningLink(selectedApp.id)} 
+                                                        disabled={signingLinkState.loading}
+                                                        className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 py-4 text-xs font-black uppercase tracking-widest text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                                                    >
+                                                        {signingLinkState.loading ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                                        ) : (
+                                                            selectedApp.lease.status === "pending_signature" ? "Send Lease Signing Link" : "Resend Lease Signing Link"
+                                                        )}
+                                                    </button>
+                                                )}
+
+                                                {signingLinkState.message && (
+                                                    <p className="text-[10px] font-black uppercase text-center text-emerald-500 animate-pulse">
+                                                        {signingLinkState.message}
+                                                    </p>
+                                                )}
+                                                {signingLinkState.error && (
+                                                    <p className="text-[10px] font-black uppercase text-center text-red-500">
+                                                        {signingLinkState.error}
+                                                    </p>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 )}
