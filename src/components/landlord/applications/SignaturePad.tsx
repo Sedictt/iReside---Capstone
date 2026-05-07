@@ -179,7 +179,7 @@ export function SignaturePad({
                 className="fixed inset-0 z-[9999] bg-black"
             >
                 <DigitalSigner 
-                    file={pdfBlob}
+                    initialFile={pdfBlob}
                     title={documentTitle}
                     onSigned={handleFullSignerComplete}
                     isProcessingInitial={true}

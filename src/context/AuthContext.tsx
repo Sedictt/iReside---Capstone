@@ -90,8 +90,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileLoading: false,
     })
 
-    // Keep a stable ref to the supabase client so we never recreate it
-    const supabaseRef = useRef(createClient())
+    // Keep a stable ref to the supabase client
+    const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+    if (!supabaseRef.current) {
+        supabaseRef.current = createClient()
+    }
+    const supabase = supabaseRef.current!
 
     /* ---------- helpers ---------- */
 
@@ -101,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      */
     const fetchVerifiedUser = useCallback(async (): Promise<VerifiedUserResult> => {
         try {
-            const { data, error } = await supabaseRef.current.auth.getUser()
+            const { data, error } = await supabase!.auth.getUser()
             if (error) {
                 return {
                     user: null,
@@ -170,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      * Returns null (and logs) on failure instead of crashing.
      */
     const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
-        const { data, error } = await supabaseRef.current
+        const { data, error } = await supabase!
             .from('profiles')
             .select('*')
             .eq('id', userId)
@@ -203,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     /* ---------- boot sequence ---------- */
 
     useEffect(() => {
-        const supabase = supabaseRef.current
+        if (!supabase) return
         let cancelled = false // prevent state updates after unmount
 
         const clearAuthState = () => {

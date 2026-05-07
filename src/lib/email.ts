@@ -272,11 +272,13 @@ export async function sendTenantSignedNotification({
     landlordName,
     tenantName,
     leaseId,
+    signingUrl,
 }: {
     to: string;
     landlordName: string;
     tenantName: string;
     leaseId: string;
+    signingUrl?: string;
 }) {
     const subject = `Tenant Signed Lease — ${tenantName}`;
 
@@ -300,13 +302,25 @@ export async function sendTenantSignedNotification({
         <p style="margin:0;font-size:15px;font-weight:700;color:#fff;font-family:monospace;">${leaseId}</p>
       </div>
 
+      ${signingUrl ? `
+      <div style="background:#1a1a1a;border:1px solid #6d9838;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#fff;">📝 Countersign the Lease</p>
+        <p style="margin:0 0 20px;font-size:13px;color:#a3a3a3;line-height:1.5;">
+          The tenant has completed their portion. Use the button below to review and provide your signature.
+        </p>
+        <a href="${signingUrl}" style="display:inline-block;background:#6d9838;color:#000;font-weight:900;font-size:15px;padding:16px 32px;border-radius:10px;text-decoration:none;letter-spacing:-0.3px;">
+          Countersign Lease →
+        </a>
+      </div>
+      ` : `
       <p style="margin:0;color:#525252;font-size:12px;">Log in to your landlord dashboard to countersign the lease.</p>
+      `}
     </div>
   </div>
 </body>
 </html>`;
 
-    const text = `Hi ${landlordName},\n\n${tenantName} has signed their lease agreement.\n\nLease ID: ${leaseId}\n\nLog in to your landlord dashboard to countersign the lease.\n\n— iReside`;
+    const text = `Hi ${landlordName},\n\n${tenantName} has signed their lease agreement.\n\nLease ID: ${leaseId}\n\n${signingUrl ? `Countersign here: ${signingUrl}` : 'Log in to your landlord dashboard to countersign the lease.'}\n\n— iReside`;
 
     await transporter.sendMail({ from: FROM, to, subject, html, text });
 }

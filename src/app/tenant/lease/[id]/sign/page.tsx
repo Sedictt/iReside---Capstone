@@ -2,10 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { generateLeasePdf } from "@/lib/lease-pdf";
-import { DigitalSigner } from "@/components/shared/DigitalSigner/DigitalSigner";
 import { CheckCircle, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Dynamic import for DigitalSigner to avoid SSR errors with pdfjs-dist
+const DigitalSigner = dynamic(
+  () => import("@/components/shared/DigitalSigner/DigitalSigner").then(mod => mod.DigitalSigner),
+  { ssr: false }
+);
 
 export default function LeaseSignaturePage() {
     const params = useParams();
@@ -103,7 +109,7 @@ export default function LeaseSignaturePage() {
                         className="h-screen w-screen"
                     >
                         <DigitalSigner 
-                            file={pdfBlob}
+                            initialFile={pdfBlob}
                             title="Lease Agreement - Unit 402"
                             onSigned={handleSigned}
                         />

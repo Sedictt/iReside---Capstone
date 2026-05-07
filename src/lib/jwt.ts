@@ -15,7 +15,8 @@ const getJwtSecret = (): string => JWT_SECRET;
 
 interface SigningTokenPayload {
   leaseId: string;
-  tenantId: string;
+  actorId: string;
+  role: 'tenant' | 'landlord';
   type: 'lease_signing';
 }
 
@@ -28,13 +29,15 @@ interface VerifyTokenResult {
 /**
  * Generate a JWT token for lease signing with 30-day expiration
  * @param leaseId - The ID of the lease to be signed
- * @param tenantId - The ID of the tenant who will sign
+ * @param actorId - The ID of the person who will sign (tenant or landlord)
+ * @param role - The role of the signer
  * @returns JWT token string
  */
-export function generateSigningToken(leaseId: string, tenantId: string): string {
+export function generateSigningToken(leaseId: string, actorId: string, role: 'tenant' | 'landlord' = 'tenant'): string {
   const payload: SigningTokenPayload = {
     leaseId,
-    tenantId,
+    actorId,
+    role,
     type: 'lease_signing',
   };
 
@@ -64,7 +67,7 @@ export function verifySigningToken(token: string): VerifyTokenResult {
     }
 
     // Validate required fields
-    if (!decoded.leaseId || !decoded.tenantId) {
+    if (!decoded.leaseId || !decoded.actorId || !decoded.role) {
       return {
         valid: false,
         error: 'Missing required token fields',
@@ -104,8 +107,19 @@ export function verifySigningToken(token: string): VerifyTokenResult {
  * @returns Full URL with embedded JWT token
  */
 export function generateSigningLink(leaseId: string, tenantId: string): string {
-  const token = generateSigningToken(leaseId, tenantId);
-  return `${APP_URL}/tenant/sign-lease/${leaseId}?token=${token}`;
+  const token = generateSigningToken(leaseId, tenantId, 'tenant');
+  return `${APP_URL}/signing/tenant/${leaseId}?token=${token}`;
+}
+
+/**
+ * Generate a complete signing link URL for landlord lease signing
+ * @param leaseId - The ID of the lease to be signed
+ * @param landlordId - The ID of the landlord who will sign
+ * @returns Full URL with embedded JWT token
+ */
+export function generateLandlordSigningLink(leaseId: string, landlordId: string): string {
+  const token = generateSigningToken(leaseId, landlordId, 'landlord');
+  return `${APP_URL}/signing/landlord/${leaseId}?token=${token}`;
 }
 
 /**
@@ -133,14 +147,16 @@ export function verifyTokenHash(token: string, storedHash: string): boolean {
  * Generate token and its hash for storage
  * Convenience function that returns both token and hash in one call
  * @param leaseId - The ID of the lease
- * @param tenantId - The ID of the tenant
+ * @param actorId - The ID of the tenant or landlord
+ * @param role - The role of the signer
  * @returns Object containing token and hash
  */
 export function generateTokenWithHash(
   leaseId: string,
-  tenantId: string
+  actorId: string,
+  role: 'tenant' | 'landlord' = 'tenant'
 ): { token: string; hash: string; expiresAt: Date } {
-  const token = generateSigningToken(leaseId, tenantId);
+  const token = generateSigningToken(leaseId, actorId, role);
   const hash = hashToken(token);
   
   // Calculate expiration date (30 days from now)

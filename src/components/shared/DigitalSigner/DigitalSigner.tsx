@@ -3,15 +3,35 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import SignaturePad from 'signature_pad';
-import { PenTool, Image as ImageIcon, Save, X, Trash2, FileText, ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { 
+  PenTool, 
+  Image as ImageIcon, 
+  Save, 
+  X, 
+  Trash2, 
+  FileText, 
+  ZoomIn, 
+  ZoomOut, 
+  Maximize2, 
+  ChevronDown, 
+  ChevronUp, 
+  Eye, 
+  EyeOff, 
+  CheckCircle2,
+  AlertTriangle,
+  Info 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PDFDocument } from 'pdf-lib';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-// Set PDF.js worker using unpkg
+// Configure worker using the local build
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
 }
 
 interface Signature {
@@ -30,21 +50,23 @@ interface PdfPage {
 }
 
 interface DigitalSignerProps {
-  file?: File | Blob | string; // File object, Blob, or URL
-  onSigned?: (signedBlob: Blob) => Promise<void>;
+  initialFile?: File | Blob | string | null;
+  onSigned?: (signedBlob: Blob, signatureDataUrl?: string) => void | Promise<void>;
   title?: string;
   isProcessingInitial?: boolean;
   hideToolbar?: boolean;
   hideSidebar?: boolean;
+  primaryActionLabel?: string;
 }
 
 export function DigitalSigner({ 
-  file: initialFile, 
+  initialFile, 
   onSigned, 
   title = "Document Signer",
   isProcessingInitial = false,
   hideToolbar = false,
-  hideSidebar = false
+  hideSidebar = false,
+  primaryActionLabel = "Finalize"
 }: DigitalSignerProps) {
   const [file, setFile] = useState<File | Blob | null>(null);
   const [pdfPages, setPdfPages] = useState<PdfPage[]>([]);
@@ -58,6 +80,8 @@ export function DigitalSigner({
   const [isSidebarOpen, setIsSidebarOpen] = useState(!hideSidebar);
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
   const [isToolbarHidden, setIsToolbarHidden] = useState(hideToolbar);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [hasDrawnOnCanvas, setHasDrawnOnCanvas] = useState(false);
 
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -70,8 +94,10 @@ export function DigitalSigner({
         if (typeof initialFile === 'string') {
             loadInitialFileFromUrl(initialFile);
         } else {
-            setFile(initialFile);
-            processFile(initialFile);
+            // Create a new local Blob to avoid cross-origin XrayWrapper issues in Firefox
+            const localBlob = new Blob([initialFile], { type: (initialFile as any).type || 'application/pdf' });
+            setFile(localBlob);
+            processFile(localBlob);
         }
     }
   }, [initialFile]);
@@ -144,6 +170,11 @@ export function DigitalSigner({
         minWidth: penSize * 0.8,
         maxWidth: penSize * 2
       });
+
+      pad.addEventListener('endStroke', () => {
+        checkCanvasStatus();
+      });
+
       signaturePads.current[idx] = pad;
       canvasSizesRef.current[idx] = { width: nextWidth, height: nextHeight };
 
@@ -326,14 +357,36 @@ export function DigitalSigner({
     }
   };
 
+  const checkCanvasStatus = useCallback(() => {
+    const hasInk = signaturePads.current.some(pad => pad && !pad.isEmpty());
+    setHasDrawnOnCanvas(hasInk);
+  }, []);
+
   const handleExport = async () => {
     if (!file) return;
+    setShowConfirmation(false);
     setIsExporting(true);
     try {
       const blob = await generatePdfBlob();
       if (!blob) return;
+
+      // Extract a single representative signature for backend recording
+      let representativeSignature = "";
       
-      if (onSigned) await onSigned(blob);
+      // Check for ink on pads first
+      for (const pad of signaturePads.current) {
+        if (pad && !pad.isEmpty()) {
+          representativeSignature = pad.toDataURL();
+          break;
+        }
+      }
+
+      // Fallback to overlay signatures if no ink found
+      if (!representativeSignature && signatures.length > 0) {
+        representativeSignature = signatures[0].dataUrl;
+      }
+      
+      if (onSigned) await onSigned(blob, representativeSignature);
       else {
           // Default behavior if no onSigned provided
           const link = document.createElement('a');
@@ -409,25 +462,41 @@ export function DigitalSigner({
             </div>
 
             {/* Action Controls */}
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl bg-zinc-800/30 border border-white/5 mr-2">
+                <div className={cn("w-2 h-2 rounded-full", signatures.length > 0 ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-zinc-600")} />
+                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                  {signatures.length === 0 ? "No Signatures" : `${signatures.length} Signature${signatures.length > 1 ? 's' : ''} Added`}
+                </span>
+              </div>
+
               <button
                 onClick={handleDownloadOnly}
                 disabled={isExporting}
-                className="p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all text-xs font-bold flex items-center gap-2"
+                className="hidden sm:flex p-2.5 md:px-5 md:py-2.5 rounded-xl bg-zinc-800/50 hover:bg-zinc-700 text-zinc-300 border border-white/5 transition-all text-xs font-bold items-center gap-2"
               >
                 <Save className="w-3.5 h-3.5" /> 
-                <span className="hidden md:inline">Draft</span>
+                <span className="hidden md:inline">Save Draft</span>
               </button>
 
               <div className="hidden md:block h-8 w-px bg-zinc-800 mx-1" />
 
               <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="px-4 py-2.5 md:px-8 md:py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-zinc-800 disabled:text-zinc-500 transition-all text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 shadow-xl"
+                onClick={() => setShowConfirmation(true)}
+                disabled={isExporting || (signatures.length === 0 && !hasDrawnOnCanvas)}
+                className={cn(
+                    "px-6 py-2.5 md:px-10 md:py-3 rounded-2xl transition-all text-[10px] md:text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 md:gap-3 shadow-2xl relative overflow-hidden group",
+                    (signatures.length > 0 || hasDrawnOnCanvas)
+                        ? "bg-primary text-primary-foreground hover:scale-105 active:scale-95" 
+                        : "bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5"
+                )}
               >
-                {isExporting ? <div className="w-3 h-3 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-                Finalize
+                {isExporting ? (
+                    <div className="w-3 h-3 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin" />
+                ) : (
+                    <CheckCircle2 className={cn("w-4 h-4", (signatures.length > 0 || hasDrawnOnCanvas) ? "animate-bounce" : "opacity-30")} />
+                )}
+                {primaryActionLabel}
               </button>
             </div>
           </motion.header>
@@ -624,7 +693,10 @@ export function DigitalSigner({
                       </label>
 
                       <button 
-                        onClick={() => signaturePads.current[currentPage]?.clear()}
+                        onClick={() => {
+                          signaturePads.current[currentPage]?.clear();
+                          checkCanvasStatus();
+                        }}
                         className="p-2 md:p-4 rounded-xl md:rounded-2xl bg-zinc-800 hover:bg-red-500/10 hover:text-red-400 text-zinc-400 transition-all flex items-center justify-center gap-2 md:gap-3 text-[10px] font-black uppercase tracking-widest"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -650,7 +722,6 @@ export function DigitalSigner({
           <button
             onClick={() => {
                 setIsPenActive(!isPenActive);
-                if (!isPenActive) setIsToolbarHidden(true);
             }}
             className={cn(
               "w-14 h-14 md:w-20 md:h-20 rounded-[1.2rem] md:rounded-[2.5rem] flex items-center justify-center transition-all shadow-2xl group",
@@ -678,6 +749,90 @@ export function DigitalSigner({
             <p className="text-xl md:text-2xl font-black mt-8 md:mt-12 tracking-tighter text-white uppercase italic">Processing Document</p>
             <p className="text-zinc-500 text-[10px] md:text-xs mt-3 font-bold uppercase tracking-[0.3em]">Building Signed Artifact</p>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showConfirmation && (
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 md:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowConfirmation(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-xl bg-zinc-900 border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 md:p-12 space-y-8">
+                <div className="flex flex-col items-center text-center space-y-6">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
+                    <AlertTriangle className="w-10 h-10 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-3xl font-black tracking-tighter uppercase italic text-white">Ready to make it official?</h2>
+                    <p className="text-zinc-500 text-sm font-medium leading-relaxed">
+                      Take a quick moment to review everything. Once you sign, this document will be completed and shared with all parties.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                   <div className="p-5 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center gap-5 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                      </div>
+                      <div className="text-left min-w-0 flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Agreement Name</p>
+                        <p className="text-sm text-white font-bold truncate leading-none">{title}</p>
+                      </div>
+                   </div>
+                   <div className="p-5 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center gap-5 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <Info className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <div className="text-left min-w-0 flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Current Status</p>
+                        <p className="text-sm text-white font-bold leading-none">Ready for your signature</p>
+                      </div>
+                   </div>
+                   <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-5 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <motion.div
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ repeat: Infinity, duration: 2 }}
+                        >
+                          <Info className="w-6 h-6 text-primary" />
+                        </motion.div>
+                      </div>
+                      <div className="text-left min-w-0 flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">What happens next?</p>
+                        <p className="text-sm text-white font-bold leading-none">The landlord will review & countersign</p>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => setShowConfirmation(false)}
+                    className="flex-1 px-8 py-5 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-black uppercase tracking-widest text-[10px] transition-all"
+                  >
+                    Go Back
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    className="flex-1 px-8 py-5 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 transition-all"
+                  >
+                    Yes, Sign Now
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

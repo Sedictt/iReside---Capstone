@@ -1,225 +1,36 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { DigitalSigner } from "@/components/shared/DigitalSigner/DigitalSigner";
-import { generateLeasePdf } from "@/lib/lease-pdf";
-import { CheckCircle, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
 
-interface LeaseDetails {
-  id: string;
-  status: string;
-  start_date: string;
-  end_date: string;
-  monthly_rent: number;
-  security_deposit: number;
-  terms: any;
-  unit: {
-    name: string;
-    property: {
-      name: string;
-      address: string;
-    };
-  };
-  landlord: {
-    full_name: string;
-    email: string;
-  };
-  tenant: {
-    full_name: string;
-    email: string;
-  };
-}
-
-// Separate component to handle search params with Suspense
-function LeaseSigningContent({ params }: { params: Promise<{ leaseId: string }> }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [leaseId, setLeaseId] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [lease, setLease] = useState<LeaseDetails | null>(null);
-  const [leasePdf, setLeasePdf] = useState<Blob | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  // Extract params and token
-  useEffect(() => {
-    const extractParams = async () => {
-      const resolvedParams = await params;
-      setLeaseId(resolvedParams.leaseId);
-      const tokenParam = searchParams.get("token");
-      setToken(tokenParam);
-    };
-    void extractParams();
-  }, [params, searchParams]);
-
-  // Fetch lease details with server-side token verification
-  useEffect(() => {
-    if (!leaseId || !token) return;
-
-    const verifyAndFetchLease = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch lease details with token for verification (verification happens on the server)
-        const response = await fetch(`/api/tenant/leases/${leaseId}?token=${token}`);
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to fetch lease details");
-        }
-
-        const leaseData = await response.json();
-        setLease(leaseData);
-
-        // Generate PDF
-        const pdfBlob = await generateLeasePdf({
-            id: leaseData.id,
-            startDate: new Date(leaseData.start_date).toLocaleDateString(),
-            endDate: new Date(leaseData.end_date).toLocaleDateString(),
-            monthlyRent: leaseData.monthly_rent,
-            securityDeposit: leaseData.security_deposit,
-            property: leaseData.unit.property,
-            unit: leaseData.unit,
-            landlord: { name: leaseData.landlord.full_name, email: leaseData.landlord.email },
-            tenant: { name: leaseData.tenant.full_name, email: leaseData.tenant.email },
-            terms: leaseData.terms
-        });
-        setLeasePdf(pdfBlob);
-
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load lease");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void verifyAndFetchLease();
-  }, [leaseId, token]);
-
-  const handleSigned = async (signedBlob: Blob) => {
-    if (!leaseId || !token) return;
-
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(signedBlob);
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-        
-        const response = await fetch(`/api/tenant/leases/${leaseId}/sign`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            tenant_signature: base64data,
-            signing_token: token,
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to sign lease");
-        }
-
-        setSuccess(true);
-        toast.success("Lease signed successfully!");
-
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          router.push("/tenant/dashboard");
-        }, 2000);
-      };
-
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to sign lease");
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <div className="relative mb-8">
-            <div className="w-20 h-20 border-2 border-indigo-500/20 rounded-full mx-auto" />
-            <div className="absolute inset-0 w-20 h-20 border-t-2 border-indigo-500 rounded-full animate-spin mx-auto" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tighter uppercase text-indigo-400">Preparing Lease Document</h2>
-          <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">Generating high-fidelity contract</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-zinc-900 border border-red-500/20 rounded-[2.5rem] p-12 text-center space-y-6 shadow-2xl">
-          <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
-            <AlertCircle className="w-10 h-10 text-red-500" />
-          </div>
-          <h1 className="text-3xl font-black tracking-tighter text-white uppercase">Access Denied</h1>
-          <p className="text-zinc-500 font-medium leading-relaxed">{error}</p>
-          <button
-            onClick={() => router.push("/tenant/dashboard")}
-            className="w-full bg-white text-black hover:bg-zinc-200 px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all"
-          >
-            Return to Safety
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-zinc-900 border border-emerald-500/20 rounded-[2.5rem] p-12 text-center space-y-6 shadow-2xl">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto">
-            <CheckCircle className="w-10 h-10 text-emerald-500" />
-          </div>
-          <h1 className="text-3xl font-black tracking-tighter text-white uppercase">Contract Sealed</h1>
-          <p className="text-zinc-500 font-medium leading-relaxed">
-            Your lease agreement has been digitally signed and secured. Redirecting to your dashboard...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!lease || !leasePdf) {
-    return null;
-  }
-
-  return (
-    <DigitalSigner 
-        file={leasePdf}
-        onSigned={handleSigned}
-        title={`Lease Agreement - ${lease.unit.property.name}`}
-    />
-  );
-}
-
-export default function TenantLeaseSigningPage({
+export default function LeaseSigningPage({
   params,
 }: {
   params: Promise<{ leaseId: string }>;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { leaseId } = use(params);
+
+  useEffect(() => {
+    if (leaseId) {
+      const search = searchParams.toString();
+      router.replace(`/signing/tenant/${leaseId}${search ? `?${search}` : ""}`);
+    }
+  }, [leaseId, router, searchParams]);
+
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <div className="relative mb-8">
-            <div className="w-20 h-20 border-2 border-indigo-500/20 rounded-full mx-auto" />
-            <div className="absolute inset-0 w-20 h-20 border-t-2 border-indigo-500 rounded-full animate-spin mx-auto" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tighter uppercase text-indigo-400">Loading</h2>
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 text-center">
+      <div className="space-y-6">
+        <div className="relative w-16 h-16 mx-auto">
+          <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
+          <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-black uppercase italic text-white tracking-tighter">Transferring to Secure Portal</h2>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Entering Isolated Environment</p>
         </div>
       </div>
-    }>
-      <LeaseSigningContent params={params} />
-    </Suspense>
+    </div>
   );
 }

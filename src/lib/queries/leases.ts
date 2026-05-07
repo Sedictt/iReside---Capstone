@@ -123,10 +123,10 @@ export async function getTenantRenewalRequests(tenantId: string) {
         .from('renewal_requests')
         .select(`
             *,
-            current_lease:leases!inner (
+            current_lease:leases!renewal_requests_current_lease_id_fkey (
                 id, start_date, end_date, monthly_rent
             ),
-            new_lease:leases!new_lease_id (*)
+            new_lease:leases!renewal_requests_new_lease_id_fkey (*)
         `)
         .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
@@ -145,7 +145,7 @@ export async function getLandlordRenewalRequests(landlordId: string, status?: Re
         .from('renewal_requests')
         .select(`
             *,
-            current_lease:leases!inner (
+            current_lease:leases!renewal_requests_current_lease_id_fkey (
                 *,
                 unit:units!inner (*),
                 tenant:profiles!leases_tenant_id_fkey (*)
@@ -173,8 +173,8 @@ export async function getRenewalRequestById(requestId: string) {
         .from('renewal_requests')
         .select(`
             *,
-            current_lease:leases!inner (*),
-            new_lease:leases!new_lease_id (*)
+            current_lease:leases!renewal_requests_current_lease_id_fkey (*),
+            new_lease:leases!renewal_requests_new_lease_id_fkey (*)
         `)
         .eq('id', requestId)
         .single()

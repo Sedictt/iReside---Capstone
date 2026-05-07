@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       .from("renewal_requests")
       .select(`
         *,
-        current_lease:leases!inner (
+        current_lease:leases!renewal_requests_current_lease_id_fkey (
           id,
           start_date,
           end_date,
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
             )
           )
         ),
-        new_lease:leases!new_lease_id (
+        new_lease:leases!renewal_requests_new_lease_id_fkey (
           id,
           status
         )

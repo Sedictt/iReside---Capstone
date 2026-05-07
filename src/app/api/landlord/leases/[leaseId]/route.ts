@@ -3,12 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { verifySigningToken } from "@/lib/jwt";
 
 /**
- * GET /api/tenant/leases/[leaseId]
+ * GET /api/landlord/leases/[leaseId]
  * 
- * Fetches lease details for tenant review before signing.
- * Returns lease information including property, unit, and landlord details.
- * 
- * Requirements: 2.5, 2.6
+ * Fetches lease details for landlord review before countersigning.
+ * Supports both session-based and token-based (remote signing) access.
  */
 export async function GET(
   request: Request,
@@ -22,38 +20,35 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
 
-    if (!token) {
-      return NextResponse.json(
-        { error: "Signing token is required" },
-        { status: 401 }
-      );
-    }
+    let landlordId: string;
 
-    // Verify token
-    const tokenResult = verifySigningToken(token);
-    if (!tokenResult.valid || !tokenResult.payload) {
-      return NextResponse.json(
-        { error: tokenResult.error || "Invalid signing token" },
-        { status: 401 }
-      );
-    }
+    if (token) {
+      // Verify token
+      const tokenResult = verifySigningToken(token);
+      if (!tokenResult.valid || !tokenResult.payload) {
+        return NextResponse.json(
+          { error: tokenResult.error || "Invalid signing token" },
+          { status: 401 }
+        );
+      }
 
-    const { leaseId: tokenLeaseId, actorId: tokenTenantId, role: tokenRole } = tokenResult.payload;
-
-    // Verify role
-    if (tokenRole !== 'tenant') {
-      return NextResponse.json(
-        { error: "Unauthorized: Invalid role for this endpoint" },
-        { status: 403 }
-      );
-    }
-
-    // Verify lease ID matches
-    if (tokenLeaseId !== leaseId) {
-      return NextResponse.json(
-        { error: "Lease ID mismatch" },
-        { status: 403 }
-      );
+      if (tokenResult.payload.leaseId !== leaseId || tokenResult.payload.role !== 'landlord') {
+        return NextResponse.json(
+          { error: "Unauthorized: Token mismatch" },
+          { status: 403 }
+        );
+      }
+      landlordId = tokenResult.payload.actorId;
+    } else {
+      // Get authenticated user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+      landlordId = user.id;
     }
 
     // Fetch lease with related data
@@ -62,17 +57,23 @@ export async function GET(
       .select(`
         id,
         status,
-        tenant_id,
+        landlord_id,
         start_date,
         end_date,
         monthly_rent,
         security_deposit,
         terms,
+        tenant_signature,
+        tenant_signed_at,
+        signed_document_url,
+        signed_at,
+        landlord_signed_at,
         unit:units!inner (
           name,
           property:properties!inner (
             name,
-            address
+            address,
+            contract_template
           )
         ),
         landlord:profiles!leases_landlord_id_fkey (
@@ -88,7 +89,7 @@ export async function GET(
       .maybeSingle();
 
     if (leaseError) {
-      console.error("[get-lease] Database error:", leaseError);
+      console.error("[get-landlord-lease] Database error:", leaseError);
       return NextResponse.json(
         { error: "Failed to fetch lease" },
         { status: 500 }
@@ -102,17 +103,17 @@ export async function GET(
       );
     }
 
-    // Verify tenant ID matches
-    if (lease.tenant_id !== tokenTenantId) {
+    // Verify landlord ID matches
+    if (lease.landlord_id !== landlordId) {
       return NextResponse.json(
-        { error: "Unauthorized: Tenant ID mismatch" },
+        { error: "Unauthorized: Landlord ID mismatch" },
         { status: 403 }
       );
     }
 
     return NextResponse.json(lease);
   } catch (error) {
-    console.error("[get-lease] Unexpected error:", error);
+    console.error("[get-landlord-lease] Unexpected error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
       { status: 500 }

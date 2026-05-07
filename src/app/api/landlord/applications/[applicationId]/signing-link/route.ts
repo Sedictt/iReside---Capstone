@@ -42,7 +42,8 @@ export async function POST(
       lease_id,
       unit_id,
       applicant_email,
-      applicant_name
+      applicant_name,
+      unit:units(name, property_id, properties(id, name, landlord_id, contract_template))
     `)
     .eq("id", applicationId)
     .maybeSingle();
@@ -249,8 +250,83 @@ export async function POST(
     });
   }
 
+  const hadLeaseInitially = !!lease;
+
+  // If no lease exists, create one automatically
+  if (!lease) {
+    console.log(`[signing-link] No lease found for application ${applicationId}. Creating one...`);
+    const adminClient = createAdminClient();
+    const unit = (application as any).unit as any;
+    const property = unit?.property || unit?.properties as any;
+    const contractTemplate = property?.contract_template || {};
+
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 12);
+
+    // Use default values since financial data isn't stored in applications table
+    const monthlyRent = 0; // Will be updated later if needed
+    const securityDeposit = 0; // Will be updated later if needed
+
+    const { data: newLease, error: leaseCreateError } = await adminClient
+      .from("leases")
+      .insert({
+        unit_id: application.unit_id,
+        tenant_id: tenantId,
+        landlord_id: user.id,
+        status: "pending_signature",
+        start_date: startDate,
+        end_date: endDate.toISOString().split('T')[0],
+        monthly_rent: monthlyRent,
+        security_deposit: securityDeposit,
+        terms: contractTemplate,
+        landlord_signature: `auto-${Date.now()}`,
+      })
+      .select(`
+        id,
+        status,
+        landlord_id,
+        tenant_id,
+        signing_link_token_hash,
+        start_date,
+        monthly_rent,
+        security_deposit,
+        units (
+          name,
+          properties (
+            name,
+            landlord_id
+          )
+        )
+      `)
+      .single();
+
+    if (leaseCreateError || !newLease) {
+      console.error("[signing-link] Lease creation failed:", leaseCreateError);
+      return NextResponse.json(
+        { error: "Failed to create lease record. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    lease = newLease;
+    console.log(`[signing-link] Created lease ${newLease.id} for application ${applicationId}`);
+
+    // Link lease to application
+    const { error: linkError } = await adminClient
+      .from("applications")
+      .update({ lease_id: newLease.id })
+      .eq("id", applicationId);
+
+    if (linkError) {
+      console.error("[signing-link] Failed to link lease to application:", linkError);
+    } else {
+      application.lease_id = newLease.id;
+    }
+  }
+
   // Verify landlord owns this application
-  if (!lease || lease.landlord_id !== user.id) {
+  if (lease.landlord_id !== user.id) {
     return NextResponse.json(
       { error: "Unauthorized: You are not the landlord for this application" },
       { status: 403 }
@@ -261,13 +337,6 @@ export async function POST(
   if (application.status !== "approved") {
     return NextResponse.json(
       { error: `Cannot generate signing link for application with status: ${application.status}` },
-      { status: 409 }
-    );
-  }
-
-  if (!application.lease_id || !lease) {
-    return NextResponse.json(
-      { error: "Application does not have an associated lease. Please generate one first." },
       { status: 409 }
     );
   }
@@ -289,7 +358,7 @@ export async function POST(
     );
   }
 
-  const token = generateSigningToken(application.lease_id, tenantId);
+  const token = generateSigningToken(application.lease_id!, tenantId, 'tenant');
   const tokenHash = hashToken(token);
 
   // Update lease with token hash, signing mode, and status
@@ -301,7 +370,7 @@ export async function POST(
       status: "pending_tenant_signature",
       updated_at: new Date().toISOString(),
     })
-    .eq("id", application.lease_id);
+    .eq("id", application.lease_id!);
 
   if (updateError) {
     console.error("[signing-link] Update error:", updateError);
@@ -313,7 +382,7 @@ export async function POST(
 
   // Generate signing URL
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const signingUrl = `${baseUrl}/tenant/sign-lease/${application.lease_id}?token=${token}`;
+  const signingUrl = `${baseUrl}/signing/tenant/${application.lease_id}?token=${token}`;
 
   // Send signing link email to tenant
   const propertyName = lease?.units?.properties?.name || "Property";
@@ -364,7 +433,7 @@ export async function POST(
   // Log audit event
   try {
     await logAuditEvent({
-      leaseId: application.lease_id,
+      leaseId: application.lease_id!,
       eventType: "signing_link_generated",
       actorId: user.id,
       metadata: {
@@ -387,5 +456,6 @@ export async function POST(
     tenant_email: tenantEmail,
     expires_at: expiresAt.toISOString(),
     email_sent: emailSent,
+    lease_created: !hadLeaseInitially,
   });
 }

@@ -140,12 +140,17 @@ export function DashboardBanner({
 
     const getNotificationHref = (notification: any) => {
         const data = notification.data || {};
-        const type = notification.type;
         const id = data.paymentId || data.applicationId || data.maintenanceId || data.conversationId || data.leaseId || data.id || notification.id;
+        const type = notification.type;
+
+        // If notification has a signing URL (for countersigning), redirect directly to signing page
+        if (data.signingUrl) {
+            return data.signingUrl;
+        }
 
         switch (type) {
             case "payment":
-                return `/landlord/invoices?id=${id}`;
+                return `/landlord/payments?id=${id}`;
             case "application":
                 return `/landlord/applications?id=${id}`;
             case "maintenance":

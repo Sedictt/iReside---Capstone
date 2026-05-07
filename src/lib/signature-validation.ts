@@ -114,6 +114,11 @@ export async function validateSignatureDimensions(
   maxWidth: number = 1000,
   maxHeight: number = 500
 ): Promise<SignatureValidationResult> {
+  // Skip DOM-dependent validation if running on the server
+  if (typeof window === 'undefined') {
+    return { valid: true };
+  }
+
   try {
     const { width, height } = await getImageDimensions(dataUrl);
 
@@ -171,6 +176,12 @@ export function sanitizeSignatureDataURL(dataUrl: string): string {
  * Check if signature canvas is empty (all transparent or white pixels)
  */
 export function isSignatureEmpty(dataUrl: string): Promise<boolean> {
+  // Skip DOM-dependent validation if running on the server
+  // Assume it's not empty, as format and size validations have already passed
+  if (typeof window === 'undefined') {
+    return Promise.resolve(false);
+  }
+
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {

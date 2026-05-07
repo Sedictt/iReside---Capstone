@@ -322,7 +322,9 @@ export function RentApplications() {
         message: string | null;
         error: string | null;
         signingUrl: string | null;
-    }>({ loading: false, message: null, error: null, signingUrl: null });
+        emailSent: boolean | null;
+        leaseCreated: boolean | null;
+    }>({ loading: false, message: null, error: null, signingUrl: null, emailSent: null, leaseCreated: null });
     const [countersignState, setCountersignState] = useState<{
         loading: boolean;
         error: string | null;
@@ -330,6 +332,7 @@ export function RentApplications() {
     }>({ loading: false, error: null, message: null });
     const [showCountersignModal, setShowCountersignModal] = useState(false);
     const [pendingCountersignature, setPendingCountersignature] = useState<string | null>(null);
+    const [countersignRedirectLoading, setCountersignRedirectLoading] = useState(false);
     const [reviewingPaymentRequestId, setReviewingPaymentRequestId] = useState<string | null>(null);
     const [bypassingPayments, setBypassingPayments] = useState(false);
     const [bypassReason, setBypassReason] = useState("");
@@ -669,14 +672,17 @@ export function RentApplications() {
     };
 
     const handleGenerateSigningLink = async (applicationId: string) => {
-        setSigningLinkState({ loading: true, message: null, error: null, signingUrl: null });
+        setSigningLinkState({ loading: true, message: null, error: null, signingUrl: null, emailSent: null, leaseCreated: null });
         try {
             const response = await fetch(`/api/landlord/applications/${applicationId}/signing-link`, { method: "POST" });
             const data = await response.json() as any;
             if (!response.ok) throw new Error(data.error || "Failed link gen");
-            setSigningLinkState({ loading: false, message: "Link generated.", error: null, signingUrl: data.signing_url });
+            const msg = data.lease_created
+                ? "Lease created & signing link generated."
+                : "Signing link generated.";
+            setSigningLinkState({ loading: false, message: msg, error: null, signingUrl: data.signing_url, emailSent: data.email_sent ?? false, leaseCreated: data.lease_created ?? false });
             setReloadKey(k => k + 1);
-        } catch (err: any) { setSigningLinkState({ loading: false, message: null, error: err.message, signingUrl: null }); }
+        } catch (err: any) { setSigningLinkState({ loading: false, message: null, error: err.message, signingUrl: null, emailSent: null, leaseCreated: null }); }
     };
 
     const handleCountersignLease = async (leaseId: string, landlordSignature: string) => {
@@ -692,6 +698,30 @@ export function RentApplications() {
             setShowCountersignModal(false);
             setReloadKey(k => k + 1);
         } catch (err: any) { setCountersignState({ loading: false, error: err.message, message: null }); }
+    };
+
+    const handleCountersignRedirect = async (leaseId: string) => {
+        setCountersignRedirectLoading(true);
+        try {
+            const response = await fetch(`/api/landlord/leases/${leaseId}/signing-link`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || "Failed to generate signing link");
+            }
+            const data = await response.json();
+            if (data.signingUrl) {
+                // Redirect to the signing page
+                window.location.href = data.signingUrl;
+            } else {
+                throw new Error("No signing URL returned");
+            }
+        } catch (err: any) {
+            setActionError(err.message || "Failed to generate signing link");
+            setCountersignRedirectLoading(false);
+        }
     };
 
     const scopedApplications = useMemo(() => selectedPropertyId === "all" ? applications : applications.filter(a => a.propertyId === selectedPropertyId), [applications, selectedPropertyId]);
@@ -1146,15 +1176,59 @@ export function RentApplications() {
                                                                 </button>
 
                                                                 {signingLinkState.message && (
-                                                                    <p className="mt-2 text-[10px] font-black uppercase text-emerald-500 animate-pulse">
-                                                                        {signingLinkState.message}
-                                                                    </p>
+                                                                    <div className="mt-2 space-y-1">
+                                                                        <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">
+                                                                            {signingLinkState.message}
+                                                                        </p>
+                                                                        {signingLinkState.emailSent === false && (
+                                                                            <p className="text-[10px] font-bold text-amber-500">
+                                                                                ⚠ Email delivery failed — copy the link below and send it manually
+                                                                            </p>
+                                                                        )}
+                                                                        {signingLinkState.emailSent && (
+                                                                            <p className="text-[10px] font-bold text-emerald-500/70">
+                                                                                ✓ Signing link emailed to tenant
+                                                                            </p>
+                                                                        )}
+                                                                        {signingLinkState.signingUrl && signingLinkState.emailSent === false && (
+                                                                            <div className="mt-2 flex items-center gap-2">
+                                                                                <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-mono text-muted-foreground truncate" />
+                                                                                <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 )}
                                                                 {signingLinkState.error && (
                                                                     <p className="mt-2 text-[10px] font-black uppercase text-red-500">
                                                                         {signingLinkState.error}
                                                                     </p>
                                                                 )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {selectedApp.lease.status === 'pending_landlord_signature' && (
+                                                        <div className="rounded-2xl bg-emerald-500/5 border border-emerald-500/10 p-5 flex items-start gap-4">
+                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600">
+                                                                <FileText className="h-4 w-4" />
+                                                            </div>
+                                                            <div className="space-y-1 w-full">
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Awaiting Your Signature</p>
+                                                                <p className="text-[11px] font-medium text-emerald-600/70 leading-relaxed">
+                                                                    The tenant has successfully signed the lease! Please review and countersign to officially activate the lease.
+                                                                </p>
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); void handleCountersignRedirect(selectedApp.lease!.id); }} 
+                                                                    disabled={countersignRedirectLoading}
+                                                                    className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 active:scale-95 disabled:opacity-50"
+                                                                >
+                                                                    {countersignRedirectLoading ? (
+                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                    ) : (
+                                                                        <FileText className="h-3.5 w-3.5" />
+                                                                    )}
+                                                                    Countersign Now
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     )}
@@ -1177,6 +1251,26 @@ export function RentApplications() {
                                                     >
                                                         {signingLinkState.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate & Link Lease"}
                                                     </button>
+                                                    {signingLinkState.message && (
+                                                        <div className="space-y-1 text-center">
+                                                            <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
+                                                            {signingLinkState.emailSent === false && (
+                                                                <p className="text-[10px] font-bold text-amber-500">⚠ Email delivery failed — copy the link below</p>
+                                                            )}
+                                                            {signingLinkState.emailSent && (
+                                                                <p className="text-[10px] font-bold text-emerald-500/70">✓ Signing link emailed to tenant</p>
+                                                            )}
+                                                            {signingLinkState.signingUrl && (
+                                                                <div className="mt-2 flex items-center gap-2">
+                                                                    <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-mono text-muted-foreground truncate" />
+                                                                    <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {signingLinkState.error && (
+                                                        <p className="text-[10px] font-black uppercase text-red-500">{signingLinkState.error}</p>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1197,18 +1291,44 @@ export function RentApplications() {
                                 ) : (
                                     <div className="flex flex-col gap-3">
                                         <div className="flex items-center justify-center rounded-2xl border border-border bg-muted/50 p-4">
-                                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Status: {selectedApp.status}</span>
                                         </div>
                                         {selectedApp.status === "approved" && (
                                             <div className="space-y-3">
                                                 {!selectedApp.lease && (
-                                                    <button 
-                                                        onClick={() => handleGenerateSigningLink(selectedApp.id)} 
-                                                        disabled={signingLinkState.loading}
-                                                        className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 py-4 text-xs font-black uppercase tracking-widest text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
-                                                    >
-                                                        {signingLinkState.loading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Generate & Send Lease Signing Link"}
-                                                    </button>
+                                                    <div className="space-y-3">
+                                                        <button 
+                                                            onClick={() => handleGenerateSigningLink(selectedApp.id)} 
+                                                            disabled={signingLinkState.loading}
+                                                            className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 py-4 text-xs font-black uppercase tracking-widest text-amber-500 hover:bg-amber-500 hover:text-white transition-all active:scale-95 disabled:opacity-50"
+                                                        >
+                                                            {signingLinkState.loading ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                                            ) : (
+                                                                <Mail className="h-3.5 w-3.5" />
+                                                            )}
+                                                            Generate & Send Lease Signing Link
+                                                        </button>
+                                                        {signingLinkState.message && (
+                                                            <div className="space-y-1 text-center">
+                                                                <p className="text-[10px] font-black uppercase text-emerald-500 animate-pulse">{signingLinkState.message}</p>
+                                                                {signingLinkState.emailSent === false && (
+                                                                    <p className="text-[10px] font-bold text-amber-500">⚠ Email delivery failed — copy the link below</p>
+                                                                )}
+                                                                {signingLinkState.emailSent && (
+                                                                    <p className="text-[10px] font-bold text-emerald-500/70">✓ Signing link emailed to tenant</p>
+                                                                )}
+                                                                {signingLinkState.signingUrl && (
+                                                                    <div className="mt-2 flex items-center gap-2">
+                                                                        <input readOnly value={signingLinkState.signingUrl} className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-mono text-muted-foreground truncate" />
+                                                                        <button onClick={() => navigator.clipboard.writeText(signingLinkState.signingUrl!)} className="shrink-0 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 text-[10px] font-black uppercase text-primary hover:bg-primary/20">Copy</button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        {signingLinkState.error && (
+                                                            <p className="text-[10px] font-black uppercase text-red-500 text-center">{signingLinkState.error}</p>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <button 
                                                     onClick={() => handleSendCredentials(selectedApp.id)} 

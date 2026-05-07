@@ -33,20 +33,13 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
     }
 
-    if (!applications || applications.length === 0) {
-        return NextResponse.json({ error: "No documents found for this account" }, { status: 404 });
-    }
-
-    // Use the latest application for status info
-    const latestApp = applications[0];
-
     // Fetch properties to get contract templates
     const { data: properties } = await supabase
         .from("properties")
         .select("id, name, contract_template, base_rent_amount, updated_at")
         .eq("landlord_id", user.id);
 
-    // Fetch active/signed leases
+    // Fetch active/signed leases with signed document URLs
     const { data: leases } = await supabase
         .from("leases")
         .select(`
@@ -54,12 +47,22 @@ export async function GET() {
             status,
             signed_at,
             created_at,
-            unit:units(name, property:properties(name))
+            signed_document_url,
+            signed_document_path,
+            tenant_id,
+            unit:units(id, name, property_id, property:properties(id, name)),
+            tenant:profiles!tenant_id(full_name)
         `)
-        .eq("landlord_id", user.id);
+        .eq("landlord_id", user.id)
+        .order("signed_at", { ascending: false });
+
+    // Combine applications data
+    const latestApp = (applications && applications.length > 0) ? applications[0] : null;
+    const fallbackDate = latestApp?.created_at || profile.created_at;
 
     // Aggregate documents from all applications (pick newest non-null)
     const getDocument = (field: string) => {
+        if (!applications) return null;
         for (const app of applications) {
             if ((app as any)[field]) return (app as any)[field];
         }
@@ -79,7 +82,7 @@ export async function GET() {
             description: "Primary identity verification document",
             url: identityDoc,
             category: "Identity",
-            updatedAt: latestApp.created_at
+            updatedAt: fallbackDate
         },
         {
             id: "permit",
@@ -87,7 +90,7 @@ export async function GET() {
             description: "Official business permit document",
             url: permitDoc,
             category: "Business",
-            updatedAt: latestApp.created_at
+            updatedAt: fallbackDate
         },
         {
             id: "permit-card",
@@ -95,7 +98,7 @@ export async function GET() {
             description: "Business permit ID card",
             url: permitCardDoc,
             category: "Business",
-            updatedAt: latestApp.created_at
+            updatedAt: fallbackDate
         },
         {
             id: "ownership",
@@ -103,7 +106,7 @@ export async function GET() {
             description: "Property title or deed of sale",
             url: ownershipDoc,
             category: "Property",
-            updatedAt: latestApp.created_at
+            updatedAt: fallbackDate
         },
         {
             id: "liveness",
@@ -111,7 +114,7 @@ export async function GET() {
             description: "Biometric verification snapshot",
             url: livenessDoc,
             category: "Identity",
-            updatedAt: latestApp.created_at
+            updatedAt: fallbackDate
         },
         // Include property contract templates
         ...(properties || []).map(p => ({
@@ -122,22 +125,49 @@ export async function GET() {
             category: "Lease",
             updatedAt: p.updated_at,
             isTemplate: true,
+            propertyId: p.id,
             templateData: {
                 ...(p.contract_template as any || {}),
                 base_rent_amount: p.base_rent_amount
             }
         })),
-        ...(leases || []).map(l => ({
-            id: `lease-${l.id}`,
-            name: `Lease Agreement - ${(l.unit as any)?.property?.name} (${(l.unit as any)?.name})`,
-            description: `Status: ${l.status.toUpperCase()}`,
-            url: "#", 
-            isLease: true,
-            category: "Lease",
-            updatedAt: l.signed_at || l.created_at
-        }))
+        // Include all leases with any status
+        ...(leases || [])
+            .map(l => {
+                const isComplete = l.status === "active" && l.signed_document_url;
+                const unitName = (l.unit as any)?.name;
+                const propertyName = (l.unit as any)?.property?.name;
+                const tenantName = (l.tenant as any)?.full_name;
+                
+                let displayName = "Lease Agreement";
+                if (tenantName) {
+                    displayName = `Lease - ${tenantName}`;
+                } else if (propertyName && unitName) {
+                    displayName = `Lease - ${propertyName} (${unitName})`;
+                } else {
+                    displayName = `Lease - ${l.id.slice(0, 8)}`;
+                }
+
+                return {
+                    id: `lease-${l.id}`,
+                    name: displayName,
+                    description: isComplete 
+                        ? `Fully executed lease agreement • Signed ${l.signed_at ? new Date(l.signed_at).toLocaleDateString() : 'N/A'}`
+                        : `Status: ${l.status || 'N/A'}`,
+                    url: l.signed_document_url || null,
+                    category: "Lease",
+                    updatedAt: l.signed_at || l.created_at,
+                    tenantId: l.tenant_id,
+                    propertyId: (l.unit as any)?.property_id,
+                    status: l.status,
+                    isComplete
+                };
+            })
     ].filter(doc => {
-        // Only include if URL exists and is not a duplicate for permit
+        // Include leases even without URLs (may be pending signature)
+        if (doc.category === "Lease") return true;
+        
+        // Only include other docs if URL exists
         if (!doc.url) return false;
         
         // Skip redundant permit card if same as paper permit
@@ -153,12 +183,16 @@ export async function GET() {
             full_name: profile.full_name,
             avatar_url: profile.avatar_url,
             avatar_bg_color: (profile as any).avatar_bg_color,
-            phone: latestApp.phone || profile.phone
+            phone: latestApp?.phone || profile.phone
         },
-        verification: {
+        verification: latestApp ? {
             status: latestApp.status,
             verificationStatus: latestApp.verification_status,
             verifiedAt: latestApp.updated_at
+        } : {
+            status: "approved", // Fallback for legacy landlords
+            verificationStatus: "verified",
+            verifiedAt: profile.created_at
         }
     });
 }

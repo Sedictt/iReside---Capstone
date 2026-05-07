@@ -42,21 +42,12 @@ type TenantProductTourStateRow = {
 };
 
 type OptionalTenantStateClient = {
-    from: (table: "tenant_onboarding_states") => {
+    from: (table: string) => {
         select: (columns: string) => {
             in: (
-                column: "tenant_id",
+                column: string,
                 values: string[]
-            ) => Promise<{ data: TenantOnboardingStateRow[] | null; error: unknown }>;
-        };
-    };
-} & {
-    from: (table: "tenant_product_tour_states") => {
-        select: (columns: string) => {
-            in: (
-                column: "tenant_id",
-                values: string[]
-            ) => Promise<{ data: TenantProductTourStateRow[] | null; error: unknown }>;
+            ) => Promise<{ data: any[] | null; error: unknown }>;
         };
     };
 };
@@ -178,7 +169,7 @@ export async function GET(request: Request) {
     const { data: onboardingRows, error: onboardingError } =
         tenantIds.length > 0
             ? await optionalStateClient
-                  .from("tenant_onboarding_states")
+                  .from("tenant_product_tour_states")
                   .select("tenant_id, status, last_reminder_sent_at")
                   .in("tenant_id", tenantIds)
             : { data: [], error: null };

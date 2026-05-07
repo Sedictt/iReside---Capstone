@@ -157,7 +157,17 @@ export const DOCS_NAV: NavSection[] = [
           { title: "Best Practices", href: "/docs/tenant/lease#best-practices" },
         ]
       },
-      { title: "Moving In & Out", href: "/docs/tenant/moving", icon: ArrowRightLeft },
+      { 
+        title: "Moving In & Out", 
+        href: "/docs/tenant/moving", 
+        icon: ArrowRightLeft,
+        subItems: [
+          { title: "Moving In", href: "/docs/tenant/moving#moving-in" },
+          { title: "Moving Out", href: "/docs/tenant/moving#moving-out" },
+          { title: "Common Questions", href: "/docs/tenant/moving#common-questions" },
+          { title: "Best Practices", href: "/docs/tenant/moving#best-practices" },
+        ]
+      },
     ],
   },
   {

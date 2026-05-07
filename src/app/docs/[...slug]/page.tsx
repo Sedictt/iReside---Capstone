@@ -823,9 +823,123 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Smooth transitions for the start and end of your tenancy.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Whether you&apos;re moving in or preparing to move out, iReside helps manage the transition.</p>
-        <h3>Move-Out Requests</h3>
-        <p>If you plan to move out, you can submit a formal notice through the app. This ensures your landlord is notified according to the terms of your lease.</p>
+        <p>Moving is one of the most significant events in your rental journey. Whether you are moving into your first rental home or preparing to leave your current place, iReside helps make this transition as smooth as possible. This section walks you through everything you need to know about the moving process, from the moment you get your keys to the day you hand them back.</p>
+
+        <h3 id="moving-in">Moving In</h3>
+        <p>When your application is approved and your lease is signed, you will be ready to move in. The move-in process involves several important steps that set the foundation for your tenancy.</p>
+
+        <h4 id="move-in-date">Your Move-In Date</h4>
+        <p>During the application process, you provided your intended move-in date. This date becomes part of your lease agreement and marks when your tenancy officially begins. Your landlord will prepare the property for you by this date, ensuring everything is clean and ready for your arrival.</p>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Coordinate with Your Landlord</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Contact your landlord a day or two before your move-in date to confirm the exact time you can pick up the keys. This helps you plan your moving schedule and ensures someone will be available to hand over the keys.</p>
+        </div>
+
+        <h4 id="move-in-inspection">The Move-In Inspection</h4>
+        <p>When you move in, you and your landlord will walk through the property together to document its condition. This is called a move-in inspection, and it serves as a record of the property condition on the day you take possession.</p>
+        <p>During this inspection, you will go room by room and note any existing issues. This might include scratches on walls, stains on carpet, fixtures that do not work, or any damage that is already present. Both you and your landlord will sign off on this inspection report, which becomes part of your tenancy records.</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Why This Matters</p>
+          <p className="m-0 text-text-medium text-sm">The move-in inspection protects you from being charged for damage that existed before you moved in. When you eventually move out, the landlord will compare the property condition to this baseline. Any new damage beyond normal wear and tear may come from your security deposit.</p>
+        </div>
+
+        <h4 id="getting-keys">Getting Your Keys and Access</h4>
+        <p>Once the inspection is complete, your landlord will give you the keys to your new home. Depending on the property, you might receive door keys for the main entrance, mailbox key if your building has individual mailboxes, garage or parking keys if parking is included with your rental, or access cards or fobs for buildings with electronic entry systems.</p>
+        <p>Keep these keys safe throughout your tenancy. If you lose them, report it to your landlord immediately so they can help you get replacements or change the locks if necessary.</p>
+
+        <h4 id="first-rent-payment">Your First Rent Payment</h4>
+        <p>After moving in, you will need to pay your first month rent. Your lease will specify when rent is due each month. Most leases require rent to be paid at the beginning of the month, but some may allow payment by a specific date. Refer to your lease agreement for the exact due date and payment amount.</p>
+        <p>To make payments, you can use GCash or pay in person with cash. Make sure to keep records of all your payments for your personal files.</p>
+
+        <h4 id="setting-up-utilities">Setting Up Utilities</h4>
+        <p>Depending on what is included with your rental, you may need to set up some utilities in your name. Your lease will specify which utilities are the landlord responsibility and which are yours. Commonly, tenants are responsible for electricity, water, internet and cable, and gas if the property uses it.</p>
+        <p>It is a good idea to set up utilities a few days before you move in so everything is ready when you arrive.</p>
+
+        <h3 id="moving-out">Moving Out</h3>
+        <p>When it is time to move out, iReside helps you navigate the process smoothly. Whether your lease is ending, you need to relocate for work, or you have decided to move to a different place, understanding the move-out process ensures you leave on good terms and get your security deposit back.</p>
+
+        <h4 id="giving-notice">Giving Notice</h4>
+        <p>Before you can move out, you must notify your landlord. This is called giving notice, and it is typically required by your lease. Most leases require 30 days notice, but some may require 60 days or more. Check your lease agreement for the specific notice period required.</p>
+        <p>When you are ready to move out, submit a move-out request through iReside. This formal notice tells your landlord that you plan to leave and provides them with your intended move-out date.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Give Notice in Writing</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Always give written notice of your intention to move out. Even if you speak with your landlord in person, follow up with a written notice through iReside. This protects you if there is any dispute about when you gave notice or when your move-out date is.</p>
+        </div>
+
+        <h4 id="landlord-approval">Landlord Approval Process</h4>
+        <p>After you submit your move-out request, your landlord will review it and decide whether to approve it. Once your landlord approves your request, your lease end date is automatically updated to match your requested move-out date, you receive a notification confirming the approval, and a move-out inspection is scheduled to assess the property condition.</p>
+
+        <h4 id="pre-moveout-checklist">Pre-Move-Out Checklist</h4>
+        <p>Before the inspection, take time to prepare the property. A thorough cleaning and minor repairs can help you get more of your security deposit back. Clean thoroughly, repair any damage you caused, clear all appliances, remove all personal items, check walls and floors for any issues, and document everything with photos.</p>
+
+        <h4 id="moveout-inspection">The Move-Out Inspection</h4>
+        <p>When you move out, you and your landlord will do another inspection, similar to the one when you moved in. The landlord will compare the property current condition to the move-in inspection report to determine if any damage goes beyond normal wear and tear.</p>
+        <p>During the inspection, the landlord will check walls, ceilings, and floors for damage, all appliances to ensure they are working properly, plumbing and fixtures for any issues, light bulbs and other replaceable items, and cleanliness of the entire property.</p>
+
+        <h4 id="clearing-bills">Clearing Bills and Payments</h4>
+        <p>Before you fully move out, make sure all your rent and utility bills are paid. The system automatically checks for outstanding rent balance and pending utility payments. Review your payment history in the app and ensure everything is current before your move-out date.</p>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Final Bill Review</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Check your payment history a week before your move-out date. This gives you time to address any issues or disputed charges before the final inspection.</p>
+        </div>
+
+        <h4 id="security-deposit-return">Security Deposit Return</h4>
+        <p>After the inspection and verification that all bills are paid, your landlord will process the return of your security deposit.</p>
+
+        <h5 id="normal-wear">Normal Wear and Tear</h5>
+        <p>You are not responsible for normal wear and tear, which is the natural deterioration that happens over time from everyday use. This includes faded paint from sunlight, worn carpet in high-traffic areas, faded curtains or blinds, slightly worn kitchen countertops, and minor scuffs on walls from furniture.</p>
+
+        <h5 id="tenant-damage">Tenant Damage</h5>
+        <p>You are responsible for damage beyond normal wear and tear. This includes holes in walls from hanging pictures or nails, broken windows or doors, stained or burned carpets, broken fixtures or appliances, excessive dirt or grime left behind, and items left in the property that require removal.</p>
+
+        <h5 id="deposit-deductions">How Deductions Are Calculated</h5>
+        <p>If there is damage beyond normal wear and tear, your landlord may deduct the cost of repairs or cleaning from your security deposit. The deposit refund amount is calculated based on the cost to repair or replace damaged items, professional cleaning fees if the property requires more than normal cleaning, any unpaid rent or utility bills, and other charges outlined in your lease.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Timeline for Deposit Return</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Your landlord typically has 30 days after you move out to return your security deposit or provide an itemized list of any deductions.</p>
+        </div>
+
+        <h4 id="returning-keys">Returning Your Keys</h4>
+        <p>On your final day, return all keys to your landlord. This includes door keys, mailbox keys, parking keys, and any access cards or fobs. Do not leave keys in the property or give them to someone other than your landlord without permission.</p>
+
+        <h3 id="common-questions">Common Questions About Moving</h3>
+
+        <p><strong>What if I want to move out before my lease ends?</strong></p>
+        <p>Breaking a lease early can have consequences. You may be responsible for paying rent until a new tenant is found, or you may forfeit your security deposit. Check your lease agreement and discuss your situation with your landlord as early as possible.</p>
+
+        <p><strong>Can my landlord keep my deposit for normal wear and tear?</strong></p>
+        <p>No. Normal wear and tear is expected and cannot be deducted from your deposit. However, if the property is damaged beyond normal use, your landlord may make deductions.</p>
+
+        <p><strong>What happens if I leave belongings behind?</strong></p>
+        <p>If you leave personal belongings in the property, your landlord may charge you for the cost of removing and storing them.</p>
+
+        <p><strong>How long does it take to get my security deposit back?</strong></p>
+        <p>This varies by landlord, but most return deposits within 14 to 30 days after you move out.</p>
+
+        <p><strong>What if I disagree with the deposit deductions?</strong></p>
+        <p>If you believe the deductions are unfair, communicate with your landlord through iReside. Provide evidence such as photos you took during the move-out inspection.</p>
+
+        <h3 id="best-practices">Best Practices for a Smooth Move</h3>
+        <ul>
+          <li><strong>Document everything:</strong> Take photos and videos of the property when you move in and when you move out.</li>
+          <li><strong>Give proper notice:</strong> Know your lease requirements and give notice well before the deadline.</li>
+          <li><strong>Communicate openly:</strong> Keep your landlord informed about your moving timeline.</li>
+          <li><strong>Clean thoroughly:</strong> A deep clean before you leave can help you get more of your deposit back.</li>
+          <li><strong>Do a final walk-through:</strong> Before handing over the keys, go through every room.</li>
+          <li><strong>Keep records:</strong> Save copies of your inspection reports, notice letters, and any communication.</li>
+          <li><strong>Update your address:</strong> Remember to update your address with the postal service and banks.</li>
+          <li><strong>Cancel utilities in your name:</strong> Contact utility companies to cancel service as of your move-out date.</li>
+        </ul>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Leaving on Good Terms</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">How you leave a property can affect your rental history and future references.</p>
+        </div>
       </div>
     ),
     next: "landlord/properties",

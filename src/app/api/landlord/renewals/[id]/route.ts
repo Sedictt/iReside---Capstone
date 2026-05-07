@@ -18,12 +18,12 @@ export async function GET(
       .from("renewal_requests")
       .select(`
         *,
-        current_lease:leases!inner (
+        current_lease:leases!renewal_requests_current_lease_id_fkey (
           *,
           unit:units!inner (*),
           tenant:profiles!inner (id, full_name, email, phone)
         ),
-        new_lease:leases!new_lease_id (*)
+        new_lease:leases!renewal_requests_new_lease_id_fkey (*)
       `)
       .eq("id", id)
       .single();
@@ -74,7 +74,7 @@ export async function POST(
     // Get renewal request
     const { data: renewalRequest, error: fetchError } = await supabase
       .from("renewal_requests")
-      .select("*, current_lease:leases!inner (unit:units!inner (property:properties!inner (landlord_id)))")
+      .select("*, current_lease:leases!renewal_requests_current_lease_id_fkey (unit:units!inner (property:properties!inner (landlord_id)))")
       .eq("id", id)
       .single();
 

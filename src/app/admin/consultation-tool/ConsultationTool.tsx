@@ -1,9 +1,15 @@
 "use client";
 
 import React from 'react';
-import { DigitalSigner } from '@/components/shared/DigitalSigner/DigitalSigner';
+import dynamic from "next/dynamic";
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+
+// Dynamic import for DigitalSigner to avoid SSR errors with pdfjs-dist
+const DigitalSigner = dynamic(
+  () => import("@/components/shared/DigitalSigner/DigitalSigner").then(mod => mod.DigitalSigner),
+  { ssr: false }
+);
 
 interface ConsultationToolProps {
   fileUrl?: string;
@@ -36,7 +42,7 @@ export default function ConsultationTool({ fileUrl, onSigned }: ConsultationTool
 
   return (
     <DigitalSigner 
-      file={fileUrl} 
+      initialFile={fileUrl} 
       onSigned={handleSigned}
       title="Consultation Document"
     />

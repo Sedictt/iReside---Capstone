@@ -4,9 +4,12 @@ import { validateSignature, sanitizeSignatureDataURL, retryWithBackoff } from "@
 import { logAuditEvent, extractIpAddress, extractUserAgent } from "@/lib/audit-logging";
 import { sendLeaseActivatedNotification } from "@/lib/email";
 import { isValidLeaseStatusTransition, getTransitionErrorMessage } from "@/lib/lease-status-transitions";
+import { verifySigningToken } from "@/lib/jwt";
+import { generateLeasePdf } from "@/lib/lease-pdf";
 
 type SignLeaseBody = {
   landlord_signature: string;
+  signing_token?: string;
 };
 
 /**
@@ -25,16 +28,6 @@ export async function POST(
   const { leaseId } = await context.params;
   const supabase = await createClient();
 
-  // Get authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
   // Parse request body
   let body: SignLeaseBody;
   try {
@@ -52,6 +45,37 @@ export async function POST(
       { error: "Missing required field: landlord_signature" },
       { status: 400 }
     );
+  }
+
+  let landlordId: string;
+
+  // Handle token-based signing or session-based signing
+  if (body.signing_token) {
+    const tokenResult = verifySigningToken(body.signing_token);
+    if (!tokenResult.valid || !tokenResult.payload) {
+      return NextResponse.json(
+        { error: tokenResult.error || "Invalid signing token" },
+        { status: 401 }
+      );
+    }
+
+    if (tokenResult.payload.leaseId !== leaseId || tokenResult.payload.role !== 'landlord') {
+      return NextResponse.json(
+        { error: "Unauthorized: Token mismatch" },
+        { status: 403 }
+      );
+    }
+    landlordId = tokenResult.payload.actorId;
+  } else {
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    landlordId = user.id;
   }
 
   // Fetch lease record
@@ -76,8 +100,8 @@ export async function POST(
     );
   }
 
-  // Verify landlord ID matches authenticated user
-  if (lease.landlord_id !== user.id) {
+  // Verify landlord ID matches
+  if (lease.landlord_id !== landlordId) {
     return NextResponse.json(
       { error: "Unauthorized: You are not the landlord for this lease" },
       { status: 403 }
@@ -132,22 +156,25 @@ export async function POST(
   // Update lease with landlord signature using optimistic locking
   const signedAt = new Date().toISOString();
   
-  const updateLeaseWithRetry = async () => {
-    // Fetch current lock version
-    const { data: currentLease, error: fetchError } = await supabase
+  const updateLeaseAndApplication = async () => {
+    // Use admin client for system-level updates
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
+
+    // 1. Update lease
+    const { data: currentLease, error: fetchError } = await adminClient
       .from("leases")
       .select("signature_lock_version")
       .eq("id", leaseId)
       .single();
 
     if (fetchError || !currentLease) {
-      throw new Error("Failed to fetch lease for optimistic locking");
+      throw new Error(`Failed to fetch lease for optimistic locking: ${fetchError?.message}`);
     }
 
     const currentLockVersion = currentLease.signature_lock_version;
 
-    // Update with optimistic lock
-    const { error: updateError } = await supabase
+    const { error: updateLeaseError, data: updatedRows } = await adminClient
       .from("leases")
       .update({
         landlord_signature: sanitizedSignature,
@@ -158,15 +185,44 @@ export async function POST(
         signature_lock_version: currentLockVersion + 1,
       })
       .eq("id", leaseId)
-      .eq("signature_lock_version", currentLockVersion);
+      .eq("signature_lock_version", currentLockVersion)
+      .select('id');
 
-    if (updateError) {
-      throw new Error(`Failed to update lease: ${updateError.message}`);
+    if (updateLeaseError) {
+      throw new Error(`Failed to update lease: ${updateLeaseError.message}`);
+    }
+    
+    if (!updatedRows || updatedRows.length === 0) {
+       throw new Error("Optimistic lock failure: lease was updated by another process.");
+    }
+
+    // 2. Update associated application
+    const { data: application, error: appFetchError } = await adminClient
+      .from("applications")
+      .select("id, compliance_checklist")
+      .eq("lease_id", leaseId)
+      .maybeSingle();
+
+    if (!appFetchError && application) {
+      const updatedChecklist = {
+        ...(application.compliance_checklist as any),
+        lease_signed: true,
+        application_completed: true
+      };
+
+      await adminClient
+        .from("applications")
+        .update({
+          status: "approved",
+          compliance_checklist: updatedChecklist,
+          updated_at: signedAt
+        })
+        .eq("id", application.id);
     }
   };
 
   try {
-    await retryWithBackoff(updateLeaseWithRetry, 3, 1000);
+    await retryWithBackoff(updateLeaseAndApplication, 3, 1000);
   } catch (error) {
     console.error("[landlord-sign-lease] Update error:", error);
     return NextResponse.json(
@@ -180,7 +236,7 @@ export async function POST(
     await logAuditEvent({
       leaseId,
       eventType: "landlord_signed",
-      actorId: user.id,
+      actorId: landlordId,
       ipAddress: extractIpAddress(request),
       userAgent: extractUserAgent(request),
       metadata: {
@@ -191,7 +247,6 @@ export async function POST(
     });
   } catch (auditError) {
     console.error("[landlord-sign-lease] Audit logging error:", auditError);
-    // Non-blocking error, continue with response
   }
 
   // Log lease activation event
@@ -199,7 +254,7 @@ export async function POST(
     await logAuditEvent({
       leaseId,
       eventType: "lease_activated",
-      actorId: user.id,
+      actorId: landlordId,
       ipAddress: extractIpAddress(request),
       userAgent: extractUserAgent(request),
       metadata: {
@@ -209,35 +264,69 @@ export async function POST(
     });
   } catch (auditError) {
     console.error("[landlord-sign-lease] Lease activation audit error:", auditError);
-    // Non-blocking error, continue with response
   }
 
-  // Send confirmation email to tenant
+  // Fetch full lease details for notifications and document generation
+  let leaseDetails: any = null;
+  let tenantProfile: any = null;
+  let landlordProfile: any = null;
+  
   try {
-    // Fetch lease and tenant details for email
-    const { data: leaseDetails } = await supabase
+    const { data: leaseData } = await supabase
       .from("leases")
       .select(`
+        id,
         start_date,
+        end_date,
+        monthly_rent,
+        security_deposit,
+        terms,
         tenant_id,
+        landlord_id,
+        tenant_signature,
+        tenant_signed_at,
+        landlord_signature,
+        landlord_signed_at,
         units (
+          id,
           name,
           properties (
-            name
+            id,
+            name,
+            address,
+            house_rules
           )
         )
       `)
       .eq("id", leaseId)
       .single();
 
-    if (leaseDetails && !('error' in leaseDetails)) {
-      // Fetch tenant profile separately
-      const { data: tenantProfile } = await supabase
+    if (leaseData && !('error' in leaseData)) {
+      leaseDetails = leaseData;
+      
+      // Fetch tenant profile
+      const { data: tProfile } = await supabase
         .from("profiles")
         .select("email, full_name")
-        .eq("id", leaseDetails.tenant_id)
+        .eq("id", leaseData.tenant_id)
         .single();
+      if (tProfile) tenantProfile = tProfile;
+      
+      // Fetch landlord profile
+      const { data: lProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", leaseData.landlord_id)
+        .single();
+      if (lProfile) landlordProfile = lProfile;
+    }
+  } catch (fetchError) {
+    console.error("[landlord-sign-lease] Fetch details error:", fetchError);
+  }
 
+  // Send confirmation email to tenant
+  try {
+    if (leaseDetails && tenantProfile) {
       const tenantEmail = tenantProfile?.email;
       const tenantName = tenantProfile?.full_name || "Tenant";
       const propertyName = (leaseDetails as any).units?.properties?.name || "Property";
@@ -256,7 +345,99 @@ export async function POST(
     }
   } catch (emailError) {
     console.error("[landlord-sign-lease] Email notification error:", emailError);
-    // Non-blocking error, continue with response
+  }
+
+  // Send system notification to landlord about successful activation
+  try {
+    if (landlordId && leaseDetails) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const adminClient = createAdminClient();
+      
+      const tenantName = tenantProfile?.full_name || "Tenant";
+      const propertyName = (leaseDetails as any).units?.properties?.name || "Property";
+      const unitName = (leaseDetails as any).units?.name || "Unit";
+      
+      await adminClient.from("notifications").insert({
+        user_id: landlordId,
+        type: "lease",
+        title: "Lease Activated",
+        message: `The lease for ${propertyName} - ${unitName} with ${tenantName} has been successfully activated. Both parties have signed the agreement.`,
+        data: { leaseId, status: "active" },
+        read: false
+      });
+    }
+  } catch (notificationError) {
+    console.error("[landlord-sign-lease] Landlord notification error:", notificationError);
+  }
+
+  // Generate and store signed lease document in vault
+  try {
+    if (leaseDetails && tenantProfile && landlordProfile) {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const adminClient = createAdminClient();
+      
+      // Generate the signed PDF
+      const pdfBlob = await generateLeasePdf({
+        id: leaseDetails.id,
+        startDate: new Date(leaseDetails.start_date).toLocaleDateString(),
+        endDate: new Date(leaseDetails.end_date).toLocaleDateString(),
+        monthlyRent: leaseDetails.monthly_rent,
+        securityDeposit: leaseDetails.security_deposit,
+        property: (leaseDetails as any).units?.properties,
+        unit: (leaseDetails as any).units,
+        landlord: { 
+          name: landlordProfile.full_name || "Landlord", 
+          email: landlordProfile.email 
+        },
+        tenant: { 
+          name: tenantProfile.full_name || "Tenant", 
+          email: tenantProfile.email 
+        },
+        terms: leaseDetails.terms,
+        tenantSignature: leaseDetails.tenant_signature,
+        tenantSignedAt: leaseDetails.tenant_signed_at,
+        landlordSignature: sanitizedSignature,
+        landlordSignedAt: signedAt,
+      });
+
+      // Convert blob to array buffer for upload
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      
+      // Upload to storage bucket
+      const fileName = `leases/${landlordId}/${leaseId}/signed-lease-${Date.now()}.pdf`;
+      const { error: uploadError } = await adminClient
+        .storage
+        .from("landlord-documents")
+        .upload(fileName, arrayBuffer, {
+          contentType: "application/pdf",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("[landlord-sign-lease] Document upload error:", uploadError);
+      } else {
+        // Get public URL
+        const { data: { publicUrl } } = adminClient
+          .storage
+          .from("landlord-documents")
+          .getPublicUrl(fileName);
+
+        // Update lease record with signed document URL and path
+        await adminClient
+          .from("leases")
+          .update({
+            signed_document_url: publicUrl,
+            signed_document_path: fileName,
+            updated_at: signedAt,
+          })
+          .eq("id", leaseId);
+
+        console.log("[landlord-sign-lease] Signed document stored in vault:", publicUrl);
+      }
+    }
+  } catch (docError) {
+    console.error("[landlord-sign-lease] Document generation/storage error:", docError);
+    // Non-blocking - lease is still activated even if document storage fails
   }
 
   return NextResponse.json({

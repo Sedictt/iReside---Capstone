@@ -60,7 +60,7 @@ export async function POST(
     );
   }
 
-  const { leaseId: tokenLeaseId, tenantId: tokenTenantId } = tokenResult.payload;
+  const { leaseId: tokenLeaseId, actorId: tokenTenantId, role: tokenRole } = tokenResult.payload;
 
   // Verify lease ID from token matches URL parameter
   if (tokenLeaseId !== leaseId) {
@@ -70,10 +70,18 @@ export async function POST(
     );
   }
 
+  // Verify role
+  if (tokenRole !== 'tenant') {
+    return NextResponse.json(
+      { error: "Unauthorized: Invalid role for this endpoint" },
+      { status: 403 }
+    );
+  }
+
   // Fetch lease record
   const { data: lease, error: leaseError } = await supabase
     .from("leases")
-    .select("id, status, tenant_id, landlord_signature")
+    .select("id, status, tenant_id, landlord_id, landlord_signature")
     .eq("id", leaseId)
     .maybeSingle();
 
@@ -101,7 +109,7 @@ export async function POST(
   }
 
   // Validate lease status
-  if (lease.status !== "pending_signature") {
+  if (lease.status !== "pending_signature" && lease.status !== "pending_tenant_signature") {
     return NextResponse.json(
       { error: `Cannot sign lease with status: ${lease.status}` },
       { status: 409 }
@@ -141,21 +149,26 @@ export async function POST(
   const signedAt = new Date().toISOString();
   
   const updateLeaseWithRetry = async () => {
+    // We use the admin client here to ensure system-level updates (status, lock version) 
+    // succeed without RLS interference, since we've already securely verified the JWT token.
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
+
     // Fetch current lock version
-    const { data: currentLease, error: fetchError } = await supabase
+    const { data: currentLease, error: fetchError } = await adminClient
       .from("leases")
       .select("signature_lock_version")
       .eq("id", leaseId)
       .single();
 
     if (fetchError || !currentLease) {
-      throw new Error("Failed to fetch lease for optimistic locking");
+      throw new Error(`Failed to fetch lease for optimistic locking: ${fetchError?.message}`);
     }
 
     const currentLockVersion = currentLease.signature_lock_version;
 
     // Update with optimistic lock
-    const { error: updateError } = await supabase
+    const { error: updateError, data: updatedRows } = await adminClient
       .from("leases")
       .update({
         tenant_signature: sanitizedSignature,
@@ -165,10 +178,16 @@ export async function POST(
         signature_lock_version: currentLockVersion + 1,
       })
       .eq("id", leaseId)
-      .eq("signature_lock_version", currentLockVersion);
+      .eq("signature_lock_version", currentLockVersion)
+      .select('id');
 
     if (updateError) {
       throw new Error(`Failed to update lease: ${updateError.message}`);
+    }
+    
+    // If no rows were returned, the optimistic lock failed (or lease deleted)
+    if (!updatedRows || updatedRows.length === 0) {
+       throw new Error("Optimistic lock failure: lease was updated by another process.");
     }
   };
 
@@ -202,37 +221,35 @@ export async function POST(
 
   // Send notification email to landlord
   try {
-    // Fetch landlord and tenant details for email
-    const { data: leaseDetails } = await supabase
+    // Generate landlord signing link
+    const { generateLandlordSigningLink } = await import("@/lib/jwt");
+    const landlordSigningUrl = generateLandlordSigningLink(leaseId, lease.landlord_id);
+
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
+
+    // Fetch landlord and tenant details for email using explicit aliases
+    const { data: leaseWithRelations, error: relationError } = await adminClient
       .from("leases")
       .select(`
-        landlord_id,
-        tenant_id,
+        id,
+        unit_id,
         units (
-          properties (
-            landlord_id,
-            profiles (
-              email,
-              full_name
-            )
-          )
-        )
+          name,
+          properties (name)
+        ),
+        tenant:profiles!leases_tenant_id_fkey (full_name, email),
+        landlord:profiles!leases_landlord_id_fkey (full_name, email)
       `)
       .eq("id", leaseId)
       .single();
 
-    if (leaseDetails && !('error' in leaseDetails)) {
-      const landlordEmail = (leaseDetails as any).units?.properties?.profiles?.email;
-      const landlordName = (leaseDetails as any).units?.properties?.profiles?.full_name || "Landlord";
-      
-      // Fetch tenant profile separately
-      const { data: tenantProfile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", leaseDetails.tenant_id)
-        .single();
-      
-      const tenantName = tenantProfile?.full_name || "Tenant";
+    if (!relationError && leaseWithRelations) {
+      const landlordEmail = (leaseWithRelations.landlord as any)?.email;
+      const landlordName = (leaseWithRelations.landlord as any)?.full_name || "Landlord";
+      const tenantName = (leaseWithRelations.tenant as any)?.full_name || "The tenant";
+      const propertyName = (leaseWithRelations.units as any)?.properties?.name || "The property";
+      const unitName = (leaseWithRelations.units as any)?.name || "The unit";
 
       if (landlordEmail) {
         await sendTenantSignedNotification({
@@ -240,8 +257,21 @@ export async function POST(
           landlordName,
           tenantName,
           leaseId,
+          signingUrl: landlordSigningUrl
         });
       }
+
+      // Trigger real-time in-app notification
+      await adminClient.from("notifications").insert({
+        user_id: lease.landlord_id,
+        type: "lease",
+        title: "Tenant Signed Lease",
+        message: `${tenantName} has signed the lease for ${propertyName} - ${unitName}. Please review and countersign.`,
+        data: { leaseId, signingUrl: landlordSigningUrl },
+        read: false
+      });
+    } else {
+      console.error("[sign-lease] Failed to fetch relations for email:", relationError);
     }
   } catch (emailError) {
     console.error("[sign-lease] Email notification error:", emailError);

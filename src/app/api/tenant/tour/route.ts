@@ -38,7 +38,7 @@ const resolveRole = async (supabase: any, user: any) => {
 
 const resolveOnboardingCompleted = async (adminClient: any, tenantId: string) => {
     const { data } = await adminClient
-        .from("tenant_onboarding_states")
+        .from("tenant_product_tour_states")
         .select("status")
         .eq("tenant_id", tenantId)
         .maybeSingle();
