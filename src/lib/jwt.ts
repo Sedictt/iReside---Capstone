@@ -8,14 +8,10 @@ import crypto from 'crypto';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-const getJwtSecret = (): string => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    console.warn('JWT_SECRET not set - using fallback signing method');
-    return `fallback-secret-${Date.now()}`;
-  }
-  return secret;
-};
+const FALLBACK_JWT_SECRET = 'iReside-dev-fallback-secret-2024';
+const JWT_SECRET = process.env.JWT_SECRET || FALLBACK_JWT_SECRET;
+
+const getJwtSecret = (): string => JWT_SECRET;
 
 interface SigningTokenPayload {
   leaseId: string;
