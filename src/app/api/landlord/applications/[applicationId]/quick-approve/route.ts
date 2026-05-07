@@ -155,7 +155,7 @@ export async function POST(
                 tenantName,
                 tempPassword,
                 inviteUrl,
-                leaseDetails: { property_name: "Property", unit_name: "Unit" },
+                leaseDetails: { property_name: "Property", unit_name: "Unit", move_in_date: app.move_in_date || "", monthly_rent: 0 },
                 signingLink,
             });
         } catch (e) {
