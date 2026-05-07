@@ -432,7 +432,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     const currentStepIndex = STEPS.findIndex(s => s.id === currentStep);
 
     return (
-        <div className="min-h-screen bg-[#121212] text-white/87 font-sans">
+        <div className="min-h-screen bg-[#121212] text-white/87 font-sans overflow-x-hidden relative">
             {/* Background */}
             <div className="absolute top-[-10%] left-[-10%] w-[50rem] h-[50rem] rounded-full bg-primary/10 blur-[150px] pointer-events-none opacity-50" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50rem] h-[50rem] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none opacity-40" />
