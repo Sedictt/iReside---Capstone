@@ -54,12 +54,17 @@ export default function LandlordLayout({
                             
                             <main 
                                 className={cn(
-                                    "flex-1 overflow-y-auto h-full transition-all duration-300", 
+                                    "flex-1 overflow-y-auto h-full transition-all duration-300 relative", 
                                     showSidebar ? (isSidebarCollapsed ? "ml-[80px]" : "ml-[280px]") : "",
                                     showContactsSidebar ? "md:pr-24" : ""
                                 )}
                             >
-                                <NotificationBanner />
+                                <div className={cn(
+                                    "w-full pointer-events-none z-[100]",
+                                    showContactsSidebar && "md:pr-24"
+                                )}>
+                                    <NotificationBanner />
+                                </div>
                                 {children}
                             </main>
                             

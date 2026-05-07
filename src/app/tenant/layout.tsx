@@ -43,10 +43,16 @@ export default function TenantLayout({
                         
                         <main 
                             className={cn(
-                                "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden",
+                                "min-w-0 h-full flex-1 flex flex-col overflow-x-hidden relative",
                                 !useImmersiveLayout && "ml-[280px]"
                             )}
                         >
+                            <div className={cn(
+                                "w-full z-[100] pointer-events-none",
+                                !useImmersiveLayout && "max-w-7xl mr-auto px-4 sm:px-6 md:pr-[104px] lg:pr-[112px]"
+                            )}>
+                                <NotificationBanner />
+                            </div>
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={pathname}
@@ -59,7 +65,6 @@ export default function TenantLayout({
                                     }}
                                     className="w-full h-full flex-1 flex flex-col"
                                 >
-                                    <NotificationBanner />
                                     {useImmersiveLayout ? (
                                         children
                                     ) : (
