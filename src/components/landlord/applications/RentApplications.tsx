@@ -593,6 +593,30 @@ export function RentApplications() {
         } catch { setActionError("Unable to update application status."); } finally { setUpdatingStatusId(null); }
     };
 
+    const handleQuickApprove = async () => {
+        if (!selectedApp) return;
+        setActionError(null);
+        setUpdatingStatusId(selectedApp.id);
+        try {
+            const response = await fetch(`/api/landlord/applications/${selectedApp.id}/quick-approve`, {
+                method: "POST",
+            });
+            const data = await response.json() as any;
+            if (!response.ok) throw new Error(data.error || "Failed to quick approve");
+            
+            setTenantCredentials({
+                email: data.tenant_account?.email || selectedApp.applicant.email,
+                tempPassword: data.tenant_account?.tempPassword || null,
+                inviteUrl: data.tenant_account?.inviteUrl,
+            });
+            setReloadKey(k => k + 1);
+            
+            setShowContractModal(false);
+            setSelectedApp(null);
+            alert(`Approved! Credentials:\nEmail: ${data.tenant_account?.email}\nTemp Password: ${data.tenant_account?.tempPassword}\n\nShare these with the tenant securely.`);
+        } catch { setActionError("Quick approve failed."); } finally { setUpdatingStatusId(null); }
+    };
+
     const openApprovalModal = (application: RentApplication) => {
         const monthlyRent = Number(application.monthlyRent ?? 0);
         if (application.status !== "payment_pending" && (!Number.isFinite(monthlyRent) || monthlyRent <= 0)) {
@@ -888,6 +912,34 @@ export function RentApplications() {
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+                                {selectedApp.status !== "approved" && (
+                                    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <button
+                                                onClick={() => handleQuickApprove()}
+                                                disabled={updatingStatusId === selectedApp.id}
+                                                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
+                                            >
+                                                {updatingStatusId === selectedApp.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Sparkles className="h-4 w-4" />
+                                                )}
+                                                Quick Approve
+                                            </button>
+                                            <button
+                                                onClick={() => openApprovalModal(selectedApp)}
+                                                className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/20"
+                                            >
+                                                <Wallet className="h-4 w-4" />
+                                                {selectedApp.status === "payment_pending" ? "Finalize" : "Request Payment"}
+                                            </button>
+                                        </div>
+                                        <p className="mt-3 text-[10px] font-medium text-muted-foreground">
+                                            Quick Approve skips payment and directly creates tenant account.
+                                        </p>
+                                    </div>
+                                )}
                                 {/* Hero Card */}
                                 <div className="relative h-48 w-full overflow-hidden rounded-[2.5rem] border border-border bg-muted shadow-sm">
                                     <img src={resolveImage(selectedApp.propertyImage)} alt="" className="h-full w-full object-cover opacity-60" />

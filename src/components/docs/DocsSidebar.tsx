@@ -142,7 +142,21 @@ export const DOCS_NAV: NavSection[] = [
           { title: "Tips for Success", href: "/docs/tenant/maintenance#tips-for-success" },
         ]
       },
-      { title: "Lease & Documents", href: "/docs/tenant/lease", icon: FileText },
+      { 
+        title: "Lease & Documents", 
+        href: "/docs/tenant/lease", 
+        icon: FileText,
+        subItems: [
+          { title: "What is a Lease?", href: "/docs/tenant/lease#what-is-a-lease" },
+          { title: "Accessing Your Documents", href: "/docs/tenant/lease#accessing-documents" },
+          { title: "Lease Signing Process", href: "/docs/tenant/lease#lease-signing" },
+          { title: "Document Types", href: "/docs/tenant/lease#document-types" },
+          { title: "Lease Amendments", href: "/docs/tenant/lease#lease-amendments" },
+          { title: "Security & Privacy", href: "/docs/tenant/lease#security" },
+          { title: "Common Questions", href: "/docs/tenant/lease#common-questions" },
+          { title: "Best Practices", href: "/docs/tenant/lease#best-practices" },
+        ]
+      },
       { title: "Moving In & Out", href: "/docs/tenant/moving", icon: ArrowRightLeft },
     ],
   },

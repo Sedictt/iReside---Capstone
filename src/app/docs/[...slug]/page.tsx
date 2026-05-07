@@ -629,9 +629,190 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Access your rental agreements and important documents anytime.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Your lease agreement is always accessible within iReside. No more searching through emails or physical folders.</p>
-        <h3>Viewing Your Documents</h3>
-        <p>Navigate to the **Lease & Documents** section to view, download, or print your current lease, house rules, and any other files shared by your landlord.</p>
+        <p>Your lease agreement is the foundation of your rental relationship with your landlord. It outlines your rights and responsibilities, the monthly rent amount, when the lease begins and ends, house rules, and any special agreements between you and your landlord. iReside keeps your lease and all related documents organized in one secure place so you can always find and reference them whenever you need.</p>
+
+        <h3 id="what-is-a-lease">What is a Lease?</h3>
+        <p>A lease is a legal contract between you (the tenant) and your landlord. It specifies the terms under which you rent the property. Think of it as an agreement that protects both you and your landlord. Your lease typically includes:</p>
+        <ul>
+          <li><strong>Property address:</strong> The exact location you are renting</li>
+          <li><strong>Lease dates:</strong> When your lease starts and when it ends</li>
+          <li><strong>Monthly rent amount:</strong> How much you pay each month</li>
+          <li><strong>Rent due date:</strong> What day of the month rent is due</li>
+          <li><strong>Security deposit amount:</strong> Money you provide upfront as protection for the landlord</li>
+          <li><strong>Utilities and services:</strong> Which utilities you pay for and which the landlord covers</li>
+          <li><strong>House rules:</strong> Rules about noise, guests, pets, smoking, and other conduct</li>
+          <li><strong>Maintenance responsibilities:</strong> Who is responsible for what repairs</li>
+          <li><strong>Lease termination conditions:</strong> How and when either party can end the lease</li>
+          <li><strong>Special agreements:</strong> Any unique arrangements between you and your landlord</li>
+        </ul>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Legally Binding Agreement</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Your lease is a legally binding contract. Both you and your landlord are expected to follow all terms. If either party violates the lease, there can be legal consequences. Make sure you understand and agree with all terms before signing.</p>
+        </div>
+
+        <h3 id="accessing-documents">Accessing Your Documents</h3>
+        <p>All your rental documents are stored in the Lease & Documents section of iReside. To access them:</p>
+        <ol>
+          <li>Log into your iReside account</li>
+          <li>Navigate to the Lease & Documents section from your dashboard</li>
+          <li>You will see a list of all documents related to your rental, organized by type</li>
+          <li>Click on any document to view, download, or print it</li>
+        </ol>
+        <p>Documents typically include your lease agreement, house rules, move-in inspection reports, amendment agreements, and any other files your landlord has shared with you.</p>
+
+        <h4 id="viewing-documents">Viewing Your Lease</h4>
+        <p>When you click on a document, it opens in a preview window. From there, you can:</p>
+        <ul>
+          <li><strong>Read the full text:</strong> Scroll through the document to read all terms and conditions</li>
+          <li><strong>Download:</strong> Save the document to your device for your personal records</li>
+          <li><strong>Print:</strong> Print a physical copy to keep in a folder or file</li>
+          <li><strong>Share:</strong> Send a copy to a family member, lawyer, or anyone else who needs to see it</li>
+          <li><strong>Search:</strong> Use the search function to find specific terms or sections quickly</li>
+        </ul>
+
+        <h4 id="downloading-printing">Downloading and Printing</h4>
+        <p>It is a good idea to keep a physical copy and a digital backup of your lease. You can download it as a PDF file to your computer or phone, making it accessible even if you are offline. Many tenants also print a copy and keep it in a safe place at home. This is especially important if you ever have disputes with your landlord - having a signed copy proves what you both agreed to.</p>
+
+        <h3 id="lease-signing">Understanding the Lease Signing Process</h3>
+        <p>Before your lease becomes active, both you and your landlord need to sign it. iReside makes this process simple and secure by allowing digital signatures.</p>
+
+        <h4 id="receiving-lease">Step 1: Receiving Your Lease</h4>
+        <p>After you and your landlord have agreed on the rental terms, your landlord will prepare the lease in iReside and send it to you. You will receive a notification that a lease is waiting for your review. The lease will appear in your Lease & Documents section with a status showing Pending Your Signature.</p>
+
+        <h4 id="reviewing-lease">Step 2: Reviewing Your Lease</h4>
+        <p>Take time to carefully read through the entire lease. Pay special attention to:</p>
+        <ul>
+          <li><strong>Dates:</strong> Make sure the start and end dates match what you agreed to</li>
+          <li><strong>Rent amount:</strong> Verify the monthly rent is correct</li>
+          <li><strong>Special terms:</strong> Check for any agreements you made with your landlord</li>
+          <li><strong>House rules:</strong> Make sure the rules are clear and something you can follow</li>
+          <li><strong>Responsibilities:</strong> Confirm who is responsible for repairs and maintenance</li>
+        </ul>
+        <p>If you notice any errors or disagree with something in the lease, do not sign it yet. Contact your landlord through the iReside messaging system and discuss the issue before proceeding.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Read Before You Sign</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Never sign a lease without reading it carefully. If you do not understand something, ask your landlord or consider consulting with a lawyer. Once you sign, you are legally bound to follow all the terms.</p>
+        </div>
+
+        <h4 id="signing-lease">Step 3: Signing Your Lease</h4>
+        <p>When you are ready to sign, click the Review and Sign button on the lease. iReside will guide you through the signing process:</p>
+        <ol>
+          <li>You will review the final lease document one more time</li>
+          <li>You will be asked to confirm your agreement to the terms</li>
+          <li>You will digitally sign the lease using your mouse, trackpad, or touchscreen</li>
+          <li>Your signature, full name, and the date will be recorded automatically</li>
+          <li>A confirmation message will appear showing your signature was received</li>
+        </ol>
+        <p>Your digital signature is legally valid and serves the same purpose as a handwritten signature. It proves that you reviewed and agreed to the lease terms.</p>
+
+        <h4 id="landlord-signs">Step 4: Waiting for Landlord Signature</h4>
+        <p>After you sign, the lease goes to your landlord for their signature. During this time, the lease status will show Pending Landlord Signature. You can continue to view and download the lease, but you will not be able to make changes. Wait for your landlord to sign before the lease becomes officially active.</p>
+        <p>Most landlords sign quickly, usually within a day or two. If your landlord takes longer than a week, you can send them a friendly reminder through iReside messaging.</p>
+
+        <h4 id="lease-active">Step 5: Lease Becomes Active</h4>
+        <p>Once your landlord signs, the lease status changes to Active. This is the official start of your tenancy. Both of you are now bound by all the terms in the lease. You can no longer make changes to an active lease - if either party wants to modify terms, you will need to create a lease amendment (see below).</p>
+
+        <h3 id="document-types">Types of Documents in Your Lease & Documents Section</h3>
+        <p>Beyond your main lease agreement, your Lease & Documents section may include other important files:</p>
+
+        <h4 id="house-rules">House Rules</h4>
+        <p>These detail the specific rules for your rental property. Common house rules include policies on noise levels, quiet hours, pets, smoking, guests, parking, and use of common areas. House rules help create a respectful living environment for all residents.</p>
+
+        <h4 id="move-in-inspection">Move-In Inspection Report</h4>
+        <p>This document is completed when you first move in. It describes the condition of the property - what is working, what is damaged, what is clean, etc. Both you and your landlord sign this report. It is important because it establishes the baseline condition of the property. When you move out, this report is compared to a move-out inspection to determine if damage is normal wear and tear (landlord responsibility) or tenant-caused damage (your responsibility).</p>
+
+        <h4 id="amendments">Lease Amendments</h4>
+        <p>Sometimes you and your landlord might want to change something in the lease after it is already signed. For example, you might want to add a pet, or your landlord might adjust the rent if you renew your lease. Instead of creating an entirely new lease, you create an amendment - a document that modifies specific terms of the original lease. Amendments must be signed by both parties, just like the original lease.</p>
+
+        <h4 id="other-documents">Other Documents</h4>
+        <p>Your landlord may also share other important documents such as utility information, parking permits, security system instructions, keys and access information, or community guidelines if you are renting in a multi-unit building.</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Keep Everything Organized</p>
+          <p className="m-0 text-text-medium text-sm">Your Lease & Documents section automatically keeps all your rental documents organized and searchable. But it is still a good idea to download and save important documents like your lease and move-in inspection to your own computer or cloud storage, just in case.</p>
+        </div>
+
+        <h3 id="lease-amendments">Making Changes: Lease Amendments</h3>
+        <p>Your lease is a living document. If you and your landlord agree to change something, you do not need to create a brand new lease. Instead, you create an amendment.</p>
+
+        <h4 id="when-amend">When Might You Need an Amendment?</h4>
+        <p>Common reasons for lease amendments include:</p>
+        <ul>
+          <li><strong>Rent increase:</strong> Your landlord wants to raise your rent (usually happens at lease renewal)</li>
+          <li><strong>Adding a roommate:</strong> You want to add another person to the lease</li>
+          <li><strong>Pet policy change:</strong> You want to add a pet, or your landlord approves a pet exception</li>
+          <li><strong>Lease term extension:</strong> You are renewing your lease for another year or longer</li>
+          <li><strong>Early termination:</strong> Both you and your landlord agree to end the lease early</li>
+          <li><strong>Service changes:</strong> Who pays for certain utilities or services is changing</li>
+          <li><strong>Maintenance responsibility changes:</strong> The landlord is taking over or you are taking over a particular responsibility</li>
+        </ul>
+
+        <h4 id="amendment-process">How the Amendment Process Works</h4>
+        <p>When an amendment is needed:</p>
+        <ol>
+          <li><strong>Your landlord proposes the change:</strong> They create an amendment in iReside describing what will change</li>
+          <li><strong>You review it:</strong> You receive a notification and can view the proposed amendment</li>
+          <li><strong>You discuss if needed:</strong> If you have questions or disagree, use iReside messaging to discuss before signing</li>
+          <li><strong>You sign:</strong> If you agree, you digitally sign the amendment</li>
+          <li><strong>Your landlord signs:</strong> They review and sign to finalize the amendment</li>
+          <li><strong>Amendment becomes effective:</strong> Once signed by both parties, the changes take effect on the date specified in the amendment</li>
+        </ol>
+        <p>The original lease stays in your records, and the amendment is stored alongside it. Together, they represent your current rental agreement.</p>
+
+        <h3 id="security">Document Security and Privacy</h3>
+        <p>Your lease and documents contain sensitive personal information. iReside takes your privacy seriously:</p>
+        <ul>
+          <li><strong>Encrypted storage:</strong> Your documents are stored securely on encrypted servers</li>
+          <li><strong>Limited access:</strong> Only you and your landlord can access your lease and documents</li>
+          <li><strong>No third-party sharing:</strong> We do not share your documents with anyone without your explicit permission</li>
+          <li><strong>Download for backup:</strong> You can download your documents anytime for your personal backup copies</li>
+          <li><strong>Retention:</strong> Your documents stay in your account even after your lease ends, so you have a permanent record</li>
+        </ul>
+
+        <h3 id="common-questions">Common Questions About Leases and Documents</h3>
+
+        <p><strong>What if I disagree with something in the lease?</strong></p>
+        <p>Do not sign it. Instead, contact your landlord through iReside messaging to discuss your concerns. You can propose changes, and if you both agree, the landlord can revise the lease and send you the updated version. Negotiating before signing is much easier than trying to change things after you have already signed.</p>
+
+        <p><strong>Can I print my lease?</strong></p>
+        <p>Yes. You can download the lease as a PDF and print it on your home printer, or use your device is print function. Having a physical copy is recommended.</p>
+
+        <p><strong>What if my landlord loses their copy of the lease?</strong></p>
+        <p>Not a problem. Both of you have access to the signed lease in iReside anytime. It is stored permanently in your account history.</p>
+
+        <p><strong>Can I share my lease with someone else (like a lawyer)?</strong></p>
+        <p>You can download your lease and share the PDF with anyone you want. You might want to share it with a lawyer for review, a family member for advice, or someone else for any reason. It is your document.</p>
+
+        <p><strong>What if I sign the lease and then change my mind?</strong></p>
+        <p>Once you sign, the lease is legally binding. Changing your mind after signing has serious consequences. That is why it is so important to carefully review before you sign. If you truly need to back out, you would need to contact your landlord and negotiate, but they are under no obligation to let you out of the lease.</p>
+
+        <p><strong>Will my digital signature hold up in court?</strong></p>
+        <p>Yes. Digital signatures are legally recognized and enforceable in most jurisdictions. iReside is signing system records your signature, your name, and the exact timestamp, making it a secure and legally valid signature.</p>
+
+        <p><strong>How long do my documents stay in iReside?</strong></p>
+        <p>Permanently. Even after your lease ends and you move out, your documents remain in your account. This is valuable because you have a complete record of your tenancy.</p>
+
+        <p><strong>What if there is a dispute about what the lease says?</strong></p>
+        <p>The signed lease in your iReside account is the official record. Both you and your landlord have access to the exact same document with your signatures and timestamps. This makes disputes easier to resolve because there is no ambiguity about what was agreed to.</p>
+
+        <h3 id="best-practices">Best Practices for Managing Your Lease</h3>
+        <ul>
+          <li><strong>Read carefully:</strong> Before signing, take time to read every word of your lease.</li>
+          <li><strong>Ask questions:</strong> If something is unclear, ask your landlord for clarification before signing.</li>
+          <li><strong>Keep backup copies:</strong> Download and save your lease to your personal computer or cloud storage.</li>
+          <li><strong>Document everything:</strong> If you and your landlord make any verbal agreements, request that they be added to the lease as an amendment.</li>
+          <li><strong>Reference your lease:</strong> When issues come up, refer back to the lease to understand what was agreed.</li>
+          <li><strong>Maintain the property:</strong> Follow the lease terms regarding maintenance and care of the property.</li>
+          <li><strong>Communicate changes:</strong> If either you or your landlord want to change lease terms, handle it through official amendments rather than verbal agreements.</li>
+          <li><strong>Keep receipts:</strong> Maintain records of rent payments and any expenses related to your lease obligations.</li>
+        </ul>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Legal Disclaimer</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">The information provided here is for general educational purposes and should not be considered legal advice. Rental laws vary by location, and your specific situation may have unique considerations. If you have legal questions about your lease or rental rights, please consult with a qualified attorney in your jurisdiction.</p>
+        </div>
       </div>
     ),
     next: "tenant/moving",
