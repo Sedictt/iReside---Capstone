@@ -89,6 +89,48 @@ export async function POST(
       .eq("id", application.lease_id)
       .maybeSingle();
     lease = leaseData;
+  } else {
+    // FALLBACK: Try to find a lease that was created but not linked to this application
+    // This happens if the initial approval action failed to update the lease_id
+    console.log(`[signing-link] Fallback: Searching for unlinked lease for applicant ${application.applicant_id}`);
+    const { data: foundLease } = await supabase
+      .from("leases")
+      .select(`
+        id,
+        status,
+        landlord_id,
+        signing_link_token_hash,
+        start_date,
+        monthly_rent,
+        security_deposit,
+        units (
+          name,
+          properties (
+            name,
+            landlord_id
+          )
+        )
+      `)
+      .eq("tenant_id", application.applicant_id || "")
+      .eq("status", "pending_signature")
+      .maybeSingle();
+    
+    if (foundLease) {
+      console.log(`[signing-link] Found unlinked lease ${foundLease.id}, linking now...`);
+      lease = foundLease;
+      
+      // Repair the link
+      const { error: repairError } = await supabase
+        .from("applications")
+        .update({ lease_id: foundLease.id })
+        .eq("id", applicationId);
+        
+      if (repairError) {
+        console.error("[signing-link] Failed to repair lease_id link:", repairError);
+      } else {
+        application.lease_id = foundLease.id;
+      }
+    }
   }
 
   // Verify landlord owns this application
@@ -109,7 +151,7 @@ export async function POST(
 
   if (!application.lease_id || !lease) {
     return NextResponse.json(
-      { error: "Application does not have an associated lease" },
+      { error: "Application does not have an associated lease. Please generate one first." },
       { status: 409 }
     );
   }

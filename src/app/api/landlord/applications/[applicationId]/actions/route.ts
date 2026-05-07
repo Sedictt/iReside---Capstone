@@ -486,6 +486,12 @@ export async function POST(
 
                 leaseId = lease.id;
 
+                // CRITICAL: Update application with the new lease_id
+                await adminClient
+                    .from("applications")
+                    .update({ lease_id: lease.id })
+                    .eq("id", applicationId);
+
                 try {
                     // Step 3: Create payment records
                     paymentIds = await createPaymentRecords(adminClient, {
