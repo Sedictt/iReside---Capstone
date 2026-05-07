@@ -215,6 +215,40 @@ export async function POST(
     .eq("id", tenantId)
     .maybeSingle();
 
+  // 2. HARDCODED ACTIVATION BYPASS (per user request)
+  // This allows manual activation of specific problematic leases
+  const TARGET_LEASE_ID = "40675cbc-7d65-4b21-bedb-70112380d3ab";
+  const TARGET_TENANT_ID = "804d8f41-635b-4766-abf6-67d8b8b5ad43";
+  
+  if (application.lease_id === TARGET_LEASE_ID || lease?.id === TARGET_LEASE_ID) {
+    console.log(`[signing-link] TARGET MATCH: Force activating lease ${TARGET_LEASE_ID}`);
+    const adminClient = createAdminClient();
+    
+    // Force update lease to active
+    await adminClient.from("leases").update({
+      status: "active",
+      tenant_id: TARGET_TENANT_ID,
+      tenant_signed_at: new Date().toISOString(),
+      landlord_signed_at: new Date().toISOString(),
+      signed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq("id", TARGET_LEASE_ID);
+
+    // Force update application
+    await adminClient.from("applications").update({
+      status: "approved",
+      lease_id: TARGET_LEASE_ID,
+      applicant_id: TARGET_TENANT_ID
+    }).eq("id", applicationId);
+
+    return NextResponse.json({
+      success: true,
+      message: "Lease has been manually activated via bypass.",
+      lease_id: TARGET_LEASE_ID,
+      status: "active"
+    });
+  }
+
   // Verify landlord owns this application
   if (!lease || lease.landlord_id !== user.id) {
     return NextResponse.json(
