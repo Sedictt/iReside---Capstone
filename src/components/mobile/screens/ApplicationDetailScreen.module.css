@@ -1,0 +1,249 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #0a0a0a;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+.header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    justify-content: space-between;
+    border-bottom: 1px solid #141414;
+    flex-shrink: 0;
+}
+
+.backButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #141414;
+    border: 1px solid #262626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a3a3a3;
+    cursor: pointer;
+}
+
+.headerTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+}
+
+.headerSpacer {
+    width: 40px;
+}
+
+/* ─── Content ──────────────────────────────────────────── */
+.scrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* ─── Status Banner ────────────────────────────────────── */
+.statusBanner {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.bgGreen { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); }
+.bgAmber { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); }
+.bgBlue { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); }
+.bgGray { background: rgba(163, 163, 163, 0.1); border: 1px solid rgba(163, 163, 163, 0.2); }
+
+.textGreen { color: #10b981; }
+.textAmber { color: #f59e0b; }
+.textBlue { color: #3b82f6; }
+.textGray { color: #a3a3a3; }
+
+.statusTextWrapper {
+    flex: 1;
+}
+
+.statusTitle {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 6px;
+}
+
+.statusDesc {
+    font-size: 14px;
+    color: #d4d4d4;
+    line-height: 1.5;
+}
+
+/* ─── Cards ────────────────────────────────────────────── */
+.card {
+    background: #141414;
+    border: 1px solid #262626;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 16px;
+}
+
+/* Property Header */
+.propertyHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.propertyIconWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6d9838;
+}
+
+.propertyTitle {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.propertyUnit {
+    font-size: 14px;
+    color: #a3a3a3;
+}
+
+.addressRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #737373;
+    background: #0a0a0a;
+    padding: 10px 12px;
+    border-radius: 10px;
+}
+
+/* Detail Rows */
+.detailRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.detailLabel {
+    font-size: 14px;
+    color: #a3a3a3;
+}
+
+.detailValue {
+    font-size: 14px;
+    color: #fafafa;
+    font-weight: 500;
+}
+
+.detailValueBold {
+    font-size: 16px;
+    color: #6d9838;
+    font-weight: 800;
+}
+
+.divider {
+    height: 1px;
+    background: #262626;
+    margin: 12px 0;
+}
+
+/* Documents */
+.documentItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0a0a0a;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.documentItem:last-child {
+    margin-bottom: 0;
+}
+
+.docIcon {
+    color: #3b82f6;
+}
+
+.docInfo {
+    flex: 1;
+}
+
+.docName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fafafa;
+    margin-bottom: 4px;
+}
+
+.docSize {
+    font-size: 12px;
+    color: #737373;
+}
+
+.downloadBtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #141414;
+    border: 1px solid #262626;
+    color: #a3a3a3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* ─── Footer ───────────────────────────────────────────── */
+.footer {
+    padding: 16px 20px 32px;
+    background: #0a0a0a;
+    border-top: 1px solid #141414;
+}
+
+.primaryBtn {
+    width: 100%;
+    height: 56px;
+    background: #6d9838;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.primaryBtn:active {
+    transform: scale(0.98);
+}

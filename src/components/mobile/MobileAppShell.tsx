@@ -14,8 +14,10 @@ import TenantChatScreen from "./screens/TenantChatScreen";
 import ChatConversationScreen from "./screens/ChatConversationScreen";
 import ApplicationFormScreen from "./screens/ApplicationFormScreen";
 import ApplicationTrackerScreen from "./screens/ApplicationTrackerScreen";
+import ApplicationDetailScreen from "./screens/ApplicationDetailScreen";
 import LeaseScreen from "./screens/LeaseScreen";
 import PaymentsScreen from "./screens/PaymentsScreen";
+import CheckoutScreen from "./screens/CheckoutScreen";
 import TenantProfileScreen from "./screens/TenantProfileScreen";
 import TenantSettingsScreen from "./screens/TenantSettingsScreen";
 import TenantMaintenanceScreen from "./screens/TenantMaintenanceScreen";
@@ -26,7 +28,9 @@ import LandlordUnitDetailScreen from "./screens/LandlordUnitDetailScreen";
 import LandlordApplicationsScreen from "./screens/LandlordApplicationsScreen";
 import LandlordApplicationReviewScreen from "./screens/LandlordApplicationReviewScreen";
 import LandlordInvoicesScreen from "./screens/LandlordInvoicesScreen";
+import LandlordInvoiceDetailScreen from "./screens/LandlordInvoiceDetailScreen";
 import LandlordMaintenanceScreen from "./screens/LandlordMaintenanceScreen";
+import LandlordMaintenanceDetailScreen from "./screens/LandlordMaintenanceDetailScreen";
 import LandlordProfileScreen from "./screens/LandlordProfileScreen";
 import LandlordChatScreen from "./screens/LandlordChatScreen";
 import NotificationsScreen from "./screens/NotificationsScreen";
@@ -209,8 +213,10 @@ function ScreenRouter() {
         chatConversation: ChatConversationScreen,
         applicationForm: ApplicationFormScreen,
         applicationTracker: ApplicationTrackerScreen,
+        applicationDetail: ApplicationDetailScreen,
         leaseList: LeaseScreen,
         payments: PaymentsScreen,
+        checkout: CheckoutScreen,
         tenantProfile: TenantProfileScreen,
         tenantSettings: TenantSettingsScreen,
         tenantMaintenance: TenantMaintenanceScreen,
@@ -221,7 +227,9 @@ function ScreenRouter() {
         landlordApplications: LandlordApplicationsScreen,
         landlordApplicationReview: LandlordApplicationReviewScreen,
         landlordInvoices: LandlordInvoicesScreen,
+        landlordInvoiceDetail: LandlordInvoiceDetailScreen,
         landlordMaintenance: LandlordMaintenanceScreen,
+        landlordMaintenanceDetail: LandlordMaintenanceDetailScreen,
         landlordProfile: LandlordProfileScreen,
         landlordChat: LandlordChatScreen,
         notifications: NotificationsScreen,

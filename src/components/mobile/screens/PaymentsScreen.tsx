@@ -101,7 +101,7 @@ export default function PaymentsScreen() {
                     {UPCOMING_PAYMENTS.length > 0 && (
                         <button
                             className={styles.payButton}
-                            onClick={() => setShowPayModal(true)}
+                            onClick={() => navigate("checkout")}
                         >
                             <CreditCard /> Pay Now
                         </button>

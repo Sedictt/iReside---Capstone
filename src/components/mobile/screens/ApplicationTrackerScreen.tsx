@@ -175,7 +175,7 @@ export default function ApplicationTrackerScreen() {
                             key={app.id}
                             className={styles.applicationCard}
                             onClick={() =>
-                                navigate("propertyDetail", { propertyId: app.propertyId })
+                                navigate("applicationDetail", { applicationId: app.id })
                             }
                         >
                             {/* Progress Bar */}
