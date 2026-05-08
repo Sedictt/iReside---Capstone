@@ -232,7 +232,73 @@ export function LandlordSettings() {
 
     // Security States
     const [otpEnabled, setOtpEnabled] = useState(false);
-    const [showOtpField, setShowOtpField] = useState(false);
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [loadingSessions, setLoadingSessions] = useState(false);
+
+    const fetchSessions = useCallback(async () => {
+        try {
+            setLoadingSessions(true);
+            const res = await fetch("/api/auth/sessions");
+            const data = await res.json();
+            if (data.sessions) {
+                setSessions(data.sessions);
+            }
+        } catch (error) {
+            console.error("Failed to fetch sessions:", error);
+        } finally {
+            setLoadingSessions(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (activeTab === "Security" && activeSubTab === "Sessions") {
+            fetchSessions();
+        }
+    }, [activeTab, activeSubTab, fetchSessions]);
+
+    const handleRevokeSession = async (sessionId: string) => {
+        try {
+            const res = await fetch("/api/auth/sessions", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId })
+            });
+            if (res.ok) {
+                toast.success("Session revoked");
+                fetchSessions();
+            } else {
+                toast.error("Failed to revoke session");
+            }
+        } catch (error) {
+            toast.error("An error occurred");
+        }
+    };
+
+    const handleSignOutOthers = async () => {
+        try {
+            const res = await fetch("/api/auth/sessions", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ scope: "others" })
+            });
+            if (res.ok) {
+                toast.success("All other sessions revoked");
+                fetchSessions();
+            } else {
+                toast.error("Failed to revoke sessions");
+            }
+        } catch (error) {
+            toast.error("An error occurred");
+        }
+    };
+
+    const parseUA = (ua: string) => {
+        if (!ua) return { browser: "Unknown", os: "Unknown", Icon: Monitor };
+        const browser = ua.includes("Chrome") ? "Chrome" : ua.includes("Safari") ? "Safari" : ua.includes("Firefox") ? "Firefox" : "Browser";
+        const os = ua.includes("Windows") ? "Windows" : ua.includes("Mac") ? "macOS" : ua.includes("iPhone") ? "iPhone" : ua.includes("Android") ? "Android" : "OS";
+        const Icon = ua.includes("iPhone") || ua.includes("Android") ? Smartphone : Monitor;
+        return { browser, os, Icon };
+    };
 
     useEffect(() => {
         if (profile) {
@@ -813,29 +879,57 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
                             <div className="space-y-4 max-w-lg">
-                                <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                                    <div className="flex items-center gap-4">
-                                        <Monitor className="h-5 w-5 text-primary" />
-                                        <div>
-                                            <h4 className="text-sm font-bold text-white">Chrome on Windows</h4>
-                                            <p className="text-[10px] text-neutral-500 uppercase tracking-wider">Current Session Â· Manila, PH</p>
-                                        </div>
+                                {loadingSessions ? (
+                                    <div className="flex items-center justify-center py-10">
+                                        <RotateCcw className="h-6 w-6 animate-spin text-primary" />
                                     </div>
-                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
-                                </div>
-                                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4">
-                                    <div className="flex items-center gap-4">
-                                        <Smartphone className="h-5 w-5 text-neutral-400" />
-                                        <div>
-                                            <h4 className="text-sm font-bold text-white">Safari on iPhone</h4>
-                                            <p className="text-[10px] text-neutral-500 uppercase tracking-wider">Last seen 2h ago Â· Manila, PH</p>
-                                        </div>
-                                    </div>
-                                    <button className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors">Revoke</button>
-                                </div>
-                                <button className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors">
-                                    <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
-                                </button>
+                                ) : sessions.length === 0 ? (
+                                    <p className="text-sm text-neutral-500 py-10 text-center">No active sessions found.</p>
+                                ) : (
+                                    sessions.map((session) => {
+                                        const { browser, os, Icon } = parseUA(session.user_agent);
+                                        return (
+                                            <div 
+                                                key={session.id} 
+                                                className={cn(
+                                                    "flex items-center justify-between rounded-2xl border p-4 transition-all",
+                                                    session.is_current 
+                                                        ? "border-primary/20 bg-primary/5" 
+                                                        : "border-white/5 bg-white/5"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <Icon className={cn("h-5 w-5", session.is_current ? "text-primary" : "text-neutral-400")} />
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
+                                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
+                                                            {session.is_current ? "Current Session" : `Last seen ${new Date(session.last_sign_in_at || session.updated_at).toLocaleDateString()}`} · {session.ip || "Unknown IP"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {session.is_current ? (
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => handleRevokeSession(session.id)}
+                                                        className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors"
+                                                    >
+                                                        Revoke
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })
+                                )}
+                                
+                                {sessions.filter(s => !s.is_current).length > 0 && (
+                                    <button 
+                                        onClick={handleSignOutOthers}
+                                        className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors"
+                                    >
+                                        <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
+                                    </button>
+                                )}
                             </div>
                         </GlassCard>
                     );
