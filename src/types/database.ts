@@ -2147,3 +2147,6 @@ export type AmenityBookingWithDetails = AmenityBooking & {
     tenant: { full_name: string | null; email: string; avatar_url: string | null } | null
 }
 
+
+export type UserSession = { id: string; user_id: string; created_at: string; updated_at: string; ip: string; user_agent: string; not_after: string; }
+

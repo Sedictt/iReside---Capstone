@@ -40,4 +40,5 @@ export type {
     ApplicationWithDetails,
     MaintenanceRequestWithDetails,
     ConversationWithParticipants,
+    UserSession,
 } from './database'

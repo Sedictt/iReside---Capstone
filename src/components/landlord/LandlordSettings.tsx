@@ -48,6 +48,7 @@ import { ProfileCoverUploader } from "@/components/profile/ProfileCoverUploader"
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { MAX_FILE_SIZE, MAX_FILE_SIZE_MB } from "@/lib/constants";
+import { UAParser } from "ua-parser-js";
 
 // --- Types ---
 type SettingsCategory = "Identity" | "Finance" | "Security" | "Notifications" | "Data";
@@ -186,9 +187,6 @@ export function LandlordSettings() {
         setActiveSubTab(SUB_TABS[activeTab][0]);
     }, [activeTab]);
 
-    if (loading) {
-        return <PageLoader message="Loading your settings..." />;
-    }
 
     const [formData, setFormData] = useState({
         full_name: "",
@@ -232,73 +230,7 @@ export function LandlordSettings() {
 
     // Security States
     const [otpEnabled, setOtpEnabled] = useState(false);
-    const [sessions, setSessions] = useState<any[]>([]);
-    const [loadingSessions, setLoadingSessions] = useState(false);
-
-    const fetchSessions = useCallback(async () => {
-        try {
-            setLoadingSessions(true);
-            const res = await fetch("/api/auth/sessions");
-            const data = await res.json();
-            if (data.sessions) {
-                setSessions(data.sessions);
-            }
-        } catch (error) {
-            console.error("Failed to fetch sessions:", error);
-        } finally {
-            setLoadingSessions(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (activeTab === "Security" && activeSubTab === "Sessions") {
-            fetchSessions();
-        }
-    }, [activeTab, activeSubTab, fetchSessions]);
-
-    const handleRevokeSession = async (sessionId: string) => {
-        try {
-            const res = await fetch("/api/auth/sessions", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId })
-            });
-            if (res.ok) {
-                toast.success("Session revoked");
-                fetchSessions();
-            } else {
-                toast.error("Failed to revoke session");
-            }
-        } catch (error) {
-            toast.error("An error occurred");
-        }
-    };
-
-    const handleSignOutOthers = async () => {
-        try {
-            const res = await fetch("/api/auth/sessions", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ scope: "others" })
-            });
-            if (res.ok) {
-                toast.success("All other sessions revoked");
-                fetchSessions();
-            } else {
-                toast.error("Failed to revoke sessions");
-            }
-        } catch (error) {
-            toast.error("An error occurred");
-        }
-    };
-
-    const parseUA = (ua: string) => {
-        if (!ua) return { browser: "Unknown", os: "Unknown", Icon: Monitor };
-        const browser = ua.includes("Chrome") ? "Chrome" : ua.includes("Safari") ? "Safari" : ua.includes("Firefox") ? "Firefox" : "Browser";
-        const os = ua.includes("Windows") ? "Windows" : ua.includes("Mac") ? "macOS" : ua.includes("iPhone") ? "iPhone" : ua.includes("Android") ? "Android" : "OS";
-        const Icon = ua.includes("iPhone") || ua.includes("Android") ? Smartphone : Monitor;
-        return { browser, os, Icon };
-    };
+    const [showOtpField, setShowOtpField] = useState(false);
 
     useEffect(() => {
         if (profile) {
@@ -329,6 +261,61 @@ export function LandlordSettings() {
             fetchProperties();
         }
     }, [profile]);
+
+    // Remaining hooks that were scattered below — hoisted here for Rules of Hooks
+    const [isUploadingPermit, setIsUploadingPermit] = useState(false);
+    const permitInputRef = useRef<HTMLInputElement>(null);
+    const [isResetting, setIsResetting] = useState(false);
+    const [activeFinanceTab, setActiveFinanceTab] = useState<"GCash" | "Water" | "Electricity">("GCash");
+
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (activeTab === "Security" && activeSubTab === "Sessions") {
+            const fetchSessions = async () => {
+                setIsSessionsLoading(true);
+                try {
+                    const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
+                    console.log("[Sessions] Fetch result:", { data, error });
+                    if (error) throw error;
+                    if (data) setSessions(data);
+                    
+                    const { data: { session } } = await supabase.auth.getSession();
+                    console.log("[Sessions] Current auth session:", session?.id);
+                    if (session) setCurrentSessionId((session as any).id);
+                } catch (err) {
+                    console.error("[Sessions] Failed to fetch sessions:", err);
+                } finally {
+                    setIsSessionsLoading(false);
+                }
+            };
+            fetchSessions();
+        }
+    }, [activeTab, activeSubTab, supabase]);
+
+    const handleSignOutOthers = async () => {
+        setIsSessionsLoading(true);
+        const loadingToast = toast.loading("Signing out other devices...");
+        try {
+            const { error } = await supabase.auth.signOut({ scope: "others" });
+            if (error) throw error;
+            toast.success("Signed out of all other devices successfully", { id: loadingToast });
+            // Refresh sessions list
+            const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
+            if (data) setSessions(data);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to sign out other devices", { id: loadingToast });
+        } finally {
+            setIsSessionsLoading(false);
+        }
+    };
+
+    // Early return AFTER all hooks to satisfy Rules of Hooks
+    if (loading) {
+        return <PageLoader message="Loading your settings..." />;
+    }
 
     const fetchProperties = async () => {
         if (!profile?.id) return;
@@ -369,8 +356,7 @@ export function LandlordSettings() {
         }
     };
 
-    const [isUploadingPermit, setIsUploadingPermit] = useState(false);
-    const permitInputRef = useRef<HTMLInputElement>(null);
+
 
     const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -410,7 +396,7 @@ export function LandlordSettings() {
             if (permitInputRef.current) permitInputRef.current.value = "";
         }
     };
-    const [isResetting, setIsResetting] = useState(false);
+
 
     const handleHardResetTour = async () => {
         if (!confirm("Are you sure you want to reset all tour progress? This cannot be undone.")) return;
@@ -810,7 +796,7 @@ export function LandlordSettings() {
         );
     };
 
-    const [activeFinanceTab, setActiveFinanceTab] = useState<"GCash" | "Water" | "Electricity">("GCash");
+
 
     const renderSecurity = () => {
         const renderSubContent = () => {
@@ -879,53 +865,54 @@ export function LandlordSettings() {
                     return (
                         <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
                             <div className="space-y-4 max-w-lg">
-                                {loadingSessions ? (
-                                    <div className="flex items-center justify-center py-10">
-                                        <RotateCcw className="h-6 w-6 animate-spin text-primary" />
-                                    </div>
+                                {isSessionsLoading && sessions.length === 0 ? (
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">Loading sessions...</div>
                                 ) : sessions.length === 0 ? (
-                                    <p className="text-sm text-neutral-500 py-10 text-center">No active sessions found.</p>
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">No sessions found</div>
                                 ) : (
-                                    sessions.map((session) => {
-                                        const { browser, os, Icon } = parseUA(session.user_agent);
+                                    sessions.map((sess) => {
+                                        const parser = new UAParser(sess.user_agent);
+                                        const browser = parser.getBrowser().name || "Unknown Browser";
+                                        const os = parser.getOS().name || "Unknown OS";
+                                        const deviceType = parser.getDevice().type;
+                                        
+                                        const isCurrent = sess.id === currentSessionId;
+                                        const isMobile = deviceType === "mobile" || deviceType === "tablet";
+                                        const Icon = isMobile ? Smartphone : Monitor;
+
+                                        // Try to format relative time or just use the date
+                                        const updatedDate = new Date(sess.updated_at);
+                                        let timeString = updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                        
                                         return (
-                                            <div 
-                                                key={session.id} 
-                                                className={cn(
-                                                    "flex items-center justify-between rounded-2xl border p-4 transition-all",
-                                                    session.is_current 
-                                                        ? "border-primary/20 bg-primary/5" 
-                                                        : "border-white/5 bg-white/5"
-                                                )}
-                                            >
+                                            <div key={sess.id} className={cn(
+                                                "flex items-center justify-between rounded-2xl border p-4 transition-colors",
+                                                isCurrent 
+                                                    ? "border-primary/20 bg-primary/5" 
+                                                    : "border-white/5 bg-white/5 hover:bg-white/10"
+                                            )}>
                                                 <div className="flex items-center gap-4">
-                                                    <Icon className={cn("h-5 w-5", session.is_current ? "text-primary" : "text-neutral-400")} />
+                                                    <Icon className={cn("h-5 w-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
                                                         <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                                                            {session.is_current ? "Current Session" : `Last seen ${new Date(session.last_sign_in_at || session.updated_at).toLocaleDateString()}`} · {session.ip || "Unknown IP"}
+                                                            {isCurrent ? "Current Session" : `Last seen ${timeString}`} • IP: {sess.ip}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                {session.is_current ? (
+                                                {isCurrent && (
                                                     <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
-                                                ) : (
-                                                    <button 
-                                                        onClick={() => handleRevokeSession(session.id)}
-                                                        className="text-xs font-bold text-red-400 hover:text-red-300 transition-colors"
-                                                    >
-                                                        Revoke
-                                                    </button>
                                                 )}
                                             </div>
                                         );
                                     })
                                 )}
                                 
-                                {sessions.filter(s => !s.is_current).length > 0 && (
+                                {sessions.length > 1 && (
                                     <button 
                                         onClick={handleSignOutOthers}
-                                        className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors"
+                                        disabled={isSessionsLoading}
+                                        className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
                                     >
                                         <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
                                     </button>

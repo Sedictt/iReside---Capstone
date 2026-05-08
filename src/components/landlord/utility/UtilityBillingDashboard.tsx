@@ -66,6 +66,11 @@ export function UtilityBillingDashboard() {
     const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
     const [selectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
     const [selectedHistoryMonth, setSelectedHistoryMonth] = useState<string | null>(null);
+
+    // History summary data per month
+    type MonthSummary = { totalElec: number; totalWater: number; readingCount: number };
+    const [historySummaries, setHistorySummaries] = useState<Record<string, MonthSummary>>({});
+    const [historySummariesLoading, setHistorySummariesLoading] = useState(false);
     
     // Sync local property selection with global navbar selector
     useEffect(() => {
@@ -159,8 +164,51 @@ export function UtilityBillingDashboard() {
 
     useEffect(() => {
         fetchData();
-         
     }, [fetchData]);
+
+    // Fetch history summaries when history tab is active
+    useEffect(() => {
+        if (activeTab !== "history") return;
+        let alive = true;
+        const fetchSummaries = async () => {
+            setHistorySummariesLoading(true);
+            const months: string[] = [];
+            for (let i = 0; i < 9; i++) {
+                const d = new Date();
+                d.setDate(1);
+                d.setMonth(d.getMonth() - i);
+                months.push(d.toISOString().slice(0, 7));
+            }
+            const results: Record<string, MonthSummary> = {};
+            await Promise.all(
+                months.map(async (m) => {
+                    try {
+                        const res = await fetch(`/api/landlord/utility-readings?month=${m}`);
+                        if (!res.ok) return;
+                        const json = await res.json();
+                        const readings: { utility_type: string; previous_reading: number; current_reading: number }[] = json.readings || [];
+                        let totalElec = 0;
+                        let totalWater = 0;
+                        for (const r of readings) {
+                            const usage = r.current_reading - r.previous_reading;
+                            if (r.utility_type === "electricity") totalElec += usage;
+                            else if (r.utility_type === "water") totalWater += usage;
+                        }
+                        results[m] = { totalElec, totalWater, readingCount: readings.length };
+                    } catch {
+                        results[m] = { totalElec: 0, totalWater: 0, readingCount: 0 };
+                    }
+                })
+            );
+            if (alive) {
+                setHistorySummaries(results);
+                setHistorySummariesLoading(false);
+            }
+        };
+        fetchSummaries();
+        return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]);
 
     const filteredDrafts = drafts.filter(d => {
         const matchesProperty = selectedPropertyId === "all" || d.propertyId === selectedPropertyId;
@@ -512,6 +560,12 @@ export function UtilityBillingDashboard() {
                                     d.setDate(1);
                                     d.setMonth(d.getMonth() - i);
                                     const monthStr = d.toISOString().slice(0, 7);
+                                    const summary = historySummaries[monthStr];
+                                    const totalElec = summary?.totalElec ?? 0;
+                                    const totalWater = summary?.totalWater ?? 0;
+                                    const readingCount = summary?.readingCount ?? 0;
+                                    const hasData = readingCount > 0;
+                                    const isCurrentMonth = i === 0;
                                     
                                     return (
                                         <button 
@@ -528,8 +582,15 @@ export function UtilityBillingDashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="md:hidden h-8 w-px bg-border" />
-                                                <div className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-[8px] font-black uppercase tracking-[0.2em] text-emerald-600 border border-emerald-500/10 whitespace-nowrap">
-                                                    Cycle Closed
+                                                <div className={cn(
+                                                    "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.2em] border whitespace-nowrap",
+                                                    isCurrentMonth 
+                                                        ? "bg-blue-500/10 text-blue-600 border-blue-500/10" 
+                                                        : hasData 
+                                                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/10" 
+                                                            : "bg-muted/50 text-muted-foreground/40 border-border"
+                                                )}>
+                                                    {isCurrentMonth ? "In Progress" : hasData ? "Cycle Closed" : "No Data"}
                                                 </div>
                                             </div>
 
@@ -543,13 +604,19 @@ export function UtilityBillingDashboard() {
                                                         <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
                                                             <Zap className="h-3 w-3" />
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">1,240 <span className="opacity-40">kWh</span></span>
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                            {historySummariesLoading ? "--" : totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                                                            <span className="opacity-40">kWh</span>
+                                                        </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <div className="h-6 w-6 flex items-center justify-center rounded-lg bg-sky-500/10 text-sky-500">
                                                             <Droplets className="h-3 w-3" />
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">450 <span className="opacity-40">m³</span></span>
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                            {historySummariesLoading ? "--" : totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                                                            <span className="opacity-40">m³</span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -557,12 +624,11 @@ export function UtilityBillingDashboard() {
                                             {/* Status & Actions */}
                                             <div className="md:col-span-4 flex items-center justify-between md:justify-end gap-10">
                                                  <div className="text-right space-y-2 flex-1 md:flex-initial">
-                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Collection Status</p>
+                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Readings Logged</p>
                                                      <div className="flex items-center justify-end gap-3">
-                                                         <div className="h-1.5 w-32 rounded-full bg-muted overflow-hidden">
-                                                             <div className="h-full bg-primary rounded-full w-[80%]" />
-                                                         </div>
-                                                         <span className="text-[10px] font-black text-foreground">8/10</span>
+                                                         <span className="text-[10px] font-black text-foreground">
+                                                             {historySummariesLoading ? "--" : `${readingCount} reading${readingCount !== 1 ? "s" : ""}`}
+                                                         </span>
                                                      </div>
                                                  </div>
                                                  <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20 transition-all">
@@ -711,28 +777,39 @@ function HistoryDetailModal({ month, isOpen, onClose }: { month: string | null, 
                                 </div>
                             ) : (
                                 <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="p-8 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 transition-all hover:bg-amber-500/[0.05]">
-                                            <div className="flex items-center gap-3 text-amber-500 mb-4">
-                                                <Zap className="h-5 w-5" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Total Electricity</span>
+                                    {(() => {
+                                        let totalElec = 0;
+                                        let totalWater = 0;
+                                        for (const r of data) {
+                                            const usage = r.current_reading - r.previous_reading;
+                                            if (r.utility_type === "electricity") totalElec += usage;
+                                            else if (r.utility_type === "water") totalWater += usage;
+                                        }
+                                        return (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="p-8 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 transition-all hover:bg-amber-500/[0.05]">
+                                                    <div className="flex items-center gap-3 text-amber-500 mb-4">
+                                                        <Zap className="h-5 w-5" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Total Electricity</span>
+                                                    </div>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-4xl font-black text-foreground tracking-tight">{totalElec.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                        <span className="text-xs font-bold text-muted-foreground uppercase">kWh</span>
+                                                    </div>
+                                                </div>
+                                                <div className="p-8 rounded-3xl bg-sky-500/[0.03] border border-sky-500/10 transition-all hover:bg-sky-500/[0.05]">
+                                                    <div className="flex items-center gap-3 text-sky-500 mb-4">
+                                                        <Droplets className="h-5 w-5" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Total Water</span>
+                                                    </div>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-4xl font-black text-foreground tracking-tight">{totalWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                        <span className="text-xs font-bold text-muted-foreground uppercase">m³</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-4xl font-black text-foreground tracking-tight">1,240</span>
-                                                <span className="text-xs font-bold text-muted-foreground uppercase">kWh</span>
-                                            </div>
-                                        </div>
-                                        <div className="p-8 rounded-3xl bg-sky-500/[0.03] border border-sky-500/10 transition-all hover:bg-sky-500/[0.05]">
-                                            <div className="flex items-center gap-3 text-sky-500 mb-4">
-                                                <Droplets className="h-5 w-5" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Total Water</span>
-                                            </div>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-4xl font-black text-foreground tracking-tight">450</span>
-                                                <span className="text-xs font-bold text-muted-foreground uppercase">m³</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        );
+                                    })()}
 
                                     <div className="rounded-[2rem] border border-border overflow-hidden bg-card/50">
                                         <div className="overflow-x-auto">

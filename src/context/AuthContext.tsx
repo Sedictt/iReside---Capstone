@@ -90,16 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profileLoading: false,
     })
 
-    // Keep a stable ref to the supabase client
-    const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
-    if (!supabaseRef.current) {
-        try {
-            supabaseRef.current = createClient()
-        } catch (e) {
-            console.error('[AuthProvider] Failed to init supabase client:', e)
-        }
-    }
-    const supabase = supabaseRef.current
+    // Use state to instantiate the supabase client securely
+    const [supabase] = useState(() => createClient())
 
     /* ---------- helpers ---------- */
 
@@ -108,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      * This is what Supabase recommends as the authoritative check.
      */
     const fetchVerifiedUser = useCallback(async (): Promise<VerifiedUserResult> => {
-        if (!supabase) return { user: null, isAuthoritativelyInvalid: false };
+        if (!supabase) return { user: null, isAuthoritativelyInvalid: false }
         try {
             const { data, error } = await supabase.auth.getUser()
             if (error) {
@@ -179,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      * Returns null (and logs) on failure instead of crashing.
      */
     const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
-        if (!supabase) return null;
+        if (!supabase) return null
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
