@@ -1,10 +1,17 @@
 {
-  "people": [],
+  "people": [
+    "Status"
+  ],
   "projects": [
-    "Access",
+    "Design",
+    "Motion",
+    "Role",
+    "Color",
+    "Primary",
     "Llama",
     "Web",
-    "Content",
-    "Real"
+    "High",
+    "Surface",
+    "Frontend"
   ]
 }

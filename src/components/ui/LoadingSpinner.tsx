@@ -25,57 +25,69 @@ export function LoadingSpinner({
 
     return (
         <div className={cn("relative flex items-center justify-center", containerSize, className)}>
-            {/* Outer Ring */}
-            <motion.div
-                className={cn(
-                    "absolute inset-0 rounded-full border-2 border-transparent border-t-primary/80",
-                    variant === "glass" && "backdrop-blur-sm border-white/5 shadow-2xl"
-                )}
+            <motion.svg
+                viewBox="0 0 50 50"
+                className="w-full h-full transform-gpu"
                 animate={{ rotate: 360 }}
-                transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "linear",
-                }}
-            />
-
-            {/* Inner Ring (Counter-rotating) */}
-            <motion.div
-                className="absolute inset-2 rounded-full border border-transparent border-t-emerald-500/60"
-                animate={{ rotate: -360 }}
                 transition={{
                     duration: 1.5,
                     repeat: Infinity,
                     ease: "linear",
                 }}
-            />
-
-            {/* Center Brand Mark (for larger spinners) */}
-            {(size === "lg" || size === "xl") && (
-                <motion.div
-                    className="h-1/3 w-1/3 bg-primary rounded-[25%] shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)]"
-                    animate={{
-                        scale: [1, 1.15, 1],
-                        rotate: [0, 45, 0],
-                        borderRadius: ["25%", "40%", "25%"]
+            >
+                <defs>
+                    <linearGradient id="spinner-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="currentColor" stopOpacity="0" />
+                        <stop offset="100%" stopColor="currentColor" stopOpacity="1" />
+                    </linearGradient>
+                </defs>
+                
+                {/* Background track (extremely subtle) */}
+                <circle
+                    cx="25"
+                    cy="25"
+                    r="20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="opacity-[0.03]"
+                />
+                
+                {/* Tapered Spinner Arc */}
+                <motion.path
+                    d="M 25,5 A 20,20 0 0 1 45,25"
+                    fill="none"
+                    stroke="url(#spinner-gradient)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className={cn(
+                        "text-primary",
+                        variant === "brand" && "text-primary",
+                        variant === "glass" && "text-white"
+                    )}
+                    animate={{ 
+                        strokeDasharray: ["1, 150", "90, 150", "90, 150"],
+                        strokeDashoffset: [0, -35, -125],
                     }}
                     transition={{
-                        duration: 2,
+                        duration: 1.5,
                         repeat: Infinity,
                         ease: "easeInOut",
                     }}
                 />
-            )}
+            </motion.svg>
 
-            {/* Ambient Pulse Glow */}
-            <motion.div
-                className="absolute inset-0 rounded-full bg-primary/10 blur-xl pointer-events-none"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
-                transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
+            {/* Subtle center core */}
+            <motion.div 
+                className={cn(
+                    "absolute h-[12%] w-[12%] rounded-full",
+                    variant === "glass" ? "bg-white/20" : "bg-primary/10"
+                )}
+                animate={{ 
+                    scale: [0.8, 1.2, 0.8],
+                    opacity: [0.1, 0.3, 0.1] 
                 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
         </div>
     );
@@ -87,40 +99,62 @@ export function PageLoader({ message }: { message?: string }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black/40 backdrop-blur-md overflow-hidden"
+            className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-[#050505]/90 backdrop-blur-2xl overflow-hidden"
         >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
+            {/* Elegant Background Texture/Atmosphere */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
+            </div>
             
-            <div className="relative flex flex-col items-center gap-12">
-                <LoadingSpinner size="xl" variant="glass" />
+            <div className="relative flex flex-col items-center gap-10">
+                <div className="relative">
+                    <LoadingSpinner size="xl" variant="glass" />
+                    {/* Inner pulse ring */}
+                    <motion.div 
+                        className="absolute inset-[-10px] rounded-full border border-white/5"
+                        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                </div>
                 
-                <div className="flex flex-col items-center gap-4 text-center">
-                    <motion.h3 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-xl font-black text-white tracking-tight uppercase"
+                <div className="flex flex-col items-center gap-3">
+                    <motion.p 
+                        initial={{ opacity: 0, letterSpacing: "0.2em" }}
+                        animate={{ opacity: 1, letterSpacing: "0.4em" }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="text-[11px] font-medium text-white/40 uppercase"
                     >
-                        {message || "Loading iReside"}
-                    </motion.h3>
-                    <div className="flex items-center gap-2">
-                        {[0, 0.2, 0.4].map((delay, i) => (
-                            <motion.div
-                                key={i}
-                                className="h-1 w-4 rounded-full bg-primary/40"
-                                animate={{ 
-                                    backgroundColor: ["rgba(var(--primary-rgb), 0.2)", "rgba(var(--primary-rgb), 1)", "rgba(var(--primary-rgb), 0.2)"],
-                                    scaleX: [1, 1.5, 1]
-                                }}
-                                transition={{ duration: 1.5, repeat: Infinity, delay }}
-                            />
-                        ))}
+                        {message || "Initiating"}
+                    </motion.p>
+                    
+                    {/* Minimalist progress trace */}
+                    <div className="w-20 h-[1px] bg-white/5 relative overflow-hidden rounded-full">
+                        <motion.div 
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+                            animate={{ x: ["-100%", "100%"] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        />
                     </div>
                 </div>
             </div>
 
-            <p className="absolute bottom-12 text-[10px] font-black text-white/30 tracking-[0.4em] uppercase">
-                Premium Property Management
-            </p>
+            <div className="absolute bottom-16 flex flex-col items-center gap-2">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="flex flex-col items-center"
+                >
+                    <span className="text-[9px] font-light text-white/10 tracking-[0.8em] uppercase mb-1">
+                        Established 2024
+                    </span>
+                    <span className="text-[12px] font-semibold text-white/30 tracking-[0.5em] uppercase">
+                        iReside
+                    </span>
+                </motion.div>
+            </div>
         </motion.div>
     );
 }
+

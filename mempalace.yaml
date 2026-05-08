@@ -2,24 +2,24 @@ wing: ireside
 rooms:
 - name: documentation
   description: Files from docs/
-- name: echo
-  description: Files from echo/
 - name: iris_3d_model
   description: Files from iris-3d-model/
 - name: lowpoly_apartment
   description: Files from lowpoly_apartment/
-- name: mkdir
-  description: Files from mkdir/
 - name: openspec
   description: Files from openspec/
 - name: output
   description: Files from output/
+- name: plans
+  description: Files from Plans/
 - name: playwright_report
   description: Files from playwright-report/
 - name: plugins
   description: Files from plugins/
 - name: public
   description: Files from public/
+- name: scratch
+  description: Files from scratch/
 - name: scripts
   description: Files from scripts/
 - name: src
@@ -28,6 +28,12 @@ rooms:
   description: Files from stitch_assets/
 - name: supabase
   description: Files from supabase/
+- name: supabase_bak
+  description: Files from supabase-bak/
+- name: supabase_backup
+  description: Files from supabase_backup/
+- name: temp
+  description: Files from temp/
 - name: test_results
   description: Files from test-results/
 - name: testing

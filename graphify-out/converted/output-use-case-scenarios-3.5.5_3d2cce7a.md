@@ -1,0 +1,516 @@
+<!-- converted from output-use-case-scenarios-3.5.5.docx -->
+
+3.5.5 Use Case Scenario
+The following use case scenarios were derived from the approved iReside use case diagram and aligned with the current functional requirements of the system.
+# Primary Use Cases
+## Use Case Scenario 1
+
+## Use Case Scenario 2
+
+## Use Case Scenario 3
+
+## Use Case Scenario 4
+
+## Use Case Scenario 5
+
+## Use Case Scenario 6
+
+## Use Case Scenario 7
+
+## Use Case Scenario 8
+
+## Use Case Scenario 9
+
+## Use Case Scenario 10
+
+## Use Case Scenario 11
+
+## Use Case Scenario 12
+
+## Use Case Scenario 13
+
+## Use Case Scenario 14
+
+## Use Case Scenario 15
+
+## Use Case Scenario 16
+
+## Use Case Scenario 17
+
+## Use Case Scenario 18
+
+## Use Case Scenario 19
+
+## Use Case Scenario 20
+
+## Use Case Scenario 21
+
+## Use Case Scenario 22
+
+# Supporting Use Cases
+## Use Case Scenario 23
+
+## Use Case Scenario 24
+
+## Use Case Scenario 25
+
+| NO. | 1 |
+| --- | --- |
+| USE CASE NAME | Sign In and Access Role Portal |
+| SUMMARY | The user signs in to the iReside system and is redirected to the appropriate portal based on the assigned role. |
+| ACTORS | Super Administrator, Landlord, Tenant |
+| PRECONDITION | The user must have a registered account.
+The user must have valid login credentials.
+The system must be available. |
+| MAIN SEQUENCE | The user enters the registered credentials.
+The system validates the submitted credentials.
+The system identifies the role of the user.
+The system creates a session for the authenticated user.
+The system redirects the user to the correct role-specific portal. |
+| ALTERNATE SEQUENCE | If the credentials are invalid, the system displays an error message.
+If the account is unauthorized or inactive, the system denies access. |
+| NON-FUNCTIONAL REQUIREMENTS | Authentication should complete within 3 seconds under normal conditions.
+Login credentials must be securely processed and protected.
+Role-based access control must be enforced. |
+| POST-CONDITION | The authenticated user gains access to the correct portal and an active session is established. |
+| NO. | 2 |
+| --- | --- |
+| USE CASE NAME | Monitor Platform Metrics |
+| SUMMARY | The Super Administrator views platform-wide metrics to monitor system activity and operational status. |
+| ACTORS | Super Administrator |
+| PRECONDITION | The Super Administrator must be logged in.
+Platform metrics data must be available. |
+| MAIN SEQUENCE | The Super Administrator opens the administrative dashboard.
+The system retrieves platform-wide statistics.
+The system displays metrics such as user counts, activity summaries, and system indicators.
+The Super Administrator reviews the displayed information. |
+| ALTERNATE SEQUENCE | If metrics cannot be retrieved, the system displays an error or fallback state.
+If there is no available data, the system displays an empty metrics view. |
+| NON-FUNCTIONAL REQUIREMENTS | Dashboard data should load within 3 seconds.
+Metrics should be presented in a clear and readable format.
+Access must be restricted to authorized administrators only. |
+| POST-CONDITION | The Super Administrator is informed of the current platform performance and status. |
+| NO. | 3 |
+| --- | --- |
+| USE CASE NAME | Review Landlord Registrations |
+| SUMMARY | The Super Administrator reviews landlord registration submissions and decides whether to approve, reject, or return them for clarification. |
+| ACTORS | Super Administrator |
+| PRECONDITION | The Super Administrator must be logged in.
+Pending landlord registration records must exist. |
+| MAIN SEQUENCE | The Super Administrator opens the landlord registration review page.
+The system displays the list of submitted registrations.
+The Super Administrator selects a registration to review.
+The system displays the submitted details and supporting information.
+The Super Administrator records a decision.
+The system saves the decision and updates the registration status. |
+| ALTERNATE SEQUENCE | If the submitted information is incomplete, the system allows the registration to be returned for clarification.
+If the record cannot be opened, the system shows an error message. |
+| NON-FUNCTIONAL REQUIREMENTS | All decisions must be logged for audit purposes.
+Submitted records must be securely stored and viewed only by authorized users.
+Status updates should be reflected immediately after saving. |
+| POST-CONDITION | The landlord registration status is updated and the decision is recorded in the system. |
+| NO. | 4 |
+| --- | --- |
+| USE CASE NAME | Manage Users and Governance |
+| SUMMARY | The Super Administrator manages user accounts, access levels, and governance-related controls within the platform. |
+| ACTORS | Super Administrator |
+| PRECONDITION | The Super Administrator must be logged in.
+The target user account or governance setting must exist. |
+| MAIN SEQUENCE | The Super Administrator opens the user and governance management module.
+The system displays the list of users and available controls.
+The Super Administrator selects a user account or governance setting.
+The Super Administrator updates the necessary information or permissions.
+The system validates and saves the changes.
+The system records the action in the audit trail. |
+| ALTERNATE SEQUENCE | If the entered data is invalid, the system prevents saving and displays validation errors.
+If the requested action is not permitted, the system denies the update. |
+| NON-FUNCTIONAL REQUIREMENTS | Administrative actions must be auditable.
+Access must be protected by role-based restrictions.
+The management interface should remain responsive during updates. |
+| POST-CONDITION | User records or governance settings are updated and logged successfully. |
+| NO. | 5 |
+| --- | --- |
+| USE CASE NAME | Manage Properties and Units |
+| SUMMARY | The landlord creates, updates, and maintains property and unit records in the system. |
+| ACTORS | Landlord |
+| PRECONDITION | The landlord must be logged in.
+The landlord must have access to the property management module. |
+| MAIN SEQUENCE | The landlord opens the property and unit management module.
+The landlord creates a new property or selects an existing one.
+The landlord enters or updates property and unit details.
+The system validates the entered data.
+The system saves the property and unit records.
+The system updates unit availability and related records. |
+| ALTERNATE SEQUENCE | If required fields are missing, the system highlights the incomplete entries.
+If invalid data is submitted, the system rejects the save request. |
+| NON-FUNCTIONAL REQUIREMENTS | Form validation should occur reliably before saving.
+Saved records should be persisted without data loss.
+The interface should be responsive on desktop and mobile devices. |
+| POST-CONDITION | The property and unit information is successfully stored or updated in the system. |
+| NO. | 6 |
+| --- | --- |
+| USE CASE NAME | Upload Unit Media |
+| SUMMARY | The landlord uploads photos or other media files associated with a property unit. |
+| ACTORS | Landlord |
+| PRECONDITION | The landlord must be logged in.
+A property unit record must already exist.
+The media file must follow supported upload formats and limits. |
+| MAIN SEQUENCE | The landlord opens the media management section of a unit.
+The landlord selects one or more media files.
+The system validates the file type and size.
+The system uploads and stores the media file.
+The system attaches the uploaded media to the selected unit.
+The system displays the uploaded media preview. |
+| ALTERNATE SEQUENCE | If the file type is unsupported, the system rejects the upload.
+If the file exceeds the allowed size, the system displays an upload error. |
+| NON-FUNCTIONAL REQUIREMENTS | Media uploads should be stored securely.
+Upload feedback should be clear and immediate.
+Supported files should be optimized for fast retrieval. |
+| POST-CONDITION | The selected media is uploaded and linked to the unit record. |
+| NO. | 7 |
+| --- | --- |
+| USE CASE NAME | Record Walk-in Applications |
+| SUMMARY | The landlord records a walk-in tenant application and stores the applicant details in the system. |
+| ACTORS | Landlord |
+| PRECONDITION | The landlord must be logged in.
+A target property unit must exist.
+The unit must be available for application processing. |
+| MAIN SEQUENCE | The landlord opens the walk-in application form.
+The landlord selects the property unit for the applicant.
+The landlord enters the applicant's personal and application details.
+The landlord uploads or records the required supporting documents.
+The landlord saves the application as pending or approved.
+The system stores the application and updates its status. |
+| ALTERNATE SEQUENCE | If required applicant information is missing, the system prevents submission.
+If the selected unit is unavailable, the system displays an availability warning. |
+| NON-FUNCTIONAL REQUIREMENTS | Application records must be stored accurately.
+Uploaded documents must be securely handled.
+Status updates should be reflected immediately after saving. |
+| POST-CONDITION | A walk-in application record is created and saved in the system. |
+| NO. | 8 |
+| --- | --- |
+| USE CASE NAME | Finalize Lease and Onboard Tenant |
+| SUMMARY | The landlord finalizes an approved application into a lease and completes the onboarding of the tenant. |
+| ACTORS | Landlord, Tenant |
+| PRECONDITION | The landlord must be logged in.
+An approved applicant record must exist.
+The lease details must be complete and the unit must be available. |
+| MAIN SEQUENCE | The landlord opens the lease finalization workflow.
+The landlord reviews and confirms the lease details.
+The system generates the lease record for the selected tenant and unit.
+The system initiates the lease signing process.
+After signing is completed, the system provisions or activates the tenant account.
+The system updates the unit and lease status accordingly. |
+| ALTERNATE SEQUENCE | If required lease information is incomplete, the system prevents finalization.
+If signing is not completed, the system keeps the lease in a pending status. |
+| NON-FUNCTIONAL REQUIREMENTS | Lease creation must preserve data consistency.
+The workflow must maintain an audit trail of onboarding actions.
+Sensitive account information must be securely handled. |
+| POST-CONDITION | The tenant is onboarded and the lease record is created or activated in the system. |
+| NO. | 9 |
+| --- | --- |
+| USE CASE NAME | View Financial Ledger |
+| SUMMARY | The landlord views the financial ledger to monitor billing records, balances, and related transactions. |
+| ACTORS | Landlord |
+| PRECONDITION | The landlord must be logged in.
+Financial and billing records must exist in the system. |
+| MAIN SEQUENCE | The landlord opens the financial ledger page.
+The system retrieves the relevant billing and ledger data.
+The system displays the recorded transactions, balances, and payment statuses.
+The landlord reviews the displayed records. |
+| ALTERNATE SEQUENCE | If no ledger records are available, the system displays an empty state.
+If billing data cannot be retrieved, the system displays an error or fallback message. |
+| NON-FUNCTIONAL REQUIREMENTS | Financial values must be accurate and consistent.
+Only authorized landlords should be able to access ledger data.
+The page should load within 3 seconds under normal conditions. |
+| POST-CONDITION | The landlord is able to review the current financial status and transaction history. |
+| NO. | 10 |
+| --- | --- |
+| USE CASE NAME | View Analytics and Generate Reports |
+| SUMMARY | The landlord views property analytics and generates reports for operational monitoring and decision-making. |
+| ACTORS | Landlord |
+| PRECONDITION | The landlord must be logged in.
+Analytics data must be available for the selected property or portfolio. |
+| MAIN SEQUENCE | The landlord opens the analytics and reports module.
+The system retrieves KPI data such as income, occupancy, delinquency, and maintenance volume.
+The system displays analytics visualizations and summaries.
+The landlord selects a reporting option.
+The system generates the requested report for download or viewing. |
+| ALTERNATE SEQUENCE | If analytics data is unavailable, the system displays an empty or error state.
+If report generation fails, the system displays an error and preserves the current analytics view. |
+| NON-FUNCTIONAL REQUIREMENTS | Charts and summaries should load promptly.
+Reports must reflect accurate and up-to-date data.
+Generated reports should be downloadable in a usable format. |
+| POST-CONDITION | The landlord reviews analytics data and may obtain a generated report from the system. |
+| NO. | 11 |
+| --- | --- |
+| USE CASE NAME | Moderate Community Content |
+| SUMMARY | The authorized moderator reviews and acts on community content to maintain a safe and appropriate platform environment. |
+| ACTORS | Super Administrator, Landlord |
+| PRECONDITION | The authorized moderator must be logged in.
+Community content or reported content must exist. |
+| MAIN SEQUENCE | The moderator opens the community moderation module.
+The system displays flagged or reported content.
+The moderator reviews the content details.
+The moderator decides to keep, remove, or take action on the content.
+The system saves the moderation decision and updates the content status. |
+| ALTERNATE SEQUENCE | If the content record is no longer available, the system informs the moderator.
+If no flagged content exists, the system displays an empty moderation queue. |
+| NON-FUNCTIONAL REQUIREMENTS | Moderation actions must be logged for auditing.
+Content updates should be reflected immediately.
+Only authorized moderators should be able to perform moderation actions. |
+| POST-CONDITION | Community content is updated based on the moderation decision and the action is recorded. |
+| NO. | 12 |
+| --- | --- |
+| USE CASE NAME | Approve Transfer or Move-Out Requests |
+| SUMMARY | The landlord reviews tenant requests for unit transfer or move-out and records a decision. |
+| ACTORS | Landlord |
+| PRECONDITION | The landlord must be logged in.
+A transfer or move-out request must exist. |
+| MAIN SEQUENCE | The landlord opens the transfer and move-out request module.
+The system displays the submitted tenant requests.
+The landlord selects a request to review.
+The system displays the request details, lease information, and unit details.
+The landlord approves or rejects the request.
+The system saves the decision and updates the request status. |
+| ALTERNATE SEQUENCE | If the request lacks required details, the system keeps it pending and indicates the missing information.
+If the request conflicts with lease policies, the system allows the landlord to reject it with a stated reason. |
+| NON-FUNCTIONAL REQUIREMENTS | Request decisions must be stored accurately.
+Status updates should be visible immediately.
+Actions should be logged for traceability. |
+| POST-CONDITION | The transfer or move-out request is updated with the landlord's decision. |
+| NO. | 13 |
+| --- | --- |
+| USE CASE NAME | View Lease and Documents |
+| SUMMARY | The tenant views lease details and associated documents through the system. |
+| ACTORS | Tenant |
+| PRECONDITION | The tenant must be logged in.
+A lease record and related documents must exist for the tenant. |
+| MAIN SEQUENCE | The tenant opens the lease and documents page.
+The system retrieves the tenant's lease information.
+The system displays the lease details and linked documents.
+The tenant reviews the displayed information. |
+| ALTERNATE SEQUENCE | If no lease record exists, the system displays an empty or unavailable state.
+If a document cannot be retrieved, the system displays an access error. |
+| NON-FUNCTIONAL REQUIREMENTS | Document access must be secure and role-restricted.
+Lease data should load within 3 seconds under normal conditions.
+The interface should remain readable across screen sizes. |
+| POST-CONDITION | The tenant has reviewed the lease details and related documents. |
+| NO. | 14 |
+| --- | --- |
+| USE CASE NAME | Complete Lease Signing |
+| SUMMARY | The landlord and tenant complete the digital lease signing process until the agreement becomes active. |
+| ACTORS | Landlord, Tenant |
+| PRECONDITION | A pending lease record must exist.
+The authorized signer must have access to the signing workflow.
+The required signing mode must already be selected. |
+| MAIN SEQUENCE | The tenant or landlord opens the lease signing workflow.
+The system displays the lease details for review.
+The tenant completes the required signature step.
+The system records and validates the tenant signature.
+The landlord completes the required signature step.
+The system records the landlord signature, stores the signed lease, and updates the lease status to active. |
+| ALTERNATE SEQUENCE | If the signing link is invalid or expired, the system denies access to the signing page.
+If required signatures are missing, the system keeps the lease in a pending status.
+If signature validation fails, the system displays an error and requests resubmission. |
+| NON-FUNCTIONAL REQUIREMENTS | Signature records must be securely stored.
+The system must maintain a complete audit trail of signing events.
+Lease status transitions must be consistent and reliable. |
+| POST-CONDITION | The lease is digitally signed, stored, and updated to the appropriate status. |
+| NO. | 15 |
+| --- | --- |
+| USE CASE NAME | Track Lease Status Progress |
+| SUMMARY | The tenant tracks the progress and current status of the lease workflow through the system. |
+| ACTORS | Tenant |
+| PRECONDITION | The tenant must be logged in.
+A lease workflow record must exist. |
+| MAIN SEQUENCE | The tenant opens the lease tracking page.
+The system retrieves the lease status information.
+The system displays the current phase, relevant dates, and remaining actions.
+The tenant reviews the progress information. |
+| ALTERNATE SEQUENCE | If the lease record is unavailable, the system shows an unavailable state.
+If the lease has not yet entered the tracked workflow, the system informs the tenant accordingly. |
+| NON-FUNCTIONAL REQUIREMENTS | Status information must be accurate and current.
+The tracking page should be responsive across devices.
+Data retrieval should be fast and reliable. |
+| POST-CONDITION | The tenant understands the current progress and status of the lease workflow. |
+| NO. | 16 |
+| --- | --- |
+| USE CASE NAME | View Payments and History |
+| SUMMARY | The tenant views outstanding charges, payment statuses, and payment history in the system. |
+| ACTORS | Tenant |
+| PRECONDITION | The tenant must be logged in.
+Payment or billing records must exist in the system. |
+| MAIN SEQUENCE | The tenant opens the payments page.
+The system retrieves the tenant's billing and payment records.
+The system displays charges, balances, statuses, and transaction history.
+The tenant reviews the payment information. |
+| ALTERNATE SEQUENCE | If payment records are unavailable, the system displays an empty or fallback state.
+If a billing record cannot be loaded, the system displays an error message. |
+| NON-FUNCTIONAL REQUIREMENTS | Financial information must be accurate and consistent.
+Access to payment records must be secure and role-restricted.
+The payments page should load within 3 seconds under normal conditions. |
+| POST-CONDITION | The tenant is informed of the current payment obligations and transaction history. |
+| NO. | 17 |
+| --- | --- |
+| USE CASE NAME | Submit Maintenance Requests |
+| SUMMARY | The tenant submits a maintenance request and the system records it for landlord review and follow-up. |
+| ACTORS | Tenant, Landlord |
+| PRECONDITION | The tenant must be logged in.
+The tenant must be associated with a property or unit.
+The maintenance form must be available. |
+| MAIN SEQUENCE | The tenant opens the maintenance request form.
+The tenant enters the issue details and uploads supporting images if needed.
+The tenant submits the maintenance request.
+The system validates and stores the request.
+The system notifies the landlord and displays the request in the maintenance dashboard. |
+| ALTERNATE SEQUENCE | If required details are missing, the system rejects the submission and shows validation errors.
+If an uploaded file violates the allowed constraints, the system prevents the upload. |
+| NON-FUNCTIONAL REQUIREMENTS | Submitted requests must be stored without data loss.
+File attachments must be securely handled.
+Request notifications should be delivered promptly. |
+| POST-CONDITION | A maintenance request is recorded and made available for monitoring and action. |
+| NO. | 18 |
+| --- | --- |
+| USE CASE NAME | Exchange Messages |
+| SUMMARY | The landlord and tenant exchange messages in real time through the system. |
+| ACTORS | Landlord, Tenant |
+| PRECONDITION | The user must be logged in.
+An authorized conversation or message channel must exist or be creatable. |
+| MAIN SEQUENCE | The user opens a conversation thread.
+The user composes a message.
+The system checks the message content for unsafe or prohibited content.
+If the message is valid, the system delivers the message to the recipient.
+The system updates the message history and conversation state. |
+| ALTERNATE SEQUENCE | If unsafe content is detected, the system blocks the message and informs the sender.
+If the message cannot be delivered, the system displays a delivery failure state. |
+| NON-FUNCTIONAL REQUIREMENTS | Messages should be delivered in near real time.
+Message history must be stored reliably.
+Conversations must be protected from unauthorized access. |
+| POST-CONDITION | The conversation thread is updated with the newly processed message. |
+| NO. | 19 |
+| --- | --- |
+| USE CASE NAME | Participate in Community Hub |
+| SUMMARY | The landlord or tenant participates in the community hub by viewing and interacting with community content. |
+| ACTORS | Landlord, Tenant |
+| PRECONDITION | The user must be logged in.
+The user must belong to a valid property community. |
+| MAIN SEQUENCE | The user opens the community hub.
+The system displays available posts, updates, or interactions in the community feed.
+The user views or creates community content.
+The system stores the interaction and updates the feed accordingly. |
+| ALTERNATE SEQUENCE | If the submitted content violates community rules, the system blocks or flags the content.
+If no content exists, the system displays an empty community feed. |
+| NON-FUNCTIONAL REQUIREMENTS | Community interactions should load promptly.
+Posted content must be stored consistently.
+The feed should remain usable on desktop and mobile screens. |
+| POST-CONDITION | The user's community interaction is reflected in the community hub. |
+| NO. | 20 |
+| --- | --- |
+| USE CASE NAME | Request Unit Transfer or Move-Out |
+| SUMMARY | The tenant submits a request to transfer to another unit or move out of the current unit. |
+| ACTORS | Tenant |
+| PRECONDITION | The tenant must be logged in.
+The tenant must have an active lease or tenancy record. |
+| MAIN SEQUENCE | The tenant opens the transfer or move-out request form.
+The tenant selects the request type.
+The tenant enters the required request details and reason.
+The tenant submits the request.
+The system stores the request and forwards it for landlord review. |
+| ALTERNATE SEQUENCE | If the request is incomplete, the system prevents submission and displays validation errors.
+If the lease does not permit the request, the system informs the tenant accordingly. |
+| NON-FUNCTIONAL REQUIREMENTS | Request data must be stored accurately.
+Status tracking should remain available after submission.
+Sensitive tenant information must be securely handled. |
+| POST-CONDITION | A transfer or move-out request is created and marked for landlord review. |
+| NO. | 21 |
+| --- | --- |
+| USE CASE NAME | Access Document Vault |
+| SUMMARY | The tenant accesses and retrieves files stored in the document vault. |
+| ACTORS | Tenant |
+| PRECONDITION | The tenant must be logged in.
+Authorized documents must exist in the tenant's document vault. |
+| MAIN SEQUENCE | The tenant opens the document vault page.
+The system retrieves the list of authorized documents.
+The system displays the available files.
+The tenant selects a document to view or download.
+The system provides the selected file. |
+| ALTERNATE SEQUENCE | If the selected document is missing, the system displays an error message.
+If the tenant attempts to access an unauthorized file, the system blocks the request. |
+| NON-FUNCTIONAL REQUIREMENTS | Documents must be securely stored and retrieved.
+Download actions must be restricted to authorized users only.
+Retrieval should be fast enough for practical document access. |
+| POST-CONDITION | The requested document is viewed or downloaded by the authorized tenant. |
+| NO. | 22 |
+| --- | --- |
+| USE CASE NAME | Ask iRis AI Assistant |
+| SUMMARY | The tenant asks a question in natural language and receives contextual assistance from the iRis AI Assistant. |
+| ACTORS | Tenant, External AI Service |
+| PRECONDITION | The tenant must be logged in.
+The AI assistant module must be available.
+Relevant system context must be accessible for response generation. |
+| MAIN SEQUENCE | The tenant opens the iRis AI Assistant interface.
+The tenant submits a question in natural language.
+The system gathers relevant contextual information.
+The system sends the request to the AI processing flow.
+The system receives the generated response.
+The system displays the answer to the tenant. |
+| ALTERNATE SEQUENCE | If the AI service is unavailable, the system provides a fallback response.
+If the question cannot be processed, the system displays a failure message or guidance. |
+| NON-FUNCTIONAL REQUIREMENTS | Responses should be returned within an acceptable wait time.
+User data and contextual inputs must be handled securely.
+The interface should remain usable while waiting for a response. |
+| POST-CONDITION | The tenant receives an AI-generated or fallback response to the submitted question. |
+| NO. | 23 |
+| --- | --- |
+| USE CASE NAME | Provide AI Fallback Response |
+| SUMMARY | The system provides an alternative response when the AI service cannot return a valid answer. |
+| ACTORS | Tenant, External AI Service |
+| PRECONDITION | The tenant must have submitted a question through the AI assistant.
+The AI service must have failed, timed out, or returned no usable response. |
+| MAIN SEQUENCE | The system detects that the AI service cannot provide a usable answer.
+The system triggers the fallback response flow.
+The system retrieves a predefined or rule-based fallback message.
+The system displays the fallback response and guidance to the tenant. |
+| ALTERNATE SEQUENCE | If no specific fallback answer is available, the system displays a general assistance message.
+If the failure persists, the system may advise the user to retry later. |
+| NON-FUNCTIONAL REQUIREMENTS | Fallback behavior should activate reliably after AI failure detection.
+The fallback message should be displayed without excessive delay.
+Failure handling should preserve system stability. |
+| POST-CONDITION | The tenant receives a fallback response instead of an empty or failed AI interaction. |
+| NO. | 24 |
+| --- | --- |
+| USE CASE NAME | Generate AI-Driven Insights |
+| SUMMARY | The system generates AI-based insights from analytics data to support landlord decision-making. |
+| ACTORS | Landlord, External AI Service |
+| PRECONDITION | The landlord must be logged in.
+Analytics data must be available.
+The AI service must be reachable for insight generation. |
+| MAIN SEQUENCE | The landlord opens the analytics page.
+The system gathers the relevant performance and operational data.
+The system sends the prepared data to the AI service.
+The AI service processes the data and returns insights or recommendations.
+The system displays the generated insights to the landlord. |
+| ALTERNATE SEQUENCE | If the AI service is unavailable, the system provides standard analytics without AI-generated insights.
+If the data is insufficient, the system displays a limited insight state. |
+| NON-FUNCTIONAL REQUIREMENTS | Data sent for insight generation must be handled securely.
+Insight generation should complete within an acceptable response time.
+Returned insights should remain readable and relevant to the displayed analytics. |
+| POST-CONDITION | The landlord receives AI-generated insights or a non-AI fallback analytics view. |
+| NO. | 25 |
+| --- | --- |
+| USE CASE NAME | Filter Unsafe Content |
+| SUMMARY | The system checks messages or community content for unsafe or prohibited content before the content is delivered or published. |
+| ACTORS | Landlord, Tenant |
+| PRECONDITION | The user must be logged in.
+The user must submit a message or community content for processing. |
+| MAIN SEQUENCE | The user submits a message or community content.
+The system scans the submitted content for unsafe, prohibited, or spam material.
+If the content is acceptable, the system allows the content to proceed to delivery or publication.
+If the content is not acceptable, the system blocks the content and informs the user. |
+| ALTERNATE SEQUENCE | If content scanning is temporarily unavailable, the system may prevent submission until checking becomes available.
+If the content is borderline or ambiguous, the system may hold it for moderation. |
+| NON-FUNCTIONAL REQUIREMENTS | Content filtering should occur in near real time.
+Content checks should be reliable enough to reduce harmful or spam content.
+Filtering results must be handled securely and consistently. |
+| POST-CONDITION | Only acceptable content proceeds to delivery or publication, while unsafe content is blocked or flagged. |

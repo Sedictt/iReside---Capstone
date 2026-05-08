@@ -115,3 +115,7 @@ supabase/seeds/auth_users.sql
 supabase/seeds/data.sql
 supabase_backup/seed.sql
 /supabase-bak
+
+# Graphify Cache
+src/graphify-out/cache/
+graphify-out/cache/

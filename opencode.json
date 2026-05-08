@@ -71,5 +71,6 @@
       "command": ["npx", "-y", "@supabase/mcp-server-supabase@latest", "--access-token", "{env:SUPABASE_ACCESS_TOKEN}"],
       "enabled": true
     }
-  }
+  },
+  "plugin": ["superpowers@git+https://github.com/obra/superpowers.git"]
 }

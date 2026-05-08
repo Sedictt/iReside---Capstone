@@ -25,6 +25,8 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/context/AuthContext";
+import { GlobalLoadingProvider } from "@/context/GlobalLoadingContext";
+
 
 export default function RootLayout({
   children,
@@ -45,20 +47,22 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={true}
-            disableTransitionOnChange
-            storageKey="ireside-theme"
-          >
-            <PageTransitionProvider>
-              <GlobalClickSpark>
-                {children}
-                <Toaster position="top-right" richColors closeButton theme="dark" />
-              </GlobalClickSpark>
-            </PageTransitionProvider>
-          </ThemeProvider>
+          <GlobalLoadingProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="light"
+              enableSystem={true}
+              disableTransitionOnChange
+              storageKey="ireside-theme"
+            >
+              <PageTransitionProvider>
+                <GlobalClickSpark>
+                  {children}
+                  <Toaster position="top-right" richColors closeButton theme="dark" />
+                </GlobalClickSpark>
+              </PageTransitionProvider>
+            </ThemeProvider>
+          </GlobalLoadingProvider>
         </AuthProvider>
       </body>
     </html>
