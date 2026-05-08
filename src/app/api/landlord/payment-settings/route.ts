@@ -108,7 +108,7 @@ export async function POST(request: Request) {
             }>;
 
             const rows = utilityConfigs.map((item) => {
-                const row: any = {
+                const row: Record<string, unknown> = {
                     landlord_id: user.id,
                     property_id: item.property_id,
                     unit_id: item.unit_id ?? null,
