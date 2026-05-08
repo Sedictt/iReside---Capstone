@@ -9,21 +9,26 @@ export async function GET() {
         if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const admin = createAdminClient();
-        const { data: { sessions }, error } = await (admin.auth.admin as any).listUserSessions(user.id);
+        const { data: sessions, error } = await (admin as any)
+            .schema("auth")
+            .from("sessions")
+            .select("*")
+            .eq("user_id", user.id);
+
         if (error) throw error;
 
         // Get current session to mark it as ACTIVE
         const { data: { session: currentSession } } = await supabase.auth.getSession();
 
         return NextResponse.json({ 
-            sessions: (sessions as any[]).map(s => ({
+            sessions: (sessions || []).map((s: any) => ({
                 id: s.id,
                 created_at: s.created_at,
                 updated_at: s.updated_at,
-                last_sign_in_at: s.last_sign_in_at,
+                last_sign_in_at: s.last_sign_in_at || s.created_at,
                 is_current: s.id === (currentSession as any)?.id,
-                user_agent: s.user_agent,
-                ip: s.ip
+                user_agent: s.user_agent || "Unknown Browser",
+                ip: s.ip || "Unknown IP"
             }))
         });
     } catch (error: any) {
@@ -42,28 +47,29 @@ export async function DELETE(req: Request) {
         const admin = createAdminClient();
 
         if (scope === "others") {
-            const { data: { sessions }, error: listError } = await (admin.auth.admin as any).listUserSessions(user.id);
-            if (listError) throw listError;
-            
             const { data: { session: currentSession } } = await supabase.auth.getSession();
             
-            const results = await Promise.all(
-                (sessions as any[])
-                    .filter(s => s.id !== (currentSession as any)?.id)
-                    .map(s => (admin.auth.admin as any).deleteSession(s.id))
-            );
+            const { error: deleteError } = await (admin as any)
+                .schema("auth")
+                .from("sessions")
+                .delete()
+                .eq("user_id", user.id)
+                .neq("id", (currentSession as any)?.id);
 
-            const errors = results.filter((r: any) => r.error);
-            if (errors.length > 0) {
-                console.error("Errors revoking some sessions:", errors);
-            }
+            if (deleteError) throw deleteError;
 
-            return NextResponse.json({ success: true, revokedCount: results.length });
+            return NextResponse.json({ success: true });
         }
 
         if (sessionId) {
-            const { error } = await (admin.auth.admin as any).deleteSession(sessionId);
-            if (error) throw error;
+            const { error: deleteError } = await (admin as any)
+                .schema("auth")
+                .from("sessions")
+                .delete()
+                .eq("id", sessionId)
+                .eq("user_id", user.id);
+
+            if (deleteError) throw deleteError;
             return NextResponse.json({ success: true });
         }
 
