@@ -232,6 +232,14 @@ export function LandlordSettings() {
     const [otpEnabled, setOtpEnabled] = useState(false);
     const [showOtpField, setShowOtpField] = useState(false);
 
+    // 2FA States
+    const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'gmail_connected' | 'pending_otp' | 'enabled'>('loading');
+    const [twoFAEmail, setTwoFAEmail] = useState<string | null>(null);
+    const [otpInput, setOtpInput] = useState("");
+    const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+    const [disablePassword, setDisablePassword] = useState("");
+    const [isDisabling, setIsDisabling] = useState(false);
+
     useEffect(() => {
         if (profile) {
             setFormData({
@@ -294,6 +302,54 @@ export function LandlordSettings() {
             fetchSessions();
         }
     }, [activeTab, activeSubTab, supabase]);
+
+    useEffect(() => {
+        if (activeTab === "Security" && activeSubTab === "Protection") {
+            const fetchTwoFAStatus = async () => {
+                try {
+                    const res = await fetch("/api/landlord/2fa?action=status");
+                    const data = await res.json();
+                    
+                    if (data.enabled) {
+                        setTwoFAStatus('enabled');
+                        setTwoFAEmail(data.email);
+                    } else if (data.hasGmailConnected) {
+                        setTwoFAStatus('gmail_connected');
+                    } else {
+                        setTwoFAStatus('disabled');
+                    }
+                } catch (err) {
+                    console.error("[2FA] Failed to fetch status:", err);
+                    setTwoFAStatus('disabled');
+                }
+            };
+            fetchTwoFAStatus();
+
+            // Handle OAuth callback params
+            const searchParams = new URLSearchParams(window.location.search);
+            const gmailConnected = searchParams.get("gmail_connected");
+            const error = searchParams.get("error");
+            
+            if (gmailConnected === "true") {
+                toast.success("Google account connected! Send OTP to verify.");
+            }
+            if (error) {
+                const errorMessages: Record<string, string> = {
+                    oauth_failed: "Google OAuth failed. Please try again.",
+                    missing_code: "Authorization code missing.",
+                    token_exchange_failed: "Failed to exchange token.",
+                    save_failed: "Failed to save credentials.",
+                    callback_failed: "Something went wrong.",
+                };
+                toast.error(errorMessages[error] || "An error occurred.");
+            }
+
+            // Clean up URL
+            if (gmailConnected || error) {
+                window.history.replaceState({}, "", window.location.pathname + "?category=Security&subtab=Protection");
+            }
+        }
+    }, [activeTab, activeSubTab]);
 
     const handleSignOutOthers = async () => {
         setIsSessionsLoading(true);
@@ -831,34 +887,192 @@ export function LandlordSettings() {
                         </GlassCard>
                     );
                 case "Protection":
+                    const handleConnectGmail = async () => {
+                        try {
+                            const res = await fetch("/api/landlord/2fa?action=google-auth");
+                            const data = await res.json();
+                            if (data.authUrl) {
+                                window.location.href = data.authUrl;
+                            }
+                        } catch (err) {
+                            toast.error("Failed to initiate Google OAuth");
+                        }
+                    };
+
+                    const handleSendOTP = async () => {
+                        const loadingToast = toast.loading("Sending OTP...");
+                        try {
+                            const res = await fetch("/api/landlord/2fa", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "send-otp" }),
+                            });
+                            const data = await res.json();
+                            if (data.error) {
+                                toast.error(data.error, { id: loadingToast });
+                            } else {
+                                setTwoFAStatus('pending_otp');
+                                toast.success(`OTP sent to ${data.email}`, { id: loadingToast });
+                            }
+                        } catch (err) {
+                            toast.error("Failed to send OTP", { id: loadingToast });
+                        }
+                    };
+
+                    const handleVerifyOTP = async () => {
+                        if (otpInput.length !== 6) {
+                            toast.error("Please enter a 6-digit code");
+                            return;
+                        }
+                        setIsVerifyingOTP(true);
+                        const loadingToast = toast.loading("Verifying OTP...");
+                        try {
+                            const res = await fetch("/api/landlord/2fa", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "verify-otp", otp: otpInput }),
+                            });
+                            const data = await res.json();
+                            if (data.error) {
+                                toast.error(data.error, { id: loadingToast });
+                            } else {
+                                setTwoFAStatus('enabled');
+                                setTwoFAEmail(data.email);
+                                setOtpInput("");
+                                toast.success("2FA enabled successfully!", { id: loadingToast });
+                            }
+                        } catch (err) {
+                            toast.error("Failed to verify OTP", { id: loadingToast });
+                        } finally {
+                            setIsVerifyingOTP(false);
+                        }
+                    };
+
+                    const handleDisable2FA = async () => {
+                        if (!disablePassword) {
+                            toast.error("Please enter your password");
+                            return;
+                        }
+                        setIsDisabling(true);
+                        const loadingToast = toast.loading("Disabling 2FA...");
+                        try {
+                            const res = await fetch("/api/landlord/2fa", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "disable", password: disablePassword }),
+                            });
+                            const data = await res.json();
+                            if (data.error) {
+                                toast.error(data.error, { id: loadingToast });
+                            } else {
+                                setTwoFAStatus('disabled');
+                                setTwoFAEmail(null);
+                                setDisablePassword("");
+                                toast.success("2FA disabled successfully", { id: loadingToast });
+                            }
+                        } catch (err) {
+                            toast.error("Failed to disable 2FA", { id: loadingToast });
+                        } finally {
+                            setIsDisabling(false);
+                        }
+                    };
+
                     return (
-                        <GlassCard title="Multi-Factor Authentication" description="Add a second layer of security using OTP (One-Time Passwords).">
-                            <div className="space-y-6 max-w-lg">
-                                <div className="flex items-center justify-between">
+                        <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security using your Google account.">
+                            {twoFAStatus === 'loading' ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                </div>
+                            ) : twoFAStatus === 'disabled' ? (
+                                <div className="space-y-6 max-w-lg">
                                     <div className="flex items-center gap-4">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
                                             <Smartphone className="h-6 w-6" />
                                         </div>
                                         <div>
-                                            <h4 className="text-sm font-bold text-white">SMS/Email OTP</h4>
-                                            <p className="text-xs text-neutral-500">Require a code for sensitive changes.</p>
+                                            <h4 className="text-sm font-bold text-white">Email OTP</h4>
+                                            <p className="text-xs text-neutral-500">Connect Gmail to enable 2FA.</p>
                                         </div>
                                     </div>
-                                    <ToggleSwitch enabled={otpEnabled} onToggle={() => setOtpEnabled(!otpEnabled)} />
+                                    <button 
+                                        onClick={handleConnectGmail}
+                                        className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-black transition-all hover:bg-primary/90"
+                                    >
+                                        Connect with Google
+                                    </button>
                                 </div>
-                                
-                                {otpEnabled && (
+                            ) : twoFAStatus === 'gmail_connected' ? (
+                                <div className="space-y-6 max-w-lg">
                                     <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                                <span className="text-xs font-bold text-neutral-300">Verified Number: +63 917 •••• 123</span>
-                                            </div>
-                                            <button className="text-[10px] font-bold text-primary uppercase tracking-wider hover:underline">Change</button>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                                            <span className="text-xs font-bold text-neutral-300">Google account connected</span>
+                                        </div>
+                                        <p className="text-xs text-neutral-500 mb-4">Now verify your identity by entering the OTP sent to your email.</p>
+                                        <button 
+                                            onClick={handleSendOTP}
+                                            className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-black transition-all hover:bg-primary/90"
+                                        >
+                                            Send OTP to My Email
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : twoFAStatus === 'pending_otp' ? (
+                                <div className="space-y-6 max-w-lg">
+                                    <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                                            <span className="text-xs font-bold text-neutral-300">Enter the 6-digit code sent to your email</span>
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            maxLength={6}
+                                            value={otpInput}
+                                            onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                                            placeholder="000000" 
+                                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white tracking-[0.5em] text-center focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary font-mono mb-4"
+                                        />
+                                        <button 
+                                            onClick={handleVerifyOTP}
+                                            disabled={isVerifyingOTP || otpInput.length !== 6}
+                                            className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-black transition-all hover:bg-primary/90 disabled:opacity-50"
+                                        >
+                                            {isVerifyingOTP ? "Verifying..." : "Verify & Enable 2FA"}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6 max-w-lg">
+                                    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-xs font-bold text-primary">2FA Enabled</span>
+                                        </div>
+                                        <p className="text-xs text-neutral-400 mb-3">Your account is protected with email-based 2FA.</p>
+                                        <div className="text-sm font-mono text-neutral-300 bg-white/5 rounded-lg px-3 py-2 inline-block">
+                                            {twoFAEmail?.replace(/(.{2})(.*)(@.*)/, "$1***$3")}
                                         </div>
                                     </div>
-                                )}
-                            </div>
+                                    <div className="border-t border-white/10 pt-4">
+                                        <h4 className="text-sm font-bold text-white mb-3">Disable 2FA</h4>
+                                        <p className="text-xs text-neutral-500 mb-3">Enter your password to disable two-factor authentication.</p>
+                                        <input 
+                                            type="password"
+                                            value={disablePassword}
+                                            onChange={(e) => setDisablePassword(e.target.value)}
+                                            placeholder="Your password"
+                                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary mb-3"
+                                        />
+                                        <button 
+                                            onClick={handleDisable2FA}
+                                            disabled={isDisabling || !disablePassword}
+                                            className="w-full rounded-2xl bg-red-500/10 border border-red-500/20 py-3 text-sm font-bold text-red-400 transition-all hover:bg-red-500/20 disabled:opacity-50"
+                                        >
+                                            {isDisabling ? "Disabling..." : "Disable 2FA"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </GlassCard>
                     );
                 case "Sessions":
@@ -882,7 +1096,7 @@ export function LandlordSettings() {
 
                                         // Try to format relative time or just use the date
                                         const updatedDate = new Date(sess.updated_at);
-                                        let timeString = updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                        const timeString = updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                                         
                                         return (
                                             <div key={sess.id} className={cn(

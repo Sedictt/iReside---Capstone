@@ -58,6 +58,13 @@ export interface Database {
                     business_permits: string[]
                     created_at: string
                     updated_at: string
+                    two_factor_enabled: boolean | null
+                    two_factor_email: string | null
+                    gmail_access_token: string | null
+                    gmail_refresh_token: string | null
+                    gmail_token_expiry: string | null
+                    otp_code: string | null
+                    otp_expiry: string | null
                 }
                 Insert: {
                     id: string
@@ -78,6 +85,13 @@ export interface Database {
                     business_permits?: string[]
                     created_at?: string
                     updated_at?: string
+                    two_factor_enabled?: boolean | null
+                    two_factor_email?: string | null
+                    gmail_access_token?: string | null
+                    gmail_refresh_token?: string | null
+                    gmail_token_expiry?: string | null
+                    otp_code?: string | null
+                    otp_expiry?: string | null
                 }
                 Update: {
                     id?: string
@@ -97,6 +111,13 @@ export interface Database {
                     business_name?: string | null
                     business_permits?: string[]
                     updated_at?: string
+                    two_factor_enabled?: boolean | null
+                    two_factor_email?: string | null
+                    gmail_access_token?: string | null
+                    gmail_refresh_token?: string | null
+                    gmail_token_expiry?: string | null
+                    otp_code?: string | null
+                    otp_expiry?: string | null
                 }
                 Relationships: any[]
             }
