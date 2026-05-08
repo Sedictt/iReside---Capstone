@@ -115,16 +115,3 @@ supabase/seeds/auth_users.sql
 supabase/seeds/data.sql
 supabase_backup/seed.sql
 /supabase-bak
-
-# Generated SQL schema dumps
-schema_dump.sql
-schema_check.sql
-*.dump.sql
-
-# Supabase local state
-supabase/.branches/
-supabase/.temp/
-
-# Sensitive migration files
-supabase/migrations/20260508104820_create_user_sessions_view.sql
-supabase/migrations/20260508114411_force_create_user_sessions_view.sql
