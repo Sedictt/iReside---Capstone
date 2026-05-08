@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+// VERSION: 1.0.2 - Fixed runtime error by using direct table query
 export async function GET() {
     try {
         const supabase = await createClient();
@@ -9,6 +10,7 @@ export async function GET() {
         if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const admin = createAdminClient();
+        // Querying auth.sessions directly because listUserSessions is missing in this version
         const { data: sessions, error } = await (admin as any)
             .schema("auth")
             .from("sessions")
