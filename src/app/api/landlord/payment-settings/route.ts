@@ -130,7 +130,7 @@ export async function POST(request: Request) {
             });
 
             if (rows.length > 0) {
-                const { error: utilityError } = await supabase.from("utility_configs").upsert(rows);
+                const { error: utilityError } = await supabase.from("utility_configs").upsert(rows as any);
                 if (utilityError) throw utilityError;
             }
         }

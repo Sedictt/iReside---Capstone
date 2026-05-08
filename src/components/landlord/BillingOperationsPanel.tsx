@@ -198,6 +198,8 @@ export function BillingOperationsPanel({
     }
   };
 
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
   if (loading) {
     return (
       <div className="flex h-64 flex-col items-center justify-center space-y-4 rounded-3xl border border-border bg-card">
@@ -214,6 +216,91 @@ export function BillingOperationsPanel({
   return (
     <div className="space-y-12">
       <AnimatePresence>
+        {showBreakdown && (
+            <div className="fixed inset-0 z-[110] flex items-end justify-center p-6 sm:items-center">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowBreakdown(false)}
+                    className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] border border-border bg-card shadow-2xl flex flex-col max-h-[70vh]"
+                >
+                    <div className="p-8 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
+                        <div>
+                            <h3 className="text-xl font-bold text-foreground">Configuration Breakdown</h3>
+                            <p className="text-xs text-muted-foreground mt-1">Reviewing {pendingChangesCount} strategies being applied</p>
+                        </div>
+                        <button 
+                            onClick={() => setShowBreakdown(false)}
+                            className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
+                        >
+                            <X className="h-5 w-5 text-muted-foreground" />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        {configs.map((c) => {
+                            const property = workspace.properties.find(p => p.id === c.property_id);
+                            const unit = property?.units.find(u => u.id === c.unit_id);
+                            const Meta = utilityMeta[c.utility_type];
+                            const strategyLabel = c.billing_mode === "included_in_rent" 
+                                ? "Included" 
+                                : (c.responsibility_mode === "tenant_direct" ? "Direct" : "Submetered");
+
+                            return (
+                                <div key={c.localId} className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn("h-10 w-10 flex items-center justify-center rounded-xl border", Meta.bg, Meta.tint, Meta.border)}>
+                                            <Meta.icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-bold text-foreground">
+                                                {unit ? unit.name : property?.name || "Global"}
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
+                                                <div className="h-1 w-1 rounded-full bg-border" />
+                                                <span className={cn(
+                                                    "text-[10px] font-black uppercase tracking-widest",
+                                                    strategyLabel === "Included" ? "text-emerald-600" : (strategyLabel === "Direct" ? "text-blue-600" : "text-amber-600")
+                                                )}>
+                                                    {strategyLabel}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        {c.billing_mode === "tenant_paid" && c.responsibility_mode !== "tenant_direct" ? (
+                                            <p className="text-sm font-black text-foreground">
+                                                ₱{c.rate_per_unit}<span className="text-[10px] text-muted-foreground/40 ml-1">/{c.unit_label === "kwh" ? "kWh" : "m³"}</span>
+                                            </p>
+                                        ) : (
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No Rate</p>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="p-6 border-t border-border bg-muted/5">
+                        <button 
+                            onClick={() => setShowBreakdown(false)}
+                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all"
+                        >
+                            Back to Editor
+                        </button>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+
         {helpContent && (
           <div className="fixed top-0 left-0 w-screen h-screen z-[100] flex items-center justify-center p-6">
             <motion.div 
@@ -291,12 +378,15 @@ export function BillingOperationsPanel({
                     exit={{ opacity: 0, x: -20 }}
                     className="flex items-center gap-6 pl-5 pr-2"
                 >
-                    <div className="hidden md:flex flex-col">
+                    <button 
+                        onClick={() => setShowBreakdown(true)}
+                        className="hidden md:flex flex-col text-left hover:opacity-70 transition-opacity"
+                    >
                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Review & Save</span>
                         <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                            Apply <span className="font-bold text-foreground">{pendingChangesCount}</span> configurations to property.
+                            Apply <span className="font-bold text-foreground underline decoration-primary/30 underline-offset-4">{pendingChangesCount}</span> configurations to property.
                         </p>
-                    </div>
+                    </button>
                     <div className="h-8 w-px bg-border hidden md:block" />
                     <button
                         onClick={save}
