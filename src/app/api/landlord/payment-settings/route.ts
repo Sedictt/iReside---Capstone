@@ -107,20 +107,27 @@ export async function POST(request: Request) {
                 note?: string | null;
             }>;
 
-            const rows = utilityConfigs.map((item) => ({
-                id: item.id,
-                landlord_id: user.id,
-                property_id: item.property_id,
-                unit_id: item.unit_id ?? null,
-                utility_type: item.utility_type,
-                billing_mode: item.billing_mode,
-                rate_per_unit: item.rate_per_unit,
-                unit_label: item.unit_label,
-                is_active: item.is_active,
-                effective_from: item.effective_from,
-                effective_to: item.effective_to ?? null,
-                note: item.note ?? null,
-            }));
+            const rows = utilityConfigs.map((item) => {
+                const row: any = {
+                    landlord_id: user.id,
+                    property_id: item.property_id,
+                    unit_id: item.unit_id ?? null,
+                    utility_type: item.utility_type,
+                    billing_mode: item.billing_mode,
+                    rate_per_unit: item.rate_per_unit,
+                    unit_label: item.unit_label,
+                    is_active: item.is_active,
+                    effective_from: item.effective_from,
+                    effective_to: item.effective_to ?? null,
+                    note: item.note ?? null,
+                };
+
+                if (item.id && typeof item.id === "string" && item.id.length > 0) {
+                    row.id = item.id;
+                }
+
+                return row;
+            });
 
             if (rows.length > 0) {
                 const { error: utilityError } = await supabase.from("utility_configs").upsert(rows);
