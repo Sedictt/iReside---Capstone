@@ -1,635 +1,372 @@
-"use client";
-
-import { useState, useRef, ChangeEvent, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Cropper from 'react-easy-crop';
-import { Point, Area } from 'react-easy-crop';
+import { redirect } from 'next/navigation';
 import {
-    ArrowRight,
-    Camera,
-    X,
-    ZoomIn,
-    RotateCw,
+    User,
+    Mail,
+    Phone,
+    MapPin,
+    Home,
+    CheckCircle2,
+    TrendingUp,
+    MessageSquare,
+    ShieldCheck,
+    Star,
+    Zap,
     Check,
-    ArrowUpRight
+    Clock,
+    ArrowRight,
+    Map as MapIcon,
+    Building2,
+    Calendar
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 
+import EditableBio from '@/components/landlord/EditableBio';
+import { ProfileAvatarUploader } from '@/components/profile/ProfileAvatarUploader';
+import { ProfileCoverUploader } from '@/components/profile/ProfileCoverUploader';
+import { RoleBadge } from '@/components/profile/RoleBadge';
+import { SocialsHeader } from '@/components/profile/SocialsHeader';
 
-export default function TenantProfilePage() {
-    const [profileImage, setProfileImage] = useState("");
-    const [displayName, setDisplayName] = useState('');
-    const [displayEmail, setDisplayEmail] = useState('');
-    const [displayPhone, setDisplayPhone] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
+function formatCurrency(amount: number) {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        maximumFractionDigits: 0,
+    }).format(amount);
+}
 
-    // Crop state
-    const [tempImage, setTempImage] = useState<string | null>(null);
-    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
-    const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
-    const [rotation, setRotation] = useState(0);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-    const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+function formatRelativeDate(value: string) {
+    const date = new Date(value);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
 
-    useEffect(() => {
-        const loadProfile = async () => {
-            const supabase = createClient();
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
+    if (Number.isNaN(diffMs) || diffMs < 0) {
+        return 'Recently';
+    }
 
-            if (!user) return;
+    const day = 24 * 60 * 60 * 1000;
+    const week = 7 * day;
+    const month = 30 * day;
 
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('full_name, email, phone, avatar_url')
-                .eq('id', user.id)
-                .maybeSingle();
+    if (diffMs < day) {
+        return 'Today';
+    }
 
-            if (profile?.full_name) setDisplayName(profile.full_name);
-            if (profile?.email) setDisplayEmail(profile.email);
-            if (profile?.phone) setDisplayPhone(profile.phone);
-            if (profile?.avatar_url) setProfileImage(profile.avatar_url);
-        };
+    if (diffMs < week) {
+        return `${Math.floor(diffMs / day)} day${Math.floor(diffMs / day) === 1 ? '' : 's'} ago`;
+    }
 
-        void loadProfile();
-    }, []);
+    if (diffMs < month) {
+        return `${Math.floor(diffMs / week)} week${Math.floor(diffMs / week) === 1 ? '' : 's'} ago`;
+    }
 
-    const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setTempImage(imageUrl);
-            setIsCropModalOpen(true);
-            setZoom(1);
-            setRotation(0);
-            setCrop({ x: 0, y: 0 });
-        }
-        // Reset input so same file can be selected again if needed
-        e.target.value = '';
-    };
+    return `${Math.floor(diffMs / month)} month${Math.floor(diffMs / month) === 1 ? '' : 's'} ago`;
+}
 
-    const triggerFileInput = () => {
-        fileInputRef.current?.click();
-    };
+function resolveGoogleAvatarUrl(user: { user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null }) {
+    const metadataAvatar = typeof user.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : null;
+    if (metadataAvatar && metadataAvatar.trim().length > 0) {
+        return metadataAvatar;
+    }
 
-    const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
-        setCroppedAreaPixels(croppedAreaPixels);
-    }, []);
+    const metadataPicture = typeof user.user_metadata?.picture === 'string' ? user.user_metadata.picture : null;
+    if (metadataPicture && metadataPicture.trim().length > 0) {
+        return metadataPicture;
+    }
 
-    const createImage = (url: string): Promise<HTMLImageElement> =>
-        new Promise((resolve, reject) => {
-            const image = new window.Image();
-            image.addEventListener('load', () => resolve(image));
-            image.addEventListener('error', (error) => reject(error));
-            image.setAttribute('crossOrigin', 'anonymous'); // needed to avoid cross-origin issues on CodeSandbox
-            image.src = url;
-        });
-
-    const getCroppedImg = async (
-        imageSrc: string,
-        pixelCrop: Area,
-        rotation = 0
-    ): Promise<string | null> => {
-        const image = await createImage(imageSrc);
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        if (!ctx) {
-            return null;
+    for (const identity of user.identities ?? []) {
+        const identityData = identity.identity_data;
+        const providerAvatar = typeof identityData?.avatar_url === 'string' ? identityData.avatar_url : null;
+        if (providerAvatar && providerAvatar.trim().length > 0) {
+            return providerAvatar;
         }
 
-        const maxSize = Math.max(image.width, image.height);
-        const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
-
-        // set each dimensions to double largest dimension to allow for a safe area for the
-        // image to rotate in without being clipped by canvas context
-        canvas.width = safeArea;
-        canvas.height = safeArea;
-
-        // translate canvas context to a central location on image to allow rotating around the center.
-        ctx.translate(safeArea / 2, safeArea / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-safeArea / 2, -safeArea / 2);
-
-        // draw rotated image and store data.
-        ctx.drawImage(
-            image,
-            safeArea / 2 - image.width * 0.5,
-            safeArea / 2 - image.height * 0.5
-        );
-
-        const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
-        // set canvas width to final desired crop size - this will clear existing context
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
-
-        // paste generated rotate image with correct offsets for x,y crop values.
-        ctx.putImageData(
-            data,
-            Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
-            Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
-        );
-
-        // As Base64 string
-        return canvas.toDataURL('image/jpeg');
-    };
-
-    const handleSaveCroppedImage = async () => {
-        if (tempImage && croppedAreaPixels) {
-            try {
-                setIsSavingAvatar(true);
-                const croppedImage = await getCroppedImg(tempImage, croppedAreaPixels, rotation);
-                if (croppedImage) {
-                    const blob = await (await fetch(croppedImage)).blob();
-                    const file = new File([blob], `avatar-${Date.now()}.jpg`, { type: 'image/jpeg' });
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    const response = await fetch('/api/profile/avatar', {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    const payload = (await response.json()) as { avatarUrl?: string; error?: string };
-
-                    if (!response.ok || !payload.avatarUrl) {
-                        throw new Error(payload.error || 'Failed to update profile photo.');
-                    }
-
-                    setProfileImage(payload.avatarUrl);
-                    window.dispatchEvent(new CustomEvent('profile-updated'));
-                    setIsCropModalOpen(false);
-                    setTempImage(null);
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsSavingAvatar(false);
-            }
+        const providerPicture = typeof identityData?.picture === 'string' ? identityData.picture : null;
+        if (providerPicture && providerPicture.trim().length > 0) {
+            return providerPicture;
         }
-    };
+    }
 
-    const handleCancelCrop = () => {
-        setIsCropModalOpen(false);
-        setTempImage(null);
-    };
+    return null;
+}
+
+export default async function TenantProfilePage() {
+    const supabase = await createClient();
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+        redirect('/login');
+    }
+
+    // Fetch profile and leases
+    const [profileRes, leasesRes] = await Promise.all([
+        supabase
+            .from('profiles')
+            .select('id, full_name, email, role, avatar_url, avatar_bg_color, phone, bio, website, address, created_at, cover_url, socials')
+            .eq('id', user.id)
+            .maybeSingle(),
+        supabase
+            .from('leases')
+            .select('*, units(*, properties(*))')
+            .eq('tenant_id', user.id)
+            .order('start_date', { ascending: false })
+    ]);
+
+    const profile = profileRes.data;
+    if (!profile) {
+        redirect('/login');
+    }
+
+    const leases = leasesRes.data || [];
+    const activeLease = leases.find(l => l.status === 'active');
+    const pastLeases = leases.filter(l => l.status !== 'active' && l.status !== 'draft');
+
+    const googleAvatarUrl = resolveGoogleAvatarUrl(user);
+    const profileAvatarUrl = profile.avatar_url ?? googleAvatarUrl;
+    const socials = (profile.socials as Record<string, string>) || {};
 
     return (
-        <div className="space-y-12 relative">
-            <div className="relative z-10">
-                <div className="space-y-12">
-
-                    {/* Hero Section with User Profile */}
-                    <section className="relative w-full min-h-[500px] rounded-3xl overflow-hidden border border-border/50 shadow-2xl group">
-                        {/* Background Image */}
-                        <div className="absolute inset-0">
-                            <Image
-                                src="https://images.unsplash.com/photo-1512918580421-b2feee3b85a6?q=80&w=2000&auto=format&fit=crop"
-                                alt="Penthouse"
-                                fill
-                                className="object-cover opacity-60 group-hover:scale-105 transition-transform duration-[20s]"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
-                            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 to-transparent" />
-                        </div>
-
-                        <div className="relative h-full flex flex-col justify-between p-8 md:p-12 z-10">
-
-                            {/* User Profile - Repositioned to Top */}
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                                <div className="flex items-center gap-6">
-                                    <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 group/avatar cursor-pointer">
-                                        <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse-slow"></div>
-                                        <div className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl group-hover/avatar:border-white transition-colors">
-                                            {profileImage ? (
-                                                <Image
-                                                    src={profileImage}
-                                                    alt={displayName}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                                    <span className="text-2xl font-bold text-muted-foreground">
-                                                        {displayName?.charAt(0) || '?'}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleImageUpload}
-                                            className="hidden"
-                                            accept="image/*"
-                                        />
-                                        <button
-                                            onClick={triggerFileInput}
-                                            className="absolute bottom-1 right-1 h-7 w-7 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-lg z-20 group-hover/avatar:scale-110"
-                                        >
-                                            <Camera className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-3xl md:text-4xl font-display text-white mb-1 drop-shadow-lg">{displayName}</h2>
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-white/80">
-                                            <span className="text-[10px] font-bold tracking-widest uppercase bg-white/10 px-2 py-1 rounded backdrop-blur-sm border border-white/10">ID : IR-992034</span>
-                                            <div className="flex items-center gap-1.5 opacity-90">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-400"></div>
-                                                <span className="text-[10px] font-bold tracking-widest uppercase">Verified Member</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col items-start md:items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
-                                    <div className="flex flex-col md:items-end gap-1 text-sm text-white/90 font-medium">
-                                        <a href={`mailto:${displayEmail}`} className="hover:text-primary transition-colors hover:underline decoration-primary/50 underline-offset-4">{displayEmail}</a>
-                                        <a href={`tel:${displayPhone.replace(/\s+/g, '')}`} className="hover:text-primary transition-colors">{displayPhone}</a>
-                                        <div className="flex flex-col md:items-end text-xs text-rose-300/90 mt-2 pt-2 border-t border-white/10 w-full">
-                                            <span className="uppercase tracking-wider font-bold text-[10px] opacity-80 mb-0.5">Emergency Contact</span>
-                                            <div className="flex items-center gap-1.5 font-medium">
-                                                <span>Sarah Thompson</span>
-                                                <span className="w-1 h-1 rounded-full bg-rose-300/40"></span>
-                                                <a href="tel:+19876543210" className="hover:text-rose-100 transition-colors underline decoration-rose-300/30 underline-offset-2">+1 987 654 3210</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Link
-                                        href="/tenant/settings"
-                                        className="inline-flex items-center justify-center px-6 py-2 rounded-full bg-white/10 hover:bg-white text-white hover:text-black border border-white/20 backdrop-blur-md text-[10px] font-bold tracking-widest uppercase transition-all duration-300"
-                                    >
-                                        Edit Profile
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {/* Active Residency Info (Bottom) */}
-                            <div>
-                                <div className="mb-8">
-                                    <h1 className="text-5xl md:text-7xl font-display text-white mb-2 leading-tight drop-shadow-xl">
-                                        Skyline Loft
-                                    </h1>
-                                    <p className="text-2xl md:text-3xl text-white/80 italic font-light drop-shadow-lg">
-                                        Unit 402, Towers
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16 border-t border-white/10 pt-6 backdrop-blur-[2px] bg-black/5 rounded-xl p-4 -mx-4 md:mx-0">
-                                    <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-1">Lease Period</p>
-                                        <p className="text-white font-medium">Jan 24 — Jan 25</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-1">Monthly Rent</p>
-                                        <p className="text-white font-medium">₱2,450.00 <span className="text-white/50 text-sm font-normal">/ mo</span></p>
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1">
-                                        <p className="text-[10px] font-bold tracking-widest text-white/60 uppercase mb-1">Days Remaining</p>
-                                        <p className="text-white font-medium italic">182 Days</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </section>
-
-
-                    {/* Trust Score Section */}
-                    <section className="relative w-full rounded-3xl overflow-hidden border border-border/50 bg-card shadow-xl p-8 md:p-12 group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-primary/5 opacity-50" />
-
-                        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12">
-                            {/* Score Display */}
-                            <div className="relative flex-shrink-0 flex items-center justify-center">
-                                {/* Glowing backdrop */}
-                                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-3xl animate-pulse-slow" />
-
-                                {/* Circular progress (SVG) */}
-                                <div className="relative w-48 h-48 md:w-56 md:h-56 flex items-center justify-center">
-                                    <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                        <circle
-                                            className="text-muted/20 stroke-current"
-                                            strokeWidth="4"
-                                            cx="50" cy="50" r="46" fill="transparent"
-                                        />
-                                        <circle
-                                            className="text-emerald-400 stroke-current drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]"
-                                            strokeWidth="4"
-                                            strokeLinecap="round"
-                                            cx="50" cy="50" r="46" fill="transparent"
-                                            strokeDasharray="289.026"
-                                            strokeDashoffset="28.902"
-                                        /* Roughly 90% of circumference */
-                                        />
-                                    </svg>
-
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                        <span className="text-5xl md:text-6xl font-display text-foreground font-bold tabular-nums drop-shadow-md">
-                                            842
-                                        </span>
-                                        <span className="text-emerald-400 font-bold tracking-widest text-[10px] uppercase mt-1">
-                                            Excellent
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Score Details */}
-                            <div className="flex-1 space-y-6">
-                                <div>
-                                    <h3 className="text-3xl md:text-4xl font-display text-foreground flex items-center gap-3">
-                                        iReside Trust Score
-                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
-                                            <Check className="w-3.5 h-3.5" />
-                                        </span>
-                                    </h3>
-                                    <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-relaxed">
-                                        Your platform reputation. Maintaining a high Trust Score unlocks priority applications, lower security deposit requirements, and premium perks across all iReside properties.
-                                    </p>
-                                </div>
-
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/50">
-                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50 text-center">
-                                        <span className="block text-xl font-bold text-foreground mb-1">100%</span>
-                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">On-Time Pay</span>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50 text-center">
-                                        <span className="block text-xl font-bold text-foreground mb-1">0</span>
-                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Violations</span>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-background/50 border border-border/50 text-center">
-                                        <span className="block text-xl font-bold text-foreground mb-1">5</span>
-                                        <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Residencies</span>
-                                    </div>
-                                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center relative overflow-hidden group/perk cursor-pointer hover:bg-emerald-500/20 transition-colors">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/perk:translate-x-[100%] transition-transform duration-1000" />
-                                        <span className="block text-xl font-bold text-emerald-400 mb-1 flex justify-center"><ArrowUpRight className="w-6 h-6" /></span>
-                                        <span className="text-[10px] font-bold tracking-widest text-emerald-400/80 uppercase">View Perks</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Journey History & Other Content */}
-                    <div className="space-y-16">
-
-                        {/* Journey History */}
-                        <section>
-                            <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-border pb-4 gap-4">
-                                <h3 className="text-4xl font-display text-foreground">Journey History</h3>
-                                <a href="#" className="text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground uppercase transition-colors flex items-center gap-2">
-                                    Archive of residencies <ArrowRight className="h-3 w-3" />
-                                </a>
-                            </div>
-
-                            <div className="relative">
-                                {/* Horizontal Scroll Container */}
-                                <div className="flex gap-6 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-thin px-4 scroll-smooth">
-
-                                    {/* Card 1 */}
-                                    <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 duration-300 min-w-[340px] max-w-[380px] flex-shrink-0 snap-start">
-                                        <div className="relative h-56 w-full overflow-hidden">
-                                            <Image
-                                                src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop"
-                                                alt="The Kensington"
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-700"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
-                                            <div className="absolute top-4 left-4">
-                                                <span className="bg-background/90 backdrop-blur-md text-foreground border border-border/50 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-sm">
-                                                    2022 - 2023
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="p-6 space-y-4">
-                                            <div>
-                                                <h4 className="text-2xl font-display text-foreground mb-1">The Kensington #310</h4>
-                                                <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                                                    <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
-                                                    Los Angeles, CA
-                                                </p>
-                                            </div>
-                                            <div className="flex items-end justify-between pt-4 border-t border-border/50">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase mb-0.5">Rent</span>
-                                                    <span className="text-lg font-medium text-foreground">₱2,100 <span className="text-sm text-muted-foreground font-normal">/ mo</span></span>
-                                                </div>
-                                                <button className="px-4 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground text-xs font-bold tracking-wide transition-all uppercase">
-                                                    View Details
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Card 2 */}
-                                    <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 duration-300 min-w-[340px] max-w-[380px] flex-shrink-0 snap-start">
-                                        <div className="relative h-56 w-full overflow-hidden">
-                                            <Image
-                                                src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop"
-                                                alt="Sunset Lofts"
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-700"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
-                                            <div className="absolute top-4 left-4">
-                                                <span className="bg-background/90 backdrop-blur-md text-foreground border border-border/50 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-sm">
-                                                    2021 - 2022
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="p-6 space-y-4">
-                                            <div>
-                                                <h4 className="text-2xl font-display text-foreground mb-1">Sunset Lofts #12</h4>
-                                                <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                                                    <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
-                                                    Santa Monica, CA
-                                                </p>
-                                            </div>
-                                            <div className="flex items-end justify-between pt-4 border-t border-border/50">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase mb-0.5">Rent</span>
-                                                    <span className="text-lg font-medium text-foreground">₱1,850 <span className="text-sm text-muted-foreground font-normal">/ mo</span></span>
-                                                </div>
-                                                <button className="px-4 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground text-xs font-bold tracking-wide transition-all uppercase">
-                                                    View Details
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Card 3 */}
-                                    <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 duration-300 min-w-[340px] max-w-[380px] flex-shrink-0 snap-start">
-                                        <div className="relative h-56 w-full overflow-hidden">
-                                            <Image
-                                                src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=800&auto=format&fit=crop"
-                                                alt="Marina Heights"
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-700"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
-                                            <div className="absolute top-4 left-4">
-                                                <span className="bg-background/90 backdrop-blur-md text-foreground border border-border/50 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-sm">
-                                                    2020 - 2021
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="p-6 space-y-4">
-                                            <div>
-                                                <h4 className="text-2xl font-display text-foreground mb-1">Marina Heights #7B</h4>
-                                                <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                                                    <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
-                                                    Venice, CA
-                                                </p>
-                                            </div>
-                                            <div className="flex items-end justify-between pt-4 border-t border-border/50">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase mb-0.5">Rent</span>
-                                                    <span className="text-lg font-medium text-foreground">₱1,600 <span className="text-sm text-muted-foreground font-normal">/ mo</span></span>
-                                                </div>
-                                                <button className="px-4 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground text-xs font-bold tracking-wide transition-all uppercase">
-                                                    View Details
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div>
-                        </section>
-
+        <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 p-6 md:p-12">
+            <div className="mx-auto max-w-5xl space-y-8">
+                {/* Profile Header Card */}
+                <div className="relative bg-[#171717]/80 border border-neutral-800 rounded-[3rem] overflow-hidden backdrop-blur-xl shadow-2xl flex flex-col items-center">
+                    {/* Cover Image Container */}
+                    <div className="relative h-64 md:h-80 w-full group">
+                        <ProfileCoverUploader 
+                            initialCoverUrl={profile.cover_url} 
+                            fullName={profile.full_name} 
+                        />
                     </div>
 
+                    {/* Profile Content Section */}
+                    <div className="relative w-full px-8 pb-12 -mt-16 md:-mt-24 flex flex-col items-center text-center">
+                        {/* Overlapping Avatar */}
+                        <div className="relative w-32 h-32 md:w-44 md:h-44 mb-6 z-20">
+                            <ProfileAvatarUploader 
+                                initialAvatarUrl={profileAvatarUrl} 
+                                avatarBgColor={profile.avatar_bg_color} 
+                                fullName={profile.full_name} 
+                                className="w-full h-full shadow-2xl"
+                            />
+                        </div>
+
+                        {/* Name & Badge Area */}
+                        <div className="space-y-3 mb-8">
+                            <div className="flex items-center justify-center gap-4">
+                                <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight">
+                                    {profile.full_name}
+                                </h1>
+                            </div>
+                            <div className="flex items-center justify-center gap-3">
+                                <RoleBadge role={profile.role} className="scale-110" showTenant={true} />
+                                <span className="text-[10px] font-bold tracking-widest uppercase text-[#6d9838]">Verified Tenant</span>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-4 mb-12">
+                            <Link
+                                href="/tenant/settings"
+                                className="px-10 py-3 rounded-2xl bg-white text-black font-bold text-[11px] tracking-widest uppercase transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-white/5"
+                            >
+                                Edit Profile
+                            </Link>
+                            <Link
+                                href="/tenant/messages"
+                                className="w-14 h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-300"
+                            >
+                                <MessageSquare size={20} />
+                            </Link>
+                        </div>
+
+                        {/* Contact Info Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
+                            <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                    <Mail size={18} className="text-[#6d9838]" />
+                                </div>
+                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Email Address</p>
+                                <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
+                            </div>
+                            <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                    <Phone size={18} className="text-[#6d9838]" />
+                                </div>
+                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Phone Number</p>
+                                <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
+                            </div>
+                            <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
+                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                    <MapPin size={18} className="text-[#6d9838]" />
+                                </div>
+                                <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Primary Location</p>
+                                <p className="text-sm text-white/90 font-medium">{profile.address || 'Metro Manila, PH'}</p>
+                            </div>
+                        </div>
+
+                        {/* Social Connectivity Row */}
+                        <SocialsHeader userId={profile.id} initialSocials={socials} />
+                    </div>
                 </div>
 
-                <style jsx global>{`
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: #262626;
-          border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: #404040;
-        }
-        .shadow-custom-primary {
-          box-shadow: 0 0 10px rgba(109, 152, 56, 0.5);
-        }
-        /* Slider Styling */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: #ffffff;
-            cursor: pointer;
-            margin-top: -6px;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-      `}</style>
+                {/* Bio Section */}
+                <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                            <User size={20} className="text-[#6d9838]" />
+                        </div>
+                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
+                    </div>
+                    <div className="max-w-4xl">
+                        <EditableBio initialBio={profile.bio || ''} />
+                    </div>
+                </div>
 
-                {/* Crop Modal */}
-                {isCropModalOpen && tempImage && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="relative w-full max-w-lg bg-[#1a1a1a] rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col max-h-[90vh]">
-                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#1a1a1a] z-10">
-                                <h3 className="text-lg font-display text-white">Edit Profile Photo</h3>
-                                <button
-                                    onClick={handleCancelCrop}
-                                    className="p-1 rounded-full hover:bg-white/10 transition-colors text-white/60 hover:text-white"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
+                {/* Active Residency Section */}
+                {activeLease ? (
+                    <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-10 backdrop-blur-xl shadow-xl overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-10 opacity-5">
+                            <Home size={200} />
+                        </div>
+                        
+                        <div className="flex items-center gap-4 mb-10 relative z-10">
+                            <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                                <Home size={20} className="text-[#6d9838]" />
+                            </div>
+                            <h2 className="text-2xl font-display font-black text-white tracking-tight">Current Residency</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
+                            <div className="space-y-6">
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Property & Unit</p>
+                                    <h3 className="text-3xl font-display font-black text-white">
+                                        {activeLease.units?.properties?.name}
+                                        <span className="block text-xl text-[#6d9838] mt-1">
+                                            {activeLease.units?.name}
+                                        </span>
+                                    </h3>
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <div className="bg-white/5 border border-white/5 p-4 rounded-2xl flex-1">
+                                        <p className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase mb-1">Monthly Rent</p>
+                                        <p className="text-xl font-bold text-white">{formatCurrency(activeLease.monthly_rent)}</p>
+                                    </div>
+                                    <div className="bg-white/5 border border-white/5 p-4 rounded-2xl flex-1">
+                                        <p className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase mb-1">Status</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#6d9838] animate-pulse" />
+                                            <p className="text-xl font-bold text-white uppercase tracking-tighter">Active</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="relative w-full h-80 bg-[#121212]">
-                                <Cropper
-                                    image={tempImage}
-                                    crop={crop}
-                                    zoom={zoom}
-                                    rotation={rotation}
-                                    aspect={1}
-                                    onCropChange={setCrop}
-                                    onCropComplete={onCropComplete}
-                                    onZoomChange={setZoom}
-                                    onRotationChange={setRotation}
-                                    cropShape="round"
-                                    showGrid={false}
-                                />
-                            </div>
-
-                            <div className="p-6 space-y-6 bg-[#1a1a1a]">
+                            <div className="bg-white/5 border border-white/5 p-8 rounded-[2rem] flex flex-col justify-between">
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <ZoomIn className="h-4 w-4 text-white/60" />
-                                        <input
-                                            type="range"
-                                            value={zoom}
-                                            min={1}
-                                            max={3}
-                                            step={0.1}
-                                            aria-labelledby="Zoom"
-                                            onChange={(e) => setZoom(Number(e.target.value))}
-                                            className="flex-1 accent-white"
-                                        />
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Calendar size={16} className="text-[#6d9838]" />
+                                            <p className="text-sm text-neutral-400">Lease Period</p>
+                                        </div>
+                                        <p className="text-sm font-bold text-white">
+                                            {new Date(activeLease.start_date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })} — {new Date(activeLease.end_date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
+                                        </p>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <RotateCw className="h-4 w-4 text-white/60" />
-                                        <input
-                                            type="range"
-                                            value={rotation}
-                                            min={0}
-                                            max={360}
-                                            step={1}
-                                            aria-labelledby="Rotation"
-                                            onChange={(e) => setRotation(Number(e.target.value))}
-                                            className="flex-1 accent-white"
+                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-[#6d9838] rounded-full" 
+                                            style={{ width: '65%' }} // Mock progress for now
                                         />
                                     </div>
                                 </div>
-
-                                <div className="flex justify-end gap-3 pt-2">
-                                    <button
-                                        onClick={handleCancelCrop}
-                                        className="px-4 py-2 rounded-full text-xs font-bold tracking-wide uppercase text-white/60 hover:text-white hover:bg-white/5 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSaveCroppedImage}
-                                        disabled={isSavingAvatar}
-                                        className="px-6 py-2 rounded-full bg-white text-black hover:bg-white/90 transition-colors text-xs font-bold tracking-wide uppercase flex items-center gap-2"
-                                    >
-                                        <Check className="h-3 w-3" /> {isSavingAvatar ? 'Saving...' : 'Save Photo'}
-                                    </button>
-                                </div>
+                                <Link 
+                                    href={`/tenant/leases/${activeLease.id}`}
+                                    className="mt-8 flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-[11px] tracking-widest uppercase transition-all"
+                                >
+                                    View Lease Details <ArrowRight size={14} />
+                                </Link>
                             </div>
                         </div>
                     </div>
+                ) : (
+                    <div className="bg-[#171717]/80 border border-neutral-800 border-dashed rounded-[3rem] p-12 backdrop-blur-xl flex flex-col items-center justify-center text-center">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                            <Home size={24} className="text-neutral-600" />
+                        </div>
+                        <h2 className="text-xl font-display font-bold text-white mb-2">No Active Residency</h2>
+                        <p className="text-neutral-500 max-w-sm mb-8">You don't have any active leases at the moment. Start exploring properties to find your next home.</p>
+                        <Link 
+                            href="/tenant/explore"
+                            className="px-8 py-3 rounded-xl bg-[#6d9838] text-white font-bold text-[11px] tracking-widest uppercase transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#6d9838]/20"
+                        >
+                            Explore Properties
+                        </Link>
+                    </div>
                 )}
+
+                {/* Journey History Section */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                                <Clock size={20} className="text-[#6d9838]" />
+                            </div>
+                            <h2 className="text-2xl font-display font-black text-white tracking-tight">Tenancy Journey</h2>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {pastLeases.length > 0 ? (
+                            pastLeases.map((lease) => (
+                                <div key={lease.id} className="group bg-[#171717]/80 border border-neutral-800 rounded-[2.5rem] overflow-hidden backdrop-blur-xl transition-all duration-500 hover:border-[#6d9838]/50 hover:shadow-2xl hover:shadow-[#6d9838]/5">
+                                    <div className="relative h-48 w-full overflow-hidden">
+                                        <Image
+                                            src={lease.units?.properties?.images?.[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=800&auto=format&fit=crop'}
+                                            alt={lease.units?.properties?.name || 'Property'}
+                                            fill
+                                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#171717] via-transparent to-transparent" />
+                                        <div className="absolute top-4 left-4">
+                                            <span className="bg-black/40 backdrop-blur-md text-white border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
+                                                {new Date(lease.start_date).getFullYear()} — {new Date(lease.end_date).getFullYear()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-6 space-y-4">
+                                        <div>
+                                            <h4 className="text-xl font-display font-black text-white group-hover:text-[#6d9838] transition-colors">{lease.units?.properties?.name}</h4>
+                                            <p className="text-sm text-neutral-500 flex items-center gap-2 mt-1">
+                                                <MapIcon size={12} /> {lease.units?.properties?.city}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                            <div>
+                                                <p className="text-[9px] font-bold tracking-widest text-neutral-600 uppercase">Monthly Rent</p>
+                                                <p className="text-sm font-bold text-white">{formatCurrency(lease.monthly_rent)}</p>
+                                            </div>
+                                            <Link 
+                                                href={`/tenant/leases/${lease.id}`}
+                                                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#6d9838] hover:text-white transition-all"
+                                            >
+                                                <ArrowRight size={16} />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-full bg-[#171717]/40 border border-neutral-800 border-dashed rounded-[2.5rem] p-12 text-center">
+                                <p className="text-neutral-500 italic">No past residencies recorded yet.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );
