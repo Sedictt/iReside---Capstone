@@ -16,16 +16,14 @@ export default function EditableBio({
     const [tempBio, setTempBio] = useState(initialBio);
     const [saving, setSaving] = useState(false);
 
-    const supabase = createClient();
-
     const handleSave = async () => {
+        if (saving) return;
         setSaving(true);
         try {
-            // Get current user
+            const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("No user found");
 
-            // Update profiles table
             const { error: profileError } = await supabase
                 .from("profiles")
                 .update({ bio: tempBio })
@@ -33,13 +31,6 @@ export default function EditableBio({
 
             if (profileError) throw profileError;
 
-            // Also update user metadata for consistency
-            const { error: metadataError } = await supabase.auth.updateUser({
-                data: { bio: tempBio }
-            });
-
-            if (metadataError) throw metadataError;
-            
             setBio(tempBio);
             setIsEditing(false);
             window.dispatchEvent(new CustomEvent("profile-updated"));
