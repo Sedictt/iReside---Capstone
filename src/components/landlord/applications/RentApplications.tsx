@@ -343,6 +343,8 @@ export function RentApplications() {
     const [showMoreFilters, setShowMoreFilters] = useState(false);
     const [showInviteTools, setShowInviteTools] = useState(false);
     const [leasePdfBlob, setLeasePdfBlob] = useState<Blob | null>(null);
+    const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+    const [declineReason, setDeclineReason] = useState("");
 
     // Generate PDF for countersigning
     useEffect(() => {
@@ -1281,7 +1283,7 @@ export function RentApplications() {
                             <div className="border-t border-border bg-card/80 p-8 backdrop-blur-xl">
                                 {selectedApp.status === "pending" || selectedApp.status === "reviewing" ? (
                                     <div className="flex gap-4">
-                                        <button onClick={() => updateApplicationStatus(selectedApp.id, "rejected")} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">
+                                        <button onClick={() => { setDeclineReason(""); setShowDeclineConfirm(true); }} className="flex-1 rounded-2xl border border-red-500/20 bg-red-500/5 py-4 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95">
                                             Decline
                                         </button>
                                         <button onClick={() => openApprovalModal(selectedApp)} className="flex-[2] rounded-2xl bg-primary py-4 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95">
@@ -1290,8 +1292,19 @@ export function RentApplications() {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-3">
-                                        <div className="flex items-center justify-center rounded-2xl border border-border bg-muted/50 p-4">
-                                        </div>
+                                        {selectedApp.status === "rejected" && (
+                                            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
+                                                <div className="mb-2 flex items-center justify-center">
+                                                    <XCircle className="h-6 w-6 text-red-500" />
+                                                </div>
+                                                <p className="text-sm font-black text-red-500">Application Declined</p>
+                                                {declineReason && (
+                                                    <p className="mt-2 text-xs font-medium text-muted-foreground">
+                                                        Reason: {declineReason}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
                                         {selectedApp.status === "approved" && (
                                             <div className="space-y-3">
                                                 {!selectedApp.lease && (
@@ -1447,6 +1460,95 @@ export function RentApplications() {
                                 <button disabled={countersignState.loading || !pendingCountersignature} onClick={() => handleCountersignLease(selectedApp.lease!.id, pendingCountersignature!)} className="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-black uppercase tracking-widest text-black hover:bg-emerald-400 disabled:opacity-50">
                                     {countersignState.loading ? "Signing..." : "Complete Execution"}
                                 </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Decline Confirmation Modal */}
+            <AnimatePresence>
+                {showDeclineConfirm && selectedApp && (
+                    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDeclineConfirm(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-red-500/20 bg-card p-8 shadow-2xl">
+                            <div className="mb-6 flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20">
+                                    <AlertCircle className="h-6 w-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-foreground">Decline Application</h3>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">This action cannot be undone</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                                    <p className="text-sm font-medium text-foreground">
+                                        You are about to decline the application from <span className="font-black">{selectedApp.applicant.name}</span> for <span className="font-black">{selectedApp.propertyName} - {selectedApp.unitNumber}</span>.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rejection Reason (Required)</label>
+                                    <textarea
+                                        id="rejection-reason"
+                                        placeholder="Enter the reason for declining this application..."
+                                        className="w-full rounded-2xl border border-border bg-background p-4 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 focus:border-red-500/50 focus:outline-none focus:ring-4 focus:ring-red-500/10 resize-none"
+                                        rows={3}
+                                        onChange={(e) => {
+                                            const reason = e.target.value;
+                                            setDeclineReason(reason);
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={() => {
+                                            setShowDeclineConfirm(false);
+                                            setDeclineReason("");
+                                        }} 
+                                        className="flex-1 rounded-2xl border border-border bg-background py-4 text-xs font-black uppercase tracking-widest text-foreground hover:bg-muted transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={async () => {
+                                            if (!declineReason.trim()) {
+                                                setActionError("Please provide a reason for declining.");
+                                                return;
+                                            }
+                                            setActionError(null);
+                                            setShowDeclineConfirm(false);
+                                            setUpdatingStatusId(selectedApp.id);
+                                            try {
+                                                const response = await fetch(`/api/landlord/applications/${selectedApp.id}/actions`, {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ status: "rejected", rejection_reason: declineReason }),
+                                                });
+                                                if (!response.ok) throw new Error("Failed to decline application");
+                                                
+                                                setSelectedApp(prev => prev ? { ...prev, status: "rejected" as const, notes: `Rejection reason: ${declineReason}` } : null);
+                                                setDeclineReason("");
+                                                setReloadKey(k => k + 1);
+                                            } catch {
+                                                setActionError("Unable to decline application.");
+                                            } finally {
+                                                setUpdatingStatusId(null);
+                                            }
+                                        }} 
+                                        disabled={updatingStatusId === selectedApp.id}
+                                        className="flex-1 rounded-2xl bg-red-500 py-4 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-red-500/20 hover:bg-red-400 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        {updatingStatusId === selectedApp.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                        ) : (
+                                            "Confirm Decline"
+                                        )}
+                                    </button>
+                                </div>
+                                {actionError && (
+                                    <p className="text-[11px] font-black text-red-500 text-center">{actionError}</p>
+                                )}
                             </div>
                         </motion.div>
                     </div>

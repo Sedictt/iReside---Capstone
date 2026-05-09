@@ -7,6 +7,7 @@ import { generateSigningLink } from "@/lib/jwt";
 
 type ActionBody = {
     status?: ApplicationStatus;
+    rejection_reason?: string;
     lease_data?: {
         start_date: string;
         end_date: string;
@@ -368,12 +369,16 @@ export async function POST(
     }
 
     const reviewedAt = new Date().toISOString();
+    const updatePayload: Record<string, unknown> = {
+        status: body.status,
+        reviewed_at: reviewedAt,
+    };
+    if (body.status === "rejected" && body.rejection_reason) {
+        updatePayload.rejection_reason = body.rejection_reason;
+    }
     const { error: updateError } = await supabase
         .from("applications")
-        .update({
-            status: body.status,
-            reviewed_at: reviewedAt,
-        })
+        .update(updatePayload as any)
         .eq("id", applicationId)
         .eq("landlord_id", user.id);
 
