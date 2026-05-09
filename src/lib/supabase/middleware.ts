@@ -28,7 +28,7 @@ const resolveRole = async (supabase: any, user: any): Promise<string> => {
 const isTourAutoStartRoute = (pathname: string) =>
     TOUR_AUTO_START_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
-const PUBLIC_ROUTE_PREFIXES = ["/login", "/signup", "/auth", "/apply", "/apply-landlord", "/landlord/onboarding", "/demo", "/sign", "/docs"];
+const PUBLIC_ROUTE_PREFIXES = ["/login", "/signup", "/auth", "/apply", "/apply-landlord", "/landlord/onboarding", "/demo", "/sign", "/docs", "/about"];
 const PUBLIC_EXACT_ROUTES = ["/"];
 
 const isPublicRoute = (pathname: string) =>
