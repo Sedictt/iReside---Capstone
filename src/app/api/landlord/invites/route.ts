@@ -48,22 +48,13 @@ const PAYMENT_PREVIEW_DISCLAIMER =
 function buildPaymentPreview(args: {
     contractTemplate: Record<string, unknown> | null;
     monthlyRentFallback: number;
-    advanceMonthsFallback?: number;
-    securityMonthsFallback?: number;
 }): PaymentPreview {
     const fallback = Number(args.monthlyRentFallback ?? 0);
     const safeFallback = Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
-
-    // Use contract_template if available, otherwise fall back to months * rent
-    const advanceMonths = args.advanceMonthsFallback ?? 1;
-    const securityMonths = args.securityMonthsFallback ?? 2;
-
     const advanceAmount =
-        pickTemplateAmount(args.contractTemplate, ADVANCE_TEMPLATE_KEYS, safeFallback) ??
-        (safeFallback > 0 ? safeFallback * advanceMonths : 0);
+        pickTemplateAmount(args.contractTemplate, ADVANCE_TEMPLATE_KEYS, safeFallback) ?? safeFallback;
     const securityDepositAmount =
-        pickTemplateAmount(args.contractTemplate, DEPOSIT_TEMPLATE_KEYS, safeFallback) ??
-        (safeFallback > 0 ? safeFallback * securityMonths : 0);
+        pickTemplateAmount(args.contractTemplate, DEPOSIT_TEMPLATE_KEYS, safeFallback) ?? safeFallback;
 
     return {
         advanceAmount,
@@ -133,7 +124,7 @@ export async function GET(request: Request) {
     const propertyIds = [...new Set(inviteRows.map((invite) => invite.property_id))];
 
     const { data: properties } = propertyIds.length
-        ? await adminClient.from("properties").select("id, name, contract_template, advance_rent_months, security_deposit_months").in("id", propertyIds)
+        ? await adminClient.from("properties").select("id, name, contract_template").in("id", propertyIds)
         : { data: [] };
     const { data: units } = propertyIds.length
         ? await adminClient.from("units").select("id, property_id, name, rent_amount").in("property_id", propertyIds)
@@ -150,8 +141,6 @@ export async function GET(request: Request) {
                     !Array.isArray(row.contract_template)
                         ? (row.contract_template as Record<string, unknown>)
                         : null,
-                advanceRentMonths: row.advance_rent_months ?? 1,
-                securityDepositMonths: row.security_deposit_months ?? 2,
             },
         ])
     );
@@ -209,8 +198,6 @@ export async function GET(request: Request) {
                 paymentPreview: buildPaymentPreview({
                     contractTemplate: property?.contractTemplate ?? null,
                     monthlyRentFallback: monthlyFallback,
-                    advanceMonthsFallback: property?.advanceRentMonths,
-                    securityMonthsFallback: property?.securityDepositMonths,
                 }),
                 shareUrl,
                 qrUrl: buildInviteQrUrl(shareUrl),
@@ -263,7 +250,7 @@ export async function POST(request: Request) {
 
     const { data: property, error: propertyError } = await adminClient
         .from("properties")
-        .select("id, name, contract_template, advance_rent_months, security_deposit_months")
+        .select("id, name, contract_template")
         .eq("id", propertyId)
         .eq("landlord_id", user.id)
         .maybeSingle();
@@ -368,8 +355,6 @@ export async function POST(request: Request) {
     const paymentPreview = buildPaymentPreview({
         contractTemplate: propertyTemplate,
         monthlyRentFallback: unitForPreview?.rent_amount ?? 0,
-        advanceMonthsFallback: property.advance_rent_months ?? 1,
-        securityMonthsFallback: property.security_deposit_months ?? 2,
     });
 
     return NextResponse.json({

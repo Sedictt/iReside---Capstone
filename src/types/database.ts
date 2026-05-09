@@ -383,7 +383,7 @@ export interface Database {
                 }
                 Relationships: any[]
             }
-properties: {
+            properties: {
                 Row: {
                     id: string
                     landlord_id: string
@@ -424,14 +424,14 @@ properties: {
                     contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
-                    total_units?: number
+total_units?: number
                     total_floors?: number
                     base_rent_amount?: number
                     advance_rent_months?: number
                     security_deposit_months?: number
                     renewal_window_days?: number
                     renewal_settings?: Json
-                    created_at?: string
+                    updated_at?: string
                 }
                 Update: {
                     landlord_id?: string
@@ -447,43 +447,14 @@ properties: {
                     contract_template?: Json | null
                     images?: string[]
                     is_featured?: boolean
-                    total_units?: number
+total_units?: number
                     total_floors?: number
                     base_rent_amount?: number
                     advance_rent_months?: number
                     security_deposit_months?: number
                     renewal_window_days?: number
                     renewal_settings?: Json
-                    updated_at?: string
-                }
-                Relationships: any[]
-            }
-            units: {
-                Row: {
-                    id: string
-                    property_id: string
-                    name: string
-                    floor: number
-                    status: UnitStatus
-                    rent_amount: number
-                    sqft: number | null
-                    beds: number
-                    baths: number
-                    created_at: string
-                    updated_at: string
-                }
-                Insert: {
-                    id?: string
-                    property_id: string
-                    name: string
-                    floor?: number
-                    status?: UnitStatus
-                    rent_amount: number
-                    sqft?: number | null
-                    beds?: number
-                    baths?: number
                     created_at?: string
-                    updated_at?: string
                 }
                 Update: {
                     property_id?: string
@@ -496,7 +467,7 @@ properties: {
                     baths?: number
                     updated_at?: string
                 }
-Relationships: any[]
+                Relationships: any[]
             }
             leases: {
                 Row: {
