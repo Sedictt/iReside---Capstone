@@ -208,7 +208,7 @@ export function TenantSidebar() {
         <>
             <header className="md:hidden sticky top-0 z-[90] h-16 border-b border-border/80 bg-background">
                 <div className="h-full px-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center">
+                    <Link href="/tenant/dashboard" className="flex items-center">
                         <Logo className="h-30 w-66" />
                     </Link>
                     <div className="flex items-center gap-3">
@@ -383,7 +383,7 @@ export function TenantSidebar() {
                     )}
                 >
                     <div className="mb-6 flex items-center justify-between">
-                        <Link href="/" className="flex items-center" onClick={() => setIsMobileOpen(false)}>
+                        <Link href="/tenant/dashboard" className="flex items-center" onClick={() => setIsMobileOpen(false)}>
                             <Logo className="h-9 w-28" />
                         </Link>
                         <button

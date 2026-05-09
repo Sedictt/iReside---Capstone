@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import type { LucideIcon } from "lucide-react";
 import { 
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface SidebarNavItem {
     label: string;
@@ -48,6 +49,37 @@ interface RoleSidebarProps {
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
     showCollapseToggle?: boolean;
+}
+
+function LogoLink({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
+    const { user, loading } = useAuth();
+
+    const getRedirectPath = () => {
+        if (loading || !user) return "/";
+        const role = user.user_metadata?.role as string | undefined;
+        switch (role) {
+            case "landlord":
+                return "/landlord/dashboard";
+            case "tenant":
+                return "/tenant/dashboard";
+            case "admin":
+                return "/admin/dashboard";
+            default:
+                return "/";
+        }
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        router.push(getRedirectPath());
+    };
+
+    return (
+        <a href={getRedirectPath()} onClick={handleClick} className="cursor-pointer">
+            {children}
+        </a>
+    );
 }
 
 export function RoleSidebar({
@@ -160,7 +192,9 @@ export function RoleSidebar({
             <div className={cn("flex h-20 items-center border-b border-border/40 px-6 transition-all duration-300", isCollapsed ? "justify-center" : "justify-between")}>
                 {!isCollapsed && (
                     <div className="flex items-center gap-3">
-                        <Logo className="h-24 w-28" />
+                        <LogoLink>
+                            <Logo className="h-24 w-28" />
+                        </LogoLink>
                     </div>
                 )}
                 <div className="flex items-center gap-2">
