@@ -44,7 +44,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "group flex h-12 items-center rounded-2xl border border-white/10 bg-card/40 transition-all hover:bg-card/60 hover:ring-1 hover:ring-primary/20",
-                    isCollapsed ? "w-12 justify-center px-0" : "gap-3 px-4",
+                    isCollapsed ? "w-12 justify-center px-0" : "w-full gap-3 px-4 overflow-hidden",
                     isOpen && "bg-card/80 ring-1 ring-primary/40"
                 )}
                 title={isCollapsed ? (selectedPropertyId === 'all' ? 'All Properties' : selectedProperty?.name) : undefined}
@@ -58,18 +58,15 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                 </div>
                 
                 {!isCollapsed && (
-                    <>
-                        <div className="flex flex-col items-start text-left overflow-hidden">
-                            <span className="truncate text-sm font-black text-foreground">
-                                {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading...')}
-                            </span>
-                        </div>
-
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <span className="truncate text-sm font-black text-foreground">
+                            {selectedPropertyId === 'all' ? 'All Properties' : (selectedProperty?.name || 'Loading...')}
+                        </span>
                         <ChevronDown className={cn(
-                            "h-4 w-4 text-muted-foreground transition-transform duration-300",
+                            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300",
                             isOpen && "rotate-180"
                         )} />
-                    </>
+                    </div>
                 )}
             </button>
 
@@ -149,7 +146,7 @@ export function PropertySelector({ isCollapsed = false }: { isCollapsed?: boolea
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex flex-1 flex-col items-start overflow-hidden">
+                                    <div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden">
                                         <span className="truncate text-sm font-black text-foreground group-hover:text-primary transition-colors">
                                             {property.name}
                                         </span>
