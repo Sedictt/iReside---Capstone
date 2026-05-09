@@ -4,6 +4,7 @@ export interface WalkInUnit {
     rent_amount: number;
     property_id: string;
     property_name: string;
+    property_contract_template?: Record<string, unknown> | null;
 }
 
 export interface RequirementsChecklist {

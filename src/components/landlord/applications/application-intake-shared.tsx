@@ -320,14 +320,17 @@ export function ApplicationProfileStep({
                         id="income"
                         icon={() => <span className="font-black text-primary/80">P</span>}
                         label="Monthly Net Income"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="0.00"
-                        value={formData.employment_info.monthly_income}
+                        className="font-mono"
+                        value={formData.employment_info.monthly_income ? Number(formData.employment_info.monthly_income).toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
                         error={formErrors.monthly_income}
                         nextFieldId="additional-notes"
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            onFieldChange("employment_info", { ...formData.employment_info, monthly_income: e.target.value }, ["monthly_income"])
-                        }
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            const raw = e.target.value.replace(/[^0-9.]/g, "");
+                            onFieldChange("employment_info", { ...formData.employment_info, monthly_income: raw }, ["monthly_income"]);
+                        }}
                     />
                 </div>
             </section>

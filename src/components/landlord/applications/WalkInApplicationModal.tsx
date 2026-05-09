@@ -53,6 +53,11 @@ import {
     type WalkInUnit,
     validateFormStep,
 } from "./application-intake-shared";
+import {
+    pickTemplateAmount,
+    ADVANCE_TEMPLATE_KEYS,
+    DEPOSIT_TEMPLATE_KEYS,
+} from "@/lib/application-payment-pending";
 
 // ─── Types ────────────────────────────────────────────────────────────
 interface LeaseData {
@@ -462,22 +467,29 @@ export function WalkInApplicationModal({
         const endDate = new Date(startDate);
         endDate.setFullYear(endDate.getFullYear() + 1);
 
+        const rentAmount = currentUnit.rent_amount ?? 0;
+        const contractTemplate = currentUnit.property_contract_template ?? null;
+
+        // Use contract_template to compute security deposit and advance rent (like invite system does)
+        const securityDepositAmount = pickTemplateAmount(contractTemplate, DEPOSIT_TEMPLATE_KEYS, rentAmount) ?? rentAmount;
+        const advanceRentAmount = pickTemplateAmount(contractTemplate, ADVANCE_TEMPLATE_KEYS, rentAmount) ?? rentAmount;
+
         setLeaseData((prev) => ({
             ...prev,
             start_date: formData.move_in_date,
             end_date: endDate.toISOString().split("T")[0],
-            monthly_rent: currentUnit.rent_amount,
-            security_deposit: currentUnit.rent_amount, // Default to one month's rent
+            monthly_rent: rentAmount,
+            security_deposit: securityDepositAmount,
         }));
 
         setPaymentData((prev) => ({
             advance_payment: {
                 ...prev.advance_payment,
-                amount: currentUnit.rent_amount,
+                amount: advanceRentAmount,
             },
             security_deposit_payment: {
                 ...prev.security_deposit_payment,
-                amount: currentUnit.rent_amount,
+                amount: securityDepositAmount,
             },
         }));
     }, [currentUnit, formData.move_in_date]);
@@ -1011,17 +1023,22 @@ export function WalkInApplicationModal({
 
                                             <div className="relative isolate group">
                                                  <div className="absolute inset-x-0 -inset-y-4 bg-primary/5 rounded-[2.5rem] -z-10 border border-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                 <GlassInput 
-                                                     id="income"
-                                                     icon={() => <span className="font-black text-primary/80">₱</span>} 
-                                                     label="Monthly Net Income" 
-                                                     type="number"
-                                                     placeholder="0.00"
-                                                     value={formData.employment_info.monthly_income}
-                                                     error={formErrors.monthly_income}
-                                                     nextFieldId="additional-notes"
-                                                     onChange={(e: ChangeEvent<HTMLInputElement>) => updateField("employment_info", { ...formData.employment_info, monthly_income: e.target.value }, ["monthly_income"])}
-                                                 />
+<GlassInput
+                                                      id="income"
+                                                      icon={() => <span className="font-black text-primary/80">₱</span>}
+                                                      label="Monthly Net Income"
+                                                      type="text"
+                                                      inputMode="numeric"
+                                                      placeholder="0.00"
+                                                      className="font-mono"
+                                                      value={formData.employment_info.monthly_income ? Number(formData.employment_info.monthly_income).toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
+                                                      error={formErrors.monthly_income}
+                                                      nextFieldId="additional-notes"
+                                                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                                          const raw = e.target.value.replace(/[^0-9.]/g, "");
+                                                          updateField("employment_info", { ...formData.employment_info, monthly_income: raw }, ["monthly_income"]);
+                                                      }}
+                                                  />
                                             </div>
                                         </section>
 
@@ -1216,10 +1233,14 @@ export function WalkInApplicationModal({
                                                                 <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
                                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 font-medium text-muted-foreground">₱</div>
                                                                 <input
-                                                                    type="number"
-                                                                    value={leaseData.monthly_rent}
-                                                                    onChange={(e) => setLeaseData({ ...leaseData, monthly_rent: parseFloat(e.target.value) || 0 })}
-                                                                    className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium text-foreground outline-none"
+                                                                    type="text"
+                                                                    inputMode="numeric"
+                                                                    className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium font-mono text-foreground outline-none"
+                                                                    value={leaseData.monthly_rent ? leaseData.monthly_rent.toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
+                                                                    onChange={(e) => {
+                                                                        const raw = e.target.value.replace(/[^0-9.]/g, "");
+                                                                        setLeaseData({ ...leaseData, monthly_rent: parseFloat(raw) || 0 });
+                                                                    }}
                                                                 />
                                                             </div>
                                                         </div>
@@ -1232,10 +1253,14 @@ export function WalkInApplicationModal({
                                                                 <div className="absolute inset-0 -z-10 rounded-2xl border border-border bg-card/90" />
                                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 font-medium text-muted-foreground">₱</div>
                                                                 <input
-                                                                    type="number"
-                                                                    value={leaseData.security_deposit}
-                                                                    onChange={(e) => setLeaseData({ ...leaseData, security_deposit: parseFloat(e.target.value) || 0 })}
-                                                                    className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium text-foreground outline-none"
+                                                                    type="text"
+                                                                    inputMode="numeric"
+                                                                    className="h-15 w-full rounded-2xl bg-transparent py-4 pl-8 pr-4 text-sm font-medium font-mono text-foreground outline-none"
+                                                                    value={leaseData.security_deposit ? leaseData.security_deposit.toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
+                                                                    onChange={(e) => {
+                                                                        const raw = e.target.value.replace(/[^0-9.]/g, "");
+                                                                        setLeaseData({ ...leaseData, security_deposit: parseFloat(raw) || 0 });
+                                                                    }}
                                                                 />
                                                             </div>
                                                         </div>
