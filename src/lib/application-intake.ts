@@ -55,12 +55,21 @@ export const DEFAULT_EMPLOYMENT: EmploymentInfo = {
     monthly_income: "",
 };
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_ALLOWED_REGEX = /^[+()\-\s\d]+$/;
+const PHONE_REGEX_11 = /^(\+?63|0)?9\d{9}$/;
+const PHONE_REGEX_10 = /^9\d{9}$/;
 
 export function getPhoneDigits(value: string) {
     return value.replace(/\D/g, "");
 }
+
+export function validatePhone(value: string): string | undefined {
+    const digits = getPhoneDigits(value);
+    if (digits.length === 11 && PHONE_REGEX_11.test(digits)) return undefined;
+    if (digits.length === 10 && PHONE_REGEX_10.test(digits)) return undefined;
+    return "Enter a valid Philippine mobile number (e.g. 09171234567).";
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateFormStep(
     currentStep: number,
@@ -84,6 +93,8 @@ export function validateFormStep(
 
         if (!name) {
             errors.applicant_name = "Applicant name is required.";
+        } else if (/\d/.test(name)) {
+            errors.applicant_name = "Name must not contain numbers.";
         } else if (name.length < 2 || name.length > 100) {
             errors.applicant_name = "Name must be between 2 and 100 characters.";
         }
@@ -95,12 +106,8 @@ export function validateFormStep(
         }
 
         if (phone) {
-            const digits = getPhoneDigits(phone);
-            if (!PHONE_ALLOWED_REGEX.test(phone)) {
-                errors.applicant_phone = "Phone contains invalid characters.";
-            } else if (digits.length < 10 || digits.length > 15) {
-                errors.applicant_phone = "Phone number must have 10 to 15 digits.";
-            }
+            const phoneError = validatePhone(phone);
+            if (phoneError) errors.applicant_phone = phoneError;
         }
 
         if (!formData.move_in_date) {
@@ -110,6 +117,8 @@ export function validateFormStep(
         const ecName = formData.emergency_contact_name.trim();
         if (!ecName) {
             errors.emergency_contact_name = "Emergency contact name is required.";
+        } else if (/\d/.test(ecName)) {
+            errors.emergency_contact_name = "Name must not contain numbers.";
         } else if (ecName.length < 2 || ecName.length > 100) {
             errors.emergency_contact_name = "Name must be between 2 and 100 characters.";
         }
@@ -118,12 +127,8 @@ export function validateFormStep(
         if (!ecPhone) {
             errors.emergency_contact_phone = "Emergency contact number is required.";
         } else {
-            const ecDigits = getPhoneDigits(ecPhone);
-            if (!PHONE_ALLOWED_REGEX.test(ecPhone)) {
-                errors.emergency_contact_phone = "Phone contains invalid characters.";
-            } else if (ecDigits.length < 10 || ecDigits.length > 15) {
-                errors.emergency_contact_phone = "Phone number must have 10 to 15 digits.";
-            }
+            const phoneError = validatePhone(ecPhone);
+            if (phoneError) errors.emergency_contact_phone = phoneError;
         }
     }
 
@@ -131,7 +136,7 @@ export function validateFormStep(
         const occupation = formData.employment_info.occupation.trim();
         const employer = formData.employment_info.employer.trim();
         const incomeRaw = String(formData.employment_info.monthly_income).trim();
-        const incomeNumber = Number(incomeRaw);
+        const incomeNumber = Number(incomeRaw.replace(/,/g, ""));
         const messageLength = formData.message.trim().length;
 
         if (!occupation) {

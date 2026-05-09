@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { startTransition, type ChangeEvent, type Dispatch, type ElementType, type InputHTMLAttributes, type ReactNode, type SetStateAction } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
     validateFormStep,
@@ -33,19 +33,27 @@ export {
     type WalkInUnit,
 } from "@/lib/application-intake";
 
+const DATE_MIN = new Date().toISOString().split("T")[0];
+const DATE_MAX = "2099-12-31";
+
 interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
     icon: ElementType;
     label?: string;
     error?: string;
     id: string;
     nextFieldId?: string;
+    blockNumbers?: boolean;
 }
 
-function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, ...props }: GlassInputProps) {
+function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, blockNumbers, ...props }: GlassInputProps) {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && nextFieldId) {
             e.preventDefault();
             document.getElementById(nextFieldId)?.focus();
+        }
+        if (blockNumbers && e.key.length === 1 && /\d/.test(e.key)) {
+            e.preventDefault();
+            return;
         }
         onKeyDown?.(e);
     };
@@ -192,6 +200,9 @@ export function ApplicationIdentityStep({
                         placeholder="Maria Mercedes"
                         value={formData.applicant_name}
                         error={formErrors.applicant_name}
+                        maxLength={100}
+                        pattern="[a-zA-Z\s.,'-]+"
+                        blockNumbers
                         nextFieldId="applicant-email"
                         onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("applicant_name", e.target.value, ["applicant_name"])}
                     />
@@ -211,11 +222,14 @@ export function ApplicationIdentityStep({
                             id="applicant-phone"
                             icon={Phone}
                             label="Phone Number"
-                            placeholder="+63 9xx xxx xxxx"
+                            type="tel"
+                            inputMode="tel"
+                            maxLength={11}
+                            placeholder="09171234567"
                             value={formData.applicant_phone}
                             error={formErrors.applicant_phone}
                             nextFieldId="move-in-date"
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("applicant_phone", e.target.value, ["applicant_phone"])}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("applicant_phone", e.target.value.replace(/\s/g, ""), ["applicant_phone"])}
                         />
                     </div>
 
@@ -232,6 +246,8 @@ export function ApplicationIdentityStep({
                                 id="move-in-date"
                                 type="date"
                                 value={formData.move_in_date}
+                                min={DATE_MIN}
+                                max={DATE_MAX}
                                 onChange={(e) => onFieldChange("move_in_date", e.target.value, ["move_in_date"])}
                                 className="h-15 w-full rounded-2xl bg-transparent py-4 pl-12 pr-4 text-sm font-medium tracking-tight text-foreground outline-none transition-all placeholder:text-muted-foreground focus-visible:ring-0 [color-scheme:light] dark:[color-scheme:dark]"
                             />
@@ -253,6 +269,9 @@ export function ApplicationIdentityStep({
                             placeholder="Juan dela Cruz"
                             value={formData.emergency_contact_name}
                             error={formErrors.emergency_contact_name}
+                            maxLength={100}
+                            pattern="[a-zA-Z\s.,'-]+"
+                            blockNumbers
                             nextFieldId="emergency-contact-phone"
                             onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("emergency_contact_name", e.target.value, ["emergency_contact_name"])}
                         />
@@ -260,10 +279,13 @@ export function ApplicationIdentityStep({
                             id="emergency-contact-phone"
                             icon={Phone}
                             label="Contact Number"
-                            placeholder="+63 9xx xxx xxxx"
+                            type="tel"
+                            inputMode="tel"
+                            maxLength={11}
+                            placeholder="09171234567"
                             value={formData.emergency_contact_phone}
                             error={formErrors.emergency_contact_phone}
-                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("emergency_contact_phone", e.target.value, ["emergency_contact_phone"])}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => onFieldChange("emergency_contact_phone", e.target.value.replace(/\s/g, ""), ["emergency_contact_phone"])}
                         />
                     </div>
                 </section>
@@ -295,6 +317,7 @@ export function ApplicationProfileStep({
                         placeholder="Software Engineer"
                         value={formData.employment_info.occupation}
                         error={formErrors.occupation}
+                        maxLength={100}
                         nextFieldId="employer"
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             onFieldChange("employment_info", { ...formData.employment_info, occupation: e.target.value }, ["occupation"])
@@ -307,6 +330,7 @@ export function ApplicationProfileStep({
                         placeholder="Stark Industries"
                         value={formData.employment_info.employer}
                         error={formErrors.employer}
+                        maxLength={100}
                         nextFieldId="income"
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             onFieldChange("employment_info", { ...formData.employment_info, employer: e.target.value }, ["employer"])
@@ -322,14 +346,25 @@ export function ApplicationProfileStep({
                         label="Monthly Net Income"
                         type="text"
                         inputMode="numeric"
-                        placeholder="0.00"
+                        maxLength={15}
+                        placeholder="50000"
                         className="font-mono"
-                        value={formData.employment_info.monthly_income ? Number(formData.employment_info.monthly_income).toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
+                        value={formData.employment_info.monthly_income ?? ""}
                         error={formErrors.monthly_income}
                         nextFieldId="additional-notes"
                         onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                            const raw = e.target.value.replace(/[^0-9.]/g, "");
+                            const raw = e.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
                             onFieldChange("employment_info", { ...formData.employment_info, monthly_income: raw }, ["monthly_income"]);
+                        }}
+                        onBlur={(e) => {
+                            const raw = String(formData.employment_info.monthly_income ?? "").replace(/[^0-9.]/g, "");
+                            if (!raw) return;
+                            const num = Number(raw);
+                            if (Number.isFinite(num)) {
+                                const formatted = num.toLocaleString("en-US");
+                                e.target.value = formatted;
+                                onFieldChange("employment_info", { ...formData.employment_info, monthly_income: formatted }, ["monthly_income"]);
+                            }
                         }}
                     />
                 </div>
@@ -347,6 +382,7 @@ export function ApplicationProfileStep({
                     <textarea
                         id="additional-notes"
                         placeholder={messagePlaceholder}
+                        maxLength={1000}
                         className={cn(
                             "min-h-[180px] w-full resize-none bg-transparent p-7 text-sm font-medium leading-relaxed text-foreground outline-none transition-all placeholder:text-muted-foreground",
                             "focus-visible:ring-4 focus-visible:ring-primary/20"

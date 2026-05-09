@@ -306,7 +306,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     emergency_contact_phone: formData.emergency_contact_phone,
                     employment_info: {
                         ...formData.employment_info,
-                        monthly_income: Number(formData.employment_info.monthly_income) || 0,
+                        monthly_income: Number(String(formData.employment_info.monthly_income).replace(/,/g, "")) || 0,
                     },
                     requirements_checklist: formData.requirements_checklist,
                     uploaded_documents: uploadedDocuments,
@@ -666,7 +666,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                 <SummaryCard label="Applicant" value={formData.applicant_name || "Not provided"} icon={User} />
                                                 <SummaryCard label="Email" value={formData.applicant_email || "Not provided"} icon={Mail} />
                                                 <SummaryCard label="Move-in date" value={formData.move_in_date || "Not provided"} icon={Calendar} />
-                                                <SummaryCard label="Income" value={formData.employment_info.monthly_income ? `P${Number(formData.employment_info.monthly_income).toLocaleString()}` : "Not provided"} icon={Briefcase} />
+                                                <SummaryCard label="Income" value={formData.employment_info.monthly_income ? `P${Number(String(formData.employment_info.monthly_income).replace(/,/g, "")).toLocaleString()}` : "Not provided"} icon={Briefcase} />
                                             </div>
                                             
                                             <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-6 lg:p-8">

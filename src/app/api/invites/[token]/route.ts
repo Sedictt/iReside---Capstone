@@ -206,14 +206,95 @@ export async function POST(
 
         const occupation = body.employment_info?.occupation?.trim() ?? "";
         const employer = body.employment_info?.employer?.trim() ?? "";
-        const monthlyIncome = Number(body.employment_info?.monthly_income ?? 0);
+        const monthlyIncome = Number(String(body.employment_info?.monthly_income ?? "0").replace(/,/g, ""));
 
-        if (!body.applicant_name?.trim() || !body.applicant_email?.trim()) {
+        const applicantName = body.applicant_name?.trim() ?? "";
+        const applicantEmail = body.applicant_email?.trim() ?? "";
+
+        if (!applicantName || !applicantEmail) {
             return NextResponse.json({ error: "Applicant name and email are required." }, { status: 400 });
+        }
+        if (/\d/.test(applicantName)) {
+            return NextResponse.json({ error: "Applicant name must not contain numbers." }, { status: 400 });
+        }
+        if (applicantName.length < 2 || applicantName.length > 100) {
+            return NextResponse.json({ error: "Applicant name must be 2 to 100 characters." }, { status: 400 });
         }
 
         if (!occupation || !employer || !Number.isFinite(monthlyIncome) || monthlyIncome <= 0) {
             return NextResponse.json({ error: "Employment details are incomplete." }, { status: 400 });
+        }
+        if (occupation.length > 100 || employer.length > 100) {
+            return NextResponse.json({ error: "Occupation and employer must not exceed 100 characters." }, { status: 400 });
+        }
+
+        const PHONE_REGEX_11 = /^(\+?63|0)?9\d{9}$/;
+        const PHONE_REGEX_10 = /^9\d{9}$/;
+        const getDigits = (v: string) => v.replace(/\D/g, "");
+
+        const rawPhone = body.applicant_phone ?? "";
+        const applicantPhone = rawPhone.replace(/\s/g, "").trim();
+        if (applicantPhone && getDigits(applicantPhone).length > 11) {
+            return NextResponse.json({ error: "Applicant phone must be at most 11 digits." }, { status: 400 });
+        }
+        if (applicantPhone) {
+            const digits = getDigits(applicantPhone);
+            if (digits.length === 11 && !PHONE_REGEX_11.test(digits)) {
+                return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
+            }
+            if (digits.length === 10 && !PHONE_REGEX_10.test(digits)) {
+                return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
+            }
+            if (digits.length !== 11 && digits.length !== 10) {
+                return NextResponse.json({ error: "Phone must be 10 or 11 digits (Philippine mobile)." }, { status: 400 });
+            }
+        }
+
+        const moveInDate = body.move_in_date?.trim() ?? "";
+        if (moveInDate) {
+            const parsed = new Date(moveInDate);
+            if (isNaN(parsed.getTime())) {
+                return NextResponse.json({ error: "Move-in date must be a valid date." }, { status: 400 });
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (parsed < today) {
+                return NextResponse.json({ error: "Move-in date cannot be in the past." }, { status: 400 });
+            }
+        }
+
+        const ecName = body.emergency_contact_name?.trim() ?? "";
+        if (!ecName) {
+            return NextResponse.json({ error: "Emergency contact name is required." }, { status: 400 });
+        }
+        if (/\d/.test(ecName)) {
+            return NextResponse.json({ error: "Emergency contact name must not contain numbers." }, { status: 400 });
+        }
+        if (ecName.length < 2 || ecName.length > 100) {
+            return NextResponse.json({ error: "Emergency contact name must be 2 to 100 characters." }, { status: 400 });
+        }
+
+        const rawEcPhone = body.emergency_contact_phone ?? "";
+        const ecPhone = rawEcPhone.replace(/\s/g, "").trim();
+        if (!ecPhone) {
+            return NextResponse.json({ error: "Emergency contact phone is required." }, { status: 400 });
+        }
+        if (getDigits(ecPhone).length > 11) {
+            return NextResponse.json({ error: "Emergency contact phone must be at most 11 digits." }, { status: 400 });
+        }
+        const ecDigits = getDigits(ecPhone);
+        if (ecDigits.length === 11 && !PHONE_REGEX_11.test(ecDigits)) {
+            return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
+        }
+        if (ecDigits.length === 10 && !PHONE_REGEX_10.test(ecDigits)) {
+            return NextResponse.json({ error: "Invalid Philippine mobile number format." }, { status: 400 });
+        }
+        if (ecDigits.length !== 11 && ecDigits.length !== 10) {
+            return NextResponse.json({ error: "Phone must be 10 or 11 digits (Philippine mobile)." }, { status: 400 });
+        }
+
+        if (body.message && body.message.trim().length > 1000) {
+            return NextResponse.json({ error: "Notes must not exceed 1000 characters." }, { status: 400 });
         }
 
         let resolvedUnitId = invite.unit_id;

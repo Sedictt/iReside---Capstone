@@ -126,6 +126,8 @@ const STEP_FIELD_KEYS: Record<number, FormErrorKey[]> = {
     5: [], // Finalize step - no form errors
 };
 
+const parseIncome = (v: string | number) => Number(String(v).replace(/,/g, "")) || 0;
+
 // ─── Sub-Components ──────────────────────────────────────────────────
 
 function ConfirmationModal({ 
@@ -640,7 +642,7 @@ export function WalkInApplicationModal({
             const payload = existingApplication ? {
                 application_id: existingApplication.id,
                 requirements_checklist: normalizedChecklist,
-                employment_info: { ...formData.employment_info, monthly_income: Number(formData.employment_info.monthly_income) || 0 },
+                employment_info: { ...formData.employment_info, monthly_income: parseIncome(formData.employment_info.monthly_income) },
                 status: asPending ? "pending" : allRequirementsMet ? "reviewing" : "pending",
             } : {
                 unit_id: selectedUnit,
@@ -650,7 +652,7 @@ export function WalkInApplicationModal({
                 move_in_date: formData.move_in_date || null,
                 emergency_contact_name: formData.emergency_contact_name || null,
                 emergency_contact_phone: formData.emergency_contact_phone || null,
-                employment_info: { ...formData.employment_info, monthly_income: Number(formData.employment_info.monthly_income) || 0 },
+                employment_info: { ...formData.employment_info, monthly_income: parseIncome(formData.employment_info.monthly_income) },
                 requirements_checklist: normalizedChecklist,
                 message: formData.message,
                 status: asPending ? "pending" : "reviewing",
@@ -1031,12 +1033,22 @@ export function WalkInApplicationModal({
                                                       inputMode="numeric"
                                                       placeholder="0.00"
                                                       className="font-mono"
-                                                      value={formData.employment_info.monthly_income ? Number(formData.employment_info.monthly_income).toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
+                                                      value={formData.employment_info.monthly_income ? Number(String(formData.employment_info.monthly_income).replace(/,/g, "")).toLocaleString("en-US") : ""}
                                                       error={formErrors.monthly_income}
                                                       nextFieldId="additional-notes"
                                                       onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                                          const raw = e.target.value.replace(/[^0-9.]/g, "");
+                                                          const raw = e.target.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
                                                           updateField("employment_info", { ...formData.employment_info, monthly_income: raw }, ["monthly_income"]);
+                                                      }}
+                                                      onBlur={(e) => {
+                                                          const raw = String(formData.employment_info.monthly_income ?? "").replace(/[^0-9.]/g, "");
+                                                          if (!raw) return;
+                                                          const num = Number(raw);
+                                                          if (Number.isFinite(num)) {
+                                                              const formatted = num.toLocaleString("en-US");
+                                                              e.target.value = formatted;
+                                                              updateField("employment_info", { ...formData.employment_info, monthly_income: formatted }, ["monthly_income"]);
+                                                          }
                                                       }}
                                                   />
                                             </div>
@@ -1564,7 +1576,7 @@ export function WalkInApplicationModal({
                                              </div>
                                              <div className="space-y-4 rounded-[2rem] border border-border bg-card/90 p-7">
                                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Income</p>
-                                                 <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">₱{Number(formData.employment_info.monthly_income).toLocaleString()}</p>
+                                                 <p className="text-2xl font-black uppercase italic tracking-tighter text-foreground">₱{parseIncome(formData.employment_info.monthly_income).toLocaleString()}</p>
                                                  <div className="pt-2 flex items-center gap-2">
                                                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Verified Monthly</p>
