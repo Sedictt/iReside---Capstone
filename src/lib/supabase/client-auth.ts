@@ -55,8 +55,53 @@ export async function signOut() {
         console.warn('Could not clear custom storage:', e)
     }
 
-    // Route logout through the server so middleware-visible cookies are
+// Route logout through the server so middleware-visible cookies are
     // definitely cleared before we land on the login page.
     const timestamp = Date.now()
     window.location.replace(`/auth/logout?logout=${timestamp}`)
+}
+
+/**
+ * Update tenant password and mark account as claimed.
+ *
+ * This function:
+ * 1. Updates the user's password in Supabase Auth
+ * 2. Sets has_changed_password = true in the user's profile
+ *
+ * Call this when a tenant changes their password for the first time.
+ * This ensures the landlord can no longer resend credentials for this account.
+ */
+export async function updateTenantPassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        const supabase = createClient()
+
+        // Step 1: Update the password in Supabase Auth
+        const { error: authError } = await supabase.auth.updateUser({
+            password: newPassword,
+        })
+
+        if (authError) {
+            console.error('[updateTenantPassword] Auth update failed:', authError)
+            return { success: false, error: authError.message }
+        }
+
+        // Step 2: Mark the account as claimed (has_changed_password = true)
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ has_changed_password: true, updated_at: new Date().toISOString() })
+            .eq('id', (await supabase.auth.getUser()).data.user?.id)
+
+        if (profileError) {
+            console.error('[updateTenantPassword] Profile update failed:', profileError)
+            // Password was changed successfully, but profile update failed
+            // This is not critical - the password change is what matters
+            // The user can still use the system, but landlord might still see them as unclaimed
+            return { success: false, error: 'Password updated but failed to mark account as claimed. Please refresh the page.' }
+        }
+
+        return { success: true }
+    } catch (error) {
+        console.error('[updateTenantPassword] Unexpected error:', error)
+        return { success: false, error: 'An unexpected error occurred' }
+    }
 }

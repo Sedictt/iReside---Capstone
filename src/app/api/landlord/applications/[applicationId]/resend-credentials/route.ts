@@ -67,12 +67,20 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
 
     const { data: existingProfile } = await adminClient
         .from("profiles")
-        .select("id")
+        .select("id, has_changed_password")
         .eq("email", tenantEmail)
         .maybeSingle();
 
     const accountExisted = Boolean(existingProfile?.id);
     let tenantId = existingProfile?.id ?? null;
+
+    // Security check: prevent resending credentials for claimed accounts
+    if (accountExisted && existingProfile?.has_changed_password === true) {
+        return NextResponse.json(
+            { error: "Cannot resend credentials for claimed accounts. The tenant has already set up their password." },
+            { status: 403 }
+        );
+    }
     let tempPassword: string | null = null;
     let inviteUrl: string | null = null;
 
@@ -123,6 +131,7 @@ export async function POST(_request: Request, context: { params: Promise<{ appli
                     full_name: tenantName,
                     email: tenantEmail,
                     role: "tenant" as const,
+                    has_changed_password: false,
                 },
                 { onConflict: "id" }
             )

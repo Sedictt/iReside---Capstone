@@ -45,6 +45,7 @@ import {
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { updateTenantPassword } from "@/lib/supabase/client-auth";
 
 // Types
 type Section = "My Profile" | "Security" | "Privacy" | "Notifications" | "Billing" | "Data Export" | "Delete Account";
@@ -134,6 +135,46 @@ export function TenantSettings() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordUpdating, setPasswordUpdating] = useState(false);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    const handlePasswordUpdate = async () => {
+        // Reset states
+        setPasswordError(null);
+        setPasswordSuccess(false);
+
+        // Validation
+        if (!currentPassword) {
+            setPasswordError("Please enter your current password.");
+            return;
+        }
+        if (newPassword.length < 6) {
+            setPasswordError("New password must be at least 6 characters.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPasswordError("New passwords do not match.");
+            return;
+        }
+
+        setPasswordUpdating(true);
+        try {
+            const result = await updateTenantPassword(newPassword);
+            if (result.success) {
+                setPasswordSuccess(true);
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+            } else {
+                setPasswordError(result.error || "Failed to update password.");
+            }
+        } catch {
+            setPasswordError("An unexpected error occurred.");
+        } finally {
+            setPasswordUpdating(false);
+        }
+    };
 
     // Privacy State
     const [privacyLandlordSearch, setPrivacyLandlordSearch] = useState(true);
@@ -447,8 +488,22 @@ export function TenantSettings() {
                                         </p>
                                     </div>
                                 )}
-                                <button className="mt-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/20 w-fit">
-                                    Update Password
+                                {passwordSuccess && (
+                                    <div className="mt-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                        <p className="text-sm text-emerald-600 font-medium">Password updated successfully! Your account is now secure.</p>
+                                    </div>
+                                )}
+                                {passwordError && (
+                                    <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                                        <p className="text-sm text-red-600 font-medium">{passwordError}</p>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={handlePasswordUpdate}
+                                    disabled={passwordUpdating}
+                                    className="mt-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/20 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {passwordUpdating ? "Updating..." : "Update Password"}
                                 </button>
                             </div>
                         </div>

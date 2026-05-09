@@ -950,7 +950,94 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Organize and monitor your real estate portfolio.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Manage your buildings, units, and listings from a single dashboard. Use the interactive Unit Map to see occupancy status at a glance.</p>
+        <p>Managing your properties effectively is key to running a successful rental business. iReside provides you with all the tools you need to organize your buildings, track your units, and monitor occupancy from a single, easy-to-use dashboard.</p>
+
+        <h3 id="overview">What is Property Management in iReside?</h3>
+        <p>Property management in iReside refers to the tools and features that help you oversee your rental properties. This includes adding new properties to your account, managing individual units within each property, creating and editing property listings, and tracking the occupancy status of your spaces. Everything is designed to save you time and keep your information organized.</p>
+        <p>Instead of using spreadsheets or paper records, iReside lets you manage everything digitally. You can access your property information from your computer or phone, making it easy to stay on top of your portfolio whether you are at home or on the go.</p>
+
+        <h3 id="adding-properties">Adding a New Property</h3>
+        <p>When you are ready to list a new property, you will use the property creation form to enter all the details. This information helps potential tenants understand what you are offering and helps you keep track of your inventory.</p>
+        
+        <h4 id="basic-details">Basic Property Details</h4>
+        <p>Start by entering the fundamental information about your property. This includes the complete address, the type of property whether it is an apartment, house, dormitory, or commercial space, and the total number of units available for rent. For dormitories or multi-unit buildings, you will also enter the number of floors.</p>
+        <p>Make sure the address is accurate and complete because this is how tenants will find your property on a map and verify its location.</p>
+
+        <h4 id="property-description">Property Description</h4>
+        <p>Write a clear description of your property that highlights its best features. Mention what makes it unique, the neighborhood, nearby amenities, and what types of tenants you are looking for. A good description helps attract the right tenants and sets clear expectations from the start.</p>
+        
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Tip for Landlords</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Be honest and detailed in your description. Tenants appreciate knowing exactly what to expect, and this helps reduce questions and misunderstandings later.</p>
+        </div>
+
+        <h4 id="photos">Adding Photos</h4>
+        <p>Photos are one of the most important parts of your listing. They give potential tenants a visual sense of the property and help your listing stand out. Upload clear, well-lit photos that show each part of the property including bedrooms, bathrooms, the kitchen, living areas, and any outdoor spaces. If the building has common areas like a lobby, elevator, or parking, include those too.</p>
+        <p>Make sure your photos accurately represent the property. Using old photos or photos that do not match the actual space can lead to confusion and disappointment when tenants come to view it.</p>
+
+        <h3 id="managing-units">Managing Units</h3>
+        <p>Each property can contain one or more units. A unit is a separate rental space within your property. For example, if you own an apartment building with 10 apartments, each apartment is a separate unit. If you own a dormitory with multiple rooms, each room or floor could be a unit depending on how you set it up.</p>
+
+        <h4 id="unit-details">Unit Information</h4>
+        <p>For each unit, you will need to provide specific details including the unit name or number, the monthly rent amount, the number of bedrooms and bathrooms, the maximum occupancy limit, and any amenities that come with that specific unit like a private bathroom or balcony.</p>
+
+        <h4 id="unit-status">Unit Status</h4>
+        <p>Each unit has a status that tells you its current condition in the rental process:</p>
+        <ul>
+          <li><strong>Vacant:</strong> The unit is available for rent and has no active tenant.</li>
+          <li><strong>Occupied:</strong> The unit has an active tenant and is currently being rented.</li>
+          <li><strong>Pending:</strong> The unit has a pending application or lease that has not been finalized yet.</li>
+          <li><strong>Under Maintenance:</strong> The unit is not available for rent because it is being repaired or renovated.</li>
+        </ul>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Keep Status Updated</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Make sure to update the status of your units as they change. An accurate status helps you track availability and ensures tenants see correct information when browsing listings.</p>
+        </div>
+
+        <h3 id="unit-map">Using the Unit Map</h3>
+        <p>The Unit Map is one of iReside's most powerful features for property managers. It gives you a visual representation of your properties and units, making it easy to see at a glance which units are occupied, vacant, or under maintenance.</p>
+
+        <h4 id="map-overview">Visual Overview</h4>
+        <p>Instead of looking through a list of units, you can view your property as a map. Each unit is shown as a separate block on the map, and the color of the block indicates its status. This makes it much faster to scan and understand the occupancy situation of your entire property.</p>
+        <p>The map view is especially helpful if you have multiple properties or many units because it puts all the information into a simple visual format.</p>
+
+        <h4 id="floor-plans">Floor Plans</h4>
+        <p>For buildings with multiple floors, you can view each floor separately. This lets you see which units are on which floor and understand the layout of your building. You can also configure the floor plan to show the actual arrangement of units, which helps with tenant placement and planning.</p>
+
+        <h3 id="listing-details">Unit Details</h3>
+        <p>Keeping your unit information clear and accurate helps you manage your properties effectively. Make sure the details for each unit are complete and up to date.</p>
+
+        <h4 id="rental-rates">Rental Rates</h4>
+        <p>Set your rental rates carefully for each unit. Consider the location, the condition of the property, the amenities included, and the current rates in your area. You can set different rates for different units based on their features and size.</p>
+        <p>You can also indicate which utilities are included in the rent and which ones the tenant will need to pay for separately. This transparency helps tenants understand their financial obligations.</p>
+
+        <h4 id="availability">Availability and Move-In Dates</h4>
+        <p>Always keep your unit information updated with accurate availability information. If a unit will be available on a specific date, make sure that date is shown. If a unit is not yet available, do not mark it as vacant. This prevents confusion and ensures you only receive applications for units that are truly ready.</p>
+
+        <h3 id="renewal-settings">Renewal Settings</h3>
+        <p>For each property, you can configure settings related to lease renewals. This includes the default lease duration, whether automatic renewals are offered, and the notice period required before a tenant must confirm if they are renewing or moving out.</p>
+        <p>These settings help you plan ahead and reduce gaps between tenants. When a tenant is approaching the end of their lease, the system can automatically send reminders and prompts to help with the renewal process.</p>
+
+        <h3 id="property-settings">Property Settings</h3>
+        <p>Each property has settings you can adjust to fit your management style. These include notification preferences so you know when new applications come in, the approval workflow for applications, and default templates for documents and communications.</p>
+        <p>Taking time to configure these settings correctly when you first add a property saves time later and ensures your workflow runs smoothly.</p>
+
+        <h3 id="monitoring">Monitoring Your Portfolio</h3>
+        <p>iReside gives you tools to monitor the health of your property portfolio. You can see occupancy rates, average rental income, and trends over time. This information helps you make smart decisions about pricing, when to schedule maintenance, and whether to expand your portfolio.</p>
+
+        <h3 id="common-questions">Common Questions About Property Management</h3>
+        <p><strong>Can I manage multiple properties under one account?</strong></p>
+        <p>Yes. You can add as many properties as you need to your account. Each property can have its own set of units and settings. The dashboard gives you an overview of all your properties so you can manage them from a single place.</p>
+
+        <p><strong>What happens if I need to temporarily make a unit unavailable?</strong></p>
+        <p>You can change the unit status to Under Maintenance or mark it as unavailable. This prevents new applications from being submitted for a space that is not ready for occupancy.</p>
+
+        <p><strong>Can I export my property and unit information?</strong></p>
+        <p>Yes. You can view and export details about your properties and units for your records. This is useful for financial planning and reporting.</p>
+
+        <p><strong>How do I handle different property types?</strong></p>
+        <p>iReside supports various property types including apartments, houses, dormitories, and commercial spaces. When you add a property, you select its type, and the system adjusts the available fields and options accordingly.</p>
       </div>
     ),
     next: "landlord/screening",
@@ -961,7 +1048,94 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Find the right tenants for your properties.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Review applications, verify documents, and communicate with prospective tenants before they move in.</p>
+        <p>Finding the right tenant is one of the most important decisions you will make as a property owner. A good tenant pays rent on time, takes care of the property, and follows the lease agreement. A bad tenant can cause headaches, financial losses, and property damage. iReside gives you the tools to screen applicants thoroughly and make informed decisions.</p>
+
+        <h3 id="overview">What is Tenant Screening?</h3>
+        <p>Tenant screening is the process of evaluating potential tenants before you approve their application. This involves reviewing the information they provide, checking their documents, verifying their identity and income, and communicating with them directly. The goal is to understand who is applying and whether they are likely to be a responsible tenant.</p>
+        <p>On iReside, you can manage the entire screening process digitally. Applications come to you through the platform, documents are uploaded and stored securely, and you can communicate with applicants without revealing your personal contact information until you are ready.</p>
+
+        <h3 id="receiving-applications">Receiving Applications</h3>
+        <p>When prospective tenants are interested in your property, they will submit applications through iReside. There are two main ways this can happen.</p>
+        
+        <h4 id="online-applications">Online Applications</h4>
+        <p>When you have an open unit and receive inquiries, interested applicants can submit applications through iReside. They will fill out the application form you have set up, provide their personal information, employment details, references, and upload any required documents. All of this comes to you through the platform in an organized format.</p>
+
+        <h4 id="walk-in-applications">Walk-In Applications</h4>
+        <p>If you meet prospective tenants in person, you can create a walk-in application directly in the system. This lets you enter their information on the spot or send them a link to apply later. Walk-in applications are useful when you meet someone at a property viewing or through a referral.</p>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Application Invitation</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">You can also proactively send application invitations to people you know are interested. Just create an invitation link and send it to them via email or messaging apps.</p>
+        </div>
+
+        <h3 id="reviewing-applications">Reviewing Applications</h3>
+        <p>When applications come in, you will see them in your Applications dashboard. Each application shows the applicant is basic information, their employment and income details, the references they have provided, and any documents they have uploaded.</p>
+
+        <h4 id="basic-information">Basic Information Review</h4>
+        <p>Start by reviewing the basic information. Check their full name, contact details, and the date they applied. Make sure the information is complete and consistent. Incomplete applications can be a red flag, so note if anything is missing or seems incomplete.</p>
+
+        <h4 id="income-verification">Income and Employment</h4>
+        <p>One of the most important factors in tenant screening is whether the applicant can afford the rent. Look at their stated income and employment information. Most landlords look for applicants whose monthly income is at least three times the monthly rent, though this can vary based on your criteria and local practices.</p>
+        <p>Check if they have a stable job history and if their employer is verifiable. If you have concerns about the income they have declared, you can request additional proof such as recent pay stubs or bank statements.</p>
+
+        <h4 id="references">Checking References</h4>
+        <p>References from previous landlords can be very valuable. They tell you how the applicant behaved as a tenant in the past. Did they pay rent on time? Did they take care of the property? Were there any issues or complaints?</p>
+        <p>If references are provided, take time to contact them. A quick call can reveal a lot about the applicant. If you cannot reach a reference, note this down. Multiple unsuccessful reference attempts might warrant further investigation.</p>
+
+        <h3 id="document-verification">Verifying Documents</h3>
+        <p>Applicants may be asked to provide documents to support their application. These can include proof of income such as pay stubs or bank statements, a valid government-issued ID such as a driver license or passport, and reference letters from previous landlords.</p>
+
+        <h4 id="id-verification">Identity Verification</h4>
+        <p>Check that the ID provided matches the name on the application. Look at the photo to confirm it resembles the applicant. Make sure the ID is not expired. This simple step helps ensure you are dealing with a real person and prevents fraud.</p>
+
+        <h4 id="document-storage">Secure Document Storage</h4>
+        <p>All documents uploaded through iReside are stored securely. You can view them anytime from your dashboard, and they are linked to the specific application. This creates a clear record of what you verified and when. Proper document storage also protects you if there are ever disputes about what was agreed to or verified.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Document Handling Reminder</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Handle all applicant documents with care. Do not share them with unauthorized people. Only use them for the purpose of evaluating the application. This protects both you and the applicant.</p>
+        </div>
+
+        <h3 id="communicating">Communicating with Applicants</h3>
+        <p>Clear communication helps the screening process go smoothly. iReside has built-in messaging that lets you communicate with applicants without revealing your personal phone number or email address until you choose to share it.</p>
+
+        <h4 id="status-updates">Application Status Updates</h4>
+        <p>Keep applicants informed about the status of their application. If you are still reviewing, let them know. If you need more information, contact them through the platform. If you have made a decision, communicate it clearly and promptly.</p>
+
+        <h4 id="questions">Asking Follow-Up Questions</h4>
+        <p>If you have questions about something in the application, you can message the applicant directly through iReside. Ask for clarification, request additional documents, or set up a call or meeting to learn more. This direct communication helps you make a more informed decision.</p>
+
+        <h3 id="approval-process">Approving or Declining</h3>
+        <p>Once you have reviewed the application and completed your screening, you will need to make a decision. You can either approve the application or decline it.</p>
+
+        <h4 id="approving">Approving an Applicant</h4>
+        <p>If you decide to approve the applicant, you will send them a lease agreement to review and sign. iReside makes this easy by generating the lease based on the property and unit details you have already entered. You can customize the terms as needed before sending.</p>
+        <p>Once the lease is signed by both parties, the tenant is officially confirmed and the unit status will update to reflect that it is no longer available.</p>
+
+        <h4 id="declining">Declining an Applicant</h4>
+        <p>If you decide not to proceed with an applicant, you can decline their application through the platform. It is good practice to notify them of your decision, though you are not always required to explain why. Being polite and professional in your decline message reflects well on you as a landlord.</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">Fair Housing Reminder</p>
+          <p className="m-0 text-text-medium text-sm">When screening tenants, apply consistent criteria to all applicants. Do not discriminate based on race, religion, gender, age, disability, family status, or other protected characteristics. Treat every applicant fairly and equally.</p>
+        </div>
+
+        <h3 id="screening-criteria">Setting Your Screening Criteria</h3>
+        <p>Before you start receiving applications, decide on your screening criteria. Having clear criteria helps you make consistent decisions and reduces the chance of accidentally discriminating against any group.</p>
+        <p>Consider what factors are most important to you such as minimum income requirements, credit history if accessible, rental history, employment status, and references. Write these down and apply them consistently to every applicant.</p>
+
+        <h3 id="common-questions">Common Questions About Tenant Screening</h3>
+        <p><strong>Can I charge applicants a fee for screening?</strong></p>
+        <p>This depends on local laws and regulations. Some areas allow landlords to charge application fees to cover the cost of background checks, while others prohibit or limit such fees. Check your local regulations to understand what is allowed in your area.</p>
+
+        <p><strong>What if an applicant has no rental history?</strong></p>
+        <p>Some applicants, especially younger people or those moving from abroad, may not have a previous rental history. In these cases, look at other factors such as employment stability, income, personal references, and character. You might also consider a shorter initial lease term to start.</p>
+
+        <p><strong>How long should I take to review applications?</strong></p>
+        <p>Try to review applications within a few days of receiving them. Prospective tenants are often applying to multiple properties and appreciate a quick response. If you need more time, send a brief message to let them know you are still reviewing.</p>
+
+        <p><strong>Can I accept multiple applications for the same unit?</strong></p>
+        <p>You can receive multiple applications, but be careful about accepting deposits or fees from more than one applicant for the same unit. This can lead to legal issues if you have to refund multiple people. Once you approve an applicant and they sign the lease, you should notify any other applicants that the unit is no longer available.</p>
       </div>
     ),
     next: "landlord/finance",
@@ -972,7 +1146,97 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Track rent collection and property expenses.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Monitor your cash flow, view pending invoices, and reconcile GCash or Cash payments efficiently.</p>
+        <p>Managing the financial side of rental property can be one of the most time-consuming parts of being a landlord. iReside simplifies this by providing tools to track rent payments, manage invoices, monitor cash flow, and keep clear financial records. Everything is in one place, so you do not have to juggle multiple spreadsheets or apps.</p>
+
+        <h3 id="overview">Financial Management Overview</h3>
+        <p>The Financial Hub in iReside gives you a complete picture of your property finances. You can see how much money is coming in from rent, what is owed, what has been paid, and track your property-related expenses. This helps you stay organized and ensures nothing slips through the cracks.</p>
+        <p>Whether you have one property or dozens, the financial dashboard makes it easy to understand your rental business performance at a glance.</p>
+
+        <h3 id="invoices">Managing Invoices</h3>
+        <p>Invoices are the core of rent collection in iReside. An invoice represents the amount a tenant owes for a specific period, typically monthly rent. You can create invoices manually or have them generated automatically based on the lease terms.</p>
+
+        <h4 id="creating-invoices">Creating Invoices</h4>
+        <p>When you have an active lease, you can create an invoice for the upcoming rent period. The invoice will include the amount due, the due date, and any other charges or credits that apply. Make sure the amount matches what was agreed to in the lease.</p>
+        <p>If you have set up recurring invoices, the system can generate them automatically each month, saving you time and ensuring consistency.</p>
+
+        <h4 id="invoice-status">Invoice Status Types</h4>
+        <p>Each invoice has a status that tells you where it stands in the payment process:</p>
+        <ul>
+          <li><strong>Pending:</strong> The invoice has been created but the tenant has not yet taken action to pay it.</li>
+          <li><strong>Under Review:</strong> The tenant has submitted proof of payment and you are verifying it.</li>
+          <li><strong>Paid:</strong> You have confirmed the payment and the invoice is settled.</li>
+          <li><strong>Overdue:</strong> The due date has passed and the invoice has not been paid.</li>
+          <li><strong>Partial:</strong> The tenant has paid part of the amount owed.</li>
+        </ul>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Invoice Tracking</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Keep an eye on the status of your invoices. If you see many overdue invoices, consider reaching out to tenants proactively to avoid payment delays.</p>
+        </div>
+
+        <h3 id="payment-methods">Payment Methods</h3>
+        <p>iReside currently supports two payment methods for rent collection. Understanding both helps you set correct expectations with your tenants.</p>
+
+        <h4 id="gcash-payments">GCash Payments</h4>
+        <p>Many tenants prefer to pay through GCash because it is fast and convenient. When a tenant chooses this method, they will transfer the rent amount directly to your GCash account using the details shown in the Checkout Hub. After making the transfer, they will upload proof of payment including the 13-digit reference number.</p>
+        <p>When you receive proof of payment, you will verify it by checking your GCash app or account history. If the reference number matches and the amount is correct, you confirm the payment in iReside. This updates the invoice status to Paid and creates a digital receipt for the tenant.</p>
+
+        <h4 id="cash-payments">Cash Payments</h4>
+        <p>Some tenants prefer to pay in cash, especially if they live in the same building or near your office. When a tenant selects this method, they will notify you through the platform that they intend to pay in cash. You will then meet them in person to receive the payment.</p>
+        <p>After you receive the cash, you confirm the payment in iReside. The invoice status will immediately update to Paid, and the tenant receives a digital receipt. This creates a clear record that the payment was received.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Cash Handling Reminder</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">When receiving cash payments, always provide a receipt and count the money in front of the tenant. Document the transaction in iReside right away to maintain accurate records.</p>
+        </div>
+
+        <h3 id="payment-reconciliation">Payment Reconciliation</h3>
+        <p>Payment reconciliation means matching the payments you receive with the invoices you have issued. This is important for keeping your books accurate and knowing exactly where you stand financially.</p>
+
+        <h4 id="verifying-payments">Verifying GCash Payments</h4>
+        <p>When a tenant submits proof of GCash payment, open your GCash app and look for the transaction using the reference number they provided. Check that the amount matches what is on the invoice and that the transaction was made on or around the expected date. If everything looks correct, confirm the payment in iReside.</p>
+
+        <h4 id="handling-disputes">Handling Payment Disputes</h4>
+        <p>Sometimes there may be a discrepancy. Maybe the tenant paid the wrong amount, the reference number does not match, or you do not see the transaction. If this happens, do not confirm the payment yet. Instead, contact the tenant through the messaging system and ask them to clarify or resubmit proof. This protects both parties and prevents misunderstandings.</p>
+
+        <h3 id="expenses">Tracking Expenses</h3>
+        <p>As a landlord, you will have expenses related to your properties. These can include repairs and maintenance, property taxes, insurance, utilities that you cover, management fees, and any other costs associated with running your properties.</p>
+
+        <h4 id="recording-expenses">Recording Expenses</h4>
+        <p>Keep a record of all your property-related expenses. Note the date, the amount, the category, and what it was for. This helps you track where your money is going and makes it easier to prepare for tax time or analyze the profitability of your properties.</p>
+
+        <h4 id="expense-categories">Expense Categories</h4>
+        <p>Organize your expenses into categories to make reporting easier. Common categories include Maintenance and Repairs, Utilities, Taxes and Insurance, Management Fees, Marketing and Advertising, and Legal and Professional Services.</p>
+
+        <h3 id="financial-reports">Financial Reports and Analytics</h3>
+        <p>iReside provides tools to help you understand your financial performance over time. You can see reports on rent collection rates, total income and expenses, outstanding balances, and trends across different periods.</p>
+
+        <h4 id="collection-rate">Collection Rate</h4>
+        <p>This tells you what percentage of rent due has been collected. A high collection rate means tenants are paying on time. A low rate might indicate problems that need attention, such as tenants struggling to pay or underlying issues with your payment process.</p>
+
+        <h4 id="income-summary">Income Summary</h4>
+        <p>See a breakdown of all money coming in, organized by property, by unit, or by time period. This helps you understand which properties are performing best and whether your income is growing over time.</p>
+
+        <h4 id="profit-loss">Profit and Loss Overview</h4>
+        <p>By comparing your income against your expenses, you can see the net profit or loss for each property. This is essential for understanding whether your rental business is sustainable and where you might be able to cut costs or improve efficiency.</p>
+
+        <div className="bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-green-700 dark:text-green-300 m-0">Record Keeping</p>
+          <p className="m-0 text-green-600 dark:text-green-200 text-sm">Maintaining accurate financial records protects you and makes your life easier at tax time. iReside keeps a digital record of all transactions that you can access anytime, so you never have to worry about losing receipts or forgetting about a payment.</p>
+        </div>
+
+        <h3 id="common-questions">Common Questions About Finances</h3>
+        <p><strong>Can I issue refunds through iReside?</strong></p>
+        <p>If you need to refund a tenant for any reason, you can do so by initiating a refund through the platform. Refunds can be issued for overpayments, security deposits, or any other reason you and the tenant agree on.</p>
+
+        <p><strong>What if a tenant pays the wrong amount?</strong></p>
+        <p>If a tenant pays less than the invoice amount, you can mark the invoice as Partial and the system will track what is still owed. If they pay more, you can issue a refund for the difference or credit it toward future rent.</p>
+
+        <p><strong>How do I handle late payments?</strong></p>
+        <p>iReside will mark invoices as overdue after the due date passes. You can follow up with tenants through the messaging system to remind them. You can also set up automatic reminders to be sent to tenants when their payment is due or overdue.</p>
+
+        <p><strong>Can I export my financial data?</strong></p>
+        <p>Yes. You can export your financial reports and transaction history for your records or for your accountant. This makes it easier to prepare tax returns or analyze your business performance.</p>
       </div>
     ),
     next: "landlord/maintenance",
@@ -983,7 +1247,112 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Stay on top of repairs and property upkeep.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Receive requests from tenants, assign tasks, and keep a history of all repairs performed on your properties.</p>
+        <p>Keeping your properties well-maintained is key to preserving their value and keeping tenants happy. iReside's maintenance management tools help you receive repair requests from tenants, track the status of each issue, assign tasks to the right people, and maintain a complete history of all work done on your properties.</p>
+
+        <h3 id="overview">Maintenance Management Overview</h3>
+        <p>When something breaks or needs fixing in a rental property, tenants submit maintenance requests through iReside. You receive these requests in your dashboard, review them, and take appropriate action. Whether you handle repairs yourself, hire a contractor, or guide the tenant through a self-repair, everything is tracked and recorded in the system.</p>
+        <p>Having a clear maintenance process benefits everyone. Tenants get their issues addressed promptly. You maintain the value of your property and prevent small problems from becoming big ones. And both parties have a record of what was reported and what was done about it.</p>
+
+        <h3 id="receiving-requests">Receiving Maintenance Requests</h3>
+        <p>When a tenant submits a maintenance request, you will see it appear in your maintenance dashboard. Each request includes details about the issue, photos the tenant may have uploaded, the priority level the tenant has assigned, and when it was submitted.</p>
+
+        <h4 id="request-notifications">Notifications</h4>
+        <p>You will receive a notification whenever a new maintenance request comes in. This ensures you can respond promptly, even if you are not checking the dashboard constantly. You can configure how you receive these notifications based on your preferences.</p>
+
+        <h4 id="reviewing-requests">Reviewing a Request</h4>
+        <p>When you open a maintenance request, take time to read the description carefully. Look at the photos provided. Check the priority level the tenant has selected. This gives you a good initial understanding of the issue before deciding on next steps.</p>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Quick Response Matters</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Tenants appreciate when landlords respond quickly to maintenance requests. Even if you cannot fix the issue immediately, acknowledging the request promptly lets the tenant know you are aware and working on it.</p>
+        </div>
+
+        <h3 id="issue-categories">Issue Categories</h3>
+        <p>Maintenance requests are organized by category to help you prioritize and route them appropriately. Common categories include:</p>
+        <ul>
+          <li><strong>Plumbing:</strong> Leaks, drips, clogs, water heater issues, or any water-related problems.</li>
+          <li><strong>Electrical:</strong> Outlets not working, lights flickering, circuit breaker issues, or any electrical hazards.</li>
+          <li><strong>HVAC:</strong> Air conditioning, heating, ventilation, or temperature control problems.</li>
+          <li><strong>Appliances:</strong> Problems with built-in appliances like stoves, ovens, refrigerators, or washing machines.</li>
+          <li><strong>Structural:</strong> Issues with walls, floors, ceilings, doors, windows, or the building structure.</li>
+          <li><strong>Pest Control:</strong> Insects, rodents, or other pest problems.</li>
+          <li><strong>General Repairs:</strong> Anything that does not fit neatly into the other categories.</li>
+        </ul>
+
+        <h3 id="priority-levels">Understanding Priority Levels</h3>
+        <p>Tenants assign a priority level to their request based on how urgent they believe it is. As a landlord, you can review this and adjust if needed based on your assessment of the situation.</p>
+
+        <h4 id="low-priority">Low Priority</h4>
+        <p>Minor issues that do not significantly affect daily life. Examples include a small scratch on a wall, a cabinet door that does not close properly, or a faucet that has a very slow drip. These can typically be addressed during routine maintenance or scheduled repairs.</p>
+
+        <h4 id="medium-priority">Medium Priority</h4>
+        <p>Issues that are inconvenient but not urgent. Examples include a bathroom light that sometimes flickers, a toilet that runs occasionally, or a window that is hard to open. These should be addressed in a timely manner, typically within a week or two.</p>
+
+        <h4 id="high-priority">High Priority</h4>
+        <p>Issues that seriously affect comfort or safety. Examples include heating not working in cold weather, multiple outlets not working, a significant leak that could cause water damage, or a door lock that is broken. These should be addressed as soon as possible.</p>
+
+        <h4 id="urgent-priority">Urgent Priority</h4>
+        <p>Critical issues that require immediate attention. Examples include no water supply, gas smell or leak, major water leak or flooding, electrical hazards, or security concerns like a broken main door. These require immediate action, and you should contact a professional right away.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Emergency Protocol</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">For truly emergency situations like gas leaks, electrical hazards, or major flooding, tell the tenant to contact emergency services immediately. Then focus on getting a professional to address the issue as quickly as possible.</p>
+        </div>
+
+        <h3 id="managing-requests">Managing Maintenance Requests</h3>
+        <p>Once you have reviewed a request, you will decide how to handle it. iReside gives you several options depending on the nature of the issue.</p>
+
+        <h4 id="approving-requests">Approving a Request</h4>
+        <p>If you decide the request is valid and needs to be addressed, you can approve it. This acknowledges the issue and moves it into your active maintenance queue. You can then assign it to yourself, a staff member, or an external contractor.</p>
+
+        <h4 id="assigning-tasks">Assigning Tasks</h4>
+        <p>For each approved request, you can assign it to the appropriate person. This might be a maintenance staff member you employ, a trusted contractor you work with, or even yourself if you plan to handle it. Assignment creates a clear chain of responsibility so everyone knows who is supposed to do what.</p>
+
+        <h4 id="self-repair-option">Self-Repair Option</h4>
+        <p>In some cases, you might guide the tenant to handle a minor repair themselves. This could be appropriate for simple tasks like changing a light bulb, unclogging a drain that is not completely blocked, or replacing batteries in a smoke detector. If you approve a self-repair, provide clear instructions to the tenant on what to do.</p>
+
+        <h4 id="requesting-more-info">Requesting More Information</h4>
+        <p>If a request is unclear or you need more details before deciding, you can message the tenant directly through iReside. Ask specific questions or request additional photos. This helps you make a better decision and ensures the right resources are dispatched.</p>
+
+        <h4 id="declining-requests">Declining a Request</h4>
+        <p>Not all requests are legitimate maintenance issues. A request might be for something that is the tenant is responsibility, something that was caused by tenant damage, or something outside the scope of what you agreed to handle. If you decline a request, explain your reasoning politely to the tenant so they understand why.</p>
+
+        <h3 id="tracking-status">Tracking Status Changes</h3>
+        <p>Maintenance requests go through different stages from submission to resolution. Tracking these stages helps both you and the tenant know where things stand.</p>
+        <ul>
+          <li><strong>Submitted:</strong> The tenant has reported the issue.</li>
+          <li><strong>Under Review:</strong> You are reviewing the request and deciding how to handle it.</li>
+          <li><strong>Approved:</strong> You have accepted the request and it is being worked on.</li>
+          <li><strong>In Progress:</strong> Work is actively being done to address the issue.</li>
+          <li><strong>Pending Confirmation:</strong> The work has been completed and is awaiting tenant confirmation.</li>
+          <li><strong>Completed:</strong> The issue has been resolved and closed.</li>
+          <li><strong>Declined:</strong> The request was not accepted and the reason has been communicated.</li>
+        </ul>
+
+        <h3 id="maintenance-history">Maintenance History</h3>
+        <p>Every maintenance request that is completed creates a record in the property history. This history is valuable for several reasons.</p>
+
+        <h4 id="track-patterns">Tracking Patterns</h4>
+        <p>If a particular unit or piece of equipment has frequent issues, the maintenance history will show this. This can help you identify when something needs to be replaced entirely rather than constantly repaired.</p>
+
+        <h4 id="move-out-inspections">Move-Out Inspections</h4>
+        <p>When a tenant moves out, you can reference the maintenance history to see what issues were reported during their tenancy and how they were addressed. This helps with security deposit decisions and understanding the condition of the property.</p>
+
+        <h4 id="contractor-records">Contractor Records</h4>
+        <p>If you hire contractors for repairs, the maintenance history keeps a record of who did what work and when. This is helpful for warranty purposes and for evaluating whether a contractor is doing good work.</p>
+
+        <h3 id="common-questions">Common Questions About Maintenance</h3>
+        <p><strong>Who is responsible for what repairs?</strong></p>
+        <p>Generally, landlords are responsible for keeping the property in a livable condition and addressing major systems like plumbing, electrical, and structural issues. Tenants are typically responsible for minor issues they cause and for keeping the property clean. Your lease agreement should spell out specific responsibilities.</p>
+
+        <p><strong>How quickly should I respond to maintenance requests?</strong></p>
+        <p>This depends on the priority. Urgent issues should be addressed immediately or within hours. High priority issues should be addressed within a day or two. Medium priority issues can wait a week or two. Low priority issues can be scheduled during routine maintenance.</p>
+
+        <p><strong>Can I require tenants to handle minor repairs themselves?</strong></p>
+        <p>If a repair is simple and safe for the tenant to do, you can offer them the option to handle it. However, you cannot force them to do repairs that are your responsibility or that require professional skills. Always document any agreements about repairs in writing.</p>
+
+        <p><strong>What if a tenant reports the same issue repeatedly?</strong></p>
+        <p>Check the maintenance history to see how many times this has been reported. If it is a recurring problem, it might need a more permanent fix. Consider getting a professional assessment to identify the root cause rather than just treating the symptoms.</p>
       </div>
     ),
     next: "landlord/documents",
@@ -994,7 +1363,109 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Create and manage digital lease agreements.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Generate leases, collect digital signatures, and store all property-related documents securely.</p>
+        <p>Leases are the foundation of the landlord-tenant relationship. They define the terms of the rental, establish the rights and responsibilities of both parties, and create a legally binding agreement. iReside makes it easy to create leases, collect digital signatures, and manage all your property documents in one secure place.</p>
+
+        <h3 id="overview">What is Lease Management?</h3>
+        <p>Lease management on iReside covers everything related to the lease agreement from creation to expiration. This includes generating the initial lease document based on the terms you set, collecting signatures from both you and your tenant, storing the signed document securely, and handling any amendments or renewals that come up during the tenancy.</p>
+        <p>Instead of dealing with paper documents, scanning, and physical filing, iReside keeps everything digital and organized. You can access any lease document from your dashboard whenever you need it.</p>
+
+        <h3 id="lease-basics">Lease Agreement Basics</h3>
+        <p>A lease agreement is a legal contract between you and your tenant. It outlines the terms under which the tenant is allowed to occupy your property. Key elements typically include:</p>
+        <ul>
+          <li><strong>Parties:</strong> The names of the landlord and tenant.</li>
+          <li><strong>Property:</strong> The address and specific unit being rented.</li>
+          <li><strong>Lease Term:</strong> The start and end dates of the rental agreement.</li>
+          <li><strong>Rent:</strong> The monthly amount, due date, and accepted payment methods.</li>
+          <li><strong>Deposits:</strong> The security deposit amount and conditions for its return.</li>
+          <li><strong>Utilities:</strong> Which utilities are included and which are the tenant responsibility.</li>
+          <li><strong>Rules:</strong> Any specific policies about pets, guests, noise, or modifications.</li>
+          <li><strong>Maintenance:</strong> Who is responsible for what types of repairs and upkeep.</li>
+        </ul>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Legal Disclaimer</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">While iReside provides tools to help you create and manage leases, it is not a substitute for professional legal advice. Consider consulting with a lawyer to ensure your lease agreements comply with local laws and adequately protect your interests.</p>
+        </div>
+
+        <h3 id="creating-leases">Creating a Lease</h3>
+        <p>When you approve a tenant application, you can move on to creating the lease. The process starts with generating the lease document in iReside.</p>
+
+        <h4 id="lease-generation">Automatic Lease Generation</h4>
+        <p>iReside can automatically generate a lease document based on the information already in the system. This includes the property details, unit information, the rent amount you have set, and the terms you have configured. This saves time because you do not have to enter the same information multiple times.</p>
+
+        <h4 id="customizing-terms">Customizing Terms</h4>
+        <p>While the auto-generated lease provides a starting point, you should review it carefully and customize any terms as needed for your specific situation. You can adjust the rent amount, change the lease duration, add special conditions, or modify any other terms to fit your agreement with the tenant.</p>
+
+        <h4 id="addendum">Adding Addendums</h4>
+        <p>If you have special terms that are not covered in the standard lease, you can add addendums. These are additional documents that become part of the overall lease agreement. Common addendums include pet policies, parking arrangements, or specific rules for your property.</p>
+
+        <h3 id="digital-signatures">Digital Signature Process</h3>
+        <p>One of the most convenient features of iReside is the ability to collect signatures digitally. This eliminates the need for printing, scanning, and physical document handling.</p>
+
+        <h4 id="sending-for-signature">Sending the Lease</h4>
+        <p>Once you are satisfied with the lease document, you send it to the tenant for review and signature through iReside. The tenant will receive a notification and can view the complete lease in the app.</p>
+
+        <h4 id="tenant-review">Tenant Review</h4>
+        <p>The tenant has the opportunity to read through the entire lease before signing. If they have questions, they can message you through the platform. This dialogue before signing helps ensure both parties understand and agree to the terms.</p>
+
+        <h4 id="signing-process">Signing the Lease</h4>
+        <p>When the tenant is ready, they sign the lease digitally using their device. The signature is captured securely and linked to their account. After the tenant signs, the lease goes to you for your signature as well. Once both parties have signed, the lease is considered complete and legally binding.</p>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border-l-4 border-yellow-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-yellow-700 dark:text-yellow-300 m-0">Signature Reminder</p>
+          <p className="m-0 text-yellow-600 dark:text-yellow-200 text-sm">Both signatures are required before the lease is finalized. If either party has not signed, the lease is not yet complete and the tenant should not move in until it is.</p>
+        </div>
+
+        <h3 id="lease-status">Lease Status Types</h3>
+        <p>Throughout its lifecycle, a lease goes through different statuses:</p>
+        <ul>
+          <li><strong>Draft:</strong> The lease has been started but not yet sent to the tenant.</li>
+          <li><strong>Pending Tenant Signature:</strong> The lease has been sent and is waiting for the tenant to sign.</li>
+          <li><strong>Pending Landlord Signature:</strong> The tenant has signed and the lease is waiting for your signature.</li>
+          <li><strong>Active:</strong> Both parties have signed and the lease is currently in effect.</li>
+          <li><strong>Expired:</strong> The lease term has ended and the lease is no longer active.</li>
+          <li><strong>Terminated:</strong> The lease was ended early before its scheduled end date.</li>
+        </ul>
+
+        <h3 id="document-storage">Secure Document Storage</h3>
+        <p>All lease documents and related files are stored securely in iReside. You can access them anytime from your dashboard, download them for your records, or share them when needed.</p>
+
+        <h4 id="organized-files">Organized File Management</h4>
+        <p>Documents are organized by property and unit, making it easy to find what you need. Instead of searching through emails or physical files, you can quickly locate the exact lease document you are looking for.</p>
+
+        <h4 id="version-history">Version History</h4>
+        <p>If a lease is amended or renewed, the system keeps track of previous versions. You can always access the original lease and any subsequent amendments, creating a complete audit trail of the tenancy.</p>
+
+        <h3 id="lease-amendments">Lease Amendments</h3>
+        <p>Sometimes the terms of a lease need to change during the tenancy. This could be for a rent adjustment, extending the lease term, or modifying other conditions. iReside allows you to create amendments to an existing lease.</p>
+
+        <h4 id="creating-amendment">Creating an Amendment</h4>
+        <p>An amendment is a separate document that modifies specific terms of the original lease while keeping the rest of the agreement intact. To create one, you start from the existing lease, specify which terms are changing, and set the effective date of the amendment.</p>
+
+        <h4 id="amendment-signatures">Signing Amendments</h4>
+        <p>Like the original lease, amendments require signatures from both parties. The amendment process is the same as signing the original lease, with both tenant and landlord signing off on the changes digitally.</p>
+
+        <h3 id="renewals">Lease Renewals</h3>
+        <p>When a lease term is approaching its end, you may want to renew it with the same tenant. iReside can help you manage this process.</p>
+
+        <h4 id="renewal-notifications">Renewal Reminders</h4>
+        <p>You can set up automatic reminders to notify you when a lease is approaching its expiration date. This gives you time to decide whether you want to renew and to start conversations with your tenant well in advance.</p>
+
+        <h4 id="renewal-process">Renewal Process</h4>
+        <p>To renew a lease, you create a new lease document based on the current one, make any adjustments needed for the new term such as a rent increase, and send it to the tenant for signature. The old lease expires and the new one takes effect.</p>
+
+        <h3 id="common-questions">Common Questions About Leases</h3>
+        <p><strong>Can I use my own lease template?</strong></p>
+        <p>iReside provides standard lease templates, but you can customize them to fit your needs. If you have an existing lease template from a lawyer, you can work with the iReside team to integrate it into the platform.</p>
+
+        <p><strong>What happens if a tenant refuses to sign?</strong></p>
+        <p>If a tenant has concerns about the lease terms, encourage them to voice those concerns before signing. You can discuss and potentially modify terms to reach an agreement. However, if a tenant ultimately refuses to sign, the lease is not valid and you should not allow them to move in.</p>
+
+        <p><strong>Can I terminate a lease early?</strong></p>
+        <p>Sometimes situations arise where either party wants to end the lease before its scheduled end. This could be due to a breach of contract, mutual agreement, or other circumstances. iReside supports early termination through the lease termination process, which creates the necessary documentation for both parties.</p>
+
+        <p><strong>How long should I keep lease documents?</strong></p>
+        <p>It is generally recommended to keep lease documents for several years after the lease ends, especially for tax and legal purposes. With iReside, your documents are stored securely as long as you need them, and you can download copies for your records anytime.</p>
       </div>
     ),
     next: "support/faq",
@@ -1005,14 +1476,97 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Quick answers to common questions.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <h3>Is iReside free to use?</h3>
-        <p>Yes, iReside is completely free for both tenants and landlords. Some background check fees may apply depending on the landlord&apos;s requirements, but those are optional.</p>
+        <p>Here you will find answers to the most common questions about using iReside. Whether you are a tenant trying to understand how payments work or a landlord setting up your properties for the first time, this section covers the essentials. If you do not find what you are looking for here, check the Troubleshooting page or Contact Us.</p>
 
-        <h3>How do I pay rent?</h3>
-        <p>Rent can be paid via GCash or Cash/In-Person. For GCash, you transfer funds to your landlord&apos;s mobile number and upload the receipt in the app. For Cash, you notify your landlord of your intent and pay them physically.</p>
+        <h3 id="general">General Questions</h3>
+        
+        <h4 id="what-is-ireside">What is iReside?</h4>
+        <p>iReside is a property management platform that helps landlords and tenants manage the rental process digitally. For landlords, it provides tools to manage properties, screen tenants, collect rent, and handle maintenance. For tenants, it offers a simple way to apply for rentals, pay rent, submit maintenance requests, and communicate with landlords. Everything happens in one place, reducing the need for paperwork and multiple apps.</p>
 
-        <h3>Is my data secure?</h3>
-        <p>Yes. Think of iReside like a bank for your rental information. Your data is protected by locks and safeguards so only you can see it. Your password keeps your account private, and we make sure your information stays safe on our servers. You can also add an extra layer of protection by turning on two-factor authentication if you&apos;d like.</p>
+        <h4 id="is-free">Is iReside free to use?</h4>
+        <p>Yes, iReside is completely free for both tenants and landlords to use. There are no subscription fees, no monthly charges, and no hidden costs. Some optional services like background checks may involve fees if your landlord chooses to use them, but these are separate from the iReside platform itself.</p>
+
+        <h4 id="who-uses">Who can use iReside?</h4>
+        <p>iReside is designed for anyone involved in private property rentals. This includes landlords who own residential properties, dormitory operators, and property managers, as well as tenants who are looking for a place to rent. The platform is flexible and can accommodate different rental scenarios.</p>
+
+        <h4 id="security">Is my data secure?</h4>
+        <p>Yes, keeping your information safe is a top priority for iReside. Your personal and financial data is protected using industry-standard security measures. This includes encrypted data transmission, secure storage, and strict access controls. You can also add extra protection to your account by enabling two-factor authentication in your security settings.</p>
+
+        <h3 id="account">Account Questions</h3>
+
+        <h4 id="create-account">How do I create an account?</h4>
+        <p>Landlords can create an account by visiting the iReside website and clicking the sign up button. You will be asked to provide your email address, create a password, and enter some basic information about yourself. You can also sign up using your Google account for faster registration. After signing up, you will go through a verification process to confirm your identity.</p>
+        <p>Tenants do not typically create accounts in advance. Instead, your landlord will send you an application link when you express interest in a property. Once your application is approved and you sign the lease, your account is created automatically using the information you provided.</p>
+
+        <h4 id="forgot-password">I forgot my password. What do I do?</h4>
+        <p>If you forget your password, click the Forgot Password link on the login page. Enter the email address associated with your account, and we will send you instructions to reset your password. Follow the link in the email to create a new password. If you do not receive the email within a few minutes, check your spam folder.</p>
+
+        <h4 id="two-factor">What is two-factor authentication?</h4>
+        <p>Two-factor authentication, also known as 2FA, is an extra security layer for your account. When enabled, you will need to enter a verification code from your phone in addition to your password when logging in. This means even if someone discovers your password, they still cannot access your account without also having your phone. You can enable two-factor authentication in your account security settings.</p>
+
+        <h4 id="change-email">How do I change my email address?</h4>
+        <p>To change your email address, go to your account settings and look for the option to update your contact information. You will need to verify your new email address by clicking a link sent to it. Until the new email is verified, your old email remains the primary contact method for account notifications.</p>
+
+        <h3 id="payments">Payment Questions</h3>
+
+        <h4 id="pay-rent">How do I pay rent?</h4>
+        <p>Tenants can pay rent through the Payments section of their dashboard. iReside currently supports two payment methods. The first is GCash, where you transfer the rent amount to your landlord's GCash account and then upload proof of payment including the reference number. The second is Cash or In-Person, where you notify your landlord of your intent to pay in cash and meet them to complete the payment. Your landlord will then confirm the payment in the system.</p>
+
+        <h4 id="gcash-steps">What are the steps for GCash payment?</h4>
+        <p>Here is the step-by-step process for paying via GCash. First, go to your Payments dashboard and select the invoice you want to pay. Choose GCash as your payment method. You will see your landlord's GCash details including their mobile number and sometimes a QR code. Open your GCash app and transfer the exact amount shown on the invoice. Take a screenshot of the confirmation screen in GCash. Back in iReside, enter the 13-digit reference number from your GCash confirmation and upload the screenshot. Submit the payment proof. Your landlord will verify the payment and confirm it in the system.</p>
+
+        <h4 id="payment-timing">When is rent due?</h4>
+        <p>Rent is due on the date specified in your lease agreement. This is typically the first day of each month, but some landlords prefer different due dates. Check your lease or ask your landlord to confirm the exact due date for your rent payments.</p>
+
+        <h4 id="late-payments">What happens if I pay late?</h4>
+        <p>The consequences for late payments depend on what your lease says and how your landlord handles the situation. Some landlords may charge a late fee after a grace period, while others may be more flexible. If you know you will be late, communicate with your landlord as soon as possible through the iReside messaging system. Most landlords appreciate being informed and are willing to work out a solution.</p>
+
+        <h4 id="receipts">Can I get a receipt for my payment?</h4>
+        <p>Yes. Once your landlord confirms your payment in iReside, a digital receipt is automatically generated. You can view and download receipts from your Payment History at any time. These receipts serve as official proof of payment and are useful for record keeping.</p>
+
+        <h3 id="applications">Application Questions</h3>
+
+        <h4 id="apply-online">How do I apply for a property online?</h4>
+        <p>When you find a property you are interested in, ask the landlord for an application link. They will send you a unique link that takes you directly to the application form for that property. Fill out all the required information honestly and completely, upload any requested documents, and submit the application. The landlord will review it and get back to you with their decision.</p>
+
+        <h4 id="documents-needed">What documents do I need to provide?</h4>
+        <p>The documents required vary depending on what the landlord asks for. Common documents include proof of income such as recent pay stubs or bank statements, a valid government-issued ID like a driver license or passport, and reference letters from previous landlords if available. Check with the specific landlord to see exactly what they require from you.</p>
+
+        <h4 id="application-status">How will I know if my application is approved?</h4>
+        <p>You will receive a notification through the iReside app when the landlord makes a decision on your application. If approved, you will typically receive the lease agreement to review and sign. If not approved, the landlord may or may not provide a reason, depending on their preference.</p>
+
+        <h3 id="maintenance">Maintenance Questions</h3>
+
+        <h4 id="report-issue">How do I report a maintenance issue?</h4>
+        <p>To report a maintenance issue, go to the Maintenance section of your dashboard and click the New Request or plus button. Fill out the form with details about the problem, including a clear title, a description of what is wrong, the category it falls under, and the priority level. You can also upload photos to help illustrate the issue. Once you submit the request, your landlord will be notified and can take action.</p>
+
+        <h4 id="emergency-maintenance">What counts as a maintenance emergency?</h4>
+        <p>Emergencies include situations that pose a safety hazard or risk of significant property damage. Examples are gas leaks, electrical hazards, major water leaks or flooding, broken locks that compromise security, and loss of essential services like water or electricity. For emergencies, contact emergency services first if needed, then report the issue through iReside so your landlord is aware and can respond.</p>
+
+        <h4 id="maintenance-tracking">How do I track my maintenance request?</h4>
+        <p>You can see the status of your maintenance requests in the Maintenance section of your dashboard. Each request shows its current status such as Submitted, Under Review, Approved, In Progress, or Completed. You will receive notifications when the status changes. You can also message your landlord directly if you have questions about a specific request.</p>
+
+        <h3 id="leases">Lease and Document Questions</h3>
+
+        <h4 id="view-lease">How do I view my lease agreement?</h4>
+        <p>Your lease agreement and other documents are available in the Lease and Documents section of your dashboard. You can view, download, and print these documents anytime for your records. Having everything stored digitally means you never have to worry about losing important paperwork.</p>
+
+        <h4 id="sign-digitally">How does digital signing work?</h4>
+        <p>When you need to sign a document, you will receive a notification in the app. Open the document, read through it carefully, and if you agree to the terms, click the Sign button. Your signature is captured digitally and linked to your account. There is no need to print, scan, or upload anything. The process typically takes just a few minutes.</p>
+
+        <h4 id="amend-lease">Can the lease be changed after signing?</h4>
+        <p>Changes to a lease after it has been signed are called amendments. If both the landlord and tenant agree to modify certain terms, an amendment can be created and signed by both parties. The amendment becomes part of the overall lease agreement. To propose a change, contact your landlord through the messaging system and discuss what modification you would like to make.</p>
+
+        <h3 id="landlord-questions">Questions for Landlords</h3>
+
+        <h4 id="add-property">How do I add a new property?</h4>
+        <p>To add a new property, go to your Properties section and click Add Property. Enter the property details including the address, property type, and description. Add photos to showcase the property. Save the property, and it will appear in your management dashboard. You can then add individual units and configure them for tenants.</p>
+
+        <h4 id="invite-tenant">How do I invite a tenant to apply?</h4>
+        <p>There are a few ways to invite tenants. You can send a direct application link to a specific person, or you can create a walk-in application if you meet someone in person who is interested. For online invites, go to your Applications section and create an invitation. Enter the applicant is basic information and send them the link via email or messaging apps.</p>
+
+        <h4 id="verify-payment">How do I verify a GCash payment?</h4>
+        <p>When a tenant submits proof of GCash payment, open your GCash app and look for the transaction using the reference number they provided. Confirm that the amount matches your invoice and that the transaction was made recently. If everything looks correct, go to the payment in your dashboard and click Confirm. This updates the invoice status to Paid and generates a receipt for the tenant.</p>
       </div>
     ),
     next: "support/troubleshooting",
@@ -1023,18 +1577,161 @@ const DOCS_CONTENT: Record<string, { title: string; subtitle?: string; content: 
     subtitle: "Solutions to common technical issues.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>If you&apos;re experiencing issues with the app, check here for common fixes. If your problem persists, please contact support.</p>
+        <p>Sometimes things do not work as expected, and that is okay. This page covers common issues that users encounter and how to resolve them. Try these solutions before contacting support, as they often fix the problem quickly. If you have tried these steps and still need help, scroll down to the Contact Us section at the bottom of this page.</p>
+
+        <h3 id="login-issues">Login and Access Issues</h3>
+
+        <h4 id="cant-login">I cannot log into my account</h4>
+        <p>If you are having trouble logging in, here are some things to check. First, make sure you are using the correct email address associated with your account. Double-check for typos. Second, verify that your password is correct by looking at what you have typed. Passwords are case-sensitive, so check that caps lock is not accidentally on. Third, try clearing your browser cache or using a different browser. Sometimes old cached data causes login problems.</p>
+        <p>If none of these work, click the Forgot Password link on the login page to reset your password. If you still cannot log in after resetting, you may need to contact support for further assistance.</p>
+
+        <h4 id="account-locked">My account is locked</h4>
+        <p>Account locking can happen if there are too many failed login attempts. This is a security feature to protect your account from unauthorized access. If your account is locked, wait about 15 minutes and try again. In the meantime, use the Forgot Password option to reset your password, which should unlock your account immediately.</p>
+
+        <h4 id="two-factor-issues">I am having trouble with two-factor authentication</h4>
+        <p>If you are not receiving the verification code, check that your phone has a good signal and that you can receive text messages. Make sure the time on your phone is set correctly, as incorrect time can cause authentication codes to be out of sync. If you have set up an authentication app, ensure the code has not expired. The code changes every few seconds, so wait for a new one if the current one does not work.</p>
+        <p>If you have lost access to your two-factor method, use your backup codes if you saved them during setup. If you do not have backup codes, contact support with verification of your identity so they can help you regain access.</p>
+
+        <h3 id="payment-issues">Payment Issues</h3>
+
+        <h4 id="payment-not-confirmed">I submitted my payment proof but it is not confirmed</h4>
+        <p>If your payment is showing as pending for a long time, first check that you submitted the proof correctly. Verify that you entered the correct 13-digit GCash reference number and that your screenshot clearly shows the transaction. If the reference number is wrong, you can resubmit with the correct information.</p>
+        <p>Also make sure the amount you paid matches the invoice amount exactly. If there is a discrepancy, contact your landlord to clarify. If you paid in cash, make sure your landlord has confirmed receipt. You can send them a message through the platform to remind them to verify the payment.</p>
+
+        <h4 id="wrong-amount">I paid the wrong amount</h4>
+        <p>If you accidentally paid more than the invoice amount, contact your landlord through the messaging system. They can issue a refund for the difference or credit it toward your next rent. If you paid less than the invoice amount, the invoice will remain partially unpaid. You will need to pay the remaining balance to bring it to full payment.</p>
+        <p>For GCash transactions, you can only receive refunds if the sender initiated the transaction as a refund. Work with your landlord to resolve any payment discrepancies.</p>
+
+        <h4 id="gcash-error">GCash is not working or I cannot transfer</h4>
+        <p>If GCash is not working for you, first check that the GCash app is updated to the latest version. Make sure you have sufficient balance in your GCash wallet to cover the transfer amount plus any fees. Check that you have not exceeded your transaction limits for the day or week.</p>
+        <p>If GCash is down or experiencing issues, you may need to wait until the service is restored. Check GCash is official social media channels for status updates. In the meantime, if your landlord agrees, you can arrange an alternative payment method.</p>
+
+        <h3 id="document-issues">Document Issues</h3>
+
+        <h4 id="cant-upload">I cannot upload my documents</h4>
+        <p>If you are having trouble uploading documents, first check the file format. Supported formats are typically JPG, PNG, and PDF. Make sure the file is not too large. If a file is very large, try compressing it or taking a lower resolution photo. Check your internet connection and try again. If the issue persists, try a different browser or device.</p>
+
+        <h4 id="document-unclear">My uploaded document is blurry or hard to read</h4>
+        <p>Clear, readable documents are important for verification. If your upload is blurry, try retaking the photo in better lighting. Hold your phone steady and make sure the document is flat. For IDs, avoid reflections or shadows that obscure the text. You can delete and reupload a new photo if needed.</p>
+
+        <h4 id="missing-document">I cannot find my uploaded document</h4>
+        <p>All your uploaded documents should appear in the Documents section of your account. If a document you uploaded is missing, first check if it is still being processed. Large files may take a moment to fully upload. Try refreshing the page. If the document still does not appear, try uploading it again.</p>
+
+        <h3 id="notification-issues">Notification Issues</h3>
+
+        <h4 id="not-receiving-notifications">I am not receiving notifications</h4>
+        <p>If you are not getting notifications, first check your notification settings in your account profile. Make sure notifications are enabled for the types of alerts you want to receive. Next, check your phone is notification settings to ensure the iReside app is allowed to send notifications.</p>
+        <p>If notifications are enabled but you still are not receiving them, check if your phone has a poor internet connection. Notifications require an active connection to be delivered. Also check if you have accidentally blocked notifications from iReside in your phone settings.</p>
+
+        <h4 id="too-many-notifications">I am getting too many notifications</h4>
+        <p>You can adjust which notifications you receive in your account settings. Go to Notifications and toggle off the types of alerts you do not want. For example, you might want payment reminders but not marketing updates. Customize your preferences to reduce noise while staying informed about what matters.</p>
+
+        <h3 id="app-issues">App Performance Issues</h3>
+
+        <h4 id="app-slow">The app is running slowly</h4>
+        <p>If the app feels sluggish, try closing other apps running in the background to free up memory on your device. Clear your browser cache if you are using the web version. Make sure you have a stable internet connection. Restarting your browser or app can also help refresh its performance.</p>
+
+        <h4 id="app-crashing">The app keeps crashing</h4>
+        <p>If the app crashes frequently, first make sure you are using the latest version of the app or your browser. Updates often include fixes for stability issues. Try clearing your browser cache or app data and logging in again. If the problem continues, try using a different browser or device to see if the issue is specific to one setup.</p>
+
+        <h4 id="page-not-loading">A page is not loading properly</h4>
+        <p>If a specific page will not load, try refreshing your browser. Make sure you have a good internet connection. Sometimes specific pages can get stuck, and a refresh solves the issue. If the page still will not load, try clearing your browser cache and cookies, then reload the page.</p>
+
+        <h3 id="maintenance-issues">Maintenance Request Issues</h3>
+
+        <h4 id="request-not-received">My landlord did not receive my maintenance request</h4>
+        <p>After you submit a maintenance request, your landlord should receive a notification. If they have not responded or acknowledged the request, first check that you submitted it correctly and received confirmation. Then consider sending your landlord a message through the platform to let them know you have submitted a request. They may have missed the notification.</p>
+
+        <h4 id="status-wrong">The status of my maintenance request seems wrong</h4>
+        <p>If you believe the status of your request is incorrect, message your landlord through the platform to clarify. The status should update as the request progresses through stages like Under Review, Approved, In Progress, and Completed. If there is a discrepancy between what you see and what your landlord has told you, a quick message can resolve the confusion.</p>
+
+        <h3 id="data-issues">Data and Sync Issues</h3>
+
+        <h4 id="data-not-saving">My changes are not saving</h4>
+        <p>If you made changes to your profile or settings and they did not seem to save, first make sure you clicked the Save button if one was required. Check your internet connection, as changes need an active connection to sync. Wait a moment and refresh the page to see if the changes appear. If the problem persists, try logging out and back in before attempting again.</p>
+
+        <h4 id="outdated-info">I am seeing outdated information</h4>
+        <p>If you are seeing old data, try refreshing your browser or app. In most cases, a refresh will load the latest information. If the problem continues, clear your browser cache and try again. For data that involves others like your landlord, such as invoice status, there may be a delay while they update their side.</p>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Before Contacting Support</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Try these troubleshooting steps first. Many issues can be resolved on your own without needing to contact support. This saves you time and lets our team focus on the cases that really need attention.</p>
+        </div>
+
+        <h3 id="contact-support">Still Need Help?</h3>
+        <p>If you have tried the steps above and are still experiencing issues, please reach out to our support team. Provide as much detail as possible about the problem you are facing, including any error messages you have seen, what steps you have already tried, and screenshots if relevant. The more information you provide, the faster we can help you.</p>
+        <p>Visit the Contact Us page to learn how to reach our support team.</p>
       </div>
     ),
     next: "support/contact",
     prev: "support/faq",
   },
-  "support/contact": {
+"support/contact": {
     title: "Contact Us",
-    subtitle: "We&apos;re here to help.",
+    subtitle: "We are here to help.",
     content: (
       <div className="prose prose-slate dark:prose-invert max-w-none">
-        <p>Have a question or need assistance? Reach out to our team and we&apos;ll get back to you as soon as possible.</p>
+        <p>We want to make sure you have the best experience possible with iReside. If you have questions, encounter issues, or need assistance with anything, our support team is ready to help. This page explains how to reach us and what to expect when you do.</p>
+
+        <h3 id="how-to-reach">How to Contact Support</h3>
+        <p>The easiest way to reach our support team is through the contact form in the app or on our website. Fill out the form with your name, email address, and a detailed description of your question or issue. The more information you provide, the better equipped we will be to help you quickly.</p>
+        <p>You can also message us through the help section in your dashboard if you need assistance with something specific to your account. This allows us to see your account details and provide more targeted help.</p>
+
+        <h3 id="what-to-include">What to Include in Your Request</h3>
+        <p>To get the fastest and most helpful response, please include the following information in your request:</p>
+        <ul>
+          <li><strong>Your account email:</strong> The email address associated with your iReside account.</li>
+          <li><strong>A clear subject:</strong> Briefly summarize what your request is about, such as Payment Issue, Login Problem, or Maintenance Request Help.</li>
+          <li><strong>Detailed description:</strong> Explain what you are experiencing, what you have already tried, and any error messages you have seen.</li>
+          <li><strong>Screenshots:</strong> If applicable, attach screenshots that show the issue. This helps us understand the problem more clearly.</li>
+          <li><strong>Your role:</strong> Let us know if you are a tenant or a landlord, and which property or unit your request relates to if applicable.</li>
+        </ul>
+
+        <div className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-blue-700 dark:text-blue-300 m-0">Good Communication Gets Faster Results</p>
+          <p className="m-0 text-blue-600 dark:text-blue-200 text-sm">Well-structured requests with clear details help our team understand and address your issue much faster than vague messages like Help or It is not working.</p>
+        </div>
+
+        <h3 id="response-time">Response Time Expectations</h3>
+        <p>We aim to respond to all support requests as quickly as possible. Here is what you can generally expect:</p>
+        <ul>
+          <li><strong>General questions:</strong> We typically respond within 1 to 2 business days.</li>
+          <li><strong>Technical issues:</strong> We typically respond within 1 to 2 business days and work to resolve issues as quickly as possible.</li>
+          <li><strong>Urgent issues:</strong> If you have a genuine emergency related to your account security or a critical system failure, please indicate this in your subject line and we will prioritize your request.</li>
+        </ul>
+        <p>Business days are Monday through Friday, excluding public holidays. Requests submitted on weekends will be responded to on the next business day.</p>
+
+        <h3 id="types-of-help">What We Can Help With</h3>
+        <p>Our support team can assist you with a wide range of issues including:</p>
+        <ul>
+          <li>Account access problems and password resets</li>
+          <li>Technical issues with the iReside platform</li>
+          <li>Questions about features and how to use them</li>
+          <li>Payment and invoice discrepancies</li>
+          <li>Maintenance request status questions</li>
+          <li>Document upload and signing issues</li>
+          <li>Bug reports and feature suggestions</li>
+        </ul>
+
+        <h3 id="limitations">What We Cannot Help With</h3>
+        <p>While we want to help with everything, there are some things outside the scope of iReside support. We cannot provide legal advice, so questions about lease terms, tenant rights, or local rental laws should be directed to a legal professional. We also cannot intervene in disputes between landlords and tenants, though we can help with technical issues related to platform usage.</p>
+
+        <h3 id="feedback">Feedback and Suggestions</h3>
+        <p>We are always looking to improve iReside. If you have feedback about features you would like to see, improvements to existing functionality, or ideas for how we can serve you better, we would love to hear from you. Send your suggestions through the same contact form and mark it as feedback. Your ideas help shape the future of the platform.</p>
+
+        <h3 id="contact-info">Other Ways to Reach Us</h3>
+        <p>For general inquiries, you can also reach us through our social media channels. However, for specific account issues, the in-app or website contact form is the fastest route since it routes your request directly to the appropriate team member.</p>
+
+        <div className="bg-primary/5 border-l-4 border-primary p-4 my-6 rounded-r-lg">
+          <p className="font-bold text-primary m-0">We Value Your Patience</p>
+          <p className="m-0 text-text-medium text-sm">During busy periods, response times may be slightly longer than usual. We appreciate your patience and assure you that every request is important to us and will be addressed.</p>
+        </div>
+
+        <h3 id="escalation">Need to Escalate?</h3>
+        <p>If you have submitted a request and feel it has not been addressed adequately, you can request an escalation. Reply to the support thread you have already started and explain why you feel the issue needs further attention. Please include your original ticket number if you have one. We will review your case and get back to you with an update.</p>
+
+        <h3 id="self-help">Before You Contact Us</h3>
+        <p>If you are experiencing a common issue, check our FAQ and Troubleshooting pages first. Many questions can be answered quickly by browsing these resources, and you may find a solution faster than waiting for a response. Visit the FAQ page or the Troubleshooting page to see if your question is already answered there.</p>
       </div>
     ),
     next: undefined,

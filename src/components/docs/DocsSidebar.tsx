@@ -173,19 +173,132 @@ export const DOCS_NAV: NavSection[] = [
   {
     title: "Landlord Guide",
     items: [
-      { title: "Property Management", href: "/docs/landlord/properties", icon: Home },
-      { title: "Tenant Screening", href: "/docs/landlord/screening", icon: ShieldCheck },
-      { title: "Financial Overview", href: "/docs/landlord/finance", icon: CreditCard },
-      { title: "Maintenance Control", href: "/docs/landlord/maintenance", icon: Wrench },
-      { title: "Lease Management", href: "/docs/landlord/documents", icon: FileText },
+      { 
+        title: "Property Management", 
+        href: "/docs/landlord/properties", 
+        icon: Home,
+        subItems: [
+          { title: "What is Property Management?", href: "/docs/landlord/properties#overview" },
+          { title: "Adding a New Property", href: "/docs/landlord/properties#adding-properties" },
+          { title: "Managing Units", href: "/docs/landlord/properties#managing-units" },
+          { title: "Using the Unit Map", href: "/docs/landlord/properties#unit-map" },
+          { title: "Unit Details", href: "/docs/landlord/properties#listing-details" },
+          { title: "Renewal Settings", href: "/docs/landlord/properties#renewal-settings" },
+          { title: "Property Settings", href: "/docs/landlord/properties#property-settings" },
+          { title: "Monitoring Your Portfolio", href: "/docs/landlord/properties#monitoring" },
+          { title: "Common Questions", href: "/docs/landlord/properties#common-questions" },
+        ]
+      },
+      { 
+        title: "Tenant Screening", 
+        href: "/docs/landlord/screening", 
+        icon: ShieldCheck,
+        subItems: [
+          { title: "What is Tenant Screening?", href: "/docs/landlord/screening#overview" },
+          { title: "Receiving Applications", href: "/docs/landlord/screening#receiving-applications" },
+          { title: "Reviewing Applications", href: "/docs/landlord/screening#reviewing-applications" },
+          { title: "Document Verification", href: "/docs/landlord/screening#document-verification" },
+          { title: "Communicating with Applicants", href: "/docs/landlord/screening#communicating" },
+          { title: "Approving or Declining", href: "/docs/landlord/screening#approval-process" },
+          { title: "Setting Screening Criteria", href: "/docs/landlord/screening#screening-criteria" },
+          { title: "Common Questions", href: "/docs/landlord/screening#common-questions" },
+        ]
+      },
+      { 
+        title: "Financial Overview", 
+        href: "/docs/landlord/finance", 
+        icon: CreditCard,
+        subItems: [
+          { title: "Financial Management Overview", href: "/docs/landlord/finance#overview" },
+          { title: "Managing Invoices", href: "/docs/landlord/finance#invoices" },
+          { title: "Payment Methods", href: "/docs/landlord/finance#payment-methods" },
+          { title: "Payment Reconciliation", href: "/docs/landlord/finance#payment-reconciliation" },
+          { title: "Tracking Expenses", href: "/docs/landlord/finance#expenses" },
+          { title: "Financial Reports and Analytics", href: "/docs/landlord/finance#financial-reports" },
+          { title: "Common Questions", href: "/docs/landlord/finance#common-questions" },
+        ]
+      },
+      { 
+        title: "Maintenance Control", 
+        href: "/docs/landlord/maintenance", 
+        icon: Wrench,
+        subItems: [
+          { title: "Maintenance Management Overview", href: "/docs/landlord/maintenance#overview" },
+          { title: "Receiving Maintenance Requests", href: "/docs/landlord/maintenance#receiving-requests" },
+          { title: "Issue Categories", href: "/docs/landlord/maintenance#issue-categories" },
+          { title: "Understanding Priority Levels", href: "/docs/landlord/maintenance#priority-levels" },
+          { title: "Managing Requests", href: "/docs/landlord/maintenance#managing-requests" },
+          { title: "Tracking Status Changes", href: "/docs/landlord/maintenance#tracking-status" },
+          { title: "Maintenance History", href: "/docs/landlord/maintenance#maintenance-history" },
+          { title: "Common Questions", href: "/docs/landlord/maintenance#common-questions" },
+        ]
+      },
+      { 
+        title: "Lease Management", 
+        href: "/docs/landlord/documents", 
+        icon: FileText,
+        subItems: [
+          { title: "What is Lease Management?", href: "/docs/landlord/documents#overview" },
+          { title: "Lease Agreement Basics", href: "/docs/landlord/documents#lease-basics" },
+          { title: "Creating a Lease", href: "/docs/landlord/documents#creating-leases" },
+          { title: "Digital Signature Process", href: "/docs/landlord/documents#digital-signatures" },
+          { title: "Lease Status Types", href: "/docs/landlord/documents#lease-status" },
+          { title: "Secure Document Storage", href: "/docs/landlord/documents#document-storage" },
+          { title: "Lease Amendments", href: "/docs/landlord/documents#lease-amendments" },
+          { title: "Lease Renewals", href: "/docs/landlord/documents#renewals" },
+          { title: "Common Questions", href: "/docs/landlord/documents#common-questions" },
+        ]
+      },
     ],
   },
   {
     title: "Support",
     items: [
-      { title: "FAQ", href: "/docs/support/faq", icon: HelpCircle },
-      { title: "Troubleshooting", href: "/docs/support/troubleshooting", icon: Settings },
-      { title: "Contact Us", href: "/docs/support/contact", icon: User },
+      { 
+        title: "FAQ", 
+        href: "/docs/support/faq", 
+        icon: HelpCircle,
+        subItems: [
+          { title: "General Questions", href: "/docs/support/faq#general" },
+          { title: "Account Questions", href: "/docs/support/faq#account" },
+          { title: "Payment Questions", href: "/docs/support/faq#payments" },
+          { title: "Application Questions", href: "/docs/support/faq#applications" },
+          { title: "Maintenance Questions", href: "/docs/support/faq#maintenance" },
+          { title: "Lease and Document Questions", href: "/docs/support/faq#leases" },
+          { title: "Questions for Landlords", href: "/docs/support/faq#landlord-questions" },
+        ]
+      },
+      { 
+        title: "Troubleshooting", 
+        href: "/docs/support/troubleshooting", 
+        icon: Settings,
+        subItems: [
+          { title: "Login and Access Issues", href: "/docs/support/troubleshooting#login-issues" },
+          { title: "Payment Issues", href: "/docs/support/troubleshooting#payment-issues" },
+          { title: "Document Issues", href: "/docs/support/troubleshooting#document-issues" },
+          { title: "Notification Issues", href: "/docs/support/troubleshooting#notification-issues" },
+          { title: "App Performance Issues", href: "/docs/support/troubleshooting#app-issues" },
+          { title: "Maintenance Request Issues", href: "/docs/support/troubleshooting#maintenance-issues" },
+          { title: "Data and Sync Issues", href: "/docs/support/troubleshooting#data-issues" },
+          { title: "Still Need Help?", href: "/docs/support/troubleshooting#contact-support" },
+        ]
+      },
+      { 
+        title: "Contact Us", 
+        href: "/docs/support/contact", 
+        icon: User,
+        subItems: [
+          { title: "How to Contact Support", href: "/docs/support/contact#how-to-reach" },
+          { title: "What to Include in Your Request", href: "/docs/support/contact#what-to-include" },
+          { title: "Response Time Expectations", href: "/docs/support/contact#response-time" },
+          { title: "What We Can Help With", href: "/docs/support/contact#types-of-help" },
+          { title: "What We Cannot Help With", href: "/docs/support/contact#limitations" },
+          { title: "Feedback and Suggestions", href: "/docs/support/contact#feedback" },
+          { title: "Other Ways to Reach Us", href: "/docs/support/contact#contact-info" },
+          { title: "Need to Escalate?", href: "/docs/support/contact#escalation" },
+          { title: "Before You Contact Us", href: "/docs/support/contact#self-help" },
+        ]
+      },
     ],
   },
 ];
