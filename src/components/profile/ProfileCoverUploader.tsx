@@ -56,9 +56,11 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
             }
 
             setCoverUrl(payload.coverUrl);
+            toast.success("Cover photo updated");
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (error) {
             console.error(error);
+            toast.error("Failed to upload cover photo");
             setCoverUrl(initialCoverUrl);
         } finally {
             URL.revokeObjectURL(previewUrl);

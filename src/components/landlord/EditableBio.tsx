@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Edit3, Check, X, Loader2, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 export default function EditableBio({
     initialBio,
@@ -33,9 +34,11 @@ export default function EditableBio({
 
             setBio(tempBio);
             setIsEditing(false);
+            toast.success("Bio updated successfully");
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (e) {
             console.error("Failed to save bio:", e);
+            toast.error("Failed to update bio. Please try again.");
         } finally {
             setSaving(false);
         }

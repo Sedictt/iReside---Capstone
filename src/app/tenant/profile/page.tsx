@@ -36,6 +36,19 @@ function formatCurrency(amount: number) {
     }).format(amount);
 }
 
+function calculateLeaseProgress(startDate: string, endDate: string): number {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+
+    if (now <= start) return 0;
+    if (now >= end) return 100;
+
+    const total = end - start;
+    const elapsed = now - start;
+    return Math.round((elapsed / total) * 100);
+}
+
 function formatRelativeDate(value: string) {
     const date = new Date(value);
     const now = new Date();
@@ -278,9 +291,9 @@ export default async function TenantProfilePage() {
                                         </p>
                                     </div>
                                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                                        <div 
-                                            className="h-full bg-[#6d9838] rounded-full" 
-                                            style={{ width: '65%' }} // Mock progress for now
+                                        <div
+                                            className="h-full bg-[#6d9838] rounded-full transition-all duration-500"
+                                            style={{ width: `${calculateLeaseProgress(activeLease.start_date, activeLease.end_date)}%` }}
                                         />
                                     </div>
                                 </div>
@@ -299,7 +312,7 @@ export default async function TenantProfilePage() {
                             <Home size={24} className="text-neutral-600" />
                         </div>
                         <h2 className="text-xl font-display font-bold text-white mb-2">No Active Residency</h2>
-                        <p className="text-neutral-500 max-w-sm mb-8">You don't have any active leases at the moment. Start exploring properties to find your next home.</p>
+                        <p className="text-neutral-500 max-w-sm mb-8">You don&apos;t have any active leases at the moment. Start exploring properties to find your next home.</p>
                         <Link 
                             href="/tenant/explore"
                             className="px-8 py-3 rounded-xl bg-[#6d9838] text-white font-bold text-[11px] tracking-widest uppercase transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[#6d9838]/20"
