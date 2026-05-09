@@ -2,79 +2,130 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Bell,
-    CheckCircle,
-    ChevronRight,
-    CreditCard,
-    Edit2,
-    Lock,
-    Plus,
-    ShieldCheck,
     User,
-    Download,
-    Trash2,
-    Mail,
-    AlertTriangle,
-    Eye,
-    EyeOff,
-    Smartphone,
+    Shield,
+    Bell,
+    CreditCard,
     Globe,
-    Camera,
-    MapPin,
+    Download,
+    Mail,
     Phone,
     FileText,
-    Clock,
+    Save,
+    CheckCircle,
+    Key,
+    Smartphone,
     Monitor,
     LogOut,
-    Key,
-    Shield,
-    Save,
-    X,
-    ChevronDown,
-    ExternalLink,
-    Archive,
-    HardDrive,
-    Calendar,
-    Receipt,
-    Wallet,
-    Info,
-    AlertCircle,
+    Eye,
+    AlertTriangle,
+    Layout,
+    ShieldCheck,
     Home,
-    CreditCard as CardIcon,
+    Wallet,
+    Receipt,
+    EyeOff,
+    Plus,
+    Info,
+    X,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/ui/LoadingSpinner";
+import { AvatarPicker } from "@/components/profile/AvatarPicker";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { updateTenantPassword } from "@/lib/supabase/client-auth";
+import { UAParser } from "ua-parser-js";
 
-// Types
-type Section = "My Profile" | "Security" | "Privacy" | "Notifications" | "Billing" | "Data Export" | "Delete Account";
+// --- Types ---
+type SettingsCategory = "Identity" | "Security" | "Notifications" | "Billing" | "Data";
 
-const SIDEBAR_ITEMS: { icon: any; label: Section; className?: string }[] = [
-    { icon: User, label: "My Profile" },
-    { icon: ShieldCheck, label: "Security" },
-    { icon: Eye, label: "Privacy" },
-    { icon: Bell, label: "Notifications" },
-    { icon: CreditCard, label: "Billing" },
-    { icon: Download, label: "Data Export" },
-    { icon: Trash2, label: "Delete Account", className: "text-red-500 hover:text-red-400 hover:bg-red-500/10" },
+interface SidebarItem {
+    id: SettingsCategory;
+    label: string;
+    icon: any;
+    description: string;
+}
+
+const SIDEBAR_ITEMS: SidebarItem[] = [
+    { 
+        id: "Identity", 
+        label: "Profile", 
+        icon: User,
+        description: "Manage your personal information"
+    },
+    { 
+        id: "Security", 
+        label: "Security & Login", 
+        icon: Shield,
+        description: "Password, 2FA and active sessions"
+    },
+    { 
+        id: "Notifications", 
+        label: "Notifications", 
+        icon: Bell,
+        description: "Communication and alert preferences"
+    },
+    { 
+        id: "Billing", 
+        label: "Billing & Payments", 
+        icon: CreditCard,
+        description: "Payment methods and transaction history"
+    },
+    { 
+        id: "Data", 
+        label: "Data & Privacy", 
+        icon: Globe,
+        description: "Export data and account management"
+    },
 ];
 
-// Reusable Toggle Switch Component
+// --- Components ---
+
+function GlassCard({ children, className, title, description }: { children: React.ReactNode; className?: string; title?: string; description?: string }) {
+    return (
+        <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
+            {(title || description) && (
+                <div className="border-b border-white/5 px-8 py-6">
+                    {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
+                    {description && <p className="text-sm text-neutral-400">{description}</p>}
+                </div>
+            )}
+            <div className="p-8">{children}</div>
+        </div>
+    );
+}
+
+function SettingField({ label, children, description, icon: Icon }: { label: string; children: React.ReactNode; description?: string; icon?: any }) {
+    return (
+        <div className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+                {Icon && <Icon className="h-3.5 w-3.5 text-neutral-500" />}
+                <label className="text-xs font-bold uppercase tracking-wider text-neutral-400">{label}</label>
+            </div>
+            {children}
+            {description && <p className="px-1 text-xs text-neutral-500">{description}</p>}
+        </div>
+    );
+}
+
 function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolean; onToggle: () => void; size?: "default" | "small" }) {
     const isSmall = size === "small";
     return (
         <button
             onClick={onToggle}
             className={cn(
-                "relative inline-flex items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
-                enabled ? "bg-primary shadow-[0_0_12px_rgba(var(--primary),0.3)]" : "bg-muted",
+                "relative inline-flex items-center rounded-full transition-all duration-300",
+                enabled ? "bg-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.3)]" : "bg-white/10",
                 isSmall ? "h-5 w-9" : "h-6 w-11"
             )}
         >
             <span
                 className={cn(
-                    "inline-block transform rounded-full bg-background shadow-sm transition-all duration-300",
+                    "inline-block transform rounded-full bg-white shadow-sm transition-all duration-300",
                     isSmall ? "h-3 w-3" : "h-4 w-4",
                     enabled
                         ? isSmall ? "translate-x-5" : "translate-x-6"
@@ -85,51 +136,85 @@ function ToggleSwitch({ enabled, onToggle, size = "default" }: { enabled: boolea
     );
 }
 
-// Reusable Setting Row Component
-function SettingRow({ title, description, children, border = true }: { title: string; description: string; children: React.ReactNode; border?: boolean }) {
+function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: string; onTabChange: (tab: string) => void }) {
     return (
-        <div className={cn("py-5", border && "border-b border-border")}>
-            <div className="flex items-center justify-between gap-4">
-                <div className="space-y-0.5 min-w-0">
-                    <h3 className="text-sm font-medium text-foreground">{title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-                </div>
-                <div className="flex-shrink-0">{children}</div>
-            </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {tabs.map((tab) => (
+                <button
+                    key={tab}
+                    onClick={() => onTabChange(tab)}
+                    className={cn(
+                        "whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold transition-all",
+                        activeTab === tab
+                            ? "bg-white/10 text-white shadow-xl shadow-white/5 border border-white/10"
+                            : "text-neutral-500 hover:text-neutral-300 hover:bg-white/5"
+                    )}
+                >
+                    {tab}
+                </button>
+            ))}
         </div>
     );
 }
 
-// Section Header Component
-function SectionHeader({ icon: Icon, title, description }: { icon: any; title: string; description: string }) {
-    return (
-        <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                    <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-            </div>
-            <p className="text-sm text-muted-foreground ml-12">{description}</p>
-        </div>
-    );
-}
+// --- Main Component ---
 
 export function TenantSettings() {
-    const [activeTab, setActiveTab] = useState<Section>("My Profile");
+    const { profile, loading, refreshProfile } = useAuth();
+    const supabase = createClient();
 
-    // Profile State
-    const [profileName, setProfileName] = useState("Alex Thompson");
-    const [profileEmail, setProfileEmail] = useState("alex.t@example.com");
-    const [profilePhone, setProfilePhone] = useState("+1 555 0123 4567");
-    const [profileAddress, setProfileAddress] = useState("Unit 402, Skyline Towers, Los Angeles, CA");
-    const [profileBio, setProfileBio] = useState("Design enthusiast and tech professional. Love discovering new neighborhoods and well-designed living spaces.");
-    const [emergencyName, setEmergencyName] = useState("Sarah Thompson");
-    const [emergencyPhone, setEmergencyPhone] = useState("+1 987 654 3210");
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    // UI State
+    const [activeTab, setActiveTab] = useState<SettingsCategory>("Identity");
+    const [activeSubTab, setActiveSubTab] = useState<string>("Profile");
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Security State
-    const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true);
+    // Mapping of Sub-tabs
+    const SUB_TABS: Record<SettingsCategory, string[]> = {
+        Identity: ["Profile", "Emergency Contact"],
+        Security: ["Account", "Protection", "Sessions"],
+        Notifications: ["Alerts"],
+        Billing: ["Payment Methods", "History"],
+        Data: ["Export", "Danger"],
+    };
+
+    // Reset sub-tab when main tab changes
+    const isRestoringFromUrl = useRef(false);
+    useEffect(() => {
+        if (!isRestoringFromUrl.current) {
+            setActiveSubTab(SUB_TABS[activeTab][0]);
+        }
+        isRestoringFromUrl.current = false;
+    }, [activeTab]);
+
+    // Read URL params on mount
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const category = searchParams.get("category");
+        const subtab = searchParams.get("subtab");
+
+        if (category && SUB_TABS[category as SettingsCategory]) {
+            isRestoringFromUrl.current = true;
+            setActiveTab(category as SettingsCategory);
+            if (subtab && SUB_TABS[category as SettingsCategory].includes(subtab)) {
+                setActiveSubTab(subtab);
+            }
+        }
+    }, []);
+
+    const [formData, setFormData] = useState({
+        full_name: "",
+        email: "",
+        phone: "",
+        address: "",
+        bio: "",
+        emergency_name: "",
+        emergency_phone: "",
+    });
+
+    // Security States
+    const [twoFAStatus, setTwoFAStatus] = useState<'loading' | 'disabled' | 'enabled'>('loading');
+    const [otpInput, setOtpInput] = useState("");
+    const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
@@ -138,13 +223,129 @@ export function TenantSettings() {
     const [passwordUpdating, setPasswordUpdating] = useState(false);
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [passwordSuccess, setPasswordSuccess] = useState(false);
+    const [disablePassword, setDisablePassword] = useState("");
+    const [isDisabling, setIsDisabling] = useState(false);
+
+    // Sessions States
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+    // Notification States
+    const [notifications, setNotifications] = useState({
+        rentEmail: true,
+        rentPush: true,
+        rentSms: true,
+        maintenanceEmail: true,
+        maintenancePush: true,
+        maintenanceSms: false,
+        leaseEmail: true,
+        leasePush: true,
+        leaseSms: false,
+        communityPush: true,
+        offersPush: false,
+    });
+
+    // Data/Export States
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    // Avatar picker
+    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+
+    useEffect(() => {
+        if (profile) {
+            setFormData({
+                full_name: profile.full_name || "",
+                email: profile.email || "",
+                phone: profile.phone || "",
+                address: profile.address || "",
+                bio: profile.bio || "",
+                emergency_name: (profile as any).emergency_contact_name || "",
+                emergency_phone: (profile as any).emergency_contact_phone || "",
+            });
+        }
+    }, [profile]);
+
+    // Fetch sessions when Security > Sessions tab is active
+    useEffect(() => {
+        if (activeTab === "Security" && activeSubTab === "Sessions") {
+            const fetchSessions = async () => {
+                setIsSessionsLoading(true);
+                try {
+                    const { data, error } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
+                    if (error) throw error;
+                    if (data) setSessions(data);
+                    
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) setCurrentSessionId((session as any).id);
+                } catch (err) {
+                    console.error("[Sessions] Failed to fetch sessions:", err);
+                } finally {
+                    setIsSessionsLoading(false);
+                }
+            };
+            fetchSessions();
+        }
+    }, [activeTab, activeSubTab, supabase]);
+
+    // Fetch 2FA status when Security > Protection is active
+    useEffect(() => {
+        if (activeTab === "Security" && activeSubTab === "Protection") {
+            const fetchTwoFAStatus = async () => {
+                try {
+                    const res = await fetch("/api/tenant/2fa?action=status");
+                    const data = await res.json();
+                    
+                    if (data.enabled) {
+                        setTwoFAStatus('enabled');
+                    } else {
+                        setTwoFAStatus('disabled');
+                    }
+                } catch (err) {
+                    console.error("[2FA] Failed to fetch status:", err);
+                    setTwoFAStatus('disabled');
+                }
+            };
+            fetchTwoFAStatus();
+        }
+    }, [activeTab, activeSubTab]);
+
+    // Early return AFTER all hooks
+    if (loading) {
+        return <PageLoader message="Loading your settings..." />;
+    }
+
+    const handleSaveProfile = async () => {
+        if (!profile) return;
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from("profiles")
+                .update({
+                    full_name: formData.full_name,
+                    phone: formData.phone,
+                    address: formData.address,
+                    bio: formData.bio,
+                    emergency_contact_name: formData.emergency_name,
+                    emergency_contact_phone: formData.emergency_phone,
+                })
+                .eq("id", profile.id);
+
+            if (error) throw error;
+            await refreshProfile();
+            toast.success("Profile updated successfully");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to update profile");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const handlePasswordUpdate = async () => {
-        // Reset states
         setPasswordError(null);
         setPasswordSuccess(false);
 
-        // Validation
         if (!currentPassword) {
             setPasswordError("Please enter your current password.");
             return;
@@ -176,297 +377,193 @@ export function TenantSettings() {
         }
     };
 
-    // Privacy State
-    const [privacyLandlordSearch, setPrivacyLandlordSearch] = useState(true);
-    const [privacyRentalHistory, setPrivacyRentalHistory] = useState(true);
-    const [privacyOnlineStatus, setPrivacyOnlineStatus] = useState(true);
-    const [privacyDataSharing, setPrivacyDataSharing] = useState(false);
+    const handleSignOutOthers = async () => {
+        setIsSessionsLoading(true);
+        const loadingToast = toast.loading("Signing out other devices...");
+        try {
+            const { error } = await supabase.auth.signOut({ scope: "others" });
+            if (error) throw error;
+            toast.success("Signed out of all other devices successfully", { id: loadingToast });
+            const { data } = await (supabase as any).from('user_sessions').select('*').order('updated_at', { ascending: false });
+            if (data) setSessions(data);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to sign out other devices", { id: loadingToast });
+        } finally {
+            setIsSessionsLoading(false);
+        }
+    };
 
-    // Notification State
-    const [notifRentEmail, setNotifRentEmail] = useState(true);
-    const [notifRentSms, setNotifRentSms] = useState(true);
-    const [notifRentPush, setNotifRentPush] = useState(true);
-    const [notifMaintenanceEmail, setNotifMaintenanceEmail] = useState(true);
-    const [notifMaintenanceSms, setNotifMaintenanceSms] = useState(false);
-    const [notifMaintenancePush, setNotifMaintenancePush] = useState(true);
-    const [notifLeaseEmail, setNotifLeaseEmail] = useState(true);
-    const [notifLeaseSms, setNotifLeaseSms] = useState(false);
-    const [notifLeasePush, setNotifLeasePush] = useState(true);
-    const [notifCommunityEmail, setNotifCommunityEmail] = useState(false);
-    const [notifCommunitySms, setNotifCommunitySms] = useState(false);
-    const [notifCommunityPush, setNotifCommunityPush] = useState(true);
-    const [notifOffersEmail, setNotifOffersEmail] = useState(false);
-    const [notifOffersSms, setNotifOffersSms] = useState(false);
-    const [notifOffersPush, setNotifOffersPush] = useState(false);
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText !== "DELETE") return;
+        
+        toast.error("Account deletion is not yet implemented. Please contact support.");
+        setShowDeleteConfirm(false);
+        setDeleteConfirmText("");
+    };
 
-    // Delete Account State
-    const [deleteConfirmText, setDeleteConfirmText] = useState("");
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-    const renderContent = () => {
-        switch (activeTab) {
-            case "My Profile":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={User} title="My Profile" description="Manage your personal information and preferences." />
-
-                        {/* Profile Card */}
-                        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                            {/* Cover */}
-                            <div className="relative h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20">
-                                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
-                            </div>
-
-                            <div className="px-8 pb-8">
-                                {/* Avatar & Name */}
-                                <div className="flex flex-col md:flex-row md:items-end justify-between -mt-12 mb-8 gap-4">
-                                    <div className="flex items-end gap-5">
-                                        <div className="relative group">
-                                            <div className="h-24 w-24 rounded-2xl bg-primary/10 p-0.5 shadow-xl ring-4 ring-card overflow-hidden">
-                                                <div className="h-full w-full rounded-[14px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                                    <User className="h-12 w-12 text-primary" />
-                                                </div>
-                                            </div>
-                                            <button className="absolute -bottom-1 -right-1 h-8 w-8 bg-primary hover:bg-primary/90 rounded-full flex items-center justify-center shadow-lg transition-colors opacity-0 group-hover:opacity-100">
-                                                <Camera className="h-3.5 w-3.5 text-primary-foreground" />
-                                            </button>
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-lg font-bold text-foreground">{profileName}</h3>
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary border border-primary/20">
-                                                    <CheckCircle className="h-3 w-3" /> Verified
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-muted-foreground">Tenant ID: #IR-992034</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsEditingProfile(!isEditingProfile)}
-                                        className={cn(
-                                            "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all shadow-sm",
-                                            isEditingProfile
-                                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                                                : "border border-border bg-background text-foreground hover:bg-muted"
-                                        )}
-                                    >
-                                        {isEditingProfile ? <><Save className="h-4 w-4" /> Save Changes</> : <><Edit2 className="h-4 w-4" /> Edit Profile</>}
-                                    </button>
-                                </div>
-
-                                {/* Profile Fields */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                            <User className="h-3 w-3" /> Full Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={profileName}
-                                            onChange={(e) => setProfileName(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all",
-                                                isEditingProfile
-                                                    ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                            <Mail className="h-3 w-3" /> Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={profileEmail}
-                                            onChange={(e) => setProfileEmail(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all",
-                                                isEditingProfile
-                                                    ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                            <Phone className="h-3 w-3" /> Phone
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            value={profilePhone}
-                                            onChange={(e) => setProfilePhone(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all",
-                                                isEditingProfile
-                                                    ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                            <Home className="h-3 w-3" /> Current Address
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={profileAddress}
-                                            onChange={(e) => setProfileAddress(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all",
-                                                isEditingProfile
-                                                    ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                            <FileText className="h-3 w-3" /> Bio
-                                        </label>
+    const renderIdentity = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Profile":
+                    return (
+                        <GlassCard title="Profile Information" description="Basic details about you.">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <SettingField label="Full Name" icon={User} description="Your verified name.">
+                                    <input
+                                        type="text"
+                                        value={formData.full_name}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Email" icon={Mail} description="Your verified email.">
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        disabled
+                                        className="w-full cursor-not-allowed rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-neutral-500"
+                                    />
+                                </SettingField>
+                                <SettingField label="Phone Number" icon={Phone}>
+                                    <input
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Address" icon={Home}>
+                                    <input
+                                        type="text"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <div className="md:col-span-2">
+                                    <SettingField label="Bio" icon={FileText} description="Tell landlords a bit about yourself.">
                                         <textarea
-                                            value={profileBio}
-                                            onChange={(e) => setProfileBio(e.target.value)}
-                                            disabled={!isEditingProfile}
-                                            rows={3}
-                                            className={cn(
-                                                "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all resize-none",
-                                                isEditingProfile
-                                                    ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                    : "bg-transparent border-transparent cursor-default"
-                                            )}
+                                            rows={4}
+                                            value={formData.bio}
+                                            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                         />
-                                    </div>
-                                </div>
-
-                                {/* Emergency Contact Section */}
-                                <div className="mt-8 pt-6 border-t border-border">
-                                    <h4 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                        <AlertCircle className="h-4 w-4 text-rose-400" />
-                                        Emergency Contact
-                                    </h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Contact Name</label>
-                                            <input
-                                                type="text"
-                                                value={emergencyName}
-                                                onChange={(e) => setEmergencyName(e.target.value)}
-                                                disabled={!isEditingProfile}
-                                                className={cn(
-                                                    "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all",
-                                                    isEditingProfile
-                                                        ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                        : "bg-transparent border-transparent cursor-default"
-                                                )}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Contact Phone</label>
-                                            <input
-                                                type="tel"
-                                                value={emergencyPhone}
-                                                onChange={(e) => setEmergencyPhone(e.target.value)}
-                                                disabled={!isEditingProfile}
-                                                className={cn(
-                                                    "w-full rounded-lg border px-4 py-2.5 text-sm text-foreground transition-all",
-                                                    isEditingProfile
-                                                        ? "bg-muted/50 border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                                        : "bg-transparent border-transparent cursor-default"
-                                                )}
-                                            />
-                                        </div>
-                                    </div>
+                                    </SettingField>
                                 </div>
                             </div>
-                        </div>
+                        </GlassCard>
+                    );
+                case "Emergency Contact":
+                    return (
+                        <GlassCard title="Emergency Contact" description="Someone we can contact in case of emergency.">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <SettingField label="Contact Name" icon={User}>
+                                    <input
+                                        type="text"
+                                        value={formData.emergency_name}
+                                        onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                                <SettingField label="Contact Phone" icon={Phone}>
+                                    <input
+                                        type="tel"
+                                        value={formData.emergency_phone}
+                                        onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    />
+                                </SettingField>
+                            </div>
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h2 className="text-3xl font-black text-white">Profile</h2>
+                        <p className="text-neutral-400">Control your personal information.</p>
                     </div>
-                );
+                    <button
+                        onClick={handleSaveProfile}
+                        disabled={isSaving}
+                        className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                    >
+                        {isSaving ? "Saving..." : <><Save className="h-5 w-5" /> Save Changes</>}
+                    </button>
+                </div>
 
-            case "Security":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={ShieldCheck} title="Security" description="Keep your account safe with these security settings." />
+                <SubNav 
+                    tabs={SUB_TABS.Identity} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
 
-                        {/* Email Address */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-muted-foreground" /> Email Address
-                            </h3>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <Mail className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-foreground">{profileEmail}</p>
-                                        <p className="text-xs text-emerald-500 flex items-center gap-1">
-                                            <CheckCircle className="h-3 w-3" /> Verified
-                                        </p>
-                                    </div>
-                                </div>
-                                <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
-                                    Change <Edit2 className="h-3 w-3" />
-                                </button>
-                            </div>
-                        </div>
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
 
-                        {/* Password */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Key className="h-4 w-4 text-muted-foreground" /> Password
-                            </h3>
-                            <div className="grid gap-4 max-w-lg">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Current Password</label>
+    const renderSecurity = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Account":
+                    return (
+                        <GlassCard title="Change Password" description="Ensure your account is using a long, random password to stay secure.">
+                            <div className="space-y-6 max-w-lg">
+                                <SettingField label="Current Password" icon={Key}>
                                     <div className="relative">
-                                        <input
+                                        <input 
                                             type={showCurrentPassword ? "text" : "password"}
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
-                                            placeholder="Enter current password"
-                                            className="w-full rounded-lg bg-muted/50 border border-border px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors pr-10"
+                                            placeholder="••••••••"
+                                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary pr-10"
                                         />
                                         <button
                                             onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
                                         >
                                             {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">New Password</label>
+                                </SettingField>
+                                <SettingField label="New Password" icon={Key}>
                                     <div className="relative">
-                                        <input
+                                        <input 
                                             type={showNewPassword ? "text" : "password"}
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
-                                            placeholder="Enter new password"
-                                            className="w-full rounded-lg bg-muted/50 border border-border px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors pr-10"
+                                            placeholder="••••••••"
+                                            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary pr-10"
                                         />
                                         <button
                                             onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors"
                                         >
                                             {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Confirm New Password</label>
-                                    <input
+                                </SettingField>
+                                <SettingField label="Confirm New Password" icon={Key}>
+                                    <input 
                                         type="password"
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder="Confirm new password"
-                                        className="w-full rounded-lg bg-muted/50 border border-border px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                                        placeholder="••••••••"
+                                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                     />
-                                </div>
+                                </SettingField>
+                                
                                 {/* Password Strength Indicator */}
                                 {newPassword && (
                                     <div className="space-y-2">
@@ -478,473 +575,406 @@ export function TenantSettings() {
                                                         "h-1 flex-1 rounded-full transition-colors",
                                                         newPassword.length >= i * 3
                                                             ? newPassword.length >= 12 ? "bg-emerald-500" : newPassword.length >= 8 ? "bg-amber-500" : "bg-red-500"
-                                                            : "bg-muted"
+                                                            : "bg-white/10"
                                                     )}
                                                 />
                                             ))}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-neutral-500">
                                             {newPassword.length < 6 ? "Weak" : newPassword.length < 10 ? "Fair" : "Strong"} password
                                         </p>
                                     </div>
                                 )}
+                                
                                 {passwordSuccess && (
-                                    <div className="mt-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                        <p className="text-sm text-emerald-600 font-medium">Password updated successfully! Your account is now secure.</p>
+                                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                        <p className="text-sm text-emerald-400 font-medium">Password updated successfully!</p>
                                     </div>
                                 )}
                                 {passwordError && (
-                                    <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                                        <p className="text-sm text-red-600 font-medium">{passwordError}</p>
+                                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                                        <p className="text-sm text-red-400 font-medium">{passwordError}</p>
                                     </div>
                                 )}
-                                <button
+                                <button 
                                     onClick={handlePasswordUpdate}
                                     disabled={passwordUpdating}
-                                    className="mt-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/20 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-white transition-all hover:bg-primary/90 disabled:opacity-50"
                                 >
                                     {passwordUpdating ? "Updating..." : "Update Password"}
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Two-Factor Auth */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-start gap-4">
-                                    <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Shield className="h-5 w-5 text-emerald-500" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h3 className="text-sm font-semibold text-foreground">Two-Factor Authentication</h3>
-                                        <p className="text-sm text-muted-foreground">Add an extra layer of security. You'll need to enter a verification code in addition to your password.</p>
-                                        {isTwoFactorEnabled && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-500 mt-2">
-                                                <CheckCircle className="h-3 w-3" /> Active
-                                            </span>
-                                        )}
+                        </GlassCard>
+                    );
+                case "Protection":
+                    return (
+                        <GlassCard title="Two-Factor Authentication" description="Add an extra layer of security to your account.">
+                            {twoFAStatus === 'loading' ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="relative flex items-center justify-center">
+                                        <div className="absolute h-12 w-12 animate-ping rounded-full bg-primary/20"></div>
+                                        <div className="relative h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                                     </div>
                                 </div>
-                                <ToggleSwitch enabled={isTwoFactorEnabled} onToggle={() => setIsTwoFactorEnabled(!isTwoFactorEnabled)} />
-                            </div>
-                        </div>
+                            ) : twoFAStatus === 'enabled' ? (
+                                <div className="space-y-6 max-w-lg">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10">
+                                        <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">2FA is Active</p>
+                                            <p className="text-xs text-neutral-400">Your account is protected with two-factor authentication.</p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/5">
+                                        <p className="text-xs text-neutral-500 mb-4">To disable 2FA, please contact support.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6 max-w-lg">
+                                    <p className="text-sm text-neutral-400">Two-factor authentication adds an extra layer of security by requiring a verification code in addition to your password.</p>
+                                    <button 
+                                        className="w-full rounded-2xl bg-primary py-3 text-sm font-bold text-white transition-all hover:bg-primary/90"
+                                        onClick={() => toast.info("2FA setup is not yet available. Contact support to enable.")}
+                                    >
+                                        Enable Two-Factor Authentication
+                                    </button>
+                                </div>
+                            )}
+                        </GlassCard>
+                    );
+                case "Sessions":
+                    return (
+                        <GlassCard title="Active Sessions" description="Devices currently logged into your account.">
+                            <div className="space-y-4 max-w-lg">
+                                {isSessionsLoading && sessions.length === 0 ? (
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">Loading sessions...</div>
+                                ) : sessions.length === 0 ? (
+                                    <div className="text-center py-4 text-xs text-neutral-500 uppercase tracking-widest font-bold">No sessions found</div>
+                                ) : (
+                                    sessions.map((sess) => {
+                                        const parser = new UAParser(sess.user_agent);
+                                        const browser = parser.getBrowser().name || "Unknown Browser";
+                                        const os = parser.getOS().name || "Unknown OS";
+                                        const deviceType = parser.getDevice().type;
+                                        
+                                        const isCurrent = sess.id === currentSessionId;
+                                        const isMobile = deviceType === "mobile" || deviceType === "tablet";
+                                        const Icon = isMobile ? Smartphone : Monitor;
 
-                        {/* Active Sessions */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Monitor className="h-4 w-4 text-muted-foreground" /> Active Sessions
-                            </h3>
+                                        const updatedDate = new Date(sess.updated_at);
+                                        const timeString = updatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                        
+                                        return (
+                                            <div key={sess.id} className={cn(
+                                                "flex items-center justify-between rounded-2xl border p-4 transition-colors",
+                                                isCurrent 
+                                                    ? "border-primary/20 bg-primary/5" 
+                                                    : "border-white/5 bg-white/5 hover:bg-white/10"
+                                            )}>
+                                                <div className="flex items-center gap-4">
+                                                    <Icon className={cn("h-5 w-5", isCurrent ? "text-primary" : "text-neutral-400")} />
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
+                                                        <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
+                                                            {isCurrent ? "Current Session" : `Last seen ${timeString}`} • IP: {sess.ip}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {isCurrent && (
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
+                                                )}
+                                            </div>
+                                        );
+                                    })
+                                )}
+                                
+                                {sessions.length > 1 && (
+                                    <button 
+                                        onClick={handleSignOutOthers}
+                                        disabled={isSessionsLoading}
+                                        className="mt-2 flex items-center gap-2 text-xs font-bold text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                                    >
+                                        <LogOut className="h-3.5 w-3.5" /> Sign out all other devices
+                                    </button>
+                                )}
+                            </div>
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
+
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-white">Security & Login</h2>
+                    <p className="text-neutral-400">Protect your account and manage active sessions.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Security} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const renderNotifications = () => (
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+        >
+            <div>
+                <h2 className="text-3xl font-black text-white">Notifications</h2>
+                <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
+            </div>
+
+            <SubNav 
+                tabs={SUB_TABS.Notifications} 
+                activeTab={activeSubTab} 
+                onTabChange={setActiveSubTab} 
+            />
+
+            <div className="mt-8">
+                <GlassCard className="!p-0 overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b border-white/5 bg-white/[0.02]">
+                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {[
+                                { key: "rent", label: "Rent Reminders", desc: "When rent is due and payment confirmations." },
+                                { key: "maintenance", label: "Maintenance Updates", desc: "Status changes for your maintenance requests." },
+                                { key: "lease", label: "Lease Updates", desc: "Renewals, expirations and document signing." },
+                                { key: "community", label: "Community Announcements", desc: "News and updates from your property." },
+                                { key: "offers", label: "Special Offers", desc: "Exclusive deals and recommendations." },
+                            ].map((item) => (
+                                <tr key={item.key} className="transition-colors hover:bg-white/[0.01]">
+                                    <td className="px-8 py-6">
+                                        <h4 className="text-sm font-bold text-white">{item.label}</h4>
+                                        <p className="text-xs text-neutral-500">{item.desc}</p>
+                                    </td>
+                                    <td className="px-4 py-6 text-center">
+                                        <ToggleSwitch 
+                                            size="small"
+                                            enabled={notifications[`${item.key}Email` as keyof typeof notifications] ?? false} 
+                                            onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Email`]: !prev[`${item.key}Email` as keyof typeof notifications] }))} 
+                                        />
+                                    </td>
+                                    <td className="px-4 py-6 text-center">
+                                        <ToggleSwitch 
+                                            size="small"
+                                            enabled={notifications[`${item.key}Push` as keyof typeof notifications] ?? false} 
+                                            onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Push`]: !prev[`${item.key}Push` as keyof typeof notifications] }))} 
+                                        />
+                                    </td>
+                                    <td className="px-4 py-6 text-center">
+                                        <ToggleSwitch 
+                                            size="small"
+                                            enabled={notifications[`${item.key}Sms` as keyof typeof notifications] ?? false} 
+                                            onToggle={() => setNotifications(prev => ({ ...prev, [`${item.key}Sms`]: !prev[`${item.key}Sms` as keyof typeof notifications] }))} 
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <div className="flex items-center justify-end gap-3 border-t border-white/5 p-6 bg-white/[0.02]">
+                        <button className="text-xs font-bold text-neutral-400 hover:text-white transition-colors">Reset to Defaults</button>
+                        <button 
+                            onClick={() => toast.success("Notification preferences saved")}
+                            className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition-all"
+                        >
+                            Save Preferences
+                        </button>
+                    </div>
+                </GlassCard>
+            </div>
+        </motion.div>
+    );
+
+    const renderBilling = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Payment Methods":
+                    return (
+                        <div className="space-y-6">
+                            <GlassCard title="Payment Methods" description="Manage your payment options.">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 rounded-2xl border border-primary/20 bg-primary/5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <Wallet className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-white">GCash (E-Wallet)</p>
+                                                <p className="text-xs text-neutral-500">Connected</p>
+                                            </div>
+                                        </div>
+                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">DEFAULT</span>
+                                    </div>
+                                    
+                                    <button className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-white/10 text-sm text-neutral-500 hover:text-white hover:border-white/20 transition-all">
+                                        <Plus className="h-4 w-4" /> Add Payment Method
+                                    </button>
+                                </div>
+                            </GlassCard>
+                        </div>
+                    );
+                case "History":
+                    return (
+                        <GlassCard title="Payment History" description="Your recent transactions.">
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-primary/20">
-                                    <div className="flex items-center gap-3">
-                                        <Monitor className="h-4 w-4 text-primary" />
-                                        <div>
-                                            <p className="text-sm text-foreground">Chrome on Windows</p>
-                                            <p className="text-xs text-muted-foreground">Los Angeles, CA · Current session</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-[10px] font-bold tracking-wider text-primary uppercase bg-primary/10 px-2 py-1 rounded">Current</span>
-                                </div>
-                                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                                    <div className="flex items-center gap-3">
-                                        <Smartphone className="h-4 w-4 text-muted-foreground" />
-                                        <div>
-                                            <p className="text-sm text-foreground">Safari on iPhone</p>
-                                            <p className="text-xs text-muted-foreground">Los Angeles, CA · 5 hours ago</p>
-                                        </div>
-                                    </div>
-                                    <button className="text-xs text-red-500 hover:text-red-400 font-medium transition-colors">Revoke</button>
-                                </div>
-                            </div>
-                            <button className="mt-4 text-xs text-red-500 hover:text-red-400 font-medium flex items-center gap-1 transition-colors">
-                                <LogOut className="h-3 w-3" /> Sign out all other sessions
-                            </button>
-                        </div>
-
-                        {/* Danger Zone */}
-                        <div className="rounded-2xl border border-red-500/10 bg-red-500/5 p-6">
-                            <h3 className="text-sm font-semibold text-red-500 mb-4 flex items-center gap-2">
-                                <AlertTriangle className="h-4 w-4" /> Danger Zone
-                            </h3>
-                            <SettingRow title="Deactivate Account" description="Temporarily disable your account. You can reactivate it later by signing in." border>
-                                <button className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
-                                    Deactivate
-                                </button>
-                            </SettingRow>
-                            <SettingRow title="Delete Account" description="Permanently delete your account and all associated data. This action cannot be undone." border={false}>
-                                <button className="px-4 py-2 rounded-lg border border-red-500/30 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors">
-                                    Delete Account
-                                </button>
-                            </SettingRow>
-                        </div>
-                    </div>
-                );
-
-            case "Privacy":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Eye} title="Privacy" description="Manage your privacy and visibility settings." />
-
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-muted-foreground" /> Visibility
-                            </h3>
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Profile Visibility</p>
-                                        <p className="text-sm text-muted-foreground">Allow landlords to view your profile during application review.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacyLandlordSearch} onToggle={() => setPrivacyLandlordSearch(!privacyLandlordSearch)} />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Share Rental History</p>
-                                        <p className="text-sm text-muted-foreground">Automatically share your verified rental history with landlords you apply to.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacyRentalHistory} onToggle={() => setPrivacyRentalHistory(!privacyRentalHistory)} />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Online Status</p>
-                                        <p className="text-sm text-muted-foreground">Show when you are active on the platform.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacyOnlineStatus} onToggle={() => setPrivacyOnlineStatus(!privacyOnlineStatus)} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <HardDrive className="h-4 w-4 text-muted-foreground" /> Data & Usage
-                            </h3>
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Data Usage for Improvements</p>
-                                        <p className="text-sm text-muted-foreground">Allow iReside to use your anonymous usage data to improve the platform.</p>
-                                    </div>
-                                    <ToggleSwitch enabled={privacyDataSharing} onToggle={() => setPrivacyDataSharing(!privacyDataSharing)} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case "Notifications":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Bell} title="Notifications" description="Choose how and when you want to be notified about activity." />
-
-                        {/* Notification Matrix */}
-                        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                            {/* Header */}
-                            <div className="px-6 py-4 border-b border-border bg-muted/30">
-                                <div className="flex items-center justify-end gap-8 pr-1">
-                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase w-12 text-center">Email</span>
-                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase w-12 text-center">SMS</span>
-                                    <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase w-12 text-center">Push</span>
-                                </div>
-                            </div>
-
-                            {/* Rows */}
-                            <div className="divide-y divide-border">
-                                {/* Rent Reminders */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Rent Reminders</p>
-                                        <p className="text-xs text-muted-foreground">Get notified before rent is due and when payments are confirmed.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifRentEmail} onToggle={() => setNotifRentEmail(!notifRentEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifRentSms} onToggle={() => setNotifRentSms(!notifRentSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifRentPush} onToggle={() => setNotifRentPush(!notifRentPush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Maintenance Updates */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Maintenance Updates</p>
-                                        <p className="text-xs text-muted-foreground">Notifications about your maintenance request status changes.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMaintenanceEmail} onToggle={() => setNotifMaintenanceEmail(!notifMaintenanceEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMaintenanceSms} onToggle={() => setNotifMaintenanceSms(!notifMaintenanceSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifMaintenancePush} onToggle={() => setNotifMaintenancePush(!notifMaintenancePush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Lease Updates */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Lease Updates</p>
-                                        <p className="text-xs text-muted-foreground">Reminders for lease renewals, expirations and document signing.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifLeaseEmail} onToggle={() => setNotifLeaseEmail(!notifLeaseEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifLeaseSms} onToggle={() => setNotifLeaseSms(!notifLeaseSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifLeasePush} onToggle={() => setNotifLeasePush(!notifLeasePush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Community Announcements */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Community Announcements</p>
-                                        <p className="text-xs text-muted-foreground">News and updates from your property management.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifCommunityEmail} onToggle={() => setNotifCommunityEmail(!notifCommunityEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifCommunitySms} onToggle={() => setNotifCommunitySms(!notifCommunitySms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifCommunityPush} onToggle={() => setNotifCommunityPush(!notifCommunityPush)} /></div>
-                                    </div>
-                                </div>
-
-                                {/* Curated Offers */}
-                                <div className="flex items-center justify-between px-6 py-5">
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-medium text-foreground">Curated Offers & Deals</p>
-                                        <p className="text-xs text-muted-foreground">Exclusive offers and property recommendations from iReside.</p>
-                                    </div>
-                                    <div className="flex items-center gap-8">
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifOffersEmail} onToggle={() => setNotifOffersEmail(!notifOffersEmail)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifOffersSms} onToggle={() => setNotifOffersSms(!notifOffersSms)} /></div>
-                                        <div className="w-12 flex justify-center"><ToggleSwitch size="small" enabled={notifOffersPush} onToggle={() => setNotifOffersPush(!notifOffersPush)} /></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex gap-3">
-                            <button className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
-                                Enable All
-                            </button>
-                            <button className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
-                                Disable All
-                            </button>
-                        </div>
-                    </div>
-                );
-
-            case "Billing":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={CreditCard} title="Billing & Payments" description="Manage your payment methods and view your payment history." />
-
-                        {/* Current Lease Summary */}
-                        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                                        <Home className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-foreground">Skyline Loft — Unit 402</h3>
-                                        <p className="text-xs text-muted-foreground">Active Lease · Jan 2024 - Jan 2025</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-2xl font-bold text-foreground">₱2,450<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Next due: Mar 1, 2026</p>
-                                </div>
-                            </div>
-                            <button className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition-colors shadow-lg shadow-primary/20">
-                                Pay Now
-                            </button>
-                        </div>
-
-                        {/* Payment Methods */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Wallet className="h-4 w-4 text-muted-foreground" /> Payment Methods
-                            </h3>
-                            <div className="grid gap-3">
-                                <div className="flex items-center justify-between p-4 rounded-xl border border-primary/20 bg-primary/5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                            <CreditCard className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-foreground">GCash (E-Wallet)</p>
-                                            <p className="text-xs text-muted-foreground">+1 555 *** 4567</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[10px] font-bold tracking-wider text-primary uppercase bg-primary/10 px-2 py-1 rounded">Default</span>
-                                        <button className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors">Edit</button>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                                            <CreditCard className="h-5 w-5 text-muted-foreground" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-foreground">Visa ending in 4242</p>
-                                            <p className="text-xs text-muted-foreground">Expires 12/2027</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <button className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors">Set Default</button>
-                                        <button className="text-xs text-red-500 hover:text-red-400 font-medium transition-colors">Remove</button>
-                                    </div>
-                                </div>
-
-                                <button className="flex items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all">
-                                    <Plus className="h-4 w-4" /> Add New Payment Method
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Payment History */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    <Receipt className="h-4 w-4 text-muted-foreground" /> Payment History
-                                </h3>
-                                <button className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 transition-colors">
-                                    Download All <Download className="h-3 w-3" />
-                                </button>
-                            </div>
-                            <div className="space-y-2">
                                 {[
                                     { date: "Feb 1, 2026", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2026-02" },
                                     { date: "Jan 1, 2026", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2026-01" },
                                     { date: "Dec 1, 2025", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2025-12" },
                                     { date: "Nov 1, 2025", amount: "₱2,450.00", status: "Paid", receipt: "#REC-2025-11" },
                                 ].map((item) => (
-                                    <div key={item.receipt} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                    <div key={item.receipt} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                                <CheckCircle className="h-5 w-5 text-emerald-500" />
                                             </div>
                                             <div>
-                                                <p className="text-sm text-foreground">{item.receipt}</p>
-                                                <p className="text-xs text-muted-foreground">{item.date}</p>
+                                                <p className="text-sm font-medium text-white">{item.receipt}</p>
+                                                <p className="text-xs text-neutral-500">{item.date}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <span className="text-sm font-medium text-foreground">{item.amount}</span>
+                                            <span className="text-sm font-bold text-white">{item.amount}</span>
                                             <button className="opacity-0 group-hover:opacity-100 text-xs text-primary hover:text-primary/80 font-medium transition-all">
-                                                <Download className="h-3.5 w-3.5" />
+                                                <Download className="h-4 w-4" />
                                             </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    </div>
-                );
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
 
-            case "Data Export":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Download} title="Data Export" description="Download a copy of your data from iReside." />
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-white">Billing & Payments</h2>
+                    <p className="text-neutral-400">Manage your payment methods and view transaction history.</p>
+                </div>
 
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <div className="flex items-start gap-4 mb-6">
-                                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                    <HardDrive className="h-6 w-6 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-semibold text-foreground mb-1">Export Your Data</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Request a copy of your personal data. This includes your profile, lease history,
-                                        payment records, and communication logs.
-                                    </p>
-                                </div>
-                            </div>
+                <SubNav 
+                    tabs={SUB_TABS.Billing} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
 
-                            <div className="grid gap-3 mb-6">
-                                {[
-                                    { icon: User, label: "Profile Information", desc: "Personal details, preferences, settings" },
-                                    { icon: FileText, label: "Lease Documents", desc: "Agreements, addendums, move-in/out records" },
-                                    { icon: Receipt, label: "Payment History", desc: "Rent receipts, transaction records" },
-                                    { icon: Mail, label: "Communications", desc: "Messages with landlord, maintenance requests" },
-                                ].map((item) => (
-                                    <label key={item.label} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border hover:border-primary/20 cursor-pointer transition-colors group">
-                                        <input type="checkbox" defaultChecked className="accent-primary h-4 w-4" />
-                                        <div className="flex items-center gap-3 flex-1">
-                                            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                                                <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-foreground">{item.label}</p>
-                                                <p className="text-xs text-muted-foreground">{item.desc}</p>
-                                            </div>
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
 
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Info className="h-3 w-3" /> Export may take up to 24 hours to process.
-                                </p>
-                                <button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
-                                    <Download className="h-4 w-4" /> Request Export
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Previous Exports */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                <Archive className="h-4 w-4 text-muted-foreground" /> Previous Exports
-                            </h3>
-                            <div className="text-sm text-muted-foreground text-center py-8">
-                                <HardDrive className="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
-                                <p>No previous exports found</p>
-                                <p className="text-xs mt-1">Request your first export above</p>
-                            </div>
-                        </div>
-                    </div>
-                );
-
-            case "Delete Account":
-                return (
-                    <div className="space-y-6 max-w-4xl">
-                        <SectionHeader icon={Trash2} title="Delete Account" description="Permanently remove your account and all associated data." />
-
-                        <div className="rounded-2xl border border-red-500/10 bg-red-500/5 p-6">
-                            <div className="flex items-start gap-4 mb-6">
-                                <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                                    <AlertTriangle className="h-6 w-6 text-red-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-semibold text-red-500 mb-2">This action is irreversible</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Deleting your account will permanently remove all your data including lease history,
-                                        payment records, and personal information. This action cannot be undone.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="rounded-xl bg-card border border-red-500/10 p-4 mb-6">
-                                <h4 className="text-sm font-medium text-foreground mb-3">What will be deleted:</h4>
-                                <ul className="space-y-2">
+    const renderData = () => {
+        const renderSubContent = () => {
+            switch (activeSubTab) {
+                case "Export":
+                    return (
+                        <GlassCard title="Data Export" description="Download a copy of your data from iReside.">
+                            <div className="space-y-6 max-w-lg">
+                                <p className="text-sm text-neutral-400">Request a copy of your personal data including profile, lease history, payment records, and communications.</p>
+                                
+                                <div className="grid gap-3">
                                     {[
-                                        "Your profile and personal information",
-                                        "Lease history and documents",
-                                        "Payment records and receipts",
-                                        "Communication history with landlords",
-                                        "Saved searches and preferences",
-                                    ].map((text) => (
-                                        <li key={text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <X className="h-3 w-3 text-red-500 flex-shrink-0" />
-                                            {text}
-                                        </li>
+                                        { icon: User, label: "Profile Information", desc: "Personal details and preferences" },
+                                        { icon: FileText, label: "Lease Documents", desc: "Agreements and records" },
+                                        { icon: Receipt, label: "Payment History", desc: "Transaction records" },
+                                        { icon: Mail, label: "Communications", desc: "Messages and requests" },
+                                    ].map((item) => (
+                                        <label key={item.label} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 cursor-pointer transition-colors group">
+                                            <input type="checkbox" defaultChecked className="accent-primary h-4 w-4" />
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
+                                                    <item.icon className="h-4 w-4 text-neutral-400 group-hover:text-primary transition-colors" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-white">{item.label}</p>
+                                                    <p className="text-xs text-neutral-500">{item.desc}</p>
+                                                </div>
+                                            </div>
+                                        </label>
                                     ))}
-                                </ul>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                    <p className="text-xs text-neutral-500 flex items-center gap-1">
+                                        <Info className="h-3 w-3" /> Export may take up to 24 hours to process.
+                                    </p>
+                                    <button className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white transition-all hover:bg-primary/90">
+                                        <Download className="h-4 w-4" /> Request Export
+                                    </button>
+                                </div>
                             </div>
+                        </GlassCard>
+                    );
+                case "Danger":
+                    return (
+                        <GlassCard className="border-red-500/20 bg-red-500/5 hover:bg-red-500/10" title="Danger Zone" description="Irreversible account actions.">
+                            <div className="space-y-6 max-w-lg">
+                                <div className="flex items-start gap-4">
+                                    <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                                        <AlertTriangle className="h-6 w-6 text-red-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-base font-bold text-red-400">Delete Account</h4>
+                                        <p className="text-sm text-neutral-400 mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl bg-white/5 border border-white/5 p-4">
+                                    <h5 className="text-sm font-semibold text-white mb-3">What will be deleted:</h5>
+                                    <ul className="space-y-2">
+                                        {[
+                                            "Your profile and personal information",
+                                            "Lease history and documents",
+                                            "Payment records and receipts",
+                                            "Communication history",
+                                            "Saved preferences",
+                                        ].map((text) => (
+                                            <li key={text} className="flex items-center gap-2 text-sm text-neutral-400">
+                                                <X className="h-3 w-3 text-red-500 flex-shrink-0" />
+                                                {text}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
 
                             {!showDeleteConfirm ? (
                                 <button
                                     onClick={() => setShowDeleteConfirm(true)}
-                                    className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-red-600/20"
+                                    className="px-6 py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition-all shadow-lg shadow-red-600/20"
                                 >
                                     I understand, delete my account
                                 </button>
@@ -954,7 +984,7 @@ export function TenantSettings() {
                                     animate={{ opacity: 1, height: "auto" }}
                                     className="space-y-4 border-t border-red-500/10 pt-4"
                                 >
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-neutral-400">
                                         Please type <span className="text-red-500 font-mono font-bold">DELETE</span> to confirm:
                                     </p>
                                     <input
@@ -962,90 +992,139 @@ export function TenantSettings() {
                                         value={deleteConfirmText}
                                         onChange={(e) => setDeleteConfirmText(e.target.value)}
                                         placeholder="Type DELETE"
-                                        className="w-full max-w-xs rounded-lg bg-card border border-red-500/20 px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/50 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
+                                        className="w-full max-w-xs rounded-xl bg-white/5 border border-red-500/20 px-4 py-3 text-sm text-white placeholder-neutral-700 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors"
                                     />
                                     <div className="flex gap-3">
                                         <button
+                                            onClick={handleDeleteAccount}
                                             disabled={deleteConfirmText !== "DELETE"}
                                             className={cn(
-                                                "px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
+                                                "px-6 py-3 rounded-2xl text-sm font-bold transition-all",
                                                 deleteConfirmText === "DELETE"
                                                     ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20"
-                                                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                                                    : "bg-white/5 text-neutral-500 cursor-not-allowed"
                                             )}
                                         >
                                             Permanently Delete
                                         </button>
                                         <button
                                             onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
-                                            className="px-4 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+                                            className="px-4 py-3 rounded-2xl border border-white/10 text-sm font-bold text-neutral-400 hover:text-white transition-all"
                                         >
                                             Cancel
                                         </button>
                                     </div>
                                 </motion.div>
                             )}
-                        </div>
-                    </div>
-                );
+                            </div>
+                        </GlassCard>
+                    );
+                default: return null;
+            }
+        };
 
-            default:
-                return (
-                    <div className="flex items-center justify-center h-64 border border-dashed border-border rounded-xl text-muted-foreground">
-                        Content for {activeTab} coming soon
-                    </div>
-                );
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+            >
+                <div>
+                    <h2 className="text-3xl font-black text-white">Data & Privacy</h2>
+                    <p className="text-neutral-400">Manage your data and account longevity.</p>
+                </div>
+
+                <SubNav 
+                    tabs={SUB_TABS.Data} 
+                    activeTab={activeSubTab} 
+                    onTabChange={setActiveSubTab} 
+                />
+
+                <div className="mt-8">
+                    {renderSubContent()}
+                </div>
+            </motion.div>
+        );
+    };
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case "Identity": return renderIdentity();
+            case "Security": return renderSecurity();
+            case "Notifications": return renderNotifications();
+            case "Billing": return renderBilling();
+            case "Data": return renderData();
+            default: return null;
         }
     };
 
     return (
-        <div className="flex w-full flex-col lg:flex-row gap-8">
+        <div className="min-h-[80vh] flex flex-col lg:flex-row gap-12">
             {/* Sidebar */}
-            <aside className="w-full lg:w-64 flex-shrink-0">
-                <div className="sticky top-24 space-y-6">
+            <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+                <div className="flex items-center gap-4 px-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-primary/20 text-primary border border-primary/20">
+                        <Layout className="h-6 w-6" />
+                    </div>
                     <div>
-                        <h2 className="text-lg font-bold text-foreground mb-1 px-3">Settings</h2>
-                        <p className="text-xs text-muted-foreground px-3 mb-4">Manage your account preferences</p>
-                        <nav className="space-y-1">
-                            {SIDEBAR_ITEMS.map((item) => (
-                                <button
-                                    key={item.label}
-                                    onClick={() => setActiveTab(item.label)}
-                                    className={cn(
-                                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                                        activeTab === item.label
-                                            ? "bg-primary/10 text-primary shadow-sm"
-                                            : item.label === "Delete Account"
-                                                ? "text-red-500 hover:bg-red-500/10"
-                                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                    )}
-                                >
-                                    <item.icon className="h-4 w-4" />
-                                    {item.label}
-                                    {activeTab === item.label && (
-                                        <ChevronRight className="h-3 w-3 ml-auto" />
-                                    )}
-                                </button>
-                            ))}
-                        </nav>
+                        <h1 className="text-xl font-black text-white">Settings</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
                     </div>
                 </div>
-            </aside>
 
-            {/* Main Content Area */}
-            <div className="flex-1 min-h-[600px]">
+                <nav className="space-y-2">
+                    {SIDEBAR_ITEMS.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = activeTab === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={cn(
+                                    "group relative flex w-full flex-col items-start rounded-[1.5rem] border px-6 py-5 transition-all duration-500",
+                                    isActive 
+                                        ? "border-primary/20 bg-primary/10 text-primary shadow-2xl shadow-primary/10" 
+                                        : "border-transparent text-neutral-500 hover:bg-white/5 hover:text-neutral-300"
+                                )}
+                            >
+                                <div className="flex w-full items-center justify-between">
+                                    <Icon className={cn("h-5 w-5 transition-transform duration-500", isActive && "scale-110")} />
+                                    {isActive && (
+                                        <motion.div 
+                                            layoutId="active-indicator"
+                                            className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" 
+                                        />
+                                    )}
+                                </div>
+                                <span className="mt-3 text-sm font-bold">{item.label}</span>
+                                <span className="text-[10px] font-medium opacity-60">{item.description}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
+            </div>
+
+            {/* Content Area */}
+            <main className="flex-1 min-w-0">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
                     >
                         {renderContent()}
                     </motion.div>
                 </AnimatePresence>
-            </div>
+            </main>
+
+            <AvatarPicker 
+                isOpen={isAvatarPickerOpen}
+                onClose={() => setIsAvatarPickerOpen(false)}
+                currentAvatarUrl={profile?.avatar_url || null}
+                currentBgColor={profile?.avatar_bg_color || null}
+            />
         </div>
     );
 }
