@@ -113,15 +113,26 @@ async function getAuthenticatedCommunityContext(): Promise<{ userId: string; rol
     const metadataRole = user.user_metadata?.role
     let resolvedRole: string | null = typeof metadataRole === 'string' ? metadataRole : null
 
-    // Fallback to profiles.role for accounts where auth metadata hasn't been backfilled yet.
     if (!resolvedRole) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
             .maybeSingle()
 
+        if (profileError) {
+            console.error('[community] Failed to fetch profile for role resolution:', profileError)
+        }
+
         resolvedRole = typeof profile?.role === 'string' ? profile.role : null
+    }
+
+    if (!resolvedRole) {
+        console.error('[community] CRITICAL: Could not resolve role for user', user.id, {
+            metadataRole,
+            userId: user.id
+        })
+        throw new Error('Unable to determine user role. Please sign out and sign back in, then try again.')
     }
 
     const role: CommunityRole = resolvedRole === 'admin' ? 'admin' : resolvedRole === 'landlord' ? 'landlord' : 'tenant'
@@ -373,9 +384,15 @@ export async function getPendingResidentPostsForModeration(limit = 20, targetPro
 
 export async function createDiscussionPost(input: { title: string; content: string; propertyId?: string }) {
     const { userId, role } = await getAuthenticatedCommunityContext()
+
+    const isLandlordOrAdmin = role === 'landlord' || role === 'admin'
+    if (isLandlordOrAdmin && process.env.NODE_ENV === 'development') {
+        console.log('[community] Landlord/Admin creating discussion post - should bypass moderation')
+    }
+
     const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
-        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
+        throw new Error(isLandlordOrAdmin ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
     }
 
     const title = input.title.trim()
@@ -389,12 +406,12 @@ export async function createDiscussionPost(input: { title: string; content: stri
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
-        author_role: toAuthorRole(role),
+        author_role: isLandlordOrAdmin ? 'landlord' : 'tenant',
         type: 'discussion',
         title,
         content,
-        is_moderated: !isManagementRole(role),
-        is_approved: isManagementRole(role),
+        is_moderated: false,
+        is_approved: true,
         status: 'published'
     })
 
@@ -410,13 +427,14 @@ export async function createDiscussionPost(input: { title: string; content: stri
 
 export async function createPollPost(input: { title: string; content: string; options: string[]; propertyId?: string }) {
     const { userId, role } = await getAuthenticatedCommunityContext()
-    if (!canCreatePostType(role, 'poll')) {
+    if (role === 'tenant') {
         throw new Error('Tenants can only create discussion posts.')
     }
 
+    const isManagement = isManagementRole(role)
     const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
-        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
+        throw new Error(isManagement ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
     }
 
     const title = input.title.trim()
@@ -439,13 +457,13 @@ export async function createPollPost(input: { title: string; content: string; op
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
-        author_role: toAuthorRole(role),
+        author_role: 'landlord',
         type: 'poll',
         title,
         content,
         metadata: { options: validOptions },
-        is_moderated: !isManagementRole(role),
-        is_approved: isManagementRole(role),
+        is_moderated: false,
+        is_approved: true,
         status: 'published'
     })
 
@@ -461,9 +479,10 @@ export async function createPollPost(input: { title: string; content: string; op
 
 export async function createPhotoAlbumPost(input: { title: string; content: string; propertyId?: string; imageUrls: string[] }) {
     const { userId, role } = await getAuthenticatedCommunityContext()
+    const isManagement = isManagementRole(role)
     const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
-        throw new Error(isManagementRole(role) ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
+        throw new Error(isManagement ? 'You need at least one property before posting in the community hub.' : 'You need an active lease before posting in the community hub.')
     }
 
     if (!input.imageUrls || input.imageUrls.length === 0) {
@@ -474,17 +493,16 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
     const content = input.content.trim()
 
     const supabase = (await createClient()) as any
-    
-    // 1. Create the Post
+
     const { data: post, error: postError } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
-        author_role: toAuthorRole(role),
+        author_role: isManagement ? 'landlord' : 'tenant',
         type: 'photo_album',
         title,
         content,
-        is_moderated: !isManagementRole(role),
-        is_approved: isManagementRole(role),
+        is_moderated: false,
+        is_approved: true,
         status: 'published'
     }).select('id').single()
 
@@ -493,7 +511,6 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
         throw new Error('Unable to create your photo album right now.')
     }
 
-    // 2. Create the Album
     const { data: album, error: albumError } = await supabase.from('community_albums').insert({
         post_id: post.id,
         property_id: propertyId,
@@ -506,7 +523,6 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
         throw new Error('Post created, but album record failed.')
     }
 
-    // 3. Create the Photos
     const photoInserts = input.imageUrls.map(url => ({
         album_id: album.id,
         url,
@@ -526,10 +542,11 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
 
 export async function createAnnouncementPost(input: { title: string; content: string; propertyId?: string }) {
     const { userId, role } = await getAuthenticatedCommunityContext()
-    if (!canCreatePostType(role, 'announcement')) {
+    if (role === 'tenant') {
         throw new Error('Tenants can only create discussion posts.')
     }
 
+    const isManagement = isManagementRole(role)
     const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
         throw new Error('You need at least one property before posting in the community hub.')
@@ -546,7 +563,7 @@ export async function createAnnouncementPost(input: { title: string; content: st
     const { error } = await supabase.from('community_posts').insert({
         property_id: propertyId,
         author_id: userId,
-        author_role: toAuthorRole(role),
+        author_role: 'landlord',
         type: 'announcement',
         title,
         content,
