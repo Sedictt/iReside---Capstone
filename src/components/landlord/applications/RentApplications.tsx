@@ -476,10 +476,10 @@ export function RentApplications() {
     useEffect(() => {
         const loadUnits = async () => {
             try {
-                const res = await fetch("/api/landlord/listings");
+                const res = await fetch("/api/landlord/property-units");
                 if (!res.ok) return;
                 const data = (await res.json()) as any;
-                const options = Array.isArray(data.options) ? data.options : [];
+                const options = Array.isArray(data.properties) ? data.properties : [];
                 const unitsList = options.flatMap((property: any) => {
                     const units = Array.isArray(property.units) ? property.units : [];
                     return units.map((unit: any) => ({

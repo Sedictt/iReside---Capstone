@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * GET /api/landlord/listings
- * Retires the 'listings' table usage but preserves 'options' (properties & units)
- * which are used by the Landlord Dashboard for Walk-ins and Invites.
+ * GET /api/landlord/property-units
+ * Returns the landlord's properties with their units.
+ * Used by the Landlord Dashboard for Walk-ins, Invites, and context selection.
+ * Replaces the retired /api/landlord/listings endpoint.
  */
 export async function GET() {
     const supabase = await createClient();
@@ -26,7 +27,7 @@ export async function GET() {
         .order("created_at", { ascending: false });
 
     if (propertiesError) {
-        console.error("[listings GET] Properties query error:", propertiesError);
+        console.error("[property-units GET] Properties query error:", propertiesError);
         return NextResponse.json({ error: "Failed to load properties." }, { status: 500 });
     }
 
@@ -42,7 +43,7 @@ export async function GET() {
         : { data: [], error: null };
 
     if (unitsError) {
-        console.error("[listings GET] Units query error:", unitsError);
+        console.error("[property-units GET] Units query error:", unitsError);
         return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
     }
 
@@ -54,8 +55,8 @@ export async function GET() {
         unitsByProperty.set(unit.property_id, existing);
     }
 
-    // 3. Format as 'options' (Legacy naming kept for frontend compatibility)
-    const listingOptions = (properties ?? []).map((property) => ({
+    // 3. Format as properties with nested units
+    const propertyUnits = (properties ?? []).map((property) => ({
         id: property.id,
         name: property.name,
         address: property.address,
@@ -77,6 +78,5 @@ export async function GET() {
         })),
     }));
 
-    // We return empty listings array to avoid breaking frontend expectation of the object structure
-    return NextResponse.json({ listings: [], options: listingOptions });
+    return NextResponse.json({ properties: propertyUnits });
 }

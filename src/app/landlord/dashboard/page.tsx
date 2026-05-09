@@ -227,11 +227,11 @@ export default function LandlordDashboard() {
     useEffect(() => {
         const loadUnits = async () => {
             try {
-                const res = await fetch("/api/landlord/listings");
+                const res = await fetch("/api/landlord/property-units");
                 if (!res.ok) return;
 
                 const data = (await res.json()) as {
-                    options?: Array<{
+                    properties?: Array<{
                         id: string;
                         name: string;
                         units?: Array<{
@@ -243,7 +243,7 @@ export default function LandlordDashboard() {
                     }>;
                 };
 
-                const options = Array.isArray(data.options) ? data.options : [];
+                const options = Array.isArray(data.properties) ? data.properties : [];
                 const unitsList: typeof availableUnits = options.flatMap((property) => {
                     const units = Array.isArray(property.units) ? property.units : [];
                     return units.map((unit) => ({

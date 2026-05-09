@@ -78,11 +78,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
         setLoading(true)
         try {
-            const res = await fetch('/api/landlord/listings')
+            const res = await fetch('/api/landlord/property-units')
             if (!res.ok) throw new Error('Failed to fetch properties')
             
             const data = await res.json()
-            const options = (data.options || []) as Property[]
+            const options = (data.properties || []) as Property[]
             setProperties(options)
 
             // Auto-select if only one property exists

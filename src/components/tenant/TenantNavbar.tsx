@@ -75,8 +75,8 @@ const NAV_SECTIONS = [
     {
         category: "Main",
         items: [
-            { label: "Community Hub", href: "/tenant/community", icon: Home },
             { label: "Dashboard", href: "/tenant/dashboard", icon: LayoutDashboard },
+            { label: "Community Hub", href: "/tenant/community", icon: Home },
         ],
     },
     {

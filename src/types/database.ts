@@ -26,8 +26,6 @@ export type MoveOutStatus = 'pending' | 'approved' | 'denied' | 'completed'
 export type UnitTransferStatus = 'pending' | 'approved' | 'denied' | 'cancelled'
 export type MessageType = 'text' | 'system' | 'image' | 'file'
 export type NotificationType = 'payment' | 'lease' | 'maintenance' | 'announcement' | 'message' | 'application' | 'lease_renewal_request' | 'lease_renewal_approved' | 'lease_renewal_rejected' | 'move_out_approved' | 'move_out_denied' | 'move_out_inspection_completed' | 'move_out_finalized'
-export type ListingScope = 'property' | 'unit'
-export type ListingStatus = 'draft' | 'published' | 'paused'
 export type LocationType = 'city' | 'barangay' | 'street'
 export type TenantInviteMode = 'property' | 'unit'
 export type TenantInviteStatus = 'active' | 'revoked' | 'expired' | 'consumed'
@@ -260,49 +258,6 @@ export interface Database {
                     row_count?: number
                     metadata?: Json
                     created_at?: string
-                }
-                Relationships: any[]
-            }
-            listings: {
-                Row: {
-                    id: string
-                    landlord_id: string
-                    property_id: string
-                    unit_id: string | null
-                    scope: ListingScope
-                    title: string
-                    rent_amount: number
-                    status: ListingStatus
-                    views: number
-                    leads: number
-                    created_at: string
-                    updated_at: string
-                }
-                Insert: {
-                    id?: string
-                    landlord_id: string
-                    property_id: string
-                    unit_id?: string | null
-                    scope: ListingScope
-                    title: string
-                    rent_amount: number
-                    status?: ListingStatus
-                    views?: number
-                    leads?: number
-                    created_at?: string
-                    updated_at?: string
-                }
-                Update: {
-                    landlord_id?: string
-                    property_id?: string
-                    unit_id?: string | null
-                    scope?: ListingScope
-                    title?: string
-                    rent_amount?: number
-                    status?: ListingStatus
-                    views?: number
-                    leads?: number
-                    updated_at?: string
                 }
                 Relationships: any[]
             }
