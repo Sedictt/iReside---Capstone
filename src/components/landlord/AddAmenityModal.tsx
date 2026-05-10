@@ -289,10 +289,11 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             {/* Left Column */}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="property-select" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Property
                                     </label>
                                     <select
+                                        id="property-select"
                                         required
                                         value={formData.property_id}
                                         onChange={(e) => setFormData({ ...formData, property_id: e.target.value })}
@@ -306,12 +307,13 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="facility-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Facility Name
                                     </label>
                                     <div className="relative">
                                         <Zap className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
+                                            id="facility-name"
                                             required
                                             type="text"
                                             placeholder="e.g., Sky Pool, Game Room"
@@ -324,10 +326,11 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <label htmlFor="facility-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                             Type
                                         </label>
                                         <select
+                                            id="facility-type"
                                             value={formData.type}
                                             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                                             className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
@@ -338,12 +341,13 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <label htmlFor="facility-capacity" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                             Capacity
                                         </label>
                                         <div className="relative">
                                             <Users className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                             <input
+                                                id="facility-capacity"
                                                 type="number"
                                                 value={formData.capacity}
                                                 onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })}
@@ -355,7 +359,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <label htmlFor="icon-search" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                             Icon Representation
                                         </label>
                                         <div className="text-[10px] font-bold text-muted-foreground/40">
@@ -367,6 +371,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
+                                            id="icon-search"
                                             type="text"
                                             placeholder="Search icons..."
                                             value={searchTerm}
@@ -477,12 +482,13 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="location-details" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Specific Location
                                     </label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40" />
                                         <input
+                                            id="location-details"
                                             type="text"
                                             placeholder="e.g., 5th Floor, Main Wing"
                                             value={formData.location_details}
@@ -493,10 +499,11 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="facility-description" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
                                         Description
                                     </label>
                                     <textarea
+                                        id="facility-description"
                                         placeholder="Describe the facility's features and rules..."
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}

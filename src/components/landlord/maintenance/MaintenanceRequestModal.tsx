@@ -534,7 +534,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
+                                            <label htmlFor="select-action" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block">
                                                 Select Action
                                             </label>
                                             <div className="relative group">
@@ -542,6 +542,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                     {processPlan === "landlord" ? <Hammer className="w-3.5 h-3.5" /> : <UserRound className="w-3.5 h-3.5" />}
                                                 </div>
                                                 <select
+                                                    id="select-action"
                                                     value={processPlan}
                                                     onChange={(e) => setProcessPlan(e.target.value as ProcessPlan)}
                                                     className="w-full appearance-none rounded-xl border border-border bg-card/50 py-3.5 pl-[3.25rem] pr-10 text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm hover:border-border cursor-pointer"
@@ -558,7 +559,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         {/* Dynamic Fields based on selection */}
                                         {processPlan === "third_party" && (
                                             <div className="pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
-                                                <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                                <label htmlFor="repair-person-name" className="mb-2 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                                     Repair Person Name <span className="text-red-500">*</span>
                                                 </label>
                                                 <div className="relative group">
@@ -566,6 +567,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                         <UserRound className="h-3.5 w-3.5" />
                                                     </div>
                                                     <input
+                                                        id="repair-person-name"
                                                         type="text"
                                                         value={thirdPartyPerson}
                                                         onChange={(event) => setThirdPartyPerson(event.target.value)}

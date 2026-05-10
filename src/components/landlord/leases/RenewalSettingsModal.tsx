@@ -128,8 +128,9 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Rent Adjustment</h4>
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
+                                    <label htmlFor="adjustment-type" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
                                     <select 
+                                        id="adjustment-type"
                                         value={settings.adjustment_type}
                                         onChange={(e) => setSettings(prev => ({ ...prev, adjustment_type: e.target.value as any }))}
                                         className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
@@ -139,10 +140,11 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    <label htmlFor="rent-adjustment" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                         {settings.adjustment_type === "percentage" ? "Increase (%)" : "Increase (PHP)"}
                                     </label>
                                     <input 
+                                        id="rent-adjustment"
                                         type="number"
                                         value={settings.base_rent_adjustment}
                                         onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: parseFloat(e.target.value) || 0 }))}

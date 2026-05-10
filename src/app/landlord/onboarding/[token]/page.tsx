@@ -491,7 +491,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-6 backdrop-blur-xl shadow-2xl">
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                        <label htmlFor="admin-identity" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
                                             Administrative Identity
                                         </label>
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
@@ -500,6 +500,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         </div>
                                     </div>
                                     <input 
+                                        id="admin-identity"
                                         type="text" 
                                         value={data?.email || ""}
                                         disabled
@@ -512,11 +513,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                    <label htmlFor="password" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
                                         Password
                                     </label>
                                     <div className="relative group">
                                         <input 
+                                            id="password"
                                             type={showPassword ? "text" : "password"}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
@@ -571,11 +573,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 </div>
                                 
                                 <div className="space-y-3">
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                    <label htmlFor="confirm-password" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
                                         Confirm Password
                                     </label>
                                     <div className="relative">
                                         <input 
+                                            id="confirm-password"
                                             type={showConfirmPassword ? "text" : "password"}
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -1284,11 +1287,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-3">
-                                            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                            <label htmlFor="full-name" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
                                                 Full Legal Name
                                             </label>
                                             <div className="relative group">
                                                 <input 
+                                                    id="full-name"
                                                     type="text"
                                                     value={fullName}
                                                     onChange={(e) => setFullName(e.target.value)}
@@ -1299,11 +1303,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         </div>
                                         
                                         <div className="space-y-3">
-                                            <label className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
+                                            <label htmlFor="admin-contact" className="block text-[10px] font-black uppercase tracking-widest text-white/40 px-1">
                                                 Administrative Contact
                                             </label>
                                             <div className="relative group">
                                                 <input 
+                                                    id="admin-contact"
                                                     type="tel"
                                                     value={phone}
                                                     onChange={(e) => setPhone(e.target.value)}

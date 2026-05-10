@@ -374,7 +374,7 @@ function NewAssetContent() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 px-1">
                                             <Camera className="w-3.5 h-3.5 text-primary" />
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 aspect-[16/10]">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -384,16 +384,17 @@ function NewAssetContent() {
                                                     <Upload className="size-8 text-white/20" />
                                                 )}
                                             </div>
-                                            <input type="file" onChange={handleMediaFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                                            <input id="cover-identity" type="file" onChange={handleMediaFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                                         </div>
                                     </div>
                                     <div className="space-y-6 bg-white/[0.03] border border-white/5 rounded-[2.5rem] p-8">
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
-                                                <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Designation</label>
+                                                <label htmlFor="property-name" className="text-[9px] font-black uppercase tracking-wider text-white/30">Designation</label>
                                                 {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <input 
+                                                id="property-name"
                                                 type="text" 
                                                 disabled={isEditMode}
                                                 value={formData.propertyName} 
@@ -404,10 +405,11 @@ function NewAssetContent() {
                                         </div>
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
-                                                <label className="text-[9px] font-black uppercase tracking-wider text-white/30">Location</label>
+                                                <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-white/30">Location</label>
                                                 {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <textarea 
+                                                id="property-address"
                                                 rows={3} 
                                                 disabled={isEditMode}
                                                 value={formData.address} 

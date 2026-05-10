@@ -289,11 +289,12 @@ export function MessageReportWizard({
               {/* Message Evidence */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
+                  <label htmlFor="message-id" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                     Message Identifier
                   </label>
                   <div className="group relative">
                     <input
+                      id="message-id"
                       value={reportedMessageId}
                       onChange={(e) => setReportedMessageId(normalizePastedMessageId(e.target.value))}
                       placeholder="Paste message ID..."
@@ -314,10 +315,11 @@ export function MessageReportWizard({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
+                  <label htmlFor="exact-content" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                     Exact Content (Optional)
                   </label>
                   <textarea
+                    id="exact-content"
                     value={exactMessage}
                     onChange={(e) => setExactMessage(e.target.value)}
                     placeholder="Copy-paste the offending text..."
@@ -328,10 +330,11 @@ export function MessageReportWizard({
 
               {/* Details */}
               <section>
-                <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
+                <label htmlFor="incident-narrative" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                   Incident Narrative
                 </label>
                 <textarea
+                  id="incident-narrative"
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   placeholder="Provide context, dates, or why this behavior is unsafe..."
@@ -342,7 +345,7 @@ export function MessageReportWizard({
               {/* Screenshots */}
               <section>
                 <div className="flex items-center justify-between mb-3 ml-1">
-                  <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled">
+                  <label htmlFor="screenshot-input" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled">
                     Visual Evidence
                   </label>
                   <span className="text-[10px] font-black tracking-widest text-disabled">{screenshots.length}/4</span>
@@ -389,6 +392,7 @@ export function MessageReportWizard({
                   </AnimatePresence>
                 </div>
                 <input
+                  id="screenshot-input"
                   ref={fileInputRef}
                   type="file"
                   accept="image/png,image/jpeg,image/webp,image/gif"

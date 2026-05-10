@@ -327,24 +327,36 @@ export default function TenantUtilitiesPage() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
+                                        <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
                                         <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
                                             <Calendar className="h-4 w-4 text-primary" />
-                                            <span className="text-sm font-medium">Select Date</span>
+                                            <input 
+                                                id="booking-date"
+                                                type="date" 
+                                                className="bg-transparent text-sm font-medium outline-none"
+                                            />
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
+                                        <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
                                         <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
                                             <Clock className="h-4 w-4 text-primary" />
-                                            <span className="text-sm font-medium">2 Hours</span>
+                                            <select 
+                                                id="booking-duration"
+                                                className="bg-transparent text-sm font-medium outline-none"
+                                            >
+                                                <option>2 Hours</option>
+                                                <option>4 Hours</option>
+                                                <option>All Day</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
+                                    <label htmlFor="booking-notes" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
                                     <textarea 
+                                        id="booking-notes"
                                         placeholder="Tell us about your event..."
                                         className="min-h-[100px] w-full rounded-xl border border-border bg-background p-3 text-sm outline-none ring-primary/20 focus:ring-2"
                                     />

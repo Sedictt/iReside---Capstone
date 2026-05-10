@@ -66,7 +66,7 @@ export function PaymentRecordForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
         {/* Amount */}
         <div className="space-y-2">
-          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="amount-due" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Amount Due
           </label>
           <div className="relative isolate group/input">
@@ -75,6 +75,7 @@ export function PaymentRecordForm({
               <DollarSign size={16} strokeWidth={2} />
             </div>
             <input
+              id="amount-due"
               type="number"
               value={amount}
               onChange={(e) => onAmountChange?.(parseFloat(e.target.value) || 0)}
@@ -90,7 +91,7 @@ export function PaymentRecordForm({
 
         {/* Method */}
         <div className="space-y-2">
-          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="payment-method" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Method
           </label>
           <div className="relative isolate group/input">
@@ -99,6 +100,7 @@ export function PaymentRecordForm({
               <Wallet size={16} strokeWidth={2} />
             </div>
             <select
+              id="payment-method"
               value={paymentMethod || ""}
               onChange={(e) => onMethodChange(e.target.value as PaymentMethod)}
               className="h-12 w-full appearance-none bg-transparent pl-11 pr-10 text-sm font-bold tracking-tight text-foreground outline-none cursor-pointer"
@@ -116,7 +118,7 @@ export function PaymentRecordForm({
 
         {/* Reference */}
         <div className="space-y-2">
-          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="ref-number" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Ref Number
           </label>
           <div className="relative isolate group/input">
@@ -125,6 +127,7 @@ export function PaymentRecordForm({
               <Hash size={16} strokeWidth={2} />
             </div>
             <input
+              id="ref-number"
               type="text"
               value={referenceNumber}
               onChange={(e) => onReferenceChange(e.target.value)}
@@ -136,7 +139,7 @@ export function PaymentRecordForm({
 
         {/* Date */}
         <div className="space-y-2">
-          <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <label htmlFor="payment-date" className="ml-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Payment Date
           </label>
           <div className="relative isolate group/input">
@@ -145,6 +148,7 @@ export function PaymentRecordForm({
               <Calendar size={16} strokeWidth={2} />
             </div>
             <input
+              id="payment-date"
               type="date"
               value={paidAt || ""}
               onChange={(e) => onPaidAtChange(e.target.value)}

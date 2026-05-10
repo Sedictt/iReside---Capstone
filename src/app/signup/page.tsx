@@ -343,19 +343,20 @@ export default function SignUpPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5 group/input">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Full Legal Name</label>
-                                <input value={fullName} onChange={e => setFullName(e.target.value)} required type="text" placeholder="e.g. Jane Doe" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
+                                <label htmlFor="full-name" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Full Legal Name</label>
+                                <input id="full-name" value={fullName} onChange={e => setFullName(e.target.value)} required type="text" placeholder="e.g. Jane Doe" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
                             </div>
                             <div className="space-y-1.5 group/input">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Phone Number</label>
-                                <input value={phone} onChange={e => setPhone(e.target.value)} required type="tel" placeholder="+1 (555) 000-0000" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
+                                <label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Phone Number</label>
+                                <input id="phone" value={phone} onChange={e => setPhone(e.target.value)} required type="tel" placeholder="+1 (555) 000-0000" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
                             </div>
                             
                             {/* Email Verification Row spans 2 cols on md */}
                             <div className="md:col-span-2 space-y-1.5 group/input">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Email Address</label>
+                                <label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Email Address</label>
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <input 
+                                        id="email"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
                                         required 
@@ -421,12 +422,12 @@ export default function SignUpPage() {
 
                         <div className="space-y-4">
                             <div className="space-y-1.5 group/input">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Property Name</label>
-                                <input value={propertyName} onChange={e => setPropertyName(e.target.value)} required type="text" placeholder="e.g. The Grand Residences" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
+                                <label htmlFor="property-name" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Property Name</label>
+                                <input id="property-name" value={propertyName} onChange={e => setPropertyName(e.target.value)} required type="text" placeholder="e.g. The Grand Residences" className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base font-medium shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]" />
                             </div>
                             <div className="space-y-1.5 group/input">
-                                <label className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Complete Address</label>
-                                <textarea value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} required rows={2} placeholder="123 Main St, Suite 400..." className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none text-base font-medium leading-relaxed shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"></textarea>
+                                <label htmlFor="property-address" className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-focus-within/input:text-primary transition-colors ml-1">Complete Address</label>
+                                <textarea id="property-address" value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} required rows={2} placeholder="123 Main St, Suite 400..." className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-white/87 placeholder-white/20 focus:border-primary focus:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none text-base font-medium leading-relaxed shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"></textarea>
                             </div>
                         </div>
                     </section>

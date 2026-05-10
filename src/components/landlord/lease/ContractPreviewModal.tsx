@@ -371,11 +371,12 @@ export function ContractPreviewModal({
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
+                                    <label htmlFor="lease-start" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
                                         <Calendar className="h-3.5 w-3.5" />
                                         Lease Start Date
                                     </label>
                                     <input
+                                        id="lease-start"
                                         type="date"
                                         value={leaseStart}
                                         onChange={(event) => setLeaseStart(event.target.value)}
@@ -383,11 +384,12 @@ export function ContractPreviewModal({
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
+                                    <label htmlFor="lease-end" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
                                         <Calendar className="h-3.5 w-3.5" />
                                         Lease End Date
                                     </label>
                                     <input
+                                        id="lease-end"
                                         type="date"
                                         value={leaseEnd}
                                         disabled
@@ -398,11 +400,12 @@ export function ContractPreviewModal({
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
+                                    <label htmlFor="monthly-rent" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
                                         <Banknote className="h-3.5 w-3.5" />
                                         Monthly Rent
                                     </label>
                                     <input
+                                        id="monthly-rent"
                                         type="number"
                                         min={0}
                                         value={monthlyRent}
@@ -411,11 +414,12 @@ export function ContractPreviewModal({
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
+                                    <label htmlFor="advance-invoice" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
                                         <Banknote className="h-3.5 w-3.5" />
                                         Advance Invoice
                                     </label>
                                     <input
+                                        id="advance-invoice"
                                         type="number"
                                         min={0}
                                         value={advanceAmount}
@@ -424,11 +428,12 @@ export function ContractPreviewModal({
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
+                                    <label htmlFor="security-deposit" className="text-xs font-bold uppercase tracking-wide text-neutral-300 flex items-center gap-2">
                                         <Banknote className="h-3.5 w-3.5" />
                                         Security Deposit
                                     </label>
                                     <input
+                                        id="security-deposit"
                                         type="number"
                                         min={0}
                                         value={securityDeposit}

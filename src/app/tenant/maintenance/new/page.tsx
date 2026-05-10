@@ -165,10 +165,11 @@ export default function NewMaintenanceRequest() {
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                                    <label htmlFor="maintenance-title" className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
                                         Title
                                     </label>
                                     <input
+                                        id="maintenance-title"
                                         type="text"
                                         placeholder="e.g., Leaking faucet in the bathroom"
                                         value={title}
@@ -179,10 +180,11 @@ export default function NewMaintenanceRequest() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                                    <label htmlFor="maintenance-description" className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
                                         Description
                                     </label>
                                     <textarea
+                                        id="maintenance-description"
                                         placeholder="Please provide more details about the issue..."
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}

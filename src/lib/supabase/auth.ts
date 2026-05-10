@@ -37,10 +37,6 @@ export async function requireUser() {
 }
 
 export async function signUp(formData: FormData) {
-    const session = await auth()
-    if (!session) {
-        throw new Error("Unauthorized")
-    }
     const supabase = await createClient()
 
     const email = formData.get('email') as string

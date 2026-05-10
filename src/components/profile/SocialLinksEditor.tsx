@@ -90,10 +90,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
 
             <div className="space-y-4 mb-6">
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="facebook-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Facebook size={12} className="text-[#1877F2]" /> Facebook URL
                     </label>
                     <input 
+                        id="facebook-url"
                         type="url" 
                         value={socials.facebook || ""} 
                         onChange={(e) => updateSocial("facebook", e.target.value)}
@@ -102,10 +103,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="twitter-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Twitter size={12} className="text-[#1DA1F2]" /> Twitter URL
                     </label>
                     <input 
+                        id="twitter-url"
                         type="url" 
                         value={socials.twitter || ""} 
                         onChange={(e) => updateSocial("twitter", e.target.value)}
@@ -114,10 +116,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="linkedin-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Linkedin size={12} className="text-[#0A66C2]" /> LinkedIn URL
                     </label>
                     <input 
+                        id="linkedin-url"
                         type="url" 
                         value={socials.linkedin || ""} 
                         onChange={(e) => updateSocial("linkedin", e.target.value)}
@@ -126,10 +129,11 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
+                    <label htmlFor="instagram-url" className="text-[9px] font-bold tracking-widest text-neutral-500 uppercase flex items-center gap-2">
                         <Instagram size={12} className="text-[#E4405F]" /> Instagram URL
                     </label>
                     <input 
+                        id="instagram-url"
                         type="url" 
                         value={socials.instagram || ""} 
                         onChange={(e) => updateSocial("instagram", e.target.value)}

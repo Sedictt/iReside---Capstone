@@ -125,10 +125,11 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
 
                     <div className="grid gap-6 sm:grid-cols-2">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
+                            <label htmlFor="expense-amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Amount (PHP)</label>
                             <div className="relative group">
                                 <DollarSign className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="expense-amount"
                                     type="number"
                                     required
                                     min="0"
@@ -142,10 +143,11 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
+                            <label htmlFor="expense-date" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Date Incurred</label>
                             <div className="relative group">
                                 <Calendar className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
+                                    id="expense-date"
                                     type="date"
                                     required
                                     value={date}
@@ -157,10 +159,11 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                     </div>
 
                     <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Description</label>
+                        <label htmlFor="expense-description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Description</label>
                         <div className="relative group">
                             <Type className="absolute left-4 top-4 size-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <textarea
+                                id="expense-description"
                                 required
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}

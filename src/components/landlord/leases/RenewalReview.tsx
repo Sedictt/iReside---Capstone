@@ -403,8 +403,9 @@ export default function LandlordRenewalReview() {
                                 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
+                                        <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
                                         <input
+                                            id="new-start-date"
                                             type="date"
                                             value={proposedStartDate}
                                             onChange={(e) => setProposedStartDate(e.target.value)}
@@ -412,8 +413,9 @@ export default function LandlordRenewalReview() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
+                                        <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
                                         <input
+                                            id="new-end-date"
                                             type="date"
                                             value={proposedEndDate}
                                             onChange={(e) => setProposedEndDate(e.target.value)}
@@ -421,10 +423,11 @@ export default function LandlordRenewalReview() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
+                                        <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">₱</span>
                                             <input
+                                                id="monthly-rent"
                                                 type="text"
                                                 value={proposedRent}
                                                 onChange={(e) => handleMoneyInput(e.target.value, setProposedRent)}
@@ -434,7 +437,7 @@ export default function LandlordRenewalReview() {
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
+                                            <label htmlFor="security-deposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
                                             <button 
                                                 onClick={() => setProposedDeposit(formatWithCommas(selectedRequest.current_lease.security_deposit?.toString() || "0"))}
                                                 className="text-[10px] font-black text-primary hover:underline uppercase tracking-tighter"
@@ -461,8 +464,9 @@ export default function LandlordRenewalReview() {
 
                             {/* Internal Notes */}
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
+                                <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
                                 <textarea
+                                    id="landlord-notes"
                                     value={rejectNotes}
                                     onChange={(e) => setRejectNotes(e.target.value)}
                                     placeholder="Explain your decision or adjustments..."

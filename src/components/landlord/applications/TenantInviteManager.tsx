@@ -481,7 +481,7 @@ export function TenantInviteManager({
 
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="group space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
+                            <label htmlFor="select-property" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                 Select Property
                             </label>
                             <div className="relative">
@@ -489,6 +489,7 @@ export function TenantInviteManager({
                                     <MapPin className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 </div>
                                 <select
+                                    id="select-property"
                                     value={propertyId}
                                     onChange={(event) => {
                                         setPropertyId(event.target.value);
@@ -512,7 +513,7 @@ export function TenantInviteManager({
 
                         {mode === "unit" && (
                             <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
+                                <label htmlFor="select-unit" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                     Select Vacant Unit
                                 </label>
                                 <div className="relative">
@@ -520,6 +521,7 @@ export function TenantInviteManager({
                                         <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                     </div>
                                     <select
+                                        id="select-unit"
                                         value={unitId}
                                         onChange={(event) => setUnitId(event.target.value)}
                                         className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-bold text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
@@ -543,7 +545,7 @@ export function TenantInviteManager({
 
                         {mode === "property" && (
                             <div className="group space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
+                                <label htmlFor="preview-unit" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                     Preview Unit Rent Basis
                                 </label>
                                 <div className="relative">
@@ -551,6 +553,7 @@ export function TenantInviteManager({
                                         <DoorOpen className="size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                     </div>
                                     <select
+                                        id="preview-unit"
                                         value={previewUnitId}
                                         onChange={(event) => setPreviewUnitId(event.target.value)}
                                         className="h-12 w-full appearance-none rounded-xl border border-border bg-card pl-10 pr-10 text-sm font-bold text-foreground shadow-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
@@ -574,7 +577,7 @@ export function TenantInviteManager({
 
                         <div className="group space-y-2">
                             <div className="flex items-center justify-between">
-                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
+                                <label htmlFor="expires-at" className="text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors group-focus-within:text-primary">
                                     Expires at
                                 </label>
                             </div>
@@ -583,6 +586,7 @@ export function TenantInviteManager({
                                     <Calendar className="size-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                 </div>
                                 <input
+                                    id="expires-at"
                                     type="datetime-local"
                                     value={expiresAt}
                                     onChange={(event) => setExpiresAt(event.target.value)}
