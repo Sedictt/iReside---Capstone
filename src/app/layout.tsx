@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { PageTransitionProvider } from "@/components/transitions/PageTransitionProvider";
 import GlobalClickSpark from "@/components/ui/ClickSparkWrapper";
 import { Toaster } from "sonner";
+import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,6 +60,7 @@ export default function RootLayout({
                 <GlobalClickSpark>
                   {children}
                   <Toaster position="top-right" richColors closeButton theme="dark" />
+                  <CookieConsent />
                 </GlobalClickSpark>
               </PageTransitionProvider>
             </ThemeProvider>
