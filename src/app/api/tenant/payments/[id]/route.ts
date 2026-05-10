@@ -23,8 +23,11 @@ export async function GET(_: Request, context: RouteContext) {
     }
 
     try {
-        await expireInPersonIntents(adminClient, user.id, { tenantId: user.id, paymentId: id });
-        const invoice = await getInvoiceDetailForActor(supabase, id, { tenantId: user.id });
+        // Parallelize: expireInPersonIntents and getInvoiceDetailForActor are independent
+        const [_, invoice] = await Promise.all([
+            expireInPersonIntents(adminClient, user.id, { tenantId: user.id, paymentId: id }),
+            getInvoiceDetailForActor(supabase, id, { tenantId: user.id }),
+        ]);
 
         if (!invoice) {
             return NextResponse.json({ error: "Invoice not found." }, { status: 404 });

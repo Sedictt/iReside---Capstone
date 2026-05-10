@@ -67,17 +67,19 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = await resolveRole(supabase as any, user);
+    // Parallelize: resolveRole and resolveOnboardingCompleted are independent
+    const [role, onboardingCompleted] = await Promise.all([
+        resolveRole(supabase as any, user),
+        resolveOnboardingCompleted(adminClient as any, user.id),
+    ]);
     if (role !== "landlord") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const url = new URL(request.url);
-    const shouldStart = parseBoolean(url.searchParams.get("start"), true);
-    const triggerSource = resolveTriggerSource(url.searchParams.get("source"));
-    const onboardingCompleted = await resolveOnboardingCompleted(adminClient as any, user.id);
-
     try {
+        const url = new URL(request.url);
+        const shouldStart = parseBoolean(url.searchParams.get("start"), true);
+        const triggerSource = resolveTriggerSource(url.searchParams.get("source"));
         const eligibility = await resolveLandlordProductTourEligibility(adminClient as any, {
             landlordId: user.id,
             role,

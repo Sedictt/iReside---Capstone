@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const tenantId = searchParams.get("tenantId");
+    
     const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -21,26 +24,25 @@ export async function GET() {
         return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Get all applications for this user to aggregate documents
-    const { data: applications, error: appError } = await supabase
-        .from("landlord_applications")
-        .select("*")
-        .eq("profile_id", user.id)
-        .order("created_at", { ascending: false });
-
-    if (appError) {
-        console.error("[Documents API] Error fetching applications:", appError);
-        return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
+    // Get all applications for this user (or tenant) to aggregate documents
+    let applicationsQuery = supabase
+        .from(tenantId ? "applications" : "landlord_applications")
+        .select("*");
+    
+    if (tenantId) {
+        applicationsQuery = applicationsQuery.eq("tenant_id", tenantId).eq("landlord_id", user.id);
+    } else {
+        applicationsQuery = applicationsQuery.eq("profile_id", user.id);
     }
 
     // Fetch properties to get contract templates
-    const { data: properties } = await supabase
+    let propertiesQuery = supabase
         .from("properties")
         .select("id, name, contract_template, base_rent_amount, updated_at")
         .eq("landlord_id", user.id);
-
+    
     // Fetch active/signed leases with signed document URLs
-    const { data: leases } = await supabase
+    let leasesQuery = supabase
         .from("leases")
         .select(`
             id,
@@ -53,8 +55,27 @@ export async function GET() {
             unit:units(id, name, property_id, property:properties(id, name)),
             tenant:profiles!tenant_id(full_name)
         `)
-        .eq("landlord_id", user.id)
-        .order("signed_at", { ascending: false });
+        .eq("landlord_id", user.id);
+
+    if (tenantId) {
+        leasesQuery = leasesQuery.eq("tenant_id", tenantId);
+    }
+
+    // Parallelize: applications, properties, and leases fetches are independent
+    const [applicationsResult, propertiesResult, leasesResult] = await Promise.all([
+        applicationsQuery.order("created_at", { ascending: false }),
+        propertiesQuery,
+        leasesQuery.order("signed_at", { ascending: false }),
+    ]);
+
+    const { data: applications, error: appError } = applicationsResult;
+    const { data: properties } = propertiesResult;
+    const { data: leases } = leasesResult;
+
+    if (appError) {
+        console.error("[Documents API] Error fetching applications:", appError);
+        return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
+    }
 
     // Combine applications data
     const latestApp = (applications && applications.length > 0) ? applications[0] : null;

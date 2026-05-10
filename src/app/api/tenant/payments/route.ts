@@ -18,8 +18,11 @@ export async function GET() {
     }
 
     try {
-        await expireInPersonIntents(adminClient, user.id, { tenantId: user.id });
-        const overview = await getTenantPaymentOverview(supabase, user.id);
+        // Parallelize: expireInPersonIntents and getTenantPaymentOverview are independent
+        const [_, overview] = await Promise.all([
+            expireInPersonIntents(adminClient, user.id, { tenantId: user.id }),
+            getTenantPaymentOverview(supabase, user.id),
+        ]);
         
         // Compute upcoming months forecast
         const now = new Date();

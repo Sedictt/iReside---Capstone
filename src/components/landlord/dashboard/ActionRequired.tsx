@@ -13,9 +13,12 @@ import {
     Activity
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { ConversationSummary } from "@/lib/messages/client";
 import { useProperty } from "@/context/PropertyContext";
+
+// --- Types ---
 
 type MaintenanceRequestItem = {
     id: string;
@@ -54,20 +57,22 @@ type ActionSummary = {
     icon: LucideIcon;
 };
 
+// --- Constants & Helpers ---
+
 const toneClasses: Record<ActionItem["tone"], string> = {
     critical: "border-red-500/25 bg-red-500/12 text-red-400",
     high: "border-amber-500/25 bg-amber-500/12 text-amber-400",
     medium: "border-primary/25 bg-primary/12 text-primary",
 };
 
-const kindIcon = {
+const kindIconMap = {
     maintenance: Wrench,
     lease: AlertTriangle,
     onboarding: ClipboardCheck,
     message: MessageSquareMore,
-} satisfies Record<ActionItem["kind"], typeof Wrench>;
+} as const;
 
-const statusLabel: Record<TenantItem["onboardingStatus"], string> = {
+const onboardingStatusLabel: Record<TenantItem["onboardingStatus"], string> = {
     pending: "Pending Approval",
     in_progress: "In Progress",
     completed: "Verified",
@@ -81,18 +86,102 @@ const formatDateLabel = (iso: string) =>
         year: "numeric"
     });
 
-const getDaysUntil = (iso: string) => {
-    const target = new Date(iso);
-    if (Number.isNaN(target.getTime())) {
-        return Number.POSITIVE_INFINITY;
-    }
+// --- Sub-components ---
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    target.setHours(0, 0, 0, 0);
+function ActionSummaryBar({ summaries }: { summaries: ActionSummary[] }) {
+    return (
+        <div className="flex gap-2 overflow-x-auto pb-1 pr-1 sm:justify-end">
+            {summaries.map((summary) => (
+                <div 
+                    key={summary.label} 
+                    className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-bold transition-all hover:bg-card"
+                >
+                    <summary.icon className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-muted-foreground">{summary.label}:</span>
+                    <span className="text-foreground">{summary.value}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
 
-    return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-};
+function ActionItemCard({ action }: { action: ActionItem }) {
+    const Icon = kindIconMap[action.kind];
+
+    return (
+        <m.div 
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-card/70 p-5 transition-all hover:bg-card"
+        >
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between relative z-10">
+                <div className="flex items-start gap-4">
+                    <div className={cn(
+                        "flex size-12 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110", 
+                        toneClasses[action.tone]
+                    )}>
+                        <Icon className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="mb-1.5 flex flex-wrap items-center gap-3">
+                            <h3 className="text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
+                                {action.title}
+                            </h3>
+                            <span className={cn(
+                                "rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", 
+                                toneClasses[action.tone]
+                            )}>
+                                {action.tone}
+                            </span>
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                            {action.detail}
+                        </p>
+                        <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                            <Clock className="size-3" />
+                            {action.meta}
+                        </div>
+                    </div>
+                </div>
+
+                <Link
+                    href={action.href}
+                    className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
+                >
+                    {action.cta}
+                    <ArrowRight className="size-4 transition-transform group-hover/btn:translate-x-1" />
+                </Link>
+            </div>
+            {/* Subtle decorative streak */}
+            <div className={cn(
+                "absolute bottom-0 left-6 right-6 h-[2px] opacity-0 transition-opacity group-hover:opacity-30", 
+                toneClasses[action.tone]
+            )} />
+        </m.div>
+    );
+}
+
+function ActionEmptyState() {
+    return (
+        <m.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-[2.5rem] border border-dashed border-white/10 bg-card/70 p-12 text-center backdrop-blur-sm"
+        >
+            <div className="mb-6 inline-flex size-20 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/12 text-primary">
+                <ShieldCheck className="size-10" />
+            </div>
+            <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
+            <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto">
+                No urgent tasks right now. Everything that needs action is already handled.
+            </p>
+        </m.div>
+    );
+}
+
+// --- Main Component ---
 
 export function ActionRequired() {
     const { selectedPropertyId } = useProperty();
@@ -101,6 +190,11 @@ export function ActionRequired() {
     const [conversations, setConversations] = useState<ConversationSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -146,7 +240,6 @@ export function ActionRequired() {
                 if ((loadError as Error).name === "AbortError") {
                     return;
                 }
-
                 setError("Unable to load action items right now.");
             } finally {
                 setLoading(false);
@@ -161,7 +254,11 @@ export function ActionRequired() {
     }, [selectedPropertyId]);
 
     const { actions, summaries } = useMemo(() => {
+        if (!mounted) return { actions: [], summaries: [] };
+
         const nextActions: ActionItem[] = [];
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
 
         maintenance
             .filter((request) => request.status !== "Resolved")
@@ -181,7 +278,12 @@ export function ActionRequired() {
 
         tenants
             .filter((tenant) => tenant.leaseEnd)
-            .map((tenant) => ({ tenant, daysUntil: getDaysUntil(tenant.leaseEnd as string) }))
+            .map((tenant) => {
+                const target = new Date(tenant.leaseEnd as string);
+                target.setHours(0, 0, 0, 0);
+                const daysUntil = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                return { tenant, daysUntil };
+            })
             .filter(({ daysUntil }) => daysUntil <= 30)
             .sort((left, right) => left.daysUntil - right.daysUntil)
             .slice(0, 2)
@@ -205,7 +307,7 @@ export function ActionRequired() {
                 nextActions.push({
                     id: `onboarding-${tenant.id}`,
                     title: "Pending Resident Verification",
-                    detail: `${tenant.name} is stuck at ${statusLabel[tenant.onboardingStatus]} stage.`,
+                    detail: `${tenant.name} is stuck at ${onboardingStatusLabel[tenant.onboardingStatus]} stage.`,
                     meta: "Onboarding Bottleneck",
                     href: "/landlord/tenants",
                     cta: "Verify Docs",
@@ -257,104 +359,61 @@ export function ActionRequired() {
         ];
 
         return { actions: sorted, summaries: summaryItems };
-    }, [conversations, maintenance, tenants]);
+    }, [conversations, maintenance, tenants, mounted]);
 
     return (
-        <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
-            <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
-                        <Activity className="h-7 w-7" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
-                        <p className="text-sm font-medium text-muted-foreground/80">
-                            Things to follow up now: maintenance, lease renewals, and tenant messages.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex gap-2 overflow-x-auto pb-1 pr-1 sm:justify-end">
-                    {summaries.map((summary) => (
-                        <div key={summary.label} className="group flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-card/70 px-4 py-2 text-xs font-bold transition-all hover:bg-card">
-                            <summary.icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-muted-foreground">{summary.label}:</span>
-                            <span className="text-foreground">{summary.value}</span>
+        <LazyMotion features={domAnimation}>
+            <section className="rounded-[2.5rem] border border-white/10 bg-card/60 p-8 shadow-2xl shadow-black/30 backdrop-blur-xl">
+                <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex size-14 items-center justify-center rounded-[1.25rem] border border-indigo-500/20 bg-indigo-500/12 text-indigo-300">
+                            <Activity className="size-7" />
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {loading ? (
-                <div className="grid gap-4">
-                    {[1, 2, 3].map((item) => (
-                        <div key={item} className="animate-pulse rounded-[1.5rem] border border-white/10 bg-card/70 p-6">
-                            <div className="flex gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-muted/40" />
-                                <div className="flex-1 space-y-3">
-                                    <div className="h-4 w-1/4 rounded bg-muted/40" />
-                                    <div className="h-3 w-3/4 rounded bg-muted/40" />
-                                </div>
-                            </div>
+                        <div>
+                            <h2 className="text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
+                            <p className="text-sm font-medium text-muted-foreground/80">
+                                Things to follow up now: maintenance, lease renewals, and tenant messages.
+                            </p>
                         </div>
-                    ))}
-                </div>
-            ) : error ? (
-                <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-center">
-                    <p className="text-sm font-bold text-red-500">{error}</p>
-                </div>
-            ) : actions.length === 0 ? (
-                <div className="rounded-[2.5rem] border border-dashed border-white/10 bg-card/70 p-12 text-center backdrop-blur-sm">
-                    <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/12 text-primary">
-                        <ShieldCheck className="h-10 w-10" />
                     </div>
-                    <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
-                    <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto">
-                        No urgent tasks right now. Everything that needs action is already handled.
-                    </p>
-                </div>
-            ) : (
-                <div className="grid gap-4">
-                    {actions.map((action) => {
-                        const Icon = kindIcon[action.kind];
 
-                        return (
-                            <div key={action.id} className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-card/70 p-5 transition-all hover:bg-card">
-                                <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between relative z-10">
-                                    <div className="flex items-start gap-4">
-                                        <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl border transition-transform group-hover:scale-110", toneClasses[action.tone])}>
-                                            <Icon className="h-5 w-5" />
-                                        </div>
-                                        <div className="min-w-0">
-                                            <div className="mb-1.5 flex flex-wrap items-center gap-3">
-                                                <h3 className="text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">{action.title}</h3>
-                                                <span className={cn("rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", toneClasses[action.tone])}>
-                                                    {action.tone}
-                                                </span>
-                                            </div>
-                                            <p className="text-sm font-medium text-muted-foreground leading-relaxed">{action.detail}</p>
-                                            <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                                <Clock className="h-3 w-3" />
-                                                {action.meta}
-                                            </div>
+                    <ActionSummaryBar summaries={summaries} />
+                </div>
+
+                <AnimatePresence mode="popLayout">
+                    {loading ? (
+                        <div className="grid gap-4">
+                            {[1, 2, 3].map((item) => (
+                                <div key={item} className="animate-pulse rounded-[1.5rem] border border-white/10 bg-card/70 p-6">
+                                    <div className="flex gap-4">
+                                        <div className="size-12 rounded-xl bg-muted/40" />
+                                        <div className="flex-1 space-y-3">
+                                            <div className="h-4 w-1/4 rounded bg-muted/40" />
+                                            <div className="h-3 w-3/4 rounded bg-muted/40" />
                                         </div>
                                     </div>
-
-                                    <Link
-                                        href={action.href}
-                                        className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
-                                    >
-                                        {action.cta}
-                                        <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                                    </Link>
                                 </div>
-                                {/* Subtle decorative streak */}
-                                <div className={cn("absolute bottom-0 left-6 right-6 h-[2px] opacity-0 transition-opacity group-hover:opacity-30", toneClasses[action.tone])} />
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-        </section>
+                            ))}
+                        </div>
+                    ) : error ? (
+                        <m.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="rounded-3xl border border-red-500/20 bg-red-500/5 p-6 text-center"
+                        >
+                            <p className="text-sm font-bold text-red-500">{error}</p>
+                        </m.div>
+                    ) : actions.length === 0 ? (
+                        <ActionEmptyState />
+                    ) : (
+                        <div className="grid gap-4">
+                            {actions.map((action) => (
+                                <ActionItemCard key={action.id} action={action} />
+                            ))}
+                        </div>
+                    )}
+                </AnimatePresence>
+            </section>
+        </LazyMotion>
     );
 }

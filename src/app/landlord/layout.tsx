@@ -11,6 +11,7 @@ import { PropertyProvider } from "@/context/PropertyContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { ProfileCardProvider } from "@/context/ProfileCardContext";
 import { ProfileCard } from "@/components/ui/ProfileCard";
+import { GlobalDetailModal } from "@/components/landlord/tenants/GlobalDetailModal";
 import { LandlordQuestTriggerGuide } from "@/components/landlord/dashboard/LandlordQuestTriggerGuide";
 import { NotificationBanner } from "@/components/navigation/NotificationBanner";
 
@@ -74,6 +75,7 @@ export default function LandlordLayout({
                             <InPersonPaymentModal />
                         </div>
                         <ProfileCard />
+                        <GlobalDetailModal />
                         <LandlordQuestTriggerGuide />
                     </ProfileCardProvider>
                 </NotificationProvider>

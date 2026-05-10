@@ -1,0 +1,3 @@
+fix: remove duplicate Image import
+
+Fixes build error where Image was imported twice in LeaseRenewalReminder.tsx
