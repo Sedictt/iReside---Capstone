@@ -407,6 +407,7 @@ export function RentApplications() {
     useEffect(() => {
         const controller = new AbortController();
         const startTime = Date.now();
+        let loadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
         const loadApplications = async () => {
             setLoading(true);
@@ -442,13 +443,18 @@ export function RentApplications() {
                 if (!controller.signal.aborted) {
                     const elapsed = Date.now() - startTime;
                     const minTime = 400;
-                    setTimeout(() => setLoading(false), Math.max(0, minTime - elapsed));
+                    loadingTimeoutId = setTimeout(() => setLoading(false), Math.max(0, minTime - elapsed));
                 }
             }
         };
 
         loadApplications();
-        return () => controller.abort();
+        return () => {
+            controller.abort();
+            if (loadingTimeoutId) {
+                clearTimeout(loadingTimeoutId);
+            }
+        };
     }, [reloadKey, selectedPropertyId]);
 
     const toggleRequirement = async (applicationId: string, currentChecklist: Record<string, boolean>, key: string) => {
