@@ -1,0 +1,11 @@
+Rule: react-doctor/nextjs-no-a-element
+Severity: warning
+Category: Next.js
+Count: 1
+
+Use next/link instead of <a> for internal links — enables client-side navigation and prefetching
+
+Suggestion: `import Link from 'next/link'` — enables client-side navigation, prefetching, and preserves scroll position
+
+Files:
+  src/components/landlord/dashboard/RecentInquiries.tsx:158

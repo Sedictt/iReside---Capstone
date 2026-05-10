@@ -1,0 +1,28 @@
+Rule: react-doctor/no-inline-bounce-easing
+Severity: warning
+Category: Performance
+Count: 18
+
+animate-bounce feels dated and tacky — use a subtle ease-out transform for natural deceleration
+
+Suggestion: Use `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out-expo) for natural deceleration — objects in the real world don't bounce
+
+Files:
+  src/components/landlord/messages/MessageComposer.tsx:94
+  src/components/landlord/messages/MessageComposer.tsx:95
+  src/components/landlord/messages/MessageComposer.tsx:96
+  src/components/tenant/ChatWidget.tsx:365
+  src/components/tenant/ChatWidget.tsx:366
+  src/components/tenant/ChatWidget.tsx:367
+  src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:136
+  src/components/tenant/TenantIrisChat.tsx:356
+  src/components/tenant/TenantIrisChat.tsx:357
+  src/components/tenant/TenantIrisChat.tsx:358
+  src/components/tenant/TenantContactsSidebar.tsx:1258
+  src/components/tenant/TenantContactsSidebar.tsx:1259
+  src/components/tenant/TenantContactsSidebar.tsx:1260
+  src/components/landlord/maintenance/MaintenanceRequestModal.tsx:614
+  src/app/tenant/applications/[id]/apply/page.tsx:650
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1232
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1233
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1234

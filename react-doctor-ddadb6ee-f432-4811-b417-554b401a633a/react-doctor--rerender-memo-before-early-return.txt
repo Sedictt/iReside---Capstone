@@ -1,0 +1,11 @@
+Rule: react-doctor/rerender-memo-before-early-return
+Severity: warning
+Category: Performance
+Count: 1
+
+useMemo returning JSX runs before an early return — extract the JSX into a memoized child component so the parent bails out before the subtree renders
+
+Suggestion: Extract the JSX into a memoized child component so the parent's early return short-circuits before the child renders
+
+Files:
+  src/components/landlord/applications/ToolAccessBar.tsx:162

@@ -6,6 +6,25 @@ import {
     resolveTenantProductTourEligibility,
 } from "@/lib/product-tour";
 
+export async function auth() {
+    // This is a helper for server actions to get the current user
+    // It returns the user object or null if not authenticated
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return [];
+                },
+                setAll() {},
+            },
+        }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+}
+
 export const TENANT_PRODUCT_TOUR_ROUTE_PREFIX = TENANT_PRODUCT_TOUR_ROUTE;
 const TOUR_AUTO_START_ROUTE_PREFIXES = [
     "/tenant/community",

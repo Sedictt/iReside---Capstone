@@ -83,7 +83,11 @@ export function SmartContractPreviewModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity" onClick={onClose} />
+            <button 
+                className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity cursor-default" 
+                onClick={onClose}
+                aria-label="Close contract preview"
+            />
 
             <div className={cn(
                 "relative w-full max-w-5xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200",

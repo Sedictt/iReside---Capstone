@@ -1,0 +1,28 @@
+Rule: react-doctor/no-render-in-render
+Severity: warning
+Category: Architecture
+Count: 18
+
+Inline render function "renderSystemIcon()" — extract to a separate component for proper reconciliation
+
+Suggestion: Extract to a named component: `const ListItem = ({ item }) => <div>{item.name}</div>`
+
+Files:
+  src/components/landlord/messages/MessageBubble.tsx:456
+  src/components/landlord/applications/ToolAccessBar.tsx:471
+  src/components/landlord/applications/ToolAccessBar.tsx:578
+  src/components/tenant/TenantNavbar.tsx:278
+  src/components/tenant/TenantNavbar.tsx:399
+  src/components/tenant/TenantContactsSidebar.tsx:1484
+  src/components/landlord/LandlordSettings.tsx:778
+  src/components/landlord/LandlordSettings.tsx:875
+  src/components/landlord/LandlordSettings.tsx:1217
+  src/components/landlord/LandlordSettings.tsx:1357
+  src/components/landlord/LandlordSettings.tsx:1430
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1451
+  src/components/tenant/TenantSettings.tsx:510
+  src/components/tenant/TenantSettings.tsx:727
+  src/components/tenant/TenantSettings.tsx:894
+  src/components/tenant/TenantSettings.tsx:1044
+  src/components/tenant/TenantSettings.tsx:1117
+  src/components/landlord/LandlordProfile.tsx:378

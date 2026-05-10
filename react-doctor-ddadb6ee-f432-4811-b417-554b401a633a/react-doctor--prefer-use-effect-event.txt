@@ -1,0 +1,19 @@
+Rule: react-doctor/prefer-use-effect-event
+Severity: warning
+Category: State & Effects
+Count: 9
+
+"startHighlight" is read only inside `addEventListener` — wrap it with useEffectEvent and remove it from the dep array so the effect doesn't re-synchronize on every parent render
+
+Suggestion: Wrap the callback with `useEffectEvent(callback)` (React 19+) and call the resulting binding from inside the sub-handler. The Effect Event captures the latest props/state without being a reactive dep, so the effect doesn't re-subscribe on every parent render. See https://react.dev/reference/react/useEffectEvent
+
+Files:
+  src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:31
+  src/components/landlord/dashboard/LandlordQuestTriggerGuide.tsx:31
+  src/components/landlord/visual-planner/VisualBuilder.tsx:1375
+  src/components/landlord/visual-planner/VisualBuilder.tsx:1375
+  src/components/landlord/visual-planner/VisualBuilder.tsx:2501
+  src/components/transitions/PageTransitionProvider.tsx:163
+  src/components/tenant/TenantProductTourOverlay.tsx:208
+  src/context/NotificationContext.tsx:381
+  src/context/NotificationContext.tsx:381

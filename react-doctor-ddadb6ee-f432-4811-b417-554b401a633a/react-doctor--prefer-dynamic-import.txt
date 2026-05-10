@@ -1,0 +1,14 @@
+Rule: react-doctor/prefer-dynamic-import
+Severity: warning
+Category: Bundle Size
+Count: 4
+
+"chart.js" is a heavy library — use React.lazy() or next/dynamic for code splitting
+
+Suggestion: Use `const Component = dynamic(() => import('library'), { ssr: false })` from next/dynamic or React.lazy()
+
+Files:
+  src/components/RevenueChart.tsx:4
+  src/components/RevenueChart.tsx:14
+  src/components/landlord/dashboard/FinancialPerformanceChart.tsx:5
+  src/components/landlord/dashboard/FinancialPerformanceChart.tsx:13

@@ -9,18 +9,22 @@ export function InPersonPaymentModal() {
 
     useEffect(() => {
         const checkStorage = () => {
-            const status = localStorage.getItem('pendingInPersonPayment');
-            if (status === 'true') {
-                setIsOpen(true);
-            } else {
-                setIsOpen(false);
-            }
+            const status = localStorage.getItem("pendingInPersonPayment");
+            setIsOpen(status === "true");
         };
 
         checkStorage();
-        const interval = setInterval(checkStorage, 1000);
 
-        return () => clearInterval(interval);
+        // Use 'storage' event to respond to changes from other tabs/windows
+        window.addEventListener("storage", checkStorage);
+        
+        // Custom event for same-tab changes if needed, but here we can just use a helper
+        const interval = setInterval(checkStorage, 2000); // Relaxed polling as fallback
+
+        return () => {
+            window.removeEventListener("storage", checkStorage);
+            clearInterval(interval);
+        };
     }, []);
 
     const handleConfirm = () => {
@@ -36,14 +40,22 @@ export function InPersonPaymentModal() {
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <button 
+                onClick={() => {
+                    setIsOpen(false);
+                    localStorage.removeItem("pendingInPersonPayment");
+                }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
+                aria-label="Close modal backdrop"
+            />
             <div className="relative w-full max-w-md bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
                 <button
                     onClick={() => {
                         setIsOpen(false);
-                        localStorage.removeItem('pendingInPersonPayment');
+                        localStorage.removeItem("pendingInPersonPayment");
                     }}
                     className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
+                    aria-label="Close modal"
                 >
                     <X className="w-5 h-5" />
                 </button>

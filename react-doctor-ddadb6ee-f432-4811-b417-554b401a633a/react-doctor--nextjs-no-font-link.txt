@@ -1,0 +1,14 @@
+Rule: react-doctor/nextjs-no-font-link
+Severity: warning
+Category: Next.js
+Count: 4
+
+Loading Google Fonts via <link> — use next/font instead for self-hosting, zero layout shift, and no render-blocking requests
+
+Suggestion: `import { Inter } from "next/font/google"` — self-hosted, zero layout shift, no render-blocking requests
+
+Files:
+  src/app/layout.tsx:39
+  src/app/layout.tsx:41
+  src/app/layout.tsx:42
+  src/app/layout.tsx:43

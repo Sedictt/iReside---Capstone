@@ -1,0 +1,38 @@
+Rule: react-doctor/no-effect-chain
+Severity: warning
+Category: State & Effects
+Count: 28
+
+useEffect reacts to "studioStep" which is set by another useEffect — chains of effects add an extra render per link and become rigid as code evolves. Compute what you can during render and write all related state inside the event handler that originally fires the chain
+
+Suggestion: Compute as much as possible during render (e.g. `const isGameOver = round > 5`) and write all related state inside the event handler that originally fires the chain. Each effect link adds an extra render and makes the code rigid as requirements evolve
+
+Files:
+  src/app/landlord/invoices/page.tsx:212
+  src/components/tenant/ChatWidget.tsx:67
+  src/components/tenant/ChatWidget.tsx:139
+  src/app/landlord/messages/page.tsx:610
+  src/app/landlord/messages/page.tsx:431
+  src/app/landlord/messages/page.tsx:443
+  src/app/landlord/messages/page.tsx:621
+  src/components/landlord/visual-planner/VisualBuilder.tsx:2113
+  src/components/landlord/visual-planner/VisualBuilder.tsx:2385
+  src/components/landlord/visual-planner/VisualBuilder.tsx:2344
+  src/components/landlord/dashboard/IrisAIAgent.tsx:202
+  src/components/landlord/applications/WalkInApplicationModal.tsx:326
+  src/components/landlord/applications/WalkInApplicationModal.tsx:384
+  src/components/landlord/applications/WalkInApplicationModal.tsx:452
+  src/components/landlord/applications/WalkInApplicationModal.tsx:425
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:246
+  src/app/landlord/onboarding/[token]/page.tsx:232
+  src/components/tenant/TenantIrisChat.tsx:54
+  src/components/tenant/TenantIrisChat.tsx:124
+  src/components/landlord/lease/ContractPreviewModal.tsx:183
+  src/components/landlord/move-out/MoveOutInspectionForm.tsx:73
+  src/app/tenant/messages/page.tsx:582
+  src/app/tenant/messages/page.tsx:376
+  src/app/tenant/messages/page.tsx:389
+  src/app/tenant/messages/page.tsx:593
+  src/app/landlord/analytics/page.tsx:514
+  src/app/landlord/analytics/page.tsx:598
+  src/app/signup/page.tsx:62

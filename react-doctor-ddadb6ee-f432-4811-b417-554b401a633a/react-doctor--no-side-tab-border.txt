@@ -1,0 +1,61 @@
+Rule: react-doctor/no-side-tab-border
+Severity: warning
+Category: Architecture
+Count: 51
+
+Thick one-sided border (border-l-4) — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it
+
+Suggestion: Use a subtler accent (box-shadow inset, background gradient, or border-bottom) instead of a thick one-sided border
+
+Files:
+  src/app/docs/[...slug]/page.tsx:16
+  src/app/docs/[...slug]/page.tsx:28
+  src/app/docs/[...slug]/page.tsx:40
+  src/app/docs/[...slug]/page.tsx:82
+  src/app/docs/[...slug]/page.tsx:98
+  src/app/docs/[...slug]/page.tsx:138
+  src/app/docs/[...slug]/page.tsx:143
+  src/app/docs/[...slug]/page.tsx:172
+  src/app/docs/[...slug]/page.tsx:212
+  src/app/docs/[...slug]/page.tsx:217
+  src/app/docs/[...slug]/page.tsx:233
+  src/app/docs/[...slug]/page.tsx:243
+  src/app/docs/[...slug]/page.tsx:251
+  src/app/docs/[...slug]/page.tsx:270
+  src/app/docs/[...slug]/page.tsx:363
+  src/app/docs/[...slug]/page.tsx:380
+  src/app/docs/[...slug]/page.tsx:407
+  src/app/docs/[...slug]/page.tsx:415
+  src/app/docs/[...slug]/page.tsx:449
+  src/app/docs/[...slug]/page.tsx:466
+  src/app/docs/[...slug]/page.tsx:494
+  src/app/docs/[...slug]/page.tsx:518
+  src/app/docs/[...slug]/page.tsx:544
+  src/app/docs/[...slug]/page.tsx:587
+  src/app/docs/[...slug]/page.tsx:649
+  src/app/docs/[...slug]/page.tsx:694
+  src/app/docs/[...slug]/page.tsx:732
+  src/app/docs/[...slug]/page.tsx:812
+  src/app/docs/[...slug]/page.tsx:834
+  src/app/docs/[...slug]/page.tsx:843
+  src/app/docs/[...slug]/page.tsx:867
+  src/app/docs/[...slug]/page.tsx:885
+  src/app/docs/[...slug]/page.tsx:902
+  src/app/docs/[...slug]/page.tsx:939
+  src/app/docs/[...slug]/page.tsx:969
+  src/app/docs/[...slug]/page.tsx:993
+  src/app/docs/[...slug]/page.tsx:1066
+  src/app/docs/[...slug]/page.tsx:1094
+  src/app/docs/[...slug]/page.tsx:1118
+  src/app/docs/[...slug]/page.tsx:1172
+  src/app/docs/[...slug]/page.tsx:1188
+  src/app/docs/[...slug]/page.tsx:1223
+  src/app/docs/[...slug]/page.tsx:1265
+  src/app/docs/[...slug]/page.tsx:1297
+  src/app/docs/[...slug]/page.tsx:1385
+  src/app/docs/[...slug]/page.tsx:1414
+  src/app/docs/[...slug]/page.tsx:1656
+  src/app/docs/[...slug]/page.tsx:1690
+  src/app/docs/[...slug]/page.tsx:1725
+  src/app/page.tsx:763
+  src/components/landlord/invoices/InvoiceModal.tsx:769

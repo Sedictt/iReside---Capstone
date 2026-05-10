@@ -8,18 +8,22 @@ export default function LandlordSettingsPage() {
     const router = useRouter();
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <div className="relative overflow-hidden px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,rgba(var(--primary-rgb),0.18),transparent_58%)]" />
-                <div className="pointer-events-none absolute left-[-8rem] top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-                <div className="pointer-events-none absolute bottom-0 right-[-5rem] h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-                <div className="relative mx-auto max-w-7xl">
+        <div className="min-h-screen bg-[#0a0a0a] text-neutral-400">
+            <div className="relative overflow-hidden p-6 md:p-12 lg:p-16">
+                {/* Background Decorations */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top,rgba(var(--primary-rgb),0.15),transparent_60%)]" />
+                <div className="pointer-events-none absolute left-[-10%] top-[10%] h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px]" />
+                <div className="pointer-events-none absolute right-[-5%] bottom-[10%] h-[350px] w-[350px] rounded-full bg-emerald-500/5 blur-[100px]" />
+
+                <div className="relative mx-auto max-w-6xl">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
+                        className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors mb-10 group"
                     >
-                        <ChevronLeft className="h-4 w-4" />
-                        Back
+                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-all">
+                            <ChevronLeft className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm font-bold tracking-wide">Back to Dashboard</span>
                     </button>
                     <LandlordSettings />
                 </div>

@@ -365,8 +365,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
+                                        <label htmlFor="moveOutDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
                                         <input 
+                                            id="moveOutDate"
                                             type="date" 
                                             required
                                             value={requestedDate}
@@ -376,8 +377,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
+                                        <label htmlFor="moveOutReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
                                         <textarea 
+                                            id="moveOutReason"
                                             rows={3}
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}

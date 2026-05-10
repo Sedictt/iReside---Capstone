@@ -1,0 +1,78 @@
+Rule: react-doctor/prefer-useReducer
+Severity: warning
+Category: State & Effects
+Count: 68
+
+Component "AvatarPicker" has 6 useState calls — consider useReducer for related state
+
+Suggestion: Group related state: `const [state, dispatch] = useReducer(reducer, { field1, field2, ... })`
+
+Files:
+  src/components/profile/AvatarPicker.tsx:30
+  src/app/landlord/documents/page.tsx:57
+  src/app/admin/test-verification/page.tsx:34
+  src/app/landlord/dashboard/page.tsx:82
+  src/app/admin/users/page.tsx:240
+  src/app/landlord/invoices/page.tsx:24
+  src/app/landlord/properties/new/page.tsx:61
+  src/components/landlord/move-out/MoveOutRequestDetails.tsx:70
+  src/components/tenant/invite/ProspectPaymentPortalClient.tsx:83
+  src/components/tenant/invite/InviteApplicationClient.tsx:74
+  src/app/landlord/utilities/page.tsx:46
+  src/components/landlord/dashboard/RecentInquiries.tsx:21
+  src/app/admin/registrations/page.tsx:118
+  src/app/tenant/community/page.tsx:70
+  src/app/landlord/messages/page.tsx:252
+  src/components/landlord/visual-planner/VisualBuilder.tsx:494
+  src/components/landlord/visual-planner/VisualBuilder.tsx:896
+  src/components/landlord/visual-planner/UnitListingWizard.tsx:16
+  src/components/landlord/visual-planner/MapSetupWizard.tsx:177
+  src/app/landlord/tenants/page.tsx:54
+  src/components/community/CommunityComposer.tsx:23
+  src/app/tenant/tour/page.tsx:30
+  src/app/tenant/lease/page.tsx:42
+  src/components/tenant/LeaseRenewalRequest.tsx:23
+  src/app/tenant/dashboard/page.tsx:153
+  src/app/tenant/payments/[id]/checkout/page.tsx:410
+  src/components/landlord/dashboard/DashboardBanner.tsx:90
+  src/components/landlord/BillingOperationsPanel.tsx:82
+  src/components/landlord/dashboard/IrisAIAgent.tsx:30
+  src/components/landlord/applications/WalkInApplicationModal.tsx:299
+  src/components/landlord/applications/TenantInviteManager.tsx:137
+  src/components/messaging/MessageReportWizard.tsx:92
+  src/app/tenant/maintenance/page.tsx:42
+  src/app/tenant/maintenance/new/page.tsx:37
+  src/components/tenant/MoveOutRequest.tsx:34
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:71
+  src/components/landlord/applications/RentApplications.tsx:248
+  src/app/landlord/onboarding/[token]/page.tsx:58
+  src/components/tenant/TenantContactsSidebar.tsx:117
+  src/components/landlord/AddAmenityModal.tsx:165
+  src/components/tenant/TenantProductTourOverlay.tsx:33
+  src/components/landlord/maintenance/MaintenanceRequestModal.tsx:38
+  src/app/tenant/applications/[id]/apply/page.tsx:48
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:57
+  src/components/landlord/leases/RenewalReview.tsx:44
+  src/components/landlord/lease/ContractPreviewModal.tsx:148
+  src/components/landlord/LandlordSettings.tsx:167
+  src/components/landlord/move-out/MoveOutInspectionForm.tsx:37
+  src/components/landlord/move-out/MoveOutRequestsList.tsx:42
+  src/components/landlord/dashboard/ContactsSidebar.tsx:120
+  src/context/NotificationContext.tsx:30
+  src/app/tenant/messages/page.tsx:187
+  src/components/landlord/invoices/InvoiceModal.tsx:33
+  src/components/landlord/invoices/RecordExpenseModal.tsx:15
+  src/app/landlord/analytics/page.tsx:234
+  src/app/(signing)/signing/tenant/[leaseId]/page.tsx:44
+  src/app/(signing)/signing/landlord/[leaseId]/page.tsx:46
+  src/components/tenant/TenantSettings.tsx:162
+  src/app/landlord/leases/page.tsx:29
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:59
+  src/app/landlord/properties/[id]/environment/page.tsx:116
+  src/app/signup/page.tsx:11
+  src/app/admin/chat-moderation/page.tsx:65
+  src/components/landlord/properties/PropertiesDashboard.tsx:67
+  src/components/landlord/LandlordProfile.tsx:44
+  src/components/landlord/dashboard/ActionRequired.tsx:97
+  src/components/landlord/tenants/AddTenantModal.tsx:34
+  src/components/tenant/UnitTransferRequest.tsx:38

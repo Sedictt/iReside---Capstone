@@ -1,0 +1,14 @@
+Rule: react-doctor/rerender-lazy-state-init
+Severity: warning
+Category: Performance
+Count: 4
+
+useState(slice()) calls initializer on every render — use useState(() => slice()) for lazy initialization
+
+Suggestion: Wrap in an arrow function so it only runs once: `useState(() => expensiveComputation())`
+
+Files:
+  src/components/landlord/invoices/RecordExpenseModal.tsx:19
+  src/app/landlord/analytics/page.tsx:240
+  src/app/landlord/analytics/page.tsx:241
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:67

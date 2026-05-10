@@ -1,0 +1,51 @@
+Rule: react-doctor/no-fetch-in-effect
+Severity: warning
+Category: State & Effects
+Count: 41
+
+fetch() inside useEffect — use a data fetching library (react-query, SWR) or server component
+
+Suggestion: Use `useQuery()` from @tanstack/react-query, `useSWR()`, or fetch in a Server Component instead
+
+Files:
+  src/app/admin/dashboard/page.tsx:106
+  src/app/landlord/documents/page.tsx:73
+  src/app/landlord/dashboard/page.tsx:149
+  src/app/landlord/dashboard/page.tsx:196
+  src/app/landlord/dashboard/page.tsx:227
+  src/app/landlord/dashboard/page.tsx:265
+  src/app/admin/users/page.tsx:248
+  src/app/landlord/properties/new/page.tsx:105
+  src/components/tenant/invite/ProspectPaymentPortalClient.tsx:95
+  src/components/tenant/invite/InviteApplicationClient.tsx:100
+  src/app/landlord/unit-map/page.tsx:17
+  src/components/landlord/dashboard/RecentInquiries.tsx:70
+  src/components/landlord/visual-planner/VisualBuilder.tsx:1021
+  src/components/landlord/visual-planner/VisualBuilder.tsx:1085
+  src/components/landlord/visual-planner/VisualBuilder.tsx:2407
+  src/app/tenant/unit-map/page.tsx:31
+  src/app/tenant/lease/page.tsx:123
+  src/app/tenant/dashboard/page.tsx:177
+  src/app/tenant/payments/[id]/checkout/page.tsx:429
+  src/components/landlord/BillingOperationsPanel.tsx:97
+  src/components/landlord/applications/ToolAccessBar.tsx:115
+  src/app/tenant/maintenance/page.tsx:56
+  src/components/messaging/OfficialReceipt.tsx:38
+  src/app/tenant/payments/page.tsx:73
+  src/components/landlord/applications/RentApplications.tsx:407
+  src/components/landlord/applications/RentApplications.tsx:476
+  src/app/landlord/onboarding/[token]/page.tsx:155
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:72
+  src/components/landlord/LandlordSettings.tsx:324
+  src/components/landlord/LandlordSettings.tsx:371
+  src/components/landlord/move-out/MoveOutInspectionForm.tsx:79
+  src/components/landlord/move-out/MoveOutRequestsList.tsx:55
+  src/components/landlord/invoices/InvoiceModal.tsx:51
+  src/app/landlord/analytics/page.tsx:520
+  src/app/(signing)/signing/tenant/[leaseId]/page.tsx:58
+  src/app/(signing)/signing/landlord/[leaseId]/page.tsx:60
+  src/components/tenant/TenantSettings.tsx:293
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:170
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:718
+  src/components/landlord/properties/PropertiesDashboard.tsx:76
+  src/components/landlord/dashboard/ActionRequired.tsx:105

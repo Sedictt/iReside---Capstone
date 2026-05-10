@@ -1,0 +1,12 @@
+Rule: react-doctor/no-many-boolean-props
+Severity: warning
+Category: Architecture
+Count: 2
+
+Component "CommunityPostCard" takes 5 boolean-like props (isSaved, isOpen, isMutating…) — consider compound components or explicit variants instead of stacking flags
+
+Suggestion: Split into compound components or named variants: `<Button.Primary />`, `<DialogConfirm />` instead of stacking `isPrimary`, `isConfirm` flags
+
+Files:
+  src/components/community/CommunityPostCard.tsx:61
+  src/components/community/CommunityHeader.tsx:27

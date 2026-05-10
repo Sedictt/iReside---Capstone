@@ -168,18 +168,18 @@ export async function GET() {
         new Set(requestRows.map((row) => row.unit_id).filter((value): value is string => Boolean(value)))
     );
 
-    const { data: landlordRows, error: landlordsError } =
+    const [{ data: landlordRows, error: landlordsError }, { data: unitRows, error: unitsError }] = await Promise.all([
         landlordIds.length > 0
-            ? await supabase.from("profiles").select("id, full_name").in("id", landlordIds)
-            : { data: [], error: null };
+            ? supabase.from("profiles").select("id, full_name").in("id", landlordIds)
+            : Promise.resolve({ data: [], error: null }),
+        unitIds.length > 0
+            ? supabase.from("units").select("id, name, property_id").in("id", unitIds)
+            : Promise.resolve({ data: [], error: null }),
+    ]);
+
     if (landlordsError) {
         return NextResponse.json({ error: "Failed to load landlord profiles." }, { status: 500 });
     }
-
-    const { data: unitRows, error: unitsError } =
-        unitIds.length > 0
-            ? await supabase.from("units").select("id, name, property_id").in("id", unitIds)
-            : { data: [], error: null };
     if (unitsError) {
         return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
     }

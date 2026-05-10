@@ -1,0 +1,11 @@
+Rule: react-doctor/client-localstorage-no-version
+Severity: warning
+Category: Correctness
+Count: 1
+
+localStorage.setItem("iris_stats_analysis", JSON.stringify(...)) — bake a version into the key (e.g. "iris_stats_analysis:v1") so a future schema change can ignore old data instead of crashing on it
+
+Suggestion: Bake a version into the storage key (e.g. "myKey:v1"); a future schema change can ignore old data instead of crashing on it
+
+Files:
+  src/components/landlord/dashboard/IrisAIAgent.tsx:189

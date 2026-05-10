@@ -1,0 +1,21 @@
+Rule: knip/types
+Severity: warning
+Category: Dead Code
+Count: 93
+
+Unused type: WizardState
+
+Files:
+  src\lib\wizard-storage.ts
+  src\types\database.ts
+  src\lib\messages\client.ts
+  src\components\tenant\maintenance\TenantMaintenanceModal.tsx
+  src\lib\messages\profanity-lexicon.ts
+  src\lib\application-payment-pending.ts
+  src\lib\messages\redaction-service.ts
+  src\lib\billing\workflow.ts
+  src\components\ui\ClickSpark.tsx
+  src\app\api\tenant\tour\helpers.ts
+  src\types\index.ts
+  src\components\docs\DocsSidebar.tsx
+  src\components\landlord\applications\SigningModeSelector.tsx

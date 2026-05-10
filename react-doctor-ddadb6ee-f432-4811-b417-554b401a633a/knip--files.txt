@@ -1,0 +1,73 @@
+Rule: knip/files
+Severity: warning
+Category: Dead Code
+Count: 63
+
+Unused file
+
+Suggestion: This file is not imported by any other file in the project.
+
+Files:
+  clean-dark.js
+  fix-blueprint.js
+  fix-colors-all.js
+  fix-colors.js
+  fix-oops.js
+  fix-page.js
+  fix-sidebar.js
+  fix.js
+  replace-background-dark.js
+  replace-blueprint-colors-more.js
+  replace-blueprint-colors.js
+  replace-ireside.js
+  replace_theme.js
+  sync-storage.js
+  scratch\check_db.js
+  scratch\check_db.ts
+  scratch\check_db_fetch.js
+  scratch\check_registrations.js
+  scratch\debug_tags.js
+  scratch\debug_tags_v2.js
+  scratch\fix_landlords.ts
+  scratch\fix_property.ts
+  scratch\manual_activate_lease.ts
+  scratch\migrate_avatars_colors.ts
+  scratch\patch_contacts_sidebar.ts
+  scratch\patch_dashboard_page.ts
+  scratch\patch_messages_bubbles.ts
+  scratch\patch_messages_page.ts
+  scratch\patch_payment_modal.ts
+  scratch\test_storage.js
+  scripts\test-business-verification.ts
+  scripts\test-real-scraper.ts
+  scripts\verify-setup.ts
+  temp\reset-app.js
+  temp\reset-lease.js
+  src\components\TestComponent.tsx
+  src\styles\design-tokens.css
+  src\styles\globals.css
+  src\lib\supabase.ts
+  src\types\supabase.ts
+  src\components\lease\LeaseHeader.tsx
+  src\components\lease\SignatureModal.tsx
+  src\components\landlord\LandlordNavbar.tsx
+  src\components\landlord\LandlordProfile.tsx
+  src\components\landlord\UnitShowcaseModal.tsx
+  src\components\profile\SocialConnectivity.tsx
+  src\components\tenant\MessageFab.tsx
+  src\components\tenant\MessagesTour.tsx
+  src\lib\supabase\auth.ts
+  src\lib\queries\index.ts
+  src\lib\queries\leases.ts
+  src\lib\queries\payments.ts
+  src\lib\queries\properties.ts
+  src\components\landlord\community\CommunityPropertyGate.tsx
+  src\components\landlord\dashboard\FeaturedPropertyCard.tsx
+  src\components\landlord\dashboard\FeaturedPropertySkeleton.tsx
+  src\components\landlord\dashboard\FloatingChatWidget.tsx
+  src\components\landlord\dashboard\OperationalSnapshotCard.tsx
+  src\components\landlord\dashboard\OperationalSnapshotSkeleton.tsx
+  src\components\landlord\dashboard\RecentInquiries.tsx
+  src\components\landlord\visual-planner\UnitListingWizard.tsx
+  src\app\admin\registrations\revert_registration.ts
+  src\app\admin\registrations\sync_permit_card.ts

@@ -1,0 +1,21 @@
+Rule: react-doctor/js-batch-dom-css
+Severity: warning
+Category: Performance
+Count: 11
+
+Multiple sequential element.style assignments — batch with cssText or classList for fewer reflows
+
+Suggestion: Batch DOM/CSS reads and writes — interleaving them inside a loop causes layout thrashing. Read first, then write
+
+Files:
+  src/components/landlord/messages/MessageComposer.tsx:79
+  src/components/landlord/messages/MessageBubble.tsx:96
+  src/components/tenant/DashboardTour.tsx:32
+  src/components/tenant/DashboardTour.tsx:36
+  src/components/tenant/CommunityTour.tsx:32
+  src/components/tenant/CommunityTour.tsx:36
+  src/components/community/CommunityComposer.tsx:108
+  src/components/tenant/LeaseTour.tsx:32
+  src/components/tenant/LeaseTour.tsx:36
+  src/components/tenant/MessagesTour.tsx:32
+  src/components/tenant/MessagesTour.tsx:36

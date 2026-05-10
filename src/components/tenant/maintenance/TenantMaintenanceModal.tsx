@@ -76,7 +76,11 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="absolute inset-0" onClick={onClose} />
+            <button 
+                className="absolute inset-0 cursor-default" 
+                onClick={onClose}
+                aria-label="Close maintenance detail"
+            />
 
             <div className="relative w-full max-w-5xl bg-background rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh] border border-border animate-in zoom-in-95 duration-300">
                 {/* Left Panel: Images & Info */}

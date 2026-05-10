@@ -1,0 +1,23 @@
+Rule: react-doctor/no-derived-useState
+Severity: warning
+Category: State & Effects
+Count: 13
+
+useState initialized from prop "initialSocials" — if this value should stay in sync with the prop, derive it during render instead
+
+Suggestion: Remove useState and compute the value inline: `const value = transform(propName)`
+
+Files:
+  src/components/profile/SocialsHeader.tsx:32
+  src/components/profile/SocialLinksEditor.tsx:23
+  src/components/profile/ProfileCoverUploader.tsx:18
+  src/components/profile/AvatarPicker.tsx:32
+  src/components/landlord/visual-planner/VisualBuilder.tsx:995
+  src/components/community/CommunityPhotoLightbox.tsx:14
+  src/components/tenant/LeaseRenewalRequest.tsx:24
+  src/components/tenant/MoveOutRequest.tsx:39
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:74
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:83
+  src/components/landlord/move-out/MoveOutRequestsList.tsx:48
+  src/components/landlord/EditableBio.tsx:16
+  src/components/landlord/EditableBio.tsx:17

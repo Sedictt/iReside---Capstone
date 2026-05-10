@@ -77,21 +77,21 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
     const handlePropertyChange = (propertyId: string) => {
         const prop = properties.find(p => p.id === propertyId)
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             propertyId,
             unitId: prop?.units[0]?.id || '',
             monthlyRent: prop?.units[0]?.rentAmount || 0
-        })
+        }))
     }
 
     const handleUnitChange = (unitId: string) => {
         const unit = availableUnits.find(u => u.id === unitId)
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             unitId,
             monthlyRent: unit?.rentAmount || 0
-        })
+        }))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -245,45 +245,48 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 </h3>
                                                 
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Full Name</label>
+                                                    <label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Full Name</label>
                                                     <div className="relative">
                                                         <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
+                                                            id="fullName"
                                                             required
                                                             type="text"
                                                             placeholder="Juan Dela Cruz"
                                                             value={formData.fullName}
-                                                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                                            onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                                                             className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email Address</label>
+                                                    <label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Email Address</label>
                                                     <div className="relative">
                                                         <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
+                                                            id="email"
                                                             required
                                                             type="email"
                                                             placeholder="juan@example.com"
                                                             value={formData.email}
-                                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                                                             className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Number</label>
+                                                    <label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Phone Number</label>
                                                     <div className="relative">
                                                         <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <input
+                                                            id="phone"
                                                             required
                                                             type="tel"
                                                             placeholder="0912 345 6789"
                                                             value={formData.phone}
-                                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                                                             className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
@@ -298,10 +301,11 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 </h3>
 
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Property</label>
+                                                    <label htmlFor="propertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Property</label>
                                                     <div className="relative">
                                                         <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <select
+                                                            id="propertyId"
                                                             required
                                                             value={formData.propertyId}
                                                             onChange={(e) => handlePropertyChange(e.target.value)}
@@ -316,10 +320,11 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Unit</label>
+                                                    <label htmlFor="unitId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Unit</label>
                                                     <div className="relative">
                                                         <Home className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                         <select
+                                                            id="unitId"
                                                             required
                                                             value={formData.unitId}
                                                             onChange={(e) => handleUnitChange(e.target.value)}
@@ -335,22 +340,24 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Start Date</label>
+                                                        <label htmlFor="startDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Start Date</label>
                                                         <input
+                                                            id="startDate"
                                                             required
                                                             type="date"
                                                             value={formData.startDate}
-                                                            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                                                            onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
                                                             className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">End Date</label>
+                                                        <label htmlFor="endDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">End Date</label>
                                                         <input
+                                                            id="endDate"
                                                             required
                                                             type="date"
                                                             value={formData.endDate}
-                                                            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                                            onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                                                             className="w-full rounded-2xl border border-border bg-muted/50 px-5 py-3.5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                         />
                                                     </div>
@@ -358,26 +365,28 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Monthly Rent</label>
+                                                        <label htmlFor="monthlyRent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Monthly Rent</label>
                                                         <div className="relative">
                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground/60">₱</span>
                                                             <input
+                                                                id="monthlyRent"
                                                                 required
                                                                 type="number"
                                                                 value={formData.monthlyRent}
-                                                                onChange={(e) => setFormData({ ...formData, monthlyRent: parseFloat(e.target.value) })}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, monthlyRent: parseFloat(e.target.value) }))}
                                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                             />
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Security Deposit</label>
+                                                        <label htmlFor="securityDeposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Security Deposit</label>
                                                         <div className="relative">
                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground/60">₱</span>
                                                             <input
+                                                                id="securityDeposit"
                                                                 type="number"
                                                                 value={formData.securityDeposit}
-                                                                onChange={(e) => setFormData({ ...formData, securityDeposit: parseFloat(e.target.value) })}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: parseFloat(e.target.value) }))}
                                                                 className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-8 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                             />
                                                         </div>
@@ -421,13 +430,14 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
 
                                         <div className="space-y-6">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target Property</label>
+                                                <label htmlFor="invitePropertyId" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target Property</label>
                                                 <div className="relative">
                                                     <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                     <select
+                                                        id="invitePropertyId"
                                                         required
                                                         value={inviteData.propertyId}
-                                                        onChange={(e) => setInviteData({ ...inviteData, propertyId: e.target.value })}
+                                                        onChange={(e) => setInviteData(prev => ({ ...prev, propertyId: e.target.value }))}
                                                         className="w-full appearance-none rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                     >
                                                         <option value="" disabled>Select Property</option>
@@ -439,13 +449,14 @@ export function AddTenantModal({ isOpen, onClose, onSuccess }: AddTenantModalPro
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
+                                                <label htmlFor="expiresAt" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Expiration (Optional)</label>
                                                 <div className="relative">
                                                     <Calendar className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/40" />
                                                     <input
+                                                        id="expiresAt"
                                                         type="date"
                                                         value={inviteData.expiresAt}
-                                                        onChange={(e) => setInviteData({ ...inviteData, expiresAt: e.target.value })}
+                                                        onChange={(e) => setInviteData(prev => ({ ...prev, expiresAt: e.target.value }))}
                                                         className="w-full rounded-2xl border border-border bg-muted/50 py-3.5 pl-12 pr-5 text-sm font-bold outline-none ring-primary/20 transition-all focus:border-primary/50 focus:ring-4"
                                                     />
                                                 </div>

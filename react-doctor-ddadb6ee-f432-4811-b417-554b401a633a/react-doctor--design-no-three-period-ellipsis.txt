@@ -1,0 +1,66 @@
+Rule: react-doctor/design-no-three-period-ellipsis
+Severity: warning
+Category: Architecture
+Count: 56
+
+Three-period ellipsis ("...") in JSX text — use the actual ellipsis character "…" (or `&hellip;`)
+
+Suggestion: Use the typographic ellipsis "…" (or `&hellip;`) instead of three periods — pairs with action-with-followup labels ("Rename…", "Loading…")
+
+Files:
+  src/components/landlord/messages/MessageComposer.tsx:99
+  src/components/landlord/messages/MessageComposer.tsx:241
+  src/components/landlord/messages/ContactList.tsx:76
+  src/components/RevenueChart.tsx:156
+  src/app/landlord/documents/page.tsx:113
+  src/app/admin/test-verification/page.tsx:149
+  src/components/landlord/community/CommunityPropertyGate.tsx:15
+  src/app/landlord/invoices/page.tsx:391
+  src/components/tenant/invite/InviteApplicationClient.tsx:332
+  src/components/tenant/invite/InviteApplicationClient.tsx:718
+  src/app/landlord/applications/page.tsx:8
+  src/components/landlord/visual-planner/VisualBuilder.tsx:664
+  src/components/landlord/visual-planner/VisualBuilder.tsx:867
+  src/components/landlord/visual-planner/MapSetupWizard.tsx:527
+  src/app/tenant/unit-map/page.tsx:67
+  src/app/tenant/tour/page.tsx:145
+  src/app/tenant/lease/page.tsx:198
+  src/app/tenant/lease/page.tsx:650
+  src/app/tenant/payments/[id]/checkout/page.tsx:572
+  src/components/landlord/BillingOperationsPanel.tsx:207
+  src/components/landlord/BillingOperationsPanel.tsx:819
+  src/components/landlord/applications/WalkInApplicationModal.tsx:36
+  src/components/landlord/applications/WalkInApplicationModal.tsx:883
+  src/components/landlord/applications/WalkInApplicationModal.tsx:1344
+  src/components/landlord/applications/ToolAccessBar.tsx:174
+  src/components/landlord/applications/TenantInviteManager.tsx:500
+  src/components/messaging/MessageReportWizard.tsx:443
+  src/app/tenant/maintenance/new/page.tsx:297
+  src/app/tenant/payments/page.tsx:255
+  src/app/tenant/payments/page.tsx:464
+  src/app/tenant/payments/page.tsx:476
+  src/components/landlord/InPersonPaymentModal.tsx:92
+  src/components/landlord/applications/RentApplications.tsx:49
+  src/app/landlord/onboarding/[token]/page.tsx:423
+  src/components/tenant/TenantContactsSidebar.tsx:1194
+  src/components/tenant/TenantContactsSidebar.tsx:1315
+  src/components/landlord/applications/application-intake-shared.tsx:169
+  src/app/tenant/applications/[id]/apply/page.tsx:516
+  src/app/tenant/applications/[id]/apply/page.tsx:627
+  src/components/landlord/leases/RenewalSettingsModal.tsx:114
+  src/components/landlord/leases/RenewalReview.tsx:244
+  src/components/landlord/LandlordSettings.tsx:1141
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1167
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1289
+  src/components/landlord/invoices/InvoiceModal.tsx:385
+  src/app/landlord/analytics/page.tsx:697
+  src/app/(signing)/signing/tenant/[leaseId]/page.tsx:212
+  src/app/(signing)/signing/landlord/[leaseId]/page.tsx:216
+  src/components/tenant/TenantSettings.tsx:652
+  src/app/landlord/leases/page.tsx:101
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:285
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:776
+  src/app/landlord/properties/[id]/environment/page.tsx:269
+  src/components/landlord/tenants/AddTenantModal.tsx:406
+  src/components/landlord/tenants/AddTenantModal.tsx:471
+  src/components/tenant/UnitTransferRequest.tsx:184

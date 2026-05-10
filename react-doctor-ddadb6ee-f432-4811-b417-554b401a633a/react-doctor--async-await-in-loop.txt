@@ -1,0 +1,45 @@
+Rule: react-doctor/async-await-in-loop
+Severity: warning
+Category: Performance
+Count: 35
+
+await inside a for-loop runs the calls sequentially — for independent operations, collect them and use `await Promise.all(items.map(...))` to run them concurrently
+
+Suggestion: Collect the items and use `await Promise.all(items.map(...))` to run independent operations concurrently
+
+Files:
+  src/app/api/tenant/maintenance/media/route.ts:84
+  src/app/api/landlord/utility-readings/route.ts:42
+  src/app/api/landlord/unit-map/route.ts:316
+  scratch/test_storage.js:11
+  scripts/test-business-verification.ts:23
+  scratch/migrate_avatars_colors.ts:44
+  scratch/fix_landlords.ts:39
+  src/app/api/community/media/route.ts:84
+  src/app/api/landlord/applications/walk-in/route.ts:228
+  src/app/api/landlord/applications/walk-in/route.ts:310
+  src/app/api/landlord/applications/walk-in/route.ts:379
+  src/app/landlord/messages/page.tsx:952
+  src/app/api/invites/[token]/documents/route.ts:135
+  src/app/api/landlord/properties/media/route.ts:101
+  src/app/api/landlord/applications/tenant-application/route.ts:208
+  src/app/api/landlord/applications/tenant-application/route.ts:324
+  src/app/api/landlord/applications/tenant-application/route.ts:403
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:223
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:327
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:332
+  src/app/api/landlord/applications/route.ts:321
+  src/app/api/landlord/applications/route.ts:450
+  src/app/api/landlord/applications/[applicationId]/payment-bypass/route.ts:101
+  src/app/api/messages/users/[targetUserId]/reports/route.ts:182
+  src/lib/signature-validation.ts:283
+  src/lib/billing/server.ts:898
+  src/lib/billing/server.ts:1184
+  tests/walkin-wizard.spec.js:43
+  tests/tenant-product-tour.spec.js:68
+  src/app/tenant/messages/page.tsx:928
+  sync-storage.js:37
+  sync-storage.js:67
+  sync-storage.js:106
+  src/lib/valenzuela-scraper.ts:183
+  src/lib/billing/workflow.ts:210

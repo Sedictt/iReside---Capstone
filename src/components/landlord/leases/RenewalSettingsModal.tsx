@@ -77,12 +77,12 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
 
     const addRule = () => {
         if (!newRule.trim()) return;
-        setSettings({ ...settings, new_rules: [...settings.new_rules, newRule.trim()] });
+        setSettings(prev => ({ ...prev, new_rules: [...prev.new_rules, newRule.trim()] }));
         setNewRule("");
     };
 
     const removeRule = (idx: number) => {
-        setSettings({ ...settings, new_rules: settings.new_rules.filter((_, i) => i !== idx) });
+        setSettings(prev => ({ ...prev, new_rules: prev.new_rules.filter((_, i) => i !== idx) }));
     };
 
     if (!isOpen) return null;
@@ -131,7 +131,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Adjustment Type</label>
                                     <select 
                                         value={settings.adjustment_type}
-                                        onChange={(e) => setSettings({ ...settings, adjustment_type: e.target.value as any })}
+                                        onChange={(e) => setSettings(prev => ({ ...prev, adjustment_type: e.target.value as any }))}
                                         className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
                                     >
                                         <option value="percentage">Percentage (%)</option>
@@ -145,7 +145,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                                     <input 
                                         type="number"
                                         value={settings.base_rent_adjustment}
-                                        onChange={(e) => setSettings({ ...settings, base_rent_adjustment: parseFloat(e.target.value) || 0 })}
+                                        onChange={(e) => setSettings(prev => ({ ...prev, base_rent_adjustment: parseFloat(e.target.value) || 0 }))}
                                         className="w-full p-4 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none"
                                     />
                                 </div>
@@ -189,7 +189,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Landlord's Note to Residents</h4>
                             <textarea 
                                 value={settings.landlord_memo}
-                                onChange={(e) => setSettings({ ...settings, landlord_memo: e.target.value })}
+                                onChange={(e) => setSettings(prev => ({ ...prev, landlord_memo: e.target.value }))}
                                 placeholder="Explain the changes or provide extra context for renewals..."
                                 className="w-full p-4 rounded-2xl border border-border bg-background text-sm min-h-[120px] outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                             />

@@ -47,12 +47,14 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
             </button>
 
             {/* Avatar Picker Modal */}
-            <AvatarPicker 
-                isOpen={isPickerOpen}
-                onClose={() => setIsPickerOpen(false)}
-                currentAvatarUrl={initialAvatarUrl}
-                currentBgColor={avatarBgColor || '#171717'}
-            />
+            {isPickerOpen && (
+                <AvatarPicker 
+                    isOpen={isPickerOpen}
+                    onClose={() => setIsPickerOpen(false)}
+                    currentAvatarUrl={initialAvatarUrl}
+                    currentBgColor={avatarBgColor || '#171717'}
+                />
+            )}
         </div>
     );
 }

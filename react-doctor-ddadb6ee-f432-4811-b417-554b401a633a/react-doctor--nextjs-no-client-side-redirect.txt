@@ -1,0 +1,18 @@
+Rule: react-doctor/nextjs-no-client-side-redirect
+Severity: warning
+Category: Next.js
+Count: 8
+
+router.replace() in useEffect — use redirect() from next/navigation or handle navigation in an event handler
+
+Suggestion: Avoid redirects inside useEffect. Use an event handler, middleware, or server-side redirect (App Router: redirect() from next/navigation; Pages Router: getServerSideProps redirect)
+
+Files:
+  src/app/landlord/messages/page.tsx:440
+  src/app/landlord/messages/page.tsx:455
+  src/app/tenant/sign-lease/[leaseId]/page.tsx:18
+  src/app/tenant/dashboard/page.tsx:171
+  src/app/landlord/onboarding/[token]/page.tsx:184
+  src/components/tenant/TenantProductTourOverlay.tsx:202
+  src/app/tenant/messages/page.tsx:386
+  src/app/tenant/messages/page.tsx:401

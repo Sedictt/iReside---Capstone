@@ -243,8 +243,9 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
 
                                 <div className="space-y-4 pt-4 border-t border-border">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Transfer (Optional)</label>
+                                        <label htmlFor="transferReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Transfer (Optional)</label>
                                         <textarea 
+                                            id="transferReason"
                                             rows={3}
                                             value={reason}
                                             onChange={(e) => setReason(e.target.value)}

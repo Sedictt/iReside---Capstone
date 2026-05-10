@@ -1,0 +1,12 @@
+Rule: react-doctor/js-index-maps
+Severity: warning
+Category: Performance
+Count: 2
+
+array.find() in a loop is O(n*m) — build a Map for O(1) lookups
+
+Suggestion: Build an index `Map` once outside the loop instead of `array.find(...)` inside it
+
+Files:
+  scratch/fix_landlords.ts:36
+  src/lib/billing/server.ts:869

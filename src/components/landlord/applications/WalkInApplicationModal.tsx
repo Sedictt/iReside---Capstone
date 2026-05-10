@@ -146,11 +146,11 @@ function ConfirmationModal({
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.button 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
                 className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
-            />
+            aria-label="Close Confirmation" />
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -707,13 +707,13 @@ export function WalkInApplicationModal({
 
     return (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden p-4 sm:p-6">
-            <motion.div
+            <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
                 className="absolute inset-0 bg-black/60 backdrop-blur-xl"
-            />
+            aria-label="Close Modal" />
 
             {currentUnit?.property_id && step !== 3 ? <ToolAccessBar propertyId={currentUnit.property_id} /> : null}
              
@@ -1192,7 +1192,7 @@ export function WalkInApplicationModal({
                                         {/* Signing Mode Selection */}
                                         <SigningModeSelector
                                             value={leaseData.signing_mode}
-                                            onChange={(mode) => setLeaseData({ ...leaseData, signing_mode: mode })}
+                                            onChange={(mode) => setLeaseData(prev => ({ ...prev, signing_mode: mode  }))}
                                             disabled={!!(leaseData.tenant_signature || leaseData.landlord_signature)}
                                         />
 
@@ -1216,7 +1216,7 @@ export function WalkInApplicationModal({
                                                                 <input
                                                                     type="date"
                                                                     value={leaseData.start_date}
-                                                                    onChange={(e) => setLeaseData({ ...leaseData, start_date: e.target.value })}
+                                                                    onChange={(e) => setLeaseData(prev => ({ ...prev, start_date: e.target.value  }))}
                                                                     className="h-15 w-full rounded-2xl bg-transparent px-4 py-4 text-sm font-medium text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
                                                                 />
                                                             </div>
@@ -1231,7 +1231,7 @@ export function WalkInApplicationModal({
                                                                 <input
                                                                     type="date"
                                                                     value={leaseData.end_date}
-                                                                    onChange={(e) => setLeaseData({ ...leaseData, end_date: e.target.value })}
+                                                                    onChange={(e) => setLeaseData(prev => ({ ...prev, end_date: e.target.value  }))}
                                                                     className="h-15 w-full rounded-2xl bg-transparent px-4 py-4 text-sm font-medium text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
                                                                 />
                                                             </div>
@@ -1251,7 +1251,7 @@ export function WalkInApplicationModal({
                                                                     value={leaseData.monthly_rent ? leaseData.monthly_rent.toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
                                                                     onChange={(e) => {
                                                                         const raw = e.target.value.replace(/[^0-9.]/g, "");
-                                                                        setLeaseData({ ...leaseData, monthly_rent: parseFloat(raw) || 0 });
+                                                                        setLeaseData(prev => ({ ...prev, monthly_rent: parseFloat(raw) || 0  }));
                                                                     }}
                                                                 />
                                                             </div>
@@ -1271,7 +1271,7 @@ export function WalkInApplicationModal({
                                                                     value={leaseData.security_deposit ? leaseData.security_deposit.toLocaleString("en-US", { maximumFractionDigits: 2 }) : ""}
                                                                     onChange={(e) => {
                                                                         const raw = e.target.value.replace(/[^0-9.]/g, "");
-                                                                        setLeaseData({ ...leaseData, security_deposit: parseFloat(raw) || 0 });
+                                                                        setLeaseData(prev => ({ ...prev, security_deposit: parseFloat(raw) || 0  }));
                                                                     }}
                                                                 />
                                                             </div>
@@ -1301,8 +1301,8 @@ export function WalkInApplicationModal({
                                                                 <div className="space-y-3">
                                                             <p className="px-1 text-xs text-muted-foreground">Tenant must sign first before landlord can countersign</p>
                                                                     <SignaturePad
-                                                                        onSave={(dataUrl) => setLeaseData({ ...leaseData, tenant_signature: dataUrl })}
-                                                                        onClear={() => setLeaseData({ ...leaseData, tenant_signature: null })}
+                                                                        onSave={(dataUrl) => setLeaseData(prev => ({ ...prev, tenant_signature: dataUrl  }))}
+                                                                        onClear={() => setLeaseData(prev => ({ ...prev, tenant_signature: null  }))}
                                                                         pdfBlob={leasePdfBlob}
                                                                         documentTitle={`Lease - ${currentUnit?.property_name} ${currentUnit?.name}`}
                                                                         variant="button"
@@ -1315,7 +1315,7 @@ export function WalkInApplicationModal({
                                                                     </div>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => setLeaseData({ ...leaseData, tenant_signature: null, landlord_signature: null })}
+                                                                        onClick={() => setLeaseData(prev => ({ ...prev, tenant_signature: null, landlord_signature: null  }))}
                                                                         className="h-12 w-full rounded-xl border border-border bg-background text-sm font-bold uppercase tracking-wider text-foreground transition-all hover:bg-muted"
                                                                     >
                                                                         Clear & Re-sign
@@ -1376,7 +1376,7 @@ export function WalkInApplicationModal({
                                                                             }
                                                                         }
                                                                     }}
-                                                                    onClear={() => setLeaseData({ ...leaseData, landlord_signature: null, signed_document_url: null, signed_document_path: null })}
+                                                                    onClear={() => setLeaseData(prev => ({ ...prev, landlord_signature: null, signed_document_url: null, signed_document_path: null }))}
                                                                     pdfBlob={leasePdfBlob}
                                                                     documentTitle={`Lease - ${currentUnit?.property_name} ${currentUnit?.name}`}
                                                                     variant="button"
@@ -1388,7 +1388,7 @@ export function WalkInApplicationModal({
                                                                     </div>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => setLeaseData({ ...leaseData, landlord_signature: null })}
+                                                                        onClick={() => setLeaseData(prev => ({ ...prev, landlord_signature: null  }))}
                                                                         className="h-12 w-full rounded-xl border border-border bg-background text-sm font-bold uppercase tracking-wider text-foreground transition-all hover:bg-muted"
                                                                     >
                                                                         Clear & Re-sign
@@ -1441,31 +1441,19 @@ export function WalkInApplicationModal({
                                                             allowAmountEdit={false}
                                                             paymentMethod={paymentData.advance_payment.method}
                                                             onMethodChange={(method) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    advance_payment: { ...paymentData.advance_payment, method },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, advance_payment: { ...prev.advance_payment, method  } }))
                                                             }
                                                             referenceNumber={paymentData.advance_payment.reference_number}
                                                             onReferenceChange={(ref) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    advance_payment: { ...paymentData.advance_payment, reference_number: ref },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, advance_payment: { ...prev.advance_payment, reference_number: ref  } }))
                                                             }
                                                             paidAt={paymentData.advance_payment.paid_at}
                                                             onPaidAtChange={(date) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    advance_payment: { ...paymentData.advance_payment, paid_at: date },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, advance_payment: { ...prev.advance_payment, paid_at: date  } }))
                                                             }
                                                             status={paymentData.advance_payment.status}
                                                             onStatusChange={(status) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    advance_payment: { ...paymentData.advance_payment, status },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, advance_payment: { ...prev.advance_payment, status  } }))
                                                             }
                                                         />
                                                     </motion.div>
@@ -1481,39 +1469,24 @@ export function WalkInApplicationModal({
                                                             label="Security Deposit"
                                                             amount={paymentData.security_deposit_payment.amount}
                                                             onAmountChange={(amount) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, amount },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, security_deposit_payment: { ...prev.security_deposit_payment, amount  } }))
                                                             }
                                                             allowAmountEdit={true}
                                                             paymentMethod={paymentData.security_deposit_payment.method}
                                                             onMethodChange={(method) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, method },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, security_deposit_payment: { ...prev.security_deposit_payment, method  } }))
                                                             }
                                                             referenceNumber={paymentData.security_deposit_payment.reference_number}
                                                             onReferenceChange={(ref) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, reference_number: ref },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, security_deposit_payment: { ...prev.security_deposit_payment, reference_number: ref  } }))
                                                             }
                                                             paidAt={paymentData.security_deposit_payment.paid_at}
                                                             onPaidAtChange={(date) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, paid_at: date },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, security_deposit_payment: { ...prev.security_deposit_payment, paid_at: date  } }))
                                                             }
                                                             status={paymentData.security_deposit_payment.status}
                                                             onStatusChange={(status) =>
-                                                                setPaymentData({
-                                                                    ...paymentData,
-                                                                    security_deposit_payment: { ...paymentData.security_deposit_payment, status },
-                                                                })
+                                                                setPaymentData(prev => ({ ...prev, security_deposit_payment: { ...prev.security_deposit_payment, status  } }))
                                                             }
                                                         />
                                                     </motion.div>

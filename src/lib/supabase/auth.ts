@@ -9,6 +9,15 @@ const getDashboardPathForRole = (role: string) => {
     return '/tenant/dashboard'
 }
 
+export async function auth() {
+    const supabase = await createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
+    return session
+}
+
 export async function signUp(formData: FormData) {
     const supabase = await createClient()
 
@@ -65,13 +74,21 @@ export async function signIn(formData: FormData) {
     return { error: null, url: getDashboardPathForRole(role || 'tenant') }
 }
 
-    export async function signOut() {
-        const supabase = await createClient()
-        await supabase.auth.signOut()
-        redirect('/login')
+export async function signOut() {
+    const session = await auth()
+    if (!session) {
+        throw new Error('Unauthorized')
     }
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+    redirect('/login')
+}
 
 export async function getCurrentUser() {
+    const session = await auth()
+    if (!session) {
+        return null
+    }
     const supabase = await createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
 
@@ -88,7 +105,11 @@ export async function getCurrentUser() {
 }
 
 export async function getSession() {
+    const sessionFromAuth = await auth()
     const supabase = await createClient()
+    if (sessionFromAuth) {
+        return sessionFromAuth
+    }
     const { data: { session } } = await supabase.auth.getSession()
     return session
 }

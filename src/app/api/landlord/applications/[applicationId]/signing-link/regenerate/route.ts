@@ -57,38 +57,37 @@ export async function POST(
     );
   }
 
-  // Fetch applicant profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("email, full_name")
-    .eq("id", application.applicant_id || "")
-    .maybeSingle();
-
-  // Fetch lease with unit and property details
-  let lease: any = null;
-  if (application.lease_id) {
-    const { data: leaseData } = await supabase
-      .from("leases")
-      .select(`
-        id,
-        status,
-        landlord_id,
-        signing_link_token_hash,
-        start_date,
-        monthly_rent,
-        security_deposit,
-        units (
-          name,
-          properties (
-            name,
-            landlord_id
-          )
-        )
-      `)
-      .eq("id", application.lease_id)
-      .maybeSingle();
-    lease = leaseData;
-  }
+  // Fetch applicant profile and lease in parallel (independent queries)
+  const [{ data: profile }, { data: leaseData }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("email, full_name")
+      .eq("id", application.applicant_id || "")
+      .maybeSingle(),
+    application.lease_id
+      ? supabase
+          .from("leases")
+          .select(`
+            id,
+            status,
+            landlord_id,
+            signing_link_token_hash,
+            start_date,
+            monthly_rent,
+            security_deposit,
+            units (
+              name,
+              properties (
+                name,
+                landlord_id
+              )
+            )
+          `)
+          .eq("id", application.lease_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  const lease: any = leaseData;
 
   // Verify landlord owns this application
   if (!lease || lease.landlord_id !== user.id) {

@@ -1,0 +1,33 @@
+Rule: react-doctor/design-no-space-on-flex-children
+Severity: warning
+Category: Architecture
+Count: 23
+
+space-y-12 on a flex/grid parent — use gap-y-12 instead. Per-sibling margins phantom-gap on conditional render and don't mirror in RTL
+
+Suggestion: Use `gap-*` on the flex/grid parent. `space-x-*` / `space-y-*` produce phantom gaps when a sibling is conditionally rendered, lose vertical spacing on wrapped lines, and don't mirror in RTL
+
+Files:
+  src/components/profile/AvatarPicker.tsx:216
+  src/app/admin/dashboard/page.tsx:284
+  src/app/landlord/properties/new/page.tsx:743
+  src/app/landlord/properties/new/page.tsx:770
+  src/app/login/page.tsx:122
+  src/components/docs/UnitMapFeatureSection.tsx:97
+  src/app/tenant/lease/page.tsx:205
+  src/components/tenant/LeaseRenewalReminder.tsx:137
+  src/components/landlord/BillingOperationsPanel.tsx:205
+  src/components/landlord/BillingOperationsPanel.tsx:656
+  src/app/tenant/maintenance/page.tsx:554
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:774
+  src/components/landlord/applications/RentApplications.tsx:1239
+  src/components/tenant/TenantIrisChat.tsx:253
+  src/components/tenant/TenantIrisChat.tsx:254
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:230
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:484
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:586
+  src/components/landlord/leases/RenewalReview.tsx:240
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:283
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:291
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:774
+  src/app/signup/page.tsx:334

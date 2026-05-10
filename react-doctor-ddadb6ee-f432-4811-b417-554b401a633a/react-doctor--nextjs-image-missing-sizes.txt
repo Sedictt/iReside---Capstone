@@ -1,0 +1,29 @@
+Rule: react-doctor/nextjs-image-missing-sizes
+Severity: warning
+Category: Next.js
+Count: 19
+
+next/image with fill but no sizes — the browser downloads the largest image. Add a sizes attribute for responsive behavior
+
+Suggestion: Add sizes for responsive behavior: `sizes="(max-width: 768px) 100vw, 50vw"` matching your layout breakpoints
+
+Files:
+  src/components/profile/ProfileCoverUploader.tsx:76
+  src/components/profile/ProfileAvatarUploader.tsx:26
+  src/app/landlord/utilities/page.tsx:262
+  src/app/tenant/profile/page.tsx:341
+  src/app/login/page.tsx:93
+  src/app/tenant/applications/[id]/page.tsx:142
+  src/app/landlord/tenants/page.tsx:284
+  src/app/tenant/utilities/page.tsx:180
+  src/app/tenant/lease/page.tsx:301
+  src/app/tenant/dashboard/page.tsx:350
+  src/components/tenant/TenantNavbar.tsx:289
+  src/components/tenant/PropertyAmenities.tsx:53
+  src/app/tenant/applications/[id]/apply/page.tsx:269
+  src/app/tenant/applications/page.tsx:195
+  src/components/landlord/UnitShowcaseModal.tsx:98
+  src/components/landlord/dashboard/FeaturedPropertyCard.tsx:41
+  src/components/landlord/properties/PropertiesDashboard.tsx:232
+  src/components/landlord/properties/PropertiesDashboard.tsx:389
+  src/components/landlord/tenants/AddTenantModal.tsx:534

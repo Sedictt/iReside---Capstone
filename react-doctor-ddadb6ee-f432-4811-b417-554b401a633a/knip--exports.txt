@@ -1,0 +1,34 @@
+Rule: knip/exports
+Severity: warning
+Category: Dead Code
+Count: 60
+
+Unused export: TENANT_PRODUCT_TOUR_ROUTE_PREFIX
+
+Files:
+  src\lib\supabase\middleware.ts
+  src\context\GlobalLoadingContext.tsx
+  src\components\ui\LoadingSpinner.tsx
+  src\lib\application-intake.ts
+  src\components\ui\button.tsx
+  src\lib\constants.ts
+  src\components\tenant\TenantNavbar.tsx
+  src\lib\email.ts
+  src\lib\jwt.ts
+  src\lib\product-tour.ts
+  src\lib\signature-validation.ts
+  src\lib\billing\server.ts
+  src\lib\billing\utils.ts
+  src\hooks\useSound.ts
+  src\lib\queries\amenities.ts
+  src\lib\community\actions.ts
+  src\lib\community\queries.ts
+  src\lib\messages\censorship.ts
+  src\lib\messages\profanity-lexicon.ts
+  src\lib\messages\spam-lexicon.ts
+  src\lib\application-payment-pending.ts
+  src\lib\billing\storage.ts
+  src\lib\messages\engine.ts
+  src\lib\billing\workflow.ts
+  src\lib\landlord-product-tour.ts
+  src\app\api\tenant\tour\helpers.ts

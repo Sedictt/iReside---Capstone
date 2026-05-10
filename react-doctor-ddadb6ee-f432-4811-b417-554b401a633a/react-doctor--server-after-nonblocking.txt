@@ -1,0 +1,11 @@
+Rule: react-doctor/server-after-nonblocking
+Severity: warning
+Category: Server
+Count: 1
+
+console.log() in server action — wrap in `after(() => console.log(...))` so it doesn't delay the user-visible response
+
+Suggestion: `import { after } from 'next/server'` then wrap: `after(() => analytics.track(...))` — response isn't blocked
+
+Files:
+  src/lib/community/actions.ts:390

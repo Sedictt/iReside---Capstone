@@ -1,0 +1,26 @@
+Rule: react/no-unknown-property
+Severity: warning
+Category: Correctness
+Count: 14
+
+Unknown property found
+
+Suggestion: Remove unknown property
+
+Docs: https://oxc.rs/docs/guide/usage/linter/rules/react/no-unknown-property.html
+
+Files:
+  src/components/profile/AvatarPicker.tsx:369
+  src/components/profile/AvatarPicker.tsx:369
+  src/components/tenant/ChatWidget.tsx:416
+  src/components/tenant/LeaseModal.tsx:68
+  src/components/tenant/LeaseModal.tsx:68
+  src/components/tenant/LeaseRenewalRequest.tsx:329
+  src/components/tenant/LeaseRenewalRequest.tsx:329
+  src/components/tenant/LeaseRenewalReminder.tsx:158
+  src/components/tenant/LeaseRenewalReminder.tsx:158
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:841
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:841
+  src/components/tenant/TenantIrisChat.tsx:417
+  src/app/signup/page.tsx:790
+  src/app/signup/page.tsx:790

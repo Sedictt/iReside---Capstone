@@ -15,66 +15,60 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: leaseData, error: leaseError } = await supabase
+    // 1. Fetch lease with unit and property info in one go (avoiding waterfall)
+    const { data: leaseWithUnit, error: initialError } = await supabase
         .from("leases")
-        .select("id, landlord_id, unit_id")
+        .select(`
+            id, 
+            landlord_id, 
+            unit_id,
+            units (
+                id,
+                name,
+                property_id,
+                properties (
+                    id,
+                    name,
+                    address,
+                    map_decorations
+                )
+            )
+        `)
         .eq("tenant_id", user.id)
         .eq("status", "active")
         .order("start_date", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-    if (leaseError) {
-        return NextResponse.json({ error: "Failed to load active lease." }, { status: 500 });
+    if (initialError) {
+        return NextResponse.json({ error: "Failed to load active lease context." }, { status: 500 });
     }
 
-    if (!leaseData?.unit_id) {
+    if (!leaseWithUnit?.units) {
         return NextResponse.json({ property: null });
     }
 
-    const lease = leaseData as unknown as LeaseWithUnit;
-    const { data: currentUnit, error: currentUnitError } = await supabase
-        .from("units")
-        .select("id, name, property_id")
-        .eq("id", lease.unit_id)
-        .maybeSingle();
+    const unitInfo = leaseWithUnit.units as any;
+    const property = unitInfo.properties;
+    const propertyId = property.id;
 
-    if (currentUnitError || !currentUnit?.property_id) {
-        return NextResponse.json({ error: "Failed to load current unit." }, { status: 500 });
-    }
-
-    const currentUnitRow = currentUnit as {
-        id: string;
-        name: string;
-        property_id: string;
-    };
-    const propertyId = currentUnitRow.property_id;
-    const { data: property, error: propertyError } = await supabase
-        .from("properties")
-        .select("id, name, address, map_decorations")
-        .eq("id", propertyId)
-        .maybeSingle();
-
-    if (propertyError || !property) {
-        return NextResponse.json({ error: "Failed to load property details." }, { status: 500 });
-    }
-
-    const { data: units, error: unitsError } = await supabase
-        .from("units")
-        .select("id, name, floor, status, beds, baths, sqft, rent_amount")
-        .eq("property_id", propertyId)
-        .order("floor", { ascending: true })
-        .order("name", { ascending: true });
-
-    if (unitsError) {
-        return NextResponse.json({ error: "Failed to load units." }, { status: 500 });
-    }
-
-    const [{ data: positions, error: posError }, { data: requests, error: requestsError }, { data: floorConfigs, error: floorError }] = await Promise.all([
+    // 2. Fetch all related property data in parallel
+    const [
+        { data: units, error: unitsError },
+        { data: positions, error: posError },
+        { data: requests, error: requestsError },
+        { data: floorConfigs, error: floorError }
+    ] = await Promise.all([
+        supabase
+            .from("units")
+            .select("id, name, floor, status, beds, baths, sqft, rent_amount")
+            .eq("property_id", propertyId)
+            .order("floor", { ascending: true })
+            .order("name", { ascending: true }),
         supabase
             .from("unit_map_positions")
             .select("unit_id, floor_key, x, y, w, h")
-            .in("unit_id", (units ?? []).map(u => u.id)),
+            .eq("property_id", propertyId), // Assuming unit_map_positions has property_id or we filter by unit_ids later
         supabase
             .from("unit_transfer_requests")
             .select("id, requested_unit_id, status, reason, created_at, landlord_note")
@@ -112,11 +106,11 @@ export async function GET() {
 
     return NextResponse.json({
         property,
-        leaseId: lease.id,
-        landlordId: lease.landlord_id,
+        leaseId: leaseWithUnit.id,
+        landlordId: leaseWithUnit.landlord_id,
         tenantId: user.id,
-        currentUnitId: currentUnitRow.id,
-        currentUnitName: currentUnitRow.name,
+        currentUnitId: unitInfo.id,
+        currentUnitName: unitInfo.name,
         units: unitsWithPositions,
         transferRequests: transferTableMissing ? [] : (requests ?? []),
         floorConfigs: floorConfigs ?? [],

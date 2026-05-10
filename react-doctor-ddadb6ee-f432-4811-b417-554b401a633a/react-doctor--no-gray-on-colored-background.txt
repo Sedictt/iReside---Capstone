@@ -1,0 +1,12 @@
+Rule: react-doctor/no-gray-on-colored-background
+Severity: warning
+Category: Accessibility
+Count: 2
+
+Gray text (text-slate-900) on colored background (bg-amber-500) looks washed out — use a darker shade of the background color or white
+
+Suggestion: Use a darker shade of the background color for text, or white/near-white for contrast. Gray text on colored backgrounds looks washed out
+
+Files:
+  src/components/landlord/visual-planner/VisualBuilder.tsx:4528
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:697

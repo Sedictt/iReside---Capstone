@@ -299,7 +299,7 @@ export function DigitalSigner({
           dataUrl: canvas.toDataURL(),
           x: 50, y: 50, scale: 0.2, pageIndex: currentPage
         };
-        setSignatures([...signatures, newSignature]);
+        setSignatures(prev => [...prev, newSignature]);
         setIsPenActive(false);
         playSound("success");
         toast.success('Signature extracted and placed');
@@ -539,7 +539,7 @@ export function DigitalSigner({
                   currentPage === idx ? "border-primary shadow-2xl scale-[1.02]" : "border-zinc-800 grayscale hover:grayscale-0 hover:border-zinc-600"
                 )}
               >
-                <img src={page.dataUrl} className="w-full h-full object-cover" alt="" />
+                <img src={page.dataUrl} className="w-full h-full object-cover" alt={`Document thumbnail page ${idx + 1}`} />
                 <div className="absolute bottom-2 right-2 w-6 h-6 rounded-lg bg-black/60 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-white">
                   {idx + 1}
                 </div>
@@ -594,7 +594,7 @@ export function DigitalSigner({
                   transformOrigin: 'top center'
                 }}
               >
-                <img src={page.dataUrl} className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none" alt="" />
+                <img src={page.dataUrl} className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none" alt={`Document page ${idx + 1}`} />
                 
                 {/* Direct Ink Canvas */}
                 <canvas 
@@ -615,7 +615,7 @@ export function DigitalSigner({
                       key={sig.id} drag dragMomentum={false}
                       initial={{ left: sig.x, top: sig.y }}
                       onDragEnd={(_, info) => {
-                        setSignatures(signatures.map(s => s.id === sig.id ? { ...s, x: s.x + info.offset.x, y: s.y + info.offset.y } : s));
+                        setSignatures(prev => prev.map(s => s.id === sig.id ? { ...s, x: s.x + info.offset.x, y: s.y + info.offset.y } : s));
                       }}
                       className={cn("absolute pointer-events-auto cursor-move group/sig", isPenActive && "opacity-30")}
                     >
@@ -626,7 +626,7 @@ export function DigitalSigner({
                           className="max-w-[150px] md:max-w-[250px] select-none"
                         />
                         <button 
-                          onClick={() => setSignatures(signatures.filter(s => s.id !== sig.id))}
+                          onClick={() => setSignatures(prev => prev.filter(s => s.id !== sig.id))}
                           className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold opacity-0 group-hover/sig:opacity-100 transition-all shadow-xl"
                         >REMOVE</button>
                       </div>

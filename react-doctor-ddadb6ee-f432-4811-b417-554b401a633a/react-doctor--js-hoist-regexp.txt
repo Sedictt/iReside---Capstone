@@ -1,0 +1,12 @@
+Rule: react-doctor/js-hoist-regexp
+Severity: warning
+Category: Performance
+Count: 2
+
+new RegExp() inside a loop — hoist to a module-level constant
+
+Suggestion: Hoist `new RegExp(...)` (or large regex literals) to a module-level constant so it isn't recompiled on every loop iteration
+
+Files:
+  replace-blueprint-colors.js:38
+  src/lib/messages/censorship.ts:108

@@ -1,0 +1,66 @@
+Rule: jsx-a11y/click-events-have-key-events
+Severity: warning
+Category: Accessibility
+Count: 54
+
+Enforce a clickable non-interactive element has at least one keyboard event listener.
+
+Suggestion: Visible, non-interactive elements with click handlers must have one of `keyup`, `keydown`, or `keypress` listener.
+
+Docs: https://oxc.rs/docs/guide/usage/linter/rules/jsx_a11y/click-events-have-key-events.html
+
+Files:
+  src/components/landlord/messages/MessageBubble.tsx:141
+  src/components/landlord/messages/MessageBubble.tsx:310
+  src/components/landlord/messages/MessageBubble.tsx:317
+  src/components/profile/SocialsHeader.tsx:101
+  src/app/landlord/documents/page.tsx:483
+  src/app/landlord/dashboard/page.tsx:698
+  src/app/admin/users/page.tsx:113
+  src/app/landlord/properties/new/page.tsx:679
+  src/components/tenant/maintenance/TenantMaintenanceModal.tsx:79
+  src/components/landlord/dashboard/PaymentModal.tsx:137
+  src/app/landlord/messages/page.tsx:1219
+  src/app/landlord/messages/page.tsx:1327
+  src/app/landlord/messages/page.tsx:1339
+  src/components/landlord/visual-planner/VisualBuilder.tsx:618
+  src/components/landlord/visual-planner/VisualBuilder.tsx:5267
+  src/components/landlord/visual-planner/VisualBuilder.tsx:5456
+  src/components/community/CommunityPostCard.tsx:358
+  src/components/community/CommunityPostCard.tsx:370
+  src/components/community/CommunityHeader.tsx:80
+  src/components/docs/UnitMapFeatureSection.tsx:96
+  src/app/tenant/payments/[id]/checkout/page.tsx:871
+  src/app/tenant/payments/[id]/checkout/page.tsx:941
+  src/components/landlord/dashboard/DashboardBanner.tsx:454
+  src/components/landlord/BusinessPermitCard.tsx:134
+  src/components/landlord/BusinessPermitCard.tsx:178
+  src/components/landlord/BusinessPermitCard.tsx:189
+  src/app/preview/move-out/page.tsx:167
+  src/app/tenant/maintenance/page.tsx:372
+  src/components/tenant/TenantNavbar.tsx:371
+  src/components/tenant/TenantNavbar.tsx:473
+  src/app/landlord/onboarding/[token]/page.tsx:906
+  src/app/landlord/onboarding/[token]/page.tsx:1012
+  src/app/landlord/onboarding/[token]/page.tsx:1246
+  src/components/tenant/TenantContactsSidebar.tsx:1121
+  src/components/landlord/AddAmenityModal.tsx:511
+  src/components/landlord/maintenance/MaintenanceRequestModal.tsx:206
+  src/components/landlord/maintenance/MaintenanceRequestModal.tsx:211
+  src/app/tenant/applications/[id]/apply/page.tsx:264
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:405
+  src/components/ui/ProfileCardTrigger.tsx:41
+  src/components/ui/ProfileCard.tsx:97
+  src/components/ui/ClickSpark.tsx:149
+  src/components/landlord/dashboard/ContactsSidebar.tsx:1094
+  src/app/tenant/messages/page.tsx:1200
+  src/app/tenant/messages/page.tsx:1308
+  src/app/tenant/messages/page.tsx:1320
+  src/components/landlord/dashboard/FeaturedPropertyCard.tsx:33
+  src/components/landlord/dashboard/FeaturedPropertyCard.tsx:87
+  src/components/landlord/properties/SmartContractPreviewModal.tsx:86
+  src/app/admin/chat-moderation/page.tsx:526
+  src/components/landlord/LandlordProfile.tsx:279
+  src/components/landlord/LandlordProfile.tsx:288
+  src/components/landlord/LandlordProfile.tsx:307
+  src/components/landlord/LandlordProfile.tsx:316

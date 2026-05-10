@@ -871,7 +871,7 @@ export function RentApplications() {
                                             <div className="grid flex-1 grid-cols-1 items-center gap-6 px-6 lg:grid-cols-[1fr_120px_180px] xl:grid-cols-[1fr_120px_120px_180px]">
                                                 <div className="flex items-center gap-4 min-w-0">
                                                     <div className="h-12 w-12 shrink-0 rounded-full border-2 border-border bg-muted flex items-center justify-center font-black text-muted-foreground" style={{ backgroundColor: app.applicant.avatarBgColor || "" }}>
-                                                        {app.applicant.avatar ? <img src={app.applicant.avatar} className="h-full w-full object-cover" /> : app.applicant.name[0]}
+                                                        {app.applicant.avatar ? <img src={app.applicant.avatar} alt={`${app.applicant.name} avatar`} className="h-full w-full object-cover" /> : app.applicant.name[0]}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <h3 className="truncate text-lg font-black tracking-tight text-foreground">{app.applicant.name}</h3>
@@ -918,7 +918,14 @@ export function RentApplications() {
             <AnimatePresence>
                 {selectedApp && (
                     <>
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setSelectedApp(null); cancelEdit(); }} className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md" />
+                        <motion.button 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => { setSelectedApp(null); cancelEdit(); }} 
+                            className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md cursor-default"
+                            aria-label="Close application detail"
+                        />
                         <motion.div
                             initial={{ x: "100%" }}
                             animate={{ x: 0 }}
@@ -1036,7 +1043,7 @@ export function RentApplications() {
                                     <div className="rounded-[2.5rem] border border-border bg-background/50 p-8 space-y-8">
                                         <div className="flex items-center gap-6">
                                             <div className="h-20 w-20 rounded-full border-4 border-border shadow-xl flex items-center justify-center text-3xl font-black text-white" style={{ backgroundColor: selectedApp.applicant.avatarBgColor || "#171717" }}>
-                                                {selectedApp.applicant.avatar ? <img src={selectedApp.applicant.avatar} className="h-full w-full object-cover" /> : selectedApp.applicant.name[0]}
+                                                {selectedApp.applicant.avatar ? <img src={selectedApp.applicant.avatar} alt={`${selectedApp.applicant.name} avatar`} className="h-full w-full object-cover" /> : selectedApp.applicant.name[0]}
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-black text-foreground">{selectedApp.applicant.name}</h3>
@@ -1367,7 +1374,14 @@ export function RentApplications() {
             <AnimatePresence>
                 {previewUrl && (
                     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-12">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPreviewUrl(null)} className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
+                        <motion.button 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setPreviewUrl(null)} 
+                            className="absolute inset-0 bg-black/90 backdrop-blur-xl cursor-default"
+                            aria-label="Close document preview"
+                        />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[210] flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-[2.5rem] border border-white/10 bg-card shadow-2xl">
                             <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-8 py-6 backdrop-blur-md">
                                 <h3 className="text-xl font-black text-white">{formatDocumentLabel(previewUrl)}</h3>
@@ -1379,7 +1393,7 @@ export function RentApplications() {
                                 {previewUrl.toLowerCase().endsWith(".pdf") ? (
                                     <iframe src={previewUrl} className="h-full w-full rounded-2xl border-0" title="Preview" />
                                 ) : (
-                                    <div className="flex h-full w-full items-center justify-center"><img src={previewUrl} className="max-h-full max-w-full rounded-2xl object-contain" /></div>
+                                    <div className="flex h-full w-full items-center justify-center"><img src={previewUrl} alt="Document preview" className="max-h-full max-w-full rounded-2xl object-contain" /></div>
                                 )}
                             </div>
                         </motion.div>
@@ -1390,7 +1404,14 @@ export function RentApplications() {
             <AnimatePresence>
                 {tenantCredentials && (
                     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setTenantCredentials(null)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.button 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setTenantCredentials(null)} 
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
+                            aria-label="Close credentials panel"
+                        />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-emerald-500/20 bg-card p-8 shadow-2xl">
                             <div className="mb-6 flex items-center gap-4">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20"><CheckCircle2 className="h-6 w-6 text-emerald-500" /></div>
@@ -1422,7 +1443,14 @@ export function RentApplications() {
             <AnimatePresence>
                 {showInviteTools && (
                     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowInviteTools(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.button 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setShowInviteTools(false)} 
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
+                            aria-label="Close invite tools"
+                        />
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative z-[160] h-[90vh] w-full max-w-6xl overflow-hidden rounded-[2.5rem] border border-border bg-background shadow-2xl">
                             <div className="flex items-center justify-between border-b border-border bg-card px-8 py-6">
                                 <h3 className="text-xl font-black tracking-tighter text-foreground">Intake Manager</h3>
@@ -1438,7 +1466,14 @@ export function RentApplications() {
             <AnimatePresence>
                 {showCountersignModal && selectedApp?.lease && (
                     <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCountersignModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.button 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setShowCountersignModal(false)} 
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
+                            aria-label="Close countersign modal"
+                        />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[410] w-full max-w-2xl rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
                             <h3 className="text-2xl font-black text-foreground mb-6">Countersign Lease</h3>
                             <div className="space-y-6">
@@ -1470,7 +1505,14 @@ export function RentApplications() {
             <AnimatePresence>
                 {showDeclineConfirm && selectedApp && (
                     <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDeclineConfirm(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.button 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setShowDeclineConfirm(false)} 
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md cursor-default"
+                            aria-label="Close decline confirmation"
+                        />
                         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative z-[310] w-full max-w-md rounded-[2.5rem] border border-red-500/20 bg-card p-8 shadow-2xl">
                             <div className="mb-6 flex items-center gap-4">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20">

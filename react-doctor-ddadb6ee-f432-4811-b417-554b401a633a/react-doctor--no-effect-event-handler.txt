@@ -1,0 +1,22 @@
+Rule: react-doctor/no-effect-event-handler
+Severity: warning
+Category: State & Effects
+Count: 12
+
+useEffect simulating an event handler — move logic to an actual event handler instead
+
+Suggestion: Move the conditional logic into onClick, onChange, or onSubmit handlers directly
+
+Files:
+  src/components/profile/AvatarPicker.tsx:41
+  src/components/tenant/ChatWidget.tsx:67
+  src/components/landlord/dashboard/LandlordQuestBoard.tsx:58
+  src/app/tenant/sign-lease/[leaseId]/page.tsx:15
+  src/components/landlord/applications/WalkInApplicationModal.tsx:425
+  src/components/tenant/MoveOutRequest.tsx:48
+  src/components/shared/DigitalSigner/DigitalSigner.tsx:93
+  src/components/landlord/applications/RentApplications.tsx:390
+  src/components/landlord/LandlordSettings.tsx:261
+  src/app/landlord/analytics/page.tsx:514
+  src/components/tenant/TenantSettings.tsx:256
+  src/app/landlord/leases/page.tsx:42

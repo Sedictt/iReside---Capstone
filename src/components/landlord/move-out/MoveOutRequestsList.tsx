@@ -53,7 +53,10 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
   }, [initialFilter]);
 
   useEffect(() => {
+    let isCancelled = false;
+
     async function loadRequests() {
+      if (isCancelled) return;
       if (preview) {
         const MOCK_REQUESTS: MoveOutRequest[] = [
           {
@@ -137,6 +140,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 800));
+        if (isCancelled) return;
         setRequests(MOCK_REQUESTS);
         setLoading(false);
         return;
@@ -154,19 +158,24 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         }
         
         const response = await fetch(`/api/landlord/move-out?${params.toString()}`);
+        if (isCancelled) return;
         if (!response.ok) throw new Error("Failed to load requests");
         
         const data = await response.json();
+        if (isCancelled) return;
         setRequests(data);
       } catch (err) {
+        if (isCancelled) return;
         console.error("Error loading move-out requests:", err);
         setError("Failed to load move-out requests. Please try again.");
       } finally {
+        if (isCancelled) return;
         setLoading(false);
       }
     }
 
     loadRequests();
+    return () => { isCancelled = true; };
   }, [selectedPropertyId, activeFilter, preview]);
 
   const filteredRequests = useMemo(() => {

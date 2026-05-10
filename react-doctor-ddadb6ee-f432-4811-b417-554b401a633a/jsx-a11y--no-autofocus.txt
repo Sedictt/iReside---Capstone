@@ -1,0 +1,15 @@
+Rule: jsx-a11y/no-autofocus
+Severity: warning
+Category: Accessibility
+Count: 3
+
+The `autoFocus` attribute is found here, which can cause usability issues for sighted and non-sighted users.
+
+Suggestion: Remove the `autoFocus` attribute.
+
+Docs: https://oxc.rs/docs/guide/usage/linter/rules/jsx_a11y/no-autofocus.html
+
+Files:
+  src/components/landlord/visual-planner/VisualBuilder.tsx:3189
+  src/components/landlord/visual-planner/UnitListingWizard.tsx:278
+  src/components/landlord/EditableBio.tsx:51

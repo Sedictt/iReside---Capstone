@@ -1,0 +1,15 @@
+Rule: react-doctor/no-derived-state-effect
+Severity: warning
+Category: State & Effects
+Count: 5
+
+State reset in useEffect — use a key prop to reset component state when props change
+
+Suggestion: For derived state, compute inline: `const x = fn(dep)`. For state resets on prop change, use a key prop: `<Component key={prop} />`. See https://react.dev/learn/you-might-not-need-an-effect
+
+Files:
+  src/app/landlord/documents/page.tsx:94
+  src/components/docs/DocsSidebar.tsx:311
+  src/components/landlord/applications/WalkInApplicationModal.tsx:326
+  src/components/landlord/move-out/MoveOutRequestsList.tsx:51
+  src/components/landlord/utility/UtilityBillingDashboard.tsx:76

@@ -1,0 +1,34 @@
+Rule: react-doctor/server-auth-actions
+Severity: error
+Category: Server
+Count: 24
+
+Server action "signUp" — add auth check (auth(), getSession(), etc.) at the top
+
+Suggestion: Add `const session = await auth()` at the top and throw/redirect if unauthorized before any data access
+
+Files:
+  src/lib/supabase/auth.ts:12
+  src/lib/supabase/auth.ts:38
+  src/lib/supabase/auth.ts:68
+  src/lib/supabase/auth.ts:74
+  src/lib/supabase/auth.ts:90
+  src/lib/community/actions.ts:188
+  src/lib/community/actions.ts:274
+  src/lib/community/actions.ts:278
+  src/lib/community/actions.ts:283
+  src/lib/community/actions.ts:287
+  src/lib/community/actions.ts:325
+  src/lib/community/actions.ts:385
+  src/lib/community/actions.ts:428
+  src/lib/community/actions.ts:480
+  src/lib/community/actions.ts:543
+  src/lib/community/actions.ts:586
+  src/lib/community/actions.ts:624
+  src/lib/community/actions.ts:643
+  src/lib/community/actions.ts:666
+  src/lib/community/actions.ts:719
+  src/lib/community/actions.ts:786
+  src/lib/community/actions.ts:882
+  src/lib/community/actions.ts:919
+  src/lib/community/actions.ts:967

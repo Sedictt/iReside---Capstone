@@ -1,0 +1,27 @@
+Rule: react-doctor/async-parallel
+Severity: warning
+Category: Performance
+Count: 17
+
+3 sequential await statements that appear independent — use Promise.all() for parallel execution
+
+Suggestion: Use `const [a, b] = await Promise.all([fetchA(), fetchB()])` to run independent operations concurrently
+
+Files:
+  src/app/api/tenant/payments/[id]/submit/route.ts:141
+  src/app/api/tenant/payments/[id]/refund-info/route.ts:71
+  src/app/api/tenant/payments/[id]/intent/route.ts:98
+  src/app/api/landlord/invoices/[id]/reminder/route.ts:71
+  src/app/api/landlord/unit-map/route.ts:475
+  src/app/api/landlord/unit-map/floor-configs/route.ts:126
+  src/app/tenant/community/page.tsx:294
+  src/app/landlord/messages/page.tsx:1384
+  src/components/tenant/TenantContactsSidebar.tsx:406
+  src/components/tenant/TenantContactsSidebar.tsx:452
+  src/components/landlord/dashboard/ContactsSidebar.tsx:409
+  src/components/landlord/dashboard/ContactsSidebar.tsx:455
+  src/app/api/landlord/move-out-requests/[id]/complete/route.ts:59
+  src/lib/messages/engine.ts:323
+  src/lib/application-payment-pending.ts:292
+  src/lib/valenzuela-scraper.ts:39
+  src/lib/billing/workflow.ts:224

@@ -1432,12 +1432,14 @@ export function LandlordSettings() {
                 </AnimatePresence>
             </main>
 
-            <AvatarPicker 
-                isOpen={isAvatarPickerOpen}
-                onClose={() => setIsAvatarPickerOpen(false)}
-                currentAvatarUrl={profile?.avatar_url || null}
-                currentBgColor={profile?.avatar_bg_color || null}
-            />
+            {isAvatarPickerOpen && (
+                <AvatarPicker 
+                    isOpen={isAvatarPickerOpen}
+                    onClose={() => setIsAvatarPickerOpen(false)}
+                    currentAvatarUrl={profile?.avatar_url || null}
+                    currentBgColor={profile?.avatar_bg_color || null}
+                />
+            )}
         </div>
     );
 }

@@ -1,0 +1,19 @@
+Rule: react-doctor/js-tosorted-immutable
+Severity: warning
+Category: Performance
+Count: 9
+
+[...array].sort() — use array.toSorted() for immutable sorting (ES2023)
+
+Suggestion: Use `array.toSorted()` (ES2023) instead of `[...array].sort()` for immutable sorting without the spread allocation
+
+Files:
+  src/components/landlord/visual-planner/MapSetupWizard.tsx:326
+  src/components/landlord/visual-planner/MapSetupWizard.tsx:475
+  src/components/landlord/applications/TenantInviteManager.tsx:166
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:206
+  src/components/landlord/leases/LeaseAuditTrail.tsx:56
+  src/lib/messages/censorship.ts:72
+  src/lib/messages/censorship.ts:73
+  src/lib/messages/censorship.ts:91
+  src/app/api/admin/users/__tests__/route.test.ts:15

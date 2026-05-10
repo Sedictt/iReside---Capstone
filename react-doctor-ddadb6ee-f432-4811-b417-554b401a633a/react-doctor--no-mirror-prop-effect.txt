@@ -1,0 +1,11 @@
+Rule: react-doctor/no-mirror-prop-effect
+Severity: warning
+Category: State & Effects
+Count: 1
+
+useState "activeFilter" is mirrored from prop "initialFilter" via this effect — delete both the useState and the effect, and read the prop directly in render
+
+Suggestion: Delete both the `useState` and the `useEffect` and read the prop directly during render. Mirroring a prop into local state forces a stale first render before the effect re-syncs
+
+Files:
+  src/components/landlord/move-out/MoveOutRequestsList.tsx:51

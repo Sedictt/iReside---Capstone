@@ -1,0 +1,48 @@
+Rule: react-doctor/server-sequential-independent-await
+Severity: warning
+Category: Server
+Count: 38
+
+Sequential `await` without a data dependency on the previous result — wrap the independent calls in `Promise.all([...])` so they race instead of waterfalling
+
+Suggestion: Wrap independent awaits in `Promise.all([...])` so they race instead of waterfalling — second call doesn't depend on the first
+
+Files:
+  src/app/api/tenant/payments/[id]/submit/route.ts:20
+  src/app/api/tenant/payments/[id]/route.ts:14
+  src/app/api/tenant/payments/[id]/refund-info/route.ts:9
+  src/app/api/tenant/payments/[id]/intent/route.ts:27
+  src/app/api/landlord/invoices/[id]/route.ts:14
+  src/app/api/landlord/invoices/[id]/review/route.ts:85
+  src/app/api/landlord/invoices/[id]/reminder/route.ts:19
+  src/app/api/landlord/invoices/[id]/mark-refunded/route.ts:27
+  src/app/api/landlord/unit-map/units/[unitId]/floor/route.ts:9
+  src/app/api/landlord/inquiries/[inquiryId]/actions/route.ts:19
+  src/app/api/landlord/leases/[leaseId]/route.ts:16
+  src/app/api/landlord/move-out/[id]/inspection/route.ts:14
+  src/app/api/landlord/move-out/[id]/inspection/route.ts:97
+  src/app/api/landlord/move-out/[id]/complete/route.ts:14
+  src/app/api/landlord/move-out/[id]/approve/route.ts:15
+  src/app/api/landlord/properties/overview/route.ts:65
+  src/app/api/tenant/leases/[leaseId]/route.ts:18
+  src/app/api/landlord/applications/[applicationId]/actions/route.ts:311
+  src/app/api/landlord/renewals/[id]/route.ts:14
+  src/app/api/landlord/renewals/[id]/route.ts:61
+  src/app/api/landlord/applications/[applicationId]/payment-requests/[requestId]/review/route.ts:19
+  src/app/api/landlord/applications/[applicationId]/payment-bypass/route.ts:17
+  src/lib/iris/context.ts:18
+  src/lib/iris/context.ts:45
+  src/app/api/landlord/documents/route.ts:43
+  src/app/api/landlord/applications/[applicationId]/signing-link/route.ts:23
+  src/app/api/landlord/applications/[applicationId]/signing-link/regenerate/route.ts:21
+  src/app/api/landlord/applications/[applicationId]/resend-credentials/route.ts:16
+  src/app/api/landlord/applications/[applicationId]/quick-approve/route.ts:56
+  src/app/api/landlord/leases/[leaseId]/signing-link/route.ts:18
+  src/app/api/landlord/properties/[id]/renewal-settings/route.ts:13
+  src/app/api/landlord/properties/[id]/renewal-settings/route.ts:45
+  src/lib/messages/engine.ts:324
+  src/lib/messages/engine.ts:347
+  src/app/api/tenant/lease/[id]/renew/route.ts:16
+  src/app/api/admin/registrations/[id]/route.ts:51
+  src/app/api/admin/registrations/[id]/verify/route.ts:33
+  src/app/api/landlord/invites/[id]/route.ts:10

@@ -53,6 +53,11 @@
       "command": ["npx", "-y", "@upstash/context7-mcp@latest"],
       "enabled": true
     },
+    "BetterBugs": {
+      "type": "http",
+      "url": "https://mcp.betterbugs.io/mcp",
+      "enabled": true
+    },
     "drawio": {
       "type": "local",
       "command": ["npx", "@next-ai-drawio/mcp-server@latest"],

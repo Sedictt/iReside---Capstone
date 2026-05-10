@@ -1,0 +1,15 @@
+Rule: jsx-a11y/alt-text
+Severity: error
+Category: Accessibility
+Count: 3
+
+Missing `alt` attribute.
+
+Suggestion: Must have `alt` prop, either with meaningful text, or an empty string for decorative images.
+
+Docs: https://oxc.rs/docs/guide/usage/linter/rules/jsx_a11y/alt-text.html
+
+Files:
+  src/components/landlord/applications/RentApplications.tsx:874
+  src/components/landlord/applications/RentApplications.tsx:1039
+  src/components/landlord/applications/RentApplications.tsx:1382

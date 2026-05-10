@@ -1,0 +1,16 @@
+Rule: react-doctor/no-uncontrolled-input
+Severity: warning
+Category: Correctness
+Count: 6
+
+<input value={...}> with no `onChange` or `readOnly` — React renders this as a silently read-only field
+
+Suggestion: Pass an explicit initial value to `useState` (e.g. `useState("")` instead of `useState()`), add `onChange` (or `readOnly` to opt out) when you supply `value`, and drop `defaultValue` on controlled inputs — React ignores it
+
+Files:
+  src/app/landlord/onboarding/[token]/page.tsx:502
+  src/components/landlord/lease/ContractPreviewModal.tsx:390
+  src/components/landlord/LandlordSettings.tsx:554
+  src/components/landlord/LandlordSettings.tsx:562
+  src/components/landlord/LandlordSettings.tsx:570
+  src/components/tenant/TenantSettings.tsx:420

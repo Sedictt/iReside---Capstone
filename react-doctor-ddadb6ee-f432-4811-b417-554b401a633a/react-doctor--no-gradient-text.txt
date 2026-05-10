@@ -1,0 +1,13 @@
+Rule: react-doctor/no-gradient-text
+Severity: warning
+Category: Architecture
+Count: 3
+
+Gradient text (bg-clip-text + bg-gradient) is decorative rather than meaningful — a common AI tell. Use solid colors for text
+
+Suggestion: Use solid text colors for readability. If you need emphasis, use font weight, size, or a distinct color instead of gradients
+
+Files:
+  src/app/page.tsx:641
+  src/app/admin/consultation-tool/ConsultationDashboard.tsx:112
+  src/app/signup/page.tsx:294

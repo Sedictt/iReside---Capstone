@@ -1,0 +1,27 @@
+Rule: react-doctor/async-defer-await
+Severity: warning
+Category: Performance
+Count: 17
+
+await blocks the function before an early-return that doesn't use the awaited value — move the await after the synchronous guard so the skip path stays fast
+
+Suggestion: Move the `await` after the synchronous early-return guard so the skip path stays fast
+
+Files:
+  src/app/api/tenant/payments/[id]/refund-info/route.ts:10
+  src/components/tenant/ChatWidget.tsx:105
+  src/app/api/tenant/dashboard/route.ts:141
+  src/app/api/landlord/analytics/overview/route.ts:383
+  src/app/api/landlord/properties/overview/route.ts:65
+  src/app/landlord/messages/page.tsx:1073
+  src/app/api/landlord/search/route.ts:9
+  src/components/tenant/TenantIrisChat.tsx:90
+  src/components/tenant/TenantContactsSidebar.tsx:479
+  src/components/tenant/TenantContactsSidebar.tsx:704
+  src/components/landlord/dashboard/ContactsSidebar.tsx:482
+  src/components/landlord/dashboard/ContactsSidebar.tsx:707
+  src/context/AuthContext.tsx:222
+  src/context/AuthContext.tsx:231
+  src/context/AuthContext.tsx:246
+  src/app/tenant/messages/page.tsx:1045
+  src/app/api/admin/stats/route.ts:28

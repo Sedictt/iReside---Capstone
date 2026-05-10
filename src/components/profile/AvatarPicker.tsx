@@ -42,6 +42,10 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
         if (isOpen) {
             setSelectedAvatar(currentAvatarUrl);
             setSelectedColor(currentBgColor || "#171717");
+        } else {
+            // Reset state when closed to avoid "stuck" state if opened again
+            setIsUpdating(false);
+            setError(null);
         }
     }, [isOpen, currentAvatarUrl, currentBgColor]);
 
@@ -71,11 +75,21 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
             return;
         }
 
-        if (!profile) return;
+        if (!profile) {
+            console.error("[AvatarPicker] No profile found");
+            return;
+        }
+
         setIsUpdating(true);
         setError(null);
 
         try {
+            console.log("[AvatarPicker] Updating profile...", { 
+                id: profile.id, 
+                avatar_url: selectedAvatar, 
+                avatar_bg_color: selectedColor 
+            });
+
             const { error: updateError } = await supabase
                 .from("profiles")
                 .update({ 
@@ -86,12 +100,27 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
 
             if (updateError) throw updateError;
 
-            await refreshProfile();
+            console.log("[AvatarPicker] Profile updated in DB, refreshing context...");
+            
+            // Call refreshProfile but handle potential hangs
+            try {
+                // Set a timeout for refreshProfile just in case
+                const refreshPromise = refreshProfile();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Refresh timeout")), 5000)
+                );
+                
+                await Promise.race([refreshPromise, timeoutPromise]);
+            } catch (refreshErr) {
+                console.warn("[AvatarPicker] Profile refresh took too long or failed:", refreshErr);
+                // We still continue because the DB update was successful
+            }
+
             toast.success("Profile appearance updated");
             onClose();
         } catch (err: any) {
-            console.error("Failed to update avatar:", err);
-            const msg = err.message || "Failed to update avatar.";
+            console.error("[AvatarPicker] Failed to update avatar:", err);
+            const msg = err.message || "Failed to update appearance. Please try again.";
             setError(msg);
             toast.error(msg);
         } finally {

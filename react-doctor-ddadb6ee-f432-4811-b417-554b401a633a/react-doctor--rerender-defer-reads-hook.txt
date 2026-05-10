@@ -1,0 +1,11 @@
+Rule: react-doctor/rerender-defer-reads-hook
+Severity: warning
+Category: Performance
+Count: 1
+
+usePathname() return is only read inside event handlers — defer the read into the handler (e.g. `new URL(window.location.href).searchParams`) so the component doesn't re-render on every URL change
+
+Suggestion: Read the URL state inside the handler (e.g. `new URL(window.location.href).searchParams`) so the component doesn't subscribe and re-render on every URL change
+
+Files:
+  src/components/transitions/PageTransitionProvider.tsx:34

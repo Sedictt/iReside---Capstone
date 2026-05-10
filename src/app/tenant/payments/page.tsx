@@ -656,7 +656,7 @@ export default function FinanceHubPage() {
                     {/* Uniform Sidebar Column (Right) */}
                     <div className="lg:col-span-1 space-y-6">
                         {/* Contextual Action/Info Card */}
-                        <div className="bg-card border border-border rounded-[2rem] p-8 flex flex-col gap-6 shadow-sm ring-1 ring-border">
+                        <div className="bg-card border border-border rounded-[2rem] p-10 flex flex-col gap-8 shadow-sm ring-1 ring-border">
                             {activeTab === 'bill' && (
                                 <>
                                     <div>
@@ -666,7 +666,7 @@ export default function FinanceHubPage() {
                                         </div>
                                         <p className="text-xs font-bold text-foreground">Budgeting for next cycle</p>
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         <div className="p-5 rounded-3xl bg-muted/30 border border-border">
                                             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Billing Policy</p>
                                             <div className="space-y-3">
@@ -701,7 +701,7 @@ export default function FinanceHubPage() {
                                         </div>
                                         <p className="text-xs font-bold text-foreground">Understanding Charges</p>
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         <div className="p-5 rounded-3xl bg-muted/30 border border-border">
                                             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Landlord-set Rates</p>
                                             <div className="space-y-4">
@@ -736,7 +736,7 @@ export default function FinanceHubPage() {
                                         </div>
                                         <p className="text-xs font-bold text-foreground">Financial Standing</p>
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         <div className="p-5 rounded-3xl bg-muted/30 border border-border">
                                             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Quick Stats</p>
                                             <div className="space-y-4">
@@ -752,9 +752,9 @@ export default function FinanceHubPage() {
                                         </div>
                                         <Link 
                                             href="/tenant/messages"
-                                            className="w-full bg-muted hover:bg-muted-dark text-foreground py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-border transition-all flex items-center justify-center gap-2.5"
+                                            className="w-full bg-muted hover:bg-muted-dark text-foreground py-6 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border border-border transition-all flex items-center justify-center gap-4"
                                         >
-                                            Inquiry? Contact Support <HelpCircle className="w-4 h-4" />
+                                            Contact Support <HelpCircle className="w-5 h-5" />
                                         </Link>
                                     </div>
                                 </>

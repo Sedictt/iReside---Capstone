@@ -1,0 +1,22 @@
+Rule: react-doctor/nextjs-no-use-search-params-without-suspense
+Severity: warning
+Category: Next.js
+Count: 12
+
+useSearchParams() requires a <Suspense> boundary — without one, the entire page bails out to client-side rendering
+
+Suggestion: Wrap the component using useSearchParams: `<Suspense fallback={<Skeleton />}><SearchComponent /></Suspense>`
+
+Files:
+  src/app/landlord/move-out/page.tsx:10
+  src/app/landlord/invoices/page.tsx:26
+  src/app/landlord/messages/page.tsx:255
+  src/app/landlord/tenants/page.tsx:55
+  src/app/tenant/tour/page.tsx:32
+  src/app/tenant/sign-lease/[leaseId]/page.tsx:12
+  src/app/tenant/payments/[id]/checkout/page.tsx:413
+  src/components/landlord/applications/RentApplications.tsx:251
+  src/app/landlord/onboarding/[token]/page.tsx:60
+  src/components/landlord/maintenance/MaintenanceDashboard.tsx:59
+  src/components/landlord/leases/RenewalReview.tsx:45
+  src/app/tenant/messages/page.tsx:190

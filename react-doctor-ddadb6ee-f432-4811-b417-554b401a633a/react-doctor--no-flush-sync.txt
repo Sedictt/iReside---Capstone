@@ -1,0 +1,11 @@
+Rule: react-doctor/no-flush-sync
+Severity: warning
+Category: Performance
+Count: 1
+
+flushSync from react-dom skips View Transition snapshots and concurrent rendering — prefer startTransition for non-urgent updates
+
+Suggestion: Use startTransition for non-urgent updates — flushSync forces a sync flush that skips View Transitions and concurrent rendering
+
+Files:
+  src/components/landlord/visual-planner/VisualBuilder.tsx:5

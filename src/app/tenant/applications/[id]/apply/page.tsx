@@ -346,10 +346,10 @@ export default function RentApplicationPage() {
                                                         Note: Name must exactly match the name on the lease contract and government-issued ID.
                                                     </p>
                                                 </div>
-                                                <FormField label="First Name" value={formData.firstName} onChange={(v: string) => setFormData({ ...formData, firstName: v })} placeholder="e.g. Jane" />
-                                                <FormField label="Last Name" value={formData.lastName} onChange={(v: string) => setFormData({ ...formData, lastName: v })} placeholder="e.g. Cooper" />
-                                                <FormField label="Email" value={formData.email} onChange={(v: string) => setFormData({ ...formData, email: v })} type="email" placeholder="email@example.com" />
-                                                <FormField label="Phone" value={formData.phone} onChange={(v: string) => setFormData({ ...formData, phone: v })} placeholder="+63 900 000 0000" />
+                                                <FormField label="First Name" value={formData.firstName} onChange={(v: string) => setFormData(prev => ({ ...prev, firstName: v }))} placeholder="e.g. Jane" />
+                                                <FormField label="Last Name" value={formData.lastName} onChange={(v: string) => setFormData(prev => ({ ...prev, lastName: v }))} placeholder="e.g. Cooper" />
+                                                <FormField label="Email" value={formData.email} onChange={(v: string) => setFormData(prev => ({ ...prev, email: v }))} type="email" placeholder="email@example.com" />
+                                                <FormField label="Phone" value={formData.phone} onChange={(v: string) => setFormData(prev => ({ ...prev, phone: v }))} placeholder="+63 900 000 0000" />
                                                 <div className="md:col-span-2">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <div className="h-px flex-1 bg-white/10" />
@@ -357,10 +357,10 @@ export default function RentApplicationPage() {
                                                         <div className="h-px flex-1 bg-white/10" />
                                                     </div>
                                                 </div>
-                                                <FormField label="Contact Person" value={formData.emergencyContactName} onChange={(v: string) => setFormData({ ...formData, emergencyContactName: v })} placeholder="Full Name" />
-                                                <FormField label="Contact Phone" value={formData.emergencyContactPhone} onChange={(v: string) => setFormData({ ...formData, emergencyContactPhone: v })} placeholder="Mobile Number" />
+                                                <FormField label="Contact Person" value={formData.emergencyContactName} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactName: v }))} placeholder="Full Name" />
+                                                <FormField label="Contact Phone" value={formData.emergencyContactPhone} onChange={(v: string) => setFormData(prev => ({ ...prev, emergencyContactPhone: v }))} placeholder="Mobile Number" />
                                                 <div className="md:col-span-2">
-                                                    <FormField label="Desired Move-in" value={formData.moveInDate} onChange={(v: string) => setFormData({ ...formData, moveInDate: v })} type="date" />
+                                                    <FormField label="Desired Move-in" value={formData.moveInDate} onChange={(v: string) => setFormData(prev => ({ ...prev, moveInDate: v }))} type="date" />
                                                 </div>
                                             </div>
 
@@ -368,7 +368,7 @@ export default function RentApplicationPage() {
                                                 <UnitSelector
                                                     label="Select Your Apartment Residence"
                                                     value={formData.unit}
-                                                    onChange={(v: string) => setFormData({ ...formData, unit: v })}
+                                                    onChange={(v: string) => setFormData(prev => ({ ...prev, unit: v }))}
                                                     onSeeMore={() => setIsUnitModalOpen(true)}
                                                     propertyId={propertyId}
                                                     options={PROPERTY_UNITS[propertyId] || PROPERTY_UNITS["1"]}
@@ -382,10 +382,10 @@ export default function RentApplicationPage() {
                                     {currentStep === 2 && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="md:col-span-2">
-                                                <FormField label="Current Vocation" value={formData.occupation} onChange={(v: string) => setFormData({ ...formData, occupation: v })} placeholder="e.g. Senior Creative Director" />
+                                                <FormField label="Current Vocation" value={formData.occupation} onChange={(v: string) => setFormData(prev => ({ ...prev, occupation: v }))} placeholder="e.g. Senior Creative Director" />
                                             </div>
-                                            <FormField label="Company Name" value={formData.employer} onChange={(v: string) => setFormData({ ...formData, employer: v })} placeholder="e.g. Apple Inc." />
-                                            <FormField label="Monthly Gross (₱)" value={formData.monthlyIncome} onChange={(v: string) => setFormData({ ...formData, monthlyIncome: v })} type="number" placeholder="0.00" />
+                                            <FormField label="Company Name" value={formData.employer} onChange={(v: string) => setFormData(prev => ({ ...prev, employer: v }))} placeholder="e.g. Apple Inc." />
+                                            <FormField label="Monthly Gross (₱)" value={formData.monthlyIncome} onChange={(v: string) => setFormData(prev => ({ ...prev, monthlyIncome: v }))} type="number" placeholder="0.00" />
                                             
                                             <div className="md:col-span-2">
                                                 <div className="flex items-center gap-2 mb-4">
@@ -397,8 +397,8 @@ export default function RentApplicationPage() {
                                                     To avoid future problems and unpaid rent — References will be contacted, this is mandatory.
                                                 </p>
                                             </div>
-                                            <FormField label="Reference Person" value={formData.referenceName} onChange={(v: string) => setFormData({ ...formData, referenceName: v })} placeholder="Employer or Previous Landlord" />
-                                            <FormField label="Reference Contact" value={formData.referencePhone} onChange={(v: string) => setFormData({ ...formData, referencePhone: v })} placeholder="Mobile Number" />
+                                            <FormField label="Reference Person" value={formData.referenceName} onChange={(v: string) => setFormData(prev => ({ ...prev, referenceName: v }))} placeholder="Employer or Previous Landlord" />
+                                            <FormField label="Reference Contact" value={formData.referencePhone} onChange={(v: string) => setFormData(prev => ({ ...prev, referencePhone: v }))} placeholder="Mobile Number" />
 
                                             <div className="md:col-span-2 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4 shadow-inner">
                                                 <Shield className="h-6 w-6 text-blue-400 shrink-0 mt-0.5" />
@@ -541,7 +541,7 @@ export default function RentApplicationPage() {
                 isOpen={isUnitModalOpen}
                 onClose={() => setIsUnitModalOpen(false)}
                 value={formData.unit}
-                onChange={(v: string) => setFormData({ ...formData, unit: v })}
+                onChange={(v: string) => setFormData(prev => ({ ...prev, unit: v }))}
                 options={PROPERTY_UNITS[propertyId] || PROPERTY_UNITS["1"]}
             />
 

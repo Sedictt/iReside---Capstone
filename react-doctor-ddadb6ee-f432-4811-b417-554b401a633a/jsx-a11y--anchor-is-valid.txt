@@ -1,0 +1,17 @@
+Rule: jsx-a11y/anchor-is-valid
+Severity: warning
+Category: Accessibility
+Count: 5
+
+Use of incorrect `href` for the 'a' element.
+
+Suggestion: Provide a correct `href` for the `a` element.
+
+Docs: https://oxc.rs/docs/guide/usage/linter/rules/jsx_a11y/anchor-is-valid.html
+
+Files:
+  src/app/page.tsx:854
+  src/app/page.tsx:905
+  src/app/page.tsx:906
+  src/app/signup/page.tsx:782
+  src/app/signup/page.tsx:782

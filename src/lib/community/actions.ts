@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCommunityPropertyId } from './queries'
 import { revalidatePath } from 'next/cache'
+import { auth } from '@/lib/supabase/middleware'
 import type {
     CommunityPost,
     CommunityPostStatus,
@@ -195,6 +196,10 @@ export async function getPosts(
     posts: CommunityPost[]
     nextCursor: string | null
 }> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const supabase = (await createClient()) as any
 
     let managedPropertyIds: string[] | null = null
@@ -272,19 +277,35 @@ export async function getPosts(
 }
 
 export async function getCurrentTenantPosts(limit = 20, cursor?: string, propertyId?: string) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     return getCurrentCommunityPosts(limit, cursor, propertyId)
 }
 
 export async function getCurrentCommunityPosts(limit = 20, cursor?: string, propertyId?: string) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     return getPosts(userId, limit, cursor, role, propertyId)
 }
 
 export async function getCurrentTenantPendingPosts(limit = 20): Promise<CommunityPost[]> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     return getCurrentCommunityPendingPosts(limit)
 }
 
 export async function getCurrentCommunityPendingPosts(limit = 20): Promise<CommunityPost[]> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     const propertyId = await getCommunityPropertyId(userId, role)
     if (!propertyId) {
@@ -323,6 +344,10 @@ export async function getCurrentCommunityPendingPosts(limit = 20): Promise<Commu
 }
 
 export async function getPendingResidentPostsForModeration(limit = 20, targetPropertyId?: string): Promise<CommunityPost[]> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     if (!isManagementRole(role)) {
         return []
@@ -383,12 +408,13 @@ export async function getPendingResidentPostsForModeration(limit = 20, targetPro
 }
 
 export async function createDiscussionPost(input: { title: string; content: string; propertyId?: string }) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
 
     const isLandlordOrAdmin = role === 'landlord' || role === 'admin'
-    if (isLandlordOrAdmin && process.env.NODE_ENV === 'development') {
-        console.log('[community] Landlord/Admin creating discussion post - should bypass moderation')
-    }
 
     const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
     if (!propertyId) {
@@ -426,6 +452,10 @@ export async function createDiscussionPost(input: { title: string; content: stri
 }
 
 export async function createPollPost(input: { title: string; content: string; options: string[]; propertyId?: string }) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     if (role === 'tenant') {
         throw new Error('Tenants can only create discussion posts.')
@@ -478,6 +508,10 @@ export async function createPollPost(input: { title: string; content: string; op
 }
 
 export async function createPhotoAlbumPost(input: { title: string; content: string; propertyId?: string; imageUrls: string[] }) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     const isManagement = isManagementRole(role)
     const propertyId = await resolvePropertyIdForPostCreation(userId, role, input.propertyId)
@@ -541,6 +575,10 @@ export async function createPhotoAlbumPost(input: { title: string; content: stri
 }
 
 export async function createAnnouncementPost(input: { title: string; content: string; propertyId?: string }) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     if (role === 'tenant') {
         throw new Error('Tenants can only create discussion posts.')
@@ -584,6 +622,10 @@ export async function createAnnouncementPost(input: { title: string; content: st
 }
 
 export async function updateOwnPost(postId: string, input: { title?: string; content?: string }) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const userId = await getAuthenticatedUserId()
     const updates: Record<string, unknown> = {}
 
@@ -622,6 +664,10 @@ export async function updateOwnPost(postId: string, input: { title?: string; con
 }
 
 export async function deleteOwnPost(postId: string) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -641,6 +687,10 @@ export async function deleteOwnPost(postId: string) {
 }
 
 export async function getManagementProperties(): Promise<Array<{ id: string; name: string }>> {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     if (!isManagementRole(role)) {
         return []
@@ -664,6 +714,10 @@ export async function getManagementProperties(): Promise<Array<{ id: string; nam
 }
 
 export async function approveResidentPost(postId: string, approved = true) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const { userId, role } = await getAuthenticatedCommunityContext()
     if (!isManagementRole(role)) {
         throw new Error('Only landlords and admins can approve resident posts.')
@@ -717,6 +771,10 @@ export async function approveResidentPost(postId: string, approved = true) {
 }
 
 export async function toggleReaction(postId: string, reactionType: CommunityReactionType) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -784,6 +842,10 @@ export async function toggleReaction(postId: string, reactionType: CommunityReac
 }
 
 export async function votePoll(pollId: string, optionIndex: number) {
+    const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -880,6 +942,7 @@ export async function votePoll(pollId: string, optionIndex: number) {
 }
 
 export async function addComment(postId: string, content: string, parentCommentId?: string) {
+    const session = await auth()
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -917,6 +980,7 @@ export async function addComment(postId: string, content: string, parentCommentI
 }
 
 export async function getPostComments(postId: string) {
+    const session = await auth()
     await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -965,6 +1029,7 @@ export async function getPostComments(postId: string) {
 }
 
 export async function reportPost(postId: string, reason: CommunityReportReason) {
+    const session = await auth()
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
