@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Camera, UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ type ProfileCoverUploaderProps = {
 
 export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: ProfileCoverUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
     const [coverUrl, setCoverUrl] = useState<string | null>(initialCoverUrl);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -57,6 +59,10 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
 
             setCoverUrl(payload.coverUrl);
             toast.success("Cover photo updated");
+            
+            // Sync Server Component
+            router.refresh();
+            
             window.dispatchEvent(new CustomEvent("profile-updated"));
         } catch (error) {
             console.error(error);

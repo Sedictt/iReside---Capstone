@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/LoadingSpinner";
@@ -160,6 +161,7 @@ function SubNav({ tabs, activeTab, onTabChange }: { tabs: string[]; activeTab: s
 // --- Main Component ---
 
 export function TenantSettings() {
+    const router = useRouter();
     const { profile, loading, refreshProfile } = useAuth();
     const supabase = createClient();
 
@@ -1124,6 +1126,7 @@ export function TenantSettings() {
                 onClose={() => setIsAvatarPickerOpen(false)}
                 currentAvatarUrl={profile?.avatar_url || null}
                 currentBgColor={profile?.avatar_bg_color || null}
+                onProfileUpdate={() => router.refresh()}
             />
         </div>
     );

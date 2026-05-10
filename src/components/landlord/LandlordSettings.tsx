@@ -243,6 +243,7 @@ export function LandlordSettings() {
     }, [fetchTourState]);
 
     const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+    const [avatarPickerKey, setAvatarPickerKey] = useState(0);
     const [properties, setProperties] = useState<any[]>([]);
     const [selectedPropertyId, setSelectedPropertyId] = useState<string>("all");
 
@@ -453,7 +454,11 @@ export function LandlordSettings() {
         }
     };
 
-
+    const handleAvatarPickerUpdate = async () => {
+        await refreshProfile();
+        setAvatarPickerKey(k => k + 1);
+        router.refresh();
+    };
 
     const handlePermitUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -1434,10 +1439,12 @@ export function LandlordSettings() {
 
             {isAvatarPickerOpen && (
                 <AvatarPicker 
+                    key={avatarPickerKey}
                     isOpen={isAvatarPickerOpen}
                     onClose={() => setIsAvatarPickerOpen(false)}
                     currentAvatarUrl={profile?.avatar_url || null}
                     currentBgColor={profile?.avatar_bg_color || null}
+                    onProfileUpdate={handleAvatarPickerUpdate}
                 />
             )}
         </div>

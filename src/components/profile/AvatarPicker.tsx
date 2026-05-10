@@ -17,6 +17,7 @@ interface AvatarPickerProps {
     currentAvatarUrl: string | null;
     currentBgColor: string | null;
     onSelect?: (url: string, color: string) => void;
+    onProfileUpdate?: () => void;
 }
 
 const DEFAULT_AVATARS_COUNT = 16; // 3 to 18
@@ -27,8 +28,8 @@ const PRESET_COLORS = [
     "#dc2626", "#ea580c", "#d97706", "#059669", "#2563eb", "#4f46e5", "#7c3aed", "#c026d3", "#db2777", "#0891b2", "#52525b", "#262626"
 ];
 
-export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor, onSelect }: AvatarPickerProps) {
-    const { profile, refreshProfile } = useAuth();
+export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor, onSelect, onProfileUpdate }: AvatarPickerProps) {
+    const { profile, loading, refreshProfile } = useAuth();
     const [selectedAvatar, setSelectedAvatar] = useState<string | null>(currentAvatarUrl);
     const [selectedColor, setSelectedColor] = useState<string>(currentBgColor || "#171717");
     const [isUploading, setIsUploading] = useState(false);
@@ -67,7 +68,10 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
     }, [currentPage, defaultAvatars]);
 
     const handleSave = async () => {
-        if (!selectedAvatar) return;
+        if (!selectedAvatar) {
+            toast.error("Please select an avatar first");
+            return;
+        }
         
         if (onSelect) {
             onSelect(selectedAvatar, selectedColor);
@@ -76,6 +80,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
         }
 
         if (!profile) {
+            toast.error("Profile not loaded. Please try again in a moment.");
             console.error("[AvatarPicker] No profile found");
             return;
         }
@@ -117,6 +122,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
             }
 
             toast.success("Profile appearance updated");
+            onProfileUpdate?.();
             onClose();
         } catch (err: any) {
             console.error("[AvatarPicker] Failed to update avatar:", err);
@@ -226,11 +232,11 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                         <div className="w-full space-y-4 relative z-10">
                             <button
                                 onClick={handleSave}
-                                disabled={isUpdating || !selectedAvatar}
+                                disabled={isUpdating || !selectedAvatar || loading}
                                 className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
                             >
-                                {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                <span>Save Profile</span>
+                                {isUpdating || (loading && !profile) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                <span>{isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
                             </button>
                             <button
                                 onClick={onClose}

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Camera } from "lucide-react";
 import { AvatarPicker } from "./AvatarPicker";
+import { useAuth } from "@/hooks/useAuth";
 
 type ProfileAvatarUploaderProps = {
     initialAvatarUrl: string | null;
@@ -12,19 +14,51 @@ type ProfileAvatarUploaderProps = {
     className?: string;
 };
 
-export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullName, className }: ProfileAvatarUploaderProps) {
+export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullName, className, onProfileUpdate }: ProfileAvatarUploaderProps & { onProfileUpdate?: () => void }) {
+    const router = useRouter();
+    const { profile } = useAuth();
     const [isPickerOpen, setIsPickerOpen] = useState(false);
+    
+    // Local state for immediate feedback
+    const [currentAvatarUrl, setCurrentAvatarUrl] = useState(initialAvatarUrl);
+    const [currentBgColor, setCurrentBgColor] = useState(avatarBgColor);
+
+    // Sync with props when server-side data re-fetches
+    useEffect(() => {
+        setCurrentAvatarUrl(initialAvatarUrl);
+    }, [initialAvatarUrl]);
+
+    useEffect(() => {
+        setCurrentBgColor(avatarBgColor);
+    }, [avatarBgColor]);
+
+    // Also sync with auth context for maximum reactivity
+    useEffect(() => {
+        if (profile?.avatar_url !== undefined) {
+            setCurrentAvatarUrl(profile.avatar_url);
+        }
+        if (profile?.avatar_bg_color !== undefined) {
+            setCurrentBgColor(profile.avatar_bg_color);
+        }
+    }, [profile]);
+
+    const handleProfileUpdate = () => {
+        // Trigger a server-side refresh to sync the Server Component page
+        router.refresh();
+        // Propagate update event
+        onProfileUpdate?.();
+    };
 
     return (
         <div className={className}>
             <div className="absolute inset-0 rounded-full border border-white/20 animate-pulse-slow"></div>
             <div 
                 className="absolute inset-1 rounded-full overflow-hidden border-2 border-white/50 shadow-2xl transition-all duration-500 flex items-center justify-center"
-                style={{ backgroundColor: avatarBgColor || '#171717' }}
+                style={{ backgroundColor: currentBgColor || '#171717' }}
             >
-                {initialAvatarUrl ? (
+                {currentAvatarUrl ? (
                     <Image
-                        src={initialAvatarUrl}
+                        src={currentAvatarUrl}
                         alt={fullName}
                         fill
                         className="object-cover"
@@ -51,8 +85,9 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                 <AvatarPicker 
                     isOpen={isPickerOpen}
                     onClose={() => setIsPickerOpen(false)}
-                    currentAvatarUrl={initialAvatarUrl}
-                    currentBgColor={avatarBgColor || '#171717'}
+                    currentAvatarUrl={currentAvatarUrl}
+                    currentBgColor={currentBgColor || '#171717'}
+                    onProfileUpdate={handleProfileUpdate}
                 />
             )}
         </div>
