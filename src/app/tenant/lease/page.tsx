@@ -214,7 +214,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                     <FileSearch className="size-10" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-black text-foreground tracking-tight">Registry Empty</h2>
+                    <h2 className="text-2xl font-semibold text-foreground tracking-tight">Registry Empty</h2>
                     <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
                         We couldn&apos;t find an active lease associated with your profile. This usually happens if your move-in is still pending approval.
                     </p>
@@ -250,7 +250,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-4xl font-black text-foreground tracking-tighter">
+                        <h1 className="text-4xl font-semibold text-foreground tracking-tighter">
                             Lease Hub
                         </h1>
                         {(previewDays || moveOutPreviewStatus) && (
@@ -322,7 +322,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                         <div className="flex justify-between items-start mb-8">
                                             <div>
                                                 <p className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">Source of Truth</p>
-                                                <h2 className="text-4xl font-black text-foreground tracking-tighter">Master Lease Agreement</h2>
+                                                <h2 className="text-4xl font-semibold text-foreground tracking-tighter">Master Lease Agreement</h2>
                                                 <p className="text-muted-foreground font-medium text-sm mt-1">{lease.unit.property.name} • Unit {lease.unit.name}</p>
                                             </div>
                                             <div className="flex gap-2">
@@ -524,7 +524,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                                     <Building2 className="size-6" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-lg font-black text-foreground tracking-tight">Building Amenities</h4>
+                                                    <h4 className="text-lg font-semibold text-foreground tracking-tight">Building Amenities</h4>
                                                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-0.5">Exclusive Residency Benefits</p>
                                                 </div>
                                             </div>
@@ -600,7 +600,7 @@ const [renewalRequest, setRenewalRequest] = useState<{
                                         
                                         <div className="space-y-4 mb-10">
                                             <div>
-                                                <h3 className="text-3xl font-black text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
+                                                <h3 className="text-3xl font-semibold text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-2 flex items-center justify-center gap-2">
                                                     <ShieldCheck className="size-4" /> Landlord
                                                 </p>

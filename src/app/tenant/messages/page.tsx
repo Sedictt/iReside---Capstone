@@ -1016,11 +1016,12 @@ if (isStillUploading) {
         return () => { activeChannelRef.current = null; supabase.removeChannel(channel); };
     }, [activeConversationId, supabase, user?.id, activeContact?.participantUserId]);
 
-    useEffect(() => {
+useEffect(() => {
         if (!shouldStickToBottomRef.current && !shouldScrollOnConversationOpenRef.current) return;
         const behavior: ScrollBehavior = shouldScrollOnConversationOpenRef.current ? "auto" : "smooth";
         window.requestAnimationFrame(() => scrollToLatest(behavior));
-        window.setTimeout(() => { scrollToLatest(behavior); shouldScrollOnConversationOpenRef.current = false; }, 80);
+        const scrollTimeout = window.setTimeout(() => { scrollToLatest(behavior); shouldScrollOnConversationOpenRef.current = false; }, 80);
+        return () => window.clearTimeout(scrollTimeout);
     }, [messagesState, isOtherUserTyping, activeConversationId, isMessagesLoading, scrollToLatest]);
 
     useEffect(() => {

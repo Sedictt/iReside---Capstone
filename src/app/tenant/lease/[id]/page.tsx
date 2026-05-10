@@ -17,7 +17,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
     return (
         <div className="space-y-8">
             <Link href="/tenant/lease" className="flex items-center text-sm text-zinc-400 hover:text-white transition-colors">
-                <ChevronLeft className="w-4 h-4 mr-1" />
+                <ChevronLeft className="size-4 mr-1" />
                 Back to Leases
             </Link>
 
@@ -28,7 +28,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                 </div>
                 <div className="flex items-center gap-3">
                     <button className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 text-sm">
-                        <Download className="w-4 h-4" />
+                        <Download className="size-4" />
                         Download PDF
                     </button>
                 </div>
@@ -45,7 +45,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                             <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-800">
                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Property</p>
                                 <div className="flex items-start gap-3">
-                                    <MapPin className="w-5 h-5 text-indigo-400 mt-0.5" />
+                                    <MapPin className="size-5 text-indigo-400 mt-0.5" />
                                     <div>
                                         <p className="font-semibold text-white">The Grand</p>
                                         <p className="text-sm text-zinc-400">Unit 304<br />123 Main St, Springfield, IL</p>
@@ -56,7 +56,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                             <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-800">
                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Occupants</p>
                                 <div className="flex items-start gap-3">
-                                    <Users className="w-5 h-5 text-indigo-400 mt-0.5" />
+                                    <Users className="size-5 text-indigo-400 mt-0.5" />
                                     <div>
                                         <p className="font-semibold text-white">Sarah Chen</p>
                                         <p className="text-sm text-zinc-400">Primary Tenant</p>
@@ -67,7 +67,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                             <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-800">
                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Term</p>
                                 <div className="flex items-start gap-3">
-                                    <Calendar className="w-5 h-5 text-indigo-400 mt-0.5" />
+                                    <Calendar className="size-5 text-indigo-400 mt-0.5" />
                                     <div>
                                         <p className="font-semibold text-white">12 Months</p>
                                         <p className="text-sm text-zinc-400">Jan 1, 2024 - Dec 31, 2024</p>
@@ -78,7 +78,7 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                             <div className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-800">
                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Rent</p>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-5 h-5 flex items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs">$</div>
+                                    <div className="size-5 flex items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs">$</div>
                                     <div>
                                         <p className="font-semibold text-white">₱18,500.00 / month</p>
                                         <p className="text-sm text-zinc-400">Due on the 1st</p>
@@ -99,13 +99,13 @@ export default async function LeaseDetailsPage({ params }: { params: Promise<{ i
                                 "Utilities: Tenant pays Electricity & Internet (Clause 3.1)"
                             ].map((clause, i) => (
                                 <li key={i} className="flex items-center gap-3 text-zinc-300 text-sm p-3 rounded-lg hover:bg-zinc-800/50 transition-colors">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                    <CheckCircle2 className="size-4 text-emerald-500 flex-shrink-0" />
                                     {clause}
                                 </li>
                             ))}
                         </ul>
                         <button className="mt-6 text-sm font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-1 group">
-                            View Full Agreement <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                            View Full Agreement <ArrowUpRight className="size-3 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                         </button>
                     </div>
                 </div>

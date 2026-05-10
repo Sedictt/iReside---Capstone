@@ -221,57 +221,57 @@ export async function expireInPersonIntents(
             .eq("workflow_status", "awaiting_in_person");
         if (updateError) throw updateError;
 
-        await insertPaymentAuditEvent(supabase, {
-            paymentId: row.id,
-            actorId,
-            action: "in_person_intent_expired",
-            source: "system_expiry",
-            beforeState: {
-                workflowStatus: row.workflow_status,
-                inPersonIntentExpiresAt: row.in_person_intent_expires_at,
-            },
-            afterState: {
-                workflowStatus: "pending",
-                inPersonIntentExpiresAt: null,
-            },
-            metadata: {
-                reason: "deadline_elapsed",
-            },
-        });
-
-        await sendPaymentNotifications(
-            supabase,
-            [row.tenant_id, row.landlord_id],
-            {
-                title: "In-person payment intent expired",
-                message: `Invoice ${row.invoice_number ?? row.id} was returned to Pending after no confirmation in 3 days.`,
-                data: {
-                    paymentId: row.id,
-                    workflowStatus: "pending",
-                    reason: "in_person_intent_expired",
+        await Promise.all([
+            insertPaymentAuditEvent(supabase, {
+                paymentId: row.id,
+                actorId,
+                action: "in_person_intent_expired",
+                source: "system_expiry",
+                beforeState: {
+                    workflowStatus: row.workflow_status,
+                    inPersonIntentExpiresAt: row.in_person_intent_expires_at,
                 },
-            },
-        );
-
-        await sendPaymentSystemMessage(
-            supabase,
-            {
-                id: row.id,
-                tenant_id: row.tenant_id,
-                landlord_id: row.landlord_id,
-                invoice_number: row.invoice_number,
-            },
-            {
-                actorId: actorId ?? row.landlord_id,
-                actorName: "IRIS",
-                content: "The face-to-face payment request has expired. The invoice status has been reverted to pending.",
+                afterState: {
+                    workflowStatus: "pending",
+                    inPersonIntentExpiresAt: null,
+                },
                 metadata: {
-                    event: "in_person_intent_expired",
-                    paymentId: row.id,
-                    workflowStatus: "pending",
+                    reason: "deadline_elapsed",
                 },
-            },
-        );
+            }),
+            sendPaymentNotifications(
+                supabase,
+                [row.tenant_id, row.landlord_id],
+                {
+                    title: "In-person payment intent expired",
+                    message: `Invoice ${row.invoice_number ?? row.id} was returned to Pending after no confirmation in 3 days.`,
+                    data: {
+                        paymentId: row.id,
+                        workflowStatus: "pending",
+                        reason: "in_person_intent_expired",
+                    },
+                },
+            ),
+            sendPaymentSystemMessage(
+                supabase,
+                {
+                    id: row.id,
+                    tenant_id: row.tenant_id,
+                    landlord_id: row.landlord_id,
+                    invoice_number: row.invoice_number,
+                },
+                {
+                    actorId: actorId ?? row.landlord_id,
+                    actorName: "IRIS",
+                    content: "The face-to-face payment request has expired. The invoice status has been reverted to pending.",
+                    metadata: {
+                        event: "in_person_intent_expired",
+                        paymentId: row.id,
+                        workflowStatus: "pending",
+                    },
+                },
+            ),
+        ]);
     }
 
     return expiredRows.length;

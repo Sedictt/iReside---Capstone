@@ -471,25 +471,26 @@ export async function DELETE(request: NextRequest) {
 
     const targetFloorNumber = otherFloors[0].floor_number;
 
-    // 1. Move units
-    await supabase
-        .from("units")
-        .update({ floor: targetFloorNumber })
-        .eq("property_id", propertyId)
-        .eq("floor", floor.floor_number);
-    
-    // 2. Clear positions
-    await (supabase
-        .from("unit_map_positions" as any)
-        .delete()
-        .eq("floor_key", floorKey) as any);
-
-    // 3. Delete floor config
-    const { error } = await (supabase
-        .from("property_floor_configs" as any)
-        .delete()
-        .eq("property_id", propertyId)
-        .eq("floor_key", floorKey) as any);
+    // Run all cleanup operations in parallel
+    const [, , { error }] = await Promise.all([
+        // 1. Move units
+        supabase
+            .from("units")
+            .update({ floor: targetFloorNumber })
+            .eq("property_id", propertyId)
+            .eq("floor", floor.floor_number),
+        // 2. Clear positions
+        supabase
+            .from("unit_map_positions" as any)
+            .delete()
+            .eq("floor_key", floorKey) as any,
+        // 3. Delete floor config
+        supabase
+            .from("property_floor_configs" as any)
+            .delete()
+            .eq("property_id", propertyId)
+            .eq("floor_key", floorKey) as any,
+    ]);
 
     if (error) {
         return NextResponse.json({ error: "Failed to delete floor" }, { status: 500 });

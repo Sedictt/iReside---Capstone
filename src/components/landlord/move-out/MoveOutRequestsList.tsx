@@ -54,10 +54,14 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
 
   useEffect(() => {
     let isCancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     async function loadRequests() {
       if (isCancelled) return;
       if (preview) {
+        await new Promise(resolve => {
+          timeoutId = setTimeout(resolve, 800);
+        });
         const MOCK_REQUESTS: MoveOutRequest[] = [
           {
             id: "req-1",
@@ -175,7 +179,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
     }
 
     loadRequests();
-    return () => { isCancelled = true; };
+    return () => { isCancelled = true; if (timeoutId !== null) clearTimeout(timeoutId); };
   }, [selectedPropertyId, activeFilter, preview]);
 
   const filteredRequests = useMemo(() => {

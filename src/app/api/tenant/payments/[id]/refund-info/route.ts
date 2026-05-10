@@ -68,14 +68,15 @@ export async function POST(
         if (updateError) throw updateError;
 
         // Notify Landlord via Dynamic System Message Update
-        const { data: tenantProfile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", user.id)
-            .single();
-
-        const { sendPaymentSystemMessage } = await import("@/lib/billing/workflow");
-        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const [{ data: tenantProfile }, { sendPaymentSystemMessage, createAdminClient }] = await Promise.all([
+            supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", user.id)
+                .single(),
+            import("@/lib/billing/workflow").then(m => ({ sendPaymentSystemMessage: m.sendPaymentSystemMessage })),
+        ]);
+        
         const adminClient = createAdminClient();
 
         // Try to find an existing overpayment message to update dynamically

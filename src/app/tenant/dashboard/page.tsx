@@ -390,7 +390,7 @@ export default function TenantDashboard() {
                 {/* Command Center Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2" data-tour-id="tour-dashboard-overview">
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
                             Welcome back, {lease?.landlordName ? "Tenant" : "Resident"}
                         </h1>
                         <p className="mt-2 text-muted-foreground">
@@ -668,7 +668,7 @@ export default function TenantDashboard() {
                             <div className="relative z-10 space-y-6">
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>
-                                    <h3 className="text-2xl font-black text-foreground tracking-tight leading-tight">
+                                    <h3 className="text-2xl font-semibold text-foreground tracking-tight leading-tight">
                                         {lease?.propertyName ?? "Property"}<br/>
                                         <span className="text-muted-foreground text-lg">{lease?.unitName ?? "Unit"}</span>
                                     </h3>

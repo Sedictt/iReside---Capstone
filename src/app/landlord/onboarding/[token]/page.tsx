@@ -57,8 +57,8 @@ const STEPS: { id: Step; label: string; icon: any }[] = [
 
 export default function OnboardingPage({ params }: { params: Promise<{ token: string }> }) {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const isPreview = searchParams.get("preview") === "true";
+    const { get: searchGet } = useSearchParams();
+    const isPreview = searchGet("preview") === "true";
     const [token, setToken] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -387,7 +387,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
     if (loading) {
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
             </div>
         );
     }
@@ -396,8 +396,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
                 <div className="max-w-md w-full p-8 text-center bg-white/[0.02] border border-red-500/20 rounded-3xl">
-                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Lock className="w-8 h-8 text-red-500" />
+                    <div className="size-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Lock className="size-8 text-red-500" />
                     </div>
                     <h2 className="text-2xl font-semibold text-white mb-2">Link Invalid</h2>
                     <p className="text-white/60 mb-6">{error}</p>
@@ -416,14 +416,14 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
         return (
             <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
                 <div className="max-w-md w-full p-10 text-center bg-white/[0.02] border border-white/12 rounded-3xl backdrop-blur-xl">
-                    <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)] mb-6">
+                    <div className="size-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 shadow-[0_0_30px_rgba(109,152,56,0.2)] mb-6">
                         <CheckCircle2 className="h-12 w-12 text-primary" />
                     </div>
                     <h2 className="text-3xl font-black text-white mb-2">All Set!</h2>
                     <p className="text-white/60 mb-6">
                         Your landlord account has been created. Redirecting you to login...
                     </p>
-                    <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+                    <Loader2 className="size-6 animate-spin text-primary mx-auto" />
                 </div>
             </div>
         );
@@ -460,11 +460,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             return (
                                 <div key={step.id} className="flex flex-col items-center relative z-10">
                                     <div className={`
-                                        w-10 h-10 rounded-full flex items-center justify-center transition-all
+                                        size-10 rounded-full flex items-center justify-center transition-all
                                         ${isActive ? "bg-primary text-black" : "bg-white/10 text-white/30"}
                                         ${isCurrent ? "ring-4 ring-primary/30" : ""}
                                     `}>
-                                        <Icon className="w-4 h-4" />
+                                        <Icon className="size-4" />
                                     </div>
                                     <span className={`text-[10px] font-bold mt-2 uppercase tracking-wider ${isActive ? "text-primary" : "text-white/30"}`}>
                                         {step.label}
@@ -481,7 +481,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
-                                    <Lock className="w-3 h-3 text-primary" />
+                                    <Lock className="size-3 text-primary" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Secure Authentication</span>
                                 </div>
                                 <h2 className="text-3xl font-black tracking-tight text-white">Create Credentials</h2>
@@ -495,7 +495,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             Administrative Identity
                                         </label>
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
-                                            <CheckCircle2 className="w-3 h-3 text-primary" />
+                                            <CheckCircle2 className="size-3 text-primary" />
                                             <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">Verified Link</span>
                                         </div>
                                     </div>
@@ -506,7 +506,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white/40 cursor-not-allowed font-medium"
                                     />
                                     <p className="text-[10px] text-white/20 mt-3 flex items-start gap-2 px-1">
-                                        <Lock className="w-3 h-3 mt-0.5" />
+                                        <Lock className="size-3 mt-0.5" />
                                         <span>This email is cryptographically linked to your registration and cannot be modified.</span>
                                     </p>
                                 </div>
@@ -528,7 +528,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
                                         >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                            {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                                         </button>
                                     </div>
                                     
@@ -541,7 +541,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         ].map((req, i) => (
                                             <div key={i} className="flex items-center gap-2">
                                                 <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all duration-500 ${req.met ? "bg-primary border-primary text-black" : "border-white/10 text-transparent"}`}>
-                                                    <CheckCircle2 className="w-2 h-2" />
+                                                    <CheckCircle2 className="size-2" />
                                                 </div>
                                                 <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${req.met ? "text-primary" : "text-white/20"}`}>
                                                     {req.label}
@@ -587,14 +587,14 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                             className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
                                         >
-                                            {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                            {showConfirmPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                                         </button>
                                     </div>
                                     {confirmPassword && (
                                         <div className="flex items-center gap-2 px-1">
                                             {password === confirmPassword ? (
                                                 <>
-                                                    <CheckCircle2 className="w-3 h-3 text-primary" />
+                                                    <CheckCircle2 className="size-3 text-primary" />
                                                     <span className="text-[10px] text-primary font-black uppercase tracking-widest">Passwords Synchronized</span>
                                                 </>
                                             ) : (
@@ -629,8 +629,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                     <img src={propertyPhoto} alt="Property Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                                                 ) : (
                                                     <>
-                                                        <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
-                                                            <Building2 className="w-7 h-7 text-primary" />
+                                                        <div className="size-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20">
+                                                            <Building2 className="size-7 text-primary" />
                                                         </div>
                                                         <div className="text-center px-6">
                                                             <span className="block text-xs font-bold text-white mb-1">Upload Photo</span>
@@ -643,7 +643,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             {propertyPhoto && (
                                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center z-20 pointer-events-none">
                                                     <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
-                                                        <Camera className="w-4 h-4 text-white" />
+                                                        <Camera className="size-4 text-white" />
                                                         <span className="text-xs font-bold text-white">Change Cover</span>
                                                     </div>
                                                 </div>
@@ -672,7 +672,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {/* Architectural Scope */}
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 space-y-6">
                                         <div className="flex items-center gap-2">
-                                            <Grid className="w-4 h-4 text-primary" />
+                                            <Grid className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Architectural Scope</h3>
                                         </div>
                                         
@@ -680,7 +680,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
-                                                        <Building2 className="w-3 h-3" /> Total Units
+                                                        <Building2 className="size-3" /> Total Units
                                                     </label>
                                                     <input 
                                                         type="number" 
@@ -691,7 +691,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
-                                                        <Layers className="w-3 h-3" /> Total Floors
+                                                        <Layers className="size-3" /> Total Floors
                                                     </label>
                                                     <input 
                                                         type="number" 
@@ -703,7 +703,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">
-                                                    <Users className="w-3 h-3" /> Maximum Capacity per Unit
+                                                    <Users className="size-3" /> Maximum Capacity per Unit
                                                 </label>
                                                 <div className="relative">
                                                     <select 
@@ -714,7 +714,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                         {[1,2,3,4,5,6,8,10].map(n => <option key={n} value={n} className="bg-black">{n} Person(s)</option>)}
                                                         <option value="none" className="bg-black">Unlimited Capacity</option>
                                                     </select>
-                                                    <ArrowRight className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 w-3 h-3 rotate-90" />
+                                                    <ArrowRight className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 size-3 rotate-90" />
                                                 </div>
                                             </div>
                                         </div>
@@ -726,7 +726,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     {/* Billing Strategy */}
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
-                                            <Zap className="w-4 h-4 text-primary" />
+                                            <Zap className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
                                         </div>
 
@@ -756,7 +756,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                                     <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
                                                                 </div>
                                                             </div>
-                                                            {utilityBilling === opt.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                                                            {utilityBilling === opt.id && <CheckCircle2 className="size-5 text-primary" />}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -765,8 +765,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             {/* Strategy Explanation Card */}
                                             <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 animate-in fade-in slide-in-from-top-2 duration-500">
                                                 <div className="flex gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                                                        <HelpCircle className="w-5 h-5 text-primary" />
+                                                    <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                                                        <HelpCircle className="size-5 text-primary" />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">How this works</h4>
@@ -776,7 +776,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                             {utilityBilling === "mixed" && "The property has one main bill that you pay. You use submeters to bill tenants for their specific usage through iReside."}
                                                         </p>
                                                         <div className="flex items-center gap-2 pt-1">
-                                                            <div className="w-1 h-1 rounded-full bg-primary" />
+                                                            <div className="size-1 rounded-full bg-primary" />
                                                             <span className="text-[9px] font-bold text-white/40 uppercase tracking-tighter">
                                                                 {utilityBilling === "included_in_rent" && "Best for: Simple rent setups"}
                                                                 {utilityBilling === "separate_metered" && "Best for: Standard houses or apartments"}
@@ -811,7 +811,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <Settings className="w-4 h-4 text-primary" />
+                                                <Settings className="size-4 text-primary" />
                                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Amenities</h3>
                                             </div>
                                             <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{amenities.length} Selected</span>
@@ -824,8 +824,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 <button
                                                     key={amenity}
                                                     onClick={() => {
-                                                        if (amenities.includes(amenity)) setAmenities(amenities.filter(a => a !== amenity));
-                                                        else setAmenities([...amenities, amenity]);
+                                                        if (amenities.includes(amenity)) setAmenities(prev => prev.filter(a => a !== amenity));
+                                                        else setAmenities(prev => [...prev, amenity]);
                                                     }}
                                                     className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
                                                 >
@@ -841,7 +841,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <ShieldCheck className="w-4 h-4 text-primary" />
+                                                <ShieldCheck className="size-4 text-primary" />
                                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
                                             </div>
                                             <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{buildingRules.length} Defined</span>
@@ -899,7 +899,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 <div className="lg:col-span-5">
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-primary" />
+                                            <FileText className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
                                         </div>
                                         
@@ -937,8 +937,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             
                                             {contractMode === "generate" ? (
                                                 <>
-                                                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500">
-                                                        <FileText className="w-8 h-8 text-primary" />
+                                                    <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500">
+                                                        <FileText className="size-8 text-primary" />
                                                     </div>
                                                     <div className="text-center px-4 relative z-10">
                                                         <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">Contract Preview</span>
@@ -947,8 +947,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${contractFile ? "bg-primary/20 border-primary/40" : "bg-white/5 border-white/10"}`}>
-                                                        {contractFile ? <CheckCircle2 className="w-8 h-8 text-primary" /> : <Upload className="w-8 h-8 text-white/20" />}
+                                                    <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${contractFile ? "bg-primary/20 border-primary/40" : "bg-white/5 border-white/10"}`}>
+                                                        {contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-white/20" />}
                                                     </div>
                                                     <div className="text-center px-4">
                                                         <span className={`block text-xs font-black uppercase tracking-widest ${contractFile ? "text-primary" : "text-white/40"}`}>
@@ -961,7 +961,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
 
                                             <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                                                 <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                                    {contractMode === "generate" ? <Maximize2 className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                                                    {contractMode === "generate" ? <Maximize2 className="size-4" /> : <Upload className="size-4" />}
                                                     <span className="text-[10px] font-black uppercase tracking-widest">
                                                         {contractMode === "generate" ? "Review & Export" : (contractFile ? "Change Document" : "Upload File")}
                                                     </span>
@@ -975,7 +975,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                 <div className="lg:col-span-7">
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6 h-full">
                                         <div className="flex items-center gap-2">
-                                            <Lock className="w-4 h-4 text-primary" />
+                                            <Lock className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Execution Strategy</h3>
                                         </div>
                                         
@@ -1015,8 +1015,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         {/* Lightbox Header */}
                                         <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#1A1A1A]/50 backdrop-blur-md sticky top-0 z-30">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                                                    <FileText className="w-5 h-5 text-primary" />
+                                                <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                                    <FileText className="size-5 text-primary" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-black text-white uppercase tracking-widest">Lease Agreement Preview</h4>
@@ -1121,9 +1121,9 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 )}
                                                 <button 
                                                     onClick={() => setShowLightbox(false)}
-                                                    className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all"
+                                                    className="size-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all"
                                                 >
-                                                    <X className="w-5 h-5" />
+                                                    <X className="size-5" />
                                                 </button>
                                             </div>
                                         </div>
@@ -1185,8 +1185,8 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 </div>
                                             ) : (
                                                 <div className="max-w-2xl mx-auto h-full flex flex-col items-center justify-center py-20 gap-6">
-                                                    <div className="w-24 h-24 bg-white/5 rounded-[2rem] border border-white/10 border-dashed flex items-center justify-center">
-                                                        <FilePlus className="w-10 h-10 text-white/10" />
+                                                    <div className="size-24 bg-white/5 rounded-[2rem] border border-white/10 border-dashed flex items-center justify-center">
+                                                        <FilePlus className="size-10 text-white/10" />
                                                     </div>
                                                     <div className="text-center max-w-sm">
                                                         <h5 className="text-lg font-black text-white uppercase tracking-widest mb-2">Awaiting Documentation</h5>
@@ -1207,7 +1207,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <div className="text-center mb-4">
                                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-3">
-                                    <User className="w-3 h-3 text-primary" />
+                                    <User className="size-3 text-primary" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Operator Profile</span>
                                 </div>
                                 <h2 className="text-3xl font-black tracking-tight text-white">Final Details</h2>
@@ -1221,7 +1221,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                            <ImageIcon className="w-6 h-6 text-white/10" />
+                                            <ImageIcon className="size-6 text-white/10" />
                                             <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Set Cover Banner</span>
                                         </div>
                                     )}
@@ -1233,7 +1233,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px] pointer-events-none">
                                         <div className="bg-white/10 border border-white/20 px-4 py-2 rounded-full flex items-center gap-2">
-                                            <Camera className="w-4 h-4 text-white" />
+                                            <Camera className="size-4 text-white" />
                                             <span className="text-[10px] font-black text-white uppercase tracking-widest">Change Cover</span>
                                         </div>
                                     </div>
@@ -1248,7 +1248,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                             className="relative group shrink-0 cursor-pointer"
                                         >
                                             <div 
-                                                className="w-32 h-32 rounded-[2.5rem] border-4 border-[#121212] overflow-hidden shadow-2xl relative transition-transform duration-500 group-hover:scale-105"
+                                                className="size-32 rounded-[2.5rem] border-4 border-[#121212] overflow-hidden shadow-2xl relative transition-transform duration-500 group-hover:scale-105"
                                                 style={{ backgroundColor: profileBgColor }}
                                             >
                                                 {profilePhoto ? (
@@ -1262,12 +1262,12 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 )}
                                                 
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
-                                                    <Camera className="w-6 h-6 text-white" />
+                                                    <Camera className="size-6 text-white" />
                                                 </div>
                                             </div>
                                             
-                                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-black rounded-full border-4 border-[#121212] flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                                                <Camera className="w-3 h-3" />
+                                            <div className="absolute -bottom-1 -right-1 size-8 bg-primary text-black rounded-full border-4 border-[#121212] flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                                                <Camera className="size-3" />
                                             </div>
                                         </div>
 
@@ -1276,7 +1276,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                                 {fullName || "New Landlord"}
                                             </h3>
                                             <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                                                <ShieldCheck className="w-3 h-3" />
+                                                <ShieldCheck className="size-3" />
                                                 Authorized Operator
                                             </p>
                                         </div>
@@ -1315,7 +1315,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                     </div>
 
                                     <p className="text-[10px] text-white/20 mt-6 flex items-start gap-2 px-1 leading-relaxed border-t border-white/5 pt-6">
-                                        <ShieldCheck className="w-3 h-3 mt-0.5 text-primary/40" />
+                                        <ShieldCheck className="size-3 mt-0.5 text-primary/40" />
                                         <span>Your profile configuration establishes your legal and administrative presence within the iReside network. Ensure all contact data is accurate for billing and emergency dispatch.</span>
                                     </p>
                                 </div>
@@ -1342,11 +1342,11 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                             className="flex-1 py-4 bg-primary text-black rounded-xl font-bold hover:bg-primary-dark transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             {submitting ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Loader2 className="size-5 animate-spin" />
                             ) : (
                                 <>
                                     {currentStep === "profile" ? "Complete Setup" : "Continue"} 
-                                    <ArrowRight className="w-4 h-4" />
+                                    <ArrowRight className="size-4" />
                                 </>
                             )}
                         </button>

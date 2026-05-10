@@ -22,7 +22,7 @@ export default function LeaseSigningPage({
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 text-center">
       <div className="space-y-6">
-        <div className="relative w-16 h-16 mx-auto">
+        <div className="relative size-16 mx-auto">
           <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
           <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
         </div>

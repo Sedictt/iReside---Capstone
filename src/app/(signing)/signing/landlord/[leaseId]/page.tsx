@@ -146,11 +146,11 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="text-center space-y-6">
-          <div className="relative w-24 h-24 mx-auto">
+          <div className="relative size-24 mx-auto">
             <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
             <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center">
-              <PenTool className="w-10 h-10 text-primary animate-pulse" />
+              <PenTool className="size-10 text-primary animate-pulse" />
             </div>
           </div>
           <div className="space-y-2">
@@ -170,8 +170,8 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-md w-full bg-zinc-900 border border-white/5 rounded-[2.5rem] p-12 text-center space-y-8 shadow-2xl backdrop-blur-3xl"
         >
-          <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center mx-auto ring-1 ring-red-500/20">
-            <AlertCircle className="w-12 h-12 text-red-500" />
+          <div className="size-24 rounded-full bg-red-500/10 flex items-center justify-center mx-auto ring-1 ring-red-500/20">
+            <AlertCircle className="size-12 text-red-500" />
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic">Access Denied</h1>
@@ -181,7 +181,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
             onClick={() => router.push("/landlord/dashboard")}
             className="group w-full bg-white text-black hover:bg-primary hover:text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3"
           >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />
             Return to Dashboard
           </button>
         </motion.div>
@@ -197,8 +197,8 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-md w-full bg-zinc-900 border border-white/5 rounded-[2.5rem] p-12 text-center space-y-8 shadow-2xl backdrop-blur-3xl"
         >
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto ring-1 ring-primary/20">
-            <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
+          <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto ring-1 ring-primary/20">
+            <CheckCircle2 className="size-16 text-emerald-500 mx-auto" />
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic">Lease Activated</h1>
@@ -207,7 +207,7 @@ function LandlordSigningContent({ params }: { params: Promise<{ leaseId: string 
             </p>
           </div>
           <div className="p-4 bg-zinc-800/50 rounded-2xl border border-white/5 flex items-center gap-4">
-             <Shield className="w-8 h-8 text-primary shrink-0" />
+             <Shield className="size-8 text-primary shrink-0" />
              <div className="text-left">
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Legal Enforcement</p>
                 <p className="text-xs text-white font-medium">Digital signatures finalized and archived.</p>
@@ -242,7 +242,7 @@ export default function LandlordLeaseSigningPage({
     <Suspense fallback={
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="text-center space-y-6">
-          <div className="relative w-24 h-24 mx-auto">
+          <div className="relative size-24 mx-auto">
             <div className="absolute inset-0 border-4 border-primary/10 rounded-full" />
             <div className="absolute inset-0 border-4 border-t-primary rounded-full animate-spin" />
           </div>

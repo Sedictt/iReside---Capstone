@@ -104,7 +104,7 @@ export default function ApplicationDashboardPage() {
                 <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                         <Link href="/tenant/applications" className="text-primary hover:text-white transition-colors">
-                            <ArrowLeft className="w-5 h-5" />
+                            <ArrowLeft className="size-5" />
                         </Link>
                         <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-primary/20 text-primary border border-primary/10">
                             Application Pending
@@ -123,7 +123,7 @@ export default function ApplicationDashboardPage() {
                 </div>
                 <div className="flex gap-2">
                     <button className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-white/5 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-xl group">
-                        <Download className="w-4 h-4 text-primary group-hover:scale-110" />
+                        <Download className="size-4 text-primary group-hover:scale-110" />
                         Support Docs
                     </button>
                     <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/5 text-white/50 hover:text-red-400 text-xs font-bold transition-all">
@@ -199,7 +199,7 @@ export default function ApplicationDashboardPage() {
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(109,152,56,0.06)_0%,transparent_70%)] pointer-events-none" />
 
                         <div className="relative z-10 flex flex-col items-center text-center">
-                            <div className="relative w-40 h-40 md:w-52 md:h-52 mb-6 flex items-center justify-center">
+                            <div className="relative size-40 md:w-52 md:h-52 mb-6 flex items-center justify-center">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                     <circle cx="50" cy="50" fill="none" r={radius} stroke="#1a1a1a" strokeWidth="4" />
                                     <motion.circle
@@ -244,12 +244,12 @@ export default function ApplicationDashboardPage() {
                                         )}
 
                                         <div className={cn(
-                                            "relative z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 shrink-0",
+                                            "relative z-10 size-9 rounded-full flex items-center justify-center transition-all duration-500 shrink-0",
                                             step.status === 'completed' ? "bg-primary/20 border border-primary text-primary" :
                                                 step.status === 'active' ? "bg-primary text-black shadow-lg shadow-primary/40 animate-pulse" :
                                                     "bg-neutral-900 border border-white/5 text-white/20"
                                         )}>
-                                            <step.icon className={cn("w-4 h-4", step.status === 'active' && "animate-spin-slow")} />
+                                            <step.icon className={cn("size-4", step.status === 'active' && "animate-spin-slow")} />
                                         </div>
 
                                         <div className="lg:mt-3">

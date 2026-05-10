@@ -288,7 +288,7 @@ export default async function LandlordProfilePage() {
                         {/* Name & Badge Area */}
                         <div className="space-y-3 mb-8">
                             <div className="flex items-center justify-center gap-4">
-                                <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight">
+                                <h1 className="text-4xl md:text-5xl font-display font-semibold text-white tracking-tight">
                                     {profile.full_name}
                                 </h1>
                                 {verificationStatus && (
@@ -354,7 +354,7 @@ export default async function LandlordProfilePage() {
                         <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <User size={20} className="text-[#6d9838]" />
                         </div>
-                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
+                        <h2 className="text-2xl font-display font-semibold text-white tracking-tight">Biography</h2>
                     </div>
                     <div className="max-w-4xl">
                         <EditableBio initialBio={profile.bio || ''} />
@@ -374,16 +374,16 @@ export default async function LandlordProfilePage() {
                         <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <TrendingUp size={20} className="text-[#6d9838]" />
                         </div>
-                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Portfolio Stats</h2>
+                        <h2 className="text-2xl font-display font-semibold text-white tracking-tight">Portfolio Stats</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
                             <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Total Units</p>
-                            <p className="text-4xl font-display font-black text-white">{units.length}</p>
+                            <p className="text-4xl font-display font-semibold text-white">{units.length}</p>
                         </div>
                         <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
                             <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Occupancy</p>
-                            <p className="text-4xl font-display font-black text-white">{occupancyRate}%</p>
+                            <p className="text-4xl font-display font-semibold text-white">{occupancyRate}%</p>
                         </div>
                     </div>
                 </div>

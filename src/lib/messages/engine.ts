@@ -318,11 +318,13 @@ export const buildConversationSummaries = async (supabase: DbClient, currentUser
         throw new Error("Failed to load conversations.");
     }
 
-    const participantRows = await getConversationParticipants(supabase, conversationIds);
+    const [participantRows, lastMessageMap, unreadCounts] = await Promise.all([
+        getConversationParticipants(supabase, conversationIds),
+        getLastMessagesByConversation(supabase, conversationIds),
+        getUnreadCounts(supabase, conversationIds, currentUserId),
+    ]);
     const participantIds = participantRows.map((row) => row.user_id);
     const profileMap = await getProfilePreviewMap(supabase, participantIds);
-    const lastMessageMap = await getLastMessagesByConversation(supabase, conversationIds);
-    const unreadCounts = await getUnreadCounts(supabase, conversationIds, currentUserId);
 
     const participantsByConversation = new Map<string, string[]>();
 
@@ -339,12 +341,10 @@ export const buildConversationSummaries = async (supabase: DbClient, currentUser
         })
         .filter((id): id is string => Boolean(id));
 
-    const { leasePartnerIds, applicationPartnerIds, paymentPartnerIds } = await resolvePartnerRelationshipData(
-        supabase,
-        currentUserId,
-        partnerIds
-    );
-    const partnerActionState = await resolvePartnerActionState(supabase, currentUserId, partnerIds);
+    const [{ leasePartnerIds, applicationPartnerIds, paymentPartnerIds }, partnerActionState] = await Promise.all([
+        resolvePartnerRelationshipData(supabase, currentUserId, partnerIds),
+        resolvePartnerActionState(supabase, currentUserId, partnerIds),
+    ]);
 
     return (conversations ?? []).map((conv) => {
         const participantIdsForConversation = participantsByConversation.get(conv.id) ?? [];

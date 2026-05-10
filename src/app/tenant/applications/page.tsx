@@ -122,7 +122,7 @@ export default function MyApplicationsPage() {
                             <AlertTriangle className="size-6" />
                         </div>
                         <div>
-                            <h3 className="text-white text-xl font-extrabold tracking-tight">Active Attention Needed</h3>
+                            <h3 className="text-white text-xl font-semibold tracking-tight">Active Attention Needed</h3>
                             <p className="text-white/50 text-sm mt-1">You have <span className="text-red-400 font-bold">2 items</span> requiring immediate document verification.</p>
                         </div>
                     </div>
@@ -138,7 +138,7 @@ export default function MyApplicationsPage() {
                             <span className="h-1 w-6 bg-primary rounded-full" />
                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Applications Portfolio</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">My <span className="text-primary italic">Journey</span></h1>
+                        <h1 className="text-4xl md:text-5xl font-semibold text-white tracking-tighter leading-none">My <span className="text-primary italic">Journey</span></h1>
                         <p className="text-white/40 font-medium max-w-md">Track the status of your future homes and manage active lease negotiations.</p>
                     </div>
 
@@ -222,7 +222,7 @@ export default function MyApplicationsPage() {
                                                 <div className="p-6 flex-1 flex flex-col gap-6">
                                                     <div className="flex justify-between items-start">
                                                         <div className="space-y-1">
-                                                            <h3 className="text-2xl font-black text-white group-hover:text-primary transition-colors tracking-tighter">
+                                                            <h3 className="text-2xl font-semibold text-white group-hover:text-primary transition-colors tracking-tighter">
                                                                 {property.name}
                                                             </h3>
                                                             <p className="text-white/40 text-xs font-bold uppercase tracking-widest">{property.address.split(',')[0]} • {property.type}</p>
@@ -280,7 +280,7 @@ export default function MyApplicationsPage() {
                                     <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                                         <History className="size-4" />
                                     </div>
-                                    <h3 className="text-white font-extrabold text-lg tracking-tight">Timeline</h3>
+                                    <h3 className="text-white font-semibold text-lg tracking-tight">Timeline</h3>
                                 </div>
                                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
                             </div>
@@ -310,7 +310,7 @@ export default function MyApplicationsPage() {
                             </div>
 
                             <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-white font-extrabold text-lg tracking-tight">Support</h3>
+                                <h3 className="text-white font-semibold text-lg tracking-tight">Support</h3>
                             </div>
 
                             <div className="space-y-4">

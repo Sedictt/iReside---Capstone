@@ -128,7 +128,7 @@ export default function RentApplicationPage() {
                         initial={{ rotate: -10, scale: 0.5 }}
                         animate={{ rotate: 0, scale: 1 }}
                         transition={{ delay: 0.3, type: "spring" }}
-                        className="mx-auto w-24 h-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
+                        className="mx-auto size-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
                     >
                         <CheckCircle2 className="h-12 w-12 text-white" />
                     </motion.div>

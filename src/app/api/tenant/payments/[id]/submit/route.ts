@@ -138,47 +138,47 @@ export async function POST(request: Request, context: RouteContext) {
             throw updateError;
         }
 
-        await sendPaymentNotifications(
-            adminClient,
-            [payment.landlord_id],
-            {
-                title: "Payment proof submitted",
-                message: `Tenant submitted GCash proof for invoice ${payment.invoice_number ?? payment.id}.`,
-                data: {
-                    paymentId: payment.id,
-                    workflowStatus: "under_review",
-                    actionButtons: ["Confirm Payment", "Reject", "Request Completion"],
+        await Promise.all([
+            sendPaymentNotifications(
+                adminClient,
+                [payment.landlord_id],
+                {
+                    title: "Payment proof submitted",
+                    message: `Tenant submitted GCash proof for invoice ${payment.invoice_number ?? payment.id}.`,
+                    data: {
+                        paymentId: payment.id,
+                        workflowStatus: "under_review",
+                        actionButtons: ["Confirm Payment", "Reject", "Request Completion"],
+                    },
                 },
-            },
-        );
-
-        await sendPaymentSystemMessage(
-            adminClient,
-            payment,
-            {
+            ),
+            sendPaymentSystemMessage(
+                adminClient,
+                payment,
+                {
+                    actorId: user.id,
+                    actorName: "Tenant",
+                    content: `Payment proof submitted for invoice ${payment.invoice_number ?? payment.id}. Status is now Under Review.`,
+                    metadata: {
+                        event: "payment_submitted",
+                        workflowStatus: "under_review",
+                        paymentId: payment.id,
+                    },
+                },
+            ),
+            insertPaymentAuditEvent(adminClient, {
+                paymentId: payment.id,
                 actorId: user.id,
-                actorName: "Tenant",
-                content: `Payment proof submitted for invoice ${payment.invoice_number ?? payment.id}. Status is now Under Review.`,
+                action: "tenant_payment_submitted_gcash",
+                source: "api",
+                beforeState,
+                afterState: toWorkflowSnapshot(updatedPayment),
                 metadata: {
-                    event: "payment_submitted",
-                    workflowStatus: "under_review",
-                    paymentId: payment.id,
+                    referenceNumber: trimmedReference,
+                    submittedAmount: partialAmount,
                 },
-            },
-        );
-
-        await insertPaymentAuditEvent(adminClient, {
-            paymentId: payment.id,
-            actorId: user.id,
-            action: "tenant_payment_submitted_gcash",
-            source: "api",
-            beforeState,
-            afterState: toWorkflowSnapshot(updatedPayment),
-            metadata: {
-                referenceNumber: trimmedReference,
-                submittedAmount: partialAmount,
-            },
-        });
+            }),
+        ]);
 
         return NextResponse.json({ ok: true });
     } catch (error) {
