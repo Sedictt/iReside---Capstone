@@ -71,7 +71,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     className="hidden" 
                     accept="image/*"
                 />
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
+                <div className="size-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10">
                     <Building2 className="text-[#6d9838]" size={32} />
                 </div>
                 <h4 className="text-2xl font-display font-black text-white mb-2 tracking-tight">Business Verification</h4>
@@ -96,7 +96,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                 {/* Header & Action Row */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                     <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-[#6d9838]/10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#6d9838]/20 shadow-inner">
+                        <div className="size-16 bg-[#6d9838]/10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-[#6d9838]/20 shadow-inner">
                             <Building2 size={32} className="text-[#6d9838]" />
                         </div>
                         <div>
@@ -151,7 +151,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         </div>
                     ) : (
                         <div className="relative aspect-[21/9] bg-white/5 border-2 border-dashed border-white/10 rounded-[2.5rem] flex flex-col items-center justify-center p-12 text-center gap-6 group-hover:border-[#6d9838]/30 transition-colors">
-                            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                            <div className="size-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
                                 <Award size={40} className="text-neutral-700" />
                             </div>
                             <div>
@@ -162,7 +162,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                     )}
                     
                     {/* Floating Decoration */}
-                    <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-black border border-neutral-800 rounded-full flex items-center justify-center shadow-2xl z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                    <div className="absolute -bottom-6 -right-6 size-24 bg-black border border-neutral-800 rounded-full flex items-center justify-center shadow-2xl z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
                         <Award size={32} className="text-[#6d9838]" />
                     </div>
                 </div>
@@ -181,7 +181,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                 >
                     <button 
                         onClick={() => setShowLightbox(false)}
-                        className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all z-20"
+                        className="absolute top-6 right-6 size-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all z-20"
                     >
                         <X size={24} />
                     </button>
@@ -202,3 +202,4 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
         </div>
     );
 }
+

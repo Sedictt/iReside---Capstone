@@ -233,7 +233,7 @@ export default function DocumentsPage() {
                                     {/* Registration Credentials */}
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between px-2">
-                                            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                                            <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-3">
                                                 <Fingerprint className="h-5 w-5 text-primary" />
                                                 Identity & Compliance
                                             </h2>
@@ -254,7 +254,7 @@ export default function DocumentsPage() {
                                                         
                                                         <div className="flex-1 min-w-0 space-y-1">
                                                             <div className="flex items-center gap-2">
-                                                                <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
+                                                                <h3 className="text-base font-semibold text-white truncate">{doc.name}</h3>
                                                                 <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
                                                                     {doc.category}
                                                                 </span>
@@ -296,7 +296,7 @@ export default function DocumentsPage() {
                                     <div className="space-y-6">
                                         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between px-2">
                                             <div className="space-y-1">
-                                                <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
+                                                <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-3">
                                                     <FileText className="h-5 w-5 text-primary" />
                                                     Lease Contracts
                                                 </h2>
@@ -372,7 +372,7 @@ export default function DocumentsPage() {
                                                                 
                                                                 <div className="flex-1 min-w-0 space-y-1">
                                                                     <div className="flex items-center gap-2">
-                                                                        <h3 className="text-base font-bold text-white truncate">{doc.name}</h3>
+                                                                        <h3 className="text-base font-semibold text-white truncate">{doc.name}</h3>
                                                                         <span className={cn(
                                                                             "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
                                                                             doc.isTemplate ? "bg-amber-500/10 text-amber-400" : "bg-primary/10 text-primary"
@@ -486,8 +486,8 @@ export default function DocumentsPage() {
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-10 py-8 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                                    <ShieldCheck className="w-6 h-6 text-primary" />
+                                <div className="size-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                                    <ShieldCheck className="size-6 text-primary" />
                                 </div>
                                 <div>
                                     <h4 className="text-lg font-black text-white uppercase tracking-widest">Digital Agreement Preview</h4>
@@ -497,16 +497,16 @@ export default function DocumentsPage() {
 
                             <button 
                                 onClick={() => setShowPreview(false)}
-                                className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-all"
+                                className="size-12 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-all"
                             >
-                                <X className="w-6 h-6" />
+                                <X className="size-6" />
                             </button>
                         </div>
 
                         {/* Modal Body */}
                         <div className="flex-1 overflow-y-auto p-12 bg-neutral-950/50 custom-scrollbar">
                             <div className="max-w-3xl mx-auto shadow-2xl rounded-2xl overflow-hidden bg-white">
-                                <LeaseDocument 
+<LeaseDocument 
                                     id="PREVIEW-MODE"
                                     start_date={new Date().toISOString().split('T')[0]}
                                     end_date={new Date(Date.now() + 31536000000).toISOString().split('T')[0]}
@@ -550,3 +550,4 @@ export default function DocumentsPage() {
         </div>
     );
 }
+

@@ -205,10 +205,10 @@ export default function TenantMessagesPage() {
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
     const [paymentHistoryTotal, setPaymentHistoryTotal] = useState(0);
     const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
-    const [paymentHistoryError, setPaymentHistoryError] = useState<string | null>(null);
+    const paymentHistoryErrorRef = useRef<string | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
     const [conversationsError, setConversationsError] = useState<string | null>(null);
-    const [messagesError, setMessagesError] = useState<string | null>(null);
+    const messagesErrorRef = useRef<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [userSearchResults, setUserSearchResults] = useState<MessageUserSearchResult[]>([]);
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);
@@ -219,7 +219,7 @@ export default function TenantMessagesPage() {
     const [pendingAttachments, setPendingAttachments] = useState<PendingAttachmentType[]>([]);
     const isUploadingFile = pendingAttachments.some(a => a.status === 'uploading');
     const [isSending, setIsSending] = useState(false);
-    const [fileUploadError, setFileUploadError] = useState<string | null>(null);
+    const fileUploadErrorRef = useRef<string | null>(null);
     const [isComposerDragOver, setIsComposerDragOver] = useState(false);
     const [isGlobalFileDrag, setIsGlobalFileDrag] = useState(false);
     const [previewImages, setPreviewImages] = useState<{ url: string; id: string }[]>([]);
@@ -304,19 +304,16 @@ export default function TenantMessagesPage() {
             }
         });
 
-        const seen = new Set<string>();
+const seen = new Set<string>();
         return files
-            .filter(file => {
-                if (seen.has(file.id)) return false;
+            .reduce((acc, file) => {
+                if (seen.has(file.id)) return acc;
                 seen.add(file.id);
-                return true;
-            })
-            .filter(f => {
-                if (fileFilter === 'all') return true;
-                if (fileFilter === 'media') return f.isMedia;
-                if (fileFilter === 'files') return !f.isMedia;
-                return true;
-            })
+                if (fileFilter === 'all') acc.push(file);
+                else if (fileFilter === 'media' && file.isMedia) acc.push(file);
+                else if (fileFilter === 'files' && !file.isMedia) acc.push(file);
+                return acc;
+            }, [] as SharedFileItem[])
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }, [messagesState, fileFilter]);
 
@@ -566,11 +563,11 @@ export default function TenantMessagesPage() {
             setPaymentHistoryTotal(cached.totalPaid);
             return;
         }
-        setPaymentHistoryLoading(true);
-        setPaymentHistoryError(null);
+setPaymentHistoryLoading(true);
+        paymentHistoryErrorRef.current = null;
         try {
             const { data, error } = await fetchConversationPaymentHistory(conversationId, 50);
-            if (error) setPaymentHistoryError(error);
+            if (error) paymentHistoryErrorRef.current = error;
             paymentHistoryCacheRef.current.set(conversationId, data);
             setPaymentHistory(data.payments);
             setPaymentHistoryTotal(data.totalPaid);
@@ -581,9 +578,9 @@ export default function TenantMessagesPage() {
 
     useEffect(() => {
         if (!activeConversationId || !canShowPaymentHistory) {
-            setPaymentHistory([]);
+setPaymentHistory([]);
             setPaymentHistoryTotal(0);
-            setPaymentHistoryError(null);
+            paymentHistoryErrorRef.current = null;
             return;
         }
         if (!showInfoSidebar && !showPaymentHistoryModal) return;
@@ -736,7 +733,7 @@ export default function TenantMessagesPage() {
 
     const refreshMessages = async (conversationId: string) => {
         const { data: list, error } = await fetchConversationMessages(conversationId, 200);
-        setMessagesError(error);
+        messagesErrorRef.current = error;
         const mapped: UiMessageType[] = list.map(mapMessageToUi);
         messagesCacheRef.current.set(conversationId, mapped);
         if (user?.id) {
@@ -800,8 +797,8 @@ export default function TenantMessagesPage() {
     };
 
     const queueSelectedFiles = (files: File[]) => {
-        if (!activeConversationId) { setFileUploadError("Select a conversation first."); return; }
-        setFileUploadError(null);
+if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation first."; return; }
+        fileUploadErrorRef.current = null;
 
         files.forEach(file => {
             const id = `pending-${Date.now()}-${Math.random()}`;
@@ -840,7 +837,7 @@ export default function TenantMessagesPage() {
                     } : a));
                 } catch (err) {
                     setPendingAttachments(curr => curr.map(a => a.id === id ? { ...a, status: 'error' } : a));
-                    setFileUploadError(err instanceof Error ? err.message : "Upload failed");
+                    fileUploadErrorRef.current = err instanceof Error ? err.message : "Upload failed";
                 }
             })();
         });
@@ -876,8 +873,8 @@ export default function TenantMessagesPage() {
                 setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...mapped, status: "sent" } : msg));
                 window.setTimeout(() => setMessagesState((prev) => prev.map((msg) => msg.id === created.id && msg.status === "sent" ? { ...msg, status: "delivered" } : msg)), 350);
             } catch (error) {
-                const message = error instanceof Error ? error.message : "Failed to send.";
-                setMessagesError(message);
+const message = error instanceof Error ? error.message : "Failed to send.";
+                messagesErrorRef.current = message;
                 setMessagesState((prev) => prev.map((msg) => msg.id === optimisticId ? { ...msg, status: "failed" } : msg));
             }
         }
@@ -885,8 +882,8 @@ export default function TenantMessagesPage() {
         const uploaded = pendingAttachments.filter(a => a.status === 'uploaded');
         const isStillUploading = pendingAttachments.some(a => a.status === 'uploading');
 
-        if (isStillUploading) {
-            setMessagesError("Please wait for files to finish uploading.");
+if (isStillUploading) {
+            messagesErrorRef.current = "Please wait for files to finish uploading.";
             return;
         }
 
@@ -920,10 +917,10 @@ export default function TenantMessagesPage() {
                     setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
                     setMessageInput(""); // Clear again just in case it was only an album
                     clearPendingAttachments();
-                } catch (error) { setMessagesError("Failed to send album."); }
-            } else {
+                } catch (error) { messagesErrorRef.current = "Failed to send album."; }
+} else {
                 // Send individually
-                for (const att of uploaded) {
+                await Promise.all(uploaded.map(async (att) => {
                     try {
                         const created = await sendConversationMessage(
                             activeConversationId,
@@ -939,8 +936,8 @@ export default function TenantMessagesPage() {
                         );
                         const mapped = mapMessageToUi({ ...created, sender: null });
                         setMessagesState((prev) => [...prev, { ...mapped, status: "sent" }]);
-                    } catch (err) { setMessagesError(`Failed to send ${att.file.name}`); }
-                }
+                    } catch (err) { messagesErrorRef.current = `Failed to send ${att.file.name}`; }
+                }));
                 clearPendingAttachments();
             }
         }
@@ -1052,7 +1049,7 @@ export default function TenantMessagesPage() {
     return (
         <div className="flex h-full w-full gap-6 overflow-hidden bg-surface-0 p-6 text-high animate-in fade-in duration-700">
             {isGlobalFileDrag && (
-                <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/35 backdrop-blur-sm dark:bg-black/60">
+                <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center bg-zinc-950/35 backdrop-blur-sm dark:bg-black/60">
                     <div className="rounded-3xl border border-primary/30 bg-card/95 px-10 py-8 text-center shadow-[0_24px_60px_-30px_rgba(15,23,42,0.28)] dark:border-primary/40 dark:bg-neutral-900/90 dark:shadow-2xl dark:shadow-primary/20">
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10">
                             <Paperclip className="h-6 w-6 text-primary" />
@@ -1140,7 +1137,7 @@ export default function TenantMessagesPage() {
                         {showInfoSidebar ? (
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between border-b border-divider p-6">
-                                    <h3 className="text-lg font-bold text-high">Conversation Info</h3>
+                                    <h3 className="text-lg font-semibold text-high">Conversation Info</h3>
                                     <button onClick={() => setShowInfoSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="h-5 w-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar-premium">
@@ -1148,7 +1145,7 @@ export default function TenantMessagesPage() {
                                         <div className="h-24 w-24 rounded-full border-4 border-surface-2 overflow-hidden mb-4 shadow-xl" style={{ backgroundColor: displayContact.avatarBgColor || 'var(--surface-3)' }}>
                                             {displayContact.avatarUrl ? <img src={displayContact.avatarUrl} alt={displayContact.name} className="h-full w-full object-cover" /> : <span className="text-2xl font-bold text-high">{displayContact.initials}</span>}
                                         </div>
-                                        <h4 className="text-xl font-bold text-high">{displayContact.name}</h4>
+                                        <h4 className="text-xl font-semibold text-high">{displayContact.name}</h4>
                                         <div className="mt-2"><RoleBadge role={displayContact.role as BadgeRole} /></div>
                                         <p className="mt-2 text-sm font-medium text-medium">{displayContact.unit}</p>
                                     </div>
@@ -1182,7 +1179,7 @@ export default function TenantMessagesPage() {
                         ) : (
                             <div className="flex h-full flex-col">
                                 <div className="flex items-center justify-between border-b border-divider p-6">
-                                    <h3 className="text-lg font-bold text-high">Shared Files</h3>
+                                    <h3 className="text-lg font-semibold text-high">Shared Files</h3>
                                     <button onClick={() => setShowFilesSidebar(false)} className="rounded-lg p-2 hover:bg-surface-2 transition-colors"><X className="h-5 w-5" /></button>
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-premium">
@@ -1285,7 +1282,7 @@ export default function TenantMessagesPage() {
                             onClick={(e) => { e.stopPropagation(); setPreviewImages([]); }}
                             className="absolute top-6 right-6 z-10 p-3 rounded-2xl border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
                         >
-                            <X className="w-6 h-6" />
+                            <X className="size-6" />
                         </button>
 
                         {previewImages.length > 1 && (
@@ -1294,13 +1291,13 @@ export default function TenantMessagesPage() {
                                     onClick={(e) => { e.stopPropagation(); setPreviewImageIndex((prev) => (prev === 0 ? previewImages.length - 1 : prev - 1)); }}
                                     className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
                                 >
-                                    <ChevronLeft className="w-8 h-8" />
+                                    <ChevronLeft className="size-8" />
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setPreviewImageIndex((prev) => (prev === previewImages.length - 1 ? 0 : prev + 1)); }}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full border border-border bg-surface-1/80 text-high hover:bg-surface-2 transition-all active:scale-95 backdrop-blur-md"
                                 >
-                                    <ChevronRight className="w-8 h-8" />
+                                    <ChevronRight className="size-8" />
                                 </button>
                             </>
                         )}
@@ -1326,7 +1323,7 @@ export default function TenantMessagesPage() {
                                         key={img.id}
                                         onClick={() => setPreviewImageIndex(idx)}
                                         className={cn(
-                                            "flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
+                                            "flex-shrink-0 size-16 rounded-xl overflow-hidden border-2 transition-all",
                                             idx === previewImageIndex
                                                 ? "border-primary ring-2 ring-primary/30"
                                                 : "border-transparent opacity-60 hover:opacity-100"
@@ -1380,3 +1377,4 @@ export default function TenantMessagesPage() {
         </div>
     );
 }
+

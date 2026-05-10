@@ -361,7 +361,7 @@ function LeasesContent() {
                 ) : (
                     <div className="flex flex-col items-center justify-center py-32 text-center rounded-[2.5rem] border-2 border-dashed border-border bg-muted/5">
                         <div className="p-6 rounded-full bg-muted/50 mb-6">
-                            <FileText className="w-12 h-12 text-muted-foreground/20" />
+                            <FileText className="size-12 text-muted-foreground/20" />
                         </div>
                         <h3 className="text-xl font-black text-foreground">Coming Soon</h3>
                         <p className="mt-2 text-sm text-muted-foreground max-w-sm">
@@ -405,3 +405,4 @@ const LayoutGrid = ({ className }: { className?: string }) => (
         <rect width="7" height="7" x="3" y="14" rx="1" />
     </svg>
 );
+

@@ -103,9 +103,9 @@ export function SignatureModal({
                     <div className="flex items-center justify-between border-b border-white/10 bg-[#0f172a] px-6 py-4">
                         <div>
                             <h2 className="text-lg font-semibold text-white">Finalize Lease</h2>
-                            <p className="text-xs text-slate-400">Review the document and provide your digital signature below.</p>
+                            <p className="text-xs text-zinc-400">Review the document and provide your digital signature below.</p>
                         </div>
-                        <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                        <button onClick={onClose} className="text-zinc-400 hover:text-white transition-colors">
                             <Maximize2 className="h-4 w-4" />
                         </button>
                     </div>
@@ -118,10 +118,10 @@ export function SignatureModal({
 
                         <div className="mb-6">
                             <div className="mb-2 flex items-center justify-between">
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Signature</span>
-                                <div className="flex bg-slate-800 rounded-lg p-0.5">
-                                    <button className="rounded px-3 py-0.5 text-xs font-medium bg-slate-600 text-white shadow-sm">Draw</button>
-                                    <button className="rounded px-3 py-0.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors">Type</button>
+                                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Signature</span>
+                                <div className="flex bg-zinc-800 rounded-lg p-0.5">
+                                    <button className="rounded px-3 py-0.5 text-xs font-medium bg-zinc-600 text-white shadow-sm">Draw</button>
+                                    <button className="rounded px-3 py-0.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors">Type</button>
                                 </div>
                             </div>
 
@@ -141,12 +141,12 @@ export function SignatureModal({
                                 />
                                 {!hasSignature && (
                                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                        <span className="font-serif text-3xl text-slate-700 opacity-50 select-none italic">Sign Here</span>
+                                        <span className="font-serif text-3xl text-zinc-700 opacity-50 select-none italic">Sign Here</span>
                                     </div>
                                 )}
                                 <button
                                     onClick={handleClear}
-                                    className="absolute bottom-3 right-3 rounded-full bg-slate-800 p-2 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors border border-white/5"
+                                    className="absolute bottom-3 right-3 rounded-full bg-zinc-800 p-2 text-zinc-400 hover:bg-zinc-700 hover:text-white transition-colors border border-white/5"
                                     title="Clear Signature"
                                 >
                                     <RefreshCw className="h-3.5 w-3.5" />
@@ -170,17 +170,17 @@ export function SignatureModal({
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={handleClear}
-                                className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-slate-800/50 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white hover:border-white/20"
+                                className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white hover:border-white/20"
                             >
                                 Clear
                             </button>
-                            <button className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-slate-800/50 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white hover:border-white/20">
+                            <button className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-zinc-800/50 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white hover:border-white/20">
                                 <Download className="h-4 w-4" />
                                 Download
                             </button>
                         </div>
 
-                        <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-slate-500 uppercase tracking-widest font-mono">
+                        <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
                             <Lock className="h-2.5 w-2.5" />
                             Secure 256-Bit Encryption
                         </div>
@@ -190,3 +190,4 @@ export function SignatureModal({
         </AnimatePresence>
     );
 }
+

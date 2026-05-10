@@ -97,8 +97,8 @@ export function SmartContractPreviewModal({
                 <div className="relative shrink-0 border-b border-white/5 bg-white/[0.01]">
                     <div className="flex justify-between items-center p-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                <Shield className="w-5 h-5 text-primary" />
+                            <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <Shield className="size-5 text-primary" />
                             </div>
                             <div>
                                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Digital Asset Agreement</h3>
@@ -107,9 +107,9 @@ export function SmartContractPreviewModal({
                         </div>
                         <button
                             onClick={onClose}
-                            className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+                            className="size-10 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="size-5" />
                         </button>
                     </div>
                 </div>
@@ -124,7 +124,7 @@ export function SmartContractPreviewModal({
                 {/* Footer */}
                 <div className="p-6 border-t border-white/5 bg-[#0a0a0a] flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
-                         <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                         <div className="size-2 rounded-full bg-primary animate-pulse" />
                          <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest italic">Draft is synchronized with real-time property rules.</p>
                     </div>
                     <button
@@ -138,3 +138,4 @@ export function SmartContractPreviewModal({
         </div>
     );
 }
+

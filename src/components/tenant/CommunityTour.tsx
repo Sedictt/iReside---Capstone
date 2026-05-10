@@ -119,7 +119,7 @@ export function CommunityTour() {
                     />
                 </>
             ) : (
-                <div className="absolute inset-0 bg-slate-950/50 transition-opacity duration-300 pointer-events-auto dark:bg-black/70" />
+                <div className="absolute inset-0 bg-zinc-950/50 transition-opacity duration-300 pointer-events-auto dark:bg-black/70" />
             )}
 
             <div 
@@ -142,11 +142,11 @@ export function CommunityTour() {
                         onClick={completeTour}
                         className="text-muted-foreground transition-colors hover:text-foreground dark:text-white/40 dark:hover:text-white"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="size-4" />
                     </button>
                 </div>
                 
-                <h3 className="mb-2 text-xl font-bold text-foreground dark:text-white">
+                <h3 className="mb-2 text-xl font-semibold text-foreground dark:text-white">
                     {activeStep.title}
                 </h3>
                 
@@ -169,7 +169,7 @@ export function CommunityTour() {
                                 onClick={prevStep}
                                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white"
                             >
-                                <ArrowLeft className="w-5 h-5" />
+                                <ArrowLeft className="size-5" />
                             </button>
                         )}
                         <button
@@ -177,7 +177,7 @@ export function CommunityTour() {
                             className="flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-110"
                         >
                             {isLastStep ? "Finish" : "Next"}
-                            {isLastStep ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                            {isLastStep ? <CheckCircle2 className="size-4" /> : <ArrowRight className="size-4" />}
                         </button>
                     </div>
                 </div>
@@ -185,3 +185,4 @@ export function CommunityTour() {
         </div>
     );
 }
+

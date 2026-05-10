@@ -876,7 +876,7 @@ export function ContactsSidebar() {
                                     activeTab === "messages" ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground dark:hover:text-neutral-300"
                                 )}
                             >
-                                <MessageSquare className="w-4 h-4" />
+                                <MessageSquare className="size-4" />
                                 Messages
                             </button>
                             <button
@@ -886,7 +886,7 @@ export function ContactsSidebar() {
                                     activeTab === "contacts" ? "text-foreground dark:text-white" : "text-muted-foreground hover:text-foreground dark:hover:text-neutral-300"
                                 )}
                             >
-                                <Users className="w-4 h-4" />
+                                <Users className="size-4" />
                                 Contacts
                             </button>
 
@@ -1065,7 +1065,7 @@ export function ContactsSidebar() {
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <h4 className="truncate text-sm font-bold text-foreground hover:underline dark:text-white">{chat.name}</h4>
+                                            <h4 className="truncate text-sm font-semibold text-foreground hover:underline dark:text-white">{chat.name}</h4>
                                             <RoleBadge role={chat.role} />
                                         </div>
                                         {chat.isActive && (
@@ -1085,7 +1085,7 @@ export function ContactsSidebar() {
                                             }}
                                             className="rounded-lg p-1.5 transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                                         >
-                                            <MoreVertical className="w-4 h-4" />
+                                            <MoreVertical className="size-4" />
                                         </button>
                                         
                                         {/* Kebab Menu Dropdown */}
@@ -1151,7 +1151,7 @@ export function ContactsSidebar() {
                                         )}
                                     </div>
                                     <button onClick={() => closeChat(chat.id)} className="rounded-lg p-1.5 transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white">
-                                        <X className="w-4 h-4" />
+                                        <X className="size-4" />
                                     </button>
                                 </div>
                             </div>
@@ -1245,7 +1245,7 @@ export function ContactsSidebar() {
                             <div className="flex flex-col gap-2 border-t border-border bg-card p-3 dark:border-white/10 dark:bg-neutral-900">
                                 <div className="flex items-center gap-2">
                                     <label className={cn("p-1.5 transition-colors", chat.isActive ? "cursor-pointer text-muted-foreground hover:text-foreground dark:hover:text-white" : "cursor-not-allowed text-muted-foreground/60")}>
-                                        <MoreHorizontal className="w-4 h-4" />
+                                        <MoreHorizontal className="size-4" />
                                         <input
                                             type="file"
                                             className="hidden"
@@ -1283,7 +1283,7 @@ export function ContactsSidebar() {
                                             chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "cursor-not-allowed text-muted-foreground/60"
                                         )}
                                     >
-                                        <Send className="w-4 h-4" />
+                                        <Send className="size-4" />
                                     </button>
                                 </div>
                                 {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment...</p>}
@@ -1323,7 +1323,7 @@ export function ContactsSidebar() {
                                     onClick={() => setSharedFilesChatId(null)}
                                     className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/10 dark:hover:text-white"
                                 >
-                                    <X className="w-4 h-4" />
+                                    <X className="size-4" />
                                 </button>
                             </div>
                             <div className="max-h-[calc(70vh-62px)] overflow-y-auto custom-scrollbar p-3 space-y-2">
@@ -1486,7 +1486,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
                         <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="truncate text-sm font-bold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
+                            <h4 className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary dark:text-white">{name}</h4>
                             <RoleBadge role={role} />
                         </div>
                     </div>
@@ -1501,3 +1501,4 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
         </div>
     )
 }
+

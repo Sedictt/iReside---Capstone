@@ -20,7 +20,7 @@ export default function LandlordSettingsPage() {
                         onClick={() => router.back()}
                         className="flex items-center gap-2 text-neutral-500 hover:text-white transition-colors mb-10 group"
                     >
-                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-all">
+                        <div className="size-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 transition-all">
                             <ChevronLeft className="h-4 w-4" />
                         </div>
                         <span className="text-sm font-bold tracking-wide">Back to Dashboard</span>
@@ -31,3 +31,4 @@ export default function LandlordSettingsPage() {
         </div>
     );
 }
+

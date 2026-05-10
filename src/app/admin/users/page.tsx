@@ -120,14 +120,14 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                 </button>
 
                 <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-white">Registration Snapshot</h2>
+                    <h2 className="text-2xl font-semibold text-white">Registration Snapshot</h2>
                     <p className="text-sm text-white/50 mt-1">{profile.full_name} - {profile.email}</p>
                 </div>
 
                 <div className="space-y-8">
                     {/* Personal Information */}
                     <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Personal Information</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Full Name</p>
@@ -153,7 +153,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                     {/* Business/Property Information */}
                     {app && (
                         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Property Information</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2">
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Business Name</p>
@@ -179,7 +179,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                                     <span className={cn(
                                         "inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold uppercase",
                                         app.verification_status === "verified" && "bg-green-500/20 text-green-400 border border-green-500/30",
-                                        app.verification_status === "not_verified" && "bg-gray-500/20 text-gray-400 border border-gray-500/30"
+                                        app.verification_status === "not_verified" && "bg-zinc-500/20 text-zinc-400 border border-zinc-500/30"
                                     )}>
                                         {app.verification_status}
                                     </span>
@@ -191,7 +191,7 @@ function SnapshotModal({ user, onClose }: { user: UserDetail; onClose: () => voi
                     {/* Documents */}
                     {app && (
                         <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-4">Uploaded Documents</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {app.identity_document_url && (
                                     <div className="space-y-2">

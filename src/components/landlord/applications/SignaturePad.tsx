@@ -117,7 +117,7 @@ export function SignaturePad({
             
             {isEmpty && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-20">
-                    <FileText className="w-12 h-12 mb-2 text-white" />
+                    <FileText className="size-12 mb-2 text-white" />
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Sign Here</p>
                 </div>
             )}
@@ -198,3 +198,4 @@ export function SignaturePad({
     </div>
   );
 }
+

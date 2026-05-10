@@ -57,14 +57,14 @@ export function InPersonPaymentModal() {
                     className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors"
                     aria-label="Close modal"
                 >
-                    <X className="w-5 h-5" />
+                    <X className="size-5" />
                 </button>
 
-                <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-4">
-                    <Wallet className="w-6 h-6 text-emerald-500" />
+                <div className="size-12 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mb-4">
+                    <Wallet className="size-6 text-emerald-500" />
                 </div>
 
-                <h3 className="text-xl font-bold text-white mb-2">In-Person Payment Confirmation</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">In-Person Payment Confirmation</h3>
                 <p className="text-neutral-400 text-sm mb-6">
                     A tenant has reported handing you cash for their rent. Please confirm you have received the exact amount.
                 </p>
@@ -101,12 +101,12 @@ export function InPersonPaymentModal() {
                     >
                         {isConfirming ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                <div className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                                 Confirming...
                             </>
                         ) : (
                             <>
-                                <CheckCircle2 className="w-4 h-4" />
+                                <CheckCircle2 className="size-4" />
                                 Confirm Receipt
                             </>
                         )}
@@ -116,3 +116,4 @@ export function InPersonPaymentModal() {
         </div>
     );
 }
+

@@ -874,7 +874,7 @@ export function TenantContactsSidebar() {
                                     activeTab === "messages" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
-                                <MessageSquare className="w-4 h-4" />
+                                <MessageSquare className="size-4" />
                                 Messages
                             </button>
                             <button
@@ -884,7 +884,7 @@ export function TenantContactsSidebar() {
                                     activeTab === "contacts" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
-                                <Users className="w-4 h-4" />
+                                <Users className="size-4" />
                                 Contacts
                             </button>
 
@@ -918,7 +918,7 @@ export function TenantContactsSidebar() {
                                     )}
                                 >
                                     <div className="relative shrink-0">
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white overflow-hidden border-2 border-card">
+                                        <div className="size-10 rounded-full flex items-center justify-center bg-white overflow-hidden border-2 border-card">
                                             <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
                                         </div>
                                         <div className="absolute top-0 right-0 h-3 w-3 rounded-full bg-primary animate-pulse border-2 border-card" />
@@ -926,12 +926,12 @@ export function TenantContactsSidebar() {
                                     {isHovered && (
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-0.5">
-                                                <h4 className="text-sm font-bold text-primary truncate pr-2 transition-colors">
+                                                <h4 className="text-sm font-semibold text-primary truncate pr-2 transition-colors">
                                                     iRis Assistant
                                                 </h4>
                                                 <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-black">AI</span>
                                             </div>
-                                            <p className="text-xs text-slate-600 dark:text-neutral-300 font-medium truncate">
+                                            <p className="text-xs text-zinc-600 dark:text-neutral-300 font-medium truncate">
                                                 How can I help you today?
                                             </p>
                                         </div>
@@ -954,13 +954,13 @@ export function TenantContactsSidebar() {
                                         >
                                             <div className="relative shrink-0">
                                                 <div
-                                                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-card"
+                                                    className="size-10 rounded-full overflow-hidden border-2 border-card"
                                                     style={{ backgroundColor: msg.avatarBgColor || '#171717' }}
                                                 >
                                                     <img
                                                         src={msg.avatar}
                                                         alt={msg.name}
-                                                        className="w-10 h-10 object-cover"
+                                                        className="size-10 object-cover"
                                                     />
                                                 </div>
                                                 {msg.unread && (
@@ -976,7 +976,7 @@ export function TenantContactsSidebar() {
                                                             userId={msg.participantUserId || ""} 
                                                             initialData={{ full_name: msg.name, avatar_url: msg.avatar, role: msg.role as any }}
                                                         >
-                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-slate-700 dark:text-neutral-200")}>
+                                                            <h4 className={cn("text-sm truncate transition-colors group-hover:text-primary", msg.unread ? "font-bold text-foreground dark:text-white" : "font-medium text-zinc-700 dark:text-neutral-200")}>
                                                                 {msg.name}
                                                             </h4>
                                                         </ProfileCardTrigger>
@@ -984,7 +984,7 @@ export function TenantContactsSidebar() {
                                                     </div>
                                                     <span className="text-[10px] text-muted-foreground shrink-0">{msg.time}</span>
                                                 </div>
-                                                <p className={cn("text-xs truncate", msg.unread ? "text-slate-600 dark:text-neutral-300 font-medium" : "text-muted-foreground dark:text-neutral-400")}>
+                                                <p className={cn("text-xs truncate", msg.unread ? "text-zinc-600 dark:text-neutral-300 font-medium" : "text-muted-foreground dark:text-neutral-400")}>
                                                     {msg.lastMessage}
                                                 </p>
                                             </div>
@@ -1083,16 +1083,16 @@ export function TenantContactsSidebar() {
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
                                         <div
-                                            className="w-8 h-8 rounded-full overflow-hidden border border-border"
+                                            className="size-8 rounded-full overflow-hidden border border-border"
                                             style={{ backgroundColor: chat.avatarBgColor || '#171717' }}
                                         >
-                                            <img src={chat.avatar} alt={chat.name} className="w-8 h-8 object-cover" />
+                                            <img src={chat.avatar} alt={chat.name} className="size-8 object-cover" />
                                         </div>
                                         <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-card rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <h4 className="text-sm font-bold text-foreground truncate hover:underline">{chat.name}</h4>
+                                            <h4 className="text-sm font-semibold text-foreground truncate hover:underline">{chat.name}</h4>
                                             <RoleBadge role={chat.role} />
                                         </div>
                                         {chat.isActive && (
@@ -1112,7 +1112,7 @@ export function TenantContactsSidebar() {
                                             }}
                                             className="p-1.5 hover:bg-muted rounded-lg hover:text-foreground transition-colors"
                                         >
-                                            <MoreVertical className="w-4 h-4" />
+                                            <MoreVertical className="size-4" />
                                         </button>
                                         
                                         {/* Kebab Menu Dropdown */}
@@ -1178,7 +1178,7 @@ export function TenantContactsSidebar() {
                                         )}
                                     </div>
                                     <button onClick={() => closeChat(chat.id)} className="p-1.5 hover:bg-muted rounded-lg hover:text-foreground transition-colors">
-                                        <X className="w-4 h-4" />
+                                        <X className="size-4" />
                                     </button>
                                 </div>
                             </div>
@@ -1231,7 +1231,7 @@ export function TenantContactsSidebar() {
                                                     className="flex items-center gap-3 rounded-2xl border p-3 border-border bg-card"
                                                 >
                                                     <div className="p-2 rounded-lg bg-muted shrink-0">
-                                                        <File className="w-4 h-4 text-foreground" />
+                                                        <File className="size-4 text-foreground" />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="text-xs font-bold truncate text-foreground">{message.content || "Attachment"}</p>
@@ -1270,8 +1270,8 @@ export function TenantContactsSidebar() {
                             {/* Chatbox Input */}
                             <div className="p-3 border-t border-border bg-card flex flex-col gap-2 shrink-0">
                                 <div className="flex items-center gap-2">
-                                    <label className={cn("p-1.5 transition-colors", chat.isActive ? "text-muted-foreground hover:text-foreground cursor-pointer" : "text-slate-400 cursor-not-allowed")}>
-                                        <MoreHorizontal className="w-4 h-4" />
+                                    <label className={cn("p-1.5 transition-colors", chat.isActive ? "text-muted-foreground hover:text-foreground cursor-pointer" : "text-zinc-400 cursor-not-allowed")}>
+                                        <MoreHorizontal className="size-4" />
                                         <input
                                             type="file"
                                             className="hidden"
@@ -1306,10 +1306,10 @@ export function TenantContactsSidebar() {
                                         onClick={() => void sendMiniMessage(chat.id)}
                                         className={cn(
                                             "p-1.5 transition-colors",
-                                            chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "text-slate-400 cursor-not-allowed"
+                                            chat.isActive && !chatState.isSending && !chatState.isUploading ? "text-primary hover:text-primary/80" : "text-zinc-400 cursor-not-allowed"
                                         )}
                                     >
-                                        <Send className="w-4 h-4" />
+                                        <Send className="size-4" />
                                     </button>
                                 </div>
                                 {chatState.isUploading && <p className="text-[10px] text-muted-foreground">Uploading attachment...</p>}
@@ -1333,7 +1333,7 @@ export function TenantContactsSidebar() {
                     <>
                         <motion.button
                             type="button"
-                            className="fixed inset-0 bg-slate-950/35 z-[75] backdrop-blur-sm"
+                            className="fixed inset-0 bg-zinc-950/35 z-[75] backdrop-blur-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -1356,7 +1356,7 @@ export function TenantContactsSidebar() {
                                     onClick={() => setSharedFilesChatId(null)}
                                     className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                 >
-                                    <X className="w-4 h-4" />
+                                    <X className="size-4" />
                                 </button>
                             </div>
                             <div className="max-h-[calc(70vh-62px)] overflow-y-auto custom-scrollbar p-3 space-y-2">
@@ -1381,7 +1381,7 @@ export function TenantContactsSidebar() {
                                                 />
                                             ) : (
                                                 <div className="flex items-center gap-2 text-foreground">
-                                                    <span className="p-2 rounded-lg bg-muted"><File className="w-4 h-4" /></span>
+                                                    <span className="p-2 rounded-lg bg-muted"><File className="size-4" /></span>
                                                     <span className="text-xs font-medium truncate">{message.content || "Attachment"}</span>
                                                 </div>
                                             )}
@@ -1500,17 +1500,17 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
         )}>
             <div className="relative shrink-0">
                 <div
-                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
+                    className="size-10 rounded-full overflow-hidden border-2 border-card shadow-sm group-hover:scale-105 transition-transform duration-300"
                     style={{ backgroundColor: avatarBgColor || '#171717' }}
                 >
                     <img
                         src={avatar}
                         alt={name}
-                        className="w-10 h-10 object-cover"
+                        className="size-10 object-cover"
                     />
                 </div>
                 <div className={cn(
-                    "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-card",
+                    "absolute bottom-0 right-0 size-3 rounded-full border-2 border-card",
                     isIssue ? "bg-red-500" : status === "Moving In" ? "bg-amber-500" : "bg-emerald-500"
                 )} />
             </div>
@@ -1519,7 +1519,7 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
                 <div className="flex-1 min-w-0 animate-in fade-in duration-300">
                     <div className="flex items-center justify-between mb-0.5">
                         <div className="flex min-w-0 items-center gap-2">
-                            <h4 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
+                            <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors truncate">{name}</h4>
                             <RoleBadge role={role} />
                         </div>
                     </div>
@@ -1534,4 +1534,5 @@ function ContactCard({ name, role, unit, avatar, avatarBgColor, status, isExpand
         </div>
     )
 }
+
 

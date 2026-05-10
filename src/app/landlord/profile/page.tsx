@@ -276,7 +276,7 @@ export default async function LandlordProfilePage() {
                     {/* Profile Content Section */}
                     <div className="relative w-full px-8 pb-12 -mt-16 md:-mt-24 flex flex-col items-center text-center">
                         {/* Overlapping Avatar */}
-                        <div className="relative w-32 h-32 md:w-44 md:h-44 mb-6 z-20">
+                        <div className="relative size-32 md:w-44 md:h-44 mb-6 z-20">
                             <ProfileAvatarUploader 
                                 initialAvatarUrl={profileAvatarUrl} 
                                 avatarBgColor={profile.avatar_bg_color} 
@@ -312,7 +312,7 @@ export default async function LandlordProfilePage() {
                             </Link>
                             <Link
                                 href="/landlord/messages"
-                                className="w-14 h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-300"
+                                className="size-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-300"
                             >
                                 <MessageSquare size={20} />
                             </Link>
@@ -321,21 +321,21 @@ export default async function LandlordProfilePage() {
                         {/* Contact Info Row */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16 pt-10 border-t border-white/5 w-full max-w-4xl">
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
                                     <Mail size={18} className="text-[#6d9838]" />
                                 </div>
                                 <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Email Address</p>
                                 <a href={`mailto:${profile.email}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.email}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
                                     <Phone size={18} className="text-[#6d9838]" />
                                 </div>
                                 <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Phone Number</p>
                                 <a href={`tel:${profile.phone}`} className="text-sm text-white/90 font-medium hover:text-[#6d9838] transition-colors">{profile.phone || '+63 (---) --- ----'}</a>
                             </div>
                             <div className="flex flex-col items-center gap-2 group/item transition-all text-center">
-                                <div className="w-10 h-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
+                                <div className="size-10 rounded-full bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20 group-hover/item:scale-110 transition-transform">
                                     <MapPin size={18} className="text-[#6d9838]" />
                                 </div>
                                 <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase">Primary Location</p>
@@ -351,7 +351,7 @@ export default async function LandlordProfilePage() {
                 {/* Bio Section */}
                 <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-12 backdrop-blur-xl shadow-xl">
                     <div className="flex items-center gap-4 mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <User size={20} className="text-[#6d9838]" />
                         </div>
                         <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
@@ -371,7 +371,7 @@ export default async function LandlordProfilePage() {
                 {/* Stats & connectivity section */}
                 <div className="bg-[#171717]/80 border border-neutral-800 rounded-[3rem] p-10 backdrop-blur-xl shadow-xl">
                     <div className="flex items-center gap-4 mb-10">
-                        <div className="w-12 h-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                        <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <TrendingUp size={20} className="text-[#6d9838]" />
                         </div>
                         <h2 className="text-2xl font-display font-black text-white tracking-tight">Portfolio Stats</h2>
@@ -391,3 +391,4 @@ export default async function LandlordProfilePage() {
         </div>
     );
 }
+

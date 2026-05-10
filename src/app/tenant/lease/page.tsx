@@ -194,7 +194,7 @@ function LeaseHubContent() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-xs font-black uppercase tracking-widest">Validating Lease Registry...</p>
             </div>
         );
@@ -203,8 +203,8 @@ function LeaseHubContent() {
     if (!lease) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-2xl mx-auto text-center space-y-6">
-                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                    <FileSearch className="w-10 h-10" />
+                <div className="size-20 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                    <FileSearch className="size-10" />
                 </div>
                 <div>
                     <h2 className="text-2xl font-black text-foreground tracking-tight">Registry Empty</h2>
@@ -257,7 +257,7 @@ function LeaseHubContent() {
                     <div className="px-1 border-r border-border/50">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">Contract Status</p>
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                             <p className="text-sm font-black text-foreground uppercase tracking-wider">Active</p>
                         </div>
                     </div>
@@ -281,7 +281,7 @@ function LeaseHubContent() {
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                     >
-                        <tab.icon className="w-4 h-4" />
+                        <tab.icon className="size-4" />
                         {tab.label}
                     </button>
                 ))}
@@ -316,13 +316,13 @@ function LeaseHubContent() {
                                             </div>
                                             <div className="flex gap-2">
                                                 <button className="h-10 px-4 rounded-xl border border-border bg-background text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2 shadow-sm">
-                                                    <Download className="w-3 h-3" /> Download PDF
+                                                    <Download className="size-3" /> Download PDF
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsModalOpen(true)}
                                                     className="h-10 px-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/10"
                                                 >
-                                                    <FileText className="w-3 h-3" /> View Lease
+                                                    <FileText className="size-3" /> View Lease
                                                 </button>
                                             </div>
                                         </div>
@@ -349,8 +349,8 @@ function LeaseHubContent() {
                                     
                                     <div className="relative z-10 mt-8 pt-6 border-t border-border/50 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
-                                                <CheckCircle2 className="w-5 h-5" />
+                                            <div className="size-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+                                                <CheckCircle2 className="size-5" />
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-foreground">Legally Signed</p>
@@ -359,7 +359,7 @@ function LeaseHubContent() {
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">Encrypted & Stored in Vault</p>
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                            <div className="size-2 rounded-full bg-emerald-500" />
                                         </div>
                                     </div>
                                 </div>
@@ -373,14 +373,14 @@ function LeaseHubContent() {
                                         renewalRequest.status === "rejected" && "bg-red-500/5 border-red-500/20"
                                     )}>
                                         <div className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center",
+                                            "size-10 rounded-xl flex items-center justify-center",
                                             renewalRequest.status === "pending" && "bg-amber-500/10 text-amber-600",
                                             renewalRequest.status === "approved" && "bg-emerald-500/10 text-emerald-600",
                                             renewalRequest.status === "rejected" && "bg-red-500/10 text-red-600"
                                         )}>
-                                            {renewalRequest.status === "pending" && <Clock className="w-5 h-5" />}
-                                            {renewalRequest.status === "approved" && <CheckCircle2 className="w-5 h-5" />}
-                                            {renewalRequest.status === "rejected" && <X className="w-5 h-5" />}
+                                            {renewalRequest.status === "pending" && <Clock className="size-5" />}
+                                            {renewalRequest.status === "approved" && <CheckCircle2 className="size-5" />}
+                                            {renewalRequest.status === "rejected" && <X className="size-5" />}
                                         </div>
                                         <div>
                                             <p className="text-sm font-black text-foreground">
@@ -401,7 +401,7 @@ function LeaseHubContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                     <div className="md:col-span-2 bg-card border border-border rounded-[2.5rem] p-8 shadow-sm ring-1 ring-border relative overflow-hidden flex flex-col justify-center">
                                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
-                                            <Clock className="w-24 h-24" />
+                                            <Clock className="size-24" />
                                         </div>
                                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-6">Residency Lifecycle</p>
                                         
@@ -416,7 +416,7 @@ function LeaseHubContent() {
                                                 <div className="flex justify-between items-center mt-3">
                                                     <p className="text-[10px] font-black text-foreground uppercase tracking-widest">Day {progressData.dayCount}</p>
                                                     <div className="flex items-center gap-2">
-                                                        <Clock className="w-3 h-3 text-primary" />
+                                                        <Clock className="size-3 text-primary" />
                                                         <p className="text-[10px] font-black text-primary uppercase tracking-widest">{progressData.daysRemaining} Days Remaining</p>
                                                     </div>
                                                 </div>
@@ -424,8 +424,8 @@ function LeaseHubContent() {
 
                                             <div className="flex flex-wrap gap-8 items-center pt-4 border-t border-border/50">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                                                        <CheckCircle className="w-5 h-5" />
+                                                    <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                                                        <CheckCircle className="size-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-in Verified</p>
@@ -433,8 +433,8 @@ function LeaseHubContent() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
-                                                        <History className="w-5 h-5" />
+                                                    <div className="size-10 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0">
+                                                        <History className="size-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Move-out Target</p>
@@ -462,13 +462,13 @@ function LeaseHubContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
                                         <div className="absolute top-0 right-0 p-8 opacity-[0.03] select-none pointer-events-none">
-                                            <Building2 className="w-32 h-32" />
+                                            <Building2 className="size-32" />
                                         </div>
                                         <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-4">Unit Specifications</p>
                                         <div className="grid grid-cols-2 gap-y-8">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Maximize className="w-5 h-5" />
+                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Maximize className="size-5" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Floor Area</p>
@@ -476,8 +476,8 @@ function LeaseHubContent() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Layers className="w-5 h-5" />
+                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Layers className="size-5" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Level</p>
@@ -485,8 +485,8 @@ function LeaseHubContent() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Bed className="w-5 h-5" />
+                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Bed className="size-5" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bedrooms</p>
@@ -494,8 +494,8 @@ function LeaseHubContent() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
-                                                    <Bath className="w-5 h-5" />
+                                                <div className="size-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground">
+                                                    <Bath className="size-5" />
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Bathrooms</p>
@@ -509,8 +509,8 @@ function LeaseHubContent() {
                                         {/* Building Amenities */}
                                         <div className="space-y-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm shadow-primary/5">
-                                                    <Building2 className="w-6 h-6" />
+                                                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-sm shadow-primary/5">
+                                                    <Building2 className="size-6" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-lg font-black text-foreground tracking-tight">Building Amenities</h4>
@@ -529,7 +529,7 @@ function LeaseHubContent() {
                                         {lease.unit.property.house_rules.length > 0 ? (
                                             lease.unit.property.house_rules.map((rule, i) => (
                                                 <div key={i} className="flex items-start gap-4 group">
-                                                    <div className="w-6 h-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-all">
+                                                    <div className="size-6 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-all">
                                                         <p className="text-[10px] font-black">{i + 1}</p>
                                                     </div>
                                                     <p className="text-xs font-bold text-foreground leading-relaxed">{rule}</p>
@@ -551,7 +551,7 @@ function LeaseHubContent() {
                                         <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Operational Requests</h3>
                                         <div className="h-px flex-1 bg-border/50 mx-6 hidden md:block" />
                                         <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                                            <Shield className="w-3 h-3" /> Managed by Protocol
+                                            <Shield className="size-3" /> Managed by Protocol
                                         </div>
                                     </div>
                                     
@@ -575,7 +575,7 @@ function LeaseHubContent() {
                                     
                                     <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
                                         <div 
-                                            className="w-28 h-28 rounded-full border-4 border-card mx-auto overflow-hidden shadow-2xl ring-4 ring-primary/5 mb-8"
+                                            className="size-28 rounded-full border-4 border-card mx-auto overflow-hidden shadow-2xl ring-4 ring-primary/5 mb-8"
                                             style={{ backgroundColor: lease.landlord?.avatar_bg_color || '#171717' }}
                                         >
                                             <Image
@@ -591,7 +591,7 @@ function LeaseHubContent() {
                                             <div>
                                                 <h3 className="text-3xl font-black text-foreground tracking-tighter">{lease.landlord?.full_name || "Your Property Manager"}</h3>
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-2 flex items-center justify-center gap-2">
-                                                    <ShieldCheck className="w-4 h-4" /> Landlord
+                                                    <ShieldCheck className="size-4" /> Landlord
                                                 </p>
                                             </div>
                                             <p className="text-base text-muted-foreground leading-relaxed">
@@ -601,7 +601,7 @@ function LeaseHubContent() {
 
                                         <div className="w-full max-w-sm mx-auto">
                                             <Link href="/tenant/messages" className="w-full py-5 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
-                                                <MessageSquare className="w-5 h-5" /> Send a Message
+                                                <MessageSquare className="size-5" /> Send a Message
                                             </Link>
                                         </div>
                                     </div>
@@ -614,15 +614,15 @@ function LeaseHubContent() {
                     <div className="lg:col-span-1 space-y-6">
                         {/* Quick Reference Card */}
                         <div className="bg-muted/20 border border-dashed border-border rounded-[2rem] p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
-                            <div className="w-12 h-12 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground mb-4">
-                                <Building2 className="w-6 h-6" />
+                            <div className="size-12 rounded-2xl bg-background border border-border flex items-center justify-center text-muted-foreground mb-4">
+                                <Building2 className="size-6" />
                             </div>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Assigned Unit</p>
                             <p className="text-lg font-black text-foreground tracking-tight">{lease.unit.name}</p>
                             <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-widest">{lease.unit.property.name}</p>
                             <div className="mt-6 pt-6 border-t border-border/50 w-full">
                                 <Link href="/tenant/dashboard" className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline flex items-center justify-center gap-2">
-                                    Return to Dashboard <ArrowUpRight className="w-3 h-3" />
+                                    Return to Dashboard <ArrowUpRight className="size-3" />
                                 </Link>
                             </div>
                         </div>
@@ -646,7 +646,7 @@ export default function LeasesPage() {
     return (
         <Suspense fallback={
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-muted-foreground">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-xs font-black uppercase tracking-widest">Initializing Vault...</p>
             </div>
         }>
@@ -654,3 +654,4 @@ export default function LeasesPage() {
         </Suspense>
     );
 }
+

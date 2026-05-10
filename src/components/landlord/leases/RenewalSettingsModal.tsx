@@ -94,7 +94,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                 <div className="p-8 border-b border-border flex justify-between items-center bg-primary/5">
                     <div className="flex items-center gap-4">
                         <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                            <Settings2 className="w-6 h-6" />
+                            <Settings2 className="size-6" />
                         </div>
                         <div>
                             <h3 className="text-xl font-black text-foreground tracking-tight">Renewal Policy</h3>
@@ -104,7 +104,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                         </div>
                     </div>
                     <button onClick={onClose} className="p-3 rounded-xl hover:bg-muted transition-colors">
-                        <X className="w-5 h-5" />
+                        <X className="size-5" />
                     </button>
                 </div>
 
@@ -117,7 +117,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                     <div className="p-8 overflow-y-auto space-y-8">
                         {/* Disclosure Notice */}
                         <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex gap-4 items-start">
-                            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                            <Info className="size-5 text-amber-600 shrink-0 mt-0.5" />
                             <p className="text-xs text-amber-800 leading-relaxed">
                                 <strong>Transparency Rule:</strong> These settings will be shown to tenants 90 days before their lease ends. They must acknowledge these terms before submitting a renewal request.
                             </p>
@@ -161,7 +161,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                                         <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                                         <span className="flex-1 text-sm font-medium">{rule}</span>
                                         <button onClick={() => removeRule(idx)} className="text-muted-foreground hover:text-red-500 transition-colors">
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="size-4" />
                                         </button>
                                     </div>
                                 ))}
@@ -178,7 +178,7 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                                         onClick={addRule}
                                         className="p-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all"
                                     >
-                                        <Plus className="w-5 h-5" />
+                                        <Plus className="size-5" />
                                     </button>
                                 </div>
                             </div>
@@ -208,10 +208,11 @@ export default function RenewalSettingsModal({ propertyId, propertyName, isOpen,
                         className="flex-[2] px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                     >
                         {saving ? "Saving Policy..." : "Update Renewal Policy"}
-                        <Save className="w-4 h-4" />
+                        <Save className="size-4" />
                     </button>
                 </div>
             </div>
         </div>
     );
 }
+

@@ -67,7 +67,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                             href={url.startsWith('http') ? url : `https://${url}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-[#6d9838]/20 border border-white/10 hover:border-[#6d9838]/40 flex items-center justify-center text-neutral-400 hover:text-[#6d9838] transition-all duration-300 group/social shadow-lg hover:shadow-[#6d9838]/10 hover:-translate-y-1"
+                            className="size-12 rounded-2xl bg-white/5 hover:bg-[#6d9838]/20 border border-white/10 hover:border-[#6d9838]/40 flex items-center justify-center text-neutral-400 hover:text-[#6d9838] transition-all duration-300 group/social shadow-lg hover:shadow-[#6d9838]/10 hover:-translate-y-1"
                             title={social.label}
                         >
                             <social.icon size={20} className="group-hover/social:scale-110 transition-transform" />
@@ -106,14 +106,14 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                         <div className="bg-[#171717] border border-neutral-800 rounded-[2.5rem] p-8 shadow-2xl">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
+                                    <div className="size-10 rounded-xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                                         <Share2 size={20} className="text-[#6d9838]" />
                                     </div>
                                     <h3 className="text-xl font-display font-black text-white tracking-tight">Social Connectivity</h3>
                                 </div>
                                 <button 
                                     onClick={() => setIsModalOpen(false)}
-                                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-neutral-500 transition-colors"
+                                    className="size-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-neutral-500 transition-colors"
                                 >
                                     <X size={18} />
                                 </button>
@@ -134,3 +134,4 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
         </>
     );
 }
+

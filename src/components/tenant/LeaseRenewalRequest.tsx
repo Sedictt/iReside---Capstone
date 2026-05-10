@@ -96,9 +96,9 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                 "flex h-10 w-10 items-center justify-center rounded-xl border",
                                 isEligible ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-border"
                             )}>
-                                <RefreshCw className={cn("w-5 h-5", isEligible && "animate-spin-slow")} />
+                                <RefreshCw className={cn("size-5", isEligible && "animate-spin-slow")} />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground">Lease Renewal</h3>
+                            <h3 className="text-xl font-semibold text-foreground">Lease Renewal</h3>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                             {isEligible 
@@ -127,10 +127,10 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                     className="bg-card/50 border border-border hover:border-primary/40 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                 >
                     <div className={cn(
-                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110",
+                        "size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110",
                         isEligible ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                     )}>
-                        <RefreshCw className="w-7 h-7" />
+                        <RefreshCw className="size-7" />
                     </div>
                     <span className="text-[10px] font-black text-center group-hover:text-primary transition-colors uppercase tracking-widest">Renew Lease</span>
                 </button>
@@ -145,7 +145,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         <div className="p-6 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                                    <RefreshCw className="w-5 h-5" />
+                                    <RefreshCw className="size-5" />
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-black text-foreground tracking-tight">
@@ -165,8 +165,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                         <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
                             {submitted ? (
                                 <div className="text-center space-y-6 animate-in zoom-in-95 duration-500">
-                                    <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                                        <CheckCircle2 className="w-10 h-10" />
+                                    <div className="size-20 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                        <CheckCircle2 className="size-10" />
                                     </div>
                                     <div className="space-y-2">
                                         <h4 className="text-2xl font-black text-foreground">Request Sent</h4>
@@ -175,14 +175,14 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         </p>
                                     </div>
                                     <div className="inline-flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
-                                        <Clock className="w-3 h-3" /> Awaiting Landlord Response
+                                        <Clock className="size-3" /> Awaiting Landlord Response
                                     </div>
                                 </div>
                             ) : step === "disclosure" ? (
                                 <div className="w-full animate-in slide-in-from-right-4 duration-500 space-y-6">
                                     <div className="bg-primary/5 rounded-[2rem] p-6 border border-primary/10 relative overflow-hidden">
                                         <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
-                                            <ShieldCheck className="w-16 h-16" />
+                                            <ShieldCheck className="size-16" />
                                         </div>
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">Official Property Memo</p>
                                         <p className="text-sm font-medium text-foreground leading-relaxed">
@@ -195,8 +195,8 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         <div className="grid grid-cols-1 gap-3">
                                             <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center text-primary">
-                                                        <ArrowRight className="w-4 h-4" />
+                                                    <div className="size-8 rounded-lg bg-background flex items-center justify-center text-primary">
+                                                        <ArrowRight className="size-4" />
                                                     </div>
                                                     <span className="text-xs font-black text-foreground uppercase tracking-widest">Expected Rent Adjustment</span>
                                                 </div>
@@ -214,7 +214,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Rules & Clauses</p>
                                                     {renewalSettings.new_rules.map((rule, i) => (
                                                         <div key={i} className="flex items-start gap-3 p-3 bg-muted/20 rounded-xl border border-dashed border-border">
-                                                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                                                            <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
                                                             <p className="text-[11px] font-medium text-foreground">{rule}</p>
                                                         </div>
                                                     ))}
@@ -229,7 +229,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             id="acknowledge"
                                             checked={acknowledged}
                                             onChange={(e) => setAcknowledged(e.target.checked)}
-                                            className="w-5 h-5 rounded-lg border-border text-primary focus:ring-primary/20"
+                                            className="size-5 rounded-lg border-border text-primary focus:ring-primary/20"
                                         />
                                         <label htmlFor="acknowledge" className="text-[11px] font-bold text-muted-foreground cursor-pointer select-none">
                                             I have reviewed the latest property terms and rules.
@@ -261,10 +261,10 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
-                                                        "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                                        "size-10 rounded-xl flex items-center justify-center transition-colors",
                                                         selectedTerm === opt.months ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10"
                                                     )}>
-                                                        <Calendar className="w-5 h-5" />
+                                                        <Calendar className="size-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-black text-foreground">{opt.months} Months</p>
@@ -283,7 +283,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                     </div>
 
                                     <div className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border border-border">
-                                        <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                                        <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
                                         <p className="text-[10px] text-muted-foreground leading-relaxed italic">
                                             Terms are based on the renewal policy disclosed in the previous step. Final approval is subject to landlord signature.
                                         </p>
@@ -301,7 +301,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                         disabled={!acknowledged}
                                         className="w-full py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                                     >
-                                        Accept & Proceed <ArrowRight className="w-4 h-4" />
+                                        Accept & Proceed <ArrowRight className="size-4" />
                                     </button>
                                 ) : (
                                     <>
@@ -316,7 +316,7 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
                                             disabled={submitting}
                                             className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] hover:bg-primary-dark transition-all flex-[2] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                                         >
-                                            {submitting ? "Submitting..." : "Submit Request"} <ArrowRight className="w-4 h-4" />
+                                            {submitting ? "Submitting..." : "Submit Request"} <ArrowRight className="size-4" />
                                         </button>
                                     </>
                                 )}
@@ -338,3 +338,4 @@ export default function LeaseRenewalRequest({ variant = "sidebar", daysRemaining
         </>
     );
 }
+

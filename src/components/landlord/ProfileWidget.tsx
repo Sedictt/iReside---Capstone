@@ -94,7 +94,7 @@ export function ProfileWidget() {
                         onError={() => setAvatarFailed(true)}
                     />
                 ) : (
-                    <span className="relative z-10 text-sm font-bold text-slate-900 dark:text-white">{initials}</span>
+                    <span className="relative z-10 text-sm font-bold text-zinc-900 dark:text-white">{initials}</span>
                 )}
             </button>
 
@@ -200,3 +200,4 @@ export function ProfileWidget() {
         </div>
     );
 }
+

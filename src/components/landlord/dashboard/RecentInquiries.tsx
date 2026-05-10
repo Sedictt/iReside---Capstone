@@ -147,7 +147,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <MessageSquare className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-foreground dark:text-white">
+                                <h2 className="text-xl font-semibold text-foreground dark:text-white">
                                     {simplifiedMode ? "Messages from People" : "Recent Inquiries"}
                                 </h2>
                                 <p className="text-sm text-muted-foreground">
@@ -219,7 +219,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                     ) : (
                                         // Neutral dark overlay for read
                                         <>
-                                            <div className="absolute inset-0 bg-slate-900/55 dark:bg-neutral-900/50" />
+                                            <div className="absolute inset-0 bg-zinc-900/55 dark:bg-neutral-900/50" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/60 to-transparent" />
                                         </>
                                     )}
@@ -268,7 +268,7 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
                                 <div className="p-4 space-y-3">
                                     {/* Name and Property */}
                                     <div>
-                                        <h3 className="mb-1 truncate text-base font-bold text-foreground dark:text-white">
+                                        <h3 className="mb-1 truncate text-base font-semibold text-foreground dark:text-white">
                                             {inquiry.prospectName}
                                         </h3>
                                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground dark:text-neutral-400">
@@ -492,3 +492,4 @@ export function RecentInquiries({ simplifiedMode = false }: { simplifiedMode?: b
         </>
     );
 }
+

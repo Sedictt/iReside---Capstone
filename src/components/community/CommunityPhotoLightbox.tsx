@@ -40,14 +40,14 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                         className="p-2.5 rounded-full bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all border border-white/5"
                         title="Download"
                     >
-                        <Download className="w-5 h-5" />
+                        <Download className="size-5" />
                     </button>
                     <button 
                         onClick={onClose}
                         className="p-2.5 rounded-full bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-all border border-white/5"
                         title="Close"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="size-5" />
                     </button>
                 </div>
             </div>
@@ -67,13 +67,13 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
                             onClick={handlePrev}
                             className="absolute left-6 md:left-12 p-4 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all border border-white/5 group"
                         >
-                            <ChevronLeft className="w-8 h-8 group-hover:-translate-x-0.5 transition-transform" />
+                            <ChevronLeft className="size-8 group-hover:-translate-x-0.5 transition-transform" />
                         </button>
                         <button 
                             onClick={handleNext}
                             className="absolute right-6 md:right-12 p-4 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all border border-white/5 group"
                         >
-                            <ChevronRight className="w-8 h-8 group-hover:translate-x-0.5 transition-transform" />
+                            <ChevronRight className="size-8 group-hover:translate-x-0.5 transition-transform" />
                         </button>
                     </>
                 )}
@@ -100,3 +100,4 @@ export function CommunityPhotoLightbox({ photos, initialIndex, onClose }: Commun
         </div>
     )
 }
+

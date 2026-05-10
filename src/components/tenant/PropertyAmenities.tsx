@@ -29,7 +29,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
     if (!amenities || amenities.length === 0) {
         return (
             <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-[2.5rem] bg-muted/5 gap-3">
-                <LucideIcons.Sparkle className="w-8 h-8 text-muted-foreground/20" />
+                <LucideIcons.Sparkle className="size-8 text-muted-foreground/20" />
                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">No active amenities listed</p>
             </div>
         );
@@ -58,7 +58,7 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                                 />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <IconComponent className="w-16 h-16 text-primary/10" />
+                                    <IconComponent className="size-16 text-primary/10" />
                                 </div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
@@ -71,8 +71,8 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
                             </div>
 
                             {/* Floating Icon Container */}
-                            <div className="absolute bottom-5 right-5 z-10 w-12 h-12 rounded-[1.25rem] bg-card shadow-2xl flex items-center justify-center text-primary border border-border group-hover:scale-110 transition-transform duration-300">
-                                <IconComponent className="w-6 h-6" />
+                            <div className="absolute bottom-5 right-5 z-10 size-12 rounded-[1.25rem] bg-card shadow-2xl flex items-center justify-center text-primary border border-border group-hover:scale-110 transition-transform duration-300">
+                                <IconComponent className="size-6" />
                             </div>
                         </div>
 
@@ -128,3 +128,4 @@ export function PropertyAmenities({ amenities }: { amenities: Amenity[] }) {
         </div>
     );
 }
+

@@ -104,20 +104,20 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 variant === "hub" ? (
                     <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border transition-all relative overflow-hidden h-full">
                         <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
-                            <Clock className="w-16 h-16" />
+                            <Clock className="size-16" />
                         </div>
                         <div className="space-y-6">
                             <div className={cn(
-                                "w-12 h-12 rounded-2xl border flex items-center justify-center",
+                                "size-12 rounded-2xl border flex items-center justify-center",
                                 existingRequest.status === "pending" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
                                 existingRequest.status === "approved" ? "bg-blue-500/10 border-blue-500/20 text-blue-500" :
                                 existingRequest.status === "denied" ? "bg-red-500/10 border-red-500/20 text-red-500" :
                                 "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
                             )}>
-                                {existingRequest.status === "pending" ? <Clock className="w-6 h-6" /> :
-                                 existingRequest.status === "approved" ? <CheckCircle2 className="w-6 h-6" /> :
-                                 existingRequest.status === "denied" ? <XCircle className="w-6 h-6" /> :
-                                 <LogOut className="w-6 h-6" />}
+                                {existingRequest.status === "pending" ? <Clock className="size-6" /> :
+                                 existingRequest.status === "approved" ? <CheckCircle2 className="size-6" /> :
+                                 existingRequest.status === "denied" ? <XCircle className="size-6" /> :
+                                 <LogOut className="size-6" />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                      "Your move-out clearance is complete."}
                                 </p>
                                 <div className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                    <Calendar className="w-3 h-3" />
+                                    <Calendar className="size-3" />
                                     Target Date: {new Date(existingRequest.requested_date).toLocaleDateString()}
                                 </div>
                             </div>
@@ -151,9 +151,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                 existingRequest.status === "pending" ? "bg-amber-500/10 border-amber-500/20 text-amber-500" :
                                 "bg-blue-500/10 border-blue-500/20 text-blue-500"
                             )}>
-                                <Clock className="w-5 h-5" />
+                                <Clock className="size-5" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground">Move-Out Status</h3>
+                            <h3 className="text-xl font-semibold text-foreground">Move-Out Status</h3>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                             Your request for {new Date(existingRequest.requested_date).toLocaleDateString()} is <strong>{existingRequest.status}</strong>.
@@ -170,11 +170,11 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                 /* Hub Section Variant - Matches the new grid style */
                 <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-red-500/30 transition-all relative overflow-hidden h-full">
                     <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
-                        <LogOut className="w-16 h-16" />
+                        <LogOut className="size-16" />
                     </div>
                     <div className="space-y-6">
-                        <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
-                            <LogOut className="w-6 h-6" />
+                        <div className="size-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                            <LogOut className="size-6" />
                         </div>
                         <div>
                             <h4 className="text-lg font-black text-foreground tracking-tight">End of Lease</h4>
@@ -197,9 +197,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
-                                <LogOut className="w-5 h-5" />
+                                <LogOut className="size-5" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground">End of Lease</h3>
+                            <h3 className="text-xl font-semibold text-foreground">End of Lease</h3>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
                             Planning to move out? You must initiate a digital clearance request before leaving the property.
@@ -218,8 +218,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     onClick={() => setIsOpen(true)}
                     className="bg-card/50 border border-border hover:border-red-500/40 rounded-[2rem] p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-red-500/5 hover:-translate-y-1 group backdrop-blur-sm"
                 >
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 bg-red-500/10 text-red-500">
-                        <LogOut className="w-7 h-7" />
+                    <div className="size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 bg-red-500/10 text-red-500">
+                        <LogOut className="size-7" />
                     </div>
                     <span className="text-[10px] font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-widest">Move Out</span>
                 </button>
@@ -234,7 +234,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         <div className="p-8 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20">
-                                    <LogOut className="w-6 h-6" />
+                                    <LogOut className="size-6" />
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-black text-foreground tracking-tight">Move-Out Clearance</h3>
@@ -357,7 +357,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         ) : (
                             <form onSubmit={handleRequest} className="p-8 space-y-6">
                                 <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 flex gap-4">
-                                    <AlertOctagon className="w-5 h-5 text-red-500 shrink-0" />
+                                    <AlertOctagon className="size-5 text-red-500 shrink-0" />
                                     <p className="text-[11px] font-medium text-red-600/80 leading-relaxed uppercase tracking-wider">
                                         Submitting this request initiates the digital clearance process. Your landlord will review your account for any pending balances and inspect the unit condition.
                                     </p>
@@ -403,9 +403,9 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                         className="flex-1 py-4 rounded-xl bg-red-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
                                         {isSubmitting ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <Loader2 className="size-4 animate-spin" />
                                         ) : (
-                                            <>Submit Request <ArrowRight className="w-4 h-4" /></>
+                                            <>Submit Request <ArrowRight className="size-4" /></>
                                         )}
                                     </button>
                                 </div>
@@ -417,4 +417,5 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
         </>
     );
 }
+
 

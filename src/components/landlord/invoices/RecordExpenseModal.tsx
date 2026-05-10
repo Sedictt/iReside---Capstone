@@ -56,7 +56,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
         { id: "maintenance", label: "Maintenance", color: "text-orange-500", bg: "bg-orange-500/10" },
         { id: "utilities", label: "Utilities", color: "text-blue-500", bg: "bg-blue-500/10" },
         { id: "taxes", label: "Taxes & Fees", color: "text-purple-500", bg: "bg-purple-500/10" },
-        { id: "other", label: "Other", color: "text-gray-500", bg: "bg-gray-500/10" },
+        { id: "other", label: "Other", color: "text-zinc-500", bg: "bg-zinc-500/10" },
     ];
 
     const content = (

@@ -239,7 +239,7 @@ export default function LandlordRenewalReview() {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-4">
                 <div className="p-4 rounded-3xl bg-primary/5">
-                    <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+                    <RefreshCw className="size-8 animate-spin text-primary" />
                 </div>
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
                     Loading Requests...
@@ -281,7 +281,7 @@ export default function LandlordRenewalReview() {
             {requests.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-[2.5rem] bg-muted/5">
                     <div className="p-4 rounded-full bg-muted/50 mb-4">
-                        <CheckCircle2 className="w-8 h-8 text-muted-foreground/30" />
+                        <CheckCircle2 className="size-8 text-muted-foreground/30" />
                     </div>
                     <p className="font-bold text-foreground">All Caught Up</p>
                     <p className="text-sm text-muted-foreground">No new renewal requests to process at this time.</p>
@@ -332,7 +332,7 @@ export default function LandlordRenewalReview() {
                                 onClick={() => openReview(request)}
                                 className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
                             >
-                                <FileText className="w-4 h-4" />
+                                <FileText className="size-4" />
                                 Review Request
                             </button>
                         </div>
@@ -348,7 +348,7 @@ export default function LandlordRenewalReview() {
                         <div className="p-8 border-b border-border flex justify-between items-center bg-muted/20">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                                    <RefreshCw className="w-6 h-6" />
+                                    <RefreshCw className="size-6" />
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-black text-foreground tracking-tight">Review Renewal Terms</h3>
@@ -361,7 +361,7 @@ export default function LandlordRenewalReview() {
                                 onClick={() => setSelectedRequest(null)}
                                 className="p-3 rounded-xl hover:bg-muted transition-colors"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
 
@@ -478,7 +478,7 @@ export default function LandlordRenewalReview() {
                                 disabled={submitting}
                                 className="px-6 py-4 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-xs transition-all flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
                             >
-                                <AlertTriangle className="w-4 h-4" />
+                                <AlertTriangle className="size-4" />
                                 Reject Request
                             </button>
                             <button
@@ -487,7 +487,7 @@ export default function LandlordRenewalReview() {
                                 className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex flex-[1.5] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                             >
                                 {submitting ? "Creating Lease..." : "Approve & Generate Lease"}
-                                <CheckCircle2 className="w-4 h-4" />
+                                <CheckCircle2 className="size-4" />
                             </button>
                         </div>
                     </div>
@@ -505,3 +505,4 @@ export default function LandlordRenewalReview() {
         </div>
     );
 }
+

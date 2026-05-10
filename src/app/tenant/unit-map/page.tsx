@@ -63,7 +63,7 @@ export default function TenantUnitMapPage() {
         return (
             <div className="flex-1 flex items-center justify-center bg-[#fafafa]">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <Loader2 className="size-8 text-primary animate-spin" />
                     <p className="text-neutral-500 text-sm">Loading your unit map...</p>
                 </div>
             </div>
@@ -85,3 +85,4 @@ export default function TenantUnitMapPage() {
 
     return <VisualBuilder readOnly propertyId={unitMapData.property.id} />;
 }
+

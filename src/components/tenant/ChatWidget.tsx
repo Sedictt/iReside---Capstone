@@ -259,7 +259,7 @@ export function ChatWidget({
                                 </div>
                             </div>
                             <div>
-                                <h3 className="font-bold text-base tracking-tight">iRis Assistant</h3>
+                                <h3 className="font-semibold text-base tracking-tight">iRis Assistant</h3>
                                 <div className="flex items-center gap-1.5">
                                     <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-pulse"></span>
                                     <p className="text-[10px] text-white/80 uppercase tracking-widest font-bold">Ask iRis</p>
@@ -272,13 +272,13 @@ export function ChatWidget({
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
                                 title="Open full chat"
                             >
-                                <Maximize2 className="w-4 h-4" />
+                                <Maximize2 className="size-4" />
                             </Link>
                             <button
                                 onClick={onClose}
                                 className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
                     </header>
@@ -296,7 +296,7 @@ export function ChatWidget({
                                             className={cn("flex gap-3 max-w-[88%]", isRight ? "ml-auto flex-row-reverse" : "")}
                                         >
                                             {!isRight && (
-                                                <div className="h-7 w-7 rounded-full bg-slate-300/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
+                                                <div className="h-7 w-7 rounded-full bg-zinc-300/80 animate-pulse flex-shrink-0 mt-auto mb-1" />
                                             )}
                                             <div
                                                 className={cn(
@@ -407,7 +407,7 @@ export function ChatWidget({
                                 disabled={!input.trim() || isChatInitializing}
                                 className="h-11 w-11 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_5px_15px_rgba(109,152,56,0.3)] transition-all hover:scale-110 active:scale-90 disabled:opacity-50 disabled:scale-100"
                             >
-                                <ArrowUp className="w-5 h-5" />
+                                <ArrowUp className="size-5" />
                             </button>
                         </div>
                     </div>
@@ -440,4 +440,5 @@ export function ChatWidget({
         </AnimatePresence>
     );
 }
+
 

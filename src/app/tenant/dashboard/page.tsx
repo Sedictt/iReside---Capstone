@@ -370,7 +370,7 @@ export default function TenantDashboard() {
                         >
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-emerald-500 rounded-lg">
-                                    <CheckCircle2 className="w-5 h-5 text-white" />
+                                    <CheckCircle2 className="size-5 text-white" />
                                 </div>
                                 <div>
                                     <p className="font-bold text-emerald-600 dark:text-emerald-400">Request Submitted!</p>
@@ -381,7 +381,7 @@ export default function TenantDashboard() {
                                 onClick={() => setShowMaintenanceSuccess(false)}
                                 className="p-1 hover:bg-emerald-500/10 rounded-full transition-colors"
                             >
-                                <X className="w-4 h-4 text-emerald-600" />
+                                <X className="size-4 text-emerald-600" />
                             </button>
                         </motion.div>
                     )}
@@ -402,14 +402,14 @@ export default function TenantDashboard() {
                 {/* Primary Command Card */}
                 <div className="relative overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/50 p-8 shadow-xl backdrop-blur-md dark:bg-white/[0.02]">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
-                        <Home className="w-48 h-48" />
+                        <Home className="size-48" />
                     </div>
                     
                     <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
                         {/* Next Payment Info */}
                         <div className="md:col-span-2 space-y-6">
                             <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
-                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
+                                <span className="size-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(109,152,56,0.6)]" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">
                                     {isInitialLoading ? "Loading status..." : nextPayment ? "Payment Due • Active Standing" : "Account Up to Date • Excellent"}
                                 </span>
@@ -421,7 +421,7 @@ export default function TenantDashboard() {
                                     <span className="text-2xl text-muted-foreground font-medium">.{displayPaymentParts.decimal}</span>
                                 </h2>
                                 <p className="text-muted-foreground flex items-center gap-2 font-medium">
-                                    <Calendar className="w-4 h-4" />
+                                    <Calendar className="size-4" />
                                     {isInitialLoading ? "Calculating..." : nextPayment?.dueDate ? `Due ${formatDueDate(nextPayment.dueDate)}` : "No upcoming payments"}
                                 </p>
                             </div>
@@ -432,7 +432,7 @@ export default function TenantDashboard() {
                                         href={`/tenant/payments/${nextPayment.id}/checkout`}
                                         className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                     >
-                                        <CreditCard className="w-4 h-4" />
+                                        <CreditCard className="size-4" />
                                         Pay Rent Now
                                     </Link>
                                 )}
@@ -522,11 +522,11 @@ export default function TenantDashboard() {
                         >
                             <div className="flex items-center gap-4">
                                 <div className="p-2.5 rounded-xl bg-primary text-white">
-                                    <Megaphone className="w-5 h-5" />
+                                    <Megaphone className="size-5" />
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-0.5">Announcement</p>
-                                    <h3 className="font-bold text-sm text-foreground">{announcement.title}</h3>
+                                    <h3 className="font-semibold text-sm text-foreground">{announcement.title}</h3>
                                     <p className="text-xs text-muted-foreground mt-0.5">{announcement.message}</p>
                                 </div>
                             </div>
@@ -547,11 +547,11 @@ export default function TenantDashboard() {
                         >
                             <div className="flex items-center gap-4">
                                 <div className="p-2.5 rounded-xl bg-red-500 text-white">
-                                    <AlertCircle className="w-5 h-5" />
+                                    <AlertCircle className="size-5" />
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] mb-0.5">Payment Required</p>
-                                    <h3 className="font-bold text-sm text-foreground">You have {overduePayments.length} overdue bills</h3>
+                                    <h3 className="font-semibold text-sm text-foreground">You have {overduePayments.length} overdue bills</h3>
                                     <p className="text-xs text-muted-foreground mt-0.5">Totaling ₱{formatCurrency(overdueTotal, 2)} • Please settle your balance.</p>
                                 </div>
                             </div>
@@ -584,8 +584,8 @@ export default function TenantDashboard() {
                                         href={action.href}
                                         className="bg-card/50 border border-border hover:border-primary/40 rounded-3xl p-6 flex flex-col items-center justify-center gap-4 transition-all hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 group backdrop-blur-sm"
                                     >
-                                        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", action.bg, action.color)}>
-                                            <action.icon className="w-7 h-7" />
+                                        <div className={cn("size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110", action.bg, action.color)}>
+                                            <action.icon className="size-7" />
                                         </div>
                                         <span className="text-xs font-bold text-center group-hover:text-primary transition-colors uppercase tracking-widest">{action.label}</span>
                                     </Link>
@@ -598,7 +598,7 @@ export default function TenantDashboard() {
                         <div className="bg-card/50 border border-border rounded-[2rem] p-8 shadow-sm backdrop-blur-sm">
                             <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h3 className="text-xl font-bold text-foreground tracking-tight">Recent Activity</h3>
+                                    <h3 className="text-xl font-semibold text-foreground tracking-tight">Recent Activity</h3>
                                     <p className="text-xs text-muted-foreground mt-1">Your latest updates and transactions</p>
                                 </div>
                                 <Link href="/tenant/payments" className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary-dark transition-colors">
@@ -616,10 +616,10 @@ export default function TenantDashboard() {
                                             <div key={payment.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border/40 hover:border-primary/20 hover:bg-primary/[0.02] transition-all">
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
-                                                        "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                                        "size-10 rounded-xl flex items-center justify-center shrink-0",
                                                         payment.status === 'completed' ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
                                                     )}>
-                                                        {payment.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                                        {payment.status === 'completed' ? <CheckCircle2 className="size-5" /> : <Clock className="size-5" />}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
@@ -677,7 +677,7 @@ export default function TenantDashboard() {
                                 <div className="space-y-4 pt-2">
                                     <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
                                         <div className="p-2.5 rounded-xl bg-background border border-border">
-                                            <Zap className="w-5 h-5 text-amber-500" />
+                                            <Zap className="size-5 text-amber-500" />
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Electricity</p>
@@ -686,7 +686,7 @@ export default function TenantDashboard() {
                                     </div>
                                     <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
                                         <div className="p-2.5 rounded-xl bg-background border border-border">
-                                            <Droplets className="w-5 h-5 text-blue-500" />
+                                            <Droplets className="size-5 text-blue-500" />
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Water</p>
@@ -769,6 +769,7 @@ export default function TenantDashboard() {
     </div>
 );
 }
+
 
 
 

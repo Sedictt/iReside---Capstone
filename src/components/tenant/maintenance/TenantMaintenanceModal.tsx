@@ -101,14 +101,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                             disabled={currentImageIndex === 0}
                                             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors disabled:opacity-0 backdrop-blur-md"
                                         >
-                                            <ChevronLeft className="w-5 h-5" />
+                                            <ChevronLeft className="size-5" />
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); nextImage(); }}
                                             disabled={currentImageIndex === request.images.length - 1}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors disabled:opacity-0 backdrop-blur-md"
                                         >
-                                            <ChevronRight className="w-5 h-5" />
+                                            <ChevronRight className="size-5" />
                                         </button>
                                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md">
                                             {request.images.map((_, idx) => (
@@ -126,7 +126,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             </>
                         ) : (
                             <div className="flex flex-col items-center justify-center text-muted-foreground/50">
-                                <ImageIcon className="w-16 h-16 mb-4 opacity-20" />
+                                <ImageIcon className="size-16 mb-4 opacity-20" />
                                 <p className="text-sm font-semibold">No images provided</p>
                             </div>
                         )}
@@ -144,7 +144,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             </span>
                             <div className="bg-background/80 backdrop-blur-md px-3 py-2 rounded-xl border border-border/50 shadow-sm flex flex-col gap-1 w-fit">
                                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                                    <MapPin className="w-3 h-3 shrink-0" />
+                                    <MapPin className="size-3 shrink-0" />
                                     <span className="text-[10px] font-black uppercase tracking-widest truncate max-w-[150px]">
                                         {request.property}
                                     </span>
@@ -169,7 +169,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                     ID: {request.id.split('-')[0]}
                                 </span>
                                 <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground uppercase">
-                                    <Clock className="w-3 h-3" />
+                                    <Clock className="size-3" />
                                     {request.reportedAt}
                                 </span>
                             </div>
@@ -185,7 +185,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             className="p-2 bg-muted hover:bg-muted-foreground/10 rounded-full transition-colors shrink-0"
                             aria-label="Close Modal"
                         >
-                            <X className="w-5 h-5 text-muted-foreground" />
+                            <X className="size-5 text-muted-foreground" />
                         </button>
                     </div>
 
@@ -202,10 +202,10 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             {/* Step 1: Submitted */}
                             <div className="relative pl-12 pr-2">
                                 <div className={cn(
-                                    "absolute left-2 top-4 w-6 h-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
+                                    "absolute left-2 top-4 size-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
                                     currentStep >= 1 ? "bg-primary ring-4 ring-primary/20 scale-110" : "bg-muted scale-100"
                                 )}>
-                                    {currentStep >= 1 && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                                    {currentStep >= 1 && <CheckCircle2 className="size-3 text-primary-foreground" />}
                                 </div>
                                 <div className={cn(
                                     "p-4 rounded-2xl border transition-all duration-500",
@@ -221,7 +221,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             {request.selfRepairRequested && (
                                 <div className="relative pl-12 pr-2">
                                     <div className={cn(
-                                        "absolute left-2 top-4 w-6 h-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
+                                        "absolute left-2 top-4 size-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
                                         currentStep >= 2 ? "bg-primary ring-4 ring-primary/20 scale-110" : "bg-muted scale-100"
                                     )}>
                                         {currentStep >= 2 && (
@@ -267,14 +267,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}
                                                         >
                                                             <div className={cn(
-                                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                                                                "size-10 rounded-full flex items-center justify-center transition-all duration-300",
                                                                 request.tenantRepairStatus === "repairing" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
                                                             )}>
-                                                                <Wrench className="w-5 h-5" />
+                                                                <Wrench className="size-5" />
                                                             </div>
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Repairing</span>
                                                             {request.tenantRepairStatus === "repairing" && (
-                                                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                                                <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" />
                                                                 </div>
                                                             )}
@@ -289,14 +289,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}
                                                         >
                                                             <div className={cn(
-                                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                                                                "size-10 rounded-full flex items-center justify-center transition-all duration-300",
                                                                 request.tenantRepairStatus === "done" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
                                                             )}>
-                                                                <CheckCircle2 className="w-5 h-5" />
+                                                                <CheckCircle2 className="size-5" />
                                                             </div>
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Done</span>
                                                             {request.tenantRepairStatus === "done" && (
-                                                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                                                <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" />
                                                                 </div>
                                                             )}
@@ -339,7 +339,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                 <div className="space-y-3 animate-in fade-in">
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
-                                                                            <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                                                                            <div key={i} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
                                                                                 <img src={img} alt={`Proof ${i}`} className="w-full h-full object-cover" />
                                                                             </div>
                                                                         ))}
@@ -362,7 +362,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                         }}
                                                                         className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                                                                     >
-                                                                        <Camera className="w-4 h-4" />
+                                                                        <Camera className="size-4" />
                                                                         Upload Photo
                                                                     </button>
                                                                 </div>
@@ -380,7 +380,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             {(!request.selfRepairRequested || request.selfRepairDecision === "rejected") && (
                                 <div className="relative pl-12 pr-2">
                                     <div className={cn(
-                                        "absolute left-2 top-4 w-6 h-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
+                                        "absolute left-2 top-4 size-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
                                         currentStep >= 2 && request.repairMethod ? "bg-cyan-500 ring-4 ring-cyan-500/20 scale-110" : "bg-muted scale-100"
                                     )}>
                                         {currentStep >= 2 && request.repairMethod && (
@@ -426,14 +426,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}
                                                         >
                                                             <div className={cn(
-                                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                                                                "size-10 rounded-full flex items-center justify-center transition-all duration-300",
                                                                 request.tenantRepairStatus === "personnel_arrived" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
                                                             )}>
-                                                                <UserRound className="w-5 h-5" />
+                                                                <UserRound className="size-5" />
                                                             </div>
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Arrived</span>
                                                             {request.tenantRepairStatus === "personnel_arrived" && (
-                                                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                                                <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" />
                                                                 </div>
                                                             )}
@@ -448,14 +448,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}
                                                         >
                                                             <div className={cn(
-                                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                                                                "size-10 rounded-full flex items-center justify-center transition-all duration-300",
                                                                 request.tenantRepairStatus === "repairing" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
                                                             )}>
-                                                                <Wrench className="w-5 h-5" />
+                                                                <Wrench className="size-5" />
                                                             </div>
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Repairing</span>
                                                             {request.tenantRepairStatus === "repairing" && (
-                                                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                                                <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" />
                                                                 </div>
                                                             )}
@@ -470,14 +470,14 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                             )}
                                                         >
                                                             <div className={cn(
-                                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                                                                "size-10 rounded-full flex items-center justify-center transition-all duration-300",
                                                                 request.tenantRepairStatus === "done" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-background"
                                                             )}>
-                                                                <CheckCircle2 className="w-5 h-5" />
+                                                                <CheckCircle2 className="size-5" />
                                                             </div>
                                                             <span className="text-[9px] font-black uppercase tracking-widest">Done</span>
                                                             {request.tenantRepairStatus === "done" && (
-                                                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
+                                                                <div className="absolute -top-1 -right-1 size-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background animate-in zoom-in duration-300">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" />
                                                                 </div>
                                                             )}
@@ -520,7 +520,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                 <div className="space-y-3 animate-in fade-in">
                                                                     <div className="flex gap-2">
                                                                         {request.tenantProvidedPhotos.map((img, i) => (
-                                                                            <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border shadow-sm">
+                                                                            <div key={i} className="relative size-16 rounded-lg overflow-hidden border border-border shadow-sm">
                                                                                 <img src={img} alt={`Proof ${i}`} className="w-full h-full object-cover" />
                                                                             </div>
                                                                         ))}
@@ -543,7 +543,7 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                                                                         }}
                                                                         className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md shadow-amber-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                                                                     >
-                                                                        <Camera className="w-4 h-4" />
+                                                                        <Camera className="size-4" />
                                                                         Upload Photo
                                                                     </button>
                                                                 </div>
@@ -560,10 +560,10 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
                             {/* Step 3: Resolved */}
                             <div className="relative pl-12 pr-2">
                                 <div className={cn(
-                                    "absolute left-2 top-4 w-6 h-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
+                                    "absolute left-2 top-4 size-6 rounded-full border-[3px] border-background flex items-center justify-center shadow-sm z-10 transition-all duration-500",
                                     currentStep === 3 ? "bg-emerald-500 ring-4 ring-emerald-500/20 scale-110" : "bg-muted scale-100"
                                 )}>
-                                    {currentStep === 3 && <CheckCircle2 className="w-3 h-3 text-white" />}
+                                    {currentStep === 3 && <CheckCircle2 className="size-3 text-white" />}
                                 </div>
                                 <div className={cn(
                                     "p-4 rounded-2xl border transition-all duration-500",
@@ -584,3 +584,4 @@ export function TenantMaintenanceModal({ isOpen, onClose, request, onUpdateReque
         </div>
     );
 }
+

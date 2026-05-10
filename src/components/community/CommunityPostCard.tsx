@@ -107,7 +107,7 @@ export function CommunityPostCard({
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h4 className="text-[15px] font-bold text-foreground dark:text-white">
+                            <h4 className="text-[15px] font-semibold text-foreground dark:text-white">
                                 {post.author_name}
                             </h4>
                             {post.author_role === 'landlord' && (

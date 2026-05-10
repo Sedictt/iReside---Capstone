@@ -53,7 +53,7 @@ export function LandlordWelcomeLightbox() {
                     className="absolute top-6 right-6 p-2 rounded-xl hover:bg-white/5 transition-colors text-muted-foreground hover:text-foreground"
                     aria-label="Close welcome"
                 >
-                    <X className="w-5 h-5" />
+                    <X className="size-5" />
                 </button>
 
                 {/* Icon Badge */}
@@ -123,7 +123,7 @@ export function LandlordWelcomeLightbox() {
                         <span className="text-sm font-black uppercase tracking-tight relative z-10">
                             View Missions
                         </span>
-                        <ArrowRight className="w-4 h-4 font-black relative z-10 transition-transform group-hover:translate-x-0.5" />
+                        <ArrowRight className="size-4 font-black relative z-10 transition-transform group-hover:translate-x-0.5" />
                     </button>
                     <button
                         onClick={handleClose}
@@ -141,3 +141,4 @@ export function LandlordWelcomeLightbox() {
         </div>
     );
 }
+

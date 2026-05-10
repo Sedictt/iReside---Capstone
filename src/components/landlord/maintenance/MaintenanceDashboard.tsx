@@ -231,7 +231,7 @@ export function MaintenanceDashboard() {
             {previewMode && (
                 <div className="mb-2 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
                     <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
+                        <Zap className="size-4" />
                         Preview Mode Active
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -287,7 +287,7 @@ export function MaintenanceDashboard() {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                         <div className="flex-1 w-full max-w-md">
                             <div className="relative group">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                 <input
                                     type="text"
                                     placeholder="Search by ID, tenant, unit or title..."
@@ -370,10 +370,10 @@ export function MaintenanceDashboard() {
 
                             {filteredRequests.length === 0 && (
                                 <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 py-20 flex flex-col items-center justify-center text-center">
-                                    <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
-                                        <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                                    <div className="size-20 bg-muted rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle2 className="size-10 text-emerald-500" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-foreground mb-2">
+                                    <h3 className="text-xl font-semibold text-foreground mb-2">
                                         No {priorityFilter !== "All" ? priorityFilter.toLowerCase() : ""} {filter !== "All" ? filter.toLowerCase() : ""} requests
                                     </h3>
                                     <p className="text-muted-foreground text-sm max-w-sm">
@@ -420,14 +420,14 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                         {/* Multiple Images Indicator */}
                         {request.images.length > 1 && (
                             <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg flex items-center gap-1.5 text-[10px] font-bold text-white border border-white/10 shadow-sm">
-                                <ImageIcon className="w-3 h-3" />
+                                <ImageIcon className="size-3" />
                                 +{request.images.length - 1}
                             </div>
                         )}
                     </>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-muted/50 absolute inset-0">
-                        <Wrench className="w-10 h-10 text-muted-foreground/20" />
+                        <Wrench className="size-10 text-muted-foreground/20" />
                     </div>
                 )}
 
@@ -449,7 +449,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 <div className="flex items-center justify-between mb-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">
                     <span className="truncate">#{request.id.split('-')[0]}</span>
                     <div className="flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" />
+                        <Clock className="size-3" />
                         {request.reportedAt}
                     </div>
                 </div>
@@ -510,7 +510,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                         className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm active:scale-95"
                         aria-label="View Details"
                     >
-                        <ArrowRight className="w-5 h-5" />
+                        <ArrowRight className="size-5" />
                     </button>
                 </div>
             </div>
@@ -533,7 +533,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
             "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
-            {priority === "Critical" && <AlertTriangle className="w-3 h-3" />}
+            {priority === "Critical" && <AlertTriangle className="size-3" />}
             {priority} Priority
         </span>
     );
@@ -608,3 +608,4 @@ function MaintenanceCardSkeleton() {
         </div>
     );
 }
+

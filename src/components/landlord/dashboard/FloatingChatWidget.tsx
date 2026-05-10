@@ -96,7 +96,7 @@ export function HeaderChatWidget() {
                             className="absolute top-[calc(100%+12px)] right-0 w-80 bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-[70]"
                         >
                             <div className="p-4 border-b border-white/5 bg-neutral-900/50 backdrop-blur-md flex items-center justify-between">
-                                <h3 className="font-bold text-white">Recent Messages</h3>
+                                <h3 className="font-semibold text-white">Recent Messages</h3>
                                 <button onClick={toggleList} className="text-neutral-500 hover:text-white transition-colors">
                                     <X className="h-4 w-4" />
                                 </button>
@@ -112,7 +112,7 @@ export function HeaderChatWidget() {
                                             <img
                                                 src={msg.avatar}
                                                 alt={msg.name}
-                                                className="w-10 h-10 rounded-full object-cover border border-white/10"
+                                                className="size-10 rounded-full object-cover border border-white/10"
                                             />
                                             {msg.unread && (
                                                 <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary border-2 border-neutral-900" />
@@ -157,23 +157,23 @@ export function HeaderChatWidget() {
                             <div className="flex items-center justify-between p-3 border-b border-white/10 bg-neutral-800/50 rounded-t-2xl cursor-pointer hover:bg-neutral-800 transition-colors">
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <div className="relative shrink-0">
-                                        <img src={chat.avatar} alt={chat.name} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                                        <img src={chat.avatar} alt={chat.name} className="size-8 rounded-full object-cover border border-white/10" />
                                         <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-neutral-900 rounded-full" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <h4 className="text-sm font-bold text-white truncate hover:underline">{chat.name}</h4>
+                                        <h4 className="text-sm font-semibold text-white truncate hover:underline">{chat.name}</h4>
                                         <p className="text-[10px] text-emerald-400">Active Now</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0 text-neutral-400">
                                     <button className="p-1 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
-                                        <Phone className="w-4 h-4" />
+                                        <Phone className="size-4" />
                                     </button>
                                     <button className="p-1 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
-                                        <Video className="w-4 h-4" />
+                                        <Video className="size-4" />
                                     </button>
                                     <button onClick={() => closeChat(chat.id)} className="p-1 hover:bg-white/10 rounded-lg hover:text-white transition-colors">
-                                        <X className="w-4 h-4" />
+                                        <X className="size-4" />
                                     </button>
                                 </div>
                             </div>
@@ -184,7 +184,7 @@ export function HeaderChatWidget() {
                                     <span className="text-[10px] text-neutral-500 font-medium bg-neutral-800 px-2 py-1 rounded-full">{chat.time}</span>
                                 </div>
                                 <div className="flex items-end gap-2">
-                                    <img src={chat.avatar} className="w-6 h-6 rounded-full shrink-0" alt="avatar" />
+                                    <img src={chat.avatar} className="size-6 rounded-full shrink-0" alt="avatar" />
                                     <div className="bg-neutral-800 text-neutral-200 text-sm px-4 py-2 rounded-2xl rounded-bl-sm max-w-[80%]">
                                         {chat.lastMessage}
                                     </div>
@@ -195,7 +195,7 @@ export function HeaderChatWidget() {
                             <div className="p-3 border-t border-white/10 bg-neutral-900 flex flex-col gap-2">
                                 <div className="flex items-center gap-2">
                                     <button className="text-neutral-400 hover:text-white p-1.5 transition-colors">
-                                        <MoreHorizontal className="w-4 h-4" />
+                                        <MoreHorizontal className="size-4" />
                                     </button>
                                     <div className="flex-1 bg-white/5 border border-white/10 rounded-full flex items-center px-3 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
                                         <input
@@ -205,7 +205,7 @@ export function HeaderChatWidget() {
                                         />
                                     </div>
                                     <button className="text-primary hover:text-primary/80 p-1.5 transition-colors">
-                                        <Send className="w-4 h-4" />
+                                        <Send className="size-4" />
                                     </button>
                                 </div>
                             </div>
@@ -216,3 +216,4 @@ export function HeaderChatWidget() {
         </>
     );
 }
+

@@ -119,7 +119,7 @@ export default function ConsultationDashboard() {
 
           <label className="group relative w-full md:w-auto">
             <div className="w-full md:px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center justify-center md:justify-start gap-3 text-sm font-bold shadow-[0_0_30px_-10px_rgba(79,70,229,0.5)] cursor-pointer">
-              {isUploading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus className="w-5 h-5" />}
+              {isUploading ? <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Plus className="size-5" />}
               {isUploading ? 'Uploading...' : 'Prepare New Document'}
             </div>
             <input type="file" className="hidden" accept=".pdf" onChange={handleFileUpload} disabled={isUploading} />
@@ -134,10 +134,10 @@ export default function ConsultationDashboard() {
           </div>
         ) : documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 bg-zinc-900/20 border-2 border-dashed border-zinc-800 rounded-[3rem]">
-            <div className="w-20 h-20 rounded-3xl bg-zinc-900 flex items-center justify-center mb-6 text-zinc-700">
-              <FileText className="w-10 h-10" />
+            <div className="size-20 rounded-3xl bg-zinc-900 flex items-center justify-center mb-6 text-zinc-700">
+              <FileText className="size-10" />
             </div>
-            <h3 className="text-xl font-bold mb-2">No documents prepared</h3>
+            <h3 className="text-xl font-semibold mb-2">No documents prepared</h3>
             <p className="text-zinc-500">Upload your first PDF to get started.</p>
           </div>
         ) : (
@@ -149,7 +149,7 @@ export default function ConsultationDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 className="group relative p-8 rounded-[2.5rem] bg-zinc-900/40 border border-zinc-800 hover:border-indigo-500/30 transition-all backdrop-blur-xl flex flex-col justify-between h-full overflow-hidden"
               >
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/5 blur-[60px] rounded-full group-hover:bg-indigo-500/10 transition-all" />
+                <div className="absolute -top-10 -right-10 size-40 bg-indigo-500/5 blur-[60px] rounded-full group-hover:bg-indigo-500/10 transition-all" />
                 
                 <div className="space-y-6">
                   <div className="flex justify-between items-start">
@@ -162,7 +162,7 @@ export default function ConsultationDashboard() {
                       {doc.status}
                     </div>
                     <button onClick={() => deleteDocument(doc.id)} className="p-2 text-zinc-700 hover:text-red-400 transition-colors">
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="size-4" />
                     </button>
                   </div>
 
@@ -178,7 +178,7 @@ export default function ConsultationDashboard() {
                       onClick={() => copySigningLink(doc.id)}
                       className="w-full py-4 rounded-2xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/50 transition-all flex items-center justify-center gap-3 text-sm font-bold group/btn"
                     >
-                      <Copy className="w-4 h-4 text-indigo-400 group-hover/btn:scale-110 transition-transform" />
+                      <Copy className="size-4 text-indigo-400 group-hover/btn:scale-110 transition-transform" />
                       Copy Signing Link
                     </button>
                   ) : (
@@ -187,7 +187,7 @@ export default function ConsultationDashboard() {
                       target="_blank"
                       className="w-full py-4 rounded-2xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-400 transition-all flex items-center justify-center gap-3 text-sm font-bold"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="size-4" />
                       Download Signed PDF
                     </a>
                   )}
@@ -200,3 +200,4 @@ export default function ConsultationDashboard() {
     </div>
   );
 }
+

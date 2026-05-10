@@ -239,7 +239,7 @@ export function MessageReportWizard({
                       blue: { icon: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/30", ring: "ring-blue-500/5" },
                       rose: { icon: "text-rose-500", bg: "bg-rose-500/10", border: "border-rose-500/30", ring: "ring-rose-500/5" },
                       orange: { icon: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/30", ring: "ring-orange-500/5" },
-                      slate: { icon: "text-slate-500", bg: "bg-slate-500/10", border: "border-slate-500/30", ring: "ring-slate-500/5" },
+                      slate: { icon: "text-zinc-500", bg: "bg-zinc-500/10", border: "border-zinc-500/30", ring: "ring-slate-500/5" },
                     };
                     const theme = colorMap[c.color] || colorMap.slate;
 
@@ -357,7 +357,7 @@ export function MessageReportWizard({
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
-                        className="group relative w-24 h-24 rounded-2xl border border-border overflow-hidden bg-surface-3 shadow-sm"
+                        className="group relative size-24 rounded-2xl border border-border overflow-hidden bg-surface-3 shadow-sm"
                       >
                         <img src={url} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
@@ -376,7 +376,7 @@ export function MessageReportWizard({
                         layout
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-24 h-24 rounded-2xl border-2 border-dashed border-divider hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
+                        className="size-24 rounded-2xl border-2 border-dashed border-divider hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
                       >
                         <div className="p-2 rounded-full bg-surface-2 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                           <Camera className="h-5 w-5" />
@@ -457,4 +457,5 @@ export function MessageReportWizard({
     </AnimatePresence>
   );
 }
+
 

@@ -113,11 +113,11 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
         <>
             <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between ring-1 ring-border group hover:border-primary/30 transition-all relative overflow-hidden h-full">
                 <div className="absolute top-0 right-0 p-6 opacity-[0.02] select-none pointer-events-none">
-                    <ArrowRightLeft className="w-16 h-16" />
+                    <ArrowRightLeft className="size-16" />
                 </div>
                 <div className="space-y-6">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600">
-                        <ArrowRightLeft className="w-6 h-6" />
+                    <div className="size-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600">
+                        <ArrowRightLeft className="size-6" />
                     </div>
                     <div>
                         <h4 className="text-lg font-black text-foreground tracking-tight">Unit Transfer</h4>
@@ -130,7 +130,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                     onClick={handleOpen}
                     className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-secondary transition-all flex items-center justify-center gap-2"
                 >
-                    Check Availability <ArrowUpRight className="w-4 h-4" />
+                    Check Availability <ArrowUpRight className="size-4" />
                 </button>
             </div>
 
@@ -142,7 +142,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                         <div className="p-8 border-b border-border flex justify-between items-center bg-card/80 backdrop-blur-md z-10">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20">
-                                    <ArrowRightLeft className="w-6 h-6" />
+                                    <ArrowRightLeft className="size-6" />
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-black text-foreground tracking-tight">Unit Transfer Portal</h3>
@@ -162,7 +162,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                             <div className="p-8 pb-4 space-y-6">
                                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                                     <div className="relative w-full md:w-96">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                                         <input 
                                             type="text"
                                             placeholder="Search by unit number or floor..."
@@ -180,13 +180,13 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                             <div className="flex-1 overflow-y-auto p-8 pt-0 space-y-6 no-scrollbar">
                                 {loading ? (
                                     <div className="flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground">
-                                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                        <Loader2 className="size-8 animate-spin text-primary" />
                                         <p className="text-xs font-black uppercase tracking-widest">Syncing Property Inventory...</p>
                                     </div>
                                 ) : filteredUnits.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-                                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                                            <Building2 className="w-8 h-8" />
+                                        <div className="size-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                                            <Building2 className="size-8" />
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-foreground">No units available</p>
@@ -208,7 +208,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                             >
                                                 {selectedUnitId === unit.id && (
                                                     <div className="absolute top-4 right-4 text-primary">
-                                                        <CheckCircle2 className="w-6 h-6" />
+                                                        <CheckCircle2 className="size-6" />
                                                     </div>
                                                 )}
                                                 <div className="space-y-4">
@@ -254,7 +254,7 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                         />
                                     </div>
                                     <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-6 flex gap-4">
-                                        <AlertCircle className="w-5 h-5 text-blue-500 shrink-0" />
+                                        <AlertCircle className="size-5 text-blue-500 shrink-0" />
                                         <p className="text-[11px] font-medium text-blue-600/80 leading-relaxed uppercase tracking-wider">
                                             Transfer requests are subject to approval. Moving to a unit with different pricing will require a lease addendum or a new agreement.
                                         </p>
@@ -278,9 +278,9 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
                                 className="flex-1 py-4 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {isSubmitting ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <Loader2 className="size-4 animate-spin" />
                                 ) : (
-                                    <>Initiate Transfer Request <ArrowRight className="w-5 h-5" /></>
+                                    <>Initiate Transfer Request <ArrowRight className="size-5" /></>
                                 )}
                             </button>
                         </div>
@@ -290,3 +290,4 @@ export default function UnitTransferRequest({ currentUnitId }: UnitTransferReque
         </>
     );
 }
+

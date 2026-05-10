@@ -22,7 +22,7 @@ export function CommunityRules({ onClose }: CommunityRulesProps) {
                             <Flag className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold tracking-tight text-foreground dark:text-white">Community Rules</h3>
+                            <h3 className="text-lg font-semibold tracking-tight text-foreground dark:text-white">Community Rules</h3>
                             <p className="text-xs text-muted-foreground">Guidelines for a healthy community</p>
                         </div>
                     </div>

@@ -1773,7 +1773,7 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
       {/* Feedback Section */}
       <div className="mt-20 flex flex-col items-center gap-6 rounded-2xl border border-divider bg-surface-1 p-8 text-center">
         <div className="space-y-2">
-          <h4 className="text-lg font-bold text-text-high">Was this page helpful?</h4>
+          <h4 className="text-lg font-semibold text-text-high">Was this page helpful?</h4>
           <p className="text-sm text-text-medium">Help us improve our documentation by providing feedback.</p>
         </div>
         <div className="flex gap-3">

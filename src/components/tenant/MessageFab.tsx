@@ -24,7 +24,7 @@ export function MessageFab() {
                 )}
             >
                 <div className="relative">
-                    <MessageSquare className="w-5 h-5" />
+                    <MessageSquare className="size-5" />
                     <div className="absolute -top-1 -right-1">
                         <Sparkles className="w-2.5 h-2.5 text-yellow-300 animate-pulse" />
                     </div>
@@ -39,4 +39,5 @@ export function MessageFab() {
         </>
     );
 }
+
 

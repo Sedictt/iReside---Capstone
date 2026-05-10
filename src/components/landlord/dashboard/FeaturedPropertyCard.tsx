@@ -53,7 +53,7 @@ export function FeaturedPropertyCard({
                     <p className="text-sm font-bold tracking-wider text-white/90 mb-1 uppercase drop-shadow-md">
                         {simplifiedMode ? "Your Best House" : "Best Performing Property"}
                     </p>
-                    <h3 className="text-3xl font-bold leading-tight max-w-[250px] text-white drop-shadow-lg">
+                    <h3 className="text-3xl font-semibold leading-tight max-w-[250px] text-white drop-shadow-lg">
                         {propertyName}
                     </h3>
                 </div>
@@ -93,14 +93,14 @@ export function FeaturedPropertyCard({
                             onClick={() => setIsModalOpen(false)}
                             className="absolute right-4 top-4 rounded-full bg-muted/60 p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="size-5" />
                         </button>
                         
                         <div className="mb-6">
                             <span className="mb-3 inline-block rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                                 {simplifiedMode ? "Best Performing" : "Top Asset MTD"}
                             </span>
-                            <h2 className="mb-1 text-2xl font-bold text-foreground">{propertyName}</h2>
+                            <h2 className="mb-1 text-2xl font-semibold text-foreground">{propertyName}</h2>
                             <p className="text-sm text-muted-foreground">
                                 {simplifiedMode ? "Here is why this is your best house this month." : "Performance overview for your top property."}
                             </p>
@@ -109,7 +109,7 @@ export function FeaturedPropertyCard({
                         <div className="space-y-4">
                             <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4">
                                 <div className="rounded-lg bg-emerald-500/20 p-3 text-emerald-600 dark:text-emerald-400">
-                                    <DollarSign className="w-6 h-6" />
+                                    <DollarSign className="size-6" />
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">{simplifiedMode ? "Money Made (Total)" : "Gross Revenue"}</p>
@@ -119,7 +119,7 @@ export function FeaturedPropertyCard({
 
                             <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4">
                                 <div className="p-3 bg-blue-500/20 text-blue-400 rounded-lg">
-                                    <TrendingUp className="w-6 h-6" />
+                                    <TrendingUp className="size-6" />
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">{simplifiedMode ? "Growth" : "MoM Growth"}</p>
@@ -129,7 +129,7 @@ export function FeaturedPropertyCard({
 
                             <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4">
                                 <div className="p-3 bg-purple-500/20 text-purple-400 rounded-lg">
-                                    <Users className="w-6 h-6" />
+                                    <Users className="size-6" />
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">Occupancy</p>
@@ -139,7 +139,7 @@ export function FeaturedPropertyCard({
 
                             <div className="flex items-center gap-4 rounded-xl border border-border bg-muted/30 p-4">
                                 <div className="p-3 bg-orange-500/20 text-orange-400 rounded-lg">
-                                    <Activity className="w-6 h-6" />
+                                    <Activity className="size-6" />
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground">{simplifiedMode ? "People Looking" : "Profile Views"}</p>
@@ -160,3 +160,4 @@ export function FeaturedPropertyCard({
         </>
     );
 }
+

@@ -280,9 +280,9 @@ export function InvoiceModal({
             dot: "bg-lime-300",
         },
         pending: {
-            classes: "bg-slate-500/10 text-slate-400 border-white/10",
+            classes: "bg-zinc-500/10 text-zinc-400 border-white/10",
             label: "Pending",
-            dot: "bg-slate-400"
+            dot: "bg-zinc-400"
         }
     };
 
@@ -393,7 +393,7 @@ export function InvoiceModal({
 
                                 <section className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
                                             <Hash className="h-4 w-4 text-primary" />
                                             Itemized Breakdown
                                         </h3>
@@ -434,7 +434,7 @@ export function InvoiceModal({
                                 </section>
 
                                 <section className="space-y-4">
-                                    <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                    <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
                                         <Clock3 className="h-4 w-4 text-primary" />
                                         Utility Consumption
                                     </h3>
@@ -475,7 +475,7 @@ export function InvoiceModal({
 
                                 <section className="space-y-4 pt-4 border-t border-white/5">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
                                             <Receipt className="h-4 w-4 text-primary" />
                                             Proof of Payment
                                         </h3>
@@ -522,7 +522,7 @@ export function InvoiceModal({
 
                                     {(invoice.metadata as any)?.refund_proof_url && (
                                         <div className="space-y-4 pt-8 border-t border-white/5 text-left">
-                                            <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-text-high">
+                                            <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-text-high">
                                                 <Wallet className="h-4 w-4 text-amber-400" />
                                                 Proof of Refund
                                             </h3>
@@ -720,7 +720,7 @@ export function InvoiceModal({
                                                     className="space-y-6"
                                                 >
                                                     <div className="space-y-1">
-                                                        <h4 className="text-sm font-bold text-text-high">Resolution Wizard</h4>
+                                                        <h4 className="text-sm font-semibold text-text-high">Resolution Wizard</h4>
                                                         <p className="text-[10px] font-medium text-text-disabled uppercase tracking-widest">Step-by-step issue management</p>
                                                     </div>
 
@@ -815,8 +815,8 @@ export function InvoiceModal({
                         <div className="relative border-l border-white/5 bg-surface-1/40 backdrop-blur-xl flex flex-col items-center justify-center p-12 text-center">
                             <div className="space-y-8">
                                 <div className="flex justify-center">
-                                    <div className="w-20 h-20 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
-                                        <ShieldCheck className="w-10 h-10" />
+                                    <div className="size-20 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+                                        <ShieldCheck className="size-10" />
                                     </div>
                                 </div>
                                 <div className="space-y-3">
@@ -830,7 +830,7 @@ export function InvoiceModal({
                                         href={`/tenant/payments/${invoiceId}/checkout`}
                                         className="w-full bg-primary hover:bg-primary-dark text-white py-5 px-8 rounded-3xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 transition-all hover:-translate-y-1 flex items-center justify-center gap-3"
                                     >
-                                        Proceed to Payment <ArrowUpRight className="w-5 h-5" />
+                                        Proceed to Payment <ArrowUpRight className="size-5" />
                                     </Link>
                                 )}
                             </div>
@@ -1729,3 +1729,4 @@ function mockInvoice(id: string): any {
         amountTag: isSelective ? "partial" : "exact"
     };
 }
+

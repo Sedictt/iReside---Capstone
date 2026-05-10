@@ -45,7 +45,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md animate-in fade-in duration-300 dark:bg-black/80 sm:p-6">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-zinc-950/60 p-4 backdrop-blur-md animate-in fade-in duration-300 dark:bg-black/80 sm:p-6">
             <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/10 bg-surface-1 shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300">
                 <button
                     onClick={onClose}
@@ -73,7 +73,7 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-disabled">In-Person Handover</p>
-                                    <h3 className="text-lg font-bold text-high">{payment.tenantName}</h3>
+                                    <h3 className="text-lg font-semibold text-high">{payment.tenantName}</h3>
                                     <div className="flex items-center gap-2 text-xs text-medium">
                                         <Home className="h-3 w-3" />
                                         <span>{payment.unit}</span>
@@ -157,3 +157,4 @@ export function CashPaymentInterface({ isOpen, onClose, payment, onConfirm }: Ca
         </div>
     );
 }
+

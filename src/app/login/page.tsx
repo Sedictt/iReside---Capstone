@@ -140,12 +140,12 @@ function LoginContent() {
                     <div className="grid grid-cols-2 gap-4 max-w-lg pt-4">
                         <div className="p-6 rounded-[2rem] bg-surface-1/30 border border-border/50 backdrop-blur-sm">
                             <ShieldCheck className="h-8 w-8 text-primary mb-4" />
-                            <h3 className="font-bold text-foreground">Secure Access</h3>
+                            <h3 className="font-semibold text-foreground">Secure Access</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reliable and secure digital protection.</p>
                         </div>
                         <div className="p-6 rounded-[2rem] bg-surface-1/30 border border-border/50 backdrop-blur-sm">
                             <ArrowRight className="h-8 w-8 text-primary mb-4" />
-                            <h3 className="font-bold text-foreground">Smart Flows</h3>
+                            <h3 className="font-semibold text-foreground">Smart Flows</h3>
                             <p className="text-xs text-muted-foreground mt-1">Operational excellence at your fingertips.</p>
                         </div>
                     </div>

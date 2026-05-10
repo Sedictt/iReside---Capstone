@@ -244,14 +244,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                             disabled={currentImageIndex === 0}
                                             className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-black/40 text-white rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 disabled:opacity-0 transition-opacity border border-white/20 hover:bg-white hover:text-black shadow-lg"
                                         >
-                                            <ChevronLeft className="w-5 h-5" />
+                                            <ChevronLeft className="size-5" />
                                         </button>
                                         <button
                                             onClick={nextImage}
                                             disabled={currentImageIndex === request.images.length - 1}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-black/40 text-white rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 disabled:opacity-0 transition-opacity border border-white/20 hover:bg-white hover:text-black shadow-lg"
                                         >
-                                            <ChevronRight className="w-5 h-5" />
+                                            <ChevronRight className="size-5" />
                                         </button>
 
                                         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/10 shadow-lg">
@@ -260,7 +260,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                     key={idx}
                                                     onClick={() => setCurrentImageIndex(idx)}
                                                     className={cn(
-                                                        "w-2 h-2 rounded-full transition-all",
+                                                        "size-2 rounded-full transition-all",
                                                         currentImageIndex === idx ? "bg-white w-6" : "bg-white/40 hover:bg-white/80"
                                                     )}
                                                 />
@@ -271,7 +271,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             </>
                         ) : (
                             <div className="absolute inset-0 flex items-center justify-center bg-muted/80">
-                                <Hammer className="w-16 h-16 text-muted-foreground/30" />
+                                <Hammer className="size-16 text-muted-foreground/30" />
                             </div>
                         )}
 
@@ -329,7 +329,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             className="absolute top-6 right-6 p-2.5 bg-muted hover:bg-muted-foreground/10 text-muted-foreground hover:text-foreground rounded-full transition-all z-20 active:scale-90"
                             aria-label="Close"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="size-5" />
                         </button>
 
                         <div className="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto custom-scrollbar">
@@ -350,11 +350,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 
                                 {request.triageReason && (
                                     <div className="mt-8 rounded-3xl border border-primary/20 bg-primary/5 p-6 relative overflow-hidden group/ai">
-                                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-primary/10 blur-3xl rounded-full" />
+                                        <div className="absolute -right-8 -top-8 size-32 bg-primary/10 blur-3xl rounded-full" />
                                         
                                         <div className="flex items-center gap-2 mb-3">
                                             <div className="p-2 bg-primary/10 rounded-xl">
-                                                <Sparkles className="w-4 h-4 text-primary" />
+                                                <Sparkles className="size-4 text-primary" />
                                             </div>
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                                 IRIS AI Smart Triage
@@ -426,14 +426,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                         <p className="text-lg font-black text-foreground truncate leading-tight">{request.tenant}</p>
                                     </div>
                                     <button className="p-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-sm active:scale-90 shrink-0">
-                                        <MessageSquare className="w-5 h-5" />
+                                        <MessageSquare className="size-5" />
                                     </button>
                                 </div>
 
                                 {request.scheduledFor && (
                                     <div className="bg-amber-500/5 border border-amber-500/20 rounded-3xl p-5 flex items-center gap-4">
                                         <div className="p-3 bg-amber-500/10 rounded-2xl">
-                                            <Calendar className="w-6 h-6 text-amber-500" />
+                                            <Calendar className="size-6 text-amber-500" />
                                         </div>
                                         <div>
                                             <span className="text-[10px] font-black text-amber-500/70 uppercase tracking-[0.2em]">Scheduled Window</span>
@@ -497,11 +497,11 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                             setTenantPhotoIndex(i);
                                                             setIsTenantPhotoLightboxOpen(true);
                                                         }}
-                                                        className="relative w-20 h-20 rounded-xl overflow-hidden border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group"
+                                                        className="relative size-20 rounded-xl overflow-hidden border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group"
                                                     >
                                                         <img src={img} alt={`Tenant proof ${i + 1}`} className="w-full h-full object-cover" />
                                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                                            <Expand className="w-5 h-5 text-white" />
+                                                            <Expand className="size-5 text-white" />
                                                         </div>
                                                     </button>
                                                 ))}
@@ -515,8 +515,8 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             {processStep !== "pending" && (
                                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-5 sm:p-6 space-y-3 animate-in fade-in slide-in-from-bottom-2">
                                     <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                                        <CheckCircle2 className="w-5 h-5 shrink-0" />
-                                        <h3 className="text-sm font-bold">Action Confirmed</h3>
+                                        <CheckCircle2 className="size-5 shrink-0" />
+                                        <h3 className="text-sm font-semibold">Action Confirmed</h3>
                                     </div>
                                     <p className="text-sm text-emerald-700/80 dark:text-emerald-300/80 font-medium">{processSummary}</p>
                                 </div>
@@ -526,7 +526,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                             {isPending && processStep === "pending" && (
                                 <div className={cn("bg-muted/20 border border-border/50 rounded-3xl p-5 sm:p-6 space-y-5 transition-all duration-300", selfRepairDecision === "allow" ? "opacity-50 pointer-events-none" : "")}>
                                     <div className="flex items-center gap-2 mb-2">
-                                        <div className={cn("w-2 h-2 rounded-full", selfRepairDecision === "allow" ? "bg-muted-foreground" : "bg-amber-500 animate-pulse")} />
+                                        <div className={cn("size-2 rounded-full", selfRepairDecision === "allow" ? "bg-muted-foreground" : "bg-amber-500 animate-pulse")} />
                                         <h3 className="text-xs font-black text-foreground uppercase tracking-widest">
                                             {selfRepairDecision === "allow" ? "Action Managed by Tenant" : "Action Required"}
                                         </h3>
@@ -550,7 +550,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                                     <option value="third_party">Third Party Repair (Assign contractor)</option>
                                                 </select>
                                                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
-                                                    <ChevronDown className="w-4 h-4" />
+                                                    <ChevronDown className="size-4" />
                                                 </div>
                                             </div>
                                         </div>
@@ -579,7 +579,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     
                                     {formError && (
                                         <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm font-semibold text-red-600 dark:text-red-400">
-                                            <ShieldCheck className="w-4 h-4 shrink-0" />
+                                            <ShieldCheck className="size-4 shrink-0" />
                                             {formError}
                                         </div>
                                     )}
@@ -606,24 +606,24 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 {processStep === "pending" && (
                                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         To Process
-                                        <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                                        <ArrowRight className="size-4 transition-transform group-hover/btn:translate-x-1" />
                                     </div>
                                 )}
                                 {processStep === "assigned" && (
                                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                        <Hammer className="w-4 h-4 animate-bounce" />
+                                        <Hammer className="size-4 animate-bounce" />
                                         Repair On the Way
                                     </div>
                                 )}
                                 {processStep === "in_progress" && (
                                     selfRepairDecision === "allow" ? (
                                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <MessageSquare className="w-4 h-4 animate-pulse" />
+                                            <MessageSquare className="size-4 animate-pulse" />
                                             Notify Tenant
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                            <CheckCircle2 className="w-4 h-4" />
+                                            <CheckCircle2 className="size-4" />
                                             Mark as Completed
                                         </div>
                                     )
@@ -631,12 +631,12 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 {processStep === "completed" && (
                                     selfRepairDecision === "allow" ? (
                                         <div className="flex items-center gap-2 animate-in zoom-in fade-in duration-300">
-                                            <Clock className="w-5 h-5 shrink-0" />
+                                            <Clock className="size-5 shrink-0" />
                                             Waiting for Tenant Update
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2 animate-in zoom-in fade-in duration-300">
-                                            <CheckCircle2 className="w-5 h-5 shrink-0" />
+                                            <CheckCircle2 className="size-5 shrink-0" />
                                             Repair Completed
                                         </div>
                                     )
@@ -657,7 +657,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                     disabled={isSaving}
                                     className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-muted hover:bg-muted/80 disabled:opacity-50 text-foreground transition-all shadow-sm border border-border/50 flex items-center justify-center gap-2 whitespace-nowrap text-sm font-bold animate-in fade-in slide-in-from-bottom-2"
                                 >
-                                    <Camera className="w-4 h-4" />
+                                    <Camera className="size-4" />
                                     Ask for Photo
                                 </button>
                             )}
@@ -674,7 +674,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                         className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-50 border border-white/10"
                         aria-label="Close Lightbox"
                     >
-                        <X className="w-6 h-6" />
+                        <X className="size-6" />
                     </button>
                     
                     <img
@@ -690,14 +690,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 disabled={currentImageIndex === 0}
                                 className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors disabled:opacity-0 border border-white/10"
                             >
-                                <ChevronLeft className="w-8 h-8" />
+                                <ChevronLeft className="size-8" />
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); nextImage(); }}
                                 disabled={currentImageIndex === request.images.length - 1}
                                 className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors disabled:opacity-0 border border-white/10"
                             >
-                                <ChevronRight className="w-8 h-8" />
+                                <ChevronRight className="size-8" />
                             </button>
                             
                             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-md border border-white/10">
@@ -726,7 +726,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                         className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-50 border border-white/10"
                         aria-label="Close Lightbox"
                     >
-                        <X className="w-6 h-6" />
+                        <X className="size-6" />
                     </button>
                     
                     <div className="absolute top-6 left-6 bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 px-4 py-2 rounded-full z-50">
@@ -746,14 +746,14 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
                                 disabled={tenantPhotoIndex === 0}
                                 className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors disabled:opacity-0 border border-white/10"
                             >
-                                <ChevronLeft className="w-8 h-8" />
+                                <ChevronLeft className="size-8" />
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); nextTenantPhoto(); }}
                                 disabled={tenantPhotoIndex === request.tenantProvidedPhotos.length - 1}
                                 className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors disabled:opacity-0 border border-white/10"
                             >
-                                <ChevronRight className="w-8 h-8" />
+                                <ChevronRight className="size-8" />
                             </button>
                             
                             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/50 px-5 py-3 rounded-full backdrop-blur-md border border-white/10">
@@ -776,3 +776,4 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, onRequestUpd
         </>
     );
 }
+

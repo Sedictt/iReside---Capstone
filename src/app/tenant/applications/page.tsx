@@ -118,8 +118,8 @@ export default function MyApplicationsPage() {
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none" />
                     <div className="relative z-10 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 shadow-2xl shadow-red-500/10 shrink-0 border border-red-500/20">
-                            <AlertTriangle className="w-6 h-6" />
+                        <div className="size-14 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 shadow-2xl shadow-red-500/10 shrink-0 border border-red-500/20">
+                            <AlertTriangle className="size-6" />
                         </div>
                         <div>
                             <h3 className="text-white text-xl font-extrabold tracking-tight">Active Attention Needed</h3>
@@ -163,7 +163,7 @@ export default function MyApplicationsPage() {
                         ))}
                         <div className="w-px h-6 bg-white/10 mx-2" />
                         <button className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors">
-                            <Filter className="w-5 h-5" />
+                            <Filter className="size-5" />
                         </button>
                     </div>
                 </div>
@@ -208,12 +208,12 @@ export default function MyApplicationsPage() {
                                                         </span>
                                                         {app.progress > 75 && (
                                                             <div className="px-3 py-1.5 rounded-xl bg-primary text-black flex items-center gap-1.5 w-fit shadow-lg shadow-primary/40 animate-pulse">
-                                                                <Zap className="w-3 h-3 fill-black" />
+                                                                <Zap className="size-3 fill-black" />
                                                                 <span className="text-[9px] font-black uppercase tracking-widest">Priority</span>
                                                             </div>
                                                         )}
                                                         <div className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 flex items-center gap-1.5 w-fit">
-                                                            <Calendar className="w-3 h-3 text-white/40" />
+                                                            <Calendar className="size-3 text-white/40" />
                                                             <span className="text-[9px] font-bold text-white/60">{app.submittedAt}</span>
                                                         </div>
                                                     </div>
@@ -234,7 +234,7 @@ export default function MyApplicationsPage() {
 
                                                     <div className="flex items-center gap-6 p-5 rounded-[2rem] bg-white/[0.02] border border-white/5 relative overflow-hidden">
                                                         <div className="absolute inset-0 bg-gradient-to-r from-primary/[0.02] to-transparent pointer-events-none" />
-                                                        <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
+                                                        <div className="relative size-16 flex items-center justify-center shrink-0">
                                                             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                                                 <circle cx="50" cy="50" fill="none" r={radius} stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
                                                                 <motion.circle
@@ -258,7 +258,7 @@ export default function MyApplicationsPage() {
 
                                                     <button className="w-full h-14 rounded-2xl bg-white/[0.05] hover:bg-white text-white hover:text-black border border-white/10 text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3">
                                                         Expand Details
-                                                        <ArrowRight className="w-4 h-4" />
+                                                        <ArrowRight className="size-4" />
                                                     </button>
                                                 </div>
                                             </Link>
@@ -278,7 +278,7 @@ export default function MyApplicationsPage() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                        <History className="w-4 h-4" />
+                                        <History className="size-4" />
                                     </div>
                                     <h3 className="text-white font-extrabold text-lg tracking-tight">Timeline</h3>
                                 </div>
@@ -295,7 +295,7 @@ export default function MyApplicationsPage() {
                                         <p className="text-sm font-black text-white group-hover:text-primary transition-colors tracking-tight">{activity.title}</p>
                                         <p className="text-xs text-white/40 font-medium mt-1 leading-relaxed">{activity.detail}</p>
                                         <div className="flex items-center gap-1.5 mt-2 opacity-30 group-hover:opacity-60 transition-opacity">
-                                            <Clock className="w-3 h-3" />
+                                            <Clock className="size-3" />
                                             <span className="text-[9px] font-black uppercase tracking-tighter">{activity.time}</span>
                                         </div>
                                     </div>
@@ -306,7 +306,7 @@ export default function MyApplicationsPage() {
                         {/* Help & Support Card */}
                         <div className="bg-[#111111]/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none">
-                                <ShieldCheck className="w-32 h-32 rotate-12" />
+                                <ShieldCheck className="size-32 rotate-12" />
                             </div>
 
                             <div className="flex items-center justify-between mb-8">
@@ -335,3 +335,4 @@ export default function MyApplicationsPage() {
         </div>
     );
 }
+

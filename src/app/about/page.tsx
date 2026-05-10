@@ -136,7 +136,7 @@ export default function AboutPage() {
                                             <value.icon className="h-6 w-6 text-primary" />
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold mb-2">{value.title}</h3>
+                                            <h3 className="text-lg font-semibold mb-2">{value.title}</h3>
                                             <p className="text-sm text-muted-foreground leading-relaxed">{value.desc}</p>
                                         </div>
                                     </div>
@@ -173,7 +173,7 @@ export default function AboutPage() {
                                             {i === 1 && <ShieldCheck className="h-5 w-5 text-primary" />}
                                             {i === 2 && <Users className="h-5 w-5 text-primary" />}
                                         </div>
-                                        <h3 className="text-xl font-bold">{item.role}</h3>
+                                        <h3 className="text-xl font-semibold">{item.role}</h3>
                                     </div>
                                     <p className="text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
                                 </div>

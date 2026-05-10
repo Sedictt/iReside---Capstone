@@ -271,7 +271,7 @@ export default function AdminRegistrationsPage() {
 
                         <div className="relative z-10">
                             <div className="mb-6 flex items-center justify-between">
-                                <h2 className="text-lg font-bold tracking-wide text-white/80">Applicant Queue</h2>
+                                <h2 className="text-lg font-semibold tracking-wide text-white/80">Applicant Queue</h2>
                                 <span className="text-xs font-bold uppercase tracking-widest text-white/30">{incoming.length} record{incoming.length !== 1 ? "s" : ""}</span>
                             </div>
 

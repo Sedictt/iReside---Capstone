@@ -328,7 +328,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0f1218] text-white flex items-center justify-center">
-                <div className="flex items-center gap-3 text-sm font-bold tracking-wide text-slate-300">
+                <div className="flex items-center gap-3 text-sm font-bold tracking-wide text-zinc-300">
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Loading private invite...
                 </div>
@@ -343,7 +343,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/10 blur-[150px] rounded-full" />
                 </div>
                 <div className="relative z-10 max-w-lg w-full rounded-[3rem] border border-white/10 bg-black/40 backdrop-blur-3xl p-10 text-center shadow-2xl">
-                    <div className="mx-auto w-24 h-24 bg-gradient-to-br from-red-500/20 to-red-900/20 rounded-3xl flex items-center justify-center shadow-2xl mb-8 border border-red-500/20">
+                    <div className="mx-auto size-24 bg-gradient-to-br from-red-500/20 to-red-900/20 rounded-3xl flex items-center justify-center shadow-2xl mb-8 border border-red-500/20">
                         <ShieldAlert className="h-10 w-10 text-red-500" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-white mb-4">Invite <span className="text-red-400 italic">unavailable</span></h1>
@@ -374,7 +374,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                         initial={{ rotate: -10, scale: 0.5 }}
                         animate={{ rotate: 0, scale: 1 }}
                         transition={{ delay: 0.3, type: "spring" }}
-                        className="mx-auto w-24 h-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
+                        className="mx-auto size-24 bg-gradient-to-br from-primary to-primary-dark rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/40 mb-10"
                     >
                         <CheckCircle2 className="h-12 w-12 text-black" />
                     </motion.div>
@@ -579,7 +579,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
 
                                     {isOnlineInvite && step === 2 && (
                                         <div className="space-y-4 max-w-2xl">
-                                            <p className="text-sm leading-relaxed text-slate-300 mb-6">
+                                            <p className="text-sm leading-relaxed text-zinc-300 mb-6">
                                                 Upload at least one clear photo for each required document. Maximum file size 5MB each.
                                             </p>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -622,7 +622,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                             "rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] transition-colors",
                                                                             checked
                                                                                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-                                                                                : "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                                                                                : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
                                                                         )}
                                                                     >
                                                                         {checked ? "READY" : "SET READY"}
@@ -633,7 +633,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                                 {key === "application_form" ? (
                                                                     <p className="text-[10px] text-primary italic font-medium">Included digitally in this app</p>
                                                                 ) : docs.length === 0 ? (
-                                                                    <p className="text-[10px] text-slate-500 italic">No files attached yet</p>
+                                                                    <p className="text-[10px] text-zinc-500 italic">No files attached yet</p>
                                                                 ) : (
                                                                     docs.map((doc) => (
                                                                         <div key={doc.url} className="flex items-center justify-between rounded-xl bg-black/40 px-3 py-2 text-xs border border-white/5">
@@ -672,9 +672,9 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                             <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-6 lg:p-8">
                                                 <div className="flex items-center gap-3 opacity-50 mb-3">
                                                     <FileText className="h-4 w-4" />
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Detailed Notes</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Detailed Notes</p>
                                                 </div>
-                                                <p className="text-sm leading-relaxed text-slate-200">{formData.message || "No additional notes provided."}</p>
+                                                <p className="text-sm leading-relaxed text-zinc-200">{formData.message || "No additional notes provided."}</p>
                                             </div>
 
                                             <div className="rounded-[2.5rem] bg-emerald-500/[0.03] border border-emerald-500/20 p-6 flex flex-col md:flex-row items-center gap-6">
@@ -682,7 +682,7 @@ export function InviteApplicationClient({ token }: { token: string }) {
                                                     <CheckCircle2 className="h-8 w-8 text-emerald-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-white font-bold text-lg mb-1">Final Review</h4>
+                                                    <h4 className="text-white font-semibold text-lg mb-1">Final Review</h4>
                                                     <p className="text-white/50 text-sm leading-relaxed font-medium">
                                                         By proceeding, you grant permission for basic background validation based on the requirements provided.
                                                     </p>
@@ -750,7 +750,7 @@ function SummaryCard({ label, value, icon: Icon }: any) {
             <div className="relative z-10">
                 <div className="flex items-center gap-2 opacity-50 mb-3 block">
                     <Icon className="h-3.5 w-3.5" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">{label}</p>
                 </div>
                 <p className="text-lg font-black tracking-tight text-white line-clamp-1">{value}</p>
             </div>
@@ -766,3 +766,4 @@ function Seal({ icon: Icon, label }: any) {
         </div>
     );
 }
+

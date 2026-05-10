@@ -62,26 +62,26 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId }: LeaseRe
                             className="relative w-full max-w-lg bg-card border border-border/50 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-auto ring-1 ring-white/10"
                         >
                             {/* Premium Background Elements */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse" />
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-[60px] -ml-24 -mb-24" />
+                            <div className="absolute top-0 right-0 size-64 bg-primary/10 rounded-full blur-[80px] -mr-32 -mt-32 animate-pulse" />
+                            <div className="absolute bottom-0 left-0 size-48 bg-primary/5 rounded-full blur-[60px] -ml-24 -mb-24" />
                             
                             <div className="relative z-10 p-8 md:p-10">
                                 <div className="flex justify-between items-start mb-8">
-                                    <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
-                                        <RefreshCw className="w-8 h-8 animate-spin-slow" />
+                                    <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
+                                        <RefreshCw className="size-8 animate-spin-slow" />
                                     </div>
                                     <button 
                                         onClick={() => setIsVisible(false)}
                                         className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="size-5" />
                                     </button>
                                 </div>
 
                                 <div className="space-y-4 mb-10">
                                     <div className="flex items-center gap-2">
                                         <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1.5">
-                                            <Clock className="w-3 h-3" /> {daysRemaining} Days Left
+                                            <Clock className="size-3" /> {daysRemaining} Days Left
                                         </div>
                                     </div>
                                     
@@ -108,7 +108,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId }: LeaseRe
                                         }}
                                         className="w-full py-4 rounded-2xl bg-primary text-white text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary-dark hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                                     >
-                                        Renew Now <ArrowRight className="w-4 h-4" />
+                                        Renew Now <ArrowRight className="size-4" />
                                     </button>
                                 </div>
 
@@ -136,7 +136,7 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId }: LeaseRe
                                     </label>
                                     <div className="flex -space-x-2">
                                         {[1, 2, 3].map((i) => (
-                                            <div key={i} className="w-6 h-6 rounded-full border-2 border-card bg-muted" />
+                                            <div key={i} className="size-6 rounded-full border-2 border-card bg-muted" />
                                         ))}
                                     </div>
                                 </div>
@@ -167,3 +167,4 @@ export default function LeaseRenewalReminder({ daysRemaining, leaseId }: LeaseRe
         </>
     );
 }
+

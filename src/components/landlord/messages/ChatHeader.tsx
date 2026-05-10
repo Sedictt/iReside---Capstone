@@ -48,7 +48,7 @@ export function ChatHeader({
                 </div>
                 <div>
                     <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-high">{contact.name}</h3>
+                        <h3 className="text-base font-semibold text-high">{contact.name}</h3>
                         {!isPlaceholder && <RoleBadge role={contact.role} />}
                     </div>
                     {!isPlaceholder && (

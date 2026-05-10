@@ -90,7 +90,7 @@ export function OfficialReceipt({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-                "w-full max-w-[340px] bg-white text-slate-900 shadow-2xl border border-slate-200 font-mono relative overflow-hidden",
+                "w-full max-w-[340px] bg-white text-zinc-900 shadow-2xl border border-zinc-200 font-mono relative overflow-hidden",
                 isCompact ? "p-4" : "p-8"
             )}
         >
@@ -106,7 +106,7 @@ export function OfficialReceipt({
                 {/* Decorative cut marks at top/bottom */}
                 <div className="absolute top-0 left-0 right-0 h-1 flex justify-between px-2 overflow-hidden opacity-20">
                     {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={i} className="w-2 h-2 bg-slate-900 rotate-45 -translate-y-1" />
+                        <div key={i} className="size-2 bg-zinc-900 rotate-45 -translate-y-1" />
                     ))}
                 </div>
 
@@ -122,7 +122,7 @@ export function OfficialReceipt({
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Payment Confirmation</p>
                     {loading && (
                         <div className="absolute -top-1 right-0">
-                            <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                            <div className="size-2 rounded-full bg-primary animate-ping" />
                         </div>
                     )}
                 </div>
@@ -150,7 +150,7 @@ export function OfficialReceipt({
                         <span className="text-right font-bold uppercase">{displayData.propertyName}</span>
                     </div>
 
-                    <div className="my-4 border-t border-slate-100" />
+                    <div className="my-4 border-t border-zinc-100" />
 
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Tenant:</span>
@@ -166,7 +166,7 @@ export function OfficialReceipt({
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Status:</span>
-                        <span className="px-1.5 py-0.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-wider">
+                        <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black uppercase tracking-wider">
                             {displayData.status}
                         </span>
                     </div>
@@ -174,7 +174,7 @@ export function OfficialReceipt({
 
                 {/* Separator */}
                 <div className={cn(
-                    "border-t border-dashed border-slate-300 relative",
+                    "border-t border-dashed border-zinc-300 relative",
                     isCompact ? "my-4" : "my-6"
                 )} />
 
@@ -193,7 +193,7 @@ export function OfficialReceipt({
                 </div>
 
                 {/* Action / Footer */}
-                <div className="pt-4 border-t-2 border-slate-900 relative">
+                <div className="pt-4 border-t-2 border-zinc-900 relative">
                     <div id={`receipt-actions-${message.id}`} className="flex items-center justify-end">
                         <button
                             disabled={isDownloading}
@@ -208,9 +208,10 @@ export function OfficialReceipt({
                 {/* Decorative cut marks at bottom */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 flex justify-between px-2 overflow-hidden opacity-20">
                     {Array.from({ length: 20 }).map((_, i) => (
-                        <div key={i} className="w-2 h-2 bg-slate-900 rotate-45 translate-y-1" />
+                        <div key={i} className="size-2 bg-zinc-900 rotate-45 translate-y-1" />
                     ))}
                 </div>
             </motion.div>
     );
 }
+

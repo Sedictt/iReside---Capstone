@@ -679,7 +679,7 @@ export function UtilityBillingDashboard() {
                                 <AlertCircle className="h-8 w-8" />
                             </div>
                             <div className="space-y-2 mb-8">
-                                <h3 className="text-xl font-bold text-foreground">Apply Property Defaults?</h3>
+                                <h3 className="text-xl font-semibold text-foreground">Apply Property Defaults?</h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
                                     This will overwrite all individual unit settings with the property-wide default rates. This action cannot be undone.
                                 </p>
@@ -910,7 +910,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                     <Building2 className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-foreground">{draft.unitName}</h2>
+                                    <h2 className="text-xl font-semibold text-foreground">{draft.unitName}</h2>
                                     <p className="text-xs text-muted-foreground">Unit Billing Profile</p>
                                 </div>
                             </div>
@@ -970,7 +970,7 @@ function UnitDetailModal({ isOpen, onClose, draft, onUpdate }: { isOpen: boolean
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <DollarSign className="h-4 w-4 text-primary" />
-                                        <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">Service Add-ons</h3>
+                                        <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">Service Add-ons</h3>
                                     </div>
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Optional Charges</span>
                                 </div>
@@ -1045,7 +1045,7 @@ function ResourceSection({ label, icon: Icon, colorClass, draft, onUpdate }: {
         <div className="space-y-4">
             <div className={cn("flex items-center gap-2", accentClass)}>
                 <Icon className="h-5 w-5" />
-                <h3 className="text-sm font-bold uppercase tracking-wider">{label}</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wider">{label}</h3>
             </div>
             <div className={cn("grid grid-cols-1 md:grid-cols-5 gap-6 rounded-3xl border p-6 overflow-hidden", borderClass, bgClass)}>
                 <div className="md:col-span-3 space-y-4">

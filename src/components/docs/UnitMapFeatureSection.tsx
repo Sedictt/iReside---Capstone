@@ -66,7 +66,7 @@ export function UnitMapFeatureSection() {
             <Map className="h-5 w-5" />
             <span>Signature Feature</span>
           </div>
-          <h2 className="text-3xl font-bold text-text-high">Interactive Unit Map</h2>
+          <h2 className="text-3xl font-semibold text-text-high">Interactive Unit Map</h2>
           <p className="text-lg text-text-medium leading-relaxed">
             Visualize your entire property layout at a glance. The Unit Map feature transforms standard, text-based property lists into an interactive, visual grid that mirrors your actual building layout.
           </p>

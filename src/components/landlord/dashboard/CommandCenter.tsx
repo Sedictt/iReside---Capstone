@@ -181,7 +181,7 @@ export function CommandCenter({
                             { label: "Maintenance Logs", icon: Hammer, href: "/landlord/maintenance", color: "text-rose-400", bgColor: "bg-rose-400/15" },
                             { label: "Lease Renewals", icon: RefreshCw, href: "/landlord/tenants?tab=renewals", color: "text-cyan-400", bgColor: "bg-cyan-400/15" },
                             { label: "Document Vault", icon: FolderSearch2, href: "/landlord/documents", color: "text-indigo-400", bgColor: "bg-indigo-400/15" },
-                            { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-slate-400", bgColor: "bg-slate-400/15" },
+                            { label: "Account Settings", icon: Settings2, href: "/landlord/settings", color: "text-zinc-400", bgColor: "bg-zinc-400/15" },
                         ].map((action, i) => {
                             const Content = (
                                 <>
@@ -251,3 +251,4 @@ export function CommandCenter({
         </section>
     );
 }
+

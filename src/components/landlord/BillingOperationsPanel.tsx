@@ -233,7 +233,7 @@ export function BillingOperationsPanel({
                 >
                     <div className="p-8 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
                         <div>
-                            <h3 className="text-xl font-bold text-foreground">Configuration Breakdown</h3>
+                            <h3 className="text-xl font-semibold text-foreground">Configuration Breakdown</h3>
                             <p className="text-xs text-muted-foreground mt-1">Reviewing {pendingChangesCount} strategies being applied</p>
                         </div>
                         <button 
@@ -335,7 +335,7 @@ export function BillingOperationsPanel({
                 </div>
 
                 <div className="space-y-2">
-                    <h4 className="text-2xl font-bold text-foreground">{helpContent.title}</h4>
+                    <h4 className="text-2xl font-semibold text-foreground">{helpContent.title}</h4>
                     <div className="h-1 w-12 bg-primary rounded-full" />
                 </div>
 
@@ -448,7 +448,7 @@ export function BillingOperationsPanel({
                     <Smartphone className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-foreground">GCash Integration</h4>
+                    <h4 className="text-lg font-semibold text-foreground">GCash Integration</h4>
                     <p className="text-xs text-muted-foreground">Receive payments directly from tenants</p>
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export function BillingOperationsPanel({
                 </div>
 
                 <div className="space-y-1.5 py-4 border-t border-border">
-                  <h5 className="text-lg font-bold text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
+                  <h5 className="text-lg font-semibold text-foreground truncate">{accountName || "Juan Dela Cruz"}</h5>
                   <div className="flex items-center justify-center gap-2">
                     <CreditCard className="h-3.5 w-3.5 text-primary" />
                     <p className="font-mono text-sm font-bold text-primary tracking-tight">{accountNumber || "0000 000 0000"}</p>
@@ -565,7 +565,7 @@ export function BillingOperationsPanel({
                         <Building2 className="h-8 w-8" />
                       </div>
                       <div className="space-y-1">
-                        <h4 className="text-2xl font-bold text-foreground">{property.name}</h4>
+                        <h4 className="text-2xl font-semibold text-foreground">{property.name}</h4>
                         <div className="flex items-center gap-3">
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                             <Target className="h-3 w-3" />

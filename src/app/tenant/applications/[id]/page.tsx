@@ -147,7 +147,7 @@ export default function ApplicationDashboardPage() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
                             <div className="absolute bottom-5 left-5">
-                                <h3 className="text-xl font-bold text-white tracking-tight">{property.name}</h3>
+                                <h3 className="text-xl font-semibold text-white tracking-tight">{property.name}</h3>
                                 <p className="text-primary text-[10px] font-black uppercase tracking-widest">Luxury Collection</p>
                             </div>
                         </div>
@@ -171,7 +171,7 @@ export default function ApplicationDashboardPage() {
                             </div>
 
                             <div className="pt-4 border-t border-white/5">
-                                <h4 className="text-white font-bold text-[10px] uppercase tracking-widest mb-3 opacity-40">Amenities included</h4>
+                                <h4 className="text-white font-semibold text-[10px] uppercase tracking-widest mb-3 opacity-40">Amenities included</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {property.amenities.slice(0, 5).map((amenity, i) => (
                                         <span key={i} className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 text-white/70 border border-white/5">

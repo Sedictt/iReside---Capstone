@@ -242,7 +242,7 @@ export default function TenantMaintenancePage() {
             {previewMode && (
                 <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
                     <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
+                        <Zap className="size-4" />
                         Preview Mode Active
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -274,7 +274,7 @@ export default function TenantMaintenancePage() {
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                        <Wrench className="w-8 h-8 text-primary" />
+                        <Wrench className="size-8 text-primary" />
                         Maintenance Requests
                     </h1>
                     <p className="text-muted-foreground mt-1">
@@ -285,7 +285,7 @@ export default function TenantMaintenancePage() {
                     href="/tenant/maintenance/new"
                     className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-2xl font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 w-fit"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="size-5" />
                     New Request
                 </Link>
             </div>
@@ -317,15 +317,15 @@ export default function TenantMaintenancePage() {
                 </div>
             ) : error ? (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center">
-                    <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-4" />
+                    <AlertTriangle className="size-10 text-red-500 mx-auto mb-4" />
                     <p className="text-red-500 font-bold">{error}</p>
                 </div>
             ) : filteredRequests.length === 0 ? (
                 <div className="bg-card border border-border border-dashed rounded-3xl p-12 text-center">
-                    <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle2 className="w-10 h-10 text-muted-foreground" />
+                    <div className="size-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 className="size-10 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-bold mb-2">No requests found</h3>
+                    <h3 className="text-xl font-semibold mb-2">No requests found</h3>
                     <p className="text-muted-foreground max-w-xs mx-auto mb-8">
                         {filter === 'All' 
                             ? "You haven't submitted any maintenance requests yet."
@@ -338,7 +338,7 @@ export default function TenantMaintenancePage() {
                             className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
                         >
                             Submit your first request
-                            <ArrowRight className="w-4 h-4" />
+                            <ArrowRight className="size-4" />
                         </Link>
                     )}
                 </div>
@@ -387,14 +387,14 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                         {/* Multiple Images Indicator */}
                         {request.images.length > 1 && (
                             <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-md flex items-center gap-1 text-[10px] font-bold text-white border border-white/10 shadow-sm">
-                                <ImageIcon className="w-3 h-3" />
+                                <ImageIcon className="size-3" />
                                 +{request.images.length - 1}
                             </div>
                         )}
                     </>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-muted absolute inset-0">
-                        <Wrench className="w-8 h-8 text-muted-foreground/30" />
+                        <Wrench className="size-8 text-muted-foreground/30" />
                     </div>
                 )}
 
@@ -423,7 +423,7 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
 
                 {/* Title */}
                 <div className="mb-4 shrink-0">
-                    <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
+                    <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight tracking-tight">
                         {request.title}
                     </h3>
                 </div>
@@ -431,13 +431,13 @@ function TenantMaintenanceCard({ request, onClick }: { request: MaintenanceReque
                 {/* Property & Unit */}
                 <div className="flex flex-col gap-2 mb-4 shrink-0">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Home className="w-3 h-3 shrink-0" />
+                        <Home className="size-3 shrink-0" />
                         <span className="text-[10px] font-black uppercase tracking-widest truncate">
                             {request.property}
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5 text-primary/80">
-                        <Zap className="w-3 h-3 shrink-0" />
+                        <Zap className="size-3 shrink-0" />
                         <span className="text-[10px] font-black uppercase tracking-widest">
                             {request.unit}
                         </span>
@@ -493,7 +493,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
         Critical: "bg-red-500 text-white border-red-400 shadow-sm",
         High: "bg-orange-500/90 backdrop-blur-md text-white border-orange-400/50 shadow-sm",
         Medium: "bg-blue-500/90 backdrop-blur-md text-white border-blue-400/50 shadow-sm",
-        Low: "bg-slate-200/90 dark:bg-neutral-800/90 backdrop-blur-md text-slate-700 dark:text-neutral-300 border-slate-300 dark:border-neutral-600 shadow-sm",
+        Low: "bg-zinc-200/90 dark:bg-neutral-800/90 backdrop-blur-md text-zinc-700 dark:text-neutral-300 border-zinc-300 dark:border-neutral-600 shadow-sm",
     };
 
     return (
@@ -501,7 +501,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
             "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
-            {priority === "Critical" && <AlertTriangle className="w-3 h-3" />}
+            {priority === "Critical" && <AlertTriangle className="size-3" />}
             {priority} Priority
         </span>
     );
@@ -576,3 +576,4 @@ function MaintenanceCardSkeleton() {
         </div>
     );
 }
+

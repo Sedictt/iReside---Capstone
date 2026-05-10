@@ -214,7 +214,7 @@ export default function TenantInformationPage() {
                                     <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                         <step.icon className="h-6 w-6" />
                                     </div>
-                                    <h3 className="text-xl font-bold tracking-tight mb-3">{step.title}</h3>
+                                    <h3 className="text-xl font-semibold tracking-tight mb-3">{step.title}</h3>
                                     <p className="text-muted-foreground">{step.description}</p>
                                 </div>
                             </motion.div>
@@ -283,7 +283,7 @@ export default function TenantInformationPage() {
                                     >
                                         <feature.icon className="h-5 w-5" />
                                     </div>
-                                    <h4 className="font-bold mb-1">{feature.label}</h4>
+                                    <h4 className="font-semibold mb-1">{feature.label}</h4>
                                     <p className="text-sm text-muted-foreground">{feature.desc}</p>
                                 </div>
                             ))}

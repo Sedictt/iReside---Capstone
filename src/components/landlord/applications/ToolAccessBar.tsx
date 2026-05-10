@@ -205,7 +205,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
         if (n.includes("pool") || n.includes("swim")) return { icon: Waves, color: "text-blue-400", bg: "bg-blue-500/10" };
         if (n.includes("gym") || n.includes("fitness")) return { icon: Dumbbell, color: "text-purple-400", bg: "bg-purple-500/10" };
         if (n.includes("wifi") || n.includes("internet")) return { icon: Wifi, color: "text-emerald-400", bg: "bg-emerald-500/10" };
-        if (n.includes("parking")) return { icon: Car, color: "text-slate-400", bg: "bg-slate-500/10" };
+        if (n.includes("parking")) return { icon: Car, color: "text-zinc-400", bg: "bg-zinc-500/10" };
         if (n.includes("laundry")) return { icon: WashingMachine, color: "text-cyan-400", bg: "bg-cyan-500/10" };
         if (n.includes("security")) return { icon: ShieldCheck, color: "text-orange-400", bg: "bg-orange-500/10" };
         if (n.includes("cctv") || n.includes("camera")) return { icon: Camera, color: "text-red-400", bg: "bg-red-500/10" };
@@ -245,7 +245,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     <div className="flex flex-col gap-0.5">
                         <span className="text-[15px] font-black tracking-tight text-foreground/90 leading-tight">{item}</span>
                         <div className="flex items-center gap-1.5">
-                            <div className="w-1 h-1 rounded-full bg-primary/50" />
+                            <div className="size-1 rounded-full bg-primary/50" />
                             <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
                         </div>
                     </div>
@@ -349,7 +349,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
 
                 <div className="relative z-10 max-w-2xl mx-auto space-y-8">
                     <div className="text-center space-y-2 border-b-2 border-neutral-300 pb-8 mb-8">
-                        <h1 className="text-[1.35rem] font-bold uppercase tracking-widest text-black">{contractTitle}</h1>
+                        <h1 className="text-[1.35rem] font-semibold uppercase tracking-widest text-black">{contractTitle}</h1>
                         <p className="text-neutral-500 italic text-sm">This is the configured lease agreement for {propertyData.name}.</p>
                     </div>
 
@@ -392,7 +392,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                                     {/* Inject Custom Clauses here */}
                                     {customClauses.filter(c => c.title && c.description).length > 0 && (
                                         <div className="pt-6 mt-6 border-t border-neutral-200 space-y-4">
-                                            <h3 className="font-bold text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
+                                            <h3 className="font-semibold text-black uppercase tracking-wider text-sm mb-4">Additional Clauses</h3>
                                             {customClauses.filter(c => c.title && c.description).map((clause, idx) => (
                                                 <p key={idx}>
                                                     <strong className="text-black uppercase">{(idx + 6)}. {clause.title}:</strong> {clause.description}
@@ -579,3 +579,4 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
     </>
   );
 }
+

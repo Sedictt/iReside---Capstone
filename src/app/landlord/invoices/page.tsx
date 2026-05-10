@@ -195,7 +195,7 @@ export default function InvoicesPage() {
 
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { label: string; classes: string }> = {
-      pending: { label: "Awaiting Payment", classes: "border-slate-500/20 bg-slate-500/10 text-slate-500 dark:text-slate-400" },
+      pending: { label: "Awaiting Payment", classes: "border-zinc-500/20 bg-zinc-500/10 text-zinc-500 dark:text-zinc-400" },
       under_review: { label: "Verify Payment", classes: "border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400" },
       intent_submitted: { label: "Payment Reported", classes: "border-indigo-500/30 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
       awaiting_in_person: { label: "Cash Collection", classes: "border-cyan-500/30 bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
@@ -859,3 +859,4 @@ function UtilityReadingStep({
     </div>
   );
 }
+

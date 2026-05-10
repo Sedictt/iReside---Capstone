@@ -90,7 +90,7 @@ export function UnitShowcaseModal({
                     onClick={onClose}
                     className="absolute top-6 right-6 z-20 p-2 text-neutral-400 hover:text-white bg-black/50 hover:bg-black/70 rounded-full transition-colors backdrop-blur-sm"
                 >
-                    <X className="w-5 h-5" />
+                    <X className="size-5" />
                 </button>
 
                 {/* Image Gallery */}
@@ -107,13 +107,13 @@ export function UnitShowcaseModal({
                         <>
                             <button
                                 onClick={prevImage}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                                className="absolute left-4 top-1/2 -translate-y-1/2 size-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
                             >
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
                             <button
                                 onClick={nextImage}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 size-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
                             >
                                 <ChevronRight className="h-5 w-5" />
                             </button>
@@ -124,7 +124,7 @@ export function UnitShowcaseModal({
                                         key={i}
                                         onClick={() => setCurrentImage(i)}
                                         className={cn(
-                                            "w-2 h-2 rounded-full transition-all",
+                                            "size-2 rounded-full transition-all",
                                             i === currentImage
                                                 ? "bg-white w-6"
                                                 : "bg-white/40 hover:bg-white/60"
@@ -183,7 +183,7 @@ export function UnitShowcaseModal({
                     {/* Description */}
                     {unit.description && (
                         <div className="bg-white/5 border border-white/5 rounded-xl p-5">
-                            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-2">
+                            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-2">
                                 Description
                             </h3>
                             <p className="text-neutral-300 text-sm leading-relaxed">
@@ -195,7 +195,7 @@ export function UnitShowcaseModal({
                     {/* Amenities */}
                     {unit.property.amenities?.length > 0 && (
                         <div>
-                            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
+                            <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-3 flex items-center gap-2">
                                 <Sparkles className="h-3.5 w-3.5" />
                                 Amenities
                             </h3>
@@ -230,3 +230,4 @@ export function UnitShowcaseModal({
         </div>
     );
 }
+

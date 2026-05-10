@@ -169,11 +169,11 @@ export function DashboardTour() {
                         className="text-muted-foreground hover:text-foreground transition-colors"
                         aria-label="Close tour"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="size-4" />
                     </button>
                 </div>
                 
-                <h3 className="text-lg font-bold text-foreground mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                     {activeStep.title}
                 </h3>
                 
@@ -194,9 +194,9 @@ export function DashboardTour() {
                         {stepIndex > 0 && (
                             <button
                                 onClick={prevStep}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                className="size-8 flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                             >
-                                <ArrowLeft className="w-4 h-4" />
+                                <ArrowLeft className="size-4" />
                             </button>
                         )}
                         <button
@@ -212,3 +212,4 @@ export function DashboardTour() {
         </div>
     );
 }
+

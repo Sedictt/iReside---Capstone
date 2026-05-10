@@ -14,7 +14,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <ProfileCardProvider>
                     <div
                         data-admin-portal="true"
-                        className="relative flex h-screen overflow-hidden bg-slate-100 text-slate-900 dark:bg-background dark:text-foreground"
+                        className="relative flex h-screen overflow-hidden bg-zinc-100 text-zinc-900 dark:bg-background dark:text-foreground"
                     >
                         <AdminSidebar />
                         <main className="relative z-10 flex-1 ml-[280px] overflow-y-auto min-h-screen">
@@ -30,5 +30,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </AuthProvider>
     );
 }
+
 
 

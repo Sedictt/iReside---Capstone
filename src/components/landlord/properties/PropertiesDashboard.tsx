@@ -207,7 +207,7 @@ export function PropertiesDashboard() {
                 {!isLoading && loadError && (
                     <div className="rounded-3xl border border-red-500/20 bg-card/95 py-20 text-center shadow-sm">
                         <Building2 className="mx-auto mb-4 h-12 w-12 text-red-500 dark:text-red-400" />
-                        <h3 className="mb-2 text-xl font-bold text-foreground">Failed to load portfolio</h3>
+                        <h3 className="mb-2 text-xl font-semibold text-foreground">Failed to load portfolio</h3>
                         <p className="mb-6 text-sm text-red-600 dark:text-red-300">{loadError}</p>
                         <button
                             onClick={() => setReloadKey((value) => value + 1)}
@@ -244,7 +244,7 @@ export function PropertiesDashboard() {
                                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-3">
-                                                <h3 className="text-2xl font-bold text-foreground leading-tight">{property.name}</h3>
+                                                <h3 className="text-2xl font-semibold text-foreground leading-tight">{property.name}</h3>
                                                 <div className={cn(
                                                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border whitespace-nowrap",
                                                     property.status === "Performing" || property.status === "Stable"
@@ -270,7 +270,7 @@ export function PropertiesDashboard() {
                                         <div className="flex flex-wrap items-center gap-6 lg:gap-10">
                                             {/* Occupancy Mini-Visual */}
                                             <div className="flex items-center gap-4">
-                                                <div className="relative w-14 h-14">
+                                                <div className="relative size-14">
                                                     <svg className="w-full h-full transform -rotate-90">
                                                         <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" className="text-muted/15" strokeWidth="4" />
                                                         <circle
@@ -308,7 +308,7 @@ export function PropertiesDashboard() {
                                             {/* Maintenance Status */}
                                             <div className="flex items-center gap-4">
                                                 <div className={cn(
-                                                    "w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors",
+                                                    "size-14 rounded-2xl flex items-center justify-center border transition-colors",
                                                     property.metrics.maintenance > 0 
                                                         ? "border-amber-500/20 bg-amber-500/5 text-amber-500" 
                                                         : "border-border bg-muted/30 text-muted-foreground"
@@ -350,7 +350,7 @@ export function PropertiesDashboard() {
                 {!isLoading && !loadError && filteredProperties.length === 0 && (
                     <div className="rounded-3xl border border-border bg-card/95 py-20 text-center shadow-sm">
                         <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                        <h3 className="mb-2 text-xl font-bold text-foreground">No matching assets</h3>
+                        <h3 className="mb-2 text-xl font-semibold text-foreground">No matching assets</h3>
                         <p className="text-muted-foreground">Try adjusting your filters or search query.</p>
                     </div>
                 )}
@@ -381,16 +381,16 @@ export function PropertiesDashboard() {
                                     onClick={() => setHubModalId(null)}
                                     className="absolute right-6 top-6 rounded-full bg-background p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="size-5" />
                                 </button>
                                 
                                 <div className="mb-6 flex items-center gap-4">
-                                    <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0 relative">
+                                    <div className="size-16 rounded-2xl overflow-hidden shrink-0 relative">
                                         <Image src={activeProperty.image} fill alt="Property" className="object-cover" />
                                     </div>
                                     <div>
                                         <p className="mb-1 text-sm font-bold uppercase tracking-wider text-primary">Quick Actions</p>
-                                        <h2 className="text-2xl font-bold leading-tight text-foreground">{activeProperty.name}</h2>
+                                        <h2 className="text-2xl font-semibold leading-tight text-foreground">{activeProperty.name}</h2>
                                     </div>
                                 </div>
 
@@ -398,30 +398,30 @@ export function PropertiesDashboard() {
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <Link href={`/landlord/properties/new?id=${activeProperty.id}&mode=edit`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                            <Edit3 className="w-5 h-5" />
+                                        <div className="size-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Edit3 className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">Edit Details</span>
                                     </Link>
                                     
                                     <Link href={`/landlord/unit-map?property=${activeProperty.id}`} className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                            <Map className="w-5 h-5" />
+                                        <div className="size-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Map className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">Unit Map</span>
                                     </Link>
 
 
                                     <Link href="/landlord/tenants" className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                            <Users className="w-5 h-5" />
+                                        <div className="size-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Users className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">View Tenants</span>
                                     </Link>
 
                                     <Link href="/landlord/maintenance" className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-background/75 p-4 transition-all hover:bg-muted">
-                                        <div className="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                            <Wrench className="w-5 h-5" />
+                                        <div className="size-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                            <Wrench className="size-5" />
                                         </div>
                                         <span className="text-sm font-medium text-foreground">Maintenance</span>
                                     </Link>
@@ -489,3 +489,4 @@ function PropertySkeleton() {
         </div>
     );
 }
+

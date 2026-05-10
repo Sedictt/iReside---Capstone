@@ -449,7 +449,7 @@ export default function TenantCommunityHubPage() {
                                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                                         <Megaphone className="h-8 w-8 text-muted-foreground/50" />
                                     </div>
-                                    <h3 className="mt-4 text-lg font-bold text-foreground">No posts found</h3>
+                                    <h3 className="mt-4 text-lg font-semibold text-foreground">No posts found</h3>
                                     <p className="mt-2 text-muted-foreground">Try adjusting your search or tab to see more content.</p>
                                 </div>
                             )}

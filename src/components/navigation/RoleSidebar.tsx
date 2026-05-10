@@ -127,7 +127,7 @@ export function RoleSidebar({
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                     nested && !isCollapsed ? "ml-4" : "",
-                    isCollapsed ? "justify-center px-0 w-12 h-12 mx-auto mb-1" : "justify-between px-3 py-2.5"
+                    isCollapsed ? "justify-center px-0 size-12 mx-auto mb-1" : "justify-between px-3 py-2.5"
                 )}
                 title={isCollapsed ? item.label : undefined}
             >
@@ -305,7 +305,7 @@ export function RoleSidebar({
                     onClick={onLogout}
                     className={cn(
                         "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-300 text-muted-foreground hover:bg-red-500/10 hover:text-red-500",
-                        isCollapsed ? "w-10 h-10 justify-center mx-auto" : "w-full"
+                        isCollapsed ? "size-10 justify-center mx-auto" : "w-full"
                     )}
                 >
                     <LogOut className="h-5 w-5 shrink-0" />
@@ -315,5 +315,6 @@ export function RoleSidebar({
         </aside>
     );
 }
+
 
 

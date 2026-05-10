@@ -736,8 +736,8 @@ export default function CheckoutPage() {
                                                         className="h-full w-full object-cover rounded-2xl"
                                                     />
                                                 ) : (
-                                                    <div className="flex h-full items-center justify-center rounded-2xl bg-slate-50 border border-dashed border-slate-200">
-                                                        <QrCode className="h-12 w-12 text-slate-300" />
+                                                    <div className="flex h-full items-center justify-center rounded-2xl bg-zinc-50 border border-dashed border-zinc-200">
+                                                        <QrCode className="h-12 w-12 text-zinc-300" />
                                                     </div>
                                                 )}
                                             </div>

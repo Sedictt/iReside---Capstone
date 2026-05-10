@@ -46,22 +46,22 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
             <div className="flex flex-col items-center gap-4">
                 <div className="flex justify-center gap-4">
                     {socials.facebook && (
-                        <a href={socials.facebook} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.facebook} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Facebook size={20} />
                         </a>
                     )}
                     {socials.twitter && (
-                        <a href={socials.twitter} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1DA1F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.twitter} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#1DA1F2] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Twitter size={20} />
                         </a>
                     )}
                     {socials.linkedin && (
-                        <a href={socials.linkedin} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.linkedin} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Linkedin size={20} />
                         </a>
                     )}
                     {socials.instagram && (
-                        <a href={socials.instagram} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#E4405F] hover:text-white transition-all duration-300 hover:-translate-y-1">
+                        <a href={socials.instagram} target="_blank" rel="noopener noreferrer" className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#E4405F] hover:text-white transition-all duration-300 hover:-translate-y-1">
                             <Instagram size={20} />
                         </a>
                     )}
@@ -82,7 +82,7 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
     return (
         <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 w-full max-w-sm animate-in fade-in zoom-in duration-300">
             <div className="flex items-center justify-between mb-6">
-                <h4 className="text-xs font-bold tracking-widest uppercase text-white">Edit Social Links</h4>
+                <h4 className="text-xs font-semibold tracking-widest uppercase text-white">Edit Social Links</h4>
                 <button onClick={() => setIsEditing(false)} className="text-neutral-500 hover:text-white transition-colors">
                     <X size={18} />
                 </button>
@@ -149,3 +149,4 @@ export function SocialLinksEditor({ initialSocials, onSave }: SocialLinksEditorP
         </div>
     );
 }
+

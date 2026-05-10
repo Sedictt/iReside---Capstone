@@ -77,7 +77,7 @@ export function NotificationCard({
             
             {/* Animated Glow Effect */}
             <div className={cn(
-                "absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none",
+                "absolute -top-24 -right-24 size-48 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none",
                 glowVariants[variant]
             )} />
 
@@ -92,7 +92,7 @@ export function NotificationCard({
                 )}>
                     <div className={cn(
                         "rounded-2xl flex items-center justify-center shrink-0 border border-white/10 transition-transform duration-500 group-hover:scale-110",
-                        isCompact ? "w-10 h-10" : "w-14 h-14",
+                        isCompact ? "size-10" : "size-14",
                         iconVariants[variant]
                     )}>
                         {/* Adjust icon size if possible, though icon is passed as node */}
@@ -106,7 +106,7 @@ export function NotificationCard({
                             {title}
                         </h3>
                         <div className="flex items-center gap-2">
-                            <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                            <span className="size-1 rounded-full bg-primary animate-pulse" />
                             <p className="text-[10px] font-black text-medium uppercase tracking-[0.2em] opacity-40">
                                 {subtitle}
                             </p>
@@ -156,7 +156,7 @@ export function NotificationCard({
                             "mt-3 flex items-center gap-2 text-[9px] text-amber-500 font-black uppercase tracking-wider bg-amber-500/10 w-fit rounded-full border border-amber-500/20",
                             isCompact ? "px-2.5 py-1" : "px-3 py-1.5"
                         )}>
-                            <Hammer className="w-3 h-3" />
+                            <Hammer className="size-3" />
                             <span>Deadline: {new Date(message.expiresAt).toLocaleDateString()}</span>
                         </div>
                     )}
@@ -226,9 +226,9 @@ export function NotificationCard({
                         <span className="relative z-10">{actionLabel}</span>
                         <div className={cn(
                             "relative z-10 rounded-full bg-black/10 flex items-center justify-center",
-                            isCompact ? "w-4 h-4" : "w-5 h-5"
+                            isCompact ? "size-4" : "size-5"
                         )}>
-                            <Zap className={cn(isCompact ? "w-3 h-3" : "w-3.5 h-3.5", "fill-current")} />
+                            <Zap className={cn(isCompact ? "size-3" : "w-3.5 h-3.5", "fill-current")} />
                         </div>
                     </motion.button>
                 )}
@@ -236,3 +236,4 @@ export function NotificationCard({
         </motion.div>
     );
 }
+

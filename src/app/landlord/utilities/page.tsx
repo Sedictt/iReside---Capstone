@@ -241,7 +241,7 @@ export default function LandlordUtilitiesPage() {
                                     <div className="mb-4 rounded-full bg-muted p-4">
                                         <Search className="h-8 w-8 text-muted-foreground" />
                                     </div>
-                                    <h3 className="text-xl font-bold">No facilities found</h3>
+                                    <h3 className="text-xl font-semibold">No facilities found</h3>
                                     <p className="text-muted-foreground">Try adjusting your search or add a new facility.</p>
                                 </div>
                             ) : (
@@ -306,7 +306,7 @@ export default function LandlordUtilitiesPage() {
                                                             </span>
                                                         ))}
                                                     </div>
-                                                    <h4 className="text-xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
+                                                    <h4 className="text-xl font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
                                                         {utility.name}
                                                     </h4>
                                                 </div>

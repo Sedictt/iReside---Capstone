@@ -161,7 +161,7 @@ function ConfirmationModal({
                 </div>
                 <div className="space-y-8">
                     <div className="flex items-center gap-5 text-amber-500">
-                        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                        <div className="size-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
                             <AlertCircle size={32} />
                         </div>
                         <h2 className="text-3xl font-black italic tracking-tight">Final Approval</h2>
@@ -753,7 +753,7 @@ export function WalkInApplicationModal({
                                     )}
                                 >
                                     <div className={cn(
-                                        "relative w-11 h-11 rounded-xl flex items-center justify-center z-10 transition-all duration-500 overflow-hidden",
+                                        "relative size-11 rounded-xl flex items-center justify-center z-10 transition-all duration-500 overflow-hidden",
                                         isActive ? "scale-105 bg-primary text-primary-foreground shadow-[0_0_24px_rgba(var(--primary-rgb),0.24)]" : 
                                         isCompleted ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
                                         "border border-border bg-background text-muted-foreground"
@@ -764,7 +764,7 @@ export function WalkInApplicationModal({
                                         <p className={cn("font-black text-sm tracking-tight transition-all", isActive ? "text-foreground" : "text-muted-foreground")}>
                                             {s.label}
                                         </p>
-                                        <p className={cn("text-[9px] uppercase tracking-widest font-bold", isActive ? "text-primary opacity-80" : "text-slate-500 dark:text-neutral-600")}>
+                                        <p className={cn("text-[9px] uppercase tracking-widest font-bold", isActive ? "text-primary opacity-80" : "text-zinc-500 dark:text-neutral-600")}>
                                             {s.sub}
                                         </p>
                                     </div>
@@ -1083,7 +1083,7 @@ export function WalkInApplicationModal({
                                         <div className="relative group">
                                             <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-primary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
                                             <div className="relative p-7 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-md flex flex-col md:flex-row gap-6 items-center">
-                                                <div className="shrink-0 w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-inner">
+                                                <div className="shrink-0 size-16 bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-500/20 shadow-inner">
                                                     <ShieldCheck className="text-amber-500" size={30} strokeWidth={1.5} />
                                                 </div>
                                                 <div className="space-y-1.5 text-center md:text-left">
@@ -1118,7 +1118,7 @@ export function WalkInApplicationModal({
                                                         <div className="relative z-10 flex items-center gap-6 w-full">
                                                             {/* Icon Container - Fixed Sizing */}
                                                             <div className={cn(
-                                                                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shrink-0",
+                                                                "size-14 rounded-2xl flex items-center justify-center transition-all duration-500 shrink-0",
                                                                 value ? "bg-emerald-500 text-black shadow-lg scale-105" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                                                             )}>
                                                                 {value ? <Check size={24} strokeWidth={3} /> : <Fingerprint size={24} strokeWidth={1.5} />}
@@ -1137,7 +1137,7 @@ export function WalkInApplicationModal({
                                                             </div>
 
                                                             <div className={cn(
-                                                                "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 shrink-0",
+                                                                "size-7 rounded-full flex items-center justify-center transition-all duration-500 shrink-0",
                                                                 value ? "bg-emerald-500 text-black" : "border-2 border-dashed border-border group-hover:border-primary/50 group-hover:rotate-90"
                                                             )}>
                                                                 {value && <Check size={12} strokeWidth={4} />}
@@ -1173,7 +1173,7 @@ export function WalkInApplicationModal({
                                 {step === 3 && (
                                     <div className="space-y-10 max-w-4xl">
                                         <div className="p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/10 text-purple-200 text-xs font-bold leading-relaxed flex gap-6 items-center shadow-[0_15px_30px_rgba(168,85,247,0.05)] backdrop-blur-sm">
-                                            <div className="shrink-0 w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20">
+                                            <div className="shrink-0 size-14 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/20">
                                                 <PenTool className="text-purple-500" size={28} />
                                             </div>
                                             <div className="space-y-1">
@@ -1410,7 +1410,7 @@ export function WalkInApplicationModal({
                                                     <p className="text-xs leading-relaxed text-muted-foreground">
                                                                         A signing link will be emailed to the tenant. The landlord signature will be added after the tenant signs remotely.
                                                                     </p>
-                                                    <p className="text-xs leading-relaxed text-slate-500 dark:text-neutral-500">
+                                                    <p className="text-xs leading-relaxed text-zinc-500 dark:text-neutral-500">
                                                                         This option is available only after the application is approved.
                                                                     </p>
                                                                 </div>
@@ -1508,7 +1508,7 @@ export function WalkInApplicationModal({
                                              
                                              <div className="p-8 flex flex-col sm:flex-row gap-8 items-center relative z-10">
                                                  <div className={cn(
-                                                     "shrink-0 w-20 h-20 rounded-[2rem] flex items-center justify-center border-4 shadow-2xl relative",
+                                                     "shrink-0 size-20 rounded-[2rem] flex items-center justify-center border-4 shadow-2xl relative",
                                                      allRequirementsMet ? "bg-emerald-500/10 border-emerald-500 text-emerald-500" : "bg-amber-500/10 border-amber-500 text-amber-500"
                                                  )}>
                                                      {allRequirementsMet ? <CheckCircle2 size={32} strokeWidth={2.5}/> : <AlertCircle size={32} strokeWidth={2.5} />}
@@ -1694,3 +1694,4 @@ export function WalkInApplicationModal({
         </div>
     );
 }
+

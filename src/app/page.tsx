@@ -693,7 +693,7 @@ export default function ScrollyTellingLandingPage() {
             <section id="features" ref={showcaseContainerRef} className="relative h-screen bg-background z-20 overflow-hidden">
                 <div className="absolute top-24 left-0 right-0 z-30 text-center pointer-events-none">
                     <p className="text-sm font-black uppercase tracking-widest text-primary mb-2">Featured Modules</p>
-                    <h2 className="text-3xl font-bold">Three core tools for confident management.</h2>
+                    <h2 className="text-3xl font-semibold">Three core tools for confident management.</h2>
                 </div>
                 {SHOWCASE_MODULES.map((mod, i) => (
                     <div key={mod.id} className="showcase-card absolute inset-0 flex items-center justify-center p-6 bg-background border-t border-border shadow-2xl" style={{ zIndex: i + 1 }}>
@@ -727,7 +727,7 @@ export default function ScrollyTellingLandingPage() {
                                 {IRIS_WORKFLOWS.map((item) => (
                                     <article key={item.title} className="iris-card rounded-2xl border border-primary/20 bg-background/50 p-5 flex items-center gap-4">
                                         <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"><item.icon className="h-5 w-5 text-primary" /></div>
-                                        <div><h3 className="text-lg font-bold">{item.title}</h3><p className="text-sm text-muted-foreground mt-1">{item.detail}</p></div>
+                                        <div><h3 className="text-lg font-semibold">{item.title}</h3><p className="text-sm text-muted-foreground mt-1">{item.detail}</p></div>
                                     </article>
                                 ))}
                             </div>
@@ -762,7 +762,7 @@ export default function ScrollyTellingLandingPage() {
                             {OUTCOMES.map(o => (
                                 <article key={o.label} className="outcome-item p-8 border-l-4 border-primary/30 bg-muted/20 rounded-r-3xl">
                                     <div className="flex items-center gap-4 mb-4"><span className="outcome-metric-value text-6xl font-black">{o.metric}</span><CheckCircle2 className="h-8 w-8 text-primary" /></div>
-                                    <h3 className="text-2xl font-bold text-primary">{o.label}</h3><p className="text-lg text-muted-foreground mt-2">{o.detail}</p>
+                                    <h3 className="text-2xl font-semibold text-primary">{o.label}</h3><p className="text-lg text-muted-foreground mt-2">{o.detail}</p>
                                 </article>
                             ))}
                         </div>

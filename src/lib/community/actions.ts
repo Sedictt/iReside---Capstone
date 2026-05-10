@@ -943,6 +943,9 @@ export async function votePoll(pollId: string, optionIndex: number) {
 
 export async function addComment(postId: string, content: string, parentCommentId?: string) {
     const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -981,6 +984,9 @@ export async function addComment(postId: string, content: string, parentCommentI
 
 export async function getPostComments(postId: string) {
     const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 
@@ -1030,6 +1036,9 @@ export async function getPostComments(postId: string) {
 
 export async function reportPost(postId: string, reason: CommunityReportReason) {
     const session = await auth()
+    if (!session) {
+        throw new Error("Unauthorized")
+    }
     const userId = await getAuthenticatedUserId()
     const supabase = (await createClient()) as any
 

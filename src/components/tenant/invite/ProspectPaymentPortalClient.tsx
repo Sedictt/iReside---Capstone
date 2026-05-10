@@ -231,7 +231,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
                     <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-black">Move-in Payment Portal</p>
                     <h1 className="mt-3 text-3xl font-black">{payload.application.propertyName}</h1>
-                    <p className="mt-2 text-sm text-slate-300">
+                    <p className="mt-2 text-sm text-zinc-300">
                         Unit: {payload.application.unitName} | Applicant: {payload.application.applicantName}
                     </p>
                     <p className="mt-2 text-xs text-amber-300">
@@ -275,12 +275,12 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                         return (
                             <section key={request.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <h2 className="text-lg font-bold">{request.label}</h2>
-                                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                                    <h2 className="text-lg font-semibold">{request.label}</h2>
+                                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                                         {statusLabel(request.status)}
                                     </span>
                                 </div>
-                                <p className="mt-1 text-sm text-slate-300">
+                                <p className="mt-1 text-sm text-zinc-300">
                                     Amount: {peso.format(request.amount)} | Due: {request.dueAt || "Before move-in"}
                                 </p>
                                 {request.reviewNote && (
@@ -288,7 +288,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 )}
 
                                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                                         Method
                                         <select
                                             value={state.method}
@@ -304,7 +304,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                             <option value="cash">Cash (in person)</option>
                                         </select>
                                     </label>
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                                         Reference Number
                                         <input
                                             value={state.referenceNumber}
@@ -316,7 +316,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     </label>
                                 </div>
 
-                                <label className="mt-3 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                                <label className="mt-3 block text-xs font-bold uppercase tracking-wider text-zinc-400">
                                     Note
                                     <textarea
                                         value={state.note}
@@ -328,7 +328,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                     />
                                 </label>
 
-                                <label className="mt-3 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                                <label className="mt-3 block text-xs font-bold uppercase tracking-wider text-zinc-400">
                                     Proof Upload {state.method === "gcash" ? "(Required for GCash)" : "(Optional for cash)"}
                                     <input
                                         type="file"
@@ -354,7 +354,7 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
                                 )}
 
                                 <div className="mt-4 flex items-center justify-between">
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-zinc-400">
                                         Submitted: {formatDateTime(request.submittedAt)} | Reviewed: {formatDateTime(request.reviewedAt)}
                                     </p>
                                     <button
@@ -385,3 +385,4 @@ export function ProspectPaymentPortalClient({ token }: { token: string }) {
         </div>
     );
 }
+

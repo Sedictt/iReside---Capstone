@@ -169,7 +169,7 @@ export function TenantSidebar() {
         <nav className={cn("space-y-8", compact && "pt-2")}>
             {NAV_SECTIONS.map((section) => (
                 <div key={section.category}>
-                    <h3 className="mb-4 px-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    <h3 className="mb-4 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         {section.category}
                     </h3>
                     <div className="space-y-1">

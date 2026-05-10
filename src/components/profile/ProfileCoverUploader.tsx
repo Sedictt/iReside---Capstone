@@ -116,7 +116,7 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
             {!coverUrl && !isUploading && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="flex flex-col items-center gap-2 opacity-40">
-                        <UploadCloud className="w-8 h-8 text-white" />
+                        <UploadCloud className="size-8 text-white" />
                         <span className="text-[10px] font-bold tracking-widest uppercase text-white">Upload Cover Photo</span>
                     </div>
                 </div>
@@ -124,3 +124,4 @@ export function ProfileCoverUploader({ initialCoverUrl, fullName, className }: P
         </div>
     );
 }
+

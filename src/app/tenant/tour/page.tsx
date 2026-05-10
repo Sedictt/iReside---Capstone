@@ -153,7 +153,7 @@ export default function TenantTourPage() {
         <div className="mx-auto max-w-3xl py-10 space-y-6">
             <section className="rounded-2xl border border-border bg-card p-6 space-y-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">Tenant Product Tour</p>
-                <h1 className="text-3xl font-bold tracking-tight">Explore your tenant portal in five guided steps</h1>
+                <h1 className="text-3xl font-semibold tracking-tight">Explore your tenant portal in five guided steps</h1>
                 <p className="text-sm text-muted-foreground">
                     This walkthrough highlights your dashboard, lease hub, payments, maintenance, and messaging workflows.
                 </p>

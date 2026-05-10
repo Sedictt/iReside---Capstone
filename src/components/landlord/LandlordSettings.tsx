@@ -100,7 +100,7 @@ function GlassCard({ children, className, title, description }: { children: Reac
         <div className={cn("relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.03] backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.05]", className)}>
             {(title || description) && (
                 <div className="border-b border-white/5 px-8 py-6">
-                    {title && <h3 className="text-lg font-bold text-white">{title}</h3>}
+                    {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
                     {description && <p className="text-sm text-neutral-400">{description}</p>}
                 </div>
             )}
@@ -649,7 +649,7 @@ export function LandlordSettings() {
                                             <Camera className="h-6 w-6" />
                                         </button>
                                     </div>
-                                    <h4 className="mt-6 text-xl font-bold text-white">{profile?.full_name}</h4>
+                                    <h4 className="mt-6 text-xl font-semibold text-white">{profile?.full_name}</h4>
                                     <p className="text-sm text-neutral-500">Verified Landlord</p>
                                 </div>
                             </GlassCard>
@@ -1024,7 +1024,7 @@ export function LandlordSettings() {
                         <Smartphone className="h-8 w-8" />
                     </div>
                     <div className="space-y-1">
-                        <h4 className="text-base font-bold text-white">Email OTP Protection</h4>
+                        <h4 className="text-base font-semibold text-white">Email OTP Protection</h4>
                         <p className="text-xs text-neutral-500 leading-relaxed">Connect your Gmail account to receive secure one-time passwords for account verification.</p>
                     </div>
                 </div>
@@ -1112,7 +1112,7 @@ export function LandlordSettings() {
                 <div className="pt-6 border-t border-white/5">
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold text-white">Disable Protection</h4>
+                            <h4 className="text-sm font-semibold text-white">Disable Protection</h4>
                             <div className="h-px flex-1 bg-white/5"></div>
                         </div>
                         <p className="text-xs text-neutral-500">To disable two-factor authentication, please provide your current account password.</p>
@@ -1171,7 +1171,7 @@ export function LandlordSettings() {
                                                 <div className="flex items-center gap-4">
                                                     <Icon className={cn("h-5 w-5", isCurrent ? "text-primary" : "text-neutral-400")} />
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-white">{browser} on {os}</h4>
+                                                        <h4 className="text-sm font-semibold text-white">{browser} on {os}</h4>
                                                         <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
                                                             {isCurrent ? "Current Session" : `Last seen ${timeString}`} • IP: {sess.ip}
                                                         </p>
@@ -1263,7 +1263,7 @@ export function LandlordSettings() {
                             ].map((item) => (
                                 <tr key={item.label} className="transition-colors hover:bg-white/[0.01]">
                                     <td className="px-8 py-6">
-                                        <h4 className="text-sm font-bold text-white">{item.label}</h4>
+                                        <h4 className="text-sm font-semibold text-white">{item.label}</h4>
                                         <p className="text-xs text-neutral-500">{item.desc}</p>
                                     </td>
                                     <td className="px-4 py-6 text-center"><ToggleSwitch enabled={true} onToggle={() => {}} /></td>

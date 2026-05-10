@@ -523,7 +523,7 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
         return (
             <div className="flex-1 flex items-center justify-center bg-[#080808]">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <Loader2 className="size-10 text-primary animate-spin" />
                     <p className="text-neutral-500 text-sm font-bold uppercase tracking-widest">Building Layout...</p>
                 </div>
             </div>
@@ -824,3 +824,4 @@ export function MapSetupWizard({ propertyId, propertyName, onSetupComplete }: Ma
         </div>
     );
 }
+

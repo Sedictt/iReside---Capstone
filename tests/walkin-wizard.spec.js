@@ -39,9 +39,9 @@ test('landlord can submit a walk-in application through the wizard', async ({ pa
   // Complete all requirement checklist items so the flow can finish as approved.
   const requirementButtons = page.locator('button:has-text("Awaiting Audit")');
   const requirementCount = await requirementButtons.count();
-  for (let i = 0; i < requirementCount; i += 1) {
-    await requirementButtons.nth(i).click();
-  }
+  await Promise.all(
+    Array.from({ length: requirementCount }, (_, i) => requirementButtons.nth(i).click())
+  );
 
   await page.getByRole('button', { name: /Continue/i }).click();
 

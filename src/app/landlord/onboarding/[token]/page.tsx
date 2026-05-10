@@ -399,7 +399,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                     <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="w-8 h-8 text-red-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Link Invalid</h2>
+                    <h2 className="text-2xl font-semibold text-white mb-2">Link Invalid</h2>
                     <p className="text-white/60 mb-6">{error}</p>
                     <Link 
                         href="/login" 
@@ -1129,7 +1129,7 @@ export default function OnboardingPage({ params }: { params: Promise<{ token: st
                                         </div>
 
                                         {/* Lightbox Body (Preview Content) */}
-                                        <div className="flex-1 overflow-y-auto p-4 md:p-12 custom-scrollbar bg-slate-900/50">
+                                        <div className="flex-1 overflow-y-auto p-4 md:p-12 custom-scrollbar bg-zinc-900/50">
                                             {contractMode === "generate" ? (
                                                 <div id="contract-preview-container" className="max-w-4xl mx-auto shadow-2xl">
                                                     <LeaseDocument 

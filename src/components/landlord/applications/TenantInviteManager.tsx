@@ -323,7 +323,7 @@ export function TenantInviteManager({
                 <div className="flex flex-col rounded-[2rem] border border-border bg-background/50 p-6 shadow-sm xl:p-8">
                     <div className="mb-5 flex flex-col items-start justify-between gap-3 border-b border-border/50 pb-5 xl:flex-row xl:items-center">
                         <div>
-                            <h3 className="text-lg font-bold text-foreground">Generator Settings</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Generator Settings</h3>
                             <p className="mt-1 text-sm text-muted-foreground">Configure the scope and expiration of your invite.</p>
                         </div>
                         <div className="w-full overflow-x-auto">

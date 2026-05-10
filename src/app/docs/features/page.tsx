@@ -50,7 +50,7 @@ export default function FeaturesPage() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
             <FileText className="h-6 w-6" />
           </div>
-          <h3 className="text-2xl font-bold text-text-high">Document & Lease Manager</h3>
+          <h3 className="text-2xl font-semibold text-text-high">Document & Lease Manager</h3>
           <p className="text-text-medium leading-relaxed">
             Move away from disorganized file folders. Keep all essential records securely centralized and easy to reference.
           </p>
@@ -75,7 +75,7 @@ export default function FeaturesPage() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
             <Wallet className="h-6 w-6" />
           </div>
-          <h3 className="text-2xl font-bold text-text-high">Financial Hub & Analytics</h3>
+          <h3 className="text-2xl font-semibold text-text-high">Financial Hub & Analytics</h3>
           <p className="text-text-medium leading-relaxed">
             Always know your financial positioning with straightforward tracking tools built for private rentals.
           </p>
@@ -100,7 +100,7 @@ export default function FeaturesPage() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
             <MessageSquare className="h-6 w-6" />
           </div>
-          <h3 className="text-2xl font-bold text-text-high">In-App Chat Messaging</h3>
+          <h3 className="text-2xl font-semibold text-text-high">In-App Chat Messaging</h3>
           <p className="text-text-medium leading-relaxed">
             Centralized communication ensures zero lost texts, preserving a clean history between landlords and tenants.
           </p>
@@ -125,7 +125,7 @@ export default function FeaturesPage() {
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
             <Wrench className="h-6 w-6" />
           </div>
-          <h3 className="text-2xl font-bold text-text-high">Maintenance Ticketing</h3>
+          <h3 className="text-2xl font-semibold text-text-high">Maintenance Ticketing</h3>
           <p className="text-text-medium leading-relaxed">
             Stop losing track of repair requests. Tenants can report issues immediately with photo evidence while landlords maintain an organized queue.
           </p>
@@ -153,7 +153,7 @@ export default function FeaturesPage() {
             <ShieldCheck className="h-8 w-8 text-zinc-300" />
           </div>
           <div>
-            <h3 className="text-xl font-bold mb-2">Verified Landlords for Safe Transacting</h3>
+            <h3 className="text-xl font-semibold mb-2">Verified Landlords for Safe Transacting</h3>
             <p className="text-zinc-400">
               In iReside, to maintain the safety of the ecosystem, landlord users undergo screening administered completely by platform administrators. Once proven verified, landlords have the authority to manage their own custom standards and manually screen tenants under their criteria—giving private owners full autonomy while blocking malicious actors from entering the system.
             </p>

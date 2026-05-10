@@ -462,9 +462,9 @@ export function DashboardBanner({
                                                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">{notification.message}</p>
                                                     <p className="mt-2 text-[10px] font-medium uppercase tracking-tight text-muted-foreground/60">{formatTimeAgo(notification.created_at)}</p>
                                                 </div>
-                                                <div className="flex items-center justify-center w-8 h-8 shrink-0">
+                                                <div className="flex items-center justify-center size-8 shrink-0">
                                                     {!notification.read ? (
-                                                        <div className="relative flex items-center justify-center w-8 h-8">
+                                                        <div className="relative flex items-center justify-center size-8">
                                                             <span className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)] group-hover/item:scale-0 transition-transform duration-300" />
                                                             <button
                                                                 onClick={(e) => handleMarkAsRead(e, notification.id)}
@@ -532,13 +532,13 @@ export function DashboardBanner({
                                 className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95"
                             >
                                 <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                <UserPlus className="w-5 h-5 font-black relative z-10" />
+                                <UserPlus className="size-5 font-black relative z-10" />
                                 <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                             </button>
                         ) : (
                             <Link href="/landlord/applications?action=tenant-application" className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95">
                                 <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                <UserPlus className="w-5 h-5 font-black relative z-10" />
+                                <UserPlus className="size-5 font-black relative z-10" />
                                 <span className="text-sm font-black uppercase tracking-tight relative z-10">New Application</span>
                             </Link>
                         )}
@@ -550,7 +550,7 @@ export function DashboardBanner({
                                     title="Create Invite link"
                                     className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                                 >
-                                    <QrCode className="w-5 h-5 text-primary" />
+                                    <QrCode className="size-5 text-primary" />
                                 </button>
                             )}
                             <Link 
@@ -558,14 +558,14 @@ export function DashboardBanner({
                                 title="Maintenance Queue"
                                 className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                             >
-                                <Wrench className="w-5 h-5 text-amber-500" />
+                                <Wrench className="size-5 text-amber-500" />
                             </Link>
                             <Link 
                                 href="/landlord/unit-map" 
                                 title="Unit Map"
                                 className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:bg-card"
                             >
-                                <Map className="w-5 h-5 text-rose-500" />
+                                <Map className="size-5 text-rose-500" />
                             </Link>
                         </div>
                     </div>
@@ -595,3 +595,4 @@ export function DashboardBanner({
         </div>
     );
 }
+

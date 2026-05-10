@@ -93,7 +93,7 @@ export function SigningModeSelector({
               {isSelected && (
                 <motion.div
                   layoutId="signing-mode-indicator"
-                  className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30"
+                  className="absolute -top-2 -right-2 size-8 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-emerald-400/50 shadow-lg shadow-emerald-500/30"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -106,7 +106,7 @@ export function SigningModeSelector({
                 {/* Icon */}
                 <div
                   className={cn(
-                    "shrink-0 w-12 h-12 rounded-xl flex items-center justify-center border",
+                    "shrink-0 size-12 rounded-xl flex items-center justify-center border",
                     colorClasses.iconBg,
                     isSelected
                       ? `${colorClasses.border} border-opacity-40`
@@ -154,3 +154,4 @@ export function SigningModeSelector({
     </div>
   );
 }
+

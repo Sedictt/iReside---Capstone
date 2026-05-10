@@ -139,11 +139,11 @@ export default function NewMaintenanceRequest() {
                         onClick={() => router.back()}
                         className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4 group"
                     >
-                        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                        <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
                         Back to Dashboard
                     </button>
                     <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-                        <Wrench className="w-8 h-8 text-primary" />
+                        <Wrench className="size-8 text-primary" />
                         New Maintenance Request
                     </h1>
                     <p className="text-muted-foreground mt-1">
@@ -158,8 +158,8 @@ export default function NewMaintenanceRequest() {
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Issue Details */}
                         <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Info className="w-5 h-5 text-primary" />
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <Info className="size-5 text-primary" />
                                 Issue Details
                             </h2>
 
@@ -212,7 +212,7 @@ export default function NewMaintenanceRequest() {
                                             )}
                                         >
                                             <div className={cn("p-2 rounded-xl transition-colors", cat.bg, cat.color)}>
-                                                <cat.icon className="w-5 h-5" />
+                                                <cat.icon className="size-5" />
                                             </div>
                                             <span className="text-xs font-bold">{cat.label}</span>
                                         </button>
@@ -223,8 +223,8 @@ export default function NewMaintenanceRequest() {
 
                         {/* Media Upload */}
                         <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Camera className="w-5 h-5 text-primary" />
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <Camera className="size-5 text-primary" />
                                 Photos (Optional)
                             </h2>
                             <p className="text-sm text-muted-foreground">
@@ -247,7 +247,7 @@ export default function NewMaintenanceRequest() {
                                                 onClick={() => removeFile(idx)}
                                                 className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full shadow-lg"
                                             >
-                                                <X className="w-3 h-3" />
+                                                <X className="size-3" />
                                             </button>
                                         </motion.div>
                                     ))}
@@ -259,7 +259,7 @@ export default function NewMaintenanceRequest() {
                                         onClick={() => fileInputRef.current?.click()}
                                         className="aspect-square rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
                                     >
-                                        <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                        <Upload className="size-6 text-muted-foreground group-hover:text-primary transition-colors" />
                                         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary">
                                             Upload
                                         </span>
@@ -282,7 +282,7 @@ export default function NewMaintenanceRequest() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-sm font-medium flex items-center gap-3"
                             >
-                                <AlertTriangle className="w-5 h-5 shrink-0" />
+                                <AlertTriangle className="size-5 shrink-0" />
                                 {error}
                             </motion.div>
                         )}
@@ -294,13 +294,13 @@ export default function NewMaintenanceRequest() {
                         >
                             {isSubmitting ? (
                                 <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <Loader2 className="size-5 animate-spin" />
                                     Submitting...
                                 </>
                             ) : (
                                 <>
                                     Submit Request
-                                    <ChevronRight className="w-5 h-5" />
+                                    <ChevronRight className="size-5" />
                                 </>
                             )}
                         </button>
@@ -312,12 +312,12 @@ export default function NewMaintenanceRequest() {
                     {/* Pro Tips */}
                     <div className="bg-primary/10 border border-primary/20 rounded-3xl p-6 space-y-4">
                         <div className="flex items-center gap-3 text-primary">
-                            <Clock className="w-5 h-5" />
-                            <h3 className="font-bold">What to expect?</h3>
+                            <Clock className="size-5" />
+                            <h3 className="font-semibold">What to expect?</h3>
                         </div>
                         <ul className="space-y-4">
                             <li className="flex gap-3">
-                                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                                <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
                                     <span className="text-[10px] font-bold text-primary">1</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -325,7 +325,7 @@ export default function NewMaintenanceRequest() {
                                 </p>
                             </li>
                             <li className="flex gap-3">
-                                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                                <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
                                     <span className="text-[10px] font-bold text-primary">2</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -333,7 +333,7 @@ export default function NewMaintenanceRequest() {
                                 </p>
                             </li>
                             <li className="flex gap-3">
-                                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                                <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-0.5">
                                     <span className="text-[10px] font-bold text-primary">3</span>
                                 </div>
                                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -375,8 +375,8 @@ export default function NewMaintenanceRequest() {
                     {/* Emergency Contact */}
                     <div className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6">
                         <div className="flex items-center gap-3 text-red-500 mb-3">
-                            <AlertTriangle className="w-5 h-5" />
-                            <h3 className="font-bold uppercase tracking-tight">Emergency Hotlines</h3>
+                            <AlertTriangle className="size-5" />
+                            <h3 className="font-semibold uppercase tracking-tight">Emergency Hotlines</h3>
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-relaxed mb-4 uppercase font-bold tracking-wider">
                             For life-threatening emergencies, please contact the authorities immediately.
@@ -421,7 +421,7 @@ export default function NewMaintenanceRequest() {
                                                     className="text-sm font-black text-foreground hover:text-red-500 transition-colors flex items-center justify-between group/num"
                                                 >
                                                     {num}
-                                                    <Phone className="w-3 h-3 opacity-0 group-hover/num:opacity-100 transition-opacity" />
+                                                    <Phone className="size-3 opacity-0 group-hover/num:opacity-100 transition-opacity" />
                                                 </a>
                                             ))}
                                         </div>
@@ -442,3 +442,4 @@ export default function NewMaintenanceRequest() {
         </div>
     );
 }
+

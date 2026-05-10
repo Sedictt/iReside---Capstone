@@ -19,7 +19,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                         <Logo theme="dark" className="h-10 w-32" />
-                        <span className="text-gray-400">|</span>
+                        <span className="text-zinc-400">|</span>
                     </div>
 
                     <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
@@ -45,7 +45,7 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                                                 ? "bg-blue-600 text-white"
                                                 : isCompleted
                                                     ? "bg-blue-600 text-white"
-                                                    : "bg-slate-700 text-slate-400"
+                                                    : "bg-zinc-700 text-zinc-400"
                                         )}
                                     >
                                         {isCompleted ? <Check className="h-3 w-3" /> : step.id}
@@ -53,14 +53,14 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                                     <span
                                         className={cn(
                                             "text-sm font-medium transition-colors",
-                                            isActive ? "text-blue-400" : "text-slate-400"
+                                            isActive ? "text-blue-400" : "text-zinc-400"
                                         )}
                                     >
                                         {step.label}
                                     </span>
                                 </div>
                                 {!isLast && (
-                                    <div className="mx-3 h-px w-8 bg-slate-700" aria-hidden="true" />
+                                    <div className="mx-3 h-px w-8 bg-zinc-700" aria-hidden="true" />
                                 )}
                             </div>
                         );
@@ -70,12 +70,12 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
                 {/* Right: User Profile & Lease ID */}
                 <div className="flex items-center gap-4 text-right">
                     <div className="hidden sm:block">
-                        <p className="text-xs text-slate-400 uppercase tracking-wider">Lease ID</p>
+                        <p className="text-xs text-zinc-400 uppercase tracking-wider">Lease ID</p>
                         <p className="text-sm font-medium text-white">{leaseId}</p>
                     </div>
                     <div className="h-10 w-10 overflow-hidden rounded-full ring-2 ring-slate-700">
                         {/* Placeholder Avatar */}
-                        <div className="flex h-full w-full items-center justify-center bg-slate-600 font-bold text-white">
+                        <div className="flex h-full w-full items-center justify-center bg-zinc-600 font-bold text-white">
                             AR
                         </div>
                         {/* Ideally utilize Image component here if user image is available */}
@@ -85,3 +85,4 @@ export function LeaseHeader({ currentStep, steps, leaseId }: LeaseHeaderProps) {
         </header>
     );
 }
+

@@ -467,7 +467,7 @@ export default function RentApplicationPage() {
                                                         <Shield className="h-6 w-6 text-amber-500" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <h4 className="text-white font-bold text-lg">Strict Acceptance Policy</h4>
+                                                        <h4 className="text-white font-semibold text-lg">Strict Acceptance Policy</h4>
                                                         <p className="text-white/40 text-sm leading-relaxed">
                                                             I acknowledge that completion of this form does not guarantee residency. Moving in requires <span className="text-amber-500 font-bold italic underline decoration-amber-500/30">Upfront Payment (1 Month Advance & 2 Months Security Deposit)</span>. 
                                                             <br />
@@ -823,7 +823,7 @@ function UploadCard({ title, desc, required }: any) {
             <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:text-black transition-all duration-300 shadow-xl">
                 <Upload className="h-5 w-5" />
             </div>
-            <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{title}</h4>
+            <h4 className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{title}</h4>
             <p className="text-[10px] text-white/40 mt-0.5 font-medium">{desc}</p>
             {required && (
                 <div className="mt-3 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[8px] font-black text-red-400 uppercase tracking-tighter">

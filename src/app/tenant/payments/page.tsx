@@ -300,7 +300,7 @@ export default function FinanceHubPage() {
                             href={`/tenant/payments/${nextPayment.id}/checkout`}
                             className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10 transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0"
                         >
-                            Pay Now <ArrowRight className="w-4 h-4" />
+                            Pay Now <ArrowRight className="size-4" />
                         </Link>
                     </div>
                 ) : (
@@ -316,7 +316,7 @@ export default function FinanceHubPage() {
                             disabled={creatingAdvance}
                             className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 flex items-center gap-2 shrink-0 disabled:opacity-50"
                         >
-                            {creatingAdvance ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Pay Next Cycle Now <ArrowRight className="w-4 h-4" /></>}
+                            {creatingAdvance ? <Loader2 className="size-4 animate-spin" /> : <>Pay Next Cycle Now <ArrowRight className="size-4" /></>}
                         </button>
                     </div>
                 )}
@@ -366,7 +366,7 @@ export default function FinanceHubPage() {
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                     >
-                        <tab.icon className="w-4 h-4" />
+                        <tab.icon className="size-4" />
                         {tab.label}
                     </button>
                 ))}
@@ -381,7 +381,7 @@ export default function FinanceHubPage() {
                         {activeTab === "bill" && (
                             <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border">
                                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] select-none pointer-events-none">
-                                    <Receipt className="w-48 h-48" />
+                                    <Receipt className="size-48" />
                                 </div>
                                 
                                 <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
@@ -419,8 +419,8 @@ export default function FinanceHubPage() {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between py-3 group border-b border-border/50">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-                                                <Home className="w-5 h-5" />
+                                            <div className="size-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
+                                                <Home className="size-5" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">Monthly Base Rent</p>
@@ -437,8 +437,8 @@ export default function FinanceHubPage() {
                                     {nextPayment?.paymentItems?.filter(i => i.category !== 'rent').map((item) => (
                                         <div key={item.id} className="flex items-center justify-between py-3 group border-b border-border/50">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground border border-border">
-                                                    {item.label.toLowerCase().includes('electric') ? <Zap className="w-5 h-5" /> : <Droplets className="w-5 h-5" />}
+                                                <div className="size-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground border border-border">
+                                                    {item.label.toLowerCase().includes('electric') ? <Zap className="size-5" /> : <Droplets className="size-5" />}
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{item.label}</p>
@@ -453,8 +453,8 @@ export default function FinanceHubPage() {
                                         <>
                                             <div className="flex items-center justify-between py-3 opacity-40">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground border border-border">
-                                                        <Zap className="w-5 h-5" />
+                                                    <div className="size-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground border border-border">
+                                                        <Zap className="size-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-black text-foreground">Electricity Bill</p>
@@ -465,8 +465,8 @@ export default function FinanceHubPage() {
                                             </div>
                                             <div className="flex items-center justify-between py-3 opacity-40">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground border border-border">
-                                                        <Droplets className="w-5 h-5" />
+                                                    <div className="size-10 rounded-xl bg-muted/30 flex items-center justify-center text-muted-foreground border border-border">
+                                                        <Droplets className="size-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-black text-foreground">Water Bill</p>
@@ -498,7 +498,7 @@ export default function FinanceHubPage() {
                         {activeTab === "consumption" && (
                             <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden ring-1 ring-border min-h-[400px]">
                                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] select-none pointer-events-none">
-                                    <TrendingUp className="w-48 h-48" />
+                                    <TrendingUp className="size-48" />
                                 </div>
                                 <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
                                     <div>
@@ -518,10 +518,10 @@ export default function FinanceHubPage() {
                                                 <div className="flex items-center justify-between mb-4">
                                                     <div className="flex items-center gap-4">
                                                         <div className={cn(
-                                                            "w-10 h-10 rounded-2xl flex items-center justify-center shadow-inner border",
+                                                            "size-10 rounded-2xl flex items-center justify-center shadow-inner border",
                                                             reading.utility_type === 'electricity' ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-blue-500/10 text-blue-500 border-blue-500/20"
                                                         )}>
-                                                            {reading.utility_type === 'electricity' ? <Zap className="w-5 h-5" /> : <Droplets className="w-5 h-5" />}
+                                                            {reading.utility_type === 'electricity' ? <Zap className="size-5" /> : <Droplets className="size-5" />}
                                                         </div>
                                                         <div>
                                                             <h3 className="text-base font-black text-foreground capitalize tracking-tight">{reading.utility_type}</h3>
@@ -553,7 +553,7 @@ export default function FinanceHubPage() {
                                         ))
                                     ) : (
                                         <div className="col-span-full py-24 text-center opacity-40">
-                                            <TrendingUp className="w-12 h-12 mx-auto mb-4" />
+                                            <TrendingUp className="size-12 mx-auto mb-4" />
                                             <p className="text-xs font-black uppercase tracking-widest">No consumption records found.</p>
                                         </div>
                                     )}
@@ -575,7 +575,7 @@ export default function FinanceHubPage() {
                                                 className="flex items-center gap-1.5 hover:bg-muted text-foreground px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all"
                                                 title="Professional Statement"
                                             >
-                                                <FileText className="w-3 h-3 text-primary" />
+                                                <FileText className="size-3 text-primary" />
                                                 PDF
                                             </button>
                                             <button 
@@ -583,7 +583,7 @@ export default function FinanceHubPage() {
                                                 className="flex items-center gap-1.5 hover:bg-muted text-foreground px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all"
                                                 title="Data Spreadsheet"
                                             >
-                                                <FileSpreadsheet className="w-3 h-3 text-muted-foreground" />
+                                                <FileSpreadsheet className="size-3 text-muted-foreground" />
                                                 CSV
                                             </button>
                                         </div>
@@ -596,14 +596,14 @@ export default function FinanceHubPage() {
                                         history.map((invoice) => (
                                             <div key={invoice.id} className="p-6 hover:bg-primary/[0.01] transition-all flex items-center justify-between gap-8 group">
                                                 <div className="flex items-center gap-6">
-                                                    <div className="w-12 h-12 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 group-hover:border-primary/30 group-hover:shadow-sm transition-all">
-                                                        <FileText className="w-6 h-6 text-muted-foreground" />
+                                                    <div className="size-12 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 group-hover:border-primary/30 group-hover:shadow-sm transition-all">
+                                                        <FileText className="size-6 text-muted-foreground" />
                                                     </div>
                                                     <div>
                                                         <h4 className="text-base font-black text-foreground tracking-tight group-hover:text-primary transition-colors">{invoice.invoiceNumber}</h4>
                                                         <div className="flex items-center gap-3 mt-1">
                                                             <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{invoice.type}</span>
-                                                            <span className="w-1 h-1 rounded-full bg-border" />
+                                                            <span className="size-1 rounded-full bg-border" />
                                                             <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">{invoice.dueDate}</span>
                                                         </div>
                                                     </div>
@@ -615,7 +615,7 @@ export default function FinanceHubPage() {
                                                         <div className="flex items-center justify-end gap-2 mt-1.5">
                                                             {invoice.hasReceipt && (
                                                                 <div className="flex items-center gap-1 text-[8px] font-black text-emerald-600 uppercase tracking-widest" title="Official Receipt Available">
-                                                                    <FileCheck className="w-3 h-3" />
+                                                                    <FileCheck className="size-3" />
                                                                     Receipted
                                                                 </div>
                                                             )}
@@ -630,21 +630,21 @@ export default function FinanceHubPage() {
                                                     <Link 
                                                         href={`/tenant/payments/${invoice.id}/checkout`}
                                                         className={cn(
-                                                            "w-10 h-10 rounded-xl border flex items-center justify-center transition-all",
+                                                            "size-10 rounded-xl border flex items-center justify-center transition-all",
                                                             invoice.status === 'paid' 
                                                                 ? "bg-muted/50 border-border hover:bg-primary/10 hover:border-primary/20 hover:text-primary" 
                                                                 : "bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-white"
                                                         )}
                                                         title={invoice.status === 'paid' ? "View Summary" : "Pay Now"}
                                                     >
-                                                        {invoice.status === 'paid' ? <ArrowUpRight className="w-5 h-5" /> : <CreditCard className="w-4 h-4" />}
+                                                        {invoice.status === 'paid' ? <ArrowUpRight className="size-5" /> : <CreditCard className="size-4" />}
                                                     </Link>
                                                 </div>
                                             </div>
                                         ))
                                     ) : (
                                         <div className="p-32 text-center opacity-40">
-                                            <History className="w-12 h-12 mx-auto mb-4" />
+                                            <History className="size-12 mx-auto mb-4" />
                                             <p className="text-xs font-black uppercase tracking-widest">No historical records found.</p>
                                         </div>
                                     )}
@@ -661,7 +661,7 @@ export default function FinanceHubPage() {
                                 <>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <Clock className="w-4 h-4 text-primary" />
+                                            <Clock className="size-4 text-primary" />
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Planning Guide</h3>
                                         </div>
                                         <p className="text-xs font-bold text-foreground">Budgeting for next cycle</p>
@@ -671,18 +671,18 @@ export default function FinanceHubPage() {
                                             <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Billing Policy</p>
                                             <div className="space-y-3">
                                                 <div className="flex items-start gap-2.5">
-                                                    <div className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                    <div className="size-1 rounded-full bg-primary mt-1.5 shrink-0" />
                                                     <p className="text-[9px] text-foreground font-black uppercase tracking-wider leading-tight">Fixed Rent: {formatPhpCurrency(lease?.monthlyRent ?? 0)}</p>
                                                 </div>
                                                 <div className="flex items-start gap-2.5">
-                                                    <div className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
+                                                    <div className="size-1 rounded-full bg-primary mt-1.5 shrink-0" />
                                                     <p className="text-[9px] text-foreground font-black uppercase tracking-wider leading-tight">Submetered Utilities Monthly</p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="space-y-4">
                                             <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10">
-                                                <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                                <Info className="size-4 text-amber-500 shrink-0 mt-0.5" />
                                                 <p className="text-[9px] text-amber-800 dark:text-amber-400 font-bold uppercase tracking-wider leading-relaxed">
                                                     Pro-tip: Set aside {formatPhpCurrency((lease?.monthlyRent ?? 0) * 1.1)} for utilities.
                                                 </p>
@@ -696,7 +696,7 @@ export default function FinanceHubPage() {
                                 <>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <Zap className="w-4 h-4 text-primary" />
+                                            <Zap className="size-4 text-primary" />
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Rate Information</h3>
                                         </div>
                                         <p className="text-xs font-bold text-foreground">Understanding Charges</p>
@@ -717,7 +717,7 @@ export default function FinanceHubPage() {
                                         </div>
                                         <div className="p-5 rounded-3xl bg-primary/5 border border-primary/10">
                                             <div className="flex items-start gap-3">
-                                                <UserCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                                                <UserCircle className="size-4 text-primary shrink-0 mt-0.5" />
                                                 <p className="text-[9px] text-primary font-bold uppercase tracking-wider leading-relaxed">
                                                     Rates and meter readings are managed and provided directly by your Landlord.
                                                 </p>
@@ -731,7 +731,7 @@ export default function FinanceHubPage() {
                                 <>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <History className="w-4 h-4 text-primary" />
+                                            <History className="size-4 text-primary" />
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Ledger Overview</h3>
                                         </div>
                                         <p className="text-xs font-bold text-foreground">Financial Standing</p>
@@ -754,7 +754,7 @@ export default function FinanceHubPage() {
                                             href="/tenant/messages"
                                             className="w-full bg-muted hover:bg-muted-dark text-foreground py-6 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] border border-border transition-all flex items-center justify-center gap-4"
                                         >
-                                            Contact Support <HelpCircle className="w-5 h-5" />
+                                            Contact Support <HelpCircle className="size-5" />
                                         </Link>
                                     </div>
                                 </>
@@ -773,3 +773,4 @@ export default function FinanceHubPage() {
         </div>
     );
 }
+

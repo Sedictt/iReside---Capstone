@@ -568,7 +568,7 @@ const ComplaintModal = ({
                                     animate={{ opacity: 1, y: 0 }}
                                     className="flex flex-col items-center justify-center py-12 px-6 text-center"
                                 >
-                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
+                                    <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
                                     <h3 className="text-xl font-black text-foreground mb-2">Complaint Received</h3>
@@ -723,7 +723,7 @@ const UnitTooltip = ({
                         }}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all text-left"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <div className="size-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
                             <span className="material-icons-round text-lg">move_down</span>
                         </div>
                         <div>
@@ -741,7 +741,7 @@ const UnitTooltip = ({
                     }}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all text-left"
                 >
-                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400">
+                    <div className="size-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400">
                         <span className="material-icons-round text-lg">report_problem</span>
                     </div>
                     <div>
@@ -752,7 +752,7 @@ const UnitTooltip = ({
             </div>
 
             {/* Tooltip arrow */}
-            <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1a1c23] rotate-45 border-r border-b border-white/10" />
+            <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 size-3 bg-[#1a1c23] rotate-45 border-r border-b border-white/10" />
         </motion.div>
     );
 };
@@ -825,7 +825,7 @@ const TransferRequestModal = ({
                                     animate={{ opacity: 1, y: 0 }}
                                     className="flex flex-col items-center justify-center py-12 px-6 text-center"
                                 >
-                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
+                                    <div className="size-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6">
                                         <span className="material-icons-round text-5xl">check_circle</span>
                                     </div>
                                     <h3 className="text-xl font-black text-foreground mb-2">Request Submitted</h3>
@@ -3129,7 +3129,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const selectedUnitNote = selectedUnit ? (unitNotes[selectedUnit.id] ?? "") : "";
 
     return (
-        <div className={`${isDark ? 'bg-background-dark text-slate-100' : 'bg-background text-slate-800'} h-full flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
+        <div className={`${isDark ? 'bg-background-dark text-zinc-100' : 'bg-background text-zinc-800'} h-full flex flex-col overflow-hidden antialiased selection:bg-primary/30 ${readOnly ? 'pointer-events-auto' : ''}`}>
             {/* Header */}
             <AnimatePresence>
                 {!isCanvasFullscreen && (
@@ -3137,16 +3137,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 64, opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className={`overflow-hidden flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-slate-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
+                        className={`overflow-hidden flex items-center justify-between px-6 shrink-0 z-20 backdrop-blur ${isDark ? 'bg-surface-dark border-b border-zinc-800 shadow-none' : 'bg-card/95 border-b border-border shadow-sm'}`}
                     >
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Logo className="h-6 w-auto" />
                     </div>
-                    <div className={`mx-2 h-6 w-px ${isDark ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
+                    <div className={`mx-2 h-6 w-px ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`}></div>
                     <div>
-                        <h1 className={`text-sm font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
-                        <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <h1 className={`text-sm font-semibold ${isDark ? 'text-zinc-100' : 'text-zinc-900'}`}>{propertyContext?.selectedProperty?.name || "All Properties"}</h1>
+                        <div className={`flex items-center gap-1 text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                             <span>All systems operational</span>
                         </div>
@@ -3165,9 +3165,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             <span className="text-[11px] font-bold text-amber-500 uppercase tracking-tighter">{unplacedDbUnits.length} Unplaced Units</span>
                         </div>
                     )}
-                        <div className={`${isDark ? 'bg-background-dark/90 border-slate-700 shadow-none' : 'bg-background/90 border-border shadow-sm'} p-1 rounded-xl border flex items-center backdrop-blur-sm`}>
-                            <div className={`flex items-center pl-2 pr-1 border-r hidden sm:flex ${isDark ? 'border-slate-700' : 'border-border'}`} title="Current Level">
-                                <span className={`material-icons-round text-[18px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>layers</span>
+                        <div className={`${isDark ? 'bg-background-dark/90 border-zinc-700 shadow-none' : 'bg-background/90 border-border shadow-sm'} p-1 rounded-xl border flex items-center backdrop-blur-sm`}>
+                            <div className={`flex items-center pl-2 pr-1 border-r hidden sm:flex ${isDark ? 'border-zinc-700' : 'border-border'}`} title="Current Level">
+                                <span className={`material-icons-round text-[18px] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>layers</span>
                         </div>
                         
                         {!readOnly && isRenamingFloor ? (
@@ -3200,17 +3200,17 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         }));
                                         setIsRenamingFloor(false);
                                     }}
-                                    className={`border border-primary text-sm font-bold px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none ${isDark ? 'bg-background-dark text-slate-100' : 'bg-card text-slate-800'}`}
+                                    className={`border border-primary text-sm font-bold px-2 py-1 rounded w-[120px] md:w-[150px] focus:outline-none ${isDark ? 'bg-background-dark text-zinc-100' : 'bg-card text-zinc-800'}`}
                                     placeholder="Floor Name"
                                 />
                             </form>
                         ) : (
-                            <div className={`relative flex items-center mx-1 group cursor-pointer transition-colors rounded-lg ${isDark ? 'hover:bg-slate-800' : 'hover:bg-white'}`}>
+                            <div className={`relative flex items-center mx-1 group cursor-pointer transition-colors rounded-lg ${isDark ? 'hover:bg-zinc-800' : 'hover:bg-white'}`}>
                                 <select
                                     id="floor-selector"
                                     value={activeFloor}
                                     onChange={(event) => switchFloor(event.target.value)}
-                                    className={`appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-bold w-[140px] md:w-[180px] cursor-pointer focus:outline-none z-10 ${isDark ? 'text-slate-100' : 'text-slate-800'}`}
+                                    className={`appearance-none bg-transparent pl-3 pr-8 py-1.5 text-sm font-bold w-[140px] md:w-[180px] cursor-pointer focus:outline-none z-10 ${isDark ? 'text-zinc-100' : 'text-zinc-800'}`}
                                 >
                                     {floorTabs.map((floorTab) => (
                                         <option key={floorTab.id} value={floorTab.id}>
@@ -3218,28 +3218,28 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </option>
                                     ))}
                                 </select>
-                                <div className={`absolute right-2 pointer-events-none transition-colors flex items-center group-hover:text-primary ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                <div className={`absolute right-2 pointer-events-none transition-colors flex items-center group-hover:text-primary ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
                                     <span className="material-icons-round text-[18px]">unfold_more</span>
                                 </div>
                             </div>
                         )}
                         
-                        <div className={`flex items-center gap-1 pl-1 pr-1 border-l ${isDark ? 'border-slate-700' : 'border-border'}`}>
+                        <div className={`flex items-center gap-1 pl-1 pr-1 border-l ${isDark ? 'border-zinc-700' : 'border-border'}`}>
                             {!readOnly && !isRenamingFloor && (
                                 <button 
                                     onClick={() => {
                                         setEditingFloorName(floorLayoutsWithActiveSnapshot[activeFloor].name || getFloorDisplayLabel(activeFloor));
                                         setIsRenamingFloor(true);
                                     }}
-                                    className={`flex items-center justify-center w-7 h-7 border rounded-md transition-all hover:text-primary ${isDark ? 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-400' : 'bg-white hover:bg-slate-200 border-border text-slate-500 shadow-sm'}`}
+                                    className={`flex items-center justify-center size-7 border rounded-md transition-all hover:text-primary ${isDark ? 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-400' : 'bg-white hover:bg-zinc-200 border-border text-zinc-500 shadow-sm'}`}
                                     title="Rename Floor"
                                 >
                                     <span className="material-icons-round text-[16px]">edit</span>
                                 </button>
                             )}
-                            <div className={`flex items-center border rounded-md px-2 py-1 h-7 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-border shadow-sm'}`} title={`${activeFloorItemCount} items on this floor`}>
+                            <div className={`flex items-center border rounded-md px-2 py-1 h-7 ${isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-border shadow-sm'}`} title={`${activeFloorItemCount} items on this floor`}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-primary/80 mr-2"></span>
-                                <span className={`text-xs font-mono font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                                <span className={`text-xs font-mono font-bold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                                     {activeFloorItemCount}
                                 </span>
                             </div>
@@ -3247,7 +3247,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             {!readOnly && (
                                 <button 
                                     onClick={createFloor} 
-                                    className={`flex items-center justify-center w-7 h-7 border rounded-md transition-all hover:bg-primary hover:border-primary hover:text-white ${isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-border text-slate-600 shadow-sm'}`}
+                                    className={`flex items-center justify-center size-7 border rounded-md transition-all hover:bg-primary hover:border-primary hover:text-white ${isDark ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-border text-zinc-600 shadow-sm'}`}
                                     title="Add New Floor"
                                 >
                                     <span className="material-icons-round text-[18px]">add</span>
@@ -3257,9 +3257,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                     </div>
                     {!readOnly && (
                         <>
-                            <div className={`h-6 w-px mx-1 ${isDark ? 'bg-slate-700' : 'bg-border'}`}></div>
+                            <div className={`h-6 w-px mx-1 ${isDark ? 'bg-zinc-700' : 'bg-border'}`}></div>
                             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                saveStatus === "idle" ? "text-slate-400" :
+                                saveStatus === "idle" ? "text-zinc-400" :
                                 saveStatus === "waiting" ? "text-amber-500 animate-pulse" :
                                 saveStatus === "saving" ? "text-primary animate-pulse" :
                                 "text-emerald-500"
@@ -3301,14 +3301,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 onDragOver={readOnly ? undefined : handleBlueprintDragOver}
                                 onDragLeave={readOnly ? undefined : handleBlueprintDragLeave}
                                 onDrop={readOnly ? undefined : handleBlueprintDrop}
-                                className={`absolute top-[20px] left-[20px] rounded-xl ${styles.bgDotPattern} relative ${isDark ? 'bg-[#171a1f] border border-slate-700/70 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)]' : 'bg-white/75 border border-slate-300/70 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.18)]'}`}
+                                className={`absolute top-[20px] left-[20px] rounded-xl ${styles.bgDotPattern} relative ${isDark ? 'bg-[#171a1f] border border-zinc-700/70 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.75)]' : 'bg-white/75 border border-zinc-300/70 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.18)]'}`}
                                                                 style={{
                                     width: BLUEPRINT_WIDTH,
                                     height: BLUEPRINT_HEIGHT,
                                 }}
                             >
                                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center select-none">
-                                    <span className={`text-[72px] md:text-[110px] font-black tracking-[0.18em] ${isDark ? 'text-white/5' : 'text-slate-400/20'}`}>
+                                    <span className={`text-[72px] md:text-[110px] font-black tracking-[0.18em] ${isDark ? 'text-white/5' : 'text-zinc-400/20'}`}>
                                         {floorWatermarkLabel}
                                     </span>
                                 </div>
@@ -3326,22 +3326,22 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     >
                                         {isLivingUnitBlock(sidebarBlockGhost.blockType) ? (
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] border ${isDark ? 'bg-neutral-800/85' : 'bg-white/85'} ${sidebarBlockGhost.isValid ? 'border-emerald-400/70' : 'border-red-400/80'}`}>
-                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
-                                                <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] z-10 border-x-2 ${isDark ? 'bg-neutral-700 border-neutral-500' : 'bg-slate-100 border-slate-400'}`}></div>
-                                                <div className={`absolute top-0 left-1/4 right-1/4 h-[6px] z-10 flex items-center justify-center border-x ${isDark ? 'bg-neutral-700 border-neutral-500' : 'bg-slate-100 border-slate-400'}`}>
-                                                    <div className={`w-full h-px ${isDark ? 'bg-neutral-600' : 'bg-slate-300'}`}></div>
+                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
+                                                <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[6px] z-10 border-x-2 ${isDark ? 'bg-neutral-700 border-neutral-500' : 'bg-zinc-100 border-zinc-400'}`}></div>
+                                                <div className={`absolute top-0 left-1/4 right-1/4 h-[6px] z-10 flex items-center justify-center border-x ${isDark ? 'bg-neutral-700 border-neutral-500' : 'bg-zinc-100 border-zinc-400'}`}>
+                                                    <div className={`w-full h-px ${isDark ? 'bg-neutral-600' : 'bg-zinc-300'}`}></div>
                                                 </div>
                                                 <div className={`absolute inset-0 opacity-20 ${sidebarBlockGhost.isValid ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-20">
-                                                    <div className={`w-2 h-2 rounded-full mb-2 ${sidebarBlockGhost.isValid ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`}></div>
-                                                    <h4 className={`font-bold text-xs drop-shadow-md ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{sidebarBlockGhost.label}</h4>
+                                                    <div className={`size-2 rounded-full mb-2 ${sidebarBlockGhost.isValid ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.7)]'}`}></div>
+                                                    <h4 className={`font-bold text-xs drop-shadow-md ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>{sidebarBlockGhost.label}</h4>
                                                     <span className={`text-[9px] font-bold uppercase mt-1 tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
                                                 </div>
                                             </div>
                                         ) : sidebarBlockGhost.blockType === "corridor" ? (
                                             <div className={`w-full h-full border-y flex items-center justify-center rounded-[1px] ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/15 border-red-400/80'}`}>
-                                                <div className={`absolute inset-0 opacity-15 pointer-events-none ${isDark ? 'bg-neutral-700/50' : 'bg-slate-200/50'}`}></div>
+                                                <div className={`absolute inset-0 opacity-15 pointer-events-none ${isDark ? 'bg-neutral-700/50' : 'bg-zinc-200/50'}`}></div>
                                                 <div className="relative z-10 flex flex-col items-center justify-center">
                                                     <span className={`text-xs font-bold uppercase tracking-[0.5em] ${sidebarBlockGhost.isValid ? 'text-emerald-300' : 'text-red-300'}`}>{sidebarBlockGhost.label}</span>
                                                     <span className={`mt-1 text-[9px] font-bold uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-700 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-700 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
@@ -3349,7 +3349,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             </div>
                                         ) : sidebarBlockGhost.blockType === "elevator" ? (
                                             <div className={`w-full h-full border rounded-sm flex items-center justify-center ${sidebarBlockGhost.isValid ? 'bg-emerald-500/15 border-emerald-400/80' : 'bg-red-500/20 border-red-400/80'}`}>
-                                                <div className={`border-2 w-full h-full m-2 flex items-center justify-center relative ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                <div className={`border-2 w-full h-full m-2 flex items-center justify-center relative ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                     <span className={`material-icons-round ${sidebarBlockGhost.isValid ? 'text-emerald-400' : 'text-red-400'}`}>elevator</span>
                                                 </div>
                                                 <span className={`absolute bottom-1 text-[9px] font-bold uppercase tracking-wider px-1 rounded ${sidebarBlockGhost.isValid ? 'text-emerald-300 border border-emerald-400/40 bg-emerald-500/10' : 'text-red-300 border border-red-400/40 bg-red-500/10'}`}>{sidebarBlockGhost.isValid ? 'Preview' : 'Blocked'}</span>
@@ -3359,35 +3359,35 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 <div style={getRotatedArtworkStyle(sidebarBlockGhost.w, sidebarBlockGhost.h, 0)}>
                                                     {sidebarBlockGhost.stairVariant === "straight" ? (
                                                         <>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
                                                             <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
                                                                 {[...Array(12)].map((_, i) => (
-                                                                    <div key={`ghost-straight-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={`ghost-straight-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <div className={`h-[60%] w-px relative ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}>
-                                                                    <div className={`absolute -top-1 -left-1 w-2 h-2 border-t border-r rotate-[-45deg] ${isDark ? 'border-neutral-400' : 'border-slate-300'}`}></div>
+                                                                <div className={`h-[60%] w-px relative ${isDark ? 'bg-neutral-500' : 'bg-zinc-400'}`}>
+                                                                    <div className={`absolute -top-1 -left-1 size-2 border-t border-r rotate-[-45deg] ${isDark ? 'border-neutral-400' : 'border-zinc-300'}`}></div>
                                                                 </div>
                                                             </div>
                                                         </>
                                                     ) : sidebarBlockGhost.stairVariant === "l-shape" ? (
                                                         <>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute top-0 right-0 w-1/2 h-1/2 border-b border-l ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute bottom-0 right-0 w-1/2 h-1/2 border-l flex flex-col justify-between py-1 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute top-0 right-0 w-1/2 h-1/2 border-b border-l ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute bottom-0 right-0 w-1/2 h-1/2 border-l flex flex-col justify-between py-1 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={`ghost-l-v-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={`ghost-l-v-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
-                                                            <div className={`absolute top-0 left-0 w-1/2 h-1/2 border-b flex flex-row justify-between px-1 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute top-0 left-0 w-1/2 h-1/2 border-b flex flex-row justify-between px-1 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={`ghost-l-h-${i}`} className={`h-full w-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={`ghost-l-h-${i}`} className={`h-full w-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
-                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-slate-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 85 90 L 85 25 L 10 25" />
                                                                     <path d="M 15 20 L 10 25 L 15 30" />
                                                                 </svg>
@@ -3395,21 +3395,21 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         </>
                                                     ) : sidebarBlockGhost.stairVariant === "u-shape" ? (
                                                         <>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-500 bg-neutral-700/60' : 'border-slate-400 bg-slate-200/60'}`}></div>
-                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 ${isDark ? 'bg-neutral-600' : 'bg-slate-500'}`}></div>
-                                                            <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-500 bg-neutral-700/60' : 'border-zinc-400 bg-zinc-200/60'}`}></div>
+                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 ${isDark ? 'bg-neutral-600' : 'bg-zinc-500'}`}></div>
+                                                            <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={`ghost-u-l-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={`ghost-u-l-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
-                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={`ghost-u-r-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={`ghost-u-r-${i}`} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             <div className="absolute inset-0 pointer-events-none p-2">
-                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-slate-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
                                                                     <path d="M 20 85 L 25 90 L 30 85" />
                                                                 </svg>
@@ -3417,20 +3417,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         </>
                                                     ) : sidebarBlockGhost.stairVariant === "spiral" ? (
                                                         <>
-                                                            <div className={`absolute inset-0 rounded-full border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute inset-[35%] border rounded-full z-10 ${isDark ? 'border-neutral-500 bg-neutral-700/80' : 'border-slate-400 bg-slate-100'}`}></div>
+                                                            <div className={`absolute inset-0 rounded-full border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute inset-[35%] border rounded-full z-10 ${isDark ? 'border-neutral-500 bg-neutral-700/80' : 'border-zinc-400 bg-zinc-100'}`}></div>
                                                             {[...Array(12)].map((_, i) => (
                                                                 <div
                                                                     key={`ghost-spiral-${i}`}
-                                                                    className={`absolute inset-0 border-t origin-center ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}
+                                                                    className={`absolute inset-0 border-t origin-center ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}
                                                                     style={{ transform: `rotate(${i * 30}deg)` }}
                                                                 ></div>
                                                             ))}
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
                                                         </>
                                                     )}
                                                 </div>
@@ -3530,20 +3530,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         }}
                                         >
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
-                                                <div className={`absolute inset-[10px] border border-dashed ${isDark ? 'border-neutral-500/80' : 'border-slate-700/80'}`}></div>
+                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
+                                                <div className={`absolute inset-[10px] border border-dashed ${isDark ? 'border-neutral-500/80' : 'border-zinc-700/80'}`}></div>
                                             {corridor.h > corridor.w ? (
-                                                <div className={`absolute top-[10px] bottom-[10px] left-1/2 -translate-x-1/2 w-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-500/80'}`}></div>
+                                                <div className={`absolute top-[10px] bottom-[10px] left-1/2 -translate-x-1/2 w-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-500/80'}`}></div>
                                             ) : (
-                                                <div className={`absolute left-[10px] right-[10px] top-1/2 -translate-y-1/2 h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-500/80'}`}></div>
+                                                <div className={`absolute left-[10px] right-[10px] top-1/2 -translate-y-1/2 h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-500/80'}`}></div>
                                             )}
                                             <div className="absolute inset-[8px] opacity-10"
                                                 style={{ backgroundImage: isDark ? 'linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)' : 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '10px 10px' }}
                                             ></div>
                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                             <div className="absolute inset-0 flex items-center justify-center z-20 overflow-hidden">
-                                                <span className={`text-xs font-bold uppercase tracking-[0.4em] px-2 ${isDark ? 'text-slate-300' : 'text-slate-500'} ${corridor.h > corridor.w ? '-rotate-90 whitespace-nowrap' : 'whitespace-nowrap'}`}>{corridor.label}</span>
+                                                <span className={`text-xs font-bold uppercase tracking-[0.4em] px-2 ${isDark ? 'text-zinc-300' : 'text-zinc-500'} ${corridor.h > corridor.w ? '-rotate-90 whitespace-nowrap' : 'whitespace-nowrap'}`}>{corridor.label}</span>
                                             </div>
 
                                             {!readOnly && selectedItem?.kind === "corridor" && selectedItem.id === corridor.id && (
@@ -3686,16 +3686,16 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     >
                                         {structure.type === "elevator" ? (
                                             <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
-                                                <div className={`absolute inset-[10px] border rounded-[1px] ${isDark ? 'border-neutral-500' : 'border-slate-700'}`}></div>
-                                                <div className={`absolute inset-x-[18%] top-[14%] bottom-[18%] flex border ${isDark ? 'border-neutral-600 bg-neutral-700/80' : 'border-slate-300 bg-slate-100'}`}>
-                                                    <div className={`w-1/2 ${isDark ? 'border-r border-neutral-600' : 'border-r border-slate-300'}`}></div>
+                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
+                                                <div className={`absolute inset-[10px] border rounded-[1px] ${isDark ? 'border-neutral-500' : 'border-zinc-700'}`}></div>
+                                                <div className={`absolute inset-x-[18%] top-[14%] bottom-[18%] flex border ${isDark ? 'border-neutral-600 bg-neutral-700/80' : 'border-zinc-300 bg-zinc-100'}`}>
+                                                    <div className={`w-1/2 ${isDark ? 'border-r border-neutral-600' : 'border-r border-zinc-300'}`}></div>
                                                     <div className="w-1/2"></div>
                                                 </div>
-                                                <div className={`absolute top-[8%] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full ${isDark ? 'bg-neutral-400' : 'bg-slate-500'}`}></div>
+                                                <div className={`absolute top-[8%] left-1/2 -translate-x-1/2 size-2 rounded-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-500'}`}></div>
                                                 <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
-                                                <div className={`absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>
+                                                <div className={`absolute bottom-[6px] left-1/2 -translate-x-1/2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>
                                                     <span className="material-icons-round text-[12px]">elevator</span>
                                                     <span>Elevator</span>
                                                 </div>
@@ -3706,18 +3706,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     {structure.variant === "straight" ? (
                                                         /* Straight Flight */
                                                         <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
                                                             {/* Steps */}
                                                             <div className="absolute left-[15%] right-[15%] top-[10%] bottom-[10%] flex flex-col justify-between">
                                                                 {[...Array(12)].map((_, i) => (
-                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Arrow */}
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <div className={`h-[60%] w-px relative ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}>
-                                                                    <div className={`absolute -top-1 -left-1 w-2 h-2 border-t border-r rotate-[-45deg] ${isDark ? 'border-neutral-500' : 'border-slate-300'}`}></div>
+                                                                <div className={`h-[60%] w-px relative ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}>
+                                                                    <div className={`absolute -top-1 -left-1 size-2 border-t border-r rotate-[-45deg] ${isDark ? 'border-neutral-500' : 'border-zinc-300'}`}></div>
                                                                 </div>
                                                             </div>
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
@@ -3725,24 +3725,24 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     ) : structure.variant === "l-shape" ? (
                                                         /* L-Shape */
                                                         <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                                             {/* Landing - Top Right */}
-                                                            <div className={`absolute top-0 right-0 w-1/2 h-1/2 border-b border-l ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                            <div className={`absolute top-0 right-0 w-1/2 h-1/2 border-b border-l ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                                             {/* Flight 1 - Bottom Right (Vertical) */}
-                                                            <div className={`absolute bottom-0 right-0 w-1/2 h-1/2 border-l flex flex-col justify-between py-1 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute bottom-0 right-0 w-1/2 h-1/2 border-l flex flex-col justify-between py-1 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Flight 2 - Top Left (Horizontal) */}
-                                                            <div className={`absolute top-0 left-0 w-1/2 h-1/2 border-b flex flex-row justify-between px-1 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute top-0 left-0 w-1/2 h-1/2 border-b flex flex-row justify-between px-1 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(5)].map((_, i) => (
-                                                                    <div key={i} className={`h-full w-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={i} className={`h-full w-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Direction Line */}
                                                             <div className="absolute top-[25%] left-[10%] right-[10%] bottom-[10%] pointer-events-none">
-                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-slate-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 85 90 L 85 25 L 10 25" />
                                                                     <path d="M 15 20 L 10 25 L 15 30" />
                                                                 </svg>
@@ -3752,26 +3752,26 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     ) : structure.variant === "u-shape" ? (
                                                         /* U-Shape */
                                                         <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                                             {/* Landing - Top */}
-                                                            <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-500 bg-neutral-700/50' : 'border-slate-400 bg-slate-200/60'}`}></div>
+                                                            <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-500 bg-neutral-700/50' : 'border-zinc-400 bg-zinc-200/60'}`}></div>
                                                             {/* Divider Wall */}
-                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 ${isDark ? 'bg-neutral-400' : 'bg-slate-500'}`}></div>
+                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 -translate-x-1/2 w-1 ${isDark ? 'bg-neutral-400' : 'bg-zinc-500'}`}></div>
                                                             {/* Left Flight */}
-                                                            <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-between py-1 border-r ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Right Flight */}
-                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}>
+                                                            <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-between py-1 border-l ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}>
                                                                 {[...Array(7)].map((_, i) => (
-                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-slate-400/80'}`}></div>
+                                                                    <div key={i} className={`w-full h-px ${isDark ? 'bg-neutral-500/80' : 'bg-zinc-400/80'}`}></div>
                                                                 ))}
                                                             </div>
                                                             {/* Direction Line */}
                                                             <div className="absolute inset-0 pointer-events-none p-2">
-                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-slate-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                                                                <svg className={`w-full h-full ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
                                                                     <path d="M 75 90 L 75 15 L 25 15 L 25 90" />
                                                                     <path d="M 20 85 L 25 90 L 30 85" />
                                                                 </svg>
@@ -3780,13 +3780,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         </div>
                                                     ) : structure.variant === "spiral" ? (
                                                         /* Spiral */
-                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-full border-[2px] ${isDark ? 'bg-neutral-800 border-neutral-500' : 'bg-white border-slate-400'}`}>
-                                                            <div className={`absolute inset-[35%] border rounded-full z-10 ${isDark ? 'border-neutral-500 bg-neutral-700/80' : 'border-slate-400 bg-slate-100'}`}></div>
+                                                        <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-full border-[2px] ${isDark ? 'bg-neutral-800 border-neutral-500' : 'bg-white border-zinc-400'}`}>
+                                                            <div className={`absolute inset-[35%] border rounded-full z-10 ${isDark ? 'border-neutral-500 bg-neutral-700/80' : 'border-zinc-400 bg-zinc-100'}`}></div>
                                                             {/* Radial Steps */}
                                                             {[...Array(12)].map((_, i) => (
                                                                 <div
                                                                     key={i}
-                                                                    className={`absolute inset-0 border-t origin-center ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}
+                                                                    className={`absolute inset-0 border-t origin-center ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}
                                                                     style={{ transform: `rotate(${i * 30}deg)` }}
                                                                 ></div>
                                                             ))}
@@ -3794,21 +3794,21 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         </div>
                                                     ) : structure.type === "facility" ? (
                                                         <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] flex items-center justify-center ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className={`absolute inset-[4px] border border-dashed ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className={`absolute inset-[4px] border border-dashed ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
                                                             <div className="flex flex-col items-center gap-1 z-20">
-                                                                <span className={`material-icons-round text-2xl ${isDark ? 'text-neutral-400' : 'text-slate-400'}`}>{structure.variant === "function-room" ? "meeting_room" : "fitness_center"}</span>
-                                                                <span className={`text-[10px] uppercase font-bold text-center leading-tight px-2 ${isDark ? 'text-neutral-300' : 'text-slate-500'}`}>{structure.label}</span>
+                                                                <span className={`material-icons-round text-2xl ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`}>{structure.variant === "function-room" ? "meeting_room" : "fitness_center"}</span>
+                                                                <span className={`text-[10px] uppercase font-bold text-center leading-tight px-2 ${isDark ? 'text-neutral-300' : 'text-zinc-500'}`}>{structure.label}</span>
                                                             </div>
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                         </div>
                                                     ) : (
                                                         /* Default / Fallback */
                                                         <div className={`w-full h-full relative shadow-sm overflow-hidden select-none rounded-[1px] ${isDark ? 'bg-neutral-800' : 'bg-white'}`}>
-                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                            <div className="absolute inset-[4px] border border-slate-300"></div>
+                                                            <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                            <div className="absolute inset-[4px] border border-zinc-300"></div>
                                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                                <span className={`text-[10px] uppercase ${isDark ? 'text-neutral-400' : 'text-slate-400'}`}>Stairwell</span>
+                                                                <span className={`text-[10px] uppercase ${isDark ? 'text-neutral-400' : 'text-zinc-400'}`}>Stairwell</span>
                                                             </div>
                                                             <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-blue-500"></div>
                                                         </div>
@@ -3936,28 +3936,28 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     >
                                         <div className={`relative h-full w-full overflow-hidden rounded-[1px] select-none ${isDark ? 'bg-neutral-800 shadow-sm' : 'bg-white shadow-sm'}`}>
                                             <div className="absolute inset-0" style={{ transform: `scaleX(${unit.flipX ? -1 : 1}) scaleY(${unit.flipY ? -1 : 1})` }}>
-                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
-                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-slate-300'}`}></div>
+                                                <div className={`absolute inset-0 border-[2px] ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
+                                                <div className={`absolute inset-[4px] border ${isDark ? 'border-neutral-600' : 'border-zinc-300'}`}></div>
 
-                                                <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}></div>
+                                                <div className={`absolute bottom-0 left-1/2 z-10 h-[6px] w-1/3 -translate-x-1/2 border-x-2 ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}></div>
 
-                                                <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
-                                                    <div className={`h-px w-full ${isDark ? 'bg-neutral-600' : 'bg-slate-300'}`}></div>
+                                                <div className={`absolute left-1/4 right-1/4 top-0 z-10 flex h-[6px] items-center justify-center border-x ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}>
+                                                    <div className={`h-px w-full ${isDark ? 'bg-neutral-600' : 'bg-zinc-300'}`}></div>
                                                 </div>
 
-                                                <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
-                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
+                                                <div className={`absolute bottom-1/4 left-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}>
+                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-zinc-400'}`}></div>
                                                 </div>
-                                                <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-slate-400 bg-slate-100'}`}>
-                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-slate-400'}`}></div>
+                                                <div className={`absolute bottom-1/4 right-0 top-1/4 z-10 flex w-[6px] flex-col justify-center border-y ${isDark ? 'border-neutral-500 bg-neutral-800' : 'border-zinc-400 bg-zinc-100'}`}>
+                                                    <div className={`mx-auto h-full w-px ${isDark ? 'bg-neutral-500' : 'bg-zinc-400'}`}></div>
                                                 </div>
 
-                                                <div className={`absolute right-[8px] top-[8px] h-5 w-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}></div>
-                                                <div className={`absolute bottom-[8px] left-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
-                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
+                                                <div className={`absolute right-[8px] top-[8px] h-5 w-5 border ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}></div>
+                                                <div className={`absolute bottom-[8px] left-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
+                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-zinc-400/70'}`}></div>
                                                 </div>
-                                                <div className={`absolute bottom-[8px] right-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-slate-300 bg-slate-50/70'}`}>
-                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-slate-400/70'}`}></div>
+                                                <div className={`absolute bottom-[8px] right-[8px] flex h-4 w-4 flex-col gap-0.5 border p-0.5 ${isDark ? 'border-neutral-600 bg-neutral-700/70' : 'border-zinc-300 bg-zinc-50/70'}`}>
+                                                    <div className={`h-full w-full border ${isDark ? 'border-neutral-700' : 'border-zinc-400/70'}`}></div>
                                                 </div>
 
                                                 <div
@@ -3977,10 +3977,10 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                         unit.status === 'maintenance' ? 'bg-status-maintenance' : 'bg-status-due'
                                                     }`}></div>
 
-                                                <h4 className={`text-xs font-bold drop-shadow-sm ${isDark ? 'text-neutral-200' : 'text-slate-700'}`}>{unit.name}</h4>
+                                                <h4 className={`text-xs font-bold drop-shadow-sm ${isDark ? 'text-neutral-200' : 'text-zinc-700'}`}>{unit.name}</h4>
 
                                                 {unit.status !== 'vacant' && unit.tenant && (
-                                                    <p className={`mt-1 font-mono text-[10px] ${isDark ? 'text-neutral-400' : 'text-slate-500'}`}>{unit.tenant}</p>
+                                                    <p className={`mt-1 font-mono text-[10px] ${isDark ? 'text-neutral-400' : 'text-zinc-500'}`}>{unit.tenant}</p>
                                                 )}
                                                 {unit.status === 'vacant' && (
                                                     <span className={`mt-1 rounded border px-1.5 text-[9px] font-bold uppercase tracking-wider ${isDark ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' : 'border-blue-400/60 bg-blue-100/90 text-blue-800'}`}>Vacant</span>
@@ -3990,7 +3990,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                 )}
                                             </div>
 
-                                            <div className={`absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-slate-400'}`}></div>
+                                            <div className={`absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize rounded-br-sm border-b-2 border-r-2 opacity-0 group-hover:opacity-100 ${isDark ? 'border-neutral-500' : 'border-zinc-400'}`}></div>
                                         </div>
                                         {draggingUnitId === unit.id && dragPlacement?.kind === "unit" && dragPlacement.id === unit.id && (
                                             <>
@@ -4046,7 +4046,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     exit={{ opacity: 0, x: -20 }}
                                     className="absolute top-10 left-10 z-30 pointer-events-none"
                                 >
-                                    <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-slate-900/90 hover:scale-[1.02]">
+                                    <div className="flex items-center gap-4 bg-zinc-900/80 backdrop-blur-xl border border-white/10 px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto transition-all hover:bg-zinc-900/90 hover:scale-[1.02]">
                                         <div className="flex items-center gap-4 px-2 py-1">
                                             <div className="flex flex-col">
                                                 <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Live Units</span>
@@ -4070,7 +4070,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     exit={{ opacity: 0, y: 20 }}
                                     className="absolute bottom-12 left-12 z-30 pointer-events-none"
                                 >
-                                    <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
+                                    <div className="flex items-center gap-2 bg-zinc-900/90 backdrop-blur-2xl border border-white/10 p-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto">
                                         <div className="flex items-center gap-6 px-6 py-1.5 whitespace-nowrap">
                                             <button 
                                                 onClick={() => toggleStatusFilter("vacant")}
@@ -4121,15 +4121,15 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 >
                                     <div className="flex gap-4 items-end pointer-events-auto">
                                         {/* Minimap */}
-                                        <div className={`relative hidden h-32 w-48 overflow-hidden rounded-lg shadow-xl md:block ${isDark ? 'border border-slate-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
+                                        <div className={`relative hidden h-32 w-48 overflow-hidden rounded-lg shadow-xl md:block ${isDark ? 'border border-zinc-800 bg-surface-dark' : 'border border-border bg-card/95'}`}>
                                             <div className="absolute inset-0 p-2">
                                                 <div
                                                     ref={minimapRef}
                                                     onPointerDown={handleMinimapPointerDown}
-                                                    className={`relative h-full w-full cursor-pointer overflow-hidden rounded border ${isDark ? 'border-slate-700 bg-[#15181d]' : 'border-slate-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
+                                                    className={`relative h-full w-full cursor-pointer overflow-hidden rounded border ${isDark ? 'border-zinc-700 bg-[#15181d]' : 'border-zinc-200 bg-[linear-gradient(180deg,#f7faf5,#eef4ec)]'}`}
                                                 >
                                                     <div
-                                                        className={`absolute border ${isDark ? 'border-slate-600/70 bg-white/[0.03]' : 'border-slate-400/70 bg-white/25'}`}
+                                                        className={`absolute border ${isDark ? 'border-zinc-600/70 bg-white/[0.03]' : 'border-zinc-400/70 bg-white/25'}`}
                                                         style={{
                                                             top: `${(BLUEPRINT_MARGIN / WORLD_HEIGHT) * 100}%`,
                                                             left: `${(BLUEPRINT_MARGIN / WORLD_WIDTH) * 100}%`,
@@ -4160,7 +4160,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     {corridors.map((corridor) => (
                                                         <div
                                                             key={`minimap-corridor-${corridor.id}`}
-                                                            className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-500/70' : 'bg-slate-400/70'}`}
+                                                            className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-500/70' : 'bg-zinc-400/70'}`}
                                                             style={{
                                                                 left: `${((BLUEPRINT_MARGIN + corridor.x) / WORLD_WIDTH) * 100}%`,
                                                                 top: `${((BLUEPRINT_MARGIN + corridor.y) / WORLD_HEIGHT) * 100}%`,
@@ -4173,7 +4173,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     {structures.map((structure) => (
                                                         <div
                                                             key={`minimap-structure-${structure.id}`}
-                                                            className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-300/70' : 'bg-slate-500/70'}`}
+                                                            className={`absolute rounded-[1px] ${isDark ? 'bg-neutral-300/70' : 'bg-zinc-500/70'}`}
                                                             style={{
                                                                 left: `${((BLUEPRINT_MARGIN + structure.x) / WORLD_WIDTH) * 100}%`,
                                                                 top: `${((BLUEPRINT_MARGIN + structure.y) / WORLD_HEIGHT) * 100}%`,
@@ -4198,14 +4198,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </div>
 
                                         <div className="flex flex-col bg-card/95 border border-border rounded-lg shadow-xl overflow-hidden backdrop-blur">
-                                            <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border" title="Zoom In"><span className="material-icons-round text-lg">add</span></button>
-                                            <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border" title="Zoom Out"><span className="material-icons-round text-lg">remove</span></button>
-                                            <button onClick={handleFit} className="p-2 hover:bg-muted text-slate-600 transition-colors border-b border-border" title="Fit to Screen"><span className="material-icons-round text-lg">aspect_ratio</span></button>
+                                            <button onClick={handleZoomIn} className="p-2 hover:bg-muted text-zinc-600 transition-colors border-b border-border" title="Zoom In"><span className="material-icons-round text-lg">add</span></button>
+                                            <button onClick={handleZoomOut} className="p-2 hover:bg-muted text-zinc-600 transition-colors border-b border-border" title="Zoom Out"><span className="material-icons-round text-lg">remove</span></button>
+                                            <button onClick={handleFit} className="p-2 hover:bg-muted text-zinc-600 transition-colors border-b border-border" title="Fit to Screen"><span className="material-icons-round text-lg">aspect_ratio</span></button>
                                             {!readOnly && (
                                                 <button
                                                     onClick={performUndo}
                                                     disabled={!undoAvailable}
-                                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-muted text-slate-600' : 'text-slate-300 cursor-not-allowed'}`}
+                                                    className={`p-2 transition-colors ${undoAvailable ? 'hover:bg-muted text-zinc-600' : 'text-zinc-300 cursor-not-allowed'}`}
                                                     title="Undo (Ctrl+Z)"
                                                 >
                                                     <span className="material-icons-round text-lg">undo</span>
@@ -4225,12 +4225,12 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 initial={{ opacity: 0, y: 20, x: "-50%" }}
                                 animate={{ opacity: 1, y: 0, x: "-50%" }}
                                 exit={{ opacity: 0, y: 20, x: "-50%" }}
-                                className={`absolute bottom-28 left-1/2 -translate-x-1/2 z-50 flex gap-2 rounded-2xl backdrop-blur-xl border p-2 shadow-2xl ${isDark ? 'bg-slate-900/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}
+                                className={`absolute bottom-28 left-1/2 -translate-x-1/2 z-50 flex gap-2 rounded-2xl backdrop-blur-xl border p-2 shadow-2xl ${isDark ? 'bg-zinc-900/90 border-white/10' : 'bg-white/90 border-zinc-200/50'}`}
                             >
                                 {selectedItem.kind === "corridor" ? (
                                     <>
                                         <div className="flex items-center gap-2 px-2 py-1">
-                                            <span className={`material-icons-round text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>edit</span>
+                                            <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>edit</span>
                                             <input
                                                 type="text"
                                                 value={corridors.find(c => c.id === selectedItem.id)?.label || ""}
@@ -4239,13 +4239,13 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                                     setCorridors(prev => prev.map(c => c.id === selectedItem.id ? { ...c, label: val } : c));
                                                 }}
                                                 placeholder="Corridor Name"
-                                                className={`bg-transparent border-none outline-none text-xs font-bold uppercase tracking-wider w-40 ${isDark ? 'text-white' : 'text-slate-800'}`}
+                                                className={`bg-transparent border-none outline-none text-xs font-bold uppercase tracking-wider w-40 ${isDark ? 'text-white' : 'text-zinc-800'}`}
                                             />
                                         </div>
                                         <div className="w-px h-6 bg-white/10 mx-1 my-auto" />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
                                             title="Rotate (R)"
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
@@ -4256,7 +4256,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <>
                                         <button
                                             onClick={() => flipSelectedItem('x')}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
                                             title="Flip Horizontal (X)"
                                         >
                                             <span className="material-icons-round text-lg">flip</span>
@@ -4264,7 +4264,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </button>
                                         <button
                                             onClick={() => flipSelectedItem('y')}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
                                             title="Flip Vertical (Y)"
                                         >
                                             <span className="material-icons-round text-lg rotate-90">flip</span>
@@ -4273,7 +4273,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         <div className="w-px h-6 bg-white/10 mx-1 my-auto" />
                                         <button
                                             onClick={() => rotateSelectedItem(selectedItem)}
-                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}
+                                            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all ${isDark ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'}`}
                                             title="Rotate (R)"
                                         >
                                             <span className="material-icons-round text-lg">rotate_right</span>
@@ -4287,7 +4287,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                     {/* Viewport System Toolbar (Always Visible) */}
                     <div className="absolute right-10 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
-                        <div className="flex flex-col bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl">
+                        <div className="flex flex-col bg-zinc-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 shadow-2xl">
                             {!isHUDHidden && (
                                 <motion.div 
                                     initial={{ opacity: 0, scale: 0.8 }}
@@ -4296,14 +4296,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 >
                                     <button 
                                         onClick={() => setIsLayoutLocked(!isLayoutLocked)}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isLayoutLocked ? 'bg-amber-500 text-slate-900 shadow-lg shadow-amber-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isLayoutLocked ? 'bg-amber-500 text-zinc-900 shadow-lg shadow-amber-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                                         title={isLayoutLocked ? "Unlock Layout" : "Lock Layout (L)"}
                                     >
                                         <span className="material-icons-round text-xl">{isLayoutLocked ? 'lock' : 'lock_open'}</span>
                                     </button>
                                     <button 
                                         onClick={toggleFullscreen}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isCanvasFullscreen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                                         title="Toggle Canvas Fullscreen (F)"
                                     >
                                         <span className="material-icons-round text-xl">{isCanvasFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>
@@ -4311,14 +4311,14 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                     <div className="h-px bg-white/10 my-1 mx-2" />
                                     <button 
                                         onClick={() => setShowHotkeys(true)}
-                                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                                        className="size-10 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
                                         title="Hotkeys Hint (?)"
                                     >
                                         <span className="material-icons-round text-xl">help_outline</span>
                                     </button>
                                     <button 
                                         onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/40 hover:text-white hover:bg-white/5' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
+                                        className={`size-10 rounded-xl flex items-center justify-center transition-all ${isSidebarVisible ? 'text-white/40 hover:text-white hover:bg-white/5' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}
                                         title={isSidebarVisible ? "Hide Sidebar (S)" : "Show Sidebar (S)"}
                                     >
                                         <span className="material-icons-round text-xl">{isSidebarVisible ? 'dock' : 'view_sidebar'}</span>
@@ -4329,7 +4329,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             
                             <button 
                                 onClick={() => setIsHUDHidden(!isHUDHidden)}
-                                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isHUDHidden ? 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                className={`size-10 rounded-xl flex items-center justify-center transition-all ${isHUDHidden ? 'bg-primary text-white shadow-lg shadow-primary/20 animate-pulse' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                                 title={isHUDHidden ? "Show HUD" : "Hide HUD (H)"}
                             >
                                 <span className="material-icons-round text-xl">{isHUDHidden ? 'visibility' : 'visibility_off'}</span>
@@ -4344,20 +4344,20 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-6"
+                                className="absolute inset-0 z-[100] flex items-center justify-center bg-zinc-950/60 backdrop-blur-md p-6"
                                 onClick={() => setShowHotkeys(false)}
                             >
                                 <motion.div
                                     initial={{ scale: 0.9, y: 20 }}
                                     animate={{ scale: 1, y: 0 }}
                                     exit={{ scale: 0.9, y: 20 }}
-                                    className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
+                                    className="w-full max-w-lg bg-zinc-900 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <div className="p-8 border-b border-white/5">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                                                <div className="size-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
                                                     <span className="material-icons-round">keyboard</span>
                                                 </div>
                                                 <div>
@@ -4367,7 +4367,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                             </div>
                                             <button 
                                                 onClick={() => setShowHotkeys(false)}
-                                                className="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                                                className="size-10 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-colors"
                                             >
                                                 <span className="material-icons-round">close</span>
                                             </button>
@@ -4399,7 +4399,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                         </div>
                                     </div>
 
-                                    <div className="p-6 bg-slate-950/50 flex justify-center">
+                                    <div className="p-6 bg-zinc-950/50 flex justify-center">
                                         <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">iReside Visual Planner Engine v2.0</p>
                                     </div>
                                 </motion.div>
@@ -4423,9 +4423,9 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
                             <div
                                 ref={trashRef}
-                                className={`w-16 h-16 rounded-full border-2 flex items-center justify-center shadow-xl transition-all ${isTrashHot ? 'border-red-400 bg-red-100 scale-110' : 'border-slate-300 bg-card/95'}`}
+                                className={`size-16 rounded-full border-2 flex items-center justify-center shadow-xl transition-all ${isTrashHot ? 'border-red-400 bg-red-100 scale-110' : 'border-zinc-300 bg-card/95'}`}
                             >
-                                <span className={`material-icons-round text-2xl ${isTrashHot ? 'text-red-500' : 'text-slate-500'}`}>delete</span>
+                                <span className={`material-icons-round text-2xl ${isTrashHot ? 'text-red-500' : 'text-zinc-500'}`}>delete</span>
                             </div>
                         </div>
                     )}
@@ -4434,18 +4434,18 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/55 backdrop-blur-sm p-4">
                             <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl">
                                 <div className="p-5">
-                                    <h3 className="text-sm font-semibold text-slate-900">Confirm deletion</h3>
-                                    <p className="mt-2 text-xs text-slate-600">
+                                    <h3 className="text-sm font-semibold text-zinc-900">Confirm deletion</h3>
+                                    <p className="mt-2 text-xs text-zinc-600">
                                         Delete {getCanvasItemLabel(pendingDelete.item)}?
                                     </p>
-                                    <p className="mt-1 text-[11px] text-slate-500">
+                                    <p className="mt-1 text-[11px] text-zinc-500">
                                         {pendingDelete.source === "trash" ? "You dropped this item near the trash." : "You used keyboard delete."}
                                     </p>
                                 </div>
                                 <div className="flex items-center justify-end gap-2 border-t border-border p-3">
                                     <button
                                         onClick={cancelDeleteItem}
-                                        className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
+                                        className="rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200"
                                     >
                                         Cancel
                                     </button>
@@ -4465,23 +4465,23 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                className={`w-full max-w-md rounded-[32px] border shadow-2xl overflow-hidden ${isDark ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}
+                                className={`w-full max-w-md rounded-[32px] border shadow-2xl overflow-hidden ${isDark ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-200 bg-white'}`}
                             >
                                 <div className="p-8">
                                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-6">
                                         <span className="material-icons-round text-3xl">ink_eraser</span>
                                     </div>
-                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Clear entire floor?</h3>
-                                    <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Clear entire floor?</h3>
+                                    <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                         This will remove all units, corridors, and structures from <span className="font-bold text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span>. 
                                         <br/><br/>
                                         <span className="italic text-xs opacity-80">Don&apos;t worry: Units will be returned to your &quot;Unplaced&quot; library and won&apos;t be deleted from the property.</span>
                                     </p>
                                 </div>
-                                <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-slate-800 bg-slate-950/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                                <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-zinc-800 bg-zinc-950/50' : 'border-zinc-100 bg-zinc-50/50'}`}>
                                     <button
                                         onClick={() => setPendingClearFloor(false)}
-                                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-white' : 'text-slate-500 hover:bg-black/5 hover:text-slate-900'}`}
+                                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-black/5 hover:text-zinc-900'}`}
                                     >
                                         Cancel
                                     </button>
@@ -4505,29 +4505,29 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                className={`w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${isDark ? 'border-amber-500/20 bg-slate-900 shadow-amber-500/10' : 'border-amber-200 bg-white shadow-amber-500/10'}`}
+                                className={`w-full max-w-md overflow-hidden rounded-3xl border shadow-2xl ${isDark ? 'border-amber-500/20 bg-zinc-900 shadow-amber-500/10' : 'border-amber-200 bg-white shadow-amber-500/10'}`}
                             >
                                 <div className="p-8 pb-6">
                                     <div className={`mb-6 flex h-16 w-16 items-center justify-center rounded-2xl ${isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-600'}`}>
                                         <span className="material-icons-round text-3xl">auto_awesome_mosaic</span>
                                     </div>
-                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Apply Layout Preset?</h3>
-                                    <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    <h3 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-zinc-900'}`}>Apply Layout Preset?</h3>
+                                    <p className={`mt-3 text-sm leading-relaxed ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                         Applying a preset will clear your current floor plan on <span className="font-bold text-primary">{floorLayouts[activeFloor]?.name || getFloorDisplayLabel(activeFloor)}</span> and generate a new layout.
                                         <br/><br/>
                                         <span className="italic text-xs opacity-80">Any placed units will be returned to your &quot;Unplaced&quot; library and automatically used to fill the preset.</span>
                                     </p>
                                 </div>
-                                <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-slate-800 bg-slate-950/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                                <div className={`flex items-center justify-end gap-3 px-8 py-6 border-t ${isDark ? 'border-zinc-800 bg-zinc-950/50' : 'border-zinc-100 bg-zinc-50/50'}`}>
                                     <button
                                         onClick={() => setPresetConfirm({ isOpen: false, presetType: null })}
-                                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-white' : 'text-slate-500 hover:bg-black/5 hover:text-slate-900'}`}
+                                        className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isDark ? 'text-zinc-400 hover:bg-white/5 hover:text-white' : 'text-zinc-500 hover:bg-black/5 hover:text-zinc-900'}`}
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={() => confirmApplyPreset(presetConfirm.presetType!)}
-                                        className="px-6 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-black shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all active:scale-95"
+                                        className="px-6 py-2.5 rounded-xl bg-amber-500 text-zinc-900 text-sm font-black shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all active:scale-95"
                                     >
                                         Apply Preset
                                     </button>
@@ -4559,7 +4559,7 @@ const deleteToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
                 {/* Sidebar */}
                 {!readOnly && !isHUDHidden && isSidebarVisible && (
-                    <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-slate-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
+                    <aside className={`w-[340px] shrink-0 flex flex-col z-10 ${isDark ? 'bg-surface-dark border-l border-zinc-800 shadow-none' : 'bg-card border-l border-border shadow-2xl'}`}>
                         <div className="flex flex-col h-full min-h-0">
                             <div className="min-h-0 flex-1">
                                 {selectedUnit ? (
@@ -4709,22 +4709,22 @@ const StructureDetailsPanel = ({
     onClose: () => void;
 }) => {
     return (
-        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-slate-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
+        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-zinc-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
-            <div className="relative h-48 w-full shrink-0 group overflow-hidden bg-slate-900">
+            <div className="relative h-48 w-full shrink-0 group overflow-hidden bg-zinc-900">
                 <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
                     <motion.button
                         whileHover={{ scale: 1.05, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-slate-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-100 dark:hover:bg-black/60"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                     >
                         <span className="material-icons-round text-lg">close</span>
                     </motion.button>
                 </div>
                 <div className="absolute bottom-8 left-8 right-8 z-20">
                     <h1 className="text-[2rem] font-black leading-tight text-white capitalize">{structure.label}</h1>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
                         {structure.type} {structure.variant ? `â€¢ ${structure.variant}` : ''}
                     </p>
                 </div>
@@ -4888,7 +4888,7 @@ const UnitDetailsPanel = ({
     };
 
     return (
-        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-slate-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
+        <div className="relative flex h-full flex-col overflow-hidden border-l border-white/10 bg-zinc-50/50 font-sans text-foreground shadow-2xl backdrop-blur-xl dark:bg-[#0a0a0a]/90">
             {/* Glossy Overlay for that Glass look */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent z-30" />
 
@@ -4911,7 +4911,7 @@ const UnitDetailsPanel = ({
                         className={`flex h-9 items-center justify-center rounded-full border px-4 text-[11px] font-bold tracking-tight transition-all shadow-lg backdrop-blur-md ${
                             notesOpen
                                 ? "border-primary/50 bg-primary/20 text-primary shadow-primary/20"
-                                : "border-white/40 bg-white/20 text-slate-900 shadow-black/5 hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-100 dark:hover:bg-black/60"
+                                : "border-white/40 bg-white/20 text-zinc-900 shadow-black/5 hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                         }`}
                     >
                         <span className="material-icons-round mr-1.5 text-sm">sticky_note_2</span>
@@ -4921,7 +4921,7 @@ const UnitDetailsPanel = ({
                         whileHover={{ scale: 1.05, rotate: 90 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={onClose}
-                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-slate-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-slate-100 dark:hover:bg-black/60"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/40 bg-white/20 text-zinc-900 shadow-lg shadow-black/5 backdrop-blur-md transition-all hover:bg-white/40 dark:border-white/10 dark:bg-black/40 dark:text-zinc-100 dark:hover:bg-black/60"
                     >
                         <span className="material-icons-round text-lg">close</span>
                     </motion.button>
@@ -4935,18 +4935,18 @@ const UnitDetailsPanel = ({
                         className="mb-1 flex items-center gap-2"
                     >
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary dark:text-primary-400">UNIT {unit.id}</span>
-                        <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{unit.type}</span>
+                        <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{unit.type}</span>
                     </motion.div>
                     
-                    <h1 className="mb-4 text-[3.2rem] font-black leading-[0.9] tracking-tighter text-slate-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] dark:text-white dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
+                    <h1 className="mb-4 text-[3.2rem] font-black leading-[0.9] tracking-tighter text-zinc-900 drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)] dark:text-white dark:drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
                         {unit.name}
                     </h1>
 
                     <div className="flex flex-wrap items-center gap-2.5">
                         <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
                             <span className="material-icons-round text-[16px] text-primary/70">king_bed</span>
-                            <span className="text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-100 uppercase">{unitLayoutLabel}</span>
+                            <span className="text-[11px] font-bold tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{unitLayoutLabel}</span>
                         </div>
                         <div className={`flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40`}>
                             <div className={`h-2 w-2 rounded-full animate-pulse ${
@@ -4955,11 +4955,11 @@ const UnitDetailsPanel = ({
                                 unit.status === 'maintenance' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
                                 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
                             }`} />
-                            <span className="text-[11px] font-bold tracking-wide text-slate-800 dark:text-slate-100 uppercase">{currentStatus.label}</span>
+                            <span className="text-[11px] font-bold tracking-wide text-zinc-800 dark:text-zinc-100 uppercase">{currentStatus.label}</span>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-xl border border-white/50 bg-white/40 px-3.5 py-2 backdrop-blur-lg shadow-sm dark:border-white/10 dark:bg-black/40">
                             <span className="material-icons-round text-[16px] text-cyan-400">aspect_ratio</span>
-                                                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 tracking-wide uppercase">{unitAreaSqm} m&sup2;</span>
+                                                            <span className="text-[11px] font-bold text-zinc-800 dark:text-zinc-100 tracking-wide uppercase">{unitAreaSqm} m&sup2;</span>
                         </div>
                     </div>
                 </div>
@@ -4974,25 +4974,25 @@ const UnitDetailsPanel = ({
                 >
                     {/* Residence Configuration (Always Editable) */}
                     <section className="space-y-4">
-                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">RESIDENCE CONFIGURATION</h3>
-                        <div className="space-y-4 rounded-[24px] border border-slate-200 bg-white p-6 dark:border-white/5 dark:bg-slate-900/40">
+                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400">RESIDENCE CONFIGURATION</h3>
+                        <div className="space-y-4 rounded-[24px] border border-zinc-200 bg-white p-6 dark:border-white/5 dark:bg-zinc-900/40">
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Area (sqm)</label>
-                                <input type="number" value={unit.areaSqm || ""} onChange={(e) => onUpdate({ areaSqm: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Area (sqm)</label>
+                                <input type="number" value={unit.areaSqm || ""} onChange={(e) => onUpdate({ areaSqm: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bedrooms</label>
-                                    <input type="number" value={unit.bedrooms || ""} onChange={(e) => onUpdate({ bedrooms: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Bedrooms</label>
+                                    <input type="number" value={unit.bedrooms || ""} onChange={(e) => onUpdate({ bedrooms: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
                                 </div>
                                 <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Baths</label>
-                                    <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Baths</label>
+                                    <input type="number" value={unit.baths || ""} onChange={(e) => onUpdate({ baths: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Kitchens</label>
-                                <input type="number" value={unit.kitchens || ""} onChange={(e) => onUpdate({ kitchens: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800" />
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Kitchens</label>
+                                <input type="number" value={unit.kitchens || ""} onChange={(e) => onUpdate({ kitchens: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-800" />
                             </div>
                         </div>
                     </section>
@@ -5001,7 +5001,7 @@ const UnitDetailsPanel = ({
                     {unit.status !== 'vacant' && (
                         <section className="relative">
                         <div className="mb-4 flex items-center justify-between px-1">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RESIDENT PROFILE</h3>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RESIDENT PROFILE</h3>
                             {unit.status === 'occupied' && (
                                 <div className="flex h-5 items-center rounded-full bg-primary/10 px-2 text-[9px] font-black uppercase text-primary">Lease Holder</div>
                             )}
@@ -5014,12 +5014,12 @@ const UnitDetailsPanel = ({
                             <button
                                 type="button"
                                 onClick={() => setTenantActionMenu((current) => ({ isOpen: !current.isOpen }))}
-                                className="group relative flex w-full flex-col rounded-3xl border border-slate-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-slate-900/60 dark:hover:bg-slate-900"
+                                className="group relative flex w-full flex-col rounded-3xl border border-zinc-200 bg-white p-5 text-left transition-all hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 dark:border-white/5 dark:bg-zinc-900/60 dark:hover:bg-zinc-900"
                             >
                                 <div className="flex items-center gap-5">
                                     <div className="relative">
                                         <div className="relative h-16 w-16 rounded-[22px] border-2 border-primary/20 p-1 transition-transform group-hover:scale-105">
-                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-slate-100 dark:bg-slate-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
+                                            <div className="h-full w-full overflow-hidden rounded-[18px] bg-zinc-100 dark:bg-zinc-800" style={unit.tenantAvatarBgColor ? { backgroundColor: unit.tenantAvatarBgColor } : undefined}>
                                                 {unit.tenantAvatarUrl ? (
                                                     <img
                                                         src={unit.tenantAvatarUrl}
@@ -5038,14 +5038,14 @@ const UnitDetailsPanel = ({
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
+                                        <p className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">{unit.tenant || "VACANT UNIT"}</p>
                                         <div className="mt-1 flex items-center gap-2">
-                                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
-                                            <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">{unit.tenant ? "Active Tenant" : "Ready for Move-in"}</span>
+                                            <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                                             <span className="text-[11px] font-bold text-primary tracking-wide">ID-{unit.id.slice(0, 5).toUpperCase()}</span>
                                         </div>
                                     </div>
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 group-hover:bg-primary/10 group-hover:text-primary dark:bg-black/40">
                                         <span className="material-icons-round text-xl">more_vert</span>
                                     </div>
                                 </div>
@@ -5057,11 +5057,11 @@ const UnitDetailsPanel = ({
                                         initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                         exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                        className="absolute right-0 top-[90px] z-50 w-64 rounded-[28px] border border-slate-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
+                                        className="absolute right-0 top-[90px] z-50 w-64 rounded-[28px] border border-zinc-200 bg-white/95 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/90"
                                     >
                                         <Link
                                             href={`/landlord/messages?unitId=${encodeURIComponent(unit.id)}`}
-                                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
+                                            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
                                         >
                                             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                                 <span className="material-icons-round text-base">chat_bubble</span>
@@ -5071,7 +5071,7 @@ const UnitDetailsPanel = ({
                                         {canViewTenantProfile ? (
                                             <Link
                                                 href={tenantProfileHref}
-                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-slate-200"
+                                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-700 transition-all hover:bg-primary/10 hover:text-primary dark:text-zinc-200"
                                             >
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
                                                     <span className="material-icons-round text-base">person</span>
@@ -5081,9 +5081,9 @@ const UnitDetailsPanel = ({
                                         ) : (
                                             <div
                                                 title="No tenant identity available for this unit yet."
-                                                className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-slate-400 dark:text-slate-600"
+                                                className="flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-4 py-3.5 text-sm font-black text-zinc-400 dark:text-zinc-600"
                                             >
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-300 dark:bg-white/5">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-100 text-zinc-300 dark:bg-white/5">
                                                     <span className="material-icons-round text-base">person_off</span>
                                                 </div>
                                                 Access Portfolio
@@ -5153,7 +5153,7 @@ const UnitDetailsPanel = ({
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-400">ACTIVE REPAIR</h3>
                                             <Link href={`/landlord/maintenance?unitId=${unit.id}`} className="text-[9px] font-black text-rose-600 hover:underline dark:text-rose-400">DETAILS</Link>
                                         </div>
-                                        <p className="mt-2 text-lg font-black leading-tight text-slate-900 dark:text-white line-clamp-2">
+                                        <p className="mt-2 text-lg font-black leading-tight text-zinc-900 dark:text-white line-clamp-2">
                                             {unit.maintenanceTitle || unit.details?.trim() || "Unspecified Repair"}
                                         </p>
                                         <div className="mt-3 flex items-center gap-2">
@@ -5168,8 +5168,8 @@ const UnitDetailsPanel = ({
 
                         {/* Lease Analytics & Timeline */}
                         {(unit.status === 'occupied' || unit.status === 'neardue') && (
-                            <div className="group relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/20 dark:border-white/5 dark:bg-slate-900/40 dark:shadow-none">
-                                <h3 className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">LEASE ANALYTICS</h3>
+                            <div className="group relative overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-8 shadow-xl shadow-slate-200/20 dark:border-white/5 dark:bg-zinc-900/40 dark:shadow-none">
+                                <h3 className="mb-8 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">LEASE ANALYTICS</h3>
                                 
                                 <div className="flex flex-col items-center">
                                     <div className="relative h-44 w-72">
@@ -5180,7 +5180,7 @@ const UnitDetailsPanel = ({
                                                 stroke="currentColor"
                                                 strokeWidth="10"
                                                 strokeLinecap="round"
-                                                className="text-slate-100 dark:text-white/5"
+                                                className="text-zinc-100 dark:text-white/5"
                                             />
                                             <motion.path
                                                 initial={{ strokeDashoffset: 251.2 }}
@@ -5210,10 +5210,10 @@ const UnitDetailsPanel = ({
                                         </svg>
                                         
                                         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center text-center">
-                                            <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+                                            <p className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white">
                                                 {daysRemaining !== null ? `${Math.abs(daysRemaining)}` : "--"}
                                             </p>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                                                 DAYS {daysRemaining && daysRemaining < 0 ? "OVERDUE" : "REMAINING"}
                                             </p>
                                         </div>
@@ -5221,22 +5221,22 @@ const UnitDetailsPanel = ({
 
                                     <div className="mt-8 flex w-full items-center justify-between gap-4">
                                         <div className="flex-1 space-y-1">
-                                            <p className="text-[10px] font-bold text-slate-400">Lease Commenced</p>
-                                            <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                            <p className="text-[10px] font-bold text-zinc-400">Lease Commenced</p>
+                                            <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseStart ? new Date(unit.leaseStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
                                         </div>
-                                        <div className="h-8 w-px bg-slate-100 dark:bg-white/5" />
+                                        <div className="h-8 w-px bg-zinc-100 dark:bg-white/5" />
                                         <div className="flex-1 text-right space-y-1">
-                                            <p className="text-[10px] font-bold text-slate-400">Renewal Window</p>
-                                            <p className="text-xs font-black text-slate-800 dark:text-slate-100">{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
+                                            <p className="text-[10px] font-bold text-zinc-400">Renewal Window</p>
+                                            <p className="text-xs font-black text-zinc-800 dark:text-zinc-100">{unit.leaseEnd ? new Date(unit.leaseEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "--"}</p>
                                         </div>
                                     </div>
 
-                                    <div className="mt-6 w-full rounded-2xl bg-slate-50 p-4 dark:bg-black/20">
+                                    <div className="mt-6 w-full rounded-2xl bg-zinc-50 p-4 dark:bg-black/20">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-slate-800">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-zinc-800">
                                                 <span className="material-icons-round text-sm text-primary">insights</span>
                                             </div>
-                                            <p className="text-[11px] font-bold leading-tight text-slate-600 dark:text-slate-400">
+                                            <p className="text-[11px] font-bold leading-tight text-zinc-600 dark:text-zinc-400">
                                                 {leaseMilestoneText}
                                             </p>
                                         </div>
@@ -5248,41 +5248,41 @@ const UnitDetailsPanel = ({
 
                     {/* Recent Activity / Status */}
                     <section className="space-y-4">
-                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">RECENT ACTIVITY</h3>
+                        <h3 className="px-1 text-[10px] font-black uppercase tracking-[0.25em] text-zinc-400 dark:text-zinc-500">RECENT ACTIVITY</h3>
                         
                         <div className="grid grid-cols-1 gap-3">
                             {unit.applicationCount && unit.applicationCount > 0 ? (
-                                <div className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40">
+                                <div className="flex items-center gap-4 rounded-[24px] border border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-zinc-900/40">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                                         <span className="material-icons-round text-xl">assignment_ind</span>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs font-black text-slate-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
-                                        <p className="text-[10px] font-bold text-slate-500">Awaiting landlord review</p>
+                                        <p className="text-xs font-black text-zinc-900 dark:text-white">{unit.applicationCount} Pending Application{unit.applicationCount === 1 ? "" : "s"}</p>
+                                        <p className="text-[10px] font-bold text-zinc-500">Awaiting landlord review</p>
                                     </div>
                                     <Link href={`/landlord/applications?unitId=${unit.id}`} className="text-[10px] font-black text-primary hover:underline">VIEW ALL</Link>
                                 </div>
                             ) : null}
 
                             <div 
-                                className="flex items-center gap-4 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-white/5 dark:bg-slate-900/40 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                                className="flex items-center gap-4 rounded-[24px] border border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-zinc-900/40 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors"
                                 onClick={onOpenHistory}
                             >
                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
                                     <span className="material-icons-round text-xl">history</span>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-black text-slate-900 dark:text-white">Full Unit History</p>
-                                    <p className="text-[10px] font-bold text-slate-500">View past leases & maintenance</p>
+                                    <p className="text-xs font-black text-zinc-900 dark:text-white">Full Unit History</p>
+                                    <p className="text-[10px] font-bold text-zinc-500">View past leases & maintenance</p>
                                 </div>
-                                <span className="material-icons-round text-slate-400 text-sm">chevron_right</span>
+                                <span className="material-icons-round text-zinc-400 text-sm">chevron_right</span>
                             </div>
                         </div>
                     </section>
 
                     {/* Command Center Quick Actions */}
-                    <section className="rounded-[32px] border border-slate-200 bg-slate-900 p-6 shadow-2xl dark:border-white/5">
-                        <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">COMMAND CENTER</h3>
+                    <section className="rounded-[32px] border border-zinc-200 bg-zinc-900 p-6 shadow-2xl dark:border-white/5">
+                        <h3 className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">COMMAND CENTER</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {quickActions.map((action) => (
                                 <motion.button
@@ -5311,15 +5311,15 @@ const UnitDetailsPanel = ({
             {pendingQuickAction && (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 p-6">
                     <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Confirm Status Change</h4>
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Confirm Status Change</h4>
+                        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
                             {evaluateQuickAction(unit, pendingQuickAction).confirmMessage || "Are you sure you want to continue?"}
                         </p>
                         <div className="mt-4 flex items-center justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => setPendingQuickAction(null)}
-                                className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                                className="rounded-lg border border-zinc-300 px-3 py-2 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                             >
                                 Cancel
                             </button>
@@ -5374,7 +5374,7 @@ const UnitNotesPanel = ({
                 <button
                     type="button"
                     onClick={onToggle}
-                    className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-slate-100 to-slate-200 text-slate-600 transition-colors hover:from-slate-200 hover:to-slate-300 dark:from-slate-900 dark:to-slate-950 dark:text-slate-300 dark:hover:from-slate-800 dark:hover:to-slate-900"
+                    className="group relative flex w-[52px] items-center justify-center border-r border-border bg-gradient-to-b from-slate-100 to-slate-200 text-zinc-600 transition-colors hover:from-slate-200 hover:to-slate-300 dark:from-slate-900 dark:to-slate-950 dark:text-zinc-300 dark:hover:from-slate-800 dark:hover:to-slate-900"
                     title={isOpen ? "Collapse notes" : "Open notes"}
                 >
                     <div className="flex flex-col items-center gap-2">
@@ -5386,14 +5386,14 @@ const UnitNotesPanel = ({
                 </button>
                 {isOpen && (
                     <div className="flex min-w-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-100/80 p-4 dark:from-slate-900 dark:to-slate-950/90">
-                        <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/70">
+                        <div className="rounded-2xl border border-zinc-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-zinc-700/80 dark:bg-zinc-900/70">
                             <div className="flex items-start justify-between gap-2">
                                 <div>
                                     <h3 className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-primary-400">
                                         <span className="material-icons-round text-base">sticky_note_2</span>
                                         Unit Notes
                                     </h3>
-                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Private note for this unit. Autosaves locally.</p>
+                                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Private note for this unit. Autosaves locally.</p>
                                 </div>
                                 <span className="rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                                     Auto
@@ -5404,11 +5404,11 @@ const UnitNotesPanel = ({
                             value={value}
                             onChange={(event) => onChange(event.target.value)}
                             placeholder="Add reminders, follow-ups, or move-in prep details..."
-                            className="mt-3 h-full min-h-[220px] resize-none rounded-2xl border border-slate-300 bg-white/95 px-4 py-4 text-sm leading-relaxed text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                            className="mt-3 h-full min-h-[220px] resize-none rounded-2xl border border-zinc-300 bg-white/95 px-4 py-4 text-sm leading-relaxed text-zinc-900 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
                         />
                         <div className="mt-2 flex items-center justify-between px-1">
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Tip: Use short action-oriented notes.</p>
-                            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{noteLength} chars</p>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Tip: Use short action-oriented notes.</p>
+                            <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">{noteLength} chars</p>
                         </div>
                     </div>
                 )}
@@ -5446,9 +5446,9 @@ const SidebarBlockLibrary = ({
     return (
         <div className="flex flex-col h-full">
             {unplacedUnits.length > 0 && (
-                <div className={`shrink-0 border-b px-4 py-3 ${isDark ? 'border-slate-800 bg-amber-500/5' : 'border-amber-200 bg-amber-50'}`}>
+                <div className={`shrink-0 border-b px-4 py-3 ${isDark ? 'border-zinc-800 bg-amber-500/5' : 'border-amber-200 bg-amber-50'}`}>
                     <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>Unplaced Units ({unplacedUnits.length})</p>
-                    <p className={`text-[11px] mb-2 ${isDark ? 'text-neutral-500' : 'text-slate-500'}`}>Drag these onto the canvas to place them.</p>
+                    <p className={`text-[11px] mb-2 ${isDark ? 'text-neutral-500' : 'text-zinc-500'}`}>Drag these onto the canvas to place them.</p>
                     <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
                         {unplacedUnits.map(u => {
                             const blockType = u.beds === 0 ? "studio" : u.beds === 2 ? "2br" : u.beds >= 3 ? "3br" : "1br";
@@ -5468,60 +5468,60 @@ const SidebarBlockLibrary = ({
                     </div>
                 </div>
             )}
-            <div className={`p-4 border-b ${isDark ? 'border-slate-800' : 'border-border'}`}>
-                <h2 className={`mb-4 text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Building Blocks</h2>
+            <div className={`p-4 border-b ${isDark ? 'border-zinc-800' : 'border-border'}`}>
+                <h2 className={`mb-4 text-xs font-bold uppercase tracking-wider ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Building Blocks</h2>
                 <div className="relative">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <span className="material-icons-round text-slate-400 text-lg">search</span>
+                        <span className="material-icons-round text-zinc-400 text-lg">search</span>
                     </span>
-                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-slate-700 bg-background-dark text-slate-200' : 'border-border bg-slate-50 text-slate-700'}`} placeholder="Search components..." type="text" />
+                    <input className={`w-full rounded-lg border pl-10 pr-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary ${isDark ? 'border-zinc-700 bg-background-dark text-zinc-200' : 'border-border bg-zinc-50 text-zinc-700'}`} placeholder="Search components..." type="text" />
                 </div>
             </div>
             <div className={`flex-1 overflow-y-auto p-4 space-y-6 ${styles['scrollbarHide'] || ''}`}>
                 <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">auto_awesome_mosaic</span>
                         Layout Presets
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={() => onApplyPreset("double-loaded")}
-                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                         >
-                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">view_week</span>
+                            <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">view_week</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Double Loaded</p>
-                                <p className="text-[10px] text-slate-500">Central corridor</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Double Loaded</p>
+                                <p className="text-[10px] text-zinc-500">Central corridor</p>
                             </div>
                         </button>
                         <button
                             onClick={() => onApplyPreset("u-shape")}
-                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                         >
-                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">view_quilt</span>
+                            <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">view_quilt</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>U-Shape</p>
-                                <p className="text-[10px] text-slate-500">Courtyard style</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>U-Shape</p>
+                                <p className="text-[10px] text-zinc-500">Courtyard style</p>
                             </div>
                         </button>
                         <button
                             onClick={() => onApplyPreset("l-shape")}
-                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                         >
-                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">filter_none</span>
+                            <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">filter_none</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>L-Shape</p>
-                                <p className="text-[10px] text-slate-500">Corner layout</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>L-Shape</p>
+                                <p className="text-[10px] text-zinc-500">Corner layout</p>
                             </div>
                         </button>
                         <button
                             onClick={() => onApplyPreset("single-loaded")}
-                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                         >
-                            <span className="material-icons-round text-2xl text-slate-400 group-hover:text-primary transition-colors">vertical_split</span>
+                            <span className="material-icons-round text-2xl text-zinc-400 group-hover:text-primary transition-colors">vertical_split</span>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Single Loaded</p>
-                                <p className="text-[10px] text-slate-500">One side units</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Single Loaded</p>
+                                <p className="text-[10px] text-zinc-500">One side units</p>
                             </div>
                         </button>
                     </div>
@@ -5529,205 +5529,205 @@ const SidebarBlockLibrary = ({
 
                 {!isPropertyMode && (
                     <div>
-                        <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                        <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                             <span className="material-icons-round text-primary text-sm">bedroom_parent</span>
                             Living Units
                         </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("studio")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`h-8 w-10 rounded transition-colors group-hover:border-primary/50 group-hover:bg-primary/10 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}></div>
+                            <div className={`h-8 w-10 rounded transition-colors group-hover:border-primary/50 group-hover:bg-primary/10 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Studio</p>
-                                <p className="text-[10px] text-slate-500">400 sqft</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Studio</p>
+                                <p className="text-[10px] text-zinc-500">400 sqft</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("1br")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`flex h-8 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}><div className={`w-1/2 ${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div></div>
+                            <div className={`flex h-8 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className={`w-1/2 ${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>1 BR Std</p>
-                                <p className="text-[10px] text-slate-500">650 sqft</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>1 BR Std</p>
+                                <p className="text-[10px] text-zinc-500">650 sqft</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("2br")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative h-10 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div></div></div>
+                            <div className={`relative h-10 w-12 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className="absolute inset-0 grid grid-cols-2 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>2 BR Corner</p>
-                                <p className="text-[10px] text-slate-500">950 sqft</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>2 BR Corner</p>
+                                <p className="text-[10px] text-zinc-500">950 sqft</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("3br")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative h-10 w-14 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-300 bg-slate-200'}`}><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-slate-400'}`}></div></div></div>
+                            <div className={`relative h-10 w-14 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-300 bg-zinc-200'}`}><div className="absolute inset-0 grid grid-cols-3 grid-rows-1"><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div><div className={`${isDark ? 'border-r border-neutral-400' : 'border-r border-zinc-400'}`}></div></div></div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>3 BR Suite</p>
-                                <p className="text-[10px] text-slate-500">1200 sqft</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>3 BR Suite</p>
+                                <p className="text-[10px] text-zinc-500">1200 sqft</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 )}
                 <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">architecture</span>
                         Structural
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("corridor")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`h-8 w-14 rounded-[1px] border-y ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-slate-500 bg-slate-100'}`} />
-                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Corridor</p></div>
+                            <div className={`h-8 w-14 rounded-[1px] border-y ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-500 bg-zinc-100'}`} />
+                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Corridor</p></div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("elevator")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`flex h-8 w-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-slate-200'}`}>
-                                <span className={`material-icons-round text-sm ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>elevator</span>
+                            <div className={`flex h-8 w-8 items-center justify-center rounded ${isDark ? 'bg-neutral-700' : 'bg-zinc-200'}`}>
+                                <span className={`material-icons-round text-sm ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>elevator</span>
                             </div>
-                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Elevator</p></div>
+                            <div className="text-center"><p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Elevator</p></div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">stairs</span>
                         Stairwells
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-straight")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`flex h-10 w-6 flex-col justify-evenly rounded px-0.5 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
-                                {[...Array(6)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
+                            <div className={`flex h-10 w-6 flex-col justify-evenly rounded px-0.5 ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                                {[...Array(6)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Straight</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Straight</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-l")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
-                                <div className={`absolute top-0 right-0 h-1/2 w-1/2 border-l border-b ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}></div>
-                                <div className={`absolute bottom-0 right-0 flex h-1/2 w-1/2 flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
-                                    {[...Array(3)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
+                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                                <div className={`absolute top-0 right-0 h-1/2 w-1/2 border-l border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}></div>
+                                <div className={`absolute bottom-0 right-0 flex h-1/2 w-1/2 flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}>
+                                    {[...Array(3)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
                                 </div>
-                                <div className={`absolute top-0 left-0 flex h-1/2 w-1/2 flex-row justify-evenly border-b ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
-                                    {[...Array(3)].map((_, i) => <div key={i} className={`h-full w-px ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
+                                <div className={`absolute top-0 left-0 flex h-1/2 w-1/2 flex-row justify-evenly border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}>
+                                    {[...Array(3)].map((_, i) => <div key={i} className={`h-full w-px ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>L-Shape</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>L-Shape</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-u")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
-                                <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}></div>
-                                <div className={`absolute top-[30%] bottom-0 left-1/2 w-0.5 -translate-x-1/2 ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>
-                                <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
-                                    {[...Array(4)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
+                            <div className={`relative h-8 w-8 rounded ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                                <div className={`absolute top-0 left-0 right-0 h-[30%] border-b ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}></div>
+                                <div className={`absolute top-[30%] bottom-0 left-1/2 w-0.5 -translate-x-1/2 ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>
+                                <div className={`absolute top-[30%] bottom-0 left-0 right-1/2 flex flex-col justify-evenly border-r ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}>
+                                    {[...Array(4)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
                                 </div>
-                                <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-slate-400'}`}>
-                                    {[...Array(4)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-slate-400'}`}></div>)}
+                                <div className={`absolute top-[30%] bottom-0 left-1/2 right-0 flex flex-col justify-evenly border-l ${isDark ? 'border-neutral-400' : 'border-zinc-400'}`}>
+                                    {[...Array(4)].map((_, i) => <div key={i} className={`h-px w-full ${isDark ? 'bg-neutral-400' : 'bg-zinc-400'}`}></div>)}
                                 </div>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>U-Shape</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>U-Shape</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("stair-spiral")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`relative flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-slate-400 bg-slate-200'}`}>
-                                <div className={`h-2 w-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-slate-400'}`}></div>
+                            <div className={`relative flex h-8 w-8 items-center justify-center rounded-full ${isDark ? 'border border-neutral-500 bg-neutral-700' : 'border border-zinc-400 bg-zinc-200'}`}>
+                                <div className={`h-2 w-2 rounded-full ${isDark ? 'border border-neutral-400' : 'border border-zinc-400'}`}></div>
                                 {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
-                                    <div key={deg} className={`absolute inset-0 border-t ${isDark ? 'border-neutral-400/50' : 'border-slate-400/50'}`} style={{ transform: `rotate(${deg}deg)` }}></div>
+                                    <div key={deg} className={`absolute inset-0 border-t ${isDark ? 'border-neutral-400/50' : 'border-zinc-400/50'}`} style={{ transform: `rotate(${deg}deg)` }}></div>
                                 ))}
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Spiral</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Spiral</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-border">
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">meeting_room</span>
                         Facilities
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("facility-function")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-slate-400 bg-slate-200'}`}>
-                                <span className={`material-icons-round text-lg ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>meeting_room</span>
+                            <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-400 bg-zinc-200'}`}>
+                                <span className={`material-icons-round text-lg ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>meeting_room</span>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Function Rm</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Function Rm</p>
                             </div>
                         </div>
                         <div
-                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-slate-700 bg-background-dark hover:shadow-none' : 'border-border bg-slate-50 hover:shadow-md'}`}
+                            className={`group flex cursor-grab flex-col items-center gap-2 rounded-lg border p-3 transition-all hover:border-primary active:cursor-grabbing ${isDark ? 'border-zinc-700 bg-background-dark hover:shadow-none' : 'border-border bg-zinc-50 hover:shadow-md'}`}
                             draggable="true"
                             onDragStart={onDragStart("facility-studio")}
                             onDragEnd={handleSidebarBlockDragEnd}
                         >
-                            <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-slate-400 bg-slate-200'}`}>
-                                <span className={`material-icons-round text-lg ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>fitness_center</span>
+                            <div className={`flex h-10 w-14 items-center justify-center rounded border ${isDark ? 'border-neutral-500 bg-neutral-700' : 'border-zinc-400 bg-zinc-200'}`}>
+                                <span className={`material-icons-round text-lg ${isDark ? 'text-zinc-300' : 'text-zinc-500'}`}>fitness_center</span>
                             </div>
                             <div className="text-center">
-                                <p className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Studio</p>
+                                <p className={`text-xs font-medium ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>Studio</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-border pb-10">
-                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                    <h3 className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-zinc-200' : 'text-zinc-700'}`}>
                         <span className="material-icons-round text-primary text-sm">construction</span>
                         Canvas Tools
                     </h3>
@@ -5737,11 +5737,11 @@ const SidebarBlockLibrary = ({
                             disabled={activeFloorItemCount === 0}
                             className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all ${
                                 activeFloorItemCount === 0
-                                    ? isDark ? 'border-slate-800 bg-slate-950 text-slate-600' : 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed'
+                                    ? isDark ? 'border-zinc-800 bg-zinc-950 text-zinc-600' : 'border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed'
                                     : isDark ? 'border-rose-800/40 bg-rose-950/20 text-rose-300 hover:bg-rose-900/40' : 'border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100'
                             }`}
                         >
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${activeFloorItemCount === 0 ? 'bg-slate-200 dark:bg-slate-800' : 'bg-rose-100 dark:bg-rose-900/40'}`}>
+                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${activeFloorItemCount === 0 ? 'bg-zinc-200 dark:bg-zinc-800' : 'bg-rose-100 dark:bg-rose-900/40'}`}>
                                 <span className="material-icons-round text-xl">layers_clear</span>
                             </div>
                             <div className="flex-1">
@@ -5762,6 +5762,7 @@ const HotkeyItem = ({ label, shortcut }: { label: string; shortcut: string }) =>
         <kbd className="px-2 py-1 rounded-md bg-white/10 border border-white/10 text-[10px] font-black text-primary font-mono shadow-sm">{shortcut}</kbd>
     </div>
 );
+
 
 
 

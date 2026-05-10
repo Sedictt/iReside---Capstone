@@ -219,7 +219,7 @@ export function TenantIrisChat() {
             <div className="h-20 border-b border-border px-6 flex items-center justify-between shrink-0 bg-card/80 backdrop-blur-md z-10">
                 <div className="flex items-center gap-4">
                     <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
+                        <div className="size-10 rounded-full bg-white overflow-hidden border border-border flex items-center justify-center">
                             <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
                         </div>
                         <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-card border border-border flex items-center justify-center shadow-sm">
@@ -227,7 +227,7 @@ export function TenantIrisChat() {
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-foreground text-base">iRis Assistant</h3>
+                        <h3 className="font-semibold text-foreground text-base">iRis Assistant</h3>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] uppercase font-bold text-primary tracking-widest bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">AI Concierge</span>
                             <span className="text-[10px] text-muted-foreground font-medium">Always Available</span>
@@ -238,13 +238,13 @@ export function TenantIrisChat() {
                 {/* Dummy Tools to match layout & guide tour step 5 */}
                 <div className="flex items-center gap-2" data-tour-id="tour-messages-tools">
                     <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Search not available for iRis">
-                        <Search className="w-4 h-4" />
+                        <Search className="size-4" />
                     </button>
                     <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Files not available for iRis">
-                        <Folder className="w-4 h-4" />
+                        <Folder className="size-4" />
                     </button>
                     <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors opacity-50 cursor-not-allowed" title="Settings">
-                        <MoreVertical className="w-4 h-4" />
+                        <MoreVertical className="size-4" />
                     </button>
                 </div>
             </div>
@@ -253,7 +253,7 @@ export function TenantIrisChat() {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 flex flex-col items-center bg-background/60">
                 <div className="w-full max-w-4xl space-y-6 flex flex-col">
                     <div className="text-center py-6 flex flex-col items-center gap-3">
-                        <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/60 shadow-[0_18px_35px_-24px_rgba(15,23,42,0.45)]">
+                        <div className="size-20 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white/60 shadow-[0_18px_35px_-24px_rgba(15,23,42,0.45)]">
                             <img src="/logos/favicon.png" alt="iRis" className="w-full h-full object-cover" />
                         </div>
                         <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
@@ -268,7 +268,7 @@ export function TenantIrisChat() {
 
                                 return (
                                     <div key={`skeleton-${index}`} className={cn("flex w-full gap-4", isRight ? "justify-end" : "justify-start")}>
-                                        {!isRight && <div className="w-8 h-8 rounded-full bg-slate-300/80 animate-pulse" />}
+                                        {!isRight && <div className="size-8 rounded-full bg-zinc-300/80 animate-pulse" />}
                                         <div
                                             className={cn(
                                                 "animate-pulse rounded-2xl",
@@ -277,7 +277,7 @@ export function TenantIrisChat() {
                                                     : "h-20 w-64 bg-card border border-border rounded-bl-sm"
                                             )}
                                         />
-                                        {isRight && <div className="w-8 h-8 rounded-full bg-slate-200 animate-pulse" />}
+                                        {isRight && <div className="size-8 rounded-full bg-zinc-200 animate-pulse" />}
                                     </div>
                                 );
                             })}
@@ -288,8 +288,8 @@ export function TenantIrisChat() {
                                 <div key={msg.id} className={cn("flex w-full gap-4", msg.role === "user" ? "justify-end" : "justify-start")}>
                                     {msg.role === "iris" && (
                                         <div className="shrink-0 mt-auto">
-                                            <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
-                                                <img src="/logos/favicon.png" alt="iRis" className="w-7 h-7 object-cover" />
+                                            <div className="size-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
+                                                <img src="/logos/favicon.png" alt="iRis" className="size-7 object-cover" />
                                             </div>
                                         </div>
                                     )}
@@ -313,7 +313,7 @@ export function TenantIrisChat() {
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all">TheLofts_Guest</p>
                                                     </div>
                                                     <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                                        <Wifi className="w-5 h-5" />
+                                                        <Wifi className="size-5" />
                                                     </button>
                                                 </div>
                                                 <div className="p-4 flex justify-between items-center relative z-10 cursor-pointer hover:bg-muted/40 transition-colors">
@@ -322,7 +322,7 @@ export function TenantIrisChat() {
                                                         <p className="text-primary font-mono font-medium text-sm md:text-base select-all">WelcomeHome2024</p>
                                                     </div>
                                                     <button className="p-2 text-muted-foreground hover:text-primary transition rounded-lg hover:bg-primary/10">
-                                                        <Copy className="w-5 h-5" />
+                                                        <Copy className="size-5" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -335,7 +335,7 @@ export function TenantIrisChat() {
 
                                     {msg.role === "user" && (
                                         <div className="shrink-0 mt-auto">
-                                            <div className="w-8 h-8 rounded-full bg-card flex items-center justify-center font-bold text-xs text-muted-foreground border border-border">
+                                            <div className="size-8 rounded-full bg-card flex items-center justify-center font-bold text-xs text-muted-foreground border border-border">
                                                 {userInitials}
                                             </div>
                                         </div>
@@ -348,8 +348,8 @@ export function TenantIrisChat() {
                     {isTyping && !isChatInitializing && (
                         <div className="flex w-full gap-4 justify-start">
                             <div className="shrink-0 mt-auto">
-                                <div className="w-8 h-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
-                                    <img src="/logos/favicon.png" alt="iRis" className="w-7 h-7 object-cover" />
+                                <div className="size-8 rounded-full bg-white overflow-hidden flex items-center justify-center border border-border">
+                                    <img src="/logos/favicon.png" alt="iRis" className="size-7 object-cover" />
                                 </div>
                             </div>
                             <div className="px-5 py-4 rounded-2xl rounded-bl-sm bg-card border border-border flex items-center gap-1.5">
@@ -403,12 +403,12 @@ export function TenantIrisChat() {
                                 disabled={!input.trim() || isChatInitializing}
                                 className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 disabled:hover:bg-primary"
                             >
-                                <ArrowUp className="w-5 h-5" />
+                                <ArrowUp className="size-5" />
                             </button>
                         </div>
                     </div>
                     <div className="flex items-center justify-center gap-1.5 text-center mt-1">
-                        <ShieldCheck className="w-3 h-3 text-emerald-500/70" />
+                        <ShieldCheck className="size-3 text-emerald-500/70" />
                         <p className="text-[10px] text-neutral-500 font-medium">Conversations are monitored by AI specifically for building administration.</p>
                     </div>
                 </div>
@@ -426,4 +426,5 @@ export function TenantIrisChat() {
         </div>
     );
 }
+
 

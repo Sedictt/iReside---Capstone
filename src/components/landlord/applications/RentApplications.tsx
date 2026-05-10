@@ -172,9 +172,9 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; color: string; b
     },
     withdrawn: {
         label: "Withdrawn",
-        color: "text-slate-500",
-        bgColor: "bg-slate-500/10",
-        borderColor: "border-slate-500/20",
+        color: "text-zinc-500",
+        bgColor: "bg-zinc-500/10",
+        borderColor: "border-zinc-500/20",
         icon: AlertCircle,
     },
 };
@@ -1605,3 +1605,4 @@ export function RentApplications() {
         </div>
     );
 }
+

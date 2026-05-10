@@ -319,7 +319,7 @@ function NewAssetContent() {
             <div className="max-w-4xl mx-auto px-4 pt-8 space-y-8 animate-in fade-in duration-700">
                 <div className="flex items-center justify-between">
                     <button onClick={handleBack} className="group flex items-center gap-2 text-sm font-bold text-white/40 hover:text-white transition-all bg-white/[0.03] px-5 py-2.5 rounded-full border border-white/5 backdrop-blur-xl">
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
                         {step === 1 ? "Cancel" : "Back"}
                     </button>
                     <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl">
@@ -342,15 +342,15 @@ function NewAssetContent() {
                                     <div key={s.id} className="flex items-center">
                                         <div className="flex flex-col items-center gap-2">
                                             <div className={cn(
-                                                "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border",
+                                                "size-10 rounded-full flex items-center justify-center transition-all duration-500 border",
                                                 step === s.id ? "bg-primary text-black border-primary shadow-lg ring-4 ring-primary/10" : "bg-white/5 text-white/20 border-white/5"
                                             )}>
                                                 {step > s.id ? (
-                                                    <Check className="w-5 h-5 text-primary" />
+                                                    <Check className="size-5 text-primary" />
                                                 ) : typeof s.icon === "string" ? (
                                                     <span className="text-sm font-black">{s.icon}</span>
                                                 ) : (
-                                                    <s.icon className="w-4 h-4" />
+                                                    <s.icon className="size-4" />
                                                 )}
                                             </div>
                                             <span className={cn("text-[9px] font-black uppercase tracking-widest", step === s.id ? "text-primary" : "text-white/20")}>{s.label}</span>
@@ -381,7 +381,7 @@ function NewAssetContent() {
                                                 {(mediaPreviewUrls.length > 0 || existingImageUrls.length > 0) ? (
                                                     <img src={mediaPreviewUrls[0] || existingImageUrls[0]} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <Upload className="w-8 h-8 text-white/20" />
+                                                    <Upload className="size-8 text-white/20" />
                                                 )}
                                             </div>
                                             <input type="file" onChange={handleMediaFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
@@ -441,7 +441,7 @@ function NewAssetContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
                                         <div className="flex items-center gap-2">
-                                            <Home className="w-4 h-4 text-primary" />
+                                            <Home className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Asset Class</h3>
                                         </div>
                                         <div className="grid gap-3">
@@ -462,7 +462,7 @@ function NewAssetContent() {
                                                             <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
                                                         </div>
                                                     </div>
-                                                    {formData.propertyType === opt.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                                                    {formData.propertyType === opt.id && <CheckCircle2 className="size-5 text-primary" />}
                                                 </button>
                                             ))}
                                         </div>
@@ -470,7 +470,7 @@ function NewAssetContent() {
 
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
                                         <div className="flex items-center gap-2">
-                                            <Grid className="w-4 h-4 text-primary" />
+                                            <Grid className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Structural Specs</h3>
                                         </div>
                                         <div className="grid gap-6">
@@ -519,7 +519,7 @@ function NewAssetContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">                                     
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
-                                            <Wallet className="w-4 h-4 text-primary" />
+                                            <Wallet className="size-4 text-primary" />
                                             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
                                         </div>
 
@@ -544,7 +544,7 @@ function NewAssetContent() {
                                                                     <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
                                                                 </div>
                                                             </div>
-                                                            {formData.utilityBilling === opt.id && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                                                            {formData.utilityBilling === opt.id && <CheckCircle2 className="size-5 text-primary" />}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -573,7 +573,7 @@ function NewAssetContent() {
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <Sparkles className="w-4 h-4 text-primary" />
+                                                <Sparkles className="size-4 text-primary" />
                                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Amenities</h3>
                                             </div>
                                             <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.amenities.length} Selected</span>
@@ -614,7 +614,7 @@ function NewAssetContent() {
                                         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <ShieldCheck className="w-4 h-4 text-primary" />
+                                                    <ShieldCheck className="size-4 text-primary" />
                                                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
                                                 </div>
                                                 <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.buildingRules.length} Defined</span>
@@ -672,7 +672,7 @@ function NewAssetContent() {
                                     <div className="lg:col-span-5">
                                         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                             <div className="flex items-center gap-2">
-                                                <FileText className="w-4 h-4 text-primary" />
+                                                <FileText className="size-4 text-primary" />
                                                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
                                             </div>
                                             
@@ -702,8 +702,8 @@ function NewAssetContent() {
                                                 
                                                 {formData.contractMode === "generate" ? (
                                                     <>
-                                                        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500">
-                                                            <FileText className="w-8 h-8 text-primary" />
+                                                        <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 group-hover:scale-110 transition-transform duration-500">
+                                                            <FileText className="size-8 text-primary" />
                                                         </div>
                                                         <div className="text-center px-4 relative z-10">
                                                             <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">Contract Preview</span>
@@ -714,8 +714,8 @@ function NewAssetContent() {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${formData.contractFile ? "bg-primary/20 border-primary/40" : "bg-white/5 border-white/10"}`}>
-                                                            {formData.contractFile ? <CheckCircle2 className="w-8 h-8 text-primary" /> : <Upload className="w-8 h-8 text-white/20" />}
+                                                        <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all group-hover:scale-110 duration-500 ${formData.contractFile ? "bg-primary/20 border-primary/40" : "bg-white/5 border-white/10"}`}>
+                                                            {formData.contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-white/20" />}
                                                         </div>
                                                         <div className="text-center px-4">
                                                             <span className={`block text-xs font-black uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-white/40"}`}>
@@ -728,7 +728,7 @@ function NewAssetContent() {
 
                                                 <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                                                     <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                                        {formData.contractMode === "generate" ? <ShieldCheck className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+                                                        {formData.contractMode === "generate" ? <ShieldCheck className="size-4" /> : <Upload className="size-4" />}
                                                         <span className="text-[10px] font-black uppercase tracking-widest">
                                                             {formData.contractMode === "generate" ? "View Generated Draft" : (formData.contractFile ? "Change Document" : "Upload File")}
                                                         </span>
@@ -743,7 +743,7 @@ function NewAssetContent() {
                                         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6 h-full flex flex-col">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    <FilePlus className="w-4 h-4 text-primary" />
+                                                    <FilePlus className="size-4 text-primary" />
                                                     <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Lease Management Method</h3>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/20 rounded-lg">
@@ -768,8 +768,8 @@ function NewAssetContent() {
                                                     ))}
                                                 </div>
                                                 <div className="bg-white/5 rounded-2xl p-6 border border-white/5 flex-1 flex flex-col items-center justify-center text-center space-y-3">
-                                                    <div className="w-12 h-12 rounded-full bg-white/[0.03] flex items-center justify-center">
-                                                        {formData.contractMode === "generate" ? <ShieldCheck className="w-6 h-6 text-primary/40" /> : <Upload className="w-6 h-6 text-white/20" />}
+                                                    <div className="size-12 rounded-full bg-white/[0.03] flex items-center justify-center">
+                                                        {formData.contractMode === "generate" ? <ShieldCheck className="size-6 text-primary/40" /> : <Upload className="size-6 text-white/20" />}
                                                     </div>
                                                     <p className="text-[11px] text-white/40 font-bold uppercase tracking-widest leading-relaxed max-w-xs">
                                                         {formData.contractMode === "generate" 
@@ -786,7 +786,7 @@ function NewAssetContent() {
 
                     <div className="p-10 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
                         <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-white/40 hover:text-white transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
-                            <ArrowLeft className="w-4 h-4" /><span>Back</span>
+                            <ArrowLeft className="size-4" /><span>Back</span>
                         </button>
                         <button onClick={handleNext} disabled={isSubmitting} className="px-10 py-5 bg-primary text-black rounded-2xl font-black uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
                             {isSubmitting ? "Syncing..." : step === 4 ? "Finalize Profile" : "Continue"}
@@ -816,9 +816,10 @@ function NewAssetContent() {
 export default function NewAssetPage() {
     return (
         <ClickSpark sparkColor="#7CA34D" sparkSize={10} sparkRadius={15} sparkCount={8} duration={400}>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="size-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}>
                 <NewAssetContent />
             </Suspense>
         </ClickSpark>
     );
 }
+
