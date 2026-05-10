@@ -183,7 +183,7 @@ export function DashboardBanner({
 
     const pageIndex = [
         { title: "Dashboard", href: "/landlord/dashboard", subtitle: "Overview & stats" },
-        { title: "Properties", href: "/landlord/properties", subtitle: "Manage listings" },
+        { title: "Properties", href: "/landlord/properties", subtitle: "Property management" },
         { title: "Tenants", href: "/landlord/tenants", subtitle: "Tenant management" },
         { title: "Messages", href: "/landlord/messages", subtitle: "Communications" },
         { title: "Invoices", href: "/landlord/invoices", subtitle: "Billing & payments" },

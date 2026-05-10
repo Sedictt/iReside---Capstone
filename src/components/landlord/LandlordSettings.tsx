@@ -63,9 +63,9 @@ interface SidebarItem {
 const SIDEBAR_ITEMS: SidebarItem[] = [
     { 
         id: "Identity", 
-        label: "Public Identity", 
+        label: "Identity", 
         icon: User,
-        description: "Manage your profile and public presence"
+        description: "Manage your profile"
     },
     { 
         id: "Finance", 
@@ -175,7 +175,7 @@ export function LandlordSettings() {
 
     // Mapping of Sub-tabs
     const SUB_TABS: Record<SettingsCategory, string[]> = {
-        Identity: ["Profile", "Branding", "Socials", "Verification", "Visibility"],
+        Identity: ["Profile", "Branding", "Socials", "Verification"],
         Finance: ["GCash", "Utilities"],
         Security: ["Account", "Protection", "Sessions"],
         Notifications: ["Alerts"],
@@ -216,7 +216,6 @@ export function LandlordSettings() {
         address: "",
         bio: "",
         business_permit_number: "",
-        public_visibility: true,
         socials: {
             facebook: "",
             instagram: "",
@@ -270,7 +269,6 @@ export function LandlordSettings() {
                 address: profile.address || "",
                 bio: profile.bio || "",
                 business_permit_number: profile.business_permit_number || "",
-                public_visibility: true,
                 socials: typeof profile.socials === 'object' && profile.socials !== null 
                     ? {
                         facebook: (profile.socials as any).facebook || "",
@@ -746,21 +744,6 @@ export function LandlordSettings() {
                             </div>
                         </GlassCard>
                     );
-                case "Visibility":
-                    return (
-                        <GlassCard title="Visibility" description="Manage how your profile is discovered.">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <h4 className="text-sm font-semibold text-white">Public Profile Status</h4>
-                                    <p className="text-xs text-neutral-400">When enabled, tenants can find your listings and profile page.</p>
-                                </div>
-                                <ToggleSwitch 
-                                    enabled={formData.public_visibility} 
-                                    onToggle={() => setFormData({ ...formData, public_visibility: !formData.public_visibility })} 
-                                />
-                            </div>
-                        </GlassCard>
-                    );
                 default: return null;
             }
         };
@@ -773,8 +756,8 @@ export function LandlordSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-black text-white">Public Identity</h2>
-                        <p className="text-neutral-400">Control how you appear to prospective tenants.</p>
+                        <h2 className="text-3xl font-black text-white">Identity</h2>
+                        <p className="text-neutral-400">Control how you appear to others.</p>
                     </div>
                     <button
                         onClick={handleSave}

@@ -984,7 +984,7 @@ export default function MessagesPage() {
             case "review-application": router.push("/landlord/applications"); break;
             case "schedule-viewing": setMessageInput("Share your preferred dates for viewing."); break;
             case "share-requirements": setMessageInput("Please submit required documents for screening."); break;
-            case "share-listing": router.push("/landlord/listings"); break;
+            case "share-listing": router.push("/landlord/properties"); break;
             case "view-profile": if (activeContact?.participantUserId) router.push(`/visitor/${activeContact.participantUserId}`); break;
             case "archive-chat": setPendingConfirmAction("archive"); break;
             case "report-user": openReportWizard(); break;
