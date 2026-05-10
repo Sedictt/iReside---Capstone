@@ -121,7 +121,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h4 className="text-lg font-black text-foreground tracking-tight">Move-Out: {existingRequest.status.charAt(0).toUpperCase() + existingRequest.status.slice(1)}</h4>
+                                    <h4 className="text-lg font-semibold text-foreground tracking-tight">Move-Out: {existingRequest.status.charAt(0).toUpperCase() + existingRequest.status.slice(1)}</h4>
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                                     {existingRequest.status === "pending" ? "Your request is currently being reviewed by the landlord." :
@@ -129,7 +129,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                      existingRequest.status === "denied" ? `Your request was denied. Reason: ${existingRequest.denial_reason}` :
                                      "Your move-out clearance is complete."}
                                 </p>
-                                <div className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                <div className="mt-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                                     <Calendar className="size-3" />
                                     Target Date: {new Date(existingRequest.requested_date).toLocaleDateString()}
                                 </div>
@@ -137,7 +137,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         </div>
                         <button 
                             onClick={() => setIsOpen(true)}
-                            className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
+                            className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-semibold uppercase tracking-widest border border-border hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
                         >
                             View Timeline & Checklist
                         </button>
@@ -160,7 +160,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
-                            className="w-full py-4 rounded-2xl bg-muted text-[10px] font-black uppercase tracking-widest hover:bg-muted/80 transition-all border border-border shadow-sm"
+                            className="w-full py-4 rounded-2xl bg-muted text-[10px] font-semibold uppercase tracking-widest hover:bg-muted/80 transition-all border border-border shadow-sm"
                         >
                             View Progress
                         </button>
@@ -177,7 +177,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                             <LogOut className="size-6" />
                         </div>
                         <div>
-                            <h4 className="text-lg font-black text-foreground tracking-tight">End of Lease</h4>
+                            <h4 className="text-lg font-semibold text-foreground tracking-tight">End of Lease</h4>
                             <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                                 Planning to move out? Initiate a digital clearance request and manage your move-out timeline.
                             </p>
@@ -185,7 +185,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     </div>
                     <button 
                         onClick={() => setIsOpen(true)}
-                        className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-black uppercase tracking-widest border border-border hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
+                        className="w-full mt-8 py-4 rounded-xl bg-muted text-[10px] font-semibold uppercase tracking-widest border border-border hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all flex items-center justify-center gap-2"
                     >
                         Request Move-Out
                     </button>
@@ -206,7 +206,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         </p>
                         <button
                             onClick={() => setIsOpen(true)}
-                            className="w-full py-4 rounded-2xl bg-red-500/10 text-red-600 font-black uppercase tracking-widest text-[10px] hover:bg-red-500/15 transition-all border border-red-500/20 shadow-sm"
+                            className="w-full py-4 rounded-2xl bg-red-500/10 text-red-600 font-semibold uppercase tracking-widest text-[10px] hover:bg-red-500/15 transition-all border border-red-500/20 shadow-sm"
                         >
                             Request Move-Out
                         </button>
@@ -221,7 +221,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                     <div className="size-14 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 bg-red-500/10 text-red-500">
                         <LogOut className="size-7" />
                     </div>
-                    <span className="text-[10px] font-black text-center group-hover:text-red-500 transition-colors uppercase tracking-widest">Move Out</span>
+                    <span className="text-[10px] font-semibold text-center group-hover:text-red-500 transition-colors uppercase tracking-widest">Move Out</span>
                 </button>
             )}
 
@@ -237,7 +237,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     <LogOut className="size-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-black text-foreground tracking-tight">Move-Out Clearance</h3>
+                                    <h3 className="text-2xl font-semibold text-foreground tracking-tight">Move-Out Clearance</h3>
                                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Residency Termination Protocol</p>
                                 </div>
                             </div>
@@ -253,7 +253,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                         {existingRequest ? (
                             <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
                                 <div className="space-y-6">
-                                    <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Clearance Progress</h4>
+                                    <h4 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Clearance Progress</h4>
                                     
                                     <div className="relative space-y-8">
                                         {/* Vertical line */}
@@ -265,7 +265,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 <Clock className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className="text-sm font-black text-foreground">Request Submitted</p>
+                                                <p className="text-sm font-semibold text-foreground">Request Submitted</p>
                                                 <p className="text-xs font-medium text-muted-foreground">{new Date(existingRequest.created_at).toLocaleDateString()}</p>
                                             </div>
                                         </div>
@@ -280,7 +280,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 {existingRequest.status === "denied" ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className={cn("text-sm font-black", existingRequest.status === "pending" ? "text-muted-foreground" : "text-foreground")}>
+                                                <p className={cn("text-sm font-semibold", existingRequest.status === "pending" ? "text-muted-foreground" : "text-foreground")}>
                                                     {existingRequest.status === "denied" ? "Request Denied" : "Landlord Approval"}
                                                 </p>
                                                 <p className="text-xs font-medium text-muted-foreground">
@@ -304,7 +304,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 <ShieldCheck className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className={cn("text-sm font-black", !existingRequest.inspection_date ? "text-muted-foreground" : "text-foreground")}>Physical Inspection</p>
+                                                <p className={cn("text-sm font-semibold", !existingRequest.inspection_date ? "text-muted-foreground" : "text-foreground")}>Physical Inspection</p>
                                                 <p className="text-xs font-medium text-muted-foreground">
                                                     {existingRequest.inspection_date ? new Date(existingRequest.inspection_date).toLocaleDateString() : "Scheduled after approval"}
                                                 </p>
@@ -320,7 +320,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 <LogOut className="size-4" />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className={cn("text-sm font-black", existingRequest.status !== "completed" ? "text-muted-foreground" : "text-foreground")}>Lease Terminated</p>
+                                                <p className={cn("text-sm font-semibold", existingRequest.status !== "completed" ? "text-muted-foreground" : "text-foreground")}>Lease Terminated</p>
                                                 <p className="text-xs font-medium text-muted-foreground">
                                                     {existingRequest.completed_at ? new Date(existingRequest.completed_at).toLocaleDateString() : "Final step"}
                                                 </p>
@@ -331,7 +331,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                 {existingRequest.inspection_date && (
                                     <div className="pt-6 border-t border-border space-y-4">
-                                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Security Deposit Summary</h4>
+                                        <h4 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Security Deposit Summary</h4>
                                         <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
                                             {existingRequest.deposit_deductions && Array.isArray(existingRequest.deposit_deductions) && existingRequest.deposit_deductions.map((d: any, i: number) => (
                                                 <div key={i} className="flex justify-between text-xs font-medium">
@@ -340,8 +340,8 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                                 </div>
                                             ))}
                                             <div className="pt-3 border-t border-border/50 flex justify-between items-center">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Estimated Refund</span>
-                                                <span className="text-lg font-black text-primary">₱{(existingRequest.deposit_refund_amount || 0).toLocaleString()}</span>
+                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-foreground">Estimated Refund</span>
+                                                <span className="text-lg font-semibold text-primary">₱{(existingRequest.deposit_refund_amount || 0).toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -365,7 +365,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label htmlFor="moveOutDate" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
+                                        <label htmlFor="moveOutDate" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Target Move-Out Date</label>
                                         <input 
                                             id="moveOutDate"
                                             type="date" 
@@ -377,7 +377,7 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label htmlFor="moveOutReason" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
+                                        <label htmlFor="moveOutReason" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Reason for Leaving (Optional)</label>
                                         <textarea 
                                             id="moveOutReason"
                                             rows={3}
@@ -393,14 +393,14 @@ export default function MoveOutRequest({ variant = "sidebar", initialRequest = n
                                     <button
                                         type="button"
                                         onClick={() => setIsOpen(false)}
-                                        className="flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all border border-transparent hover:border-border"
+                                        className="flex-1 py-4 rounded-xl text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all border border-transparent hover:border-border"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="flex-1 py-4 rounded-xl bg-red-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                        className="flex-1 py-4 rounded-xl bg-red-500 text-white text-[10px] font-semibold uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                                     >
                                         {isSubmitting ? (
                                             <Loader2 className="size-4 animate-spin" />

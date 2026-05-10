@@ -45,7 +45,7 @@ export function MoveOutStatusBadge({ status, className }: MoveOutStatusBadgeProp
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 rounded-xl border px-3 py-1 text-[10px] font-black uppercase tracking-widest",
+        "flex items-center gap-1.5 rounded-xl border px-3 py-1 text-[10px] font-semibold uppercase tracking-widest",
         config.bgColor,
         config.color,
         config.borderColor,

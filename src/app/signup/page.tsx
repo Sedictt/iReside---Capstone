@@ -247,7 +247,7 @@ export default function SignUpPage() {
                         <CheckCircle2 className="size-12 text-primary" />
                     </div>
                     <div className="space-y-2">
-                        <h2 className="text-3xl font-extrabold tracking-tight">Application Submitted</h2>
+                        <h2 className="text-3xl font-semibold tracking-tight">Application Submitted</h2>
                         <p className="text-white/60 font-medium leading-relaxed">
                             Your landlord registration has been submitted successfully. Our system administrator will review your documents and verify your application shortly.
                         </p>
@@ -709,7 +709,7 @@ export default function SignUpPage() {
                                         {/* CSS Proof of Ownership Illustration */}
                                         <div className="relative w-20 h-24 bg-[#fdfbf7] rounded-sm shadow-lg overflow-hidden mx-auto mb-4 group-hover/upload:scale-110 transition-transform duration-500 border border-zinc-300 p-2.5 flex flex-col">
                                             <div className="absolute top-1 left-1 right-1 h-[2px] border-t border-b border-amber-700/30"></div>
-                                            <div className="text-[4px] font-black text-amber-900 text-center uppercase tracking-widest mt-1">Title of Deed</div>
+                                            <div className="text-[4px] font-semibold text-amber-900 text-center uppercase tracking-widest mt-1">Title of Deed</div>
                                             <div className="w-4 h-[1px] bg-amber-700/50 mx-auto mt-[1px] mb-1.5"></div>
                                             
                                             <div className="space-y-1 flex-1">

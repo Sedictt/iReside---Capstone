@@ -667,7 +667,7 @@ export default function TenantDashboard() {
                             <div className="absolute top-0 right-0 size-32 bg-primary/5 blur-3xl -mr-8 -mt-8" />
                             <div className="relative z-10 space-y-6">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary mb-2">Your Home</p>
                                     <h3 className="text-2xl font-semibold text-foreground tracking-tight leading-tight">
                                         {lease?.propertyName ?? "Property"}<br/>
                                         <span className="text-muted-foreground text-lg">{lease?.unitName ?? "Unit"}</span>
@@ -681,7 +681,7 @@ export default function TenantDashboard() {
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Electricity</p>
-                                            <p className="font-black text-sm text-foreground">₱{formatCurrency(electricityAmount ?? 0)}</p>
+                                            <p className="font-semibold text-sm text-foreground">₱{formatCurrency(electricityAmount ?? 0)}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/40 border border-border/50">
@@ -690,7 +690,7 @@ export default function TenantDashboard() {
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Water</p>
-                                            <p className="font-black text-sm text-foreground">₱{formatCurrency(waterAmount ?? 0)}</p>
+                                            <p className="font-semibold text-sm text-foreground">₱{formatCurrency(waterAmount ?? 0)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -700,7 +700,7 @@ export default function TenantDashboard() {
                                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Lease Details</p>
                                         <button 
                                             onClick={() => setIsLeaseModalOpen(true)}
-                                            className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
+                                            className="text-[10px] font-semibold text-primary uppercase tracking-widest hover:underline"
                                         >
                                             View Contract
                                         </button>
@@ -708,11 +708,11 @@ export default function TenantDashboard() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Monthly Rent</p>
-                                            <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.monthlyRent ?? 0)}</p>
+                                            <p className="text-sm font-semibold text-foreground">₱{formatCurrency(lease?.monthlyRent ?? 0)}</p>
                                         </div>
                                         <div>
                                             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Deposit</p>
-                                            <p className="text-sm font-black text-foreground">₱{formatCurrency(lease?.securityDeposit ?? 0)}</p>
+                                            <p className="text-sm font-semibold text-foreground">₱{formatCurrency(lease?.securityDeposit ?? 0)}</p>
                                         </div>
                                     </div>
                                 </div>

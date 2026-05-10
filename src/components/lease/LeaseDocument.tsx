@@ -202,7 +202,7 @@ return (
 
             {/* Watermark */}
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.015]">
-                <p className="-rotate-45 text-[min(10rem,12vw)] font-black uppercase text-zinc-950 select-none">
+                <p className="-rotate-45 text-[min(10rem,12vw)] font-semibold uppercase text-zinc-950 select-none">
                     LEGAL DRAFT
                 </p>
             </div>

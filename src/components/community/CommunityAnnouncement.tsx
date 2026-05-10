@@ -62,7 +62,7 @@ export function CommunityAnnouncement({
                     
                     <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3">
-                            <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${config.color} ${config.bg} border border-current opacity-80`}>
+                            <span className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wider ${config.color} ${config.bg} border border-current opacity-80`}>
                                 {config.badge}
                             </span>
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

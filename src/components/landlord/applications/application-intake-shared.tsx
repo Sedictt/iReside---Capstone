@@ -63,7 +63,7 @@ function GlassInput({ icon: Icon, label, error, id, nextFieldId, onKeyDown, bloc
             {label && (
                 <label
                     htmlFor={id}
-                    className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary"
+                    className="ml-1 cursor-pointer text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary"
                 >
                     {label}
                 </label>
@@ -142,7 +142,7 @@ export function ApplicationIdentityStep({
                     <section className="space-y-6">
                         <div className="flex items-center gap-4 text-primary">
                             <MapPin size={18} strokeWidth={2.5} />
-                            <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">
+                            <label htmlFor="unit-select" className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
                                 Select Unit
                             </label>
                         </div>
@@ -161,7 +161,7 @@ export function ApplicationIdentityStep({
                                     }}
                                     disabled={lockUnit}
                                     className={cn(
-                                        "w-full h-20 appearance-none cursor-pointer bg-transparent pl-16 pr-12 text-lg font-black tracking-tighter text-foreground outline-none transition-all disabled:opacity-50",
+                                        "w-full h-20 appearance-none cursor-pointer bg-transparent pl-16 pr-12 text-lg font-semibold tracking-tighter text-foreground outline-none transition-all disabled:opacity-50",
                                         "focus-visible:ring-4 focus-visible:ring-primary/10",
                                         formErrors.unit && "text-red-400"
                                     )}
@@ -181,8 +181,8 @@ export function ApplicationIdentityStep({
                         {formErrors.unit && <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider ml-1 mt-1">{formErrors.unit}</p>}
                         {currentUnit && (
                             <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="flex justify-between items-center px-4 py-3 bg-primary/5 border border-primary/20 rounded-2xl">
-                                <span className="text-[10px] font-black uppercase text-primary tracking-widest">Monthly Rent</span>
-                                <span className="text-lg font-black italic text-foreground">P{currentUnit.rent_amount.toLocaleString()}</span>
+                                <span className="text-[10px] font-semibold uppercase text-primary tracking-widest">Monthly Rent</span>
+                                <span className="text-lg font-semibold italic text-foreground">P{currentUnit.rent_amount.toLocaleString()}</span>
                             </motion.div>
                         )}
                     </section>
@@ -191,7 +191,7 @@ export function ApplicationIdentityStep({
                 <section className="space-y-6">
                     <div className="flex items-center gap-4 text-blue-400">
                         <User size={18} strokeWidth={2.5} />
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Applicant Information</h3>
+                        <h3 className="text-[11px] font-semibold uppercase tracking-[0.3em]">Applicant Information</h3>
                     </div>
                     <GlassInput
                         id="applicant-name"
@@ -234,7 +234,7 @@ export function ApplicationIdentityStep({
                     </div>
 
                     <div className="space-y-2.5 group">
-                        <label htmlFor="move-in-date" className="ml-1 cursor-pointer text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary">
+                        <label htmlFor="move-in-date" className="ml-1 cursor-pointer text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground transition-all duration-300 group-focus-within:text-primary">
                             Move-in Date
                         </label>
                         <div className="relative isolate">
@@ -259,7 +259,7 @@ export function ApplicationIdentityStep({
                 <section className="space-y-6">
                     <div className="flex items-center gap-4 text-red-400">
                         <Phone size={18} strokeWidth={2.5} />
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Emergency Contact</h3>
+                        <h3 className="text-[11px] font-semibold uppercase tracking-[0.3em]">Emergency Contact</h3>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <GlassInput
@@ -306,7 +306,7 @@ export function ApplicationProfileStep({
             <section className="space-y-8">
                 <div className="flex items-center gap-4 text-primary">
                     <Wallet size={18} strokeWidth={2.5} />
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em]">Financial Details</h3>
+                    <h3 className="text-[11px] font-semibold uppercase tracking-[0.3em]">Financial Details</h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -342,7 +342,7 @@ export function ApplicationProfileStep({
                     <div className="absolute inset-x-0 -inset-y-4 bg-primary/5 rounded-[2.5rem] -z-10 border border-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <GlassInput
                         id="income"
-                        icon={() => <span className="font-black text-primary/80">P</span>}
+                        icon={() => <span className="font-semibold text-primary/80">P</span>}
                         label="Monthly Net Income"
                         type="text"
                         inputMode="numeric"
@@ -373,7 +373,7 @@ export function ApplicationProfileStep({
             <section className="space-y-6">
                 <div className="flex items-center gap-4 text-muted-foreground">
                     <FileCheck size={18} strokeWidth={2.5} />
-                    <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-black uppercase tracking-[0.3em] text-muted-foreground">
+                    <label htmlFor="additional-notes" className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
                         {messageLabel}
                     </label>
                 </div>

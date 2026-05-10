@@ -121,7 +121,7 @@ function LoginContent() {
                 {/* Left Side: Brand Narrative */}
                 <div className="hidden lg:flex flex-col space-y-8">
                     <div className="space-y-6">
-                        <h1 className="text-7xl font-black leading-[1.05] tracking-tighter text-foreground drop-shadow-sm">
+                        <h1 className="text-7xl font-semibold leading-[1.05] tracking-tighter text-foreground drop-shadow-sm">
                             Welcome to <br />
                             the <span className="text-primary italic underline decoration-primary/20 decoration-8 underline-offset-8">next era</span> <br /> 
                             of living.
@@ -130,7 +130,7 @@ function LoginContent() {
                             <p className="text-xl text-muted-foreground font-medium leading-relaxed max-w-md">
                                 A seamless ecosystem designed for modern property owners and discerning residents.
                             </p>
-                            <Link href="/about" className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary hover:gap-3 transition-all group">
+                            <Link href="/about" className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary hover:gap-3 transition-all group">
                                 Learn more about iReside
                                 <ArrowRight className="size-4" />
                             </Link>
@@ -155,7 +155,7 @@ function LoginContent() {
                 <div className="relative">
                     <section className="relative rounded-[3rem] border border-white/10 bg-background/60 dark:bg-surface-1/40 backdrop-blur-3xl shadow-2xl p-10 lg:p-12 space-y-6">
                         <div className="space-y-2">
-                            <h2 className="text-4xl font-black tracking-tight leading-none">Sign In</h2>
+                            <h2 className="text-4xl font-semibold tracking-tight leading-none">Sign In</h2>
                             <p className="text-base text-muted-foreground font-medium">Access your personalized portal.</p>
                         </div>
 
@@ -177,7 +177,7 @@ function LoginContent() {
                         <form className="space-y-4" onSubmit={handleSubmit}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1" htmlFor="email">Email</label>
+                                    <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1" htmlFor="email">Email</label>
                                     <input
                                         id="email"
                                         name="email"
@@ -189,8 +189,8 @@ function LoginContent() {
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center ml-1">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground" htmlFor="password">Password</label>
-                                        <Link href="/forgot-password" title="Forgot Password?" className="text-[10px] font-black text-primary hover:underline">Forgot?</Link>
+                                        <label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground" htmlFor="password">Password</label>
+                                        <Link href="/forgot-password" title="Forgot Password?" className="text-[10px] font-semibold text-primary hover:underline">Forgot?</Link>
                                     </div>
                                     <div className="relative">
                                         <input
@@ -215,7 +215,7 @@ function LoginContent() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="h-14 w-full rounded-2xl bg-primary font-black text-primary-foreground text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="h-14 w-full rounded-2xl bg-primary font-semibold text-primary-foreground text-base shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {loading ? "Authenticating..." : "Sign into Account"}
                                 {!loading && <ArrowRight className="size-5" />}
@@ -224,14 +224,14 @@ function LoginContent() {
 
                         <div className="relative flex items-center gap-4 pt-2">
                             <div className="h-[1px] flex-1 bg-border/50" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">OR CONTINUE WITH</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">OR CONTINUE WITH</span>
                             <div className="h-[1px] flex-1 bg-border/50" />
                         </div>
 
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
-                            className="h-14 w-full flex items-center justify-center gap-4 rounded-2xl border border-border bg-background/50 hover:bg-surface-1 transition-all font-black text-sm active:scale-[0.98]"
+                            className="h-14 w-full flex items-center justify-center gap-4 rounded-2xl border border-border bg-background/50 hover:bg-surface-1 transition-all font-semibold text-sm active:scale-[0.98]"
                         >
                             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="size-6" alt="Google" />
                             Google Account
@@ -241,7 +241,7 @@ function LoginContent() {
                         <div className="space-y-4 pt-4">
                             <div className="relative flex items-center gap-4 py-2">
                                 <div className="h-[1px] flex-1 bg-border/50" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">NEW TO IRESIDE?</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">NEW TO IRESIDE?</span>
                                 <div className="h-[1px] flex-1 bg-border/50" />
                             </div>
 
@@ -255,8 +255,8 @@ function LoginContent() {
                                             <Building2 className="size-5" />
                                         </div>
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/70 leading-none mb-1">Landlord</span>
-                                            <span className="text-sm font-black">Register</span>
+                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 leading-none mb-1">Landlord</span>
+                                            <span className="text-sm font-semibold">Register</span>
                                         </div>
                                     </div>
                                     <ArrowUpRight className="size-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -273,13 +273,13 @@ function LoginContent() {
                                             </div>
                                             <div className="flex flex-col text-left">
                                                 <div className="flex items-center gap-1.5 mb-1">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary/70 leading-none">Resident</span>
+                                                    <span className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 leading-none">Resident</span>
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-[8px] font-black bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded-full border border-amber-500/10">Private</span>
+                                                        <span className="text-[8px] font-semibold bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded-full border border-amber-500/10">Private</span>
                                                         <Info className="size-2.5 text-amber-600/50" />
                                                     </div>
                                                 </div>
-                                                <span className="text-sm font-black">Join</span>
+                                                <span className="text-sm font-semibold">Join</span>
                                             </div>
                                         </div>
                                         <ArrowUpRight className="size-4 text-muted-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -301,7 +301,7 @@ function LoginContent() {
 
             {/* Footer */}
             <footer className="absolute bottom-0 left-0 right-0 p-8 text-center opacity-30 select-none pointer-events-none">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">© 2026 iReside Technologies. Global Operations.</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.4em]">© 2026 iReside Technologies. Global Operations.</p>
             </footer>
         </div>
     );

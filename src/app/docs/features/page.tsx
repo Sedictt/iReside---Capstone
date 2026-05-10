@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import { 
   Building2, 
@@ -29,7 +29,7 @@ export default function FeaturesPage() {
         <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
           Platform Capabilities
         </div>
-        <h1 className="text-4xl font-extrabold tracking-tight text-text-high sm:text-5xl">
+        <h1 className="text-4xl font-semibold tracking-tight text-text-high sm:text-5xl">
           Core Features of <span className="text-primary">iReside</span>
         </h1>
         <p className="text-xl text-text-medium max-w-3xl leading-relaxed">

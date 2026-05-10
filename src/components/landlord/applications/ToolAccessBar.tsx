@@ -171,7 +171,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
             className="flex flex-col items-center gap-4 rounded-3xl border border-border bg-card/95 px-8 py-6 shadow-sm backdrop-blur-md"
           >
             <Loader2 className="size-8 animate-spin text-primary" />
-            <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Loading property data...</span>
+            <span className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Loading property data...</span>
           </motion.div>
         </div>
       );
@@ -189,7 +189,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
               <AlertCircle className="size-7 text-red-400" />
             </div>
             <div>
-              <p className="text-lg font-black text-red-300 tracking-tight">Unable to Load Tools</p>
+              <p className="text-lg font-semibold text-red-300 tracking-tight">Unable to Load Tools</p>
               <p className="text-sm font-medium text-red-200/80 mt-2">{loadError}</p>
             </div>
           </motion.div>
@@ -243,10 +243,10 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                       <AmenityIcon className={cn("size-6", color)} strokeWidth={1.5} />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-[15px] font-black tracking-tight text-foreground/90 leading-tight">{item}</span>
+                        <span className="text-[15px] font-semibold tracking-tight text-foreground/90 leading-tight">{item}</span>
                         <div className="flex items-center gap-1.5">
                             <div className="size-1 rounded-full bg-primary/50" />
-                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
+                            <span className="text-[8px] font-semibold uppercase tracking-widest text-muted-foreground/50">Verified Facility</span>
                         </div>
                     </div>
                   </motion.div>
@@ -278,15 +278,15 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 >
                   <div className="flex items-center gap-6">
                         <div className="shrink-0 flex flex-col items-center gap-1 min-w-[50px]">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
-                            <span className="text-xl font-black italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/40 leading-none">Clause</span>
+                            <span className="text-xl font-semibold italic text-blue-500/60 leading-none">{String(index + 1).padStart(2, '0')}</span>
                         </div>
                         <div className="w-px h-8 bg-border/40" />
                         <div className="flex-1">
                             <p className="text-[15px] font-bold leading-relaxed text-foreground/90 tracking-tight">{rule}</p>
                         </div>
                         <div className="shrink-0 px-2.5 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">Binding</span>
+                            <span className="text-[8px] font-semibold uppercase tracking-widest text-blue-400">Binding</span>
                         </div>
                   </div>
                 </motion.div>
@@ -455,7 +455,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                 
                 {/* Custom Tooltip - adjusted for vertical/horizontal visibility */}
                 <div className={cn(
-                  "pointer-events-none absolute select-none whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-popover-foreground opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50",
+                  "pointer-events-none absolute select-none whitespace-nowrap rounded-md border border-border bg-popover px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-popover-foreground opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50",
                   direction === "vertical" 
                     ? "right-full mr-3 top-1/2 -translate-y-1/2 group-hover:-translate-x-1" 
                     : "-top-10 left-1/2 -translate-x-1/2 translate-y-2 group-hover:-translate-y-1"
@@ -507,8 +507,8 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                     {activeTool.key === "amenities" && <Sparkles className="size-6 text-emerald-300" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
-                    <p className="truncate text-xl font-black tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
+                    <p className="text-[10px] font-semibold text-primary uppercase tracking-[0.25em] opacity-80 mb-1">Property Configuration</p>
+                    <p className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{activeTool.label}</p>
                   </div>
                 </div>
 
@@ -560,7 +560,7 @@ export function ToolAccessBar({ propertyId, className, variant = "default", dire
                   setActiveTool(tool);
                 }}
                 className={cn(
-                  "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
+                  "group inline-flex flex-1 sm:flex-none justify-center items-center gap-3 rounded-[1.1rem] border px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap",
                   disabled
                     ? "cursor-not-allowed border-border bg-muted/30 text-muted-foreground"
                     : "cursor-pointer border-border bg-background text-foreground hover:-translate-y-0.5 hover:border-primary/20 hover:bg-muted active:translate-y-0"

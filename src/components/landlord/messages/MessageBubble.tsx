@@ -326,7 +326,7 @@ function AlbumGrid({ attachments, isMe, onImageClick }: { attachments: UiMessage
                                 tabIndex={0}
                                 role="button"
                             >
-                                <span className="text-white text-xl font-black">+{extraCount}</span>
+                                <span className="text-white text-xl font-semibold">+{extraCount}</span>
                             </div>
                         )}
                     </div>

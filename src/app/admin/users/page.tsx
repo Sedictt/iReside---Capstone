@@ -309,11 +309,11 @@ export default function AdminUsersPage() {
                 
                 <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl space-y-4">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-primary">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary">
                             <Users className="size-3.5" />
                             Directory Access
                         </div>
-                        <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+                        <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
                             User Records
                         </h1>
                         <p className="text-base font-medium leading-relaxed text-white/50">
@@ -449,7 +449,7 @@ export default function AdminUsersPage() {
                 <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-border/70 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground bg-muted/30">
+                            <tr className="border-b border-border/70 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground bg-muted/30">
                                 <th className="px-8 py-5 font-bold">Identity</th>
                                 <th className="px-8 py-5 font-bold">Contact</th>
                                 <th className="px-8 py-5 font-bold">Clearance Role</th>

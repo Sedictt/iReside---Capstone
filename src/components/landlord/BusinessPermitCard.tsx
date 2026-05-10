@@ -101,7 +101,7 @@ export function BusinessPermitCard({ businessName, permitUrl, className }: Busin
                         </div>
                         <div>
                             <h3 className="text-3xl font-display font-semibold text-white mb-1 tracking-tight">{businessName || "Registered Business"}</h3>
-                            <p className="text-[11px] font-black tracking-[0.2em] uppercase text-neutral-500">Official Business Identification</p>
+                            <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-neutral-500">Official Business Identification</p>
                         </div>
                     </div>
                     

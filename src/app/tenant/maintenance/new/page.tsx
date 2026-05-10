@@ -142,7 +142,7 @@ export default function NewMaintenanceRequest() {
                         <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
                         Back to Dashboard
                     </button>
-                    <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
                         <Wrench className="size-8 text-primary" />
                         New Maintenance Request
                     </h1>
@@ -292,7 +292,7 @@ export default function NewMaintenanceRequest() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-4 rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
+                            className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground py-4 rounded-2xl font-semibold uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-[0.98]"
                         >
                             {isSubmitting ? (
                                 <>
@@ -349,7 +349,7 @@ export default function NewMaintenanceRequest() {
                     <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-4">
                         <div className="flex items-center justify-between gap-4">
                             <div className="space-y-1">
-                                <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
+                                <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                                     Self-Repair
                                 </h3>
                                 <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
@@ -414,13 +414,13 @@ export default function NewMaintenanceRequest() {
                             ].map((hotline) => (
                                 <div key={hotline.label} className="group relative">
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">{hotline.label}</span>
+                                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">{hotline.label}</span>
                                         <div className="space-y-1.5">
                                             {hotline.numbers.map((num) => (
                                                 <a 
                                                     key={num}
                                                     href={`tel:${num.replace(/[^0-9]/g, '')}`}
-                                                    className="text-sm font-black text-foreground hover:text-red-500 transition-colors flex items-center justify-between group/num"
+                                                    className="text-sm font-semibold text-foreground hover:text-red-500 transition-colors flex items-center justify-between group/num"
                                                 >
                                                     {num}
                                                     <Phone className="size-3 opacity-0 group-hover/num:opacity-100 transition-opacity" />

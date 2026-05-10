@@ -140,7 +140,7 @@ export function PropertiesDashboard() {
                             <Building2 className="size-5" />
                             <span>Portfolio Management</span>
                         </div>
-                        <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground md:text-5xl">
+                        <h1 className="mb-2 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
                             Property Portfolio
                         </h1>
                         <p className="max-w-xl text-lg text-muted-foreground">
@@ -246,7 +246,7 @@ export function PropertiesDashboard() {
                                             <div className="flex items-center gap-3">
                                                 <h3 className="text-2xl font-semibold text-foreground leading-tight">{property.name}</h3>
                                                 <div className={cn(
-                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border whitespace-nowrap",
+                                                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border whitespace-nowrap",
                                                     property.status === "Performing" || property.status === "Stable"
                                                         ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                                         : "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
@@ -293,7 +293,7 @@ export function PropertiesDashboard() {
                                                 <div>
                                                     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Occupancy</p>
                                                     <div className="flex items-baseline gap-1.5">
-                                                        <span className="text-xl font-black text-foreground">{property.metrics.occupied}</span>
+                                                        <span className="text-xl font-semibold text-foreground">{property.metrics.occupied}</span>
                                                         <span className="text-xs font-medium text-muted-foreground">/ {property.metrics.total} Units</span>
                                                     </div>
                                                     <p className={cn(
@@ -318,7 +318,7 @@ export function PropertiesDashboard() {
                                                 <div>
                                                     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Maintenance</p>
                                                     <p className={cn(
-                                                        "text-xl font-black",
+                                                        "text-xl font-semibold",
                                                         property.metrics.maintenance > 3 ? "text-amber-600 dark:text-amber-400" : "text-foreground"
                                                     )}>
                                                         {property.metrics.maintenance}

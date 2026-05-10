@@ -115,7 +115,7 @@ export default function TenantUtilitiesPage() {
                                 <motion.span 
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="flex h-6 items-center rounded-full bg-primary/10 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary"
+                                    className="flex h-6 items-center rounded-full bg-primary/10 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary"
                                 >
                                     Facilities
                                 </motion.span>
@@ -126,7 +126,7 @@ export default function TenantUtilitiesPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="text-5xl font-black tracking-tight text-foreground md:text-6xl lg:text-7xl"
+                                className="text-5xl font-semibold tracking-tight text-foreground md:text-6xl lg:text-7xl"
                             >
                                 Building <span className="text-primary">Amenities</span>
                             </motion.h1>
@@ -148,7 +148,7 @@ export default function TenantUtilitiesPage() {
                     {/* Main Content: Discovery */}
                     <div className="lg:col-span-2 flex flex-col gap-6">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-black tracking-tight">Available Facilities</h2>
+                            <h2 className="text-2xl font-semibold tracking-tight">Available Facilities</h2>
                             <div className="flex gap-2">
                                 {categories.map(cat => (
                                     <button 
@@ -191,12 +191,12 @@ export default function TenantUtilitiesPage() {
                                                     return <Icon className="size-4" />;
                                                 })()}
                                             </div>
-                                            <span className="text-xs font-black uppercase tracking-wider text-white drop-shadow-md">{amenity.type}</span>
+                                            <span className="text-xs font-semibold uppercase tracking-wider text-white drop-shadow-md">{amenity.type}</span>
                                         </div>
                                     </div>
 
                                     <div className="flex flex-1 flex-col p-6">
-                                        <h3 className="text-xl font-black text-foreground">{amenity.name}</h3>
+                                        <h3 className="text-xl font-semibold text-foreground">{amenity.name}</h3>
                                         <p className="mt-2 text-sm text-muted-foreground/80 line-clamp-2">{amenity.description}</p>
                                         
                                         <div className="mt-4 flex items-center gap-4 border-t border-border/50 pt-4">
@@ -212,9 +212,9 @@ export default function TenantUtilitiesPage() {
 
                                         <div className="mt-6 flex items-center justify-between">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">Booking Rate</span>
+                                                <span className="text-[10px] font-semibold uppercase tracking-tighter text-muted-foreground">Booking Rate</span>
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black text-foreground">
+                                                    <span className="text-xl font-semibold text-foreground">
                                                         {amenity.price === 0 ? "Free" : `₱${amenity.price}`}
                                                     </span>
                                                     {amenity.price > 0 && <span className="text-xs font-bold text-muted-foreground">/{amenity.unit}</span>}
@@ -239,7 +239,7 @@ export default function TenantUtilitiesPage() {
                         {/* Current Reservations */}
                         <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-black tracking-tight flex items-center gap-2">
+                                <h3 className="font-semibold tracking-tight flex items-center gap-2">
                                     <Calendar className="size-5 text-primary" />
                                     My Reservations
                                 </h3>
@@ -251,7 +251,7 @@ export default function TenantUtilitiesPage() {
                                     <div key={booking.id} className="group relative rounded-2xl bg-muted/30 p-4 transition-all hover:bg-muted/50 border border-transparent hover:border-border">
                                         <div className="flex items-start justify-between">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-black text-foreground">{booking.name}</span>
+                                                <span className="text-sm font-semibold text-foreground">{booking.name}</span>
                                                 <span className="mt-1 text-xs font-bold text-muted-foreground">{booking.date}</span>
                                                 <span className="text-xs text-muted-foreground/70">{booking.time}</span>
                                             </div>
@@ -263,8 +263,8 @@ export default function TenantUtilitiesPage() {
                                             </div>
                                         </div>
                                         <div className="mt-3 flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{booking.type} Request</span>
-                                            <button className="text-[10px] font-black uppercase text-primary opacity-0 transition-opacity group-hover:opacity-100">Cancel</button>
+                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{booking.type} Request</span>
+                                            <button className="text-[10px] font-semibold uppercase text-primary opacity-0 transition-opacity group-hover:opacity-100">Cancel</button>
                                         </div>
                                     </div>
                                 ))}
@@ -305,7 +305,7 @@ export default function TenantUtilitiesPage() {
                             className="relative w-full max-w-lg rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl"
                         >
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-black">Request Access</h3>
+                                <h3 className="text-2xl font-semibold">Request Access</h3>
                                 <button onClick={() => setBookingModal(null)} className="rounded-full bg-muted p-2 hover:bg-muted-foreground/10">
                                     <AlertCircle className="size-5 rotate-45" />
                                 </button>
@@ -319,7 +319,7 @@ export default function TenantUtilitiesPage() {
                                     })()}
                                 </div>
                                 <div>
-                                    <p className="font-black text-foreground">{bookingModal.name}</p>
+                                    <p className="font-semibold text-foreground">{bookingModal.name}</p>
                                     <p className="text-xs text-muted-foreground">{bookingModal.type} • {bookingModal.capacity}</p>
                                 </div>
                             </div>
@@ -327,7 +327,7 @@ export default function TenantUtilitiesPage() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="flex flex-col gap-1.5">
-                                        <label htmlFor="booking-date" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Date</label>
+                                        <label htmlFor="booking-date" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</label>
                                         <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
                                             <Calendar className="size-4 text-primary" />
                                             <input 
@@ -338,7 +338,7 @@ export default function TenantUtilitiesPage() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <label htmlFor="booking-duration" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Duration</label>
+                                        <label htmlFor="booking-duration" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</label>
                                         <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-3">
                                             <Clock className="size-4 text-primary" />
                                             <select 
@@ -354,7 +354,7 @@ export default function TenantUtilitiesPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-1.5">
-                                    <label htmlFor="booking-notes" className="text-xs font-black uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
+                                    <label htmlFor="booking-notes" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes (Optional)</label>
                                     <textarea 
                                         id="booking-notes"
                                         placeholder="Tell us about your event..."
@@ -365,12 +365,12 @@ export default function TenantUtilitiesPage() {
 
                             <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">Estimated Cost</span>
-                                    <span className="text-2xl font-black text-foreground">
+                                    <span className="text-[10px] font-semibold uppercase tracking-tighter text-muted-foreground">Estimated Cost</span>
+                                    <span className="text-2xl font-semibold text-foreground">
                                         {bookingModal.price === 0 ? "Free" : `₱${bookingModal.price * 2}`}
                                     </span>
                                 </div>
-                                <button className="rounded-2xl bg-primary px-8 py-3 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90">
+                                <button className="rounded-2xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90">
                                     Confirm Request
                                 </button>
                             </div>

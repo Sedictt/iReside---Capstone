@@ -166,7 +166,7 @@ export function OfficialReceipt({
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="shrink-0 opacity-60">Status:</span>
-                        <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-black uppercase tracking-wider">
+                        <span className="px-1.5 py-0.5 bg-zinc-900 text-white text-[9px] font-semibold uppercase tracking-wider">
                             {displayData.status}
                         </span>
                     </div>
@@ -184,7 +184,7 @@ export function OfficialReceipt({
                     isCompact ? "mb-4" : "mb-8"
                 )}>
                     <div className={cn(
-                        "flex justify-between font-black",
+                        "flex justify-between font-semibold",
                         isCompact ? "text-xs" : "text-sm"
                     )}>
                         <span>TOTAL AMOUNT:</span>
@@ -198,7 +198,7 @@ export function OfficialReceipt({
                         <button
                             disabled={isDownloading}
                             onClick={() => onDownload?.(`receipt-${message.id}`, `Receipt-${displayData.invoiceId}`)}
-                            className="text-[10px] font-black underline hover:no-underline uppercase tracking-tighter disabled:opacity-50"
+                            className="text-[10px] font-semibold underline hover:no-underline uppercase tracking-tighter disabled:opacity-50"
                         >
                             {isDownloading ? "Saving..." : "Save as Photo"}
                         </button>

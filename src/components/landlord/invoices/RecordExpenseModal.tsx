@@ -159,7 +159,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                     </div>
 
                     <div className="space-y-3">
-                        <label htmlFor="expense-description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Description</label>
+                        <label htmlFor="expense-description" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Description</label>
                         <div className="relative group">
                             <Type className="absolute left-4 top-4 size-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <textarea
@@ -178,7 +178,7 @@ export function RecordExpenseModal({ isOpen, onClose, onSaved }: RecordExpenseMo
                         <button
                             type="submit"
                             disabled={loading || !amount || !description}
-                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                            className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-semibold uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] hover:bg-primary/90 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                         >
                             {loading ? (
                                 "Saving..."

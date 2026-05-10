@@ -167,7 +167,7 @@ export default function DocumentsPage() {
                     </div>
                     
                     <div className="relative z-10 space-y-6">
-                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">
+                        <div className="inline-flex items-center gap-3 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
                             <span className="relative flex size-2">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                                 <span className="relative inline-flex size-2 rounded-full bg-primary"></span>
@@ -176,7 +176,7 @@ export default function DocumentsPage() {
                         </div>
                         
                         <div className="space-y-2">
-                            <h1 className="text-5xl font-black tracking-tighter text-white md:text-6xl">
+                            <h1 className="text-5xl font-semibold tracking-tighter text-white md:text-6xl">
                                 Professional Archive <br />
                                 & <span className="text-primary">Lease Vault.</span>
                             </h1>
@@ -195,7 +195,7 @@ export default function DocumentsPage() {
                             <button 
                                 onClick={() => setActiveTab("compliance")}
                                 className={cn(
-                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all",
+                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all",
                                     activeTab === "compliance" ? "text-primary" : "text-neutral-500 hover:text-neutral-300"
                                 )}
                             >
@@ -208,7 +208,7 @@ export default function DocumentsPage() {
                             <button 
                                 onClick={() => setActiveTab("leases")}
                                 className={cn(
-                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-black uppercase tracking-[0.2em] transition-all",
+                                    "relative flex items-center gap-2 px-8 py-5 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all",
                                     activeTab === "leases" ? "text-primary" : "text-neutral-500 hover:text-neutral-300"
                                 )}
                             >
@@ -237,7 +237,7 @@ export default function DocumentsPage() {
                                                 <Fingerprint className="size-5 text-primary" />
                                                 Identity & Compliance
                                             </h2>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
+                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">{registrationDocs.length} Records</span>
                                         </div>
 
                                         <div className="grid gap-4">
@@ -255,7 +255,7 @@ export default function DocumentsPage() {
                                                         <div className="flex-1 min-w-0 space-y-1">
                                                             <div className="flex items-center gap-2">
                                                                 <h3 className="text-base font-semibold text-white truncate">{doc.name}</h3>
-                                                                <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-neutral-400">
+                                                                <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-tighter text-neutral-400">
                                                                     {doc.category}
                                                                 </span>
                                                             </div>
@@ -300,7 +300,7 @@ export default function DocumentsPage() {
                                                     <FileText className="size-5 text-primary" />
                                                     Lease Contracts
                                                 </h2>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                                                <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500">
                                                     {filteredLeaseDocs.length} Total Documents Found
                                                 </p>
                                             </div>
@@ -374,7 +374,7 @@ export default function DocumentsPage() {
                                                                     <div className="flex items-center gap-2">
                                                                         <h3 className="text-base font-semibold text-white truncate">{doc.name}</h3>
                                                                         <span className={cn(
-                                                                            "rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter",
+                                                                            "rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-tighter",
                                                                             doc.isTemplate ? "bg-amber-500/10 text-amber-400" : "bg-primary/10 text-primary"
                                                                         )}>
                                                                             {doc.isTemplate ? "TEMPLATE" : "EXECUTED"}
@@ -450,7 +450,7 @@ export default function DocumentsPage() {
                                                             key={i}
                                                             onClick={() => setCurrentPage(i + 1)}
                                                             className={cn(
-                                                                "size-12 rounded-2xl text-[11px] font-black transition-all",
+                                                                "size-12 rounded-2xl text-[11px] font-semibold transition-all",
                                                                 currentPage === i + 1 
                                                                     ? "bg-primary text-black shadow-lg shadow-primary/20" 
                                                                     : "border border-white/5 bg-neutral-900/40 text-neutral-500 hover:border-primary/20 hover:text-white"
@@ -490,7 +490,7 @@ export default function DocumentsPage() {
                                     <ShieldCheck className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-black text-white uppercase tracking-widest">Digital Agreement Preview</h4>
+                                    <h4 className="text-lg font-semibold text-white uppercase tracking-widest">Digital Agreement Preview</h4>
                                     <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Smart Template • Secure Protocol v2.1</p>
                                 </div>
                             </div>

@@ -229,7 +229,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
               key={tab.value}
               onClick={() => setActiveFilter(tab.value as any)}
               className={cn(
-                "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all",
+                "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-all",
                 activeFilter === tab.value
                   ? "bg-card text-foreground shadow-sm ring-1 ring-border"
                   : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
@@ -267,13 +267,13 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
         ) : error ? (
           <div className="flex h-64 flex-col items-center justify-center rounded-[2rem] border border-red-500/10 bg-red-500/5 p-8 text-center">
             <AlertCircle className="mb-4 size-12 text-red-500/50" />
-            <h3 className="text-lg font-black text-foreground">Error Loading Requests</h3>
+            <h3 className="text-lg font-semibold text-foreground">Error Loading Requests</h3>
             <p className="text-sm font-medium text-muted-foreground">{error}</p>
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="flex h-64 flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-border bg-muted/20 p-12 text-center">
             <Inbox className="mb-4 size-12 text-muted-foreground/30" />
-            <h3 className="text-xl font-black text-foreground">No Requests Found</h3>
+            <h3 className="text-xl font-semibold text-foreground">No Requests Found</h3>
             <p className="text-sm font-medium text-muted-foreground">
               {searchQuery || activeFilter !== "all" 
                 ? "No requests match your current filters."
@@ -307,7 +307,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
                     <div className="mb-4 flex flex-1 flex-col gap-1 md:mb-0">
                       <div className="flex items-center gap-2">
                         <User className="size-4 text-primary/60" />
-                        <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">
+                        <h4 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
                           {req.lease.tenant.full_name}
                         </h4>
                       </div>
@@ -320,7 +320,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
                     <div className="mb-4 flex flex-1 flex-col gap-1 md:mb-0">
                       <div className="flex items-center gap-2">
                         <Home className="size-4 text-primary/60" />
-                        <span className="text-sm font-black text-foreground">
+                        <span className="text-sm font-semibold text-foreground">
                           {req.lease.unit.name}
                         </span>
                       </div>
@@ -331,7 +331,7 @@ export function MoveOutRequestsList({ onSelect, initialFilter = "all", preview =
 
                     {/* Reason Preview */}
                     <div className="hidden flex-1 flex-col gap-1 lg:flex">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Reason</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Reason</span>
                       <p className="text-xs font-medium text-foreground line-clamp-1 italic">
                         &quot;{req.reason || "No reason provided"}&quot;
                       </p>

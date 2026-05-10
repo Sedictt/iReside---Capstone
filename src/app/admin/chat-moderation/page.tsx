@@ -629,13 +629,13 @@ function ModerationReportCard({
                                         <div className="flex-1 flex items-center justify-center">
                                             {report.reportedMessage ? (
                                                 <div className="relative bg-transparent py-2 overflow-hidden w-full">
-                                                    <p className="text-xl font-black text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
+                                                    <p className="text-xl font-semibold text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
                                                         &quot;{report.reportedMessage.content}&quot;
                                                     </p>
                                                 </div>
                                             ) : report.exactMessage ? (
                                                 <div className="relative bg-transparent py-2 overflow-hidden w-full">
-                                                    <p className="text-xl font-black text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
+                                                    <p className="text-xl font-semibold text-foreground dark:text-neutral-200 leading-relaxed italic text-center">
                                                         "{report.exactMessage}"
                                                     </p>
                                                 </div>

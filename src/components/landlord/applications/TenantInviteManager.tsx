@@ -667,7 +667,7 @@ export function TenantInviteManager({
                             <button
                                 type="button"
                                 onClick={() => void copyLink(freshInvite.shareUrl)}
-                                className="inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl bg-foreground px-6 text-xs font-black uppercase tracking-[0.2em] text-background transition-transform hover:scale-[1.02] active:scale-95"
+                                className="inline-flex w-full h-12 items-center justify-center gap-2 rounded-xl bg-foreground px-6 text-xs font-semibold uppercase tracking-[0.2em] text-background transition-transform hover:scale-[1.02] active:scale-95"
                             >
                                 <Copy className="size-4" />
                                 Copy Link
@@ -689,7 +689,7 @@ export function TenantInviteManager({
             {showHistory && (
                 <div className="mt-8 animate-in slide-in-from-top-4 fade-in duration-300">
                     <div className="mb-4 flex items-center justify-between border-b border-border/50 pb-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <History className="size-4" />
                             Recent Invites History
                         </h3>
@@ -709,13 +709,13 @@ export function TenantInviteManager({
                                         </div>
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                                                <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-primary">
                                                     {invite.mode === "unit" ? "Unit Invite" : "Property Invite"}
                                                 </span>
-                                                <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-indigo-500">
+                                                <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-indigo-500">
                                                     {invite.applicationType === "online" ? "Online" : "Face to face"}
                                                 </span>
-                                                <span className={`rounded-md px-2 py-0.5 text-[9px] font-black uppercase tracking-widest ${invite.status === "active" ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
+                                                <span className={`rounded-md px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest ${invite.status === "active" ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
                                                     {invite.status}
                                                 </span>
                                             </div>

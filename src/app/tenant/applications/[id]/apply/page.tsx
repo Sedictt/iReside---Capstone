@@ -133,7 +133,7 @@ export default function RentApplicationPage() {
                         <CheckCircle2 className="size-12 text-white" />
                     </motion.div>
 
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight text-white leading-tight">
+                    <h1 className="text-4xl md:text-5xl font-semibold mb-6 tracking-tight text-white leading-tight">
                         Application <br /><span className="text-primary italic">Successfully</span> Sent
                     </h1>
 
@@ -199,7 +199,7 @@ export default function RentApplicationPage() {
                                 <ChevronLeft className="size-4 transition-transform group-hover:-translate-x-1" />
                                 Return to Applications
                             </button>
-                            <h1 className="text-4xl font-extrabold text-white tracking-tighter leading-none">
+                            <h1 className="text-4xl font-semibold text-white tracking-tighter leading-none">
                                 Application <br />
                                 <span className="text-primary italic">Process</span>
                             </h1>
@@ -277,7 +277,7 @@ export default function RentApplicationPage() {
                                     <div className="bg-primary/80 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full w-fit mb-2 shadow-lg">
                                         AVAILABLE NOW
                                     </div>
-                                    <h3 className="text-xl font-extrabold text-white truncate">{property.name}</h3>
+                                    <h3 className="text-xl font-semibold text-white truncate">{property.name}</h3>
                                     <p className="text-xs text-white/70 flex items-center gap-1.5 mt-1">
                                         <MapPin className="size-3" />
                                         {property.address}
@@ -324,7 +324,7 @@ export default function RentApplicationPage() {
                                         </div>
                                         <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Step {currentStep} of 4</span>
                                     </div>
-                                    <h2 className="text-3xl font-extrabold text-white tracking-tight mb-3">
+                                    <h2 className="text-3xl font-semibold text-white tracking-tight mb-3">
                                         {currentStep === 1 && "Personal Identity"}
                                         {currentStep === 2 && "Career & Finance"}
                                         {currentStep === 3 && "Verification Vault"}
@@ -434,7 +434,7 @@ export default function RentApplicationPage() {
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
                                                     <h4 className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Acceptance Roadmap</h4>
-                                                    <span className="text-[8px] font-black bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
+                                                    <span className="text-[8px] font-semibold bg-primary/20 text-primary border border-primary/20 px-2 py-0.5 rounded uppercase tracking-tighter">7 Mandatory Steps</span>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -508,7 +508,7 @@ export default function RentApplicationPage() {
                                         type="button"
                                         onClick={handleNext}
                                         disabled={isSubmitting}
-                                        className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary-dark text-black font-extrabold text-base transition-all shadow-[0_10px_30px_rgba(109,152,56,0.3)] flex items-center gap-3 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
+                                        className="h-14 px-12 rounded-2xl bg-primary hover:bg-primary-dark text-black font-semibold text-base transition-all shadow-[0_10px_30px_rgba(109,152,56,0.3)] flex items-center gap-3 disabled:opacity-50 active:scale-[0.98] relative overflow-hidden group"
                                     >
                                         <div className="absolute inset-x-0 bottom-0 h-1 bg-black/10 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                                         {isSubmitting ? (
@@ -713,7 +713,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                         <div className="flex-1 flex flex-col min-w-0">
                             <header className="p-8 pb-4 flex justify-between items-center">
                                 <div className="space-y-1">
-                                    <h3 className="text-2xl font-black text-white tracking-tighter">
+                                    <h3 className="text-2xl font-semibold text-white tracking-tighter">
                                         Unit <span className="text-primary italic">Selection</span>
                                     </h3>
                                     <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">
@@ -755,7 +755,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                     <div className="relative z-10 w-full">
                                                         <div className="flex justify-between items-start mb-4">
                                                             <div className="space-y-1">
-                                                                <p className={cn("text-xl font-black tracking-tight", isSelected ? "text-primary" : "text-white")}>
+                                                                <p className={cn("text-xl font-semibold tracking-tight", isSelected ? "text-primary" : "text-white")}>
                                                                     {opt.name}
                                                                 </p>
                                                                 <p className="text-[10px] font-bold text-white/30 uppercase tracking-tighter italic">
@@ -763,7 +763,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                                 </p>
                                                             </div>
                                                             <span className={cn(
-                                                                "text-[8px] px-2.5 py-1 rounded-full font-black uppercase tracking-tighter",
+                                                                "text-[8px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-tighter",
                                                                 opt.status === "Available" ? "bg-primary text-black" : "bg-yellow-500/20 text-yellow-500 border border-yellow-500/30"
                                                             )}>
                                                                 {opt.status}
@@ -772,7 +772,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
                                                         <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="size-1.5 rounded-full bg-primary/40" />
-                                                                <span className="text-[10px] font-black text-white/60 tracking-widest">{opt.price}</span>
+                                                                <span className="text-[10px] font-semibold text-white/60 tracking-widest">{opt.price}</span>
                                                             </div>
                                                             <ArrowRight className={cn("size-4 transition-all duration-500 opacity-0 -translate-x-2 group-hover/unit:opacity-100 group-hover/unit:translate-x-0", isSelected ? "text-primary opacity-100 translate-x-0" : "text-white/20")} />
                                                         </div>
@@ -799,7 +799,7 @@ function UnitSelectionModal({ isOpen, onClose, value, onChange, options }: any) 
 function FormField({ label, value, onChange, placeholder, type = "text" }: any) {
     return (
         <div className="group space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ml-1 group-focus-within:text-primary transition-colors">
+            <label className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40 ml-1 group-focus-within:text-primary transition-colors">
                 {label}
             </label>
             <div className="relative">
@@ -826,7 +826,7 @@ function UploadCard({ title, desc, required }: any) {
             <h4 className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{title}</h4>
             <p className="text-[10px] text-white/40 mt-0.5 font-medium">{desc}</p>
             {required && (
-                <div className="mt-3 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[8px] font-black text-red-400 uppercase tracking-tighter">
+                <div className="mt-3 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-[8px] font-semibold text-red-400 uppercase tracking-tighter">
                     Required Action
                 </div>
             )}

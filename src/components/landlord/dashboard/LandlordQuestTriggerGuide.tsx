@@ -122,10 +122,10 @@ export function LandlordQuestTriggerGuide() {
                     <div className="flex size-8 items-center justify-center rounded-xl bg-primary/20 text-primary">
                         <Sparkles className="size-4" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Action Required</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Action Required</p>
                 </div>
                 
-                <h3 className="text-sm font-black text-foreground mb-2 leading-tight">
+                <h3 className="text-sm font-semibold text-foreground mb-2 leading-tight">
                     Start Your First Mission
                 </h3>
                 

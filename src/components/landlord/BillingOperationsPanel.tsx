@@ -382,10 +382,10 @@ export function BillingOperationsPanel({
                                                 {unit ? unit.name : property?.name || "Global"}
                                             </p>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
+                                                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">{c.utility_type}</span>
                                                 <div className="size-1 rounded-full bg-border" />
                                                 <span className={cn(
-                                                    "text-[10px] font-black uppercase tracking-widest",
+                                                    "text-[10px] font-semibold uppercase tracking-widest",
                                                     strategyLabel === "Included" ? "text-emerald-600" : (strategyLabel === "Direct" ? "text-blue-600" : "text-amber-600")
                                                 )}>
                                                     {strategyLabel}
@@ -395,11 +395,11 @@ export function BillingOperationsPanel({
                                     </div>
                                     <div className="text-right">
                                         {c.billing_mode === "tenant_paid" && c.responsibility_mode !== "tenant_direct" ? (
-                                            <p className="text-sm font-black text-foreground">
+                                            <p className="text-sm font-semibold text-foreground">
                                                 ₱{c.rate_per_unit}<span className="text-[10px] text-muted-foreground/40 ml-1">/{c.unit_label === "kwh" ? "kWh" : "m³"}</span>
                                             </p>
                                         ) : (
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No Rate</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">No Rate</p>
                                         )}
                                     </div>
                                 </div>
@@ -410,7 +410,7 @@ export function BillingOperationsPanel({
                     <div className="p-6 border-t border-border bg-muted/5">
                         <button 
                             onClick={() => dispatch({ type: 'SET_SHOW_BREAKDOWN', payload: false })}
-                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-black uppercase tracking-widest hover:opacity-90 transition-all"
+                            className="w-full py-4 rounded-2xl bg-foreground text-background text-xs font-semibold uppercase tracking-widest hover:opacity-90 transition-all"
                         >
                             Back to Editor
                         </button>
@@ -964,7 +964,7 @@ function UtilityConfigEditor({
           <div className="space-y-6">
             {!isOverride && (
               <div className="relative flex items-center gap-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/30">1. Select Logic</span>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
             )}
@@ -978,7 +978,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "included_in_rent", responsibility_mode: "landlord_bills" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-semibold uppercase tracking-widest transition-all",
                       strategy === "included" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -990,7 +990,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "landlord_bills" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-semibold uppercase tracking-widest transition-all",
                       strategy === "submetered" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -1002,7 +1002,7 @@ function UtilityConfigEditor({
                   <button 
                     onClick={() => onChange(config.localId, { billing_mode: "tenant_paid", responsibility_mode: "tenant_direct" })}
                     className={cn(
-                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                      "flex items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-semibold uppercase tracking-widest transition-all",
                       strategy === "direct" 
                         ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]" 
                         : "text-muted-foreground hover:bg-white/5"
@@ -1028,7 +1028,7 @@ function UtilityConfigEditor({
               >
                 {!isOverride && (
                   <div className="relative flex items-center gap-4">
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground/30">2. Rates & Billing</span>
                     <div className="h-px flex-1 bg-border/40" />
                   </div>
                 )}
@@ -1117,7 +1117,7 @@ function UtilityConfigEditor({
                 <div className="flex items-center gap-2">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground">Operational Strategy</p>
                     {isSubmetered && config.rate_per_unit === 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-black uppercase text-amber-600 tracking-tighter">Action Required</span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-[8px] font-semibold uppercase text-amber-600 tracking-tighter">Action Required</span>
                     )}
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed font-medium">

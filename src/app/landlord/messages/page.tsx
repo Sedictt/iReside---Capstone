@@ -1176,22 +1176,22 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                         {activeQuickActions.map((action) => (
                                             <button key={action.key} onClick={() => handleQuickAction(action.key)} className="flex flex-col items-center gap-2 rounded-2xl border border-divider bg-surface-2 p-4 transition-all hover:bg-surface-3 hover:scale-[1.02] active:scale-95 group">
                                                 <div className={cn("p-2.5 rounded-xl transition-colors", action.iconContainerClassName)}><action.icon className={cn("size-5", action.iconClassName)} /></div>
-                                                <div className="text-center"><p className="text-[10px] font-black uppercase tracking-widest text-high">{action.labelTop}</p><p className="text-[10px] font-medium text-medium">{action.labelBottom}</p></div>
+                                                <div className="text-center"><p className="text-[10px] font-semibold uppercase tracking-widest text-high">{action.labelTop}</p><p className="text-[10px] font-medium text-medium">{action.labelBottom}</p></div>
                                             </button>
                                         ))}
                                     </div>
                                     {canShowPaymentHistory && (
                                         <div className="space-y-4">
-                                            <div className="flex items-center justify-between"><h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Payment History</h5><span className="text-[10px] font-bold text-primary">Total: ₱{paymentHistoryTotal}</span></div>
+                                            <div className="flex items-center justify-between"><h5 className="text-[10px] font-semibold uppercase tracking-widest text-disabled">Payment History</h5><span className="text-[10px] font-bold text-primary">Total: ₱{paymentHistoryTotal}</span></div>
                                             <div className="space-y-2">{paymentHistoryLoading ? <div className="h-20 w-full animate-pulse rounded-2xl bg-surface-2" /> : paymentHistory.length === 0 ? <p className="text-xs text-disabled text-center py-6 bg-surface-2/50 rounded-2xl italic border border-dashed border-divider">No payments found</p> : paymentHistory.slice(0, 5).map((payment) => (
                                                 <div key={payment.id} className="flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-colors">
-                                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="size-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-bold text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-black text-emerald-500">₱{payment.amount}</span>
+                                                    <div className="flex items-center gap-3"><div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/10"><Wallet className="size-3.5 text-emerald-500" /></div><div className="flex flex-col"><span className="text-xs font-bold text-high truncate max-w-[100px]">{payment.typeLabel || 'Payment'}</span><span className="text-[9px] font-medium text-disabled">{payment.dateLabel}</span></div></div><span className="text-xs font-semibold text-emerald-500">₱{payment.amount}</span>
                                                 </div>
                                             ))}</div>
                                         </div>
                                     )}
                                     <div className="pt-4 space-y-3">
-                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-disabled">Actions</h5>
+                                        <h5 className="text-[10px] font-semibold uppercase tracking-widest text-disabled">Actions</h5>
                                         <div className="space-y-2">
                                             <button onClick={() => setPendingConfirmAction("archive")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-divider bg-surface-2/30 hover:bg-surface-2 transition-all group"><span className="text-xs font-bold text-medium group-hover:text-high">Archive Chat</span><ChevronRight className="size-4 text-disabled" /></button>
                                             <button onClick={() => setPendingConfirmAction("block")} className="w-full flex items-center justify-between p-3 rounded-2xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 transition-all group"><span className="text-xs font-bold text-red-500">Block Contact</span><AlertTriangle className="size-4 text-red-500/50" /></button>
@@ -1207,7 +1207,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-premium">
                                     <div className="flex gap-2 mb-6 p-1 bg-surface-2 rounded-2xl">
-                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", fileFilter === f ? "bg-surface-1 text-primary shadow-sm" : "text-disabled hover:text-medium")}>{f}</button>))}
+                                        {['media', 'files'].map((f) => (<button key={f} onClick={() => setFileFilter(f)} className={cn("flex-1 py-1.5 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all", fileFilter === f ? "bg-surface-1 text-primary shadow-sm" : "text-disabled hover:text-medium")}>{f}</button>))}
                                     </div>
                                     
                                     {sharedFiles.length > 0 ? (
@@ -1274,7 +1274,7 @@ if (!activeConversationId) { fileUploadErrorRef.current = "Select a conversation
                 {pendingConfirmAction && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl">
-                            <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-black tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
+                            <div className="flex items-center gap-4 mb-6"><div className={cn("p-3 rounded-2xl", pendingConfirmAction === "block" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500")}>{pendingConfirmAction === "block" ? <ShieldCheck className="size-6" /> : <Folder className="size-6" />}</div><h3 className="text-xl font-semibold tracking-tight text-high">{pendingConfirmAction === "block" ? "Block Contact?" : "Archive Conversation?"}</h3></div>
                             <p className="text-sm text-medium leading-relaxed mb-8">{pendingConfirmAction === "block" ? "This user will no longer be able to message you. You can unblock them later in settings." : "This conversation will be moved to archives. You can still access it later from your archived messages."}</p>
                             <div className="flex justify-end gap-3">
                                 <button onClick={() => setPendingConfirmAction(null)} className="px-6 py-2.5 rounded-xl text-sm font-bold text-medium hover:bg-surface-2 transition-all">Cancel</button>

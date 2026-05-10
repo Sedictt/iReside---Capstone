@@ -62,7 +62,7 @@ export function LandlordWelcomeLightbox() {
                 </div>
 
                 {/* Heading */}
-                <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight mb-3">
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground leading-tight mb-3">
                     Welcome to iReside
                 </h1>
 
@@ -78,7 +78,7 @@ export function LandlordWelcomeLightbox() {
                             <Sparkles className="size-5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-foreground mb-1">
+                            <h3 className="text-sm font-semibold text-foreground mb-1">
                                 Missions &amp; Guided Tours
                             </h3>
                             <p className="text-xs text-muted-foreground/80 leading-relaxed">
@@ -120,14 +120,14 @@ export function LandlordWelcomeLightbox() {
                         className="flex-1 group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-6 py-4 text-primary-foreground shadow-[0_8px_18px_rgba(var(--primary-rgb),0.28)] transition-all hover:brightness-105 active:scale-95"
                     >
                         <div className="absolute inset-0 bg-white/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                        <span className="text-sm font-black uppercase tracking-tight relative z-10">
+                        <span className="text-sm font-semibold uppercase tracking-tight relative z-10">
                             View Missions
                         </span>
-                        <ArrowRight className="size-4 font-black relative z-10 transition-transform group-hover:translate-x-0.5" />
+                        <ArrowRight className="size-4 font-semibold relative z-10 transition-transform group-hover:translate-x-0.5" />
                     </button>
                     <button
                         onClick={handleClose}
-                        className="flex-1 rounded-2xl border border-white/10 bg-card/70 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
+                        className="flex-1 rounded-2xl border border-white/10 bg-card/70 px-6 py-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 transition-all hover:bg-card hover:text-foreground"
                     >
                         Skip for Now
                     </button>

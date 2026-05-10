@@ -34,7 +34,7 @@ export function ContactItem({ contact, isActive, onClick }: ContactItemProps) {
                 </div>
                 {contact.unread > 0 && (
                     <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-surface-1 bg-red-500 shadow-sm animate-in zoom-in duration-300">
-                        <span className="text-[10px] font-black text-white">{contact.unread}</span>
+                        <span className="text-[10px] font-semibold text-white">{contact.unread}</span>
                     </div>
                 )}
             </div>

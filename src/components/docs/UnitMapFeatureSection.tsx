@@ -48,7 +48,7 @@ export function UnitMapFeatureSection() {
             
             {/* Top hint */}
             <div className="absolute top-10 left-1/2 -translate-x-1/2 pointer-events-none z-[110]">
-              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em] bg-black/40 backdrop-blur-md px-10 py-3.5 rounded-full border border-white/10 shadow-2xl">
+              <p className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.4em] bg-black/40 backdrop-blur-md px-10 py-3.5 rounded-full border border-white/10 shadow-2xl">
                 ESC TO EXIT PREVIEW
               </p>
             </div>

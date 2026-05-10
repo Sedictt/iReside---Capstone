@@ -319,18 +319,18 @@ export default function LandlordRenewalReview() {
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Proposed Rent</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Proposed Rent</p>
                                     <p className="font-bold text-foreground">PHP {request.proposed_monthly_rent?.toLocaleString()}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Submitted On</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Submitted On</p>
                                     <p className="font-bold text-foreground">{new Date(request.created_at).toLocaleDateString()}</p>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => openReview(request)}
-                                className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
+                                className="w-full py-4 rounded-2xl bg-primary/5 border border-primary/10 text-primary hover:bg-primary hover:text-white font-semibold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
                             >
                                 <FileText className="size-4" />
                                 Review Request
@@ -351,8 +351,8 @@ export default function LandlordRenewalReview() {
                                     <RefreshCw className="size-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-foreground tracking-tight">Review Renewal Terms</h3>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
+                                    <h3 className="text-xl font-semibold text-foreground tracking-tight">Review Renewal Terms</h3>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
                                         Reviewing request for {selectedRequest.tenant.full_name}
                                     </p>
                                 </div>
@@ -370,7 +370,7 @@ export default function LandlordRenewalReview() {
                             {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-muted/30 rounded-3xl p-6 border border-border/50">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black mb-4">Current Lease</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-semibold mb-4">Current Lease</p>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-muted-foreground">Expires</span>
@@ -383,15 +383,15 @@ export default function LandlordRenewalReview() {
                                     </div>
                                 </div>
                                 <div className="bg-primary/5 rounded-3xl p-6 border border-primary/20">
-                                    <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-black mb-4">Tenant Proposal</p>
+                                    <p className="text-[10px] text-primary uppercase tracking-[0.2em] font-semibold mb-4">Tenant Proposal</p>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-primary/70">Target Start</span>
-                                            <span className="text-sm font-black text-primary">{new Date(selectedRequest.proposed_start_date).toLocaleDateString()}</span>
+                                            <span className="text-sm font-semibold text-primary">{new Date(selectedRequest.proposed_start_date).toLocaleDateString()}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs text-primary/70">Target Rent</span>
-                                            <span className="text-sm font-black text-primary">PHP {selectedRequest.proposed_monthly_rent?.toLocaleString()}</span>
+                                            <span className="text-sm font-semibold text-primary">PHP {selectedRequest.proposed_monthly_rent?.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -399,11 +399,11 @@ export default function LandlordRenewalReview() {
 
                             {/* Editing Form */}
                             <div className="space-y-6">
-                                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Finalize New Terms</h4>
+                                <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-2">Finalize New Terms</h4>
                                 
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label htmlFor="new-start-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Start Date</label>
+                                        <label htmlFor="new-start-date" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">New Start Date</label>
                                         <input
                                             id="new-start-date"
                                             type="date"
@@ -413,7 +413,7 @@ export default function LandlordRenewalReview() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="new-end-date" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New End Date</label>
+                                        <label htmlFor="new-end-date" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">New End Date</label>
                                         <input
                                             id="new-end-date"
                                             type="date"
@@ -423,7 +423,7 @@ export default function LandlordRenewalReview() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="monthly-rent" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
+                                        <label htmlFor="monthly-rent" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Monthly Rent (PHP)</label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">₱</span>
                                             <input
@@ -431,16 +431,16 @@ export default function LandlordRenewalReview() {
                                                 type="text"
                                                 value={proposedRent}
                                                 onChange={(e) => handleMoneyInput(e.target.value, setProposedRent)}
-                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <label htmlFor="security-deposit" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
+                                            <label htmlFor="security-deposit" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Security Deposit (PHP)</label>
                                             <button 
                                                 onClick={() => setProposedDeposit(formatWithCommas(selectedRequest.current_lease.security_deposit?.toString() || "0"))}
-                                                className="text-[10px] font-black text-primary hover:underline uppercase tracking-tighter"
+                                                className="text-[10px] font-semibold text-primary hover:underline uppercase tracking-tighter"
                                             >
                                                 Use Current Balance
                                             </button>
@@ -451,12 +451,12 @@ export default function LandlordRenewalReview() {
                                                 type="text"
                                                 value={proposedDeposit}
                                                 onChange={(e) => handleMoneyInput(e.target.value, setProposedDeposit)}
-                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-black focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                                className="w-full p-4 pl-8 rounded-2xl border border-border bg-background text-sm font-semibold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             />
                                         </div>
                                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/30 border border-border/50">
-                                            <span className="text-[9px] font-black text-muted-foreground uppercase">Current Held:</span>
-                                            <span className="text-[9px] font-black text-foreground">PHP {selectedRequest.current_lease.security_deposit?.toLocaleString()}</span>
+                                            <span className="text-[9px] font-semibold text-muted-foreground uppercase">Current Held:</span>
+                                            <span className="text-[9px] font-semibold text-foreground">PHP {selectedRequest.current_lease.security_deposit?.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -464,7 +464,7 @@ export default function LandlordRenewalReview() {
 
                             {/* Internal Notes */}
                             <div className="space-y-2">
-                                <label htmlFor="landlord-notes" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
+                                <label htmlFor="landlord-notes" className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground block">Landlord Notes (Optional)</label>
                                 <textarea
                                     id="landlord-notes"
                                     value={rejectNotes}
@@ -480,7 +480,7 @@ export default function LandlordRenewalReview() {
                             <button
                                 onClick={handleReject}
                                 disabled={submitting}
-                                className="px-6 py-4 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-xs transition-all flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="px-6 py-4 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-semibold uppercase tracking-widest text-xs transition-all flex-1 disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 <AlertTriangle className="size-4" />
                                 Reject Request
@@ -488,7 +488,7 @@ export default function LandlordRenewalReview() {
                             <button
                                 onClick={handleApprove}
                                 disabled={submitting}
-                                className="px-6 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex flex-[1.5] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+                                className="px-6 py-4 rounded-2xl bg-primary text-white font-semibold uppercase tracking-widest text-xs hover:bg-primary-dark transition-all flex flex-[1.5] items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
                             >
                                 {submitting ? "Creating Lease..." : "Approve & Generate Lease"}
                                 <CheckCircle2 className="size-4" />

@@ -638,7 +638,7 @@ export function LandlordSettings() {
                                         {profile?.avatar_url ? (
                                             <img src={profile.avatar_url} alt="Avatar" className="h-full w-full rounded-[2.8rem] object-cover" />
                                         ) : (
-                                            <span className="text-5xl font-black text-white">
+                                            <span className="text-5xl font-semibold text-white">
                                                 {profile?.full_name?.charAt(0).toUpperCase()}
                                             </span>
                                         )}
@@ -761,7 +761,7 @@ export function LandlordSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-black text-white">Identity</h2>
+                        <h2 className="text-3xl font-semibold text-white">Identity</h2>
                         <p className="text-neutral-400">Control how you appear to others.</p>
                     </div>
                     <button
@@ -844,7 +844,7 @@ export function LandlordSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
                     <div className="flex-1">
-                        <h2 className="text-3xl font-black text-white">Finance & Utilities</h2>
+                        <h2 className="text-3xl font-semibold text-white">Finance & Utilities</h2>
                         <p className="text-neutral-400">Configure how you receive payments and manage utility rates.</p>
                     </div>
                     
@@ -1030,7 +1030,7 @@ export function LandlordSettings() {
                 </div>
                 <button 
                     onClick={handleConnectGmail}
-                    className="group relative w-full overflow-hidden rounded-2xl bg-primary py-4 text-sm font-black text-black transition-all hover:scale-[1.02] active:scale-95"
+                    className="group relative w-full overflow-hidden rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:scale-[1.02] active:scale-95"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     <span className="relative flex items-center justify-center gap-2">
@@ -1057,7 +1057,7 @@ export function LandlordSettings() {
                         <div className="pt-4">
                             <button 
                                 onClick={handleSendOTP}
-                                className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-black transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
                             >
                                 Send Verification Code
                             </button>
@@ -1087,7 +1087,7 @@ export function LandlordSettings() {
                         <button 
                             onClick={handleVerifyOTP}
                             disabled={isVerifyingOTP || otpInput.length !== 6}
-                            className="w-full rounded-2xl bg-primary py-4 text-sm font-black text-black transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
+                            className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-black transition-all hover:bg-primary/90 disabled:opacity-50 shadow-lg shadow-primary/20"
                         >
                             {isVerifyingOTP ? "Verifying..." : "Verify & Enable 2FA"}
                         </button>
@@ -1178,7 +1178,7 @@ export function LandlordSettings() {
                                                     </div>
                                                 </div>
                                                 {isCurrent && (
-                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-semibold text-primary">ACTIVE</span>
                                                 )}
                                             </div>
                                         );
@@ -1208,7 +1208,7 @@ export function LandlordSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Security & Login</h2>
+                    <h2 className="text-3xl font-semibold text-white">Security & Login</h2>
                     <p className="text-neutral-400">Protect your account and manage active sessions.</p>
                 </div>
 
@@ -1232,7 +1232,7 @@ export function LandlordSettings() {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-black text-white">Notifications</h2>
+                <h2 className="text-3xl font-semibold text-white">Notifications</h2>
                 <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
             </div>
 
@@ -1247,10 +1247,10 @@ export function LandlordSettings() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+                                <th className="px-8 py-5 text-xs font-semibold uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">SMS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -1348,7 +1348,7 @@ export function LandlordSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Data & Privacy</h2>
+                    <h2 className="text-3xl font-semibold text-white">Data & Privacy</h2>
                     <p className="text-neutral-400">Manage your data and account longevity.</p>
                 </div>
 
@@ -1385,7 +1385,7 @@ export function LandlordSettings() {
                         <Layout className="size-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-white">Settings</h1>
+                        <h1 className="text-xl font-semibold text-white">Settings</h1>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
                     </div>
                 </div>

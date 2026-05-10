@@ -90,7 +90,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                     <div 
-                        className="size-16 overflow-hidden rounded-2xl border-2 border-background shadow-inner flex items-center justify-center text-xl font-black text-white"
+                        className="size-16 overflow-hidden rounded-2xl border-2 border-background shadow-inner flex items-center justify-center text-xl font-semibold text-white"
                         style={{ backgroundColor: tenant.avatarBgColor || '#6d9838' }}
                     >
                         {tenant.avatarUrl ? (
@@ -108,7 +108,7 @@ export function TenantCard({ tenant, idx, onViewProfile }: TenantCardProps) {
                         )}
                     </div>
                     <div>
-                        <h3 className="text-lg font-black leading-tight text-foreground transition-colors group-hover:text-primary">
+                        <h3 className="text-lg font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
                             {tenant.name}
                         </h3>
                         <p className="text-xs font-medium text-muted-foreground">{tenant.email}</p>

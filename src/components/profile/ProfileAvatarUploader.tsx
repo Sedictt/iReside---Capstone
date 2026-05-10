@@ -64,7 +64,7 @@ export function ProfileAvatarUploader({ initialAvatarUrl, avatarBgColor, fullNam
                         className="object-cover"
                     />
                 ) : (
-                    <span className="text-4xl font-black text-white">
+                    <span className="text-4xl font-semibold text-white">
                         {(fullName || "C").split(" ").filter(Boolean).slice(0, 2).map(p => p[0]?.toUpperCase()).join("")}
                     </span>
                 )}

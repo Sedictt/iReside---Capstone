@@ -230,7 +230,7 @@ export function MaintenanceDashboard() {
         <div className="flex flex-col w-full bg-background text-foreground p-6 md:p-8 space-y-8 animate-in fade-in duration-700 relative">
             {previewMode && (
                 <div className="mb-2 p-4 bg-primary/10 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <span className="text-sm font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-sm font-semibold text-primary uppercase tracking-widest flex items-center gap-2">
                         <Zap className="size-4" />
                         Preview Mode Active
                     </span>
@@ -261,20 +261,20 @@ export function MaintenanceDashboard() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground flex items-center gap-3">
                             <Wrench className="size-8 text-primary" />
                             Maintenance Operations
                         </h1>
                         <div className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
                             <Sparkles className="size-3.5 text-primary" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Smart Triage Active</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-primary">Smart Triage Active</span>
                         </div>
                     </div>
                     <p className="text-muted-foreground font-medium text-sm max-w-2xl">
                         Coordinate, assign, and track property repairs. IRIS AI automatically prioritizes urgent requests for faster resolution.
                     </p>
                 </div>
-                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-3xl font-black uppercase tracking-wider text-xs hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 shrink-0">
+                <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-3xl font-semibold uppercase tracking-wider text-xs hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95 shrink-0">
                     <Plus className="size-5" />
                     New Work Order
                 </button>
@@ -455,7 +455,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-black text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight mb-4">
+                <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight mb-4">
                     {request.title}
                 </h3>
 
@@ -473,7 +473,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                         <div className="p-1.5 bg-primary/10 rounded-lg">
                             <Zap className="size-3.5" />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-wider">
+                        <span className="text-xs font-semibold uppercase tracking-wider">
                             Unit {request.unit}
                         </span>
                     </div>
@@ -497,7 +497,7 @@ function MaintenanceCard({ request, onClick }: { request: MaintenanceRequest, on
                             )}
                         </div>
                         <div className="flex flex-col justify-center pl-4">
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">Tenant</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest leading-none">Tenant</span>
                             <span className="text-xs font-bold text-foreground truncate max-w-[100px]">{request.tenant}</span>
                         </div>
                     </div>
@@ -530,7 +530,7 @@ function PriorityBadge({ priority }: { priority: Priority }) {
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5",
             config[priority]
         )}>
             {priority === "Critical" && <AlertTriangle className="size-3" />}
@@ -565,7 +565,7 @@ function StatusBadge({ status, tenantRepairStatus }: { status: Status, tenantRep
 
     return (
         <span className={cn(
-            "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider shadow-sm",
+            "px-2.5 py-1 rounded-lg border text-[10px] font-semibold uppercase tracking-wider shadow-sm",
             customClass
         )}>
             {displayStatus}

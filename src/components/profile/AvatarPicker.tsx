@@ -225,7 +225,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                 className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/20 px-3.5 py-1 rounded-full shadow-xl flex items-center gap-2"
                             >
                                 <div className="size-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ backgroundColor: selectedColor }} />
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90 font-mono">{selectedColor.toUpperCase()}</span>
+                                <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/90 font-mono">{selectedColor.toUpperCase()}</span>
                             </motion.div>
                         </div>
 
@@ -233,14 +233,14 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                             <button
                                 onClick={handleSave}
                                 disabled={isUpdating || !selectedAvatar || loading}
-                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-black uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
+                                className="group relative w-full flex items-center justify-center gap-3 rounded-2xl bg-primary px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary-foreground shadow-[0_15px_30px_-5px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_20px_40px_-5px_rgba(var(--primary-rgb),0.4)] active:scale-95 disabled:opacity-50 overflow-hidden"
                             >
                                 {isUpdating || (loading && !profile) ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                                 <span>{isUpdating ? "Saving..." : (loading && !profile ? "Loading..." : "Save Profile")}</span>
                             </button>
                             <button
                                 onClick={onClose}
-                                className="w-full py-1 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 hover:text-white transition-colors"
+                                className="w-full py-1 text-[10px] font-semibold uppercase tracking-[0.4em] text-zinc-500 hover:text-white transition-colors"
                             >
                                 Cancel
                             </button>
@@ -258,7 +258,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                         {/* Avatar Section */}
                         <section className="space-y-4">
                             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Profile Photo</h3>
+                                <h3 className="text-[10px] font-semibold uppercase tracking-[0.4em] text-zinc-500">Profile Photo</h3>
                                 <div className="flex gap-1">
                                     {Array.from({ length: totalPages }).map((_, i) => (
                                         <button
@@ -340,10 +340,10 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                         {/* Color Section */}
                         <section className="space-y-4">
                             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Background Color</h3>
+                                <h3 className="text-[10px] font-semibold uppercase tracking-[0.4em] text-zinc-500">Background Color</h3>
                                 <button 
                                     onClick={() => setSelectedColor("#171717")}
-                                    className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5"
+                                    className="text-[9px] font-semibold uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-1.5"
                                 >
                                     <RefreshCcw className="size-2.5" />
                                     Reset
@@ -360,7 +360,7 @@ export function AvatarPicker({ isOpen, onClose, currentAvatarUrl, currentBgColor
                                         />
                                     </div>
                                     <div className="h-10 w-full rounded-xl bg-white/5 border border-white/10 flex items-center px-3 gap-2 focus-within:border-primary/40 transition-colors">
-                                        <span className="text-[9px] font-black text-zinc-500 uppercase font-mono">HEX</span>
+                                        <span className="text-[9px] font-semibold text-zinc-500 uppercase font-mono">HEX</span>
                                         <input 
                                             type="text" 
                                             value={selectedColor.toUpperCase()}

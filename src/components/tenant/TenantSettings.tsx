@@ -490,7 +490,7 @@ export function TenantSettings() {
             >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 className="text-3xl font-black text-white">Profile</h2>
+                        <h2 className="text-3xl font-semibold text-white">Profile</h2>
                         <p className="text-neutral-400">Control your personal information.</p>
                     </div>
                     <button
@@ -685,7 +685,7 @@ export function TenantSettings() {
                                                     </div>
                                                 </div>
                                                 {isCurrent && (
-                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">ACTIVE</span>
+                                                    <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-semibold text-primary">ACTIVE</span>
                                                 )}
                                             </div>
                                         );
@@ -715,7 +715,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Security & Login</h2>
+                    <h2 className="text-3xl font-semibold text-white">Security & Login</h2>
                     <p className="text-neutral-400">Protect your account and manage active sessions.</p>
                 </div>
 
@@ -739,7 +739,7 @@ export function TenantSettings() {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-black text-white">Notifications</h2>
+                <h2 className="text-3xl font-semibold text-white">Notifications</h2>
                 <p className="text-neutral-400">Choose how and when you want to be alerted.</p>
             </div>
 
@@ -754,10 +754,10 @@ export function TenantSettings() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-white/5 bg-white/[0.02]">
-                                <th className="px-8 py-5 text-xs font-black uppercase tracking-widest text-neutral-500">Activity Type</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Email</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Push</th>
-                                <th className="px-4 py-5 text-center text-xs font-black uppercase tracking-widest text-neutral-500">SMS</th>
+                                <th className="px-8 py-5 text-xs font-semibold uppercase tracking-widest text-neutral-500">Activity Type</th>
+                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Email</th>
+                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">Push</th>
+                                <th className="px-4 py-5 text-center text-xs font-semibold uppercase tracking-widest text-neutral-500">SMS</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -830,7 +830,7 @@ export function TenantSettings() {
                                                 <p className="text-xs text-neutral-500">Connected</p>
                                             </div>
                                         </div>
-                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-black text-primary">DEFAULT</span>
+                                        <span className="rounded-lg bg-primary/20 px-2 py-1 text-[10px] font-semibold text-primary">DEFAULT</span>
                                     </div>
                                     
                                     <button className="flex items-center justify-center gap-2 w-full p-4 rounded-2xl border border-dashed border-white/10 text-sm text-neutral-500 hover:text-white hover:border-white/20 transition-all">
@@ -882,7 +882,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Billing & Payments</h2>
+                    <h2 className="text-3xl font-semibold text-white">Billing & Payments</h2>
                     <p className="text-neutral-400">Manage your payment methods and view transaction history.</p>
                 </div>
 
@@ -1032,7 +1032,7 @@ export function TenantSettings() {
                 className="space-y-8"
             >
                 <div>
-                    <h2 className="text-3xl font-black text-white">Data & Privacy</h2>
+                    <h2 className="text-3xl font-semibold text-white">Data & Privacy</h2>
                     <p className="text-neutral-400">Manage your data and account longevity.</p>
                 </div>
 
@@ -1069,7 +1069,7 @@ export function TenantSettings() {
                         <Layout className="size-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-white">Settings</h1>
+                        <h1 className="text-xl font-semibold text-white">Settings</h1>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">Control Center</p>
                     </div>
                 </div>

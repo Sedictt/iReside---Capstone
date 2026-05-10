@@ -74,7 +74,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                 <div className="shrink-0 border-b border-white/5 bg-surface-1/50 px-8 py-6">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <h2 className="text-xl font-black text-text-high tracking-tight">Resolve Payment Issue</h2>
+                            <h2 className="text-xl font-semibold text-text-high tracking-tight">Resolve Payment Issue</h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-text-disabled">Case ID: {message.id.slice(-8).toUpperCase()}</p>
                         </div>
                         <button 
@@ -106,7 +106,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                              <Info className="size-8" />}
                         </div>
                         <div className="space-y-1">
-                            <h3 className="text-lg font-black text-text-high">
+                            <h3 className="text-lg font-semibold text-text-high">
                                 {issueType === "insufficient_amount" ? "Insufficient Balance" :
                                  issueType === "excessive_amount" ? "Overpayment Detected" :
                                  issueType === "not_received" ? "Payment Not Found" :
@@ -124,8 +124,8 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="rounded-2xl border border-white/10 bg-surface-1 p-6 space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-disabled">Remaining Balance</p>
-                                        <p className="text-xl font-black text-amber-400">{formatPhpCurrency(shortfall)}</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-disabled">Remaining Balance</p>
+                                        <p className="text-xl font-semibold text-amber-400">{formatPhpCurrency(shortfall)}</p>
                                     </div>
                                     <div className="h-[1px] bg-white/5" />
                                     <div className="flex items-start gap-3">
@@ -140,7 +140,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 
                                 <button 
                                     onClick={() => router.push(`/tenant/payments/${message.invoiceId}/checkout`)}
-                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
+                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-semibold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
                                 >
                                     Pay Remaining Balance <ArrowUpRight className="size-5" />
                                 </button>
@@ -151,8 +151,8 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-6 space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Excess Amount</p>
-                                        <p className="text-xl font-black text-emerald-500">{formatPhpCurrency(Math.abs(shortfall))}</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-500">Excess Amount</p>
+                                        <p className="text-xl font-semibold text-emerald-500">{formatPhpCurrency(Math.abs(shortfall))}</p>
                                     </div>
                                     <p className="text-xs text-text-medium leading-relaxed font-medium">
                                         You have paid more than the required amount. How would you like to handle the excess?
@@ -168,7 +168,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                         )}
                                     >
                                         <TrendingUp className="size-5" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-center">Credit to Next Bill</span>
+                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-center">Credit to Next Bill</span>
                                     </button>
                                     <button 
                                         onClick={() => setExcessAction("refund")}
@@ -178,24 +178,24 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                         )}
                                     >
                                         <QrCode className="size-5" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-center">Request Refund</span>
+                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-center">Request Refund</span>
                                     </button>
                                 </div>
 
                                 {excessAction === "refund" && (
                                     <div className="space-y-4 p-6 rounded-2xl border border-white/5 bg-surface-1 animate-in zoom-in-95 duration-300">
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">GCash Number</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">GCash Number</p>
                                             <input 
                                                 type="text"
                                                 value={gcashNumber}
                                                 onChange={(e) => setGcashNumber(e.target.value)}
                                                 placeholder="09XX XXX XXXX"
-                                                className="w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-black text-text-high outline-none focus:border-primary/50 transition-all"
+                                                className="w-full rounded-xl border border-white/10 bg-surface-2 px-4 py-3 text-sm font-semibold text-text-high outline-none focus:border-primary/50 transition-all"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-text-disabled">Or Upload QR Code</p>
+                                            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-disabled">Or Upload QR Code</p>
                                             <label className="flex cursor-pointer items-center justify-center gap-3 rounded-xl border-2 border-dashed border-white/10 bg-surface-2 py-4 text-text-disabled transition-colors hover:border-primary/30 hover:bg-surface-3">
                                                 <Upload className="size-4" />
                                                 <span className="text-xs font-bold uppercase tracking-widest">{qrFile ? qrFile.name : "Choose File"}</span>
@@ -208,7 +208,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 <button 
                                     onClick={handleExcessSubmit}
                                     disabled={isSubmitting || (excessAction === "refund" && !gcashNumber && !qrFile)}
-                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50 disabled:translate-y-0"
+                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-semibold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50 disabled:translate-y-0"
                                 >
                                     {isSubmitting ? <Loader2 className="size-5 animate-spin" /> : <CheckCircle2 className="size-5" />}
                                     {excessAction === "credit" ? "Confirm Credit Arrangement" : "Submit Refund Info"}
@@ -238,7 +238,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 
                                 <button 
                                     onClick={() => router.push(`/tenant/payments/${message.invoiceId}/checkout`)}
-                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
+                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-semibold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
                                 >
                                     Resubmit Payment Proof <Receipt className="size-5" />
                                 </button>
@@ -255,7 +255,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
                                 
                                 <button 
                                     onClick={() => router.push(`/tenant/payments/${message.invoiceId}/checkout`)}
-                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
+                                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-semibold uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-2xl shadow-primary/20 hover:-translate-y-1 transition-all active:scale-95"
                                 >
                                     Proceed to Checkout <ArrowUpRight className="size-5" />
                                 </button>
@@ -266,7 +266,7 @@ export function PaymentIssueResolver({ message, onClose, onResolved }: PaymentIs
 
                 {/* Footer / Support */}
                 <div className="shrink-0 border-t border-white/5 bg-surface-1/50 px-8 py-6 flex items-center justify-center">
-                    <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-disabled hover:text-primary transition-colors group">
+                    <button className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-text-disabled hover:text-primary transition-colors group">
                         <HelpCircle className="size-3 group-hover:text-primary" />
                         Still having trouble? Contact Support
                     </button>

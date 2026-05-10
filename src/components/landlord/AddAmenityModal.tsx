@@ -271,7 +271,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-border bg-muted/30 px-8 py-6">
                         <div className="space-y-1">
-                            <h2 className="text-2xl font-black tracking-tight">Add New Facility</h2>
+                            <h2 className="text-2xl font-semibold tracking-tight">Add New Facility</h2>
                             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
                                 Expand your property assets
                             </p>
@@ -289,7 +289,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             {/* Left Column */}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="property-select" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="property-select" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                         Property
                                     </label>
                                     <select
@@ -307,7 +307,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="facility-name" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="facility-name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                         Facility Name
                                     </label>
                                     <div className="relative">
@@ -326,7 +326,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label htmlFor="facility-type" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <label htmlFor="facility-type" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                             Type
                                         </label>
                                         <select
@@ -341,7 +341,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="facility-capacity" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <label htmlFor="facility-capacity" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                             Capacity
                                         </label>
                                         <div className="relative">
@@ -359,7 +359,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label htmlFor="icon-search" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                        <label htmlFor="icon-search" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                             Icon Representation
                                         </label>
                                         <div className="text-[10px] font-bold text-muted-foreground/40">
@@ -455,7 +455,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             {/* Right Column */}
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                         Pricing Details
                                     </label>
                                     <div className="grid grid-cols-2 gap-4">
@@ -482,7 +482,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="location-details" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="location-details" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                         Specific Location
                                     </label>
                                     <div className="relative">
@@ -499,7 +499,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="facility-description" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label htmlFor="facility-description" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                         Description
                                     </label>
                                     <textarea
@@ -512,7 +512,7 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
                                         Facility Photo
                                     </label>
                                     <div 
@@ -559,14 +559,14 @@ export function AddAmenityModal({ isOpen, onClose, onSuccess, landlordId }: AddA
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-black transition-all hover:bg-muted"
+                                className="flex-1 rounded-2xl border border-border bg-muted/30 py-4 text-sm font-semibold transition-all hover:bg-muted"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-black text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                className="flex-[2] rounded-2xl bg-primary py-4 text-sm font-semibold text-primary-foreground shadow-2xl shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
                                 {loading ? 'Creating...' : 'Create Facility'}
                             </button>

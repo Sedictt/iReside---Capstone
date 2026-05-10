@@ -205,7 +205,7 @@ export function CommunityComposer({
                         <button 
                             type="submit" 
                             disabled={isSubmitting || uploadingPhotos || (!body.trim() && !title.trim() && selectedPhotos.length === 0)} 
-                            className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
                             {uploadingPhotos ? "Uploading..." : isSubmitting ? "Publishing..." : "Publish"}
                             <Send className="size-5" />

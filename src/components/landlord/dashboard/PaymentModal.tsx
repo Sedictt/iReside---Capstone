@@ -97,9 +97,9 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                     <CreditCard className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <h2 className="flex items-center gap-3 text-2xl font-black text-white">
+                                    <h2 className="flex items-center gap-3 text-2xl font-semibold text-white">
                                         {categoryCopy.title}
-                                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary border border-primary/20">
+                                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
                                             {payments.length}
                                         </span>
                                     </h2>
@@ -130,7 +130,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                         <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar-premium bg-gradient-to-b from-transparent to-black/20">
                             {payments.length === 0 ? (
                                 <div className="rounded-[2.5rem] border border-dashed border-white/10 bg-white/5 p-16 text-center backdrop-blur-sm">
-                                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{categoryCopy.emptyState}</p>
+                                    <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/40">{categoryCopy.emptyState}</p>
                                 </div>
                             ) : (
                                 payments.map((payment) => (
@@ -156,14 +156,14 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                 )} />
                                             </div>
                                             <div className="min-w-0">
-                                                <h4 className="text-base font-black text-white transition-colors group-hover:text-primary truncate">{payment.tenant}</h4>
+                                                <h4 className="text-base font-semibold text-white transition-colors group-hover:text-primary truncate">{payment.tenant}</h4>
                                                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{payment.unit}</p>
                                             </div>
                                         </div>
                                         
                                         <div className="text-right flex flex-col items-end relative z-10">
-                                            <h4 className="mb-1 text-base font-black text-white tracking-tight">PHP {payment.amount.toLocaleString()}</h4>
-                                            <div className="flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-widest">
+                                            <h4 className="mb-1 text-base font-semibold text-white tracking-tight">PHP {payment.amount.toLocaleString()}</h4>
+                                            <div className="flex items-center justify-end gap-2 text-[10px] font-semibold uppercase tracking-widest">
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full border border-white/5 bg-white/5",
                                                     confirmedPayments.includes(payment.id) || category === "Paid" ? "text-emerald-500" : getStatusStyles().split(' ')[0]
@@ -213,12 +213,12 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                     />
                                                     <div className="absolute -bottom-1 -right-1 size-7 rounded-full border-4 border-neutral-900 bg-emerald-500 shadow-lg" />
                                                 </div>
-                                                <h3 className="text-2xl font-black text-white">{selectedActionPayment.tenant}</h3>
-                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mt-1">{selectedActionPayment.unit}</p>
+                                                <h3 className="text-2xl font-semibold text-white">{selectedActionPayment.tenant}</h3>
+                                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3em] mt-1">{selectedActionPayment.unit}</p>
                                                 
                                                 <div className="mt-8 flex flex-col gap-2 rounded-3xl bg-white/[0.02] p-6 border border-white/5">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Settlement Due</p>
-                                                    <h4 className="text-4xl font-black text-white tracking-tighter">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
+                                                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Settlement Due</p>
+                                                    <h4 className="text-4xl font-semibold text-white tracking-tighter">PHP {selectedActionPayment.amount.toLocaleString()}</h4>
                                                 </div>
                                             </div>
 
@@ -231,14 +231,14 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                                         <div className="flex size-10 items-center justify-center rounded-xl bg-white/20">
                                                             <CheckCircle2 className="size-5 text-white" />
                                                         </div>
-                                                        <span className="text-sm font-black uppercase tracking-tight text-white">Record Settlement</span>
+                                                        <span className="text-sm font-semibold uppercase tracking-tight text-white">Record Settlement</span>
                                                     </div>
                                                     <ChevronRight className="size-4 text-white/60 transition-transform group-hover:translate-x-1" />
                                                 </button>
 
                                                 <button 
                                                     onClick={() => setSelectedActionPayment(null)}
-                                                    className="flex items-center justify-center rounded-2xl border border-white/5 bg-white/5 py-4 text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
+                                                    className="flex items-center justify-center rounded-2xl border border-white/5 bg-white/5 py-4 text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
                                                 >
                                                     Dismiss
                                                 </button>
@@ -249,7 +249,7 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                             <div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                                 <AlertTriangle className="size-10" />
                                             </div>
-                                            <h3 className="text-2xl font-black text-white tracking-tight">Double Check</h3>
+                                            <h3 className="text-2xl font-semibold text-white tracking-tight">Double Check</h3>
                                             
                                             <div className="mt-6 rounded-[1.5rem] border border-primary/20 bg-primary/5 p-6">
                                                 <p className="text-xs font-bold leading-relaxed text-primary/80">
@@ -260,13 +260,13 @@ export function PaymentModal({ isOpen, onClose, category, paymentsByCategory }: 
                                             <div className="mt-10 flex flex-col gap-3">
                                                 <button 
                                                     onClick={() => handleConfirm(selectedActionPayment.id)}
-                                                    className="w-full rounded-2xl bg-primary py-5 text-sm font-black uppercase tracking-widest text-white shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] active:scale-95"
+                                                    className="w-full rounded-2xl bg-primary py-5 text-sm font-semibold uppercase tracking-widest text-white shadow-[0_15px_30px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-[1.02] active:scale-95"
                                                 >
                                                     Confirm Record
                                                 </button>
                                                 <button 
                                                     onClick={() => setIsConfirmingAction(false)}
-                                                    className="w-full rounded-2xl border border-white/5 bg-white/5 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
+                                                    className="w-full rounded-2xl border border-white/5 bg-white/5 py-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 transition-all hover:bg-white/10 hover:text-white"
                                                 >
                                                     Go Back
                                                 </button>

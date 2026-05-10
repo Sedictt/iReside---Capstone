@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Link from "next/link";
 import { 
   ArrowRight, 
@@ -46,7 +46,7 @@ export default function DocsPage() {
       {/* Hero Section */}
       <section className="space-y-6">
         <div className="space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight text-text-high sm:text-5xl">
+          <h1 className="text-4xl font-semibold tracking-tight text-text-high sm:text-5xl">
             Welcome to <span className="text-primary">iReside Docs</span>
           </h1>
           <p className="text-xl text-text-medium max-w-3xl leading-relaxed">

@@ -207,8 +207,8 @@ export function MessageReportWizard({
                   <ShieldAlert className="size-6" />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-xl font-black tracking-tight text-high">Security Report</h3>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-disabled">
+                  <h3 className="text-xl font-semibold tracking-tight text-high">Security Report</h3>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-disabled">
                     {reportedUserLabel ? `Submitting for ${reportedUserLabel}` : "Citizen Safety & Verification"}
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export function MessageReportWizard({
             <div className="flex-1 overflow-y-auto custom-scrollbar-premium p-8 space-y-8">
               {/* Category Selection */}
               <section>
-                <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-4 ml-1">
+                <label className="block text-[10px] font-semibold uppercase tracking-[0.3em] text-disabled mb-4 ml-1">
                   Violation Category
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -264,7 +264,7 @@ export function MessageReportWizard({
                           <Icon className="size-4" />
                         </div>
                         <span className={cn(
-                          "text-[10px] font-black uppercase tracking-widest mb-1 transition-colors",
+                          "text-[10px] font-semibold uppercase tracking-widest mb-1 transition-colors",
                           isActive ? theme.icon : "text-high"
                         )}>
                           {c.label}
@@ -289,7 +289,7 @@ export function MessageReportWizard({
               {/* Message Evidence */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="message-id" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
+                  <label htmlFor="message-id" className="block text-[10px] font-semibold uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                     Message Identifier
                   </label>
                   <div className="group relative">
@@ -315,7 +315,7 @@ export function MessageReportWizard({
                 </div>
 
                 <div>
-                  <label htmlFor="exact-content" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
+                  <label htmlFor="exact-content" className="block text-[10px] font-semibold uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                     Exact Content (Optional)
                   </label>
                   <textarea
@@ -330,7 +330,7 @@ export function MessageReportWizard({
 
               {/* Details */}
               <section>
-                <label htmlFor="incident-narrative" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
+                <label htmlFor="incident-narrative" className="block text-[10px] font-semibold uppercase tracking-[0.3em] text-disabled mb-3 ml-1">
                   Incident Narrative
                 </label>
                 <textarea
@@ -345,10 +345,10 @@ export function MessageReportWizard({
               {/* Screenshots */}
               <section>
                 <div className="flex items-center justify-between mb-3 ml-1">
-                  <label htmlFor="screenshot-input" className="block text-[10px] font-black uppercase tracking-[0.3em] text-disabled">
+                  <label htmlFor="screenshot-input" className="block text-[10px] font-semibold uppercase tracking-[0.3em] text-disabled">
                     Visual Evidence
                   </label>
-                  <span className="text-[10px] font-black tracking-widest text-disabled">{screenshots.length}/4</span>
+                  <span className="text-[10px] font-semibold tracking-widest text-disabled">{screenshots.length}/4</span>
                 </div>
                 
                 <div className="flex flex-wrap gap-3">
@@ -384,7 +384,7 @@ export function MessageReportWizard({
                         <div className="p-2 rounded-full bg-surface-2 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                           <Camera className="size-5" />
                         </div>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-disabled group-hover:text-primary">
+                        <span className="text-[9px] font-semibold uppercase tracking-widest text-disabled group-hover:text-primary">
                           Add
                         </span>
                       </motion.button>
@@ -428,7 +428,7 @@ export function MessageReportWizard({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 sm:flex-none px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-all active:scale-95"
+                  className="flex-1 sm:flex-none px-8 py-3 rounded-2xl text-[10px] font-semibold uppercase tracking-widest text-medium hover:bg-surface-2 hover:text-high transition-all active:scale-95"
                 >
                   Cancel
                 </button>
@@ -437,7 +437,7 @@ export function MessageReportWizard({
                   onClick={submit}
                   disabled={isSubmitting || !hasAnyEvidence || !targetUserId || !conversationId}
                   className={cn(
-                    "flex-1 sm:flex-none px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all shadow-2xl active:scale-[0.98] disabled:opacity-50 disabled:grayscale",
+                    "flex-1 sm:flex-none px-8 py-4 rounded-2xl text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-all shadow-2xl active:scale-[0.98] disabled:opacity-50 disabled:grayscale",
                     "bg-red-500 hover:bg-red-600 shadow-red-500/20 flex items-center justify-center gap-3"
                   )}
                 >

@@ -112,7 +112,7 @@ function TenantsContent() {
                             key={tab.id}
                             onClick={() => setTab(tab.id)}
                             className={cn(
-                                "flex items-center gap-2 px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
+                                "flex items-center gap-2 px-6 py-4 text-sm font-semibold uppercase tracking-widest transition-all relative",
                                 currentTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >

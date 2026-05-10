@@ -293,7 +293,7 @@ export default function PropertyEnvironmentPage() {
             />
 
             <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h1 className="text-2xl font-black tracking-tight text-foreground">Environment Configuration</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground">Environment Configuration</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
                     Configure the operating environment for {propertyName}. This affects occupancy rules, policies, and billing defaults.
                 </p>

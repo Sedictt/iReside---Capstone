@@ -279,11 +279,11 @@ export default function InvoicesPage() {
     <div className="mx-auto max-w-[1600px] space-y-10 px-4 py-8 md:px-8 lg:py-10">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-primary shadow-sm backdrop-blur-md">
             <FileText className="size-3.5" />
             Financial Center
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Finance Hub</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage your unified ledger, track expenses, and oversee rent invoices.</p>
         </div>
         {/* Deprecated: Invoice Studio removed in favor of direct utility dashboard workflow */}
@@ -337,7 +337,7 @@ export default function InvoicesPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Ledger</p>
-              <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Issued invoices</h2>
+              <h2 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">Issued invoices</h2>
             </div>
             <div className="relative w-full md:max-w-xs">
               <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -394,25 +394,25 @@ export default function InvoicesPage() {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-lg font-black tracking-tight text-foreground">{invoice.invoiceNumber}</p>
+                      <p className="text-lg font-semibold tracking-tight text-foreground">{invoice.invoiceNumber}</p>
                       <div className="flex items-center gap-2">
                         {(() => {
                           const config = getStatusConfig(invoice.workflowStatus ?? invoice.status);
                           return (
-                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] shadow-sm", config.classes)}>
+                            <span className={cn("inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] shadow-sm", config.classes)}>
                               <div className="mr-1.5 size-1 rounded-full bg-current animate-pulse" />
                               {config.label}
                             </span>
                           );
                         })()}
                         {invoice.proofStatus === "submitted" && (
-                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-blue-500 shadow-sm">
+                          <span className="relative overflow-hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-blue-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Proof Attached
                           </span>
                         )}
                         {invoice.hasRefundRequest && (
-                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-amber-500 shadow-sm">
+                          <span className="relative overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-500 shadow-sm">
                             <span className="absolute inset-0 -translate-x-[100%] animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                             Refund Details Sent
                           </span>
@@ -457,7 +457,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Overview</p>
-                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Financial Ledger</h2>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">Financial Ledger</h2>
               </div>
               <button className="group inline-flex items-center gap-2.5 rounded-full border border-border/50 bg-background/80 px-6 py-3 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-95">
                 Download Statement
@@ -470,7 +470,7 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
                     <FileText className="size-8" />
                   </div>
-                  <p className="text-lg font-black text-foreground">No entries yet.</p>
+                  <p className="text-lg font-semibold text-foreground">No entries yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Your timeline of paid invoices and recorded expenses will appear here.</p>
                 </div>
             ) : (
@@ -489,7 +489,7 @@ export default function InvoicesPage() {
                                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{item.desc} • {item.date.toLocaleDateString()}</p>
                                 </div>
                             </div>
-                            <p className={cn("text-base font-black", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
+                            <p className={cn("text-base font-semibold", item.type === 'income' ? 'text-emerald-500' : 'text-rose-500')}>
                                 {item.type === 'income' ? '+' : '-'}{formatPhpCurrency(item.amount)}
                             </p>
                         </div>
@@ -507,7 +507,7 @@ export default function InvoicesPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Outflow</p>
-                <h2 className="mt-2 text-2xl font-black text-foreground lg:text-3xl">Expense Log</h2>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground lg:text-3xl">Expense Log</h2>
               </div>
               <button 
                 onClick={() => setIsExpenseModalOpen(true)}
@@ -524,7 +524,7 @@ export default function InvoicesPage() {
                   <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-4">
                     <Filter className="size-8" />
                   </div>
-                  <p className="text-lg font-black text-foreground">No expenses recorded yet.</p>
+                  <p className="text-lg font-semibold text-foreground">No expenses recorded yet.</p>
                   <p className="mt-2 max-w-md mx-auto">Click &quot;Record Expense&quot; to log maintenance costs, utility bills you cover, and property taxes to keep your accounting accurate.</p>
                 </div>
             ) : (
@@ -541,7 +541,7 @@ export default function InvoicesPage() {
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-base font-black text-foreground">{formatPhpCurrency(expense.amount)}</p>
+                            <p className="text-base font-semibold text-foreground">{formatPhpCurrency(expense.amount)}</p>
                         </div>
                     </div>
                 ))
@@ -558,7 +558,7 @@ export default function InvoicesPage() {
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Monthly billing</p>
-                <h2 className="mt-2 text-3xl font-black text-foreground">Invoice studio</h2>
+                <h2 className="mt-2 text-3xl font-semibold text-foreground">Invoice studio</h2>
                 <p className="mt-2 max-w-xl text-sm text-muted-foreground">
                   Step through rent first, then review water and electricity only when they are billed separately from rent.
                 </p>
@@ -590,7 +590,7 @@ export default function InvoicesPage() {
                     )}
                   >
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Step {index + 1}</p>
-                    <p className={cn("mt-2 text-base font-black", studioStep === step.key ? "text-primary" : "text-foreground")}>{step.label}</p>
+                    <p className={cn("mt-2 text-base font-semibold", studioStep === step.key ? "text-primary" : "text-foreground")}>{step.label}</p>
                     <p className="mt-1 text-sm text-muted-foreground">{step.enabled ? "Required in this invoice flow" : "Bundled into rent"}</p>
                   </button>
                 ))}
@@ -608,7 +608,7 @@ export default function InvoicesPage() {
                   <div className="rounded-[1.75rem] border border-border/50 bg-card/80 p-5">
                     <div className="border-b border-border/50 pb-4">
                       <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Step 1</p>
-                      <h3 className="mt-2 text-lg font-black text-foreground">Verify lease rent details</h3>
+                      <h3 className="mt-2 text-lg font-semibold text-foreground">Verify lease rent details</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {selectedGeneratorLease
                           ? `${selectedGeneratorLease.tenant?.full_name ?? "Tenant"} - ${selectedGeneratorLease.property?.name ?? "Property"} - ${selectedGeneratorLease.unit?.name ?? "Unit"}`
@@ -637,7 +637,7 @@ export default function InvoicesPage() {
                 <div className="space-y-6">
                   <div className="rounded-[1.75rem] border border-sky-500/20 bg-sky-500/10 p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-sky-400">Step 2</p>
-                    <h3 className="mt-2 text-lg font-black text-white">Water bill review</h3>
+                    <h3 className="mt-2 text-lg font-semibold text-white">Water bill review</h3>
                     <p className="mt-1 text-sm text-sky-100/80">
                       {utilityStepState.water.config
                         ? `Water is billed separately at ${formatPhpCurrency(Number(utilityStepState.water.config.rate_per_unit ?? 0))} per ${utilityStepState.water.config.unit_label === "cubic_meter" ? "cubic meter" : "kWh"}.`
@@ -666,7 +666,7 @@ export default function InvoicesPage() {
                 <div className="space-y-6">
                   <div className="rounded-[1.75rem] border border-amber-500/20 bg-amber-500/10 p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-400">Step 3</p>
-                    <h3 className="mt-2 text-lg font-black text-white">Electricity bill review</h3>
+                    <h3 className="mt-2 text-lg font-semibold text-white">Electricity bill review</h3>
                     <p className="mt-1 text-sm text-amber-100/80">
                       {utilityStepState.electricity.config
                         ? `Electricity is billed separately at ${formatPhpCurrency(Number(utilityStepState.electricity.config.rate_per_unit ?? 0))} per ${utilityStepState.electricity.config.unit_label === "cubic_meter" ? "cubic meter" : "kWh"}.`
@@ -732,7 +732,7 @@ function HeroStat({ label, value, highlight }: { label: string; value: string; h
   return (
     <div className="group rounded-[2rem] border border-border/50 bg-background/60 p-5 shadow-sm backdrop-blur-md transition-all hover:bg-background/80 hover:border-border/80">
       <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{label}</p>
-      <p className={cn("mt-3 text-3xl font-black md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
+      <p className={cn("mt-3 text-3xl font-semibold md:text-2xl lg:text-3xl", highlight ?? "text-foreground")}>{value}</p>
     </div>
   );
 }
@@ -740,8 +740,8 @@ function HeroStat({ label, value, highlight }: { label: string; value: string; h
 function LedgerMetric({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
-      <p className={cn("whitespace-nowrap text-base font-black lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
+      <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">{label}</p>
+      <p className={cn("whitespace-nowrap text-base font-semibold lg:text-lg tracking-tight", highlight ? "text-primary" : "text-foreground")}>{value}</p>
     </div>
   );
 }

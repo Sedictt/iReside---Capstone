@@ -100,9 +100,9 @@ export default function AboutPage() {
                 >
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
                         <Sparkles className="size-4 text-primary" />
-                        <span className="text-xs font-black uppercase tracking-widest text-primary">About iReside</span>
+                        <span className="text-xs font-semibold uppercase tracking-widest text-primary">About iReside</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6">
+                    <h1 className="text-5xl md:text-7xl font-semibold tracking-tight mb-6">
                         The calm way to
                         <span className="block text-primary">manage rentals.</span>
                     </h1>
@@ -114,7 +114,7 @@ export default function AboutPage() {
                 <section className="py-16 md:py-20">
                     <div className="rounded-[2.5rem] border border-border bg-card p-8 md:p-12 shadow-sm">
                         <div className="text-center mb-12">
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
+                            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
                                 Built on principles that matter.
                             </h2>
                             <p className="text-muted-foreground font-medium max-w-xl mx-auto">
@@ -148,7 +148,7 @@ export default function AboutPage() {
 
                 <section className="py-16 md:py-20">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
+                        <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
                             Who iReside is for.
                         </h2>
                         <p className="text-muted-foreground font-medium max-w-xl mx-auto">
@@ -186,7 +186,7 @@ export default function AboutPage() {
                     <div className="relative rounded-[2.5rem] border border-border bg-card p-8 md:p-12 overflow-hidden">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,152,56,0.08),transparent_60%)]" />
                         <div className="relative max-w-2xl mx-auto text-center">
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
+                            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
                                 Ready to experience calmer operations?
                             </h2>
                             <p className="text-muted-foreground font-medium mb-8 leading-relaxed">

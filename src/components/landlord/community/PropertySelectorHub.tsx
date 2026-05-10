@@ -73,7 +73,7 @@ export function PropertySelectorHub({
                     <div className="size-16 animate-pulse rounded-2xl bg-primary/20 flex items-center justify-center">
                         <ShieldCheck className="size-8 text-primary" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Syncing Portfolio</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground animate-pulse">Syncing Portfolio</p>
                 </div>
             </div>
         );
@@ -85,13 +85,13 @@ export function PropertySelectorHub({
                 <div className="mb-8 flex size-24 items-center justify-center rounded-[2rem] border border-white/5 bg-card/40 shadow-2xl backdrop-blur-xl">
                     <Building2 className="size-10 text-primary" />
                 </div>
-                <h1 className="mb-4 text-3xl font-black tracking-tight text-foreground md:text-5xl">No properties detected</h1>
+                <h1 className="mb-4 text-3xl font-semibold tracking-tight text-foreground md:text-5xl">No properties detected</h1>
                 <p className="mb-10 max-w-md text-sm font-medium text-muted-foreground/80 leading-relaxed">
                     The Community Hub requires a specific property context. Please register a property to begin managing its residents and discussions.
                 </p>
                 <Link 
                     href="/landlord/properties"
-                    className="group flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-black uppercase tracking-widest text-primary-foreground transition-all hover:scale-[1.02] active:scale-95"
+                    className="group flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-sm font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:scale-[1.02] active:scale-95"
                 >
                     Initialize First Property
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
@@ -124,7 +124,7 @@ export function PropertySelectorHub({
                             {icon}
                         </div>
                         <div>
-                            <h2 className="text-xl font-black tracking-tight">{title}</h2>
+                            <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Portfolio Selection</p>
                         </div>
                     </div>
@@ -168,7 +168,7 @@ export function PropertySelectorHub({
                                 </div>
                                 <div className="flex flex-1 flex-col items-start text-left">
                                     <span className={cn(
-                                        "truncate text-sm font-black transition-colors",
+                                        "truncate text-sm font-semibold transition-colors",
                                         activePropertyIndex === idx ? "text-primary" : "text-foreground/90 group-hover:text-foreground"
                                     )}>
                                         {property.name}
@@ -194,7 +194,7 @@ export function PropertySelectorHub({
                 </div>
 
                 <div className="border-t border-white/5 p-6">
-                    <Link href="/landlord/dashboard" className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 transition-colors hover:text-foreground">
+                    <Link href="/landlord/dashboard" className="flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60 transition-colors hover:text-foreground">
                         Exit Selection
                     </Link>
                 </div>
@@ -235,7 +235,7 @@ export function PropertySelectorHub({
                                                     <MapPin className="size-6" />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Verified Location</span>
+                                                    <span className="text-[10px] font-semibold uppercase tracking-widest opacity-60">Verified Location</span>
                                                     <span className="text-sm font-bold tracking-tight">{activeProperty.address}</span>
                                                 </div>
                                             </div>
@@ -245,11 +245,11 @@ export function PropertySelectorHub({
                                     {/* Info Side */}
                                     <div className="flex flex-col p-10">
                                         <div className="mb-auto">
-                                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
                                                 <MessageSquare className="size-3" />
                                                 {badgeText}
                                             </div>
-                                            <h1 className="property-stage-content text-4xl font-black tracking-tight text-foreground">
+                                            <h1 className="property-stage-content text-4xl font-semibold tracking-tight text-foreground">
                                                 {activeProperty.name}
                                             </h1>
                                             <p className="property-stage-content mt-4 text-sm font-medium text-muted-foreground/80 leading-relaxed">
@@ -261,14 +261,14 @@ export function PropertySelectorHub({
                                                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Units</span>
                                                     <div className="flex items-center gap-2">
                                                         <Home className="size-4 text-primary" />
-                                                        <span className="text-lg font-black">{activeProperty.units?.length || 0}</span>
+                                                        <span className="text-lg font-semibold">{activeProperty.units?.length || 0}</span>
                                                     </div>
                                                 </div>
                                                 <div className="property-stage-content flex flex-col gap-1 rounded-2xl border border-white/5 bg-white/5 p-4 transition-all hover:bg-white/10">
                                                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Residents</span>
                                                     <div className="flex items-center gap-2">
                                                         <Users className="size-4 text-emerald-400" />
-                                                        <span className="text-lg font-black">
+                                                        <span className="text-lg font-semibold">
                                                             {activeProperty.units?.filter(u => u.status === 'occupied').length || 0}
                                                         </span>
                                                     </div>
@@ -279,7 +279,7 @@ export function PropertySelectorHub({
                                         <div className="property-stage-content mt-12">
                                             <button 
                                                 onClick={() => setSelectedPropertyId(activeProperty.id)}
-                                                className="group flex w-full items-center justify-between rounded-2xl bg-primary p-5 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                                                className="group flex w-full items-center justify-between rounded-2xl bg-primary p-5 text-sm font-semibold uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
                                             >
                                                 {buttonText}
                                                 <div className="flex size-8 items-center justify-center rounded-xl bg-white/20 transition-transform group-hover:translate-x-1">

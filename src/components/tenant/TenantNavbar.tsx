@@ -444,7 +444,7 @@ function NotificationPanelContent({
     return (
         <>
             <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Notifications</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-foreground">Notifications</p>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{unreadCount} New</span>
             </div>
 
@@ -495,7 +495,7 @@ function NotificationPanelContent({
                         e.stopPropagation();
                         onMarkAllAsRead();
                     }}
-                    className="w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
+                    className="w-full rounded-xl py-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground transition-all hover:bg-card hover:text-primary hover:shadow-sm"
                 >
                     Mark all as read
                 </button>

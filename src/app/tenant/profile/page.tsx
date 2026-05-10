@@ -170,7 +170,7 @@ export default async function TenantProfilePage() {
                         {/* Name & Badge Area */}
                         <div className="space-y-3 mb-8">
                             <div className="flex items-center justify-center gap-4">
-                                <h1 className="text-4xl md:text-5xl font-display font-black text-white tracking-tight">
+                                <h1 className="text-4xl md:text-5xl font-display font-semibold text-white tracking-tight">
                                     {profile.full_name}
                                 </h1>
                             </div>
@@ -232,7 +232,7 @@ export default async function TenantProfilePage() {
                         <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                             <User size={20} className="text-[#6d9838]" />
                         </div>
-                        <h2 className="text-2xl font-display font-black text-white tracking-tight">Biography</h2>
+                        <h2 className="text-2xl font-display font-semibold text-white tracking-tight">Biography</h2>
                     </div>
                     <div className="max-w-4xl">
                         <EditableBio initialBio={profile.bio || ''} />
@@ -250,14 +250,14 @@ export default async function TenantProfilePage() {
                             <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                                 <Home size={20} className="text-[#6d9838]" />
                             </div>
-                            <h2 className="text-2xl font-display font-black text-white tracking-tight">Current Residency</h2>
+                            <h2 className="text-2xl font-display font-semibold text-white tracking-tight">Current Residency</h2>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
                             <div className="space-y-6">
                                 <div>
                                     <p className="text-[10px] font-bold tracking-widest text-neutral-500 uppercase mb-2">Property & Unit</p>
-                                    <h3 className="text-3xl font-display font-black text-white">
+                                    <h3 className="text-3xl font-display font-semibold text-white">
                                         {activeLease.units?.properties?.name}
                                         <span className="block text-xl text-[#6d9838] mt-1">
                                             {activeLease.units?.name}
@@ -329,7 +329,7 @@ export default async function TenantProfilePage() {
                             <div className="size-12 rounded-2xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                                 <Clock size={20} className="text-[#6d9838]" />
                             </div>
-                            <h2 className="text-2xl font-display font-black text-white tracking-tight">Tenancy Journey</h2>
+                            <h2 className="text-2xl font-display font-semibold text-white tracking-tight">Tenancy Journey</h2>
                         </div>
                     </div>
 
@@ -353,7 +353,7 @@ export default async function TenantProfilePage() {
                                     </div>
                                     <div className="p-6 space-y-4">
                                         <div>
-                                            <h4 className="text-xl font-display font-black text-white group-hover:text-[#6d9838] transition-colors">{lease.units?.properties?.name}</h4>
+                                            <h4 className="text-xl font-display font-semibold text-white group-hover:text-[#6d9838] transition-colors">{lease.units?.properties?.name}</h4>
                                             <p className="text-sm text-neutral-500 flex items-center gap-2 mt-1">
                                                 <MapIcon size={12} /> {lease.units?.properties?.city}
                                             </p>

@@ -934,7 +934,7 @@ export function TenantContactsSidebar() {
                                                 <h4 className="text-sm font-semibold text-primary truncate pr-2 transition-colors">
                                                     iRis Assistant
                                                 </h4>
-                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-black">AI</span>
+                                                <span className="text-[10px] text-primary shrink-0 opacity-80 uppercase tracking-widest font-semibold">AI</span>
                                             </div>
                                             <p className="text-xs text-zinc-600 dark:text-neutral-300 font-medium truncate">
                                                 How can I help you today?

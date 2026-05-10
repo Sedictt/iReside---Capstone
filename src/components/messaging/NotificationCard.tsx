@@ -100,14 +100,14 @@ export function NotificationCard({
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className={cn(
-                            "font-black text-high tracking-tight leading-tight mb-0.5",
+                            "font-semibold text-high tracking-tight leading-tight mb-0.5",
                             isCompact ? "text-sm" : "text-xl"
                         )}>
                             {title}
                         </h3>
                         <div className="flex items-center gap-2">
                             <span className="size-1 rounded-full bg-primary animate-pulse" />
-                            <p className="text-[10px] font-black text-medium uppercase tracking-[0.2em] opacity-40">
+                            <p className="text-[10px] font-semibold text-medium uppercase tracking-[0.2em] opacity-40">
                                 {subtitle}
                             </p>
                         </div>
@@ -121,9 +121,9 @@ export function NotificationCard({
                         isCompact ? "rounded-2xl p-3" : "rounded-[2rem] p-5"
                     )}>
                         <div className="flex flex-col">
-                            <span className="text-[9px] uppercase tracking-[0.15em] text-medium font-black mb-0.5 opacity-60">Amount Paid</span>
+                            <span className="text-[9px] uppercase tracking-[0.15em] text-medium font-semibold mb-0.5 opacity-60">Amount Paid</span>
                             <span className={cn(
-                                "font-black text-primary tracking-tighter",
+                                "font-semibold text-primary tracking-tighter",
                                 isCompact ? "text-lg" : "text-2xl"
                             )}>₱{paymentAmount}</span>
                         </div>
@@ -153,7 +153,7 @@ export function NotificationCard({
 
                     {message.expiresAt && (
                         <div className={cn(
-                            "mt-3 flex items-center gap-2 text-[9px] text-amber-500 font-black uppercase tracking-wider bg-amber-500/10 w-fit rounded-full border border-amber-500/20",
+                            "mt-3 flex items-center gap-2 text-[9px] text-amber-500 font-semibold uppercase tracking-wider bg-amber-500/10 w-fit rounded-full border border-amber-500/20",
                             isCompact ? "px-2.5 py-1" : "px-3 py-1.5"
                         )}>
                             <Hammer className="size-3" />
@@ -165,7 +165,7 @@ export function NotificationCard({
                 {/* Optional Receipt Image */}
                 {receiptImg && (
                     <div className="flex flex-col gap-1.5">
-                        <span className="text-[8px] uppercase tracking-[0.2em] text-medium font-black ml-2 opacity-40">Proof of Payment</span>
+                        <span className="text-[8px] uppercase tracking-[0.2em] text-medium font-semibold ml-2 opacity-40">Proof of Payment</span>
                         <div className={cn(
                             "overflow-hidden border border-white/10 relative cursor-pointer shadow-2xl group/img",
                             isCompact ? "rounded-xl" : "rounded-[2rem]"
@@ -175,7 +175,7 @@ export function NotificationCard({
                                 isCompact ? "h-24" : "h-40"
                             )} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                <span className="text-[8px] text-white font-black uppercase tracking-widest">Click to expand</span>
+                                <span className="text-[8px] text-white font-semibold uppercase tracking-widest">Click to expand</span>
                             </div>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ export function NotificationCard({
                 {refundImg && (
                     <div className="flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-500">
                         <div className="flex items-center gap-2 ml-2">
-                            <span className="text-[8px] uppercase tracking-[0.2em] text-emerald-500 font-black">Proof of Refund</span>
+                            <span className="text-[8px] uppercase tracking-[0.2em] text-emerald-500 font-semibold">Proof of Refund</span>
                             <div className="h-[1px] flex-1 bg-emerald-500/10" />
                         </div>
                         <div className={cn(
@@ -197,7 +197,7 @@ export function NotificationCard({
                                 isCompact ? "h-24" : "h-40"
                             )} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                                <span className="text-[8px] text-white font-black uppercase tracking-widest">Transaction Reconciled</span>
+                                <span className="text-[8px] text-white font-semibold uppercase tracking-widest">Transaction Reconciled</span>
                             </div>
                         </div>
                     </div>
@@ -211,7 +211,7 @@ export function NotificationCard({
                         onClick={onAction}
                         disabled={disabled}
                         className={cn(
-                            "w-full rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-2xl relative overflow-hidden group/btn",
+                            "w-full rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-2xl relative overflow-hidden group/btn",
                             isCompact ? "py-2.5" : "py-4",
                             disabled && "bg-disabled text-medium cursor-not-allowed shadow-none opacity-50",
                             !disabled && variant === "warning" && "bg-amber-500 text-white shadow-amber-500/30",

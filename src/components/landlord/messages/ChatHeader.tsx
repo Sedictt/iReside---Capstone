@@ -75,7 +75,7 @@ export function ChatHeader({
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={openReportWizard}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/5 text-red-500 text-[10px] font-semibold uppercase tracking-widest border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
                     >
                         <AlertTriangle className="size-3.5" />
                         <span className="hidden sm:inline">Report</span>

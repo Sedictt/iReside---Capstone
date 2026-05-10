@@ -109,7 +109,7 @@ export function SocialsHeader({ userId, initialSocials }: SocialsHeaderProps) {
                                     <div className="size-10 rounded-xl bg-[#6d9838]/10 flex items-center justify-center border border-[#6d9838]/20">
                                         <Share2 size={20} className="text-[#6d9838]" />
                                     </div>
-                                    <h3 className="text-xl font-display font-black text-white tracking-tight">Social Connectivity</h3>
+                                    <h3 className="text-xl font-display font-semibold text-white tracking-tight">Social Connectivity</h3>
                                 </div>
                                 <button 
                                     onClick={() => setIsModalOpen(false)}

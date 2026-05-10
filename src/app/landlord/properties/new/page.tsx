@@ -322,7 +322,7 @@ function NewAssetContent() {
                         <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
                         {step === 1 ? "Cancel" : "Back"}
                     </button>
-                    <div className="text-[10px] font-black text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl">
+                    <div className="text-[10px] font-semibold text-primary uppercase tracking-[0.3em] bg-primary/10 px-5 py-2 rounded-full border border-primary/20 backdrop-blur-xl">
                         {isEditMode ? "Asset Configuration" : "Expansion Wizard"}
                     </div>
                 </div>
@@ -331,7 +331,7 @@ function NewAssetContent() {
                     <div className="p-10 border-b border-white/5 bg-white/[0.01]">
                         <div className="flex flex-col md:row md:items-center justify-between gap-10">
                             <div className="space-y-3">
-                                <h1 className="text-4xl font-black text-white tracking-tight">Property Wizard</h1>
+                                <h1 className="text-4xl font-semibold text-white tracking-tight">Property Wizard</h1>
                                 <p className="text-white/40 text-sm font-medium max-w-md">
                                     {isEditMode ? "Refining parameters for your asset." : "Establishing a new verified asset profile."}
                                 </p>
@@ -348,12 +348,12 @@ function NewAssetContent() {
                                                 {step > s.id ? (
                                                     <Check className="size-5 text-primary" />
                                                 ) : typeof s.icon === "string" ? (
-                                                    <span className="text-sm font-black">{s.icon}</span>
+                                                    <span className="text-sm font-semibold">{s.icon}</span>
                                                 ) : (
                                                     <s.icon className="size-4" />
                                                 )}
                                             </div>
-                                            <span className={cn("text-[9px] font-black uppercase tracking-widest", step === s.id ? "text-primary" : "text-white/20")}>{s.label}</span>
+                                            <span className={cn("text-[9px] font-semibold uppercase tracking-widest", step === s.id ? "text-primary" : "text-white/20")}>{s.label}</span>
                                         </div>
                                         {idx < STEPS.length - 1 && <div className="w-6 h-px bg-white/5 mx-2 -mt-6" />}
                                     </div>
@@ -367,14 +367,14 @@ function NewAssetContent() {
                         {step === 1 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Property Identity</h2>
+                                    <h2 className="text-3xl font-semibold tracking-tight text-white">Property Identity</h2>
                                     <p className="text-white/40 text-sm font-medium mt-1">Establish the visual and formal identity of your asset.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 px-1">
                                             <Camera className="size-3.5 text-primary" />
-                                            <label htmlFor="cover-identity" className="text-[10px] font-black uppercase tracking-widest text-white/40">Cover Identity</label>
+                                            <label htmlFor="cover-identity" className="text-[10px] font-semibold uppercase tracking-widest text-white/40">Cover Identity</label>
                                         </div>
                                         <div className="relative group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 aspect-[16/10]">
                                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -390,8 +390,8 @@ function NewAssetContent() {
                                     <div className="space-y-6 bg-white/[0.03] border border-white/5 rounded-[2.5rem] p-8">
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
-                                                <label htmlFor="property-name" className="text-[9px] font-black uppercase tracking-wider text-white/30">Designation</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
+                                                <label htmlFor="property-name" className="text-[9px] font-semibold uppercase tracking-wider text-white/30">Designation</label>
+                                                {isEditMode && <span className="text-[8px] font-semibold text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <input 
                                                 id="property-name"
@@ -399,14 +399,14 @@ function NewAssetContent() {
                                                 disabled={isEditMode}
                                                 value={formData.propertyName} 
                                                 onChange={e => handleInputChange("propertyName", e.target.value)} 
-                                                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
+                                                className={`w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-primary/50 ${isEditMode ? "opacity-50 cursor-not-allowed bg-black/20" : ""}`} 
                                                 placeholder="e.g. Skyline Residences" 
                                             />
                                         </div>
                                         <div className="space-y-2 relative">
                                             <div className="flex items-center justify-between px-1">
-                                                <label htmlFor="property-address" className="text-[9px] font-black uppercase tracking-wider text-white/30">Location</label>
-                                                {isEditMode && <span className="text-[8px] font-black text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
+                                                <label htmlFor="property-address" className="text-[9px] font-semibold uppercase tracking-wider text-white/30">Location</label>
+                                                {isEditMode && <span className="text-[8px] font-semibold text-primary/40 uppercase tracking-widest flex items-center gap-1"><ShieldCheck className="size-2.5" /> Locked by Admin</span>}
                                             </div>
                                             <textarea 
                                                 id="property-address"
@@ -422,7 +422,7 @@ function NewAssetContent() {
                                             <button 
                                                 type="button"
                                                 onClick={() => router.push("/landlord/support?topic=property_info_change")}
-                                                className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
+                                                className="w-full py-4 rounded-2xl border border-primary/20 bg-primary/5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
                                             >
                                                 <ShieldCheck className="size-3.5" />
                                                 Request Identity Modification
@@ -437,14 +437,14 @@ function NewAssetContent() {
                         {step === 2 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Architectural Scope</h2>
+                                    <h2 className="text-3xl font-semibold tracking-tight text-white">Architectural Scope</h2>
                                     <p className="text-white/40 text-sm font-medium mt-1">Define the physical parameters and capacity.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
                                         <div className="flex items-center gap-2">
                                             <Home className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Asset Class</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Asset Class</h3>
                                         </div>
                                         <div className="grid gap-3">
                                             {[
@@ -460,7 +460,7 @@ function NewAssetContent() {
                                                     <div className="flex items-center gap-4">
                                                         <div className={`size-2.5 rounded-full ${formData.propertyType === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                         <div>
-                                                            <p className={`text-sm font-black tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                            <p className={`text-sm font-semibold tracking-tight ${formData.propertyType === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
                                                             <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
                                                         </div>
                                                     </div>
@@ -473,7 +473,7 @@ function NewAssetContent() {
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
                                         <div className="flex items-center gap-2">
                                             <Grid className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Structural Specs</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Structural Specs</h3>
                                         </div>
                                         <div className="grid gap-6">
                                             <div className="grid grid-cols-2 gap-4">
@@ -483,7 +483,7 @@ function NewAssetContent() {
                                                         type="number" 
                                                         value={formData.totalUnits}
                                                         onChange={(e) => handleInputChange("totalUnits", e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-primary/50"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
@@ -492,7 +492,7 @@ function NewAssetContent() {
                                                         type="number" 
                                                         value={formData.floorCount}
                                                         onChange={(e) => handleInputChange("floorCount", e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-primary/50"
                                                     />
                                                 </div>
                                             </div>
@@ -502,7 +502,7 @@ function NewAssetContent() {
                                                     type="number" 
                                                     value={formData.occupancyLimit}
                                                     onChange={(e) => handleInputChange("occupancyLimit", e.target.value)}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-black text-white outline-none focus:border-primary/50"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-semibold text-white outline-none focus:border-primary/50"
                                                 />
                                             </div>
                                         </div>
@@ -515,14 +515,14 @@ function NewAssetContent() {
                         {step === 3 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Financial Strategy</h2>
+                                    <h2 className="text-3xl font-semibold tracking-tight text-white">Financial Strategy</h2>
                                     <p className="text-white/40 text-sm font-medium mt-1">Configure billing logic and amenities.</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">                                     
                                     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                         <div className="flex items-center gap-2">
                                             <Wallet className="size-4 text-primary" />
-                                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
+                                            <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Billing Strategy</h3>
                                         </div>
 
                                         <div className="grid gap-6">
@@ -542,7 +542,7 @@ function NewAssetContent() {
                                                             <div className="flex items-center gap-4">
                                                                 <div className={`size-2.5 rounded-full ${formData.utilityBilling === opt.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" : "bg-white/10"}`} />
                                                                 <div>
-                                                                    <p className={`text-sm font-black tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
+                                                                    <p className={`text-sm font-semibold tracking-tight ${formData.utilityBilling === opt.id ? "text-primary" : "text-white"}`}>{opt.label}</p>
                                                                     <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">{opt.desc}</p>
                                                                 </div>
                                                             </div>
@@ -555,7 +555,7 @@ function NewAssetContent() {
                                             <div className="space-y-3">
                                                 <label className="text-[10px] font-bold uppercase tracking-wider text-white/30 px-1">Standard Base Rent (PHP)</label>
                                                 <div className="relative group">
-                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-black text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
+                                                    <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-xl font-semibold text-primary/40 group-focus-within:text-primary transition-colors">₱</div>
                                                     <input 
                                                         type="text" 
                                                         value={formData.baseRent === 0 ? "" : formData.baseRent.toLocaleString('en-US')}
@@ -565,7 +565,7 @@ function NewAssetContent() {
                                                             handleInputChange("baseRent", num);
                                                         }}
                                                         placeholder="0.00"
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-5 text-2xl font-black text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-5 text-2xl font-semibold text-white outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all"
                                                     />
                                                 </div>
                                             </div>
@@ -576,9 +576,9 @@ function NewAssetContent() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Sparkles className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Amenities</h3>
+                                                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Amenities</h3>
                                             </div>
-                                            <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.amenities.length} Selected</span>
+                                            <span className="text-[10px] font-semibold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.amenities.length} Selected</span>
                                         </div>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                             {[
@@ -593,7 +593,7 @@ function NewAssetContent() {
                                                             : [...formData.amenities, amenity];
                                                         handleInputChange("amenities", newAmenities);
                                                     }}
-                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all text-center ${formData.amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
+                                                    className={`px-4 py-3 rounded-2xl text-[10px] font-semibold uppercase tracking-widest border transition-all text-center ${formData.amenities.includes(amenity) ? "bg-primary text-black border-primary shadow-lg shadow-primary/20" : "bg-white/5 border-white/5 text-white/30 hover:text-white/50"}`}
                                                 >
                                                     {amenity}
                                                 </button>
@@ -608,7 +608,7 @@ function NewAssetContent() {
                         {step === 4 && (
                             <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-3xl font-black tracking-tight text-white">Rules & Governance</h2>
+                                    <h2 className="text-3xl font-semibold tracking-tight text-white">Rules & Governance</h2>
                                     <p className="text-white/40 text-sm font-medium mt-1">Define property conduct and validate configuration.</p>
                                 </div>
                                     {/* Building Rules - Spans 12 columns */}
@@ -617,9 +617,9 @@ function NewAssetContent() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <ShieldCheck className="size-4 text-primary" />
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
+                                                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Building Rules & Conduct</h3>
                                                 </div>
-                                                <span className="text-[10px] font-black text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.buildingRules.length} Defined</span>
+                                                <span className="text-[10px] font-semibold text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20 uppercase tracking-widest">{formData.buildingRules.length} Defined</span>
                                             </div>
 
                                             <div className="space-y-4">
@@ -675,7 +675,7 @@ function NewAssetContent() {
                                         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-7 space-y-6">
                                             <div className="flex items-center gap-2">
                                                 <FileText className="size-4 text-primary" />
-                                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
+                                                <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Final Validation</h3>
                                             </div>
                                             
                                             <div 
@@ -708,8 +708,8 @@ function NewAssetContent() {
                                                             <FileText className="size-8 text-primary" />
                                                         </div>
                                                         <div className="text-center px-4 relative z-10">
-                                                            <span className="block text-xs font-black text-white uppercase tracking-widest mb-1">Contract Preview</span>
-                                                            <span className="block text-[8px] text-white/30 uppercase tracking-widest font-black">
+                                                            <span className="block text-xs font-semibold text-white uppercase tracking-widest mb-1">Contract Preview</span>
+                                                            <span className="block text-[8px] text-white/30 uppercase tracking-widest font-semibold">
                                                                 Draft Synchronized
                                                             </span>
                                                         </div>
@@ -720,7 +720,7 @@ function NewAssetContent() {
                                                             {formData.contractFile ? <CheckCircle2 className="size-8 text-primary" /> : <Upload className="size-8 text-white/20" />}
                                                         </div>
                                                         <div className="text-center px-4">
-                                                            <span className={`block text-xs font-black uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-white/40"}`}>
+                                                            <span className={`block text-xs font-semibold uppercase tracking-widest ${formData.contractFile ? "text-primary" : "text-white/40"}`}>
                                                                 {formData.contractFile ? "Upload Complete" : "Click to Upload"}
                                                             </span>
                                                             {formData.contractFile && <span className="block text-[8px] text-white/30 uppercase tracking-widest font-bold mt-1 truncate max-w-[150px] mx-auto">{formData.contractFile}</span>}
@@ -731,7 +731,7 @@ function NewAssetContent() {
                                                 <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                                                     <div className="bg-white text-black px-5 py-2.5 rounded-full flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                                                         {formData.contractMode === "generate" ? <ShieldCheck className="size-4" /> : <Upload className="size-4" />}
-                                                        <span className="text-[10px] font-black uppercase tracking-widest">
+                                                        <span className="text-[10px] font-semibold uppercase tracking-widest">
                                                             {formData.contractMode === "generate" ? "View Generated Draft" : (formData.contractFile ? "Change Document" : "Upload File")}
                                                         </span>
                                                     </div>
@@ -746,11 +746,11 @@ function NewAssetContent() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <FilePlus className="size-4 text-primary" />
-                                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60">Lease Management Method</h3>
+                                                    <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Lease Management Method</h3>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 border border-primary/20 rounded-lg">
                                                     <div className="size-1.5 rounded-full bg-primary animate-pulse" />
-                                                    <span className="text-[8px] font-black text-primary uppercase tracking-widest">Global Preference</span>
+                                                    <span className="text-[8px] font-semibold text-primary uppercase tracking-widest">Global Preference</span>
                                                 </div>
                                             </div>
                                             
@@ -763,7 +763,7 @@ function NewAssetContent() {
                                                         <button 
                                                             key={mode.id}
                                                             onClick={() => handleInputChange("contractMode", mode.id as any)}
-                                                            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formData.contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
+                                                            className={`flex-1 py-4 text-[10px] font-semibold uppercase tracking-widest rounded-xl transition-all ${formData.contractMode === mode.id ? "bg-primary text-black shadow-lg shadow-primary/10" : "text-white/30 hover:text-white/50"}`}
                                                         >
                                                             {mode.label}
                                                         </button>
@@ -787,10 +787,10 @@ function NewAssetContent() {
                     </div>
 
                     <div className="p-10 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
-                        <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-white/40 hover:text-white transition-all font-black uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
+                        <button onClick={handleBack} disabled={isSubmitting} className={cn("flex items-center gap-2 text-white/40 hover:text-white transition-all font-semibold uppercase text-[11px]", step === 1 ? "opacity-0 pointer-events-none" : "")}>
                             <ArrowLeft className="size-4" /><span>Back</span>
                         </button>
-                        <button onClick={handleNext} disabled={isSubmitting} className="px-10 py-5 bg-primary text-black rounded-2xl font-black uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
+                        <button onClick={handleNext} disabled={isSubmitting} className="px-10 py-5 bg-primary text-black rounded-2xl font-semibold uppercase text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
                             {isSubmitting ? "Syncing..." : step === 4 ? "Finalize Profile" : "Continue"}
                         </button>
                     </div>

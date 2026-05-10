@@ -94,7 +94,7 @@ export default function TestVerificationPage() {
                         >
                             <Search className="size-5 text-blue-400" />
                         </div>
-                        <h1 className="text-3xl font-black text-white tracking-tight">Business Verification Test</h1>
+                        <h1 className="text-3xl font-semibold text-white tracking-tight">Business Verification Test</h1>
                     </div>
                     <p className="text-sm text-neutral-500 ml-10">
                         Test the Valenzuela City Business Directory verification feature without going through the full registration workflow.

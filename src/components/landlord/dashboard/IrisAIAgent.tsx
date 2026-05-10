@@ -262,7 +262,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                     exit={{ opacity: 0, x: 20, y: 20, scale: 0.85 }}
                                     transition={{ duration: isBubbleExpanded ? 0.32 : 0.22, ease: "easeOut" }}
                                     style={{ transformOrigin: "left bottom" }}
-                                    className="absolute left-[85%] ml-1 bottom-[6.25rem] whitespace-nowrap rounded-2xl border border-white/10 bg-card/80 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-foreground backdrop-blur-xl shadow-2xl"
+                                    className="absolute left-[85%] ml-1 bottom-[6.25rem] whitespace-nowrap rounded-2xl border border-white/10 bg-card/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-foreground backdrop-blur-xl shadow-2xl"
                                 >
                                     <AnimatePresence mode="wait" initial={false}>
                                         <motion.span
@@ -303,7 +303,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                             setInternalIsVisible(nextVisible);
                         }
                     }}
-                    className="fixed left-[240px] bottom-8 z-[101] pointer-events-auto flex items-center gap-2 rounded-full border border-primary/30 bg-card/90 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-primary shadow-xl backdrop-blur-xl transition-all hover:scale-[1.03] active:scale-95"
+                    className="fixed left-[240px] bottom-8 z-[101] pointer-events-auto flex items-center gap-2 rounded-full border border-primary/30 bg-card/90 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary shadow-xl backdrop-blur-xl transition-all hover:scale-[1.03] active:scale-95"
                     aria-pressed={!resolvedIsVisible}
                     aria-label={resolvedIsVisible ? "Hide iRis assistant" : "Show iRis assistant"}
                 >
@@ -329,8 +329,8 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                 <div className="flex items-center justify-between mb-8">
                                     <div className="flex items-center gap-4">
                                         <div>
-                                            <h3 className="text-xl font-black tracking-tight text-foreground">iRis Property Analysis</h3>
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Portfolio Intelligence</p>
+                                            <h3 className="text-xl font-semibold tracking-tight text-foreground">iRis Property Analysis</h3>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">Portfolio Intelligence</p>
                                         </div>
                                     </div>
                                     <button
@@ -366,7 +366,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
 
                                             <div className="grid gap-6 md:grid-cols-2">
                                                 <div className="space-y-4">
-                                                    <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                                                    <h4 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-emerald-400">
                                                         <div className="size-1.5 rounded-full bg-emerald-400" />
                                                         Good Things
                                                     </h4>
@@ -381,7 +381,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-400">
+                                                    <h4 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-amber-400">
                                                         <div className="size-1.5 rounded-full bg-amber-400" />
                                                         Things to Watch
                                                     </h4>
@@ -402,7 +402,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                                         <MessageSquare className="size-5 text-primary" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-black text-foreground">Need deeper insights?</p>
+                                                        <p className="text-xs font-semibold text-foreground">Need deeper insights?</p>
                                                         <p className="text-[10px] font-medium text-muted-foreground">Ask iRis in the command center.</p>
                                                     </div>
                                                 </div>
@@ -414,7 +414,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                             <p className="text-sm font-bold text-muted-foreground">No analysis available for this period.</p>
                                             <button
                                                 onClick={() => fetchAnalysis(true)}
-                                                className="mt-4 text-xs font-black uppercase tracking-widest text-primary hover:underline"
+                                                className="mt-4 text-xs font-semibold uppercase tracking-widest text-primary hover:underline"
                                             >
                                                 Generate Now
                                             </button>
@@ -431,7 +431,7 @@ export function IrisAIAgent({ stats, isVisible: controlledIsVisible, onVisibilit
                                         onClick={() => fetchAnalysis(true)}
                                         disabled={isLoading || cooldown > 0}
                                         className={cn(
-                                            "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                                            "flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-all active:scale-95",
                                             cooldown > 0
                                                 ? "bg-muted/20 text-muted-foreground cursor-not-allowed opacity-50"
                                                 : "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"

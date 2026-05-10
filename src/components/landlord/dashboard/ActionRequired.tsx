@@ -126,11 +126,11 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                     </div>
                     <div className="min-w-0">
                         <div className="mb-1.5 flex flex-wrap items-center gap-3">
-                            <h3 className="text-base font-black tracking-tight text-foreground transition-colors group-hover:text-primary">
+                            <h3 className="text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-primary">
                                 {action.title}
                             </h3>
                             <span className={cn(
-                                "rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", 
+                                "rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest", 
                                 toneClasses[action.tone]
                             )}>
                                 {action.tone}
@@ -139,7 +139,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
                         <p className="text-sm font-medium text-muted-foreground leading-relaxed">
                             {action.detail}
                         </p>
-                        <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        <div className="mt-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                             <Clock className="size-3" />
                             {action.meta}
                         </div>
@@ -148,7 +148,7 @@ function ActionItemCard({ action }: { action: ActionItem }) {
 
                 <Link
                     href={action.href}
-                    className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-black tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
+                    className="group/btn inline-flex items-center gap-3 self-start rounded-xl bg-foreground px-6 py-3 text-sm font-semibold tracking-tight text-background transition-all hover:brightness-110 active:scale-95 sm:self-center"
                 >
                     {action.cta}
                     <ArrowRight className="size-4 transition-transform group-hover/btn:translate-x-1" />
@@ -173,7 +173,7 @@ function ActionEmptyState() {
             <div className="mb-6 inline-flex size-20 items-center justify-center rounded-[1.5rem] border border-primary/20 bg-primary/12 text-primary">
                 <ShieldCheck className="size-10" />
             </div>
-            <h3 className="text-xl font-black text-foreground">All Caught Up</h3>
+            <h3 className="text-xl font-semibold text-foreground">All Caught Up</h3>
             <p className="mt-2 text-sm font-medium text-muted-foreground max-w-sm mx-auto">
                 No urgent tasks right now. Everything that needs action is already handled.
             </p>
@@ -370,7 +370,7 @@ export function ActionRequired() {
                             <Activity className="size-7" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-foreground">Needs Your Attention</h2>
+                            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Needs Your Attention</h2>
                             <p className="text-sm font-medium text-muted-foreground/80">
                                 Things to follow up now: maintenance, lease renewals, and tenant messages.
                             </p>

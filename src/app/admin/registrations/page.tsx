@@ -107,7 +107,7 @@ function KpiCard({ icon: Icon, label, value, accentText }: {
                     <Icon className="size-5" strokeWidth={1.5} />
                 </div>
                 <div>
-                    <p className="text-3xl font-extrabold tracking-tight text-white">{value}</p>
+                    <p className="text-3xl font-semibold tracking-tight text-white">{value}</p>
                     <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-white/40">{label}</p>
                 </div>
             </div>
@@ -236,13 +236,13 @@ export default function AdminRegistrationsPage() {
                     <section className="relative overflow-hidden rounded-[2.5rem] border border-border/70 bg-card p-8 md:p-12">
                         <div className="relative z-10 space-y-8">
                             <div className="space-y-4">
-                                <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-amber-300/80">
+                                <div className="inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-amber-300/80">
                                     <span className="relative flex size-2">
                                         <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
                                     </span>
                                     Registration Queue
                                 </div>
-                                <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl lg:leading-[1.1]">
+                                <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl lg:leading-[1.1]">
                                     Incoming Landlord Registrations
                                 </h1>
                                 <p className="max-w-2xl text-base font-medium leading-relaxed text-white/50">
@@ -379,9 +379,9 @@ export default function AdminRegistrationsPage() {
                                         )} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/60">Prospective Landlord</p>
                                         <div className="mt-1 flex items-center gap-3">
-                                            <h2 className="text-2xl font-extrabold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
+                                            <h2 className="text-2xl font-semibold tracking-tight text-white">{selected.applicant?.full_name || "Unknown applicant"}</h2>
                                             <RoleBadge role={selected.applicant?.role ?? null} className="text-[9px]" />
                                         </div>
                                         <div className="mt-2 flex items-center gap-3">
